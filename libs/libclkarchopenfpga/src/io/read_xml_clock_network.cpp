@@ -67,10 +67,10 @@ static void read_xml_clock_tree_tap_type_single(pugi::xml_node& xml_tap,
 
   /* Single tap only require a coordinate */
   size_t tap_x =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_X, loc_data, pugi::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_X, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_int();
   size_t tap_y =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y, loc_data, pugi::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_int();
   clk_ntwk.set_tap_bounding_box(tap_id, vtr::Rect<size_t>(tap_x, tap_y, tap_x, tap_y));
 }
@@ -97,16 +97,16 @@ static void read_xml_clock_tree_tap_type_region(pugi::xml_node& xml_tap,
 
   /* Region require a bounding box */
   size_t tap_start_x =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX, loc_data, pugi::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_int();
   size_t tap_start_y =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY, loc_data, pugi::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_int();
   size_t tap_end_x =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX, loc_data, pugi::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_int();
   size_t tap_end_y =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY, loc_data, pugi::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_int();
   clk_ntwk.set_tap_bounding_box(tap_id, vtr::Rect<size_t>(tap_start_x, tap_start_y, tap_end_x, tap_end_y));
 

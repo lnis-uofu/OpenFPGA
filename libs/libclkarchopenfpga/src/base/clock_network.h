@@ -49,7 +49,7 @@ class ClockNetwork {
   typedef vtr::Range<clock_internal_driver_iterator>
     clock_internal_driver_range;
   /* Type of tap points */
-  enum class : unsigned char {
+  enum class e_tap_type : unsigned char {
     ALL = 0,
     SINGLE,
     REGION,
@@ -284,7 +284,7 @@ class ClockNetwork {
   vtr::vector<ClockTreeId, size_t> tree_widths_;
   vtr::vector<ClockTreeId, size_t> tree_depths_;
   vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
-  vtr::vector<ClockTreeId, ClockTapId> tree_taps_;
+  vtr::vector<ClockTreeId, std::vector<ClockTapId>> tree_taps_;
 
   /* Basic information of each spine */
   vtr::vector<ClockSpineId, ClockSpineId> spine_ids_;

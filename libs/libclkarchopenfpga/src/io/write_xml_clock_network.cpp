@@ -30,7 +30,7 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
   fp << "<" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
   /* Depends on the type */
   for (ClockTapId tap_id : clk_ntwk.tree_taps(tree_id)) {
-    switch clk_ntwk.tap_type(tap_id): {
+    switch (clk_ntwk.tap_type(tap_id)) {
       case ClockNetwork::e_tap_type::ALL: {
         openfpga::write_tab_to_file(fp, 4);
         fp << "<" << XML_CLOCK_TREE_TAP_ALL_NODE_NAME << "";
@@ -40,6 +40,7 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
                             clk_ntwk.tap_to_port(tap_id).c_str());
         fp << "/>"
            << "\n";
+        break;
       }
       case ClockNetwork::e_tap_type::SINGLE: {
         openfpga::write_tab_to_file(fp, 4);
@@ -54,6 +55,7 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
                             clk_ntwk.tap_y(tap_id));
         fp << "/>"
            << "\n";
+        break;
       }
       case ClockNetwork::e_tap_type::REGION: {
         openfpga::write_tab_to_file(fp, 4);
@@ -76,12 +78,14 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
                             clk_ntwk.tap_step_y(tap_id));
         fp << "/>"
            << "\n";
+        break;
       }
       default: {
         VTR_LOG_ERROR("Invalid type of tap point!\n");
         return 1;
       }
     }
+  }
 
   openfpga::write_tab_to_file(fp, 3);
   fp << "</" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";

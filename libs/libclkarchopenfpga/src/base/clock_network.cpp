@@ -703,8 +703,7 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
 
 ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
                                       const std::string& from_port,
-                                      const std::string& to_port,
-                                      const ) {
+                                      const std::string& to_port) {
   VTR_ASSERT(valid_tree_id(tree_id));
   /* TODO: Consider find existing tap template and avoid duplication in storage */
   ClockTapId tap_id = ClockTapId(tap_ids_.size());
@@ -712,7 +711,7 @@ ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
   tap_from_ports_.push_back(from_port);
   tap_to_ports_.push_back(to_port);
   tap_bbs_.emplace_back(empty_tap_bb_);
-  tap_bb_steps_.emplace_back(vtr::Point<size_t>(1, 1));
+  tap_bb_steps_.emplace_back(vtr::Point<size_t>(0, 0));
   tree_taps_[tree_id].push_back(tap_id);
   return tap_id;
 }
@@ -720,7 +719,7 @@ ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
 bool ClockNetwork::set_tap_bounding_box(const ClockTapId& tap_id, const vtr::Rect<size_t>& bb) {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* Check the bounding box, ensure it must be valid */
-  if (bb.height() < 0 || bb.width() < 0) {
+  if (bb.xmax() < bb.xmin() || bb.ymax() < bb.ymin()) {
      VTR_LOG_ERROR("Invalid bounding box (xlow=%lu, ylow=%lu) -> (xhigh=%lu, yhigh=%lu)! Must follow: xlow <= xhigh, ylow <= yhigh!\n", bb.xmin(), bb.ymin(), bb.xmax(), bb.ymax());
      return false;
   }
@@ -728,25 +727,25 @@ bool ClockNetwork::set_tap_bounding_box(const ClockTapId& tap_id, const vtr::Rec
   return true;
 }
 
-bool ClockNetwork::set_tap_step_x(const ClockTapId& tap_id, const size_t step) {
+bool ClockNetwork::set_tap_step_x(const ClockTapId& tap_id, const size_t& step) {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* Must be a valid step >= 1 */
   if (step == 0) {
      VTR_LOG_ERROR("Invalid x-direction step (=%lu) for any bounding box! Expect an integer >= 1!\n", step);
      return false;
   }
-  tap_bbs_[tap_id].set_x(step);
+  tap_bb_steps_[tap_id].set_x(step);
   return true;
 }
 
-bool ClockNetwork::set_tap_step_y(const ClockTapId& tap_id, const size_t step) {
+bool ClockNetwork::set_tap_step_y(const ClockTapId& tap_id, const size_t& step) {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* Must be a valid step >= 1 */
   if (step == 0) {
      VTR_LOG_ERROR("Invalid y-direction step (=%lu) for any bounding box! Expect an integer >= 1!\n", step);
      return false;
   }
-  tap_bbs_[tap_id].set_y(step);
+  tap_bb_steps_[tap_id].set_y(step);
   return true;
 }
 
