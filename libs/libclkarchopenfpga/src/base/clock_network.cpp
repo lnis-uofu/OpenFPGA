@@ -363,7 +363,8 @@ std::string ClockNetwork::tap_to_port(const ClockTapId& tap_id) const {
   return tap_to_ports_[tap_id];
 }
 
-ClockNetwork::e_tap_type ClockNetwork::tap_type(const ClockTapId& tap_id) const {
+ClockNetwork::e_tap_type ClockNetwork::tap_type(
+  const ClockTapId& tap_id) const {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* If not a region, it is a default type covering all the coordinates*/
   if (tap_bbs_[tap_id] == empty_tap_bb_) {
@@ -378,56 +379,62 @@ ClockNetwork::e_tap_type ClockNetwork::tap_type(const ClockTapId& tap_id) const 
 
 size_t ClockNetwork::tap_x(const ClockTapId& tap_id) const {
   VTR_ASSERT(tap_type(tap_id) == ClockNetwork::e_tap_type::SINGLE);
-  return tap_bbs_[tap_id].xmin(); 
+  return tap_bbs_[tap_id].xmin();
 }
 
 size_t ClockNetwork::tap_y(const ClockTapId& tap_id) const {
   VTR_ASSERT(tap_type(tap_id) == ClockNetwork::e_tap_type::SINGLE);
-  return tap_bbs_[tap_id].ymin(); 
+  return tap_bbs_[tap_id].ymin();
 }
 
-vtr::Rect<size_t> ClockNetwork::tap_bounding_box(const ClockTapId& tap_id) const {
+vtr::Rect<size_t> ClockNetwork::tap_bounding_box(
+  const ClockTapId& tap_id) const {
   VTR_ASSERT(tap_type(tap_id) == ClockNetwork::e_tap_type::REGION);
-  return tap_bbs_[tap_id]; 
+  return tap_bbs_[tap_id];
 }
 
 size_t ClockNetwork::tap_step_x(const ClockTapId& tap_id) const {
   VTR_ASSERT(tap_type(tap_id) == ClockNetwork::e_tap_type::REGION);
-  return tap_bb_steps_[tap_id].x(); 
+  return tap_bb_steps_[tap_id].x();
 }
 
 size_t ClockNetwork::tap_step_y(const ClockTapId& tap_id) const {
   VTR_ASSERT(tap_type(tap_id) == ClockNetwork::e_tap_type::REGION);
-  return tap_bb_steps_[tap_id].y(); 
+  return tap_bb_steps_[tap_id].y();
 }
 
-bool ClockNetwork::valid_tap_coord_in_bb(const ClockTapId& tap_id, const vtr::Point<size_t>& tap_coord) const {
+bool ClockNetwork::valid_tap_coord_in_bb(
+  const ClockTapId& tap_id, const vtr::Point<size_t>& tap_coord) const {
   VTR_ASSERT(valid_tap_id(tap_id));
   if (tap_type(tap_id) == ClockNetwork::e_tap_type::ALL) {
     return true;
   }
-  if (tap_type(tap_id) == ClockNetwork::e_tap_type::SINGLE && tap_bbs_[tap_id].strictly_contains(tap_coord)) {
+  if (tap_type(tap_id) == ClockNetwork::e_tap_type::SINGLE &&
+      tap_bbs_[tap_id].strictly_contains(tap_coord)) {
     return true;
   }
-  if (tap_type(tap_id) == ClockNetwork::e_tap_type::REGION && tap_bbs_[tap_id].strictly_contains(tap_coord)) {
+  if (tap_type(tap_id) == ClockNetwork::e_tap_type::REGION &&
+      tap_bbs_[tap_id].strictly_contains(tap_coord)) {
     /* Check if steps are considered, coords still matches */
     bool x_in_bb = false;
-    for (size_t ix = tap_bbs_[tap_id].xmin(); ix < tap_bbs_[tap_id].xmax(); ix = ix + tap_bb_steps_[tap_id].x()) {
+    for (size_t ix = tap_bbs_[tap_id].xmin(); ix < tap_bbs_[tap_id].xmax();
+         ix = ix + tap_bb_steps_[tap_id].x()) {
       if (tap_coord.x() == ix) {
         x_in_bb = true;
         break;
-      } 
+      }
     }
     /* Early exit */
     if (!x_in_bb) {
       return false;
     }
     bool y_in_bb = false;
-    for (size_t iy = tap_bbs_[tap_id].ymin(); iy < tap_bbs_[tap_id].ymax(); iy = iy + tap_bb_steps_[tap_id].y()) {
+    for (size_t iy = tap_bbs_[tap_id].ymin(); iy < tap_bbs_[tap_id].ymax();
+         iy = iy + tap_bb_steps_[tap_id].y()) {
       if (tap_coord.y() == iy) {
         y_in_bb = true;
         break;
-      } 
+      }
     }
     if (y_in_bb && x_in_bb) {
       return true;
@@ -437,7 +444,8 @@ bool ClockNetwork::valid_tap_coord_in_bb(const ClockTapId& tap_id, const vtr::Po
 }
 
 std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
-  const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id, const vtr::Point<size_t>& tap_coord) const {
+  const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id,
+  const vtr::Point<size_t>& tap_coord) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   std::vector<std::string> flatten_taps;
   for (ClockTapId tap_id : tree_taps_[tree_id]) {
@@ -459,7 +467,7 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
     if (from_port.get_lsb() != size_t(clk_pin_id)) {
       continue;
     }
-    /* Filter out unmatched coordinates */ 
+    /* Filter out unmatched coordinates */
     if (!valid_tap_coord_in_bb(tap_id, tap_coord)) {
       continue;
     }
@@ -761,7 +769,8 @@ ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
                                       const std::string& from_port,
                                       const std::string& to_port) {
   VTR_ASSERT(valid_tree_id(tree_id));
-  /* TODO: Consider find existing tap template and avoid duplication in storage */
+  /* TODO: Consider find existing tap template and avoid duplication in storage
+   */
   ClockTapId tap_id = ClockTapId(tap_ids_.size());
   tap_ids_.push_back(tap_id);
   tap_from_ports_.push_back(from_port);
@@ -772,34 +781,46 @@ ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
   return tap_id;
 }
 
-bool ClockNetwork::set_tap_bounding_box(const ClockTapId& tap_id, const vtr::Rect<size_t>& bb) {
+bool ClockNetwork::set_tap_bounding_box(const ClockTapId& tap_id,
+                                        const vtr::Rect<size_t>& bb) {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* Check the bounding box, ensure it must be valid */
   if (bb.xmax() < bb.xmin() || bb.ymax() < bb.ymin()) {
-     VTR_LOG_ERROR("Invalid bounding box (xlow=%lu, ylow=%lu) -> (xhigh=%lu, yhigh=%lu)! Must follow: xlow <= xhigh, ylow <= yhigh!\n", bb.xmin(), bb.ymin(), bb.xmax(), bb.ymax());
-     return false;
+    VTR_LOG_ERROR(
+      "Invalid bounding box (xlow=%lu, ylow=%lu) -> (xhigh=%lu, yhigh=%lu)! "
+      "Must follow: xlow <= xhigh, ylow <= yhigh!\n",
+      bb.xmin(), bb.ymin(), bb.xmax(), bb.ymax());
+    return false;
   }
   tap_bbs_[tap_id] = bb;
   return true;
 }
 
-bool ClockNetwork::set_tap_step_x(const ClockTapId& tap_id, const size_t& step) {
+bool ClockNetwork::set_tap_step_x(const ClockTapId& tap_id,
+                                  const size_t& step) {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* Must be a valid step >= 1 */
   if (step == 0) {
-     VTR_LOG_ERROR("Invalid x-direction step (=%lu) for any bounding box! Expect an integer >= 1!\n", step);
-     return false;
+    VTR_LOG_ERROR(
+      "Invalid x-direction step (=%lu) for any bounding box! Expect an integer "
+      ">= 1!\n",
+      step);
+    return false;
   }
   tap_bb_steps_[tap_id].set_x(step);
   return true;
 }
 
-bool ClockNetwork::set_tap_step_y(const ClockTapId& tap_id, const size_t& step) {
+bool ClockNetwork::set_tap_step_y(const ClockTapId& tap_id,
+                                  const size_t& step) {
   VTR_ASSERT(valid_tap_id(tap_id));
   /* Must be a valid step >= 1 */
   if (step == 0) {
-     VTR_LOG_ERROR("Invalid y-direction step (=%lu) for any bounding box! Expect an integer >= 1!\n", step);
-     return false;
+    VTR_LOG_ERROR(
+      "Invalid y-direction step (=%lu) for any bounding box! Expect an integer "
+      ">= 1!\n",
+      step);
+    return false;
   }
   tap_bb_steps_[tap_id].set_y(step);
   return true;
@@ -957,10 +978,8 @@ bool ClockNetwork::valid_internal_driver_id(
          (int_driver_id == internal_driver_ids_[int_driver_id]);
 }
 
-bool ClockNetwork::valid_tap_id(
-  const ClockTapId& tap_id) const {
-  return (size_t(tap_id) < tap_ids_.size()) &&
-         (tap_id == tap_ids_[tap_id]);
+bool ClockNetwork::valid_tap_id(const ClockTapId& tap_id) const {
+  return (size_t(tap_id) < tap_ids_.size()) && (tap_id == tap_ids_[tap_id]);
 }
 
 bool ClockNetwork::valid_level_id(const ClockTreeId& tree_id,

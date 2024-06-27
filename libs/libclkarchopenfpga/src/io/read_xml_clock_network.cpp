@@ -29,8 +29,8 @@ namespace openfpga {  // Begin namespace openfpga
  *******************************************************************/
 static void read_xml_clock_tree_tap_type_all(pugi::xml_node& xml_tap,
                                              const pugiutil::loc_data& loc_data,
-                                    ClockNetwork& clk_ntwk,
-                                    const ClockTreeId& tree_id) {
+                                             ClockNetwork& clk_ntwk,
+                                             const ClockTreeId& tree_id) {
   if (!clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
                    "Invalid id of a clock tree!\n");
@@ -48,10 +48,9 @@ static void read_xml_clock_tree_tap_type_all(pugi::xml_node& xml_tap,
 /********************************************************************
  * Parse XML codes of a <single> to an object of ClockNetwork
  *******************************************************************/
-static void read_xml_clock_tree_tap_type_single(pugi::xml_node& xml_tap,
-                                             const pugiutil::loc_data& loc_data,
-                                    ClockNetwork& clk_ntwk,
-                                    const ClockTreeId& tree_id) {
+static void read_xml_clock_tree_tap_type_single(
+  pugi::xml_node& xml_tap, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
   if (!clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
                    "Invalid id of a clock tree!\n");
@@ -63,25 +62,26 @@ static void read_xml_clock_tree_tap_type_single(pugi::xml_node& xml_tap,
   std::string to_pin_name =
     get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
       .as_string();
-  ClockTapId tap_id = clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
+  ClockTapId tap_id =
+    clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
 
   /* Single tap only require a coordinate */
-  size_t tap_x =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_X, loc_data, pugiutil::ReqOpt::REQUIRED)
-      .as_int();
-  size_t tap_y =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y, loc_data, pugiutil::ReqOpt::REQUIRED)
-      .as_int();
-  clk_ntwk.set_tap_bounding_box(tap_id, vtr::Rect<size_t>(tap_x, tap_y, tap_x, tap_y));
+  size_t tap_x = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_X,
+                               loc_data, pugiutil::ReqOpt::REQUIRED)
+                   .as_int();
+  size_t tap_y = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y,
+                               loc_data, pugiutil::ReqOpt::REQUIRED)
+                   .as_int();
+  clk_ntwk.set_tap_bounding_box(tap_id,
+                                vtr::Rect<size_t>(tap_x, tap_y, tap_x, tap_y));
 }
 
 /********************************************************************
  * Parse XML codes of a <region> to an object of ClockNetwork
  *******************************************************************/
-static void read_xml_clock_tree_tap_type_region(pugi::xml_node& xml_tap,
-                                             const pugiutil::loc_data& loc_data,
-                                    ClockNetwork& clk_ntwk,
-                                    const ClockTreeId& tree_id) {
+static void read_xml_clock_tree_tap_type_region(
+  pugi::xml_node& xml_tap, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
   if (!clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
                    "Invalid id of a clock tree!\n");
@@ -93,22 +93,26 @@ static void read_xml_clock_tree_tap_type_region(pugi::xml_node& xml_tap,
   std::string to_pin_name =
     get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
       .as_string();
-  ClockTapId tap_id = clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
+  ClockTapId tap_id =
+    clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
 
   /* Region require a bounding box */
   size_t tap_start_x =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX, loc_data, pugiutil::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX, loc_data,
+                  pugiutil::ReqOpt::REQUIRED)
       .as_int();
   size_t tap_start_y =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY, loc_data, pugiutil::ReqOpt::REQUIRED)
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY, loc_data,
+                  pugiutil::ReqOpt::REQUIRED)
       .as_int();
-  size_t tap_end_x =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX, loc_data, pugiutil::ReqOpt::REQUIRED)
-      .as_int();
-  size_t tap_end_y =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY, loc_data, pugiutil::ReqOpt::REQUIRED)
-      .as_int();
-  clk_ntwk.set_tap_bounding_box(tap_id, vtr::Rect<size_t>(tap_start_x, tap_start_y, tap_end_x, tap_end_y));
+  size_t tap_end_x = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX,
+                                   loc_data, pugiutil::ReqOpt::REQUIRED)
+                       .as_int();
+  size_t tap_end_y = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY,
+                                   loc_data, pugiutil::ReqOpt::REQUIRED)
+                       .as_int();
+  clk_ntwk.set_tap_bounding_box(
+    tap_id, vtr::Rect<size_t>(tap_start_x, tap_start_y, tap_end_x, tap_end_y));
 
   /* Default step is all 1 */
   size_t tap_step_x =
@@ -129,12 +133,17 @@ static void read_xml_clock_tree_taps(pugi::xml_node& xml_taps,
     /* Error out if the XML child has an invalid name! */
     if (xml_tap.name() == std::string(XML_CLOCK_TREE_TAP_ALL_NODE_NAME)) {
       read_xml_clock_tree_tap_type_all(xml_tap, loc_data, clk_ntwk, tree_id);
-    } else if (xml_tap.name() == std::string(XML_CLOCK_TREE_TAP_REGION_NODE_NAME)) {
+    } else if (xml_tap.name() ==
+               std::string(XML_CLOCK_TREE_TAP_REGION_NODE_NAME)) {
       read_xml_clock_tree_tap_type_region(xml_tap, loc_data, clk_ntwk, tree_id);
-    } else if (xml_tap.name() == std::string(XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME)) {
+    } else if (xml_tap.name() ==
+               std::string(XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME)) {
       read_xml_clock_tree_tap_type_single(xml_tap, loc_data, clk_ntwk, tree_id);
     } else {
-      bad_tag(xml_taps, loc_data, xml_tap, {XML_CLOCK_TREE_TAP_ALL_NODE_NAME, XML_CLOCK_TREE_TAP_REGION_NODE_NAME, XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME});
+      bad_tag(
+        xml_taps, loc_data, xml_tap,
+        {XML_CLOCK_TREE_TAP_ALL_NODE_NAME, XML_CLOCK_TREE_TAP_REGION_NODE_NAME,
+         XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME});
     }
   }
 }

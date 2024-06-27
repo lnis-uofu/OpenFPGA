@@ -171,15 +171,17 @@ static int route_clock_tree_rr_graph(
           for (RREdgeId edge : rr_graph.edge_range(src_node)) {
             RRNodeId des_node = rr_graph.edge_sink_node(edge);
             if (rr_graph.node_type(des_node) == IPIN) {
-              /* Check if the IPIN is mapped, if not, do not connect */ 
-              /* if the IPIN is mapped, only connect when net mapping is expected */ 
+              /* Check if the IPIN is mapped, if not, do not connect */
+              /* if the IPIN is mapped, only connect when net mapping is
+               * expected */
               if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
                 continue;
               }
               if (!vpr_routing_annotation.rr_node_net(des_node)) {
                 continue;
               }
-              if (vpr_routing_annotation.rr_node_net(des_node) != tree2clk_pin_map.at(ipin)) {
+              if (vpr_routing_annotation.rr_node_net(des_node) !=
+                  tree2clk_pin_map.at(ipin)) {
                 continue;
               }
               VTR_ASSERT(rr_graph.valid_node(src_node));
