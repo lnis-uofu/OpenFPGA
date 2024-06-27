@@ -96,6 +96,8 @@ static int route_clock_tree_rr_graph(
     for (auto ipin : clk_ntwk.pins(clk_tree)) {
       /* Do not route unused clock spines */
       if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
+        VTR_LOGV(verbose, "Skip routing backbone of unused spine '%s'...\n",
+                 clk_ntwk.spine_name(ispine).c_str());
         continue;
       }
       /* Route the spine from starting point to ending point */
