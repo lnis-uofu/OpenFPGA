@@ -18,16 +18,13 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
-                         const DeviceContext& vpr_device_ctx,
-                         const AtomContext& atom_ctx,
-                         const ClusteredNetlist& cluster_nlist,
-                         const PlacementContext& vpr_place_ctx,
-                         const VprNetlistAnnotation& netlist_annotation,
-                         const RRClockSpatialLookup& clk_rr_lookup,
-                         const ClockNetwork& clk_ntwk,
-                         const PinConstraints& pin_constraints,
-                         const bool& verbose);
+int route_clock_rr_graph(
+  VprRoutingAnnotation& vpr_routing_annotation,
+  const DeviceContext& vpr_device_ctx, const AtomContext& atom_ctx,
+  const ClusteredNetlist& cluster_nlist, const PlacementContext& vpr_place_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
+  const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
+  const PinConstraints& pin_constraints, const bool& verbose);
 
 } /* end namespace openfpga */
 

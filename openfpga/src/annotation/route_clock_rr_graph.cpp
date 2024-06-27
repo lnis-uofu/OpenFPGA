@@ -1,12 +1,12 @@
 #include "route_clock_rr_graph.h"
 
 #include "command_exit_codes.h"
+#include "openfpga_annotate_routing.h"
 #include "openfpga_atom_netlist_utils.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "openfpga_annotate_routing.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -177,17 +177,23 @@ static int route_clock_tree_rr_graph(
               /* if the IPIN is mapped, only connect when net mapping is
                * expected */
               if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
-                VTR_LOGV(verbose, "Skip routing clock tap of spine '%s' as the tree is not used\n",
+                VTR_LOGV(verbose,
+                         "Skip routing clock tap of spine '%s' as the tree is "
+                         "not used\n",
                          clk_ntwk.spine_name(ispine).c_str());
                 continue;
               }
               if (!rr_node_gnets[des_node]) {
-                VTR_LOGV(verbose, "Skip routing clock tap of spine '%s' as the IPIN is not mapped\n",
+                VTR_LOGV(verbose,
+                         "Skip routing clock tap of spine '%s' as the IPIN is "
+                         "not mapped\n",
                          clk_ntwk.spine_name(ispine).c_str());
                 continue;
               }
               if (rr_node_gnets[des_node] != tree2clk_pin_map.at(ipin)) {
-                VTR_LOGV(verbose, "Skip routing clock tap of spine '%s' as the net mapping does not match clock net\n",
+                VTR_LOGV(verbose,
+                         "Skip routing clock tap of spine '%s' as the net "
+                         "mapping does not match clock net\n",
                          clk_ntwk.spine_name(ispine).c_str());
                 continue;
               }
@@ -216,16 +222,13 @@ static int route_clock_tree_rr_graph(
  * - configure the routing annotation w.r.t. the clock node connections
  * - quick check to ensure routing is valid
  *******************************************************************/
-int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
-                         const DeviceContext& vpr_device_ctx,
-                         const AtomContext& atom_ctx,
-                         const ClusteredNetlist& cluster_nlist,
-                         const PlacementContext& vpr_place_ctx,
-                         const VprNetlistAnnotation& netlist_annotation,
-                         const RRClockSpatialLookup& clk_rr_lookup,
-                         const ClockNetwork& clk_ntwk,
-                         const PinConstraints& pin_constraints,
-                         const bool& verbose) {
+int route_clock_rr_graph(
+  VprRoutingAnnotation& vpr_routing_annotation,
+  const DeviceContext& vpr_device_ctx, const AtomContext& atom_ctx,
+  const ClusteredNetlist& cluster_nlist, const PlacementContext& vpr_place_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
+  const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
+  const PinConstraints& pin_constraints, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Route programmable clock network based on routing resource graph");
 
@@ -256,7 +259,9 @@ int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
   }
 
   /* Build rr_node-to-net mapping for global nets */
-  vtr::vector<RRNodeId, ClusterNetId> rr_node_gnets = annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx, verbose);
+  vtr::vector<RRNodeId, ClusterNetId> rr_node_gnets =
+    annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx,
+                                verbose);
 
   /* Route spines one by one */
   for (auto itree : clk_ntwk.trees()) {
@@ -274,8 +279,8 @@ int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
     VTR_LOGV(verbose, "Routing clock tree '%s'...\n",
              clk_ntwk.tree_name(itree).c_str());
     status = route_clock_tree_rr_graph(
-      vpr_routing_annotation, vpr_device_ctx.rr_graph, clk_rr_lookup, rr_node_gnets,
-      tree2clk_pin_map, clk_ntwk, itree, verbose);
+      vpr_routing_annotation, vpr_device_ctx.rr_graph, clk_rr_lookup,
+      rr_node_gnets, tree2clk_pin_map, clk_ntwk, itree, verbose);
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
     }
