@@ -30,7 +30,9 @@ Using the clock network description language, users can define multiple clock ne
         </switch_point>
       </spine>  
       <taps>
-        <tap tile_pin="<string>"/>
+        <all from_pin="<string>" to_pin="<string>"/>
+        <region from_pin="<string>" to_pin="<string>" start_x="<int>" start_y="<int>" end_x="<int>" end_y="<int>" repeat_x="<int>" repeat_y="<int>"/>
+        <single from_pin="<string>" to_pin="<string>" x="<int>" y="<int>"/>
       </taps>
     </clock_network>  
   </clock_networks> 
@@ -209,23 +211,67 @@ where the clock routing can be driven at (x=1,y=1) by the output pins ``O[0:3]``
 Tap Point Settings
 ^^^^^^^^^^^^^^^^^^
 
-The following syntax are applicable to the XML definition tagged by ``tap``.
+The following syntax are applicable to the XML definition tagged by ``all``, ``region`` and ``single``.
 Note that a number of tap points can be defined under the node ``taps``.
 
-.. option:: tile_pin="<string>"
+.. option:: from_pin="<string>"
 
-  Define the pin of a programmable block to be tapped by a clock network. The pin must be a valid pin defined in the VPR architecture description file.
+  Define the source pin of a programmable block to be tapped by a clock network. The pin must be a valid pin of the global ports defined in the tile_annotation part of OpenFPGA architecture description file.
+
+.. option:: to_pin="<string>"
+
+  Define the destination pin of a programmable block to be tapped by a clock network. The pin must be a valid pin defined in the VPR architecture description file.
 
 .. note:: Only the leaf clock spine (not switch points to drive other clock spine) can tap pins of programmable blocks.
+
+.. note:: Each coordinate must be a valid integer within the device height and width that are defined in VPR architecture!!!
+
+.. warning:: The following syntax are only applicable to ``single`` tap mode.
+
+.. option:: x="<int>"
+
+  Define the x coordinate of the tap point, which is applied to the destination pin ``to_pin``
+
+.. option:: y="<int>"
+
+  Define the y coordinate of the tap point, which is applied to the destination pin ``to_pin``
+
+.. warning:: The following syntax are only applicable to ``region`` tap mode.
+
+.. option:: start_x="<int>"
+
+  Define the starting x coordinate of the tap region, which is applied to the destination pin ``to_pin``
+
+.. option:: start_y="<int>"
+
+  Define the starting y coordinate of the tap region, which is applied to the destination pin ``to_pin``
+
+.. option:: end_x="<int>"
+
+  Define the ending x coordinate of the tap region, which is applied to the destination pin ``to_pin``
+
+.. option:: end_y="<int>"
+
+  Define the ending y coordinate of the tap region, which is applied to the destination pin ``to_pin``
+
+.. option:: repeat_x="<int>"
+
+  Define the repeating factor on x coordinate of the tap region, which is applied to the destination pin ``to_pin``
+
+.. option:: repeat_y="<int>"
+
+  Define the repeating factor on y coordinate of the tap region, which is applied to the destination pin ``to_pin``
 
 For example,
 
 .. code-block:: xml
 
-  <clock_network name="clk_tree_0" width="1">
+  <clock_network name="clk_tree_0" width="2">
     <!-- Some clock spines -->
     <taps>
-      <tap tile_pin="clb.clk"/>
+      <all from_pin="clk[0:0]" to_pin="clb.clk[0:0]"/>
+      <region from_pin="clk[1:1]" to_pin="clb.clk[1:1]" start_x="1" start_y="1" end_x="4" end_y="4" repeat_x="2" repeat_y="2"/>
+      <single from_pin="clk[1:1]" to_pin="clb.clk[1:1]" x="2" y="2"/>
     </taps>
   </clock_network>
 
@@ -235,7 +281,7 @@ where all the clock spines of the clock network ``clk_tree_0`` tap the clock pin
 
   <tile name="clb">
    <sub_tile name="clb">
-     <clock name="clk" num_pins="1"/>
+     <clock name="clk" num_pins="2"/>
    </sub_tile>
   </tile>
 
