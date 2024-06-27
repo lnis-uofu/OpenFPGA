@@ -8,9 +8,53 @@
 #include "old_traceback.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/********************************************************************
+ * Create a mapping between each rr_node and its mapped nets
+ * - Only applicable to global nets for dedicated clock routing purpose
+ * - Note that this function is different than annotate_vpr_rr_nodes()
+ *   Please do not annotate global nets in vpr_routing_annotation!
+ *******************************************************************/
+vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(const DeviceContext& device_ctx,
+                                                                const ClusteredNetlist& cluster_nlist,
+                                                                const PlacementContext& placement_ctx,
+                                                                const bool& verbose) {
+  vtr::vector<RRNodeId, ClusterNetId> rr_node_nets;
+
+  size_t counter = 0;
+  vtr::ScopedStartFinishTimer timer("Annotating rr_node with global nets");
+
+  const auto& rr_graph = device_ctx.rr_graph;
+
+  rr_node_nets.resize(rr_graph.num_nodes(), ClusterNetId::INVALID());
+  
+  size_t layer = 0;
+
+  for (ClusterNetId net_id : cluster_nlist.nets()) {
+    if (!cluster_nlist.net_is_ignored(net_id)) {
+      continue;
+    }
+    /* Walk through all the sinks */
+    for (ClusterPinId pin_id : cluster_nlist.net_pins(net_id)) { 
+      ClusterBlockId block_id = cluster_nlist.pin_block(pin_id);
+      t_block_loc blk_loc = get_block_loc(block_id, false); 
+      int phy_pin = placement_ctx.physical_pins[pin_id];
+      std::vector<RRNodeId> curr_rr_nodes = rr_graph.node_lookup().find_nodes_at_all_sides(layer, blk_loc.loc.x, blk_loc.loc.y, IPIN, phy_pin);
+      for (RRNodeId curr_rr_node : curr_rr_nodes) {
+        rr_node_nets[curr_rr_node] = net_id;
+      }
+    }
+  }
+
+  VTR_LOGV(verbose, "Done with %d nodes mapping\n", counter);
+
+
+  return rr_node_nets;
+}
 
 /********************************************************************
  * Create a mapping between each rr_node and its mapped nets
