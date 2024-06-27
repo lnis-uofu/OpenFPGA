@@ -17,10 +17,10 @@
     <spine name="rib_lvl1_lower_left" start_x="2" start_y="1" end_x="1" end_y="1"/> 
     <spine name="rib_lvl1_lower_right" start_x="2" start_y="1" end_x="3" end_y="1"/> 
     <taps>
-      <tap tile_pin="io[0:23].clk[0:7]"/>
-      <tap tile_pin="clb[0:0].clk[0:7]"/>
-      <tap tile_pin="dsp[0:0].clk[0:7]"/>
-      <tap tile_pin="bram[0:0].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="io[0:23].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="dsp[0:0].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="bram[0:0].clk[0:7]"/>
     </taps>
   </clock_network>  
 </clock_networks> 

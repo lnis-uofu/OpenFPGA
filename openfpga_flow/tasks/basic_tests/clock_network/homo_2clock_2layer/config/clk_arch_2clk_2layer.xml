@@ -11,8 +11,8 @@
     <spine name="rib_lvl1_sw1_upper" start_x="2" start_y="2" end_x="2" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
     <spine name="rib_lvl1_sw1_lower" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
     <taps>
-      <tap tile_pin="clb[0:0].clk[0:0]"/>
-      <tap tile_pin="clb[0:0].clk[1:1]"/>
+      <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
+      <all from_pin="clk[1:1]" to_pin="clb[0:0].clk[1:1]"/>
     </taps>
   </clock_network>  
 </clock_networks> 
