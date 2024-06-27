@@ -91,13 +91,14 @@ static int route_clock_tree_rr_graph(
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
+  const bool& disable_unused_trees,
   const bool& verbose) {
   for (auto ispine : clk_ntwk.spines(clk_tree)) {
     VTR_LOGV(verbose, "Routing spine '%s'...\n",
              clk_ntwk.spine_name(ispine).c_str());
     for (auto ipin : clk_ntwk.pins(clk_tree)) {
       /* Do not route unused clock spines */
-      if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
+      if (disable_unused_trees && tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
         VTR_LOGV(verbose, "Skip routing backbone of unused spine '%s'...\n",
                  clk_ntwk.spine_name(ispine).c_str());
         continue;
@@ -172,6 +173,8 @@ static int route_clock_tree_rr_graph(
             vpr_routing_annotation.set_rr_node_net(des_node,
                                                    tree2clk_pin_map.at(ipin));
             use_int_driver++;
+            VTR_LOGV(verbose, "Routing switch points of spine '%s' at the switching point (%lu, %lu) using internal driver\n",
+                     clk_ntwk.spine_name(ispine).c_str(), src_coord.x(), src_coord.y());
           }
         }
         if (use_int_driver > 1) {
@@ -266,7 +269,10 @@ int route_clock_rr_graph(
   const ClusteredNetlist& cluster_nlist, const PlacementContext& vpr_place_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
-  const PinConstraints& pin_constraints, const bool& verbose) {
+  const PinConstraints& pin_constraints,
+  const bool& disable_unused_trees,
+  const bool& disable_unused_spines,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Route programmable clock network based on routing resource graph");
 
@@ -318,7 +324,7 @@ int route_clock_rr_graph(
              clk_ntwk.tree_name(itree).c_str());
     status = route_clock_tree_rr_graph(
       vpr_routing_annotation, vpr_device_ctx.rr_graph, clk_rr_lookup,
-      rr_node_gnets, tree2clk_pin_map, clk_ntwk, itree, verbose);
+      rr_node_gnets, tree2clk_pin_map, clk_ntwk, itree, disable_unused_trees, verbose);
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
     }
