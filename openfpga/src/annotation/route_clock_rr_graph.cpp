@@ -94,6 +94,10 @@ static int route_clock_tree_rr_graph(
     VTR_LOGV(verbose, "Routing spine '%s'...\n",
              clk_ntwk.spine_name(ispine).c_str());
     for (auto ipin : clk_ntwk.pins(clk_tree)) {
+      /* Do not route unused clock spines */
+      if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
+        continue;
+      }
       /* Route the spine from starting point to ending point */
       std::vector<vtr::Point<int>> spine_coords =
         clk_ntwk.spine_coordinates(ispine);
@@ -165,6 +169,17 @@ static int route_clock_tree_rr_graph(
           for (RREdgeId edge : rr_graph.edge_range(src_node)) {
             RRNodeId des_node = rr_graph.edge_sink_node(edge);
             if (rr_graph.node_type(des_node) == IPIN) {
+              /* Check if the IPIN is mapped, if not, do not connect */ 
+              /* if the IPIN is mapped, only connect when net mapping is expected */ 
+              if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
+                continue;
+              }
+              if (!vpr_routing_annotation.rr_node_net(des_node)) {
+                continue;
+              }
+              if (vpr_routing_annotation.rr_node_net(des_node) != tree2clk_pin_map.at(ipin)) {
+                continue;
+              }
               VTR_ASSERT(rr_graph.valid_node(src_node));
               VTR_ASSERT(rr_graph.valid_node(des_node));
               vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
