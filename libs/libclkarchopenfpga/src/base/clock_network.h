@@ -164,7 +164,7 @@ class ClockNetwork {
    * resource graph Note that the clk_pin_id limits only 1 clock to be accessed
    */
   std::vector<std::string> tree_flatten_tap_to_ports(
-    const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const;
+    const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id, const vtr::Point<size_t>& tap_coord) const;
   /* Find a spine with a given name, if not found, return an valid id, otherwise
    * return an invalid one */
   ClockSpineId find_spine(const std::string& name) const;
@@ -264,6 +264,8 @@ class ClockNetwork {
     const ClockInternalDriverId& int_driver_id) const;
   /* Show if the tap id is a valid for data queries */
   bool valid_tap_id(const ClockTapId& tap_id) const;
+  /* Check if a given coordinate matches the requirements for a tap point */
+  bool valid_tap_coord_in_bb(const ClockTapId& tap_id, const vtr::Point<size_t>& tap_coord) const;
 
  private: /* Private mutators */
   /* Build internal links between spines under a given tree */

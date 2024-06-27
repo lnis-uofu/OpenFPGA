@@ -401,12 +401,68 @@ size_t ClockNetwork::tap_step_y(const ClockTapId& tap_id) const {
   return tap_bb_steps_[tap_id].y(); 
 }
 
+bool ClockNetwork::valid_tap_coord_in_bb(const ClockTapId& tap_id, const vtr::Point<size_t>& tap_coord) const {
+  VTR_ASSERT(valid_tap_id(tap_id));
+  if (tap_type(tap_id) == ClockNetwork::e_tap_type::ALL) {
+    return true;
+  }
+  if (tap_type(tap_id) == ClockNetwork::e_tap_type::SINGLE && tap_bbs_[tap_id].strictly_contains(tap_coord)) {
+    return true;
+  }
+  if (tap_type(tap_id) == ClockNetwork::e_tap_type::REGION && tap_bbs_[tap_id].strictly_contains(tap_coord)) {
+    /* Check if steps are considered, coords still matches */
+    bool x_in_bb = false;
+    for (size_t ix = tap_bbs_[tap_id].xmin(); ix < tap_bbs_[tap_id].xmax(); ix = ix + tap_bb_steps_[tap_id].x()) {
+      if (tap_coord.x() == ix) {
+        x_in_bb = true;
+        break;
+      } 
+    }
+    /* Early exit */
+    if (!x_in_bb) {
+      return false;
+    }
+    bool y_in_bb = false;
+    for (size_t iy = tap_bbs_[tap_id].ymin(); iy < tap_bbs_[tap_id].ymax(); iy = iy + tap_bb_steps_[tap_id].y()) {
+      if (tap_coord.y() == iy) {
+        y_in_bb = true;
+        break;
+      } 
+    }
+    if (y_in_bb && x_in_bb) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
-  const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const {
+  const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id, const vtr::Point<size_t>& tap_coord) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   std::vector<std::string> flatten_taps;
   for (ClockTapId tap_id : tree_taps_[tree_id]) {
     VTR_ASSERT(valid_tap_id(tap_id));
+    /* Filter out unmatched from ports. Expect [clk_pin_id:clk_pin_id] */
+    std::string tap_from_port_name = tap_from_ports_[tap_id];
+    PortParser from_port_parser(tap_from_port_name);
+    BasicPort from_port = from_port_parser.port();
+    if (!from_port.is_valid()) {
+      VTR_LOG_ERROR("Invalid from port name '%s' whose index is not valid\n",
+                    tap_from_port_name.c_str());
+      exit(1);
+    }
+    if (from_port.get_width() != 1) {
+      VTR_LOG_ERROR("Invalid from port name '%s' whose width is not 1\n",
+                    tap_from_port_name.c_str());
+      exit(1);
+    }
+    if (from_port.get_lsb() != size_t(clk_pin_id)) {
+      continue;
+    }
+    /* Filter out unmatched coordinates */ 
+    if (!valid_tap_coord_in_bb(tap_id, tap_coord)) {
+      continue;
+    }
     std::string tap_name = tap_to_ports_[tap_id];
     StringToken tokenizer(tap_name);
     std::vector<std::string> pin_tokens = tokenizer.split(".");

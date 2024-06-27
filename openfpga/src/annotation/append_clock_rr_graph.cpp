@@ -400,7 +400,7 @@ static void try_find_and_add_clock_track2ipin_node(
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
-       clk_ntwk.tree_flatten_taps(clk_tree, clk_pin)) {
+       clk_ntwk.tree_flatten_tap_to_ports(clk_tree, clk_pin, grid_coord)) {
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {
