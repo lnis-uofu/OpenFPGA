@@ -150,7 +150,7 @@ static int route_clock_spine_switch_point(
     return CMD_EXEC_FATAL_ERROR;
   }
   if (use_int_driver == 1) {
-    continue; /* Used internal driver, early pass */
+    return CMD_EXEC_SUCCESS; /* Used internal driver, early pass */
   }
   vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
                                                src_node);
@@ -293,7 +293,7 @@ static int rec_expand_and_route_clock_spine(
         clk_ntwk.spine_switch_point_tap(curr_spine, switch_point_id);
       /* Go recursively for the destination spine */
       bool curr_branch_usage = false;
-      status = rec_expand_and_route_clock_spine(vpr_routing_annotation, curr_branch_usage, rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, des_spine, curr_pin, verbose);
+      status = rec_expand_and_route_clock_spine(vpr_routing_annotation, curr_branch_usage, rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, des_spine, curr_pin, disable_unused_spines, verbose);
       if (CMD_EXEC_SUCCESS != status) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -316,16 +316,16 @@ static int rec_expand_and_route_clock_spine(
       continue;
     } 
     /* Connect only when next stop is used */
-    Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
-    Direction des_spine_direction = clk_ntwk.spine_direction(ispine);
-    ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
-    ClockLevelId des_spine_level = clk_ntwk.spine_level(ispine);
+    Direction src_spine_direction = clk_ntwk.spine_direction(curr_spine);
+    Direction des_spine_direction = clk_ntwk.spine_direction(curr_spine);
+    ClockLevelId src_spine_level = clk_ntwk.spine_level(curr_spine);
+    ClockLevelId des_spine_level = clk_ntwk.spine_level(curr_spine);
     RRNodeId src_node =
       clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                              src_spine_level, ipin, src_spine_direction);
+                              src_spine_level, curr_pin, src_spine_direction);
     RRNodeId des_node =
       clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                              des_spine_level, ipin, des_spine_direction);
+                              des_spine_level, curr_pin, des_spine_direction);
     VTR_ASSERT(rr_graph.valid_node(src_node));
     VTR_ASSERT(rr_graph.valid_node(des_node));
     VTR_LOGV(verbose, "Routing backbone of spine '%s' from (x=%lu, y=%lu) to (x=%lu, y=%lu)...\n",
@@ -375,11 +375,16 @@ static int route_clock_tree_rr_graph(
       continue;
     }
     /* Start with the top-level spines. Recursively walk through coordinates and expand on switch points */
-    for (auto top_spine : clk_ntwk.tree_top_spine(clk_tree)) {
-      int status = rec_expand_and_route_clock_spine(vpr_routing_annotation, spine_usage, rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, top_spine, ipin, verbose);
+    bool tree_usage = false;
+    for (auto top_spine : clk_ntwk.tree_top_spines(clk_tree)) {
+      int status = rec_expand_and_route_clock_spine(vpr_routing_annotation, tree_usage, rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, top_spine, ipin, disable_unused_spines, verbose);
       if (CMD_EXEC_SUCCESS != status) {
         return CMD_EXEC_FATAL_ERROR;
       }
+    }
+    if (!tree_usage) {
+      VTR_LOGV(verbose, "Detect unused tree '%s' pin '%lu'...\n",
+               clk_ntwk.tree_name(clk_tree).c_str(), size_t(ipin));
     }
   }
   return CMD_EXEC_SUCCESS;
