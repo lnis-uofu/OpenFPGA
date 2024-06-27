@@ -175,15 +175,21 @@ static int route_clock_tree_rr_graph(
               /* if the IPIN is mapped, only connect when net mapping is
                * expected */
               if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
+                VTR_LOGV(verbose, "Skip routing clock tap of spine '%s' as the tree is not used\n",
+                         clk_ntwk.spine_name(ispine).c_str());
                 continue;
               }
-              if (!vpr_routing_annotation.rr_node_net(des_node)) {
-                continue;
-              }
-              if (vpr_routing_annotation.rr_node_net(des_node) !=
-                  tree2clk_pin_map.at(ipin)) {
-                continue;
-              }
+              //if (!vpr_routing_annotation.rr_node_net(des_node)) {
+              //  VTR_LOGV(verbose, "Skip routing clock tap of spine '%s' as the IPIN is not mapped\n",
+              //           clk_ntwk.spine_name(ispine).c_str());
+              //  continue;
+              //}
+              //if (vpr_routing_annotation.rr_node_net(des_node) !=
+              //    tree2clk_pin_map.at(ipin)) {
+              //  VTR_LOGV(verbose, "Skip routing clock tap of spine '%s' as the net mapping does not match clock net\n",
+              //           clk_ntwk.spine_name(ispine).c_str());
+              //  continue;
+              //}
               VTR_ASSERT(rr_graph.valid_node(src_node));
               VTR_ASSERT(rr_graph.valid_node(des_node));
               vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
