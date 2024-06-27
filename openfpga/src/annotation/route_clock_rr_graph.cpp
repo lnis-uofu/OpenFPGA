@@ -79,6 +79,201 @@ static int build_clock_tree_net_map(
 }
 
 /********************************************************************
+ * Route a selected clock spine in a staight line
+ * - route the spine from the starting point to the ending point
+ *******************************************************************/
+static int route_straight_spines(
+  VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
+  const RRClockSpatialLookup& clk_rr_lookup,
+  const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
+  const ClockSpineId& ispine, const ClockTreePinId& ipin,
+  const bool& verbose) {
+  std::vector<vtr::Point<int>> spine_coords =
+    clk_ntwk.spine_coordinates(ispine);
+  VTR_LOGV(verbose, "Routing backbone of spine '%s'...\n",
+           clk_ntwk.spine_name(ispine).c_str());
+  for (size_t icoord = 0; icoord < spine_coords.size() - 1; ++icoord) {
+    vtr::Point<int> src_coord = spine_coords[icoord];
+    vtr::Point<int> des_coord = spine_coords[icoord + 1];
+    Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
+    Direction des_spine_direction = clk_ntwk.spine_direction(ispine);
+    ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
+    ClockLevelId des_spine_level = clk_ntwk.spine_level(ispine);
+    RRNodeId src_node =
+      clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
+                              src_spine_level, ipin, src_spine_direction);
+    RRNodeId des_node =
+      clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
+                              des_spine_level, ipin, des_spine_direction);
+    VTR_ASSERT(rr_graph.valid_node(src_node));
+    VTR_ASSERT(rr_graph.valid_node(des_node));
+    vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
+                                                 src_node);
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Route a switching points between spines
+ * - connect between two routing tracks (left or right turns)
+ * - connect internal driver to routing track
+ *******************************************************************/
+static int route_spine_switch_points(
+  VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
+  const RRClockSpatialLookup& clk_rr_lookup,
+  const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
+  const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
+  const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
+  const ClockSpineId& ispine, const ClockTreePinId& ipin,
+  const bool& verbose) {
+  VTR_LOGV(verbose, "Routing switch points of spine '%s'...\n",
+           clk_ntwk.spine_name(ispine).c_str());
+  for (ClockSwitchPointId switch_point_id :
+       clk_ntwk.spine_switch_points(ispine)) {
+    vtr::Point<int> src_coord =
+      clk_ntwk.spine_switch_point(ispine, switch_point_id);
+    ClockSpineId des_spine =
+      clk_ntwk.spine_switch_point_tap(ispine, switch_point_id);
+    vtr::Point<int> des_coord = clk_ntwk.spine_start_point(des_spine);
+    Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
+    Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
+    ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
+    ClockLevelId des_spine_level = clk_ntwk.spine_level(des_spine);
+    RRNodeId src_node =
+      clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
+                              src_spine_level, ipin, src_spine_direction);
+    RRNodeId des_node =
+      clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
+                              des_spine_level, ipin, des_spine_direction);
+    VTR_ASSERT(rr_graph.valid_node(src_node));
+    VTR_ASSERT(rr_graph.valid_node(des_node));
+    /* Internal drivers may appear at the switch point. Check if there are
+     * any defined and related rr_node found as incoming edges. If the
+     * global net is mapped to the internal driver, use it as the previous
+     * node  */
+    size_t use_int_driver = 0;
+    if (!clk_ntwk
+           .spine_switch_point_internal_drivers(ispine, switch_point_id)
+           .empty() &&
+        tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+      for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
+        RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
+        if (OPIN != rr_graph.node_type(opin_node)) {
+          continue;
+        }
+        if (rr_node_gnets[opin_node] != tree2clk_pin_map.at(ipin)) {
+          continue;
+        }
+        /* This is the opin node we need, use it as the internal driver */
+        vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
+                                                     opin_node);
+        vpr_routing_annotation.set_rr_node_net(opin_node,
+                                               tree2clk_pin_map.at(ipin));
+        vpr_routing_annotation.set_rr_node_net(des_node,
+                                               tree2clk_pin_map.at(ipin));
+        use_int_driver++;
+        VTR_LOGV(verbose, "Routing switch points of spine '%s' at the switching point (%lu, %lu) using internal driver\n",
+                 clk_ntwk.spine_name(ispine).c_str(), src_coord.x(), src_coord.y());
+      }
+    }
+    if (use_int_driver > 1) {
+      VTR_LOG_ERROR(
+        "Found %lu internal drivers for the switching point (%lu, %lu) for "
+        "spine '%s'!\n Expect only 1!\n",
+        use_int_driver, src_coord.x(), src_coord.y(),
+        clk_ntwk.spine_name(ispine).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    if (use_int_driver == 1) {
+      continue; /* Used internal driver, early pass */
+    }
+    vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
+                                                 src_node);
+    /* It could happen that there is no net mapped some clock pin, skip the
+     * net mapping */
+    if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+      vpr_routing_annotation.set_rr_node_net(src_node,
+                                             tree2clk_pin_map.at(ipin));
+      vpr_routing_annotation.set_rr_node_net(des_node,
+                                             tree2clk_pin_map.at(ipin));
+    }
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Route a spine to its tap points
+ * - Only connect to tap points which are mapped by a global net
+ *******************************************************************/
+static int route_spine_taps(
+  VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
+  const RRClockSpatialLookup& clk_rr_lookup,
+  const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
+  const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
+  const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
+  const ClockSpineId& ispine, const ClockTreePinId& ipin,
+  const bool& verbose) {
+  std::vector<vtr::Point<int>> spine_coords =
+    clk_ntwk.spine_coordinates(ispine);
+  /* Route the spine-to-IPIN connections (only for the last level) */
+  if (clk_ntwk.is_last_level(ispine)) {
+    VTR_LOGV(verbose, "Routing clock taps of spine '%s'...\n",
+             clk_ntwk.spine_name(ispine).c_str());
+    /* Connect to any fan-out node which is IPIN */
+    for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
+      vtr::Point<int> src_coord = spine_coords[icoord];
+      Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
+      ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
+      RRNodeId src_node =
+        clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
+                                src_spine_level, ipin, src_spine_direction);
+      for (RREdgeId edge : rr_graph.edge_range(src_node)) {
+        RRNodeId des_node = rr_graph.edge_sink_node(edge);
+        if (rr_graph.node_type(des_node) == IPIN) {
+          /* Check if the IPIN is mapped, if not, do not connect */
+          /* if the IPIN is mapped, only connect when net mapping is
+           * expected */
+          if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
+            VTR_LOGV(verbose,
+                     "Skip routing clock tap of spine '%s' as the tree is "
+                     "not used\n",
+                     clk_ntwk.spine_name(ispine).c_str());
+            continue;
+          }
+          if (!rr_node_gnets[des_node]) {
+            VTR_LOGV(verbose,
+                     "Skip routing clock tap of spine '%s' as the IPIN is "
+                     "not mapped\n",
+                     clk_ntwk.spine_name(ispine).c_str());
+            continue;
+          }
+          if (rr_node_gnets[des_node] != tree2clk_pin_map.at(ipin)) {
+            VTR_LOGV(verbose,
+                     "Skip routing clock tap of spine '%s' as the net "
+                     "mapping does not match clock net\n",
+                     clk_ntwk.spine_name(ispine).c_str());
+            continue;
+          }
+          VTR_ASSERT(rr_graph.valid_node(src_node));
+          VTR_ASSERT(rr_graph.valid_node(des_node));
+          vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
+                                                       src_node);
+          if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+            vpr_routing_annotation.set_rr_node_net(
+              src_node, tree2clk_pin_map.at(ipin));
+            vpr_routing_annotation.set_rr_node_net(
+              des_node, tree2clk_pin_map.at(ipin));
+          }
+        }
+      }
+    }
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * Route a clock tree on an existing routing resource graph
  * The strategy is to route spine one by one
  * - route the spine from the starting point to the ending point
@@ -106,151 +301,16 @@ static int route_clock_tree_rr_graph(
       /* Route the spine from starting point to ending point */
       std::vector<vtr::Point<int>> spine_coords =
         clk_ntwk.spine_coordinates(ispine);
-      VTR_LOGV(verbose, "Routing backbone of spine '%s'...\n",
-               clk_ntwk.spine_name(ispine).c_str());
-      for (size_t icoord = 0; icoord < spine_coords.size() - 1; ++icoord) {
-        vtr::Point<int> src_coord = spine_coords[icoord];
-        vtr::Point<int> des_coord = spine_coords[icoord + 1];
-        Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
-        Direction des_spine_direction = clk_ntwk.spine_direction(ispine);
-        ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
-        ClockLevelId des_spine_level = clk_ntwk.spine_level(ispine);
-        RRNodeId src_node =
-          clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                                  src_spine_level, ipin, src_spine_direction);
-        RRNodeId des_node =
-          clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                                  des_spine_level, ipin, des_spine_direction);
-        VTR_ASSERT(rr_graph.valid_node(src_node));
-        VTR_ASSERT(rr_graph.valid_node(des_node));
-        vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
-                                                     src_node);
+      if (CMD_EXEC_SUCCESS != route_straight_spines(vpr_routing_annotation, rr_graph, clk_rr_lookup, clk_ntwk, clk_tree, ispine, ipin, verbose)) {
+        return CMD_EXEC_FATAL_ERROR;
       }
-      /* Route the spine-to-spine switching points */
-      VTR_LOGV(verbose, "Routing switch points of spine '%s'...\n",
-               clk_ntwk.spine_name(ispine).c_str());
-      for (ClockSwitchPointId switch_point_id :
-           clk_ntwk.spine_switch_points(ispine)) {
-        vtr::Point<int> src_coord =
-          clk_ntwk.spine_switch_point(ispine, switch_point_id);
-        ClockSpineId des_spine =
-          clk_ntwk.spine_switch_point_tap(ispine, switch_point_id);
-        vtr::Point<int> des_coord = clk_ntwk.spine_start_point(des_spine);
-        Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
-        Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
-        ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
-        ClockLevelId des_spine_level = clk_ntwk.spine_level(des_spine);
-        RRNodeId src_node =
-          clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                                  src_spine_level, ipin, src_spine_direction);
-        RRNodeId des_node =
-          clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                                  des_spine_level, ipin, des_spine_direction);
-        VTR_ASSERT(rr_graph.valid_node(src_node));
-        VTR_ASSERT(rr_graph.valid_node(des_node));
-        /* Internal drivers may appear at the switch point. Check if there are
-         * any defined and related rr_node found as incoming edges. If the
-         * global net is mapped to the internal driver, use it as the previous
-         * node  */
-        size_t use_int_driver = 0;
-        if (!clk_ntwk
-               .spine_switch_point_internal_drivers(ispine, switch_point_id)
-               .empty() &&
-            tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
-          for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
-            RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
-            if (OPIN != rr_graph.node_type(opin_node)) {
-              continue;
-            }
-            if (rr_node_gnets[opin_node] != tree2clk_pin_map.at(ipin)) {
-              continue;
-            }
-            /* This is the opin node we need, use it as the internal driver */
-            vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
-                                                         opin_node);
-            vpr_routing_annotation.set_rr_node_net(opin_node,
-                                                   tree2clk_pin_map.at(ipin));
-            vpr_routing_annotation.set_rr_node_net(des_node,
-                                                   tree2clk_pin_map.at(ipin));
-            use_int_driver++;
-            VTR_LOGV(verbose, "Routing switch points of spine '%s' at the switching point (%lu, %lu) using internal driver\n",
-                     clk_ntwk.spine_name(ispine).c_str(), src_coord.x(), src_coord.y());
-          }
-        }
-        if (use_int_driver > 1) {
-          VTR_LOG_ERROR(
-            "Found %lu internal drivers for the switching point (%lu, %lu) for "
-            "spine '%s'!\n Expect only 1!\n",
-            use_int_driver, src_coord.x(), src_coord.y(),
-            clk_ntwk.spine_name(ispine).c_str());
-          return CMD_EXEC_FATAL_ERROR;
-        }
-        if (use_int_driver == 1) {
-          continue; /* Used internal driver, early pass */
-        }
-        vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
-                                                     src_node);
-        /* It could happen that there is no net mapped some clock pin, skip the
-         * net mapping */
-        if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
-          vpr_routing_annotation.set_rr_node_net(src_node,
-                                                 tree2clk_pin_map.at(ipin));
-          vpr_routing_annotation.set_rr_node_net(des_node,
-                                                 tree2clk_pin_map.at(ipin));
-        }
+      /* Route the opin/spine-to-spine switching points */
+      if (CMD_EXEC_SUCCESS != route_spine_switch_points(vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, ispine, ipin, verbose)) {
+        return CMD_EXEC_FATAL_ERROR;
       }
       /* Route the spine-to-IPIN connections (only for the last level) */
-      if (clk_ntwk.is_last_level(ispine)) {
-        VTR_LOGV(verbose, "Routing clock taps of spine '%s'...\n",
-                 clk_ntwk.spine_name(ispine).c_str());
-        /* Connect to any fan-out node which is IPIN */
-        for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
-          vtr::Point<int> src_coord = spine_coords[icoord];
-          Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
-          ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
-          RRNodeId src_node =
-            clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                                    src_spine_level, ipin, src_spine_direction);
-          for (RREdgeId edge : rr_graph.edge_range(src_node)) {
-            RRNodeId des_node = rr_graph.edge_sink_node(edge);
-            if (rr_graph.node_type(des_node) == IPIN) {
-              /* Check if the IPIN is mapped, if not, do not connect */
-              /* if the IPIN is mapped, only connect when net mapping is
-               * expected */
-              if (tree2clk_pin_map.find(ipin) == tree2clk_pin_map.end()) {
-                VTR_LOGV(verbose,
-                         "Skip routing clock tap of spine '%s' as the tree is "
-                         "not used\n",
-                         clk_ntwk.spine_name(ispine).c_str());
-                continue;
-              }
-              if (!rr_node_gnets[des_node]) {
-                VTR_LOGV(verbose,
-                         "Skip routing clock tap of spine '%s' as the IPIN is "
-                         "not mapped\n",
-                         clk_ntwk.spine_name(ispine).c_str());
-                continue;
-              }
-              if (rr_node_gnets[des_node] != tree2clk_pin_map.at(ipin)) {
-                VTR_LOGV(verbose,
-                         "Skip routing clock tap of spine '%s' as the net "
-                         "mapping does not match clock net\n",
-                         clk_ntwk.spine_name(ispine).c_str());
-                continue;
-              }
-              VTR_ASSERT(rr_graph.valid_node(src_node));
-              VTR_ASSERT(rr_graph.valid_node(des_node));
-              vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
-                                                           src_node);
-              if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
-                vpr_routing_annotation.set_rr_node_net(
-                  src_node, tree2clk_pin_map.at(ipin));
-                vpr_routing_annotation.set_rr_node_net(
-                  des_node, tree2clk_pin_map.at(ipin));
-              }
-            }
-          }
-        }
+      if (CMD_EXEC_SUCCESS != route_spine_taps(vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, ispine, ipin, verbose)) {
+        return CMD_EXEC_FATAL_ERROR;
       }
     }
   }
