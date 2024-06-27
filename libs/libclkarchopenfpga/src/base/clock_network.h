@@ -125,6 +125,10 @@ class ClockNetwork {
   vtr::Point<int> spine_switch_point(
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
+
+  /* Find all the switching points at a given coordinate */
+  std::vector<ClockSwitchPointId> find_spine_switch_points_with_coord(const ClockSpineId& spine_id, const vtr::Point<int>& coord) const;
+
   std::vector<ClockInternalDriverId> spine_switch_point_internal_drivers(
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
