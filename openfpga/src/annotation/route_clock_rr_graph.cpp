@@ -299,7 +299,8 @@ static int rec_expand_and_route_clock_spine(
    * As such, it is easy to turn off spines by any stop.
    * The spine should go in a straight line, connect all the stops on the line */
   bool prev_stop_usage = false;
-  for (size_t icoord = spine_coords.size() - 1; icoord >= 0; --icoord) {
+  std::reverse(spine_coords.begin(), spine_coords.end());
+  for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
     vtr::Point<int> switch_point_coord = spine_coords[icoord];
     bool curr_stop_usage = false;
     /* Expand on the switching point here */
@@ -332,12 +333,14 @@ static int rec_expand_and_route_clock_spine(
       continue;
     } 
     /* Skip the first stop */
-    if (icoord == 0) {
+    if (icoord == spine_coords.size() - 1) {
       continue;
     }
     /* Connect only when next stop is used */
-    vtr::Point<int> src_coord = spine_coords[icoord - 1];
+    vtr::Point<int> src_coord = spine_coords[icoord + 1];
     vtr::Point<int> des_coord = spine_coords[icoord];
+    VTR_LOGV(verbose, "(icoord=%lu) Expanding on backbone of spine '%s' from (x=%lu, y=%lu) to (x=%lu, y=%lu)...\n",
+             icoord, clk_ntwk.spine_name(curr_spine).c_str(), src_coord.x(), src_coord.y(), des_coord.x(), des_coord.y());
     Direction src_spine_direction = clk_ntwk.spine_direction(curr_spine);
     Direction des_spine_direction = clk_ntwk.spine_direction(curr_spine);
     ClockLevelId src_spine_level = clk_ntwk.spine_level(curr_spine);
