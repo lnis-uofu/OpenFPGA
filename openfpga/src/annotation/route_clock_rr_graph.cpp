@@ -147,9 +147,15 @@ static int route_clock_tree_rr_graph(
                                   des_spine_level, ipin, des_spine_direction);
         VTR_ASSERT(rr_graph.valid_node(src_node));
         VTR_ASSERT(rr_graph.valid_node(des_node));
-        /* Internal drivers may appear at the switch point. Check if there are any defined and related rr_node found as incoming edges. If the global net is mapped to the internal driver, use it as the previous node  */
+        /* Internal drivers may appear at the switch point. Check if there are
+         * any defined and related rr_node found as incoming edges. If the
+         * global net is mapped to the internal driver, use it as the previous
+         * node  */
         size_t use_int_driver = 0;
-        if (!clk_ntwk.spine_switch_point_internal_drivers(ispine, switch_point_id).empty() && tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+        if (!clk_ntwk
+               .spine_switch_point_internal_drivers(ispine, switch_point_id)
+               .empty() &&
+            tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
           for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
             RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
             if (OPIN != rr_graph.node_type(opin_node)) {
@@ -169,7 +175,11 @@ static int route_clock_tree_rr_graph(
           }
         }
         if (use_int_driver > 1) {
-          VTR_LOG_ERROR("Found %lu internal drivers for the switching point (%lu, %lu) for spine '%s'!\n Expect only 1!\n", use_int_driver, src_coord.x(), src_coord.y(), clk_ntwk.spine_name(ispine).c_str());
+          VTR_LOG_ERROR(
+            "Found %lu internal drivers for the switching point (%lu, %lu) for "
+            "spine '%s'!\n Expect only 1!\n",
+            use_int_driver, src_coord.x(), src_coord.y(),
+            clk_ntwk.spine_name(ispine).c_str());
           return CMD_EXEC_FATAL_ERROR;
         }
         if (use_int_driver == 1) {
