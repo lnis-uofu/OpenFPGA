@@ -220,7 +220,8 @@ int route_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
   /* add an option '--pin_constraints_file in short '-pcf' */
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_disable_unused_trees = cmd.option("disable_unused_trees");
-  CommandOptionId opt_disable_unused_spines = cmd.option("disable_unused_spines");
+  CommandOptionId opt_disable_unused_spines =
+    cmd.option("disable_unused_spines");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* If pin constraints are enabled by command options, read the file */

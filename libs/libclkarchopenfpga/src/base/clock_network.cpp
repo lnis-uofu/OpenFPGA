@@ -333,9 +333,9 @@ vtr::Point<int> ClockNetwork::spine_switch_point(
   return spine_switch_coords_[spine_id][size_t(switch_point_id)];
 }
 
-std::vector<ClockSwitchPointId> ClockNetwork::find_spine_switch_points_with_coord(
-  const ClockSpineId& spine_id,
-  const vtr::Point<int>& coord) const {
+std::vector<ClockSwitchPointId>
+ClockNetwork::find_spine_switch_points_with_coord(
+  const ClockSpineId& spine_id, const vtr::Point<int>& coord) const {
   VTR_ASSERT(valid_spine_id(spine_id));
   std::vector<ClockSwitchPointId> ret;
   for (size_t i = 0; i < spine_switch_points_[spine_id].size(); ++i) {

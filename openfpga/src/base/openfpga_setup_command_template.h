@@ -710,8 +710,12 @@ ShellCommandId add_route_clock_rr_graph_command_template(
   shell_cmd.set_option_short_name(opt_file, "pcf");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
-  shell_cmd.add_option("disable_unused_trees", false, "Disable entire clock trees when they are not used by any clock nets. Useful to reduce clock power");
-  shell_cmd.add_option("disable_unused_spines", false, "Disable part of the clock tree which are used by clock nets. Useful to reduce clock power");
+  shell_cmd.add_option("disable_unused_trees", false,
+                       "Disable entire clock trees when they are not used by "
+                       "any clock nets. Useful to reduce clock power");
+  shell_cmd.add_option("disable_unused_spines", false,
+                       "Disable part of the clock tree which are used by clock "
+                       "nets. Useful to reduce clock power");
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
