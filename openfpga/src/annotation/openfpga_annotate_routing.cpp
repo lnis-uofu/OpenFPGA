@@ -47,6 +47,7 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(
           layer, blk_loc.loc.x, blk_loc.loc.y, IPIN, phy_pin);
       for (RRNodeId curr_rr_node : curr_rr_nodes) {
         rr_node_nets[curr_rr_node] = net_id;
+        counter++;
       }
     }
   }
