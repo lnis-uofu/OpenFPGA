@@ -269,6 +269,21 @@ static int route_spine_taps(
  *
  *  <-------------------------------------------- direction to walk through
  *
+ *
+ *  On each stop, we expand the spine to switch points and tap points
+ *  - If the previous stop is used (connection to des_spines are required), then the current stop should be connected to the previous stop
+ *  - If previous stop is not used, while the des_spines are required to connect, then the current stop should be connected to the previous stop
+ *  - Only when previous stops and des_spines are not used, the current stop will be NOT connected to the previous stop
+ * 
+ *                    des_spine_top[i]
+ *                       ^
+ *                       |
+ *  spine_curr_stop ---->+->spine_prev_stop
+ *                       |
+ *                       v
+ *                    des_spine_bottom[i]
+
+ *
  *******************************************************************/
 static int rec_expand_and_route_clock_spine(
   VprRoutingAnnotation& vpr_routing_annotation,
@@ -303,6 +318,9 @@ static int rec_expand_and_route_clock_spine(
   for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
     vtr::Point<int> switch_point_coord = spine_coords[icoord];
     bool curr_stop_usage = false;
+    if (icoord == 0) {
+      prev_stop_usage = true; /* The first stop is always used */
+    }
     /* Expand on the switching point here */
     for (ClockSwitchPointId switch_point_id :
          clk_ntwk.find_spine_switch_points_with_coord(curr_spine, switch_point_coord)) {
