@@ -185,8 +185,8 @@ static int route_spine_taps(
   size_t spine_tap_cnt = 0;
   /* Route the spine-to-IPIN connections (only for the last level) */
   if (clk_ntwk.is_last_level(ispine)) {
-    VTR_LOGV(verbose, "Routing clock taps of spine '%s'...\n",
-             clk_ntwk.spine_name(ispine).c_str());
+    VTR_LOGV(verbose, "Routing clock taps of spine '%s' for pin '%d' of tree '%s'...\n",
+             clk_ntwk.spine_name(ispine).c_str(), size_t(ipin), clk_ntwk.tree_name(clk_tree).c_str());
     /* Connect to any fan-out node which is IPIN */
     for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
       vtr::Point<int> src_coord = spine_coords[icoord];
@@ -198,6 +198,8 @@ static int route_spine_taps(
       for (RREdgeId edge : rr_graph.edge_range(src_node)) {
         RRNodeId des_node = rr_graph.edge_sink_node(edge);
         if (rr_graph.node_type(des_node) == IPIN) {
+          VTR_LOGV(verbose, "Trying to route to IPIN '%s'\n",
+                   rr_graph.node_coordinate_to_string(des_node).c_str());
           /* Check if the IPIN is mapped, if not, do not connect */
           /* if the IPIN is mapped, only connect when net mapping is
            * expected */
@@ -393,6 +395,13 @@ static int rec_expand_and_route_clock_spine(
              clk_ntwk.spine_name(curr_spine).c_str(), src_coord.x(),
              src_coord.y(), des_coord.x(), des_coord.y());
     vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node, src_node);
+    /* It could happen that there is no net mapped some clock pin, skip the
+      * net mapping */
+     if (tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
+       vpr_routing_annotation.set_rr_node_net(src_node, tree2clk_pin_map.at(curr_pin));
+       vpr_routing_annotation.set_rr_node_net(des_node, tree2clk_pin_map.at(curr_pin));
+     }
+
     prev_stop_usage = true;
     curr_spine_usage = true;
   }
