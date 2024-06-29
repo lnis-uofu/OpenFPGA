@@ -3,5 +3,6 @@
        - the reset signal to the op_reset[0] port of the FPGA fabric
     -->
   <set_io pin="op_reset[0]" net="reset"/>
+  <set_io pin="op_clk[0]" net="clk"/>
 </pin_constraints>
 
