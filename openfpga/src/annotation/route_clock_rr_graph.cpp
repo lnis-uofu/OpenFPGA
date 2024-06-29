@@ -24,6 +24,7 @@ static int build_clock_tree_net_map(
   const ClusteredNetlist& cluster_nlist, const PinConstraints& pin_constraints,
   const std::vector<ClusterNetId>& gnets, const ClockNetwork& clk_ntwk,
   const ClockTreeId clk_tree, const bool& verbose) {
+  BasicPort tree_gport = clk_ntwk.tree_global_port(clk_tree);
   /* Find the pin id for each clock name, error out if there is any mismatch */
   if (clk_ntwk.num_trees() == 1 && gnets.size() == 1 && clk_ntwk.tree_width(clk_tree) == 1) {
     /* Find cluster net id */
@@ -37,6 +38,7 @@ static int build_clock_tree_net_map(
     for (ClusterNetId gnet : gnets) {
       /* Find the pin information that the net should be mapped to */
       std::string gnet_name = cluster_nlist.net_name(gnet);
+      /* The pin should match be global port name of the tree */
       BasicPort tree_pin = pin_constraints.net_pin(gnet_name);
       if (!tree_pin.is_valid()) {
         VTR_LOG_ERROR(
@@ -52,11 +54,15 @@ static int build_clock_tree_net_map(
           gnet_name.c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
-      if (tree_pin.get_lsb() >= clk_ntwk.tree_width(clk_tree)) {
+      if (tree_gport.get_name() != tree_pin.get_name()) {
+        continue;
+      }
+      if (!tree_gport.contained(tree_pin)) {
         VTR_LOG_ERROR(
-          "Invalid tree pin %s[%lu] is out of range of clock tree size '%lu'\n",
-          tree_pin.get_name().c_str(), tree_pin.get_lsb(),
-          clk_ntwk.tree_width(clk_tree));
+          "Invalid pin constraint port '%s' which is out of range of the global port '%s' of clock tree '%s'\n",
+          tree_pin.to_verilog_string().c_str(),
+          tree_gport.to_verilog_string().c_str(),
+          clk_ntwk.tree_name(clk_tree).c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
       /* TODO: Check the tree_pin.get_name(), see if matches the tree from ports */
