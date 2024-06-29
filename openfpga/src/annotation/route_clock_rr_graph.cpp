@@ -59,6 +59,7 @@ static int build_clock_tree_net_map(
           clk_ntwk.tree_width(clk_tree));
         return CMD_EXEC_FATAL_ERROR;
       }
+      /* TODO: Check the tree_pin.get_name(), see if matches the tree from ports */
       /* Register the pin mapping */
       tree2clk_pin_map[ClockTreePinId(tree_pin.get_lsb())] = gnet;
     }
@@ -457,7 +458,8 @@ int route_clock_rr_graph(
   const DeviceContext& vpr_device_ctx, 
   const ClusteredNetlist& cluster_nlist, const PlacementContext& vpr_place_ctx,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
-  const PinConstraints& pin_constraints, const bool& disable_unused_trees,
+  const PinConstraints& pin_constraints,
+  const bool& disable_unused_trees,
   const bool& disable_unused_spines, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Route programmable clock network based on routing resource graph");
