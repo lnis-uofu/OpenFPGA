@@ -2,7 +2,7 @@
 
 #include "command_exit_codes.h"
 #include "openfpga_annotate_routing.h"
-#include "openfpga_atom_netlist_utils.h"
+#include "openfpga_clustered_netlist_utils.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "vtr_log.h"
@@ -22,27 +22,26 @@ namespace openfpga {
 static int build_clock_tree_net_map(
   std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClusteredNetlist& cluster_nlist, const PinConstraints& pin_constraints,
-  const std::vector<std::string>& clk_names, const ClockNetwork& clk_ntwk,
+  const std::vector<ClusterNetId>& gnets, const ClockNetwork& clk_ntwk,
   const ClockTreeId clk_tree, const bool& verbose) {
   /* Find the pin id for each clock name, error out if there is any mismatch */
-  if (clk_names.size() == 1 && clk_ntwk.tree_width(clk_tree) == 1) {
+  if (clk_ntwk.num_trees() == 1 && gnets.size() == 1 && clk_ntwk.tree_width(clk_tree) == 1) {
     /* Find cluster net id */
-    ClusterNetId clk_net = cluster_nlist.find_net(clk_names[0]);
-    if (!cluster_nlist.valid_net_id(clk_net)) {
-      VTR_LOG_ERROR("Invalid clock name '%s'! Cannot found from netlists!\n",
-                    clk_names[0].c_str());
+    if (!cluster_nlist.valid_net_id(gnets[0])) {
+      VTR_LOG_ERROR("Invalid clock name '%s'! Cannot be found from netlists!\n",
+                    cluster_nlist.net_name(gnets[0]).c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    tree2clk_pin_map[ClockTreePinId(0)] = clk_net;
+    tree2clk_pin_map[ClockTreePinId(0)] = gnets[0];
   } else {
-    for (std::string clk_name : clk_names) {
+    for (ClusterNetId gnet : gnets) {
       /* Find the pin information that the net should be mapped to */
-      BasicPort tree_pin = pin_constraints.net_pin(clk_name);
+      std::string gnet_name = cluster_nlist.net_name(gnet);
+      BasicPort tree_pin = pin_constraints.net_pin(gnet_name);
       if (!tree_pin.is_valid()) {
         VTR_LOG_ERROR(
-          "Invalid tree pin for clock '%s'! Clock name may not be valid "
-          "(mismatched with netlists)!\n",
-          clk_name.c_str());
+          "Global net '%s' is not mapped to a valid pin '%s' in pin constraints!\n",
+          gnet_name.c_str(), tree_pin.to_verilog_string().c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
       if (tree_pin.get_width() != 1) {
@@ -50,7 +49,7 @@ static int build_clock_tree_net_map(
           "Invalid tree pin %s[%lu:%lu] for clock '%s'! Clock pin must have "
           "only a width of 1!\n",
           tree_pin.get_name().c_str(), tree_pin.get_lsb(), tree_pin.get_msb(),
-          clk_name.c_str());
+          gnet_name.c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
       if (tree_pin.get_lsb() >= clk_ntwk.tree_width(clk_tree)) {
@@ -60,15 +59,8 @@ static int build_clock_tree_net_map(
           clk_ntwk.tree_width(clk_tree));
         return CMD_EXEC_FATAL_ERROR;
       }
-      /* Find cluster net id */
-      ClusterNetId clk_net = cluster_nlist.find_net(clk_name);
-      if (!cluster_nlist.valid_net_id(clk_net)) {
-        VTR_LOG_ERROR("Invalid clock name '%s'! Cannot found from netlists!\n",
-                      clk_name.c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
       /* Register the pin mapping */
-      tree2clk_pin_map[ClockTreePinId(tree_pin.get_lsb())] = clk_net;
+      tree2clk_pin_map[ClockTreePinId(tree_pin.get_lsb())] = gnet;
     }
   }
 
@@ -462,9 +454,8 @@ static int route_clock_tree_rr_graph(
  *******************************************************************/
 int route_clock_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation,
-  const DeviceContext& vpr_device_ctx, const AtomContext& atom_ctx,
+  const DeviceContext& vpr_device_ctx, 
   const ClusteredNetlist& cluster_nlist, const PlacementContext& vpr_place_ctx,
-  const VprNetlistAnnotation& netlist_annotation,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
   const PinConstraints& pin_constraints, const bool& disable_unused_trees,
   const bool& disable_unused_spines, const bool& verbose) {
@@ -479,21 +470,20 @@ int route_clock_rr_graph(
     return CMD_EXEC_SUCCESS;
   }
 
-  /* If there are multiple clock signals from the netlist, require pin
+  /* If there are multiple global signals from the netlist, require pin
    * constraints */
-  std::vector<std::string> clock_net_names =
-    find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
-  if (clock_net_names.empty()) {
+  std::vector<ClusterNetId> gnets = find_clustered_netlist_global_nets(cluster_nlist);
+  if (gnets.empty()) {
     VTR_LOG(
-      "Skip due to 0 clocks found from netlist\nDouble check your HDL design "
+      "Skip due to 0 global nets found from netlist\nDouble check your HDL design "
       "if this is unexpected\n");
     return CMD_EXEC_SUCCESS;
   }
-  if (clock_net_names.size() > 1 && pin_constraints.empty()) {
+  if (gnets.size() > 1 && pin_constraints.empty()) {
     VTR_LOG(
-      "There is %lu clock nets (more than 1). Require pin constraints to be "
+      "There is %lu global nets (more than 1). Require pin constraints to be "
       "specified\n",
-      clock_net_names.size());
+      gnets.size());
     return CMD_EXEC_FATAL_ERROR;
   }
 
@@ -504,13 +494,13 @@ int route_clock_rr_graph(
 
   /* Route spines one by one */
   for (auto itree : clk_ntwk.trees()) {
-    VTR_LOGV(verbose, "Build clock name to clock tree '%s' pin mapping...\n",
+    VTR_LOGV(verbose, "Build global net name to clock tree '%s' pin mapping...\n",
              clk_ntwk.tree_name(itree).c_str());
     std::map<ClockTreePinId, ClusterNetId> tree2clk_pin_map;
     int status = CMD_EXEC_SUCCESS;
     status =
       build_clock_tree_net_map(tree2clk_pin_map, cluster_nlist, pin_constraints,
-                               clock_net_names, clk_ntwk, itree, verbose);
+                               gnets, clk_ntwk, itree, verbose);
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
     }
