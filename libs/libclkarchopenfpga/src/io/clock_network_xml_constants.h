@@ -12,7 +12,7 @@ constexpr const char* XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_DRIVER_SWITCH =
   "default_driver_switch";
 constexpr const char* XML_CLOCK_TREE_NODE_NAME = "clock_network";
 constexpr const char* XML_CLOCK_TREE_ATTRIBUTE_NAME = "name";
-constexpr const char* XML_CLOCK_TREE_ATTRIBUTE_WIDTH = "width";
+constexpr const char* XML_CLOCK_TREE_ATTRIBUTE_GLOBAL_PORT = "global_port";
 constexpr const char* XML_CLOCK_SPINE_NODE_NAME = "spine";
 constexpr const char* XML_CLOCK_SPINE_ATTRIBUTE_NAME = "name";
 constexpr const char* XML_CLOCK_SPINE_ATTRIBUTE_START_X = "start_x";

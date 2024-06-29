@@ -194,8 +194,8 @@ static int write_xml_clock_tree(std::fstream& fp, const ClockNetwork& clk_ntwk,
 
   write_xml_attribute(fp, XML_CLOCK_TREE_ATTRIBUTE_NAME,
                       clk_ntwk.tree_name(tree_id).c_str());
-  write_xml_attribute(fp, XML_CLOCK_TREE_ATTRIBUTE_WIDTH,
-                      clk_ntwk.tree_width(tree_id));
+  write_xml_attribute(fp, XML_CLOCK_TREE_ATTRIBUTE_GLOBAL_PORT,
+                      clk_ntwk.tree_global_port(tree_id).to_verilog_string().c_str());
   fp << ">"
      << "\n";
 

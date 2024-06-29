@@ -338,14 +338,15 @@ static void read_xml_clock_tree(pugi::xml_node& xml_clk_tree,
                                 const pugiutil::loc_data& loc_data,
                                 ClockNetwork& clk_ntwk) {
   std::string clk_tree_name =
-    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_NAME, loc_data)
+    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_NAME, loc_data, pugiutil::ReqOpt::REQUIRED)
       .as_string();
-  int clk_tree_width =
-    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_WIDTH, loc_data)
-      .as_int();
+  std::string clk_global_port_str =
+    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_GLOBAL_PORT, loc_data, pugiutil::ReqOpt::REQUIRED)
+      .as_string();
 
   /* Create a new tree in the storage */
-  ClockTreeId tree_id = clk_ntwk.create_tree(clk_tree_name, clk_tree_width);
+  PortParser gport_parser(clk_global_port_str); 
+  ClockTreeId tree_id = clk_ntwk.create_tree(clk_tree_name, gport_parser.port());
 
   if (false == clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clk_tree),

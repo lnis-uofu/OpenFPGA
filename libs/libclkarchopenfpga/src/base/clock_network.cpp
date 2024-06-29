@@ -217,9 +217,14 @@ size_t ClockNetwork::max_tree_depth() const {
   return max_size;
 }
 
+BasicPort ClockNetwork::tree_global_port(const ClockTreeId& tree_id) const {
+  VTR_ASSERT(valid_tree_id(tree_id));
+  return tree_global_ports_[tree_id];
+}
+
 size_t ClockNetwork::tree_width(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
-  return tree_widths_[tree_id];
+  return tree_global_ports_[tree_id].get_width();
 }
 
 size_t ClockNetwork::tree_depth(const ClockTreeId& tree_id) const {
@@ -606,7 +611,7 @@ void ClockNetwork::reserve_spines(const size_t& num_spines) {
 void ClockNetwork::reserve_trees(const size_t& num_trees) {
   tree_ids_.reserve(num_trees);
   tree_names_.reserve(num_trees);
-  tree_widths_.reserve(num_trees);
+  tree_global_ports_.reserve(num_trees);
   tree_top_spines_.reserve(num_trees);
   tree_taps_.reserve(num_trees);
 }
@@ -635,13 +640,19 @@ void ClockNetwork::set_default_driver_switch_name(const std::string& name) {
   default_driver_switch_name_ = name;
 }
 
-ClockTreeId ClockNetwork::create_tree(const std::string& name, size_t width) {
+ClockTreeId ClockNetwork::create_tree(const std::string& name, const BasicPort& global_port) {
+  /* Sanity checks */
+  if (!global_port.is_valid()) {
+    VTR_LOG_ERROR("Invalid global port '%s' for clock tree name '%s'\n",
+                  global_port.to_verilog_string().c_str(), name.c_str());
+    exit(1);
+  }
   /* Create a new id */
   ClockTreeId tree_id = ClockTreeId(tree_ids_.size());
 
   tree_ids_.push_back(tree_id);
   tree_names_.push_back(name);
-  tree_widths_.push_back(width);
+  tree_global_ports_.push_back(global_port);
   tree_depths_.emplace_back();
   tree_taps_.emplace_back();
   tree_top_spines_.emplace_back();

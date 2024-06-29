@@ -1,5 +1,5 @@
 <clock_networks default_segment="seg_len1" default_tap_switch="fast_switch" default_driver_switch="slow_switch"> 
-  <clock_network name="example_network" width="8"> 
+  <clock_network name="example_network" global_port="clk[0:7]"> 
     <spine name="spine_lvl3" start_x="0" start_y="2" end_x="2" end_y="2"> 
       <switch_point tap="spine_lvl2_upper" x="2" y="2"/> 
       <switch_point tap="spine_lvl2_lower" x="2" y="2"/> 

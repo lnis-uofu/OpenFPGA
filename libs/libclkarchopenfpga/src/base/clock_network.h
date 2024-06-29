@@ -16,6 +16,7 @@
 #include "clock_network_fwd.h"
 #include "rr_graph_fwd.h"
 #include "rr_node_types.h"
+#include "openfpga_port.h"
 
 namespace openfpga {  // Begin namespace openfpga
 
@@ -87,6 +88,7 @@ class ClockNetwork {
   RRSwitchId default_driver_switch() const;
   std::string default_driver_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;
+  BasicPort tree_global_port(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
   size_t tree_depth(const ClockTreeId& tree_id) const;
   size_t max_tree_width() const;
@@ -196,7 +198,7 @@ class ClockNetwork {
   void set_default_driver_switch_name(const std::string& name);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal;
    * use width to adjust the size */
-  ClockTreeId create_tree(const std::string& name, size_t width = 1);
+  ClockTreeId create_tree(const std::string& name, const BasicPort& global_port);
   /* Create a new spine, if the spine is already created, return an invalid id
    */
   ClockSpineId create_spine(const std::string& name);
@@ -289,7 +291,7 @@ class ClockNetwork {
   /* Basic information of each tree */
   vtr::vector<ClockTreeId, ClockTreeId> tree_ids_;
   vtr::vector<ClockTreeId, std::string> tree_names_;
-  vtr::vector<ClockTreeId, size_t> tree_widths_;
+  vtr::vector<ClockTreeId, BasicPort> tree_global_ports_;
   vtr::vector<ClockTreeId, size_t> tree_depths_;
   vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
   vtr::vector<ClockTreeId, std::vector<ClockTapId>> tree_taps_;
