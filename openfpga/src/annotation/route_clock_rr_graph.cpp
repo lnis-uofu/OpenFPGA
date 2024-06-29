@@ -68,6 +68,8 @@ static int build_clock_tree_net_map(
       /* TODO: Check the tree_pin.get_name(), see if matches the tree from ports */
       /* Register the pin mapping */
       tree2clk_pin_map[ClockTreePinId(tree_pin.get_lsb())] = gnet;
+      VTR_LOGV(verbose, "Mapped net '%s' to pin '%s' of clock tree '%s'.\n",
+               gnet_name.c_str(), tree_pin.to_verilog_string().c_str(), clk_ntwk.tree_name(clk_tree).c_str());
     }
   }
 
