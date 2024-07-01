@@ -42,7 +42,8 @@ static void read_xml_clock_tree_tap_type_all(pugi::xml_node& xml_tap,
   std::string to_pin_name =
     get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
       .as_string();
-  clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
+  PortParser from_port_parser(from_pin_name);
+  clk_ntwk.add_tree_tap(tree_id, from_port_parser.port(), to_pin_name);
 }
 
 /********************************************************************
@@ -62,8 +63,9 @@ static void read_xml_clock_tree_tap_type_single(
   std::string to_pin_name =
     get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
       .as_string();
+  PortParser from_port_parser(from_pin_name);
   ClockTapId tap_id =
-    clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
+    clk_ntwk.add_tree_tap(tree_id, from_port_parser.port(), to_pin_name);
 
   /* Single tap only require a coordinate */
   size_t tap_x = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_X,
@@ -93,8 +95,9 @@ static void read_xml_clock_tree_tap_type_region(
   std::string to_pin_name =
     get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
       .as_string();
+  PortParser from_port_parser(from_pin_name);
   ClockTapId tap_id =
-    clk_ntwk.add_tree_tap(tree_id, from_pin_name, to_pin_name);
+    clk_ntwk.add_tree_tap(tree_id, from_port_parser.port(), to_pin_name);
 
   /* Region require a bounding box */
   size_t tap_start_x =

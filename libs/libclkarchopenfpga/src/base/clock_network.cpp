@@ -372,7 +372,7 @@ std::vector<ClockTapId> ClockNetwork::tree_taps(
   return tree_taps_[tree_id];
 }
 
-std::string ClockNetwork::tap_from_port(const ClockTapId& tap_id) const {
+BasicPort ClockNetwork::tap_from_port(const ClockTapId& tap_id) const {
   VTR_ASSERT(valid_tap_id(tap_id));
   return tap_from_ports_[tap_id];
 }
@@ -470,17 +470,15 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
   for (ClockTapId tap_id : tree_taps_[tree_id]) {
     VTR_ASSERT(valid_tap_id(tap_id));
     /* Filter out unmatched from ports. Expect [clk_pin_id:clk_pin_id] */
-    std::string tap_from_port_name = tap_from_ports_[tap_id];
-    PortParser from_port_parser(tap_from_port_name);
-    BasicPort from_port = from_port_parser.port();
+    BasicPort from_port = tap_from_ports_[tap_id];
     if (!from_port.is_valid()) {
       VTR_LOG_ERROR("Invalid from port name '%s' whose index is not valid\n",
-                    tap_from_port_name.c_str());
+                    from_port.to_verilog_string().c_str());
       exit(1);
     }
     if (from_port.get_width() != 1) {
       VTR_LOG_ERROR("Invalid from port name '%s' whose width is not 1\n",
-                    tap_from_port_name.c_str());
+                    from_port.to_verilog_string().c_str());
       exit(1);
     }
     if (from_port.get_lsb() != size_t(clk_pin_id)) {
@@ -792,7 +790,7 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
 }
 
 ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
-                                      const std::string& from_port,
+                                      const BasicPort& from_port,
                                       const std::string& to_port) {
   VTR_ASSERT(valid_tree_id(tree_id));
   /* TODO: Consider find existing tap template and avoid duplication in storage

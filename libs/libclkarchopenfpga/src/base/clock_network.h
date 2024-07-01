@@ -144,7 +144,7 @@ class ClockNetwork {
    */
   std::vector<ClockTapId> tree_taps(const ClockTreeId& tree_id) const;
   /* Return the source ports for a given tap */
-  std::string tap_from_port(const ClockTapId& tap_id) const;
+  BasicPort tap_from_port(const ClockTapId& tap_id) const;
   /* Return the destination ports for a given tap */
   std::string tap_to_port(const ClockTapId& tap_id) const;
   /* Find the type of tap point:
@@ -224,7 +224,7 @@ class ClockNetwork {
     const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
     const std::string& internal_driver_port);
   ClockTapId add_tree_tap(const ClockTreeId& tree_id,
-                          const std::string& from_port,
+                          const BasicPort& from_port,
                           const std::string& to_port);
   bool set_tap_bounding_box(const ClockTapId& tap_id,
                             const vtr::Rect<size_t>& bb);
@@ -319,7 +319,7 @@ class ClockNetwork {
   vtr::vector<ClockInternalDriverId, std::string> internal_driver_ports_;
   /* Basic information about tap */
   vtr::vector<ClockTapId, ClockTapId> tap_ids_;
-  vtr::vector<ClockTapId, std::string> tap_from_ports_;
+  vtr::vector<ClockTapId, BasicPort> tap_from_ports_;
   vtr::vector<ClockTapId, std::string> tap_to_ports_;
   vtr::vector<ClockTapId, vtr::Rect<size_t>>
     tap_bbs_; /* Bounding box for tap points, (xlow, ylow) -> (xhigh, yhigh) */
