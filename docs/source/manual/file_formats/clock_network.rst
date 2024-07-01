@@ -23,7 +23,7 @@ Using the clock network description language, users can define multiple clock ne
 .. code-block:: xml
 
   <clock_networks default_segment="<string>" default_tap_switch="<string>" default_driver_switch="<string>"> 
-    <clock_network name="<string>" width="<int>"> 
+    <clock_network name="<string>" global_port="<int>"> 
       <spine name="<string>" start_x="<int>" start_y="<int>" end_x="<int>" end_y="<int>"> 
         <switch_point tap="<string>" x="<int>" y="<int>"> 
           <internal_driver tile_pin="<string>"/>
@@ -107,9 +107,9 @@ where the clock network is used to drive the global clock pin ``clk0`` in OpenFP
     </global_port>
   </tile_annotations>
 
-.. option:: width="<int>"
+.. option:: global_port="<int>"
 
-  The maximum number of clock pins that a clock network can drive.
+  Define the source port of the clock network. For example, ``clk[0:7]``. Note that the global port name should match the ``from_pin`` when defining the tap points (See details in :ref:`file_formats_clock_network_clock_tap_point`).
 
 .. _file_formats_clock_network_clock_spine:
 
