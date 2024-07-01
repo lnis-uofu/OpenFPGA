@@ -640,7 +640,8 @@ void ClockNetwork::set_default_driver_switch_name(const std::string& name) {
   default_driver_switch_name_ = name;
 }
 
-ClockTreeId ClockNetwork::create_tree(const std::string& name, const BasicPort& global_port) {
+ClockTreeId ClockNetwork::create_tree(const std::string& name,
+                                      const BasicPort& global_port) {
   /* Sanity checks */
   if (!global_port.is_valid()) {
     VTR_LOG_ERROR("Invalid global port '%s' for clock tree name '%s'\n",

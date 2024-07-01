@@ -1324,8 +1324,10 @@ int add_top_module_global_ports_from_grid_modules(
       global_port_to_add.set_name(
         tile_annotation.global_port_name(tile_global_port));
       /* Dedicated network has their own sizes of port */
-      if (tile_annotation.global_port_thru_dedicated_network(tile_global_port)) {
-        std::string clk_tree_name = tile_annotation.global_port_clock_arch_tree_name(tile_global_port);
+      if (tile_annotation.global_port_thru_dedicated_network(
+            tile_global_port)) {
+        std::string clk_tree_name =
+          tile_annotation.global_port_clock_arch_tree_name(tile_global_port);
         ClockTreeId clk_tree = clk_ntwk.find_tree(clk_tree_name);
         global_port_to_add.set_width(clk_ntwk.tree_width(clk_tree));
       } else {

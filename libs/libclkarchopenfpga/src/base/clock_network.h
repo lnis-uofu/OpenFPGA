@@ -14,9 +14,9 @@
 
 /* Headers from openfpgautil library */
 #include "clock_network_fwd.h"
+#include "openfpga_port.h"
 #include "rr_graph_fwd.h"
 #include "rr_node_types.h"
-#include "openfpga_port.h"
 
 namespace openfpga {  // Begin namespace openfpga
 
@@ -198,7 +198,8 @@ class ClockNetwork {
   void set_default_driver_switch_name(const std::string& name);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal;
    * use width to adjust the size */
-  ClockTreeId create_tree(const std::string& name, const BasicPort& global_port);
+  ClockTreeId create_tree(const std::string& name,
+                          const BasicPort& global_port);
   /* Create a new spine, if the spine is already created, return an invalid id
    */
   ClockSpineId create_spine(const std::string& name);

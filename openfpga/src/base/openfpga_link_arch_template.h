@@ -234,8 +234,7 @@ int route_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
   return route_clock_rr_graph(
     openfpga_ctx.mutable_vpr_routing_annotation(), g_vpr_ctx.device(),
     g_vpr_ctx.clustering().clb_nlist, g_vpr_ctx.placement(),
-    openfpga_ctx.clock_rr_lookup(),
-    openfpga_ctx.clock_arch(), pin_constraints,
+    openfpga_ctx.clock_rr_lookup(), openfpga_ctx.clock_arch(), pin_constraints,
     cmd_context.option_enable(cmd, opt_disable_unused_trees),
     cmd_context.option_enable(cmd, opt_disable_unused_spines),
     cmd_context.option_enable(cmd, opt_verbose));

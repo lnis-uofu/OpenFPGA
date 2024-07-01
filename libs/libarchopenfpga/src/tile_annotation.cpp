@@ -101,7 +101,6 @@ bool TileAnnotation::global_port_thru_dedicated_network(
   return !global_port_clock_arch_tree_name(global_port_id).empty();
 }
 
-
 std::string TileAnnotation::global_port_clock_arch_tree_name(
   const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));

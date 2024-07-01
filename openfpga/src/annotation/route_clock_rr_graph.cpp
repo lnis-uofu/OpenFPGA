@@ -26,7 +26,8 @@ static int build_clock_tree_net_map(
   const ClockTreeId clk_tree, const bool& verbose) {
   BasicPort tree_gport = clk_ntwk.tree_global_port(clk_tree);
   /* Find the pin id for each clock name, error out if there is any mismatch */
-  if (clk_ntwk.num_trees() == 1 && gnets.size() == 1 && clk_ntwk.tree_width(clk_tree) == 1) {
+  if (clk_ntwk.num_trees() == 1 && gnets.size() == 1 &&
+      clk_ntwk.tree_width(clk_tree) == 1) {
     /* Find cluster net id */
     if (!cluster_nlist.valid_net_id(gnets[0])) {
       VTR_LOG_ERROR("Invalid clock name '%s'! Cannot be found from netlists!\n",
@@ -42,7 +43,8 @@ static int build_clock_tree_net_map(
       BasicPort tree_pin = pin_constraints.net_pin(gnet_name);
       if (!tree_pin.is_valid()) {
         VTR_LOG_ERROR(
-          "Global net '%s' is not mapped to a valid pin '%s' in pin constraints!\n",
+          "Global net '%s' is not mapped to a valid pin '%s' in pin "
+          "constraints!\n",
           gnet_name.c_str(), tree_pin.to_verilog_string().c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -59,17 +61,20 @@ static int build_clock_tree_net_map(
       }
       if (!tree_gport.contained(tree_pin)) {
         VTR_LOG_ERROR(
-          "Invalid pin constraint port '%s' which is out of range of the global port '%s' of clock tree '%s'\n",
+          "Invalid pin constraint port '%s' which is out of range of the "
+          "global port '%s' of clock tree '%s'\n",
           tree_pin.to_verilog_string().c_str(),
           tree_gport.to_verilog_string().c_str(),
           clk_ntwk.tree_name(clk_tree).c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
-      /* TODO: Check the tree_pin.get_name(), see if matches the tree from ports */
+      /* TODO: Check the tree_pin.get_name(), see if matches the tree from ports
+       */
       /* Register the pin mapping */
       tree2clk_pin_map[ClockTreePinId(tree_pin.get_lsb())] = gnet;
       VTR_LOGV(verbose, "Mapped net '%s' to pin '%s' of clock tree '%s'.\n",
-               gnet_name.c_str(), tree_pin.to_verilog_string().c_str(), clk_ntwk.tree_name(clk_tree).c_str());
+               gnet_name.c_str(), tree_pin.to_verilog_string().c_str(),
+               clk_ntwk.tree_name(clk_tree).c_str());
     }
   }
 
@@ -186,8 +191,10 @@ static int route_spine_taps(
   size_t spine_tap_cnt = 0;
   /* Route the spine-to-IPIN connections (only for the last level) */
   if (clk_ntwk.is_last_level(ispine)) {
-    VTR_LOGV(verbose, "Routing clock taps of spine '%s' for pin '%d' of tree '%s'...\n",
-             clk_ntwk.spine_name(ispine).c_str(), size_t(ipin), clk_ntwk.tree_name(clk_tree).c_str());
+    VTR_LOGV(verbose,
+             "Routing clock taps of spine '%s' for pin '%d' of tree '%s'...\n",
+             clk_ntwk.spine_name(ispine).c_str(), size_t(ipin),
+             clk_ntwk.tree_name(clk_tree).c_str());
     /* Connect to any fan-out node which is IPIN */
     for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
       vtr::Point<int> src_coord = spine_coords[icoord];
@@ -397,11 +404,13 @@ static int rec_expand_and_route_clock_spine(
              src_coord.y(), des_coord.x(), des_coord.y());
     vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node, src_node);
     /* It could happen that there is no net mapped some clock pin, skip the
-      * net mapping */
-     if (tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
-       vpr_routing_annotation.set_rr_node_net(src_node, tree2clk_pin_map.at(curr_pin));
-       vpr_routing_annotation.set_rr_node_net(des_node, tree2clk_pin_map.at(curr_pin));
-     }
+     * net mapping */
+    if (tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
+      vpr_routing_annotation.set_rr_node_net(src_node,
+                                             tree2clk_pin_map.at(curr_pin));
+      vpr_routing_annotation.set_rr_node_net(des_node,
+                                             tree2clk_pin_map.at(curr_pin));
+    }
 
     prev_stop_usage = true;
     curr_spine_usage = true;
@@ -463,11 +472,10 @@ static int route_clock_tree_rr_graph(
  *******************************************************************/
 int route_clock_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation,
-  const DeviceContext& vpr_device_ctx, 
-  const ClusteredNetlist& cluster_nlist, const PlacementContext& vpr_place_ctx,
+  const DeviceContext& vpr_device_ctx, const ClusteredNetlist& cluster_nlist,
+  const PlacementContext& vpr_place_ctx,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
-  const PinConstraints& pin_constraints,
-  const bool& disable_unused_trees,
+  const PinConstraints& pin_constraints, const bool& disable_unused_trees,
   const bool& disable_unused_spines, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Route programmable clock network based on routing resource graph");
@@ -482,10 +490,12 @@ int route_clock_rr_graph(
 
   /* If there are multiple global signals from the netlist, require pin
    * constraints */
-  std::vector<ClusterNetId> gnets = find_clustered_netlist_global_nets(cluster_nlist);
+  std::vector<ClusterNetId> gnets =
+    find_clustered_netlist_global_nets(cluster_nlist);
   if (gnets.empty()) {
     VTR_LOG(
-      "Skip due to 0 global nets found from netlist\nDouble check your HDL design "
+      "Skip due to 0 global nets found from netlist\nDouble check your HDL "
+      "design "
       "if this is unexpected\n");
     return CMD_EXEC_SUCCESS;
   }
@@ -504,7 +514,8 @@ int route_clock_rr_graph(
 
   /* Route spines one by one */
   for (auto itree : clk_ntwk.trees()) {
-    VTR_LOGV(verbose, "Build global net name to clock tree '%s' pin mapping...\n",
+    VTR_LOGV(verbose,
+             "Build global net name to clock tree '%s' pin mapping...\n",
              clk_ntwk.tree_name(itree).c_str());
     std::map<ClockTreePinId, ClusterNetId> tree2clk_pin_map;
     int status = CMD_EXEC_SUCCESS;
