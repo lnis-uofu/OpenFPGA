@@ -37,6 +37,14 @@ Using the clock network description language, users can define multiple clock ne
     </clock_network>  
   </clock_networks> 
 
+.. _fig_prog_clock_network_example_2x2:
+
+.. figure:: figures/prog_clock_network_example_2x2.png
+   :width: 100%
+   :alt: An example of programmable clock network considering a 2x2 FPGA fabric
+
+   An example of programmable clock network considering a 2x2 FPGA fabric
+
 General Settings
 ^^^^^^^^^^^^^^^^
 
@@ -44,7 +52,7 @@ The following syntax are applicable to the XML definition under the root node ``
 
 .. option:: default_segment="<string>"
 
-  Define the default routing segment to be used when building the routing tracks for the clock network. Must be a valid routing segment defined in the VPR architecture file.  For example, 
+  Define the default routing segment to be used when building the routing tracks for the clock network. The routing segments are used to build the spines of clock networks as shown in :numref:`fig_prog_clock_network_example_2x2`. Must be a valid routing segment defined in the VPR architecture file.  For example, 
 
   .. code-block:: xml
 
@@ -62,11 +70,13 @@ where the segment is defined in the VPR architecture file:
 
 .. option:: default_tap_switch="<string>"
 
-  Define the default routing switch to be used when interconnects the routing tracks to the input pins of programmable blocks in the clock network. Must be a valid routing switch defined in the VPR architecture file. See the example in the ``default_driver_switch``. 
+  Define the default routing switch to be used when interconnects the routing tracks to the input pins of programmable blocks in the clock network. The tap switches are used to build the taps of clock networks as shown in :numref:`fig_prog_clock_network_example_2x2`. Must be a valid routing switch defined in the VPR architecture file. See the example in the ``default_driver_switch``. 
 
 .. option:: default_driver_switch="<string>"
 
-  Define the default routing switch to be used when interconnects the routing tracks in the clock network. Must be a valid routing switch defined in the VPR architecture file. For example, 
+  .. note:: For internal drivers, suggest to use the same driver switch for the output pins of a programmable block as defined in VPR architecture.
+
+  Define the default routing switch to be used when interconnects the routing tracks in the clock network. The driver switches are used to build the switch points of clock networks as shown in :numref:`fig_prog_clock_network_example_2x2`. Must be a valid routing switch defined in the VPR architecture file. For example, 
 
   .. code-block:: xml
 
@@ -103,13 +113,18 @@ where the clock network is used to drive the global clock pin ``clk0`` in OpenFP
 
   <tile_annotations>
     <global_port name="clk0" is_clock="true" clock_arch_tree_name="clk_tree_0" default_val="0">
-      <tile name="clb" port="clk[0:1]"/>
+      <tile name="clb" port="clk[0:0]"/>
     </global_port>
   </tile_annotations>
 
-.. option:: global_port="<int>"
+.. option:: global_port="<string>"
 
-  Define the source port of the clock network. For example, ``clk[0:7]``. Note that the global port name should match the ``from_pin`` when defining the tap points (See details in :ref:`file_formats_clock_network_clock_tap_point`).
+  .. note:: When programmable clock network is specified for a global port in OpenFPGA architecure description file, the width of clock tree will be the final size of the global port. 
+
+  Define the source port of the clock network. For example, ``clk[0:7]``. Note that the global port name should match 
+
+  - the ``from_pin`` when defining the tap points (See details in :ref:`file_formats_clock_network_clock_tap_point`). 
+  - the ``name`` of global port definition in OpenFPGA architecture description file
 
 .. _file_formats_clock_network_clock_spine:
 
@@ -145,7 +160,7 @@ For example,
 
   <spine name="spine0" start_x="1" start_y="1" end_x="2" end_y="1"/>
 
-where a horizental clock spine ``spine0`` is defined which spans from (1, 1) to (2, 1)
+where a horizental clock spine ``spine0`` is defined which spans from (1, 1) to (2, 1), as highlighted in orange in the :numref:`fig_prog_clock_network_example_2x2`
 
 .. note:: We only support clock spines in horizental and vertical directions. Diagonal clock spine is not supported!
 
@@ -177,7 +192,7 @@ For example,
     <switch_point tap="spine1" x="1" y="1"/>
   <spine>
 
-where clock spine ``spine0`` will drive another clock spine ``spine1`` at (1, 1). 
+where clock spine ``spine0`` will drive another clock spine ``spine1`` at (1, 1), as highlighted in blue in the :numref:`fig_prog_clock_network_example_2x2`
 
 For each switch point, outputs of neighbouring programmable blocks are allowed to drive the spine at next level, through syntax ``internal_driver``.
 
@@ -284,4 +299,5 @@ where all the clock spines of the clock network ``clk_tree_0`` tap the clock pin
      <clock name="clk" num_pins="2"/>
    </sub_tile>
   </tile>
+
 
