@@ -96,4 +96,30 @@ int link_clock_network_rr_graph(ClockNetwork& clk_ntwk,
   return status;
 }
 
+/** Check for each global ports in tile annotation
+ *  If a clock tree is required for a global port, the global port name define in the tile annotation should match the one in clock clock
+ */
+int check_clock_network_tile_annotation(const ClockNetwork& clk_ntwk,
+                                        const TileAnnotation& tile_annotation) {
+  for (const TileGlobalPortId& gport_id : tile_annotation.global_ports()) {
+    if (!tile_annotation.global_port_thru_dedicated_network(gport_id)) {
+      continue;
+    }
+    std::string gport_name = tile_annotation.global_port_name(gport_id);
+    std::string clk_tree_name = tile_annotation.global_port_clock_arch_tree_name(gport_id);
+    ClockTreeId clk_tree_id = clk_ntwk.find_tree(clk_tree_name);
+    if (!clk_ntwk.valid_tree_id(clk_tree_id)) {
+      VTR_LOG_ERROR("Invalid clock tree name '%s' defined for global port '%s' in tile annotation! Must be a valid name defined in the clock network description!\n",
+      clk_tree_name.c_str(), gport_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    if (clk_ntwk.tree_global_port(clk_tree_id).get_name() != gport_name) {
+      VTR_LOG_ERROR("Global port '%s' of clock tree name '%s' must match the name of assoicated global port '%s' in tile annotation! Must be a valid name defined in the clock network description!\n",
+      clk_ntwk.tree_global_port(clk_tree_id).to_verilog_string().c_str(), clk_tree_name.c_str(), gport_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
 }  // End of namespace openfpga
