@@ -246,10 +246,11 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
     VTR_LOG_ERROR("Link clock network to routing architecture failed!");
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (CMD_EXEC_SUCCESS !=
-      check_clock_network_tile_annotation(openfpga_context.clock_arch(),
-                                          openfpga_context.arch().tile_annotations)) {
-    VTR_LOG_ERROR("Check clock network consistency with tile annotation failed!");
+  if (CMD_EXEC_SUCCESS != check_clock_network_tile_annotation(
+                            openfpga_context.clock_arch(),
+                            openfpga_context.arch().tile_annotations)) {
+    VTR_LOG_ERROR(
+      "Check clock network consistency with tile annotation failed!");
     return CMD_EXEC_FATAL_ERROR;
   }
   /* Ensure clean data */

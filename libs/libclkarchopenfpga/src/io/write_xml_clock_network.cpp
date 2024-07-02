@@ -34,8 +34,9 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
       case ClockNetwork::e_tap_type::ALL: {
         openfpga::write_tab_to_file(fp, 4);
         fp << "<" << XML_CLOCK_TREE_TAP_ALL_NODE_NAME << "";
-        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
-                            clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
+        write_xml_attribute(
+          fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+          clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
         write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
                             clk_ntwk.tap_to_port(tap_id).c_str());
         fp << "/>"
@@ -45,8 +46,9 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
       case ClockNetwork::e_tap_type::SINGLE: {
         openfpga::write_tab_to_file(fp, 4);
         fp << "<" << XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME << "";
-        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
-                            clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
+        write_xml_attribute(
+          fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+          clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
         write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
                             clk_ntwk.tap_to_port(tap_id).c_str());
         write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_X,
@@ -60,8 +62,9 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
       case ClockNetwork::e_tap_type::REGION: {
         openfpga::write_tab_to_file(fp, 4);
         fp << "<" << XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME << "";
-        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
-                            clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
+        write_xml_attribute(
+          fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+          clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
         write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
                             clk_ntwk.tap_to_port(tap_id).c_str());
         write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX,
