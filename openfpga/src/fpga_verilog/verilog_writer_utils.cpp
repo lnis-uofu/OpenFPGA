@@ -533,10 +533,10 @@ std::string generate_verilog_port(
     } else if ((1 == port_info.get_width())) {
       size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
     }
-    verilog_line = port_info.get_name() + size_str;
+    verilog_line = escapeNames(port_info.get_name()) + size_str;
   } else {
     verilog_line = VERILOG_PORT_TYPE_STRING[verilog_port_type];
-    verilog_line += " " + size_str + " " + port_info.get_name();
+    verilog_line += " " + size_str + " " + escapeNames(port_info.get_name());
   }
 
   return verilog_line;

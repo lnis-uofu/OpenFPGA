@@ -199,6 +199,8 @@ void print_verilog_netlist_include_header_file(
   const char* subckt_dir, const char* header_file_name,
   const bool& include_time_stamp);
 
+std::string escapeNames(const std::string& name);
+
 } /* end namespace openfpga */
 
 #endif
