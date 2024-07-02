@@ -108,8 +108,8 @@
           <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
-          <loc side="left"></loc>
-          <loc side="top"></loc>
+          <loc side="left"/>
+          <loc side="top"/>
           <loc side="right">clb.reset clb.clk clb.O[4:7] clb.I[6:11]</loc>
           <loc side="bottom">clb.O[0:3] clb.I[0:5]</loc>
         </pinlocations>
