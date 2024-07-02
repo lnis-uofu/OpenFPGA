@@ -266,6 +266,7 @@ class ClockNetwork {
  private: /* Public invalidators/validators */
   /* Ensure tree data is clean. All the spines are valid, and switch points are
    * valid */
+  bool validate_tree_taps() const;
   bool validate_tree() const;
   /* Show if the internal driver id is a valid for data queries */
   bool valid_internal_driver_id(

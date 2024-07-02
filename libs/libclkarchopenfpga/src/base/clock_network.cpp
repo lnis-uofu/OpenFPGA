@@ -859,6 +859,23 @@ bool ClockNetwork::link() {
   return true;
 }
 
+bool ClockNetwork::validate_tree_taps() const {
+  for (ClockTreeId tree_id : trees()) {
+    for (ClockTapId tap_id : tree_taps(tree_id)) {
+      /* The from pin name should match the global port */
+      if (!tree_global_port(tree_id).mergeable(tap_from_port(tap_id)) || !tree_global_port(tree_id).contained(tap_from_port(tap_id))) {
+        VTR_LOG_ERROR(
+          "Tap point from_port '%s' is not part of the global port '%s' of tree '%s'\n",
+          tap_from_port(tap_id).to_verilog_string().c_str(),
+          tree_global_port(tree_id).to_verilog_string().c_str(),
+          tree_name(tree_id).c_str());
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool ClockNetwork::validate_tree() const {
   for (ClockTreeId tree_id : trees()) {
     for (ClockSpineId spine_id : spines(tree_id)) {
@@ -920,7 +937,7 @@ bool ClockNetwork::validate_tree() const {
 bool ClockNetwork::validate() const {
   is_dirty_ = true;
   if (default_segment_id_ && default_tap_switch_id_ &&
-      default_driver_switch_id_ && validate_tree()) {
+      default_driver_switch_id_ && validate_tree() && validate_tree_taps()) {
     is_dirty_ = false;
   }
   return true;
