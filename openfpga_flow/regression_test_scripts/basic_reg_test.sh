@@ -235,6 +235,7 @@ run-task basic_tests/clock_network/homo_2clock_2layer $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused_tree $@
 run-task basic_tests/clock_network/homo_1clock_1_reset_2layer $@
+run-task basic_tests/clock_network/homo_1clock_1_reset_2layer_syntax $@
 run-task basic_tests/clock_network/homo_1clock_1_reset_2layer_disable_unused_spines $@
 run-task basic_tests/clock_network/homo_1clock_1_reset_2layer_internal_driver $@
 
