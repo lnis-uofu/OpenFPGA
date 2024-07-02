@@ -236,9 +236,23 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
   openfpga_context.mutable_clock_arch() =
     read_xml_clock_network(arch_file_name.c_str());
   /* Build internal links */
-  openfpga_context.mutable_clock_arch().link();
-  link_clock_network_rr_graph(openfpga_context.mutable_clock_arch(),
-                              g_vpr_ctx.device().rr_graph);
+  if (!openfpga_context.mutable_clock_arch().link()) {
+    VTR_LOG_ERROR("Link clock network failed!");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  if (CMD_EXEC_SUCCESS !=
+      link_clock_network_rr_graph(openfpga_context.mutable_clock_arch(),
+                                  g_vpr_ctx.device().rr_graph)) {
+    VTR_LOG_ERROR("Link clock network to routing architecture failed!");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  if (CMD_EXEC_SUCCESS != check_clock_network_tile_annotation(
+                            openfpga_context.clock_arch(),
+                            openfpga_context.arch().tile_annotations)) {
+    VTR_LOG_ERROR(
+      "Check clock network consistency with tile annotation failed!");
+    return CMD_EXEC_FATAL_ERROR;
+  }
   /* Ensure clean data */
   openfpga_context.clock_arch().validate();
   if (!openfpga_context.clock_arch().is_valid()) {

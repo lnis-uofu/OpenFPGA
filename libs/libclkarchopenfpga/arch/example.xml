@@ -1,5 +1,5 @@
-<clock_networks default_segment="seg_len1" default_switch="fast_switch"> 
-  <clock_network name="example_network" width="8"> 
+<clock_networks default_segment="seg_len1" default_tap_switch="fast_switch" default_driver_switch="slow_switch"> 
+  <clock_network name="example_network" global_port="clk[0:7]"> 
     <spine name="spine_lvl3" start_x="0" start_y="2" end_x="2" end_y="2"> 
       <switch_point tap="spine_lvl2_upper" x="2" y="2"/> 
       <switch_point tap="spine_lvl2_lower" x="2" y="2"/> 
@@ -17,10 +17,10 @@
     <spine name="rib_lvl1_lower_left" start_x="2" start_y="1" end_x="1" end_y="1"/> 
     <spine name="rib_lvl1_lower_right" start_x="2" start_y="1" end_x="3" end_y="1"/> 
     <taps>
-      <tap tile_pin="io[0:23].clk[0:7]"/>
-      <tap tile_pin="clb[0:0].clk[0:7]"/>
-      <tap tile_pin="dsp[0:0].clk[0:7]"/>
-      <tap tile_pin="bram[0:0].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="io[0:23].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="dsp[0:0].clk[0:7]"/>
+      <all from_pin="clk[0:0]" to_pin="bram[0:0].clk[0:7]"/>
     </taps>
   </clock_network>  
 </clock_networks> 

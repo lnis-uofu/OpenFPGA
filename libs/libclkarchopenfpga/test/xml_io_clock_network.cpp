@@ -22,6 +22,10 @@ int main(int argc, const char** argv) {
 
   /* Validate before write out */
   if (!clk_ntwk.link()) {
+    VTR_LOG_ERROR("Invalid clock network when linking.\n");
+    exit(1);
+  }
+  if (!clk_ntwk.validate()) {
     VTR_LOG_ERROR("Invalid clock network.\n");
     exit(1);
   }

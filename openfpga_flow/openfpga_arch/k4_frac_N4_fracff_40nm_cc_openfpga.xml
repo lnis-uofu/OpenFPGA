@@ -197,6 +197,7 @@
     <switch name="0" circuit_model_name="mux_2level_tapbuf"/>
   </switch_block>
   <routing_segment>
+    <segment name="L1" circuit_model_name="chan_segment"/>
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <tile_annotations>

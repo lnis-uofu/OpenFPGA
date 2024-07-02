@@ -96,6 +96,11 @@ size_t TileAnnotation::global_port_default_value(
   return global_port_default_values_[global_port_id];
 }
 
+bool TileAnnotation::global_port_thru_dedicated_network(
+  const TileGlobalPortId& global_port_id) const {
+  return !global_port_clock_arch_tree_name(global_port_id).empty();
+}
+
 std::string TileAnnotation::global_port_clock_arch_tree_name(
   const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));

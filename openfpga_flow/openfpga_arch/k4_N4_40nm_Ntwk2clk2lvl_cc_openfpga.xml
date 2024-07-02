@@ -174,7 +174,7 @@
   </routing_segment>
   <tile_annotations>
     <global_port name="clk" is_clock="true" clock_arch_tree_name="clk_tree_2lvl" default_val="0">
-      <tile name="clb" port="clk[0:1]"/>
+      <tile name="clb" port="clk[0:0]"/>
     </global_port>
   </tile_annotations>
   <pb_type_annotations>

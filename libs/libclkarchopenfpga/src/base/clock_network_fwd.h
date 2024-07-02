@@ -19,12 +19,16 @@ struct clock_tree_id_tag;
 struct clock_tree_pin_id_tag;
 struct clock_spine_id_tag;
 struct clock_switch_point_id_tag;
+struct clock_internal_driver_id_tag;
+struct clock_tap_id_tag;
 
 typedef vtr::StrongId<clock_level_id_tag> ClockLevelId;
 typedef vtr::StrongId<clock_tree_id_tag> ClockTreeId;
 typedef vtr::StrongId<clock_tree_pin_id_tag> ClockTreePinId;
 typedef vtr::StrongId<clock_spine_id_tag> ClockSpineId;
 typedef vtr::StrongId<clock_switch_point_id_tag> ClockSwitchPointId;
+typedef vtr::StrongId<clock_internal_driver_id_tag> ClockInternalDriverId;
+typedef vtr::StrongId<clock_tap_id_tag> ClockTapId;
 
 /* Short declaration of class */
 class ClockNetwork;
