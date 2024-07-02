@@ -436,7 +436,7 @@ bool ClockNetwork::valid_tap_coord_in_bb(
       tap_bbs_[tap_id].coincident(tap_coord)) {
     /* Check if steps are considered, coords still matches */
     bool x_in_bb = false;
-    for (size_t ix = tap_bbs_[tap_id].xmin(); ix < tap_bbs_[tap_id].xmax();
+    for (size_t ix = tap_bbs_[tap_id].xmin(); ix <= tap_bbs_[tap_id].xmax();
          ix = ix + tap_bb_steps_[tap_id].x()) {
       if (tap_coord.x() == ix) {
         x_in_bb = true;
@@ -448,7 +448,7 @@ bool ClockNetwork::valid_tap_coord_in_bb(
       return false;
     }
     bool y_in_bb = false;
-    for (size_t iy = tap_bbs_[tap_id].ymin(); iy < tap_bbs_[tap_id].ymax();
+    for (size_t iy = tap_bbs_[tap_id].ymin(); iy <= tap_bbs_[tap_id].ymax();
          iy = iy + tap_bb_steps_[tap_id].y()) {
       if (tap_coord.y() == iy) {
         y_in_bb = true;
