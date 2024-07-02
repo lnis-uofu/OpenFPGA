@@ -429,11 +429,11 @@ bool ClockNetwork::valid_tap_coord_in_bb(
     return true;
   }
   if (tap_type(tap_id) == ClockNetwork::e_tap_type::SINGLE &&
-      tap_bbs_[tap_id].strictly_contains(tap_coord)) {
+      tap_bbs_[tap_id].coincident(tap_coord)) {
     return true;
   }
   if (tap_type(tap_id) == ClockNetwork::e_tap_type::REGION &&
-      tap_bbs_[tap_id].strictly_contains(tap_coord)) {
+      tap_bbs_[tap_id].coincident(tap_coord)) {
     /* Check if steps are considered, coords still matches */
     bool x_in_bb = false;
     for (size_t ix = tap_bbs_[tap_id].xmin(); ix < tap_bbs_[tap_id].xmax();
