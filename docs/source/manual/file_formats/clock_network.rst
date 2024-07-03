@@ -39,7 +39,7 @@ Using the clock network description language, users can define multiple clock ne
 
 .. _fig_prog_clock_network_example_2x2:
 
-.. figure:: figures/prog_clock_network_example_2x2.png
+.. figure:: figures/prog_clk_network_example_2x2.png
    :width: 100%
    :alt: An example of programmable clock network considering a 2x2 FPGA fabric
 
