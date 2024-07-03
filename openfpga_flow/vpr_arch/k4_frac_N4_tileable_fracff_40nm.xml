@@ -107,7 +107,12 @@
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
           <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
         </fc>
-        <pinlocations pattern="spread"/>
+        <pinlocations pattern="custom">
+          <loc side="left"/>
+          <loc side="top"/>
+          <loc side="right">clb.reset clb.clk clb.O[4:7] clb.I[6:11]</loc>
+          <loc side="bottom">clb.O[0:3] clb.I[0:5]</loc>
+        </pinlocations>
       </sub_tile>
     </tile>
   </tiles>
@@ -194,6 +199,11 @@
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
     <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
+    <segment name="L1" freq="0.000000" length="1" type="unidir" Rmetal="101" Cmetal="22.5e-15">
+      <mux name="0"/>
+      <sb type="pattern">1 1</sb>
+      <cb type="pattern">1</cb>
+    </segment>
     <segment name="L4" freq="1.000000" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
       <mux name="0"/>
       <sb type="pattern">1 1 1 1 1</sb>

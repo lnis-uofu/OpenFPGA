@@ -79,6 +79,7 @@ For subtile port merge support (see an illustrative example in :numref:`fig_subt
 
 .. note:: When defined, the given port of all the subtiles of a tile will be merged into one port. For example, a tile consists of 8 subtile ``A`` and 6 subtile ``B`` and all the subtiles have a port ``clk``, in the FPGA fabric, all the ``clk`` of the subtiles ``A`` and ``B`` will be wired to a common port ``clk`` at tile level.
 
+.. note:: Note that when a dedicated clock network is defined, the size of the global port will follow the ``global_port`` defined in the clock network description file (See details in :ref:`file_formats_clock_network`)
 
 .. note:: When merged, the port will have a default side of ``TOP`` and index of ``0`` on all the attributes, such as width, height etc.
 
@@ -98,6 +99,8 @@ For global port support:
 - ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
 
 - ``clock_arch_tree_name="<string>"`` defines the name of the programmable clock network, which the global port will drive. The name of the programmable clock network must be a valid name (See details in :ref:`file_formats_clock_network`)
+
+.. note:: ``clock_arch_tree_name`` is applicable to clock, reset and set signals.
 
 - ``is_reset="<bool>"`` define if the global port is a reset port at the top-level FPGA fabric. An operating reset port will be driven by proper signals in testbenches.
 
