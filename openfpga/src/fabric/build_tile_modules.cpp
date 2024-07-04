@@ -1175,6 +1175,7 @@ static int build_tile_port_and_nets_from_pb(
   const TileAnnotation& tile_annotation, const vtr::Point<size_t>& pb_coord,
   const std::vector<size_t>& pb_instances, const FabricTile& fabric_tile,
   const FabricTileId& curr_fabric_tile_id, const size_t& ipb,
+  const bool& perimeter_cb,
   const bool& frame_view, const bool& verbose) {
   size_t pb_instance = pb_instances[ipb];
   t_physical_tile_type_ptr phy_tile = grids.get_physical_type(
@@ -1201,7 +1202,7 @@ static int build_tile_port_and_nets_from_pb(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(phy_tile)) {
-    grid_pin_sides = find_grid_module_pin_sides(phy_tile, grid_side);
+    grid_pin_sides = find_grid_module_pin_sides(phy_tile, grid_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -1378,6 +1379,7 @@ static int build_tile_module_ports_and_nets(
   const FabricTileId& fabric_tile_id, const std::vector<size_t>& pb_instances,
   const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
   const std::vector<size_t>& sb_instances, const bool& name_module_using_index,
+  const bool& perimeter_cb,
   const bool& frame_view, const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
@@ -1441,7 +1443,7 @@ static int build_tile_module_ports_and_nets(
     status_code = build_tile_port_and_nets_from_pb(
       module_manager, tile_module, grids, layer, vpr_device_annotation,
       rr_graph_view, tile_annotation, pb_coord, pb_instances, fabric_tile,
-      fabric_tile_id, ipb, frame_view, verbose);
+      fabric_tile_id, ipb, perimeter_cb, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
@@ -1487,7 +1489,9 @@ static int build_tile_module(
   const TileAnnotation& tile_annotation, const CircuitLibrary& circuit_lib,
   const CircuitModelId& sram_model,
   const e_config_protocol_type& sram_orgz_type,
-  const bool& name_module_using_index, const bool& frame_view,
+  const bool& name_module_using_index,
+  const bool& perimeter_cb,
+  const bool& frame_view,
   const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
@@ -1635,7 +1639,7 @@ static int build_tile_module(
     module_manager, tile_module, grids, layer, vpr_device_annotation,
     device_rr_gsb, rr_graph_view, tile_annotation, fabric_tile, fabric_tile_id,
     pb_instances, cb_instances, sb_instances, name_module_using_index,
-    frame_view, verbose);
+    perimeter_cb, frame_view, verbose);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
@@ -1709,6 +1713,7 @@ int build_tile_modules(ModuleManager& module_manager,
                        const CircuitModelId& sram_model,
                        const e_config_protocol_type& sram_orgz_type,
                        const bool& name_module_using_index,
+                       const bool& perimeter_cb,
                        const bool& frame_view, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build tile modules for the FPGA fabric");
 
@@ -1722,7 +1727,7 @@ int build_tile_modules(ModuleManager& module_manager,
       module_manager, decoder_lib, fabric_tile, fabric_tile_id, grids, layer,
       vpr_device_annotation, device_rr_gsb, rr_graph_view, tile_annotation,
       circuit_lib, sram_model, sram_orgz_type, name_module_using_index,
-      frame_view, verbose);
+      perimeter_cb, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
