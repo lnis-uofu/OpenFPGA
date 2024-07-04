@@ -261,6 +261,7 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
        * We will skip those modules
        */
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+      VTR_LOGV(verbose, "Try to add %s connnection block at (%lu, %lu)\n", cb_type == CHANX ? "X-" : "Y-", ix, iy); 
       vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type),
                                        rr_gsb.get_cb_y(cb_type));
       if (false == rr_gsb.is_cb_exist(cb_type)) {
