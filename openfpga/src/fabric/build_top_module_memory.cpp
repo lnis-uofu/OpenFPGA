@@ -458,12 +458,12 @@ void organize_top_module_memory_modules(
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coords;
 
   /* BOTTOM side I/Os */
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
     io_coords[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
   }
 
   /* RIGHT side I/Os */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
     io_coords[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
   }
 
@@ -483,13 +483,13 @@ void organize_top_module_memory_modules(
    *    +--------+ +--------+
    *
    */
-  for (size_t ix = grids.width() - 2; ix >= 1; --ix) {
+  for (size_t ix = grids.width() - 1; ix >= 1; --ix) {
     io_coords[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
   }
   io_coords[TOP].push_back(vtr::Point<size_t>(0, grids.height() - 1));
 
   /* LEFT side I/Os */
-  for (size_t iy = grids.height() - 2; iy >= 1; --iy) {
+  for (size_t iy = grids.height() - 1; iy >= 1; --iy) {
     io_coords[LEFT].push_back(vtr::Point<size_t>(0, iy));
   }
 
