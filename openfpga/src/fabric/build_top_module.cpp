@@ -79,7 +79,7 @@ int build_top_module(
       rr_clock_lookup, vpr_device_annotation, grids, layer, tile_annotation,
       rr_graph, device_rr_gsb, tile_direct, arch_direct, config_protocol,
       sram_model, frame_view, compact_routing_hierarchy, duplicate_grid_pin,
-      fabric_key, group_config_block);
+      fabric_key, group_config_block, verbose);
   } else {
     /* Build the tile instances under the top module */
     status = build_top_module_tile_child_instances(

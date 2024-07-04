@@ -244,7 +244,7 @@ static vtr::Matrix<size_t> add_top_module_switch_block_instances(
 static vtr::Matrix<size_t> add_top_module_connection_block_instances(
   ModuleManager& module_manager, const ModuleId& top_module,
   const DeviceRRGSB& device_rr_gsb, const t_rr_type& cb_type,
-  const bool& compact_routing_hierarchy) {
+  const bool& compact_routing_hierarchy, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Add connection block instances to top module");
 
@@ -264,6 +264,7 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
       vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type),
                                        rr_gsb.get_cb_y(cb_type));
       if (false == rr_gsb.is_cb_exist(cb_type)) {
+        VTR_LOGV(verbose, "Skip connnection block at (%lu, %lu) as it does not exist\n", cb_coordinate.x(), cb_coordinate.y()); 
         continue;
       }
       /* If we use compact routing hierarchy, we should instanciate the unique
@@ -295,6 +296,7 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
         top_module, cb_module,
         cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)],
         cb_instance_name);
+      VTR_LOGV(verbose, "Added connnection block '%s' (module '%s')\n", cb_instance_name.c_str(), cb_module_name.c_str()); 
     }
   }
 
@@ -445,7 +447,8 @@ int build_top_module_fine_grained_child_instances(
   const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
   const bool& frame_view, const bool& compact_routing_hierarchy,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& group_config_block) {
+  const bool& group_config_block,
+  const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
@@ -460,10 +463,10 @@ int build_top_module_fine_grained_child_instances(
   /* Add all the CBX and CBYs across the fabric */
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(
     module_manager, top_module, device_rr_gsb, CHANX,
-    compact_routing_hierarchy);
+    compact_routing_hierarchy, verbose);
   cb_instance_ids[CHANY] = add_top_module_connection_block_instances(
     module_manager, top_module, device_rr_gsb, CHANY,
-    compact_routing_hierarchy);
+    compact_routing_hierarchy, verbose);
 
   /* Update I/O children list */
   add_top_module_io_children(module_manager, top_module, grids, layer,
