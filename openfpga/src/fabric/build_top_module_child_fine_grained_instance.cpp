@@ -264,7 +264,7 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
       vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type),
                                        rr_gsb.get_cb_y(cb_type));
       if (false == rr_gsb.is_cb_exist(cb_type)) {
-        VTR_LOGV(verbose, "Skip connnection block at (%lu, %lu) as it does not exist\n", cb_coordinate.x(), cb_coordinate.y()); 
+        VTR_LOGV(verbose, "Skip %s connnection block at (%lu, %lu) as it does not exist\n", cb_type == CHANX ? "X-" : "Y-", cb_coordinate.x(), cb_coordinate.y()); 
         continue;
       }
       /* If we use compact routing hierarchy, we should instanciate the unique
@@ -296,7 +296,7 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
         top_module, cb_module,
         cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)],
         cb_instance_name);
-      VTR_LOGV(verbose, "Added connnection block '%s' (module '%s')\n", cb_instance_name.c_str(), cb_module_name.c_str()); 
+      VTR_LOGV(verbose, "Added %s connnection block '%s' (module '%s')\n", cb_type == CHANX ? "X-" : "Y-", cb_instance_name.c_str(), cb_module_name.c_str()); 
     }
   }
 
