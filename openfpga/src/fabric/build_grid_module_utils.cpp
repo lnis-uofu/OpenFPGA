@@ -40,7 +40,9 @@ std::vector<e_side> find_grid_module_pin_sides(
   std::vector<e_side> pin_sides;
   pin_sides.reserve(3);
   for (e_side pin_side : {TOP, RIGHT, BOTTOM, LEFT}) {
-    pin_sides.push_back(pin_side);
+    if (pin_side != border_side) {
+      pin_sides.push_back(pin_side);
+    }
   }
   return pin_sides;
 }
