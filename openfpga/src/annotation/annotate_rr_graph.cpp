@@ -126,7 +126,12 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
     switch (side) {
       case TOP: /* TOP = 0 */
-        /* For the border, we should take special care */
+        /* For the border, we should take special care
+         * For the fabric where no cbs are on perimeter tiles (y = H - 1),
+         * the the border should be on the y = H - 2
+         * For the fabric where cbs are on perimeter tiles,
+         * the border should be on the y = H - 1
+         */
         if (gsb_coord.y() == gsb_range.y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
@@ -157,7 +162,12 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         break;
       case RIGHT: /* RIGHT = 1 */
-        /* For the border, we should take special care */
+        /* For the border, we should take special care
+         * For the fabric where no cbs are on perimeter tiles (x = W - 1),
+         * the the border should be on the x = W - 2
+         * For the fabric where cbs are on perimeter tiles,
+         * the border should be on the x = W - 1
+         */
         if (gsb_coord.x() == gsb_range.x()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
@@ -189,8 +199,13 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
-        /* For the border, we should take special care */
-        if (gsb_coord.y() == 0) {
+        /* For the border, we should take special care
+         * For the fabric where no cbs are on perimeter tiles (y = 0),
+         * the the border should be on the y = 0
+         * For the fabric where cbs are on perimeter tiles,
+         * the border should be on the y = - 1, leading to no border
+         */
+        if (!vpr_device_ctx.arch->perimeter_cb && gsb_coord.y() == 0) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -220,8 +235,13 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
-        /* For the border, we should take special care */
-        if (gsb_coord.x() == 0) {
+        /* For the border, we should take special care
+         * For the fabric where no cbs are on perimeter tiles (x = 0),
+         * the the border should be on the x = 0
+         * For the fabric where cbs are on perimeter tiles,
+         * the border should be on the x = - 1, leading to no border
+         */
+        if (!vpr_device_ctx.arch->perimeter_cb && gsb_coord.x() == 0) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
