@@ -763,7 +763,10 @@ static void add_top_module_nets_connect_sb_and_cb(
       /* Only for the condition where cbs are on perimeter, the neighbour cb will be invalid
        * Bypass in such case on finding neighbour cbs
        */
-      if (instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x() || instance_sb_coordinate.y() == 0) {
+      if (BOTTOM == side_manager.get_side() && instance_sb_coordinate.y() == 0) {
+        continue;
+      }
+      if (RIGHT == side_manager.get_side() && instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x()) {
         continue;
       }
       const RRGSB& adjacent_gsb =
