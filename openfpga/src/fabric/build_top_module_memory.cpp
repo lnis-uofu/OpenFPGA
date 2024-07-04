@@ -370,12 +370,13 @@ void build_top_module_configurable_regions(
  *   Note: the organization of inter-tile aims to reduce the wire length
  *         to connect between tiles. Therefore, it is organized as a snake
  *         where we can avoid long wires between rows and columns
+ *   Note: Corner I/Os only occur when perimeter cb is allowed
  *
  *    +--------------------------------------------------------+
- *    |              +------+------+-----+------+              |
- *    |              | I/O  | I/O  | ... | I/O  |              |
- *    |              | TOP  | TOP  |     | TOP  |              |
- *    |              +------+------+-----+------+              |
+ *    |  +------+    +------+------+-----+------+   +------+   |
+ *    |  | I/O  |    | I/O  | I/O  | ... | I/O  |   | I/O  |   |
+ *    |  | LEFT |    | TOP  | TOP  |     | TOP  |   | TOP  |   |
+ *    |  +------+    +------+------+-----+------+   +------+   |
  *    |           +---------------------------------->tail     |
  *    |  +------+ |  +------+------+-----+------+   +------+   |
  *    |  |      | |  |      |      |     |      |   |      |   |
@@ -397,10 +398,10 @@ void build_top_module_configurable_regions(
  *    |  | LEFT |    | [0]  |  [1] |     |  [i] | | |RIGHT |   |
  *    |  +------+    +------+------+-----+------+ | +------+   |
  *    +-------------------------------------------+            |
- *                   +------+------+-----+------+              |
- *                   | I/O  | I/O  | ... | I/O  |              |
- *                   |BOTTOM|BOTTOM|     |BOTTOM|              |
- *                   +------+------+-----+------+              |
+ *       +------+    +------+------+-----+------+   +------+   |
+ *       | I/O  |    | I/O  | I/O  | ... | I/O  |   | I/O  |   |
+ *       |BOTTOM|    |BOTTOM|BOTTOM|     |BOTTOM|   |RIGHT |   |
+ *       +------+    +------+------+-----+------+   +------+   |
  *        head >-----------------------------------------------+
  *
  * Inner tile connection:
@@ -486,7 +487,6 @@ void organize_top_module_memory_modules(
   for (size_t ix = grids.width() - 1; ix >= 1; --ix) {
     io_coords[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
   }
-  io_coords[TOP].push_back(vtr::Point<size_t>(0, grids.height() - 1));
 
   /* LEFT side I/Os */
   for (size_t iy = grids.height() - 1; iy >= 1; --iy) {
