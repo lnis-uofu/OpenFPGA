@@ -760,6 +760,12 @@ static void add_top_module_nets_connect_sb_and_cb(
     }
 
     if (RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side()) {
+      /* Only for the condition where cbs are on perimeter, the neighbour cb will be invalid
+       * Bypass in such case on finding neighbour cbs
+       */
+      if (instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x() || instance_sb_coordinate.y() == 0) {
+        continue;
+      }
       const RRGSB& adjacent_gsb =
         device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
       if (false == adjacent_gsb.is_cb_exist(cb_type)) {
