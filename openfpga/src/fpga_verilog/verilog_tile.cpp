@@ -60,6 +60,7 @@ static int print_verilog_tile_module_netlist(
   /* Write the module content in Verilog format */
   write_verilog_module_to_file(fp, module_manager, tile_module,
                                options.explicit_port_mapping(),
+                               options.constant_undriven_inputs(),
                                options.default_net_type());
 
   /* Add an empty line as a splitter */

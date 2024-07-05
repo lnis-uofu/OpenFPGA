@@ -61,6 +61,7 @@ static void print_verilog_mux_memory_module(
         fp, module_manager, mem_module,
         options.explicit_port_mapping() ||
           circuit_lib.dump_explicit_port_map(mux_model),
+        options.constant_undriven_inputs(),
         options.default_net_type());
 
       /* Add an empty line as a splitter */
@@ -84,6 +85,7 @@ static void print_verilog_mux_memory_module(
           fp, module_manager, feedthru_mem_module,
           options.explicit_port_mapping() ||
             circuit_lib.dump_explicit_port_map(mux_model),
+          options.constant_undriven_inputs(),
           options.default_net_type());
 
         /* Add an empty line as a splitter */
@@ -208,6 +210,7 @@ void print_verilog_submodule_memories(
     write_verilog_module_to_file(fp, module_manager, mem_module,
                                  options.explicit_port_mapping() ||
                                    circuit_lib.dump_explicit_port_map(model),
+                                 options.constant_undriven_inputs(),
                                  options.default_net_type());
 
     /* Add an empty line as a splitter */
@@ -228,6 +231,7 @@ void print_verilog_submodule_memories(
       write_verilog_module_to_file(fp, module_manager, feedthru_mem_module,
                                    options.explicit_port_mapping() ||
                                      circuit_lib.dump_explicit_port_map(model),
+                                   options.constant_undriven_inputs(),
                                    options.default_net_type());
 
       /* Add an empty line as a splitter */
@@ -241,6 +245,7 @@ void print_verilog_submodule_memories(
     /* Write the module content in Verilog format */
     write_verilog_module_to_file(fp, module_manager, mem_group_module,
                                  options.explicit_port_mapping(),
+                                 options.constant_undriven_inputs(),
                                  options.default_net_type());
 
     /* Add an empty line as a splitter */

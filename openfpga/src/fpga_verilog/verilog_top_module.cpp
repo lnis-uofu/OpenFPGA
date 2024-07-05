@@ -63,6 +63,7 @@ void print_verilog_core_module(NetlistManager& netlist_manager,
   /* Write the module content in Verilog format */
   write_verilog_module_to_file(fp, module_manager, core_module,
                                options.explicit_port_mapping(),
+                               options.constant_undriven_inputs(),
                                options.default_net_type());
 
   /* Add an empty line as a splitter */
@@ -129,6 +130,7 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
   /* Write the module content in Verilog format */
   write_verilog_module_to_file(fp, module_manager, top_module,
                                options.explicit_port_mapping(),
+                               options.constant_undriven_inputs(),
                                options.default_net_type());
 
   /* Add an empty line as a splitter */

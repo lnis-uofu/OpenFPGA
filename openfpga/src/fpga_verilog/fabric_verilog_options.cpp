@@ -21,6 +21,7 @@ FabricVerilogOption::FabricVerilogOption() {
   default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
   time_stamp_ = true;
   use_relative_path_ = false;
+  constant_undriven_inputs_ = false;
   verbose_output_ = false;
 }
 
@@ -52,6 +53,8 @@ bool FabricVerilogOption::print_user_defined_template() const {
 e_verilog_default_net_type FabricVerilogOption::default_net_type() const {
   return default_net_type_;
 }
+
+bool FabricVerilogOption::constant_undriven_inputs() const { return constant_undriven_inputs_; }
 
 bool FabricVerilogOption::verbose_output() const { return verbose_output_; }
 
@@ -104,6 +107,10 @@ void FabricVerilogOption::set_default_net_type(
       VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE],
       VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE]);
   }
+}
+
+void FabricVerilogOption::set_constant_undriven_inputs(const bool& enabled) {
+  constant_undriven_inputs_ = enabled;
 }
 
 void FabricVerilogOption::set_verbose_output(const bool& enabled) {

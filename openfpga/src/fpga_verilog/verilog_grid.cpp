@@ -114,6 +114,7 @@ static void print_verilog_primitive_block(
 
   /* Write the verilog module */
   write_verilog_module_to_file(fp, module_manager, primitive_module, true,
+                               options.constant_undriven_inputs(),
                                options.default_net_type());
 
   /* Close file handler */
@@ -234,6 +235,7 @@ static void rec_print_verilog_logical_tile(
   /* Write the verilog module */
   write_verilog_module_to_file(fp, module_manager, pb_module,
                                options.explicit_port_mapping(),
+                               options.constant_undriven_inputs(),
                                options.default_net_type());
 
   print_verilog_comment(
@@ -348,6 +350,7 @@ static void print_verilog_physical_tile_netlist(
                     module_manager.module_name(grid_module) + " -----"));
   write_verilog_module_to_file(fp, module_manager, grid_module,
                                options.explicit_port_mapping(),
+                               options.constant_undriven_inputs(),
                                options.default_net_type());
 
   print_verilog_comment(

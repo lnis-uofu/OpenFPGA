@@ -147,7 +147,7 @@ static BasicPort generate_verilog_port_for_module_net(
  *******************************************************************/
 static void
 find_verilog_module_local_undriven_wires(
-  std::map<std::string, std::vector<BasicPort>>& local_wires;
+  std::map<std::string, std::vector<BasicPort>>& local_wires,
   const ModuleManager& module_manager,
   const ModuleId& module_id,
   const std::vector<ModuleManager::e_module_port_type>& port_type_blacklist) {
@@ -572,6 +572,7 @@ static void write_verilog_instance_to_file(std::fstream& fp,
 void write_verilog_module_to_file(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& module_id, const bool& use_explicit_port_map,
+  const bool& constant_local_undriven_wires,
   const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -603,7 +604,26 @@ void write_verilog_module_to_file(
   }
 
   /* Use constant to drive undriven local wires */
-  find_verilog_module_local_undriven_wires(local_wires, module_manager, module_id, std::vector<ModuleManager::e_module_port_type>());
+  if (constant_local_undriven_wires) {
+    std::vector<ModuleManager::e_module_port_type> blacklist = {
+    ModuleManager::e_module_port_type::MODULE_GLOBAL_PORT, 
+    ModuleManager::e_module_port_type::MODULE_GPIN_PORT, 
+    ModuleManager::e_module_port_type::MODULE_GPOUT_PORT, 
+    ModuleManager::e_module_port_type::MODULE_GPIO_PORT,
+    ModuleManager::e_module_port_type::MODULE_INOUT_PORT,
+    ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT,
+    ModuleManager::e_module_port_type::MODULE_CLOCK_PORT
+    };
+    std::map<std::string, std::vector<BasicPort>> local_undriven_wires;
+    find_verilog_module_local_undriven_wires(local_undriven_wires, module_manager, module_id, blacklist);
+    for (std::pair<std::string, std::vector<BasicPort>> port_group :
+         local_undriven_wires) {
+      for (const BasicPort& local_undriven_wire : port_group.second) {
+        fp << generate_verilog_port_constant_values(local_undriven_wire, std::vector<size_t>(local_undriven_wire.get_width(), 0), false) << ";"
+           << std::endl;
+      }
+    }
+  }
 
   /* Print an empty line as splitter */
   fp << std::endl;
