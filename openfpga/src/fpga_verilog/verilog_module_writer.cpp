@@ -140,6 +140,67 @@ static BasicPort generate_verilog_port_for_module_net(
 }
 
 /********************************************************************
+ * Find all the undriven nets that are going to be local wires
+ * And organize it in a vector of ports
+ * Verilog wire writter function will use the output of this function
+ * to write up local wire declaration in Verilog format
+ *******************************************************************/
+static void
+find_verilog_module_local_undriven_wires(
+  std::map<std::string, std::vector<BasicPort>>& local_wires;
+  const ModuleManager& module_manager,
+  const ModuleId& module_id,
+  const std::vector<ModuleManager::e_module_port_type>& port_type_blacklist) {
+
+  /* Local wires could also happen for undriven ports of child module */
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    for (size_t instance :
+         module_manager.child_module_instances(module_id, child)) {
+      for (const ModulePortId& child_port_id :
+           module_manager.module_ports(child)) {
+        BasicPort child_port = module_manager.module_port(child, child_port_id);
+        ModuleManager::e_module_port_type child_port_type = module_manager.port_type(child, child_port_id);
+        bool filter_out = false;
+        for (ModuleManager::e_module_port_type curr_port_type : port_type_blacklist) {
+          if (child_port_type == curr_port_type) {
+            filter_out = true;
+            break;
+          }
+        }
+        if (filter_out) {
+          continue;
+        }
+        std::vector<size_t> undriven_pins;
+        for (size_t child_pin : child_port.pins()) {
+          /* Find the net linked to the pin */
+          ModuleNetId net = module_manager.module_instance_port_net(
+            module_id, child, instance, child_port_id, child_pin);
+          /* We only care undriven ports */
+          if (ModuleNetId::INVALID() == net) {
+            undriven_pins.push_back(child_pin);
+          }
+        }
+        if (true == undriven_pins.empty()) {
+          continue;
+        }
+        /* Reach here, we need a local wire, we will create a port only for the
+         * undriven pins of the port! */
+        BasicPort instance_port;
+        instance_port.set_name(generate_verilog_undriven_local_wire_name(
+          module_manager, module_id, child, instance, child_port_id));
+        /* We give the same port name as child module, this case happens to
+         * global ports */
+        instance_port.set_width(
+          *std::min_element(undriven_pins.begin(), undriven_pins.end()),
+          *std::max_element(undriven_pins.begin(), undriven_pins.end()));
+
+        local_wires[instance_port.get_name()].push_back(instance_port);
+      }
+    }
+  }
+}
+
+/********************************************************************
  * Find all the nets that are going to be local wires
  * And organize it in a vector of ports
  * Verilog wire writter function will use the output of this function
@@ -206,41 +267,7 @@ find_verilog_module_local_wires(const ModuleManager& module_manager,
     }
   }
 
-  /* Local wires could also happen for undriven ports of child module */
-  for (const ModuleId& child : module_manager.child_modules(module_id)) {
-    for (size_t instance :
-         module_manager.child_module_instances(module_id, child)) {
-      for (const ModulePortId& child_port_id :
-           module_manager.module_ports(child)) {
-        BasicPort child_port = module_manager.module_port(child, child_port_id);
-        std::vector<size_t> undriven_pins;
-        for (size_t child_pin : child_port.pins()) {
-          /* Find the net linked to the pin */
-          ModuleNetId net = module_manager.module_instance_port_net(
-            module_id, child, instance, child_port_id, child_pin);
-          /* We only care undriven ports */
-          if (ModuleNetId::INVALID() == net) {
-            undriven_pins.push_back(child_pin);
-          }
-        }
-        if (true == undriven_pins.empty()) {
-          continue;
-        }
-        /* Reach here, we need a local wire, we will create a port only for the
-         * undriven pins of the port! */
-        BasicPort instance_port;
-        instance_port.set_name(generate_verilog_undriven_local_wire_name(
-          module_manager, module_id, child, instance, child_port_id));
-        /* We give the same port name as child module, this case happens to
-         * global ports */
-        instance_port.set_width(
-          *std::min_element(undriven_pins.begin(), undriven_pins.end()),
-          *std::max_element(undriven_pins.begin(), undriven_pins.end()));
-
-        local_wires[instance_port.get_name()].push_back(instance_port);
-      }
-    }
-  }
+  find_verilog_module_local_undriven_wires(local_wires, module_manager, module_id, std::vector<ModuleManager::e_module_port_type>());
 
   return local_wires;
 }
@@ -574,6 +601,9 @@ void write_verilog_module_to_file(
          << std::endl;
     }
   }
+
+  /* Use constant to drive undriven local wires */
+  find_verilog_module_local_undriven_wires(local_wires, module_manager, module_id, std::vector<ModuleManager::e_module_port_type>());
 
   /* Print an empty line as splitter */
   fp << std::endl;
