@@ -330,7 +330,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       case RIGHT: /* RIGHT = 1 */
         /* For the bording, we should take special care */
         /* Check if TOP side chan width is 0 or not */
-        chan_side = TOP;
+        chan_side = BOTTOM;
         /* Build the connection block: ipin and ipin_grid_side */
         /* LEFT side INPUT Pins of Grid[x+1][y] */
         ix = rr_gsb.get_sb_x() + 1;
@@ -350,7 +350,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       case LEFT: /* LEFT = 3 */
         /* For the bording, we should take special care */
         /* Check if left side chan width is 0 or not */
-        chan_side = TOP;
+        chan_side = BOTTOM;
         /* Build the connection block: ipin and ipin_grid_side */
         /* RIGHT side INPUT Pins of Grid[x][y] */
         ix = rr_gsb.get_sb_x();
