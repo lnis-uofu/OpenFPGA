@@ -115,13 +115,13 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     std::map<e_side, vtr::Point<size_t>> track_range;
     track_range[TOP] = vtr::Point<size_t>(0, gsb_range.y());
     track_range[RIGHT] = vtr::Point<size_t>(0, gsb_range.x());
-    track_range[BOTTOM] = vtr::Point<size_t>(1, gsb_range.y());
-    track_range[LEFT] = vtr::Point<size_t>(1, gsb_range.x());
+    track_range[BOTTOM] = vtr::Point<size_t>(0, gsb_range.y());
+    track_range[LEFT] = vtr::Point<size_t>(0, gsb_range.x());
     if (perimeter_cb) {
         track_range[TOP] = vtr::Point<size_t>(0, gsb_range.y() + 1);
         track_range[RIGHT] = vtr::Point<size_t>(0, gsb_range.x() + 1);
-        track_range[BOTTOM] = vtr::Point<size_t>(0, gsb_range.y() + 2);
-        track_range[LEFT] = vtr::Point<size_t>(0, gsb_range.x() + 2);
+        track_range[BOTTOM] = vtr::Point<size_t>(0, gsb_range.y() + 1);
+        track_range[LEFT] = vtr::Point<size_t>(0, gsb_range.x() + 1);
     }
 
   /* Create an object to return */
