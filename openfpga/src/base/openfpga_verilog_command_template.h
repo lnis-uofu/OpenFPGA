@@ -30,6 +30,10 @@ ShellCommandId add_write_fabric_verilog_command_template(
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--constant_undriven_inputs' */
+  shell_cmd.add_option("constant_undriven_inputs", false,
+                       "Use constant gnd for undriven wires in Verilog netlists. Recommand to enable when there are boundary routing tracks in FPGA fabric");
+
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
                        "Use explicit port mapping in Verilog netlists");
