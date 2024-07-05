@@ -98,7 +98,32 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_range,
                           const size_t& layer,
                           const vtr::Point<size_t>& gsb_coord,
+                          const bool& perimeter_cb,
                           const bool& include_clock) {
+    /* Bounding box for GSB ranges on routing tracks.
+     * Note that when perimeter connection blocks are not allowed,
+     * - top side routing tracks for any GSB exist on y = [0, H-2)
+     * - right side routing tracks for any GSB exist on x = [0, W-2)
+     * - bottom side routing tracks for any GSB exist on y = [1, H-1)
+     * - left side routing tracks for any GSB exist on x = [1, W-1)
+     * Note that when perimeter connection blocks are allowed,
+     * - top side routing tracks for any GSB exist on y = [0, H-1)
+     * - right side routing tracks for any GSB exist on x = [0, W-1)
+     * - bottom side routing tracks for any GSB exist on y = [0, H)
+     * - left side routing tracks for any GSB exist on x = [0, W)
+     */
+    std::map<e_side, vtr::Point<size_t>> track_range;
+    track_range[TOP] = vtr::Point<size_t>(0, gsb_range.y();
+    track_range[RIGHT] = vtr::Point<size_t>(0, gsb_range.x());
+    track_range[BOTTOM] = vtr::Point<size_t>(1, gsb_range.y());
+    track_range[LEFT] = vtr::Point<size_t>(1, gsb_range.x());
+    if (perimeter_cb) {
+        track_range[TOP] = vtr::Point<size_t>(0, gsb_range.y() + 1);
+        track_range[RIGHT] = vtr::Point<size_t>(0, gsb_range.x() + 1);
+        track_range[BOTTOM] = vtr::Point<size_t>(0, gsb_range.y() + 2);
+        track_range[LEFT] = vtr::Point<size_t>(0, gsb_range.x() + 2);
+    }
+
   /* Create an object to return */
   RRGSB rr_gsb;
 
@@ -126,13 +151,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
     switch (side) {
       case TOP: /* TOP = 0 */
-        /* For the border, we should take special care
-         * For the fabric where no cbs are on perimeter tiles (y = H - 1),
-         * the the border should be on the y = H - 2
-         * For the fabric where cbs are on perimeter tiles,
-         * the border should be on the y = H - 1
-         */
-        if (gsb_coord.y() == gsb_range.y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coordinate.y() || gsb_coordinate.y() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -168,7 +187,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
          * For the fabric where cbs are on perimeter tiles,
          * the border should be on the x = W - 1
          */
-        if (gsb_coord.x() == gsb_range.x()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coordinate.x() || gsb_coordinate.x() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -199,13 +218,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
-        /* For the border, we should take special care
-         * For the fabric where no cbs are on perimeter tiles (y = 0),
-         * the the border should be on the y = 0
-         * For the fabric where cbs are on perimeter tiles,
-         * the border should be on the y = - 1, leading to no border
-         */
-        if (!vpr_device_ctx.arch->perimeter_cb && gsb_coord.y() == 0) {
+        if (track_range[side_manager.get_side()].x() > gsb_coordinate.y() || gsb_coordinate.y() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -235,13 +248,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
-        /* For the border, we should take special care
-         * For the fabric where no cbs are on perimeter tiles (x = 0),
-         * the the border should be on the x = 0
-         * For the fabric where cbs are on perimeter tiles,
-         * the border should be on the x = - 1, leading to no border
-         */
-        if (!vpr_device_ctx.arch->perimeter_cb && gsb_coord.x() == 0) {
+        if (track_range[side_manager.get_side()].x() > gsb_coordinate.y() || gsb_coordinate.y() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -355,9 +362,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Check if TOP side chan width is 0 or not */
         chan_side = TOP;
         /* Build the connection block: ipin and ipin_grid_side */
-        /* LEFT side INPUT Pins of Grid[x+1][y+1] */
+        /* LEFT side INPUT Pins of Grid[x+1][y] */
         ix = rr_gsb.get_sb_x() + 1;
-        iy = rr_gsb.get_sb_y() + 1;
+        iy = rr_gsb.get_sb_y();
         ipin_rr_node_grid_side = LEFT;
         break;
       case BOTTOM: /* BOTTOM = 2*/
@@ -375,9 +382,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Check if left side chan width is 0 or not */
         chan_side = TOP;
         /* Build the connection block: ipin and ipin_grid_side */
-        /* RIGHT side INPUT Pins of Grid[x][y+1] */
+        /* RIGHT side INPUT Pins of Grid[x][y] */
         ix = rr_gsb.get_sb_x();
-        iy = rr_gsb.get_sb_y() + 1;
+        iy = rr_gsb.get_sb_y();
         ipin_rr_node_grid_side = RIGHT;
         break;
       default:
@@ -459,13 +466,10 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        */
       vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 2,
                                        vpr_device_ctx.grid.height() - 2);
-      if (vpr_device_ctx.arch->perimeter_cb) {
-        sub_gsb_range.set(vpr_device_ctx.grid.width() - 1, vpr_device_ctx.grid.height() - 1);
-      }
       const RRGSB& rr_gsb =
         build_rr_gsb(vpr_device_ctx,
                      sub_gsb_range,
-                     layer, vtr::Point<size_t>(ix, iy), include_clock);
+                     layer, vtr::Point<size_t>(ix, iy), perimeter_cb, include_clock);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
