@@ -619,8 +619,7 @@ void write_verilog_module_to_file(
     for (std::pair<std::string, std::vector<BasicPort>> port_group :
          local_undriven_wires) {
       for (const BasicPort& local_undriven_wire : port_group.second) {
-        fp << generate_verilog_port_constant_values(local_undriven_wire, std::vector<size_t>(local_undriven_wire.get_width(), 0), false) << ";"
-           << std::endl;
+        print_verilog_wire_constant_values(fp, local_undriven_wire, std::vector<size_t>(local_undriven_wire.get_width(), 0));
       }
     }
   }
