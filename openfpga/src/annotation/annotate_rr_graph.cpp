@@ -151,7 +151,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
     switch (side) {
       case TOP: /* TOP = 0 */
-        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() > track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -187,7 +187,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
          * For the fabric where cbs are on perimeter tiles,
          * the border should be on the x = W - 1
          */
-        if (track_range[side_manager.get_side()].x() > gsb_coord.x() || gsb_coord.x() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.x() || gsb_coord.x() > track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -218,7 +218,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
-        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() > track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -248,7 +248,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
-        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() > track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
