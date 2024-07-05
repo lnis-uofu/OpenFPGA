@@ -753,17 +753,17 @@ static void add_top_module_nets_connect_sb_and_cb(
      * is_cb_exist() FOr RIGHT and BOTTOM side, find the adjacent RRGSB and then
      * use is_cb_exist()
      */
-    if (TOP == side_manager.get_side() || LEFT == side_manager.get_side()) {
+    if (BOTTOM == side_manager.get_side() || LEFT == side_manager.get_side()) {
       if (false == rr_gsb.is_cb_exist(cb_type)) {
         continue;
       }
     }
 
-    if (RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side()) {
+    if (RIGHT == side_manager.get_side() || TOP == side_manager.get_side()) {
       /* Only for the condition where cbs are on perimeter, the neighbour cb will be invalid
        * Bypass in such case on finding neighbour cbs
        */
-      if (BOTTOM == side_manager.get_side() && instance_sb_coordinate.y() == 0) {
+      if (TOP == side_manager.get_side() && instance_sb_coordinate.y() == device_rr_gsb.get_gsb_range().y()) {
         continue;
       }
       if (RIGHT == side_manager.get_side() && instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x()) {
