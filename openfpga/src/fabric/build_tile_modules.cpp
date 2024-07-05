@@ -732,13 +732,13 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
      * is_cb_exist() FOr RIGHT and BOTTOM side, find the adjacent RRGSB and then
      * use is_cb_exist()
      */
-    if (TOP == side_manager.get_side() || LEFT == side_manager.get_side()) {
+    if (BOTTOM == side_manager.get_side() || LEFT == side_manager.get_side()) {
       if (false == rr_gsb.is_cb_exist(cb_type)) {
         continue;
       }
     }
 
-    if (RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side()) {
+    if (RIGHT == side_manager.get_side() || TOP == side_manager.get_side()) {
       const RRGSB& adjacent_gsb =
         device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
       if (false == adjacent_gsb.is_cb_exist(cb_type)) {
