@@ -113,7 +113,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
      * - left side routing tracks for any GSB exist on x = [0, W)
      */
     std::map<e_side, vtr::Point<size_t>> track_range;
-    track_range[TOP] = vtr::Point<size_t>(0, gsb_range.y();
+    track_range[TOP] = vtr::Point<size_t>(0, gsb_range.y());
     track_range[RIGHT] = vtr::Point<size_t>(0, gsb_range.x());
     track_range[BOTTOM] = vtr::Point<size_t>(1, gsb_range.y());
     track_range[LEFT] = vtr::Point<size_t>(1, gsb_range.x());
@@ -151,7 +151,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
     switch (side) {
       case TOP: /* TOP = 0 */
-        if (track_range[side_manager.get_side()].x() > gsb_coordinate.y() || gsb_coordinate.y() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -187,7 +187,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
          * For the fabric where cbs are on perimeter tiles,
          * the border should be on the x = W - 1
          */
-        if (track_range[side_manager.get_side()].x() > gsb_coordinate.x() || gsb_coordinate.x() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.x() || gsb_coord.x() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -218,7 +218,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
-        if (track_range[side_manager.get_side()].x() > gsb_coordinate.y() || gsb_coordinate.y() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -248,7 +248,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
-        if (track_range[side_manager.get_side()].x() > gsb_coordinate.y() || gsb_coordinate.y() >= track_range[side_manager.get_side()].y()) {
+        if (track_range[side_manager.get_side()].x() > gsb_coord.y() || gsb_coord.y() >= track_range[side_manager.get_side()].y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -469,7 +469,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
       const RRGSB& rr_gsb =
         build_rr_gsb(vpr_device_ctx,
                      sub_gsb_range,
-                     layer, vtr::Point<size_t>(ix, iy), perimeter_cb, include_clock);
+                     layer, vtr::Point<size_t>(ix, iy), vpr_device_ctx.arch->perimeter_cb, include_clock);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
