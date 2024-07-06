@@ -66,8 +66,8 @@ void add_grid_module_duplicated_pb_type_ports(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side, perimeter_cb);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -173,8 +173,7 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
   const size_t& child_inst_subtile_index,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor, t_pb_graph_pin* pb_graph_pin,
-  const e_side& border_side,
-  const bool& perimeter_cb,
+  const e_side& border_side, const bool& perimeter_cb,
   const e_pin2pin_interc_type& pin2pin_interc_type) {
   /* Make sure this is ONLY applied to output pins */
   VTR_ASSERT(OUTPUT2OUTPUT_INTERC == pin2pin_interc_type);
@@ -185,8 +184,8 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side, perimeter_cb);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }

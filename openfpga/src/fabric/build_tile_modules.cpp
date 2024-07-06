@@ -1175,8 +1175,7 @@ static int build_tile_port_and_nets_from_pb(
   const TileAnnotation& tile_annotation, const vtr::Point<size_t>& pb_coord,
   const std::vector<size_t>& pb_instances, const FabricTile& fabric_tile,
   const FabricTileId& curr_fabric_tile_id, const size_t& ipb,
-  const bool& perimeter_cb,
-  const bool& frame_view, const bool& verbose) {
+  const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   size_t pb_instance = pb_instances[ipb];
   t_physical_tile_type_ptr phy_tile = grids.get_physical_type(
     t_physical_tile_loc(pb_coord.x(), pb_coord.y(), layer));
@@ -1202,7 +1201,8 @@ static int build_tile_port_and_nets_from_pb(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(phy_tile)) {
-    grid_pin_sides = find_grid_module_pin_sides(phy_tile, grid_side, perimeter_cb);
+    grid_pin_sides =
+      find_grid_module_pin_sides(phy_tile, grid_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -1379,8 +1379,7 @@ static int build_tile_module_ports_and_nets(
   const FabricTileId& fabric_tile_id, const std::vector<size_t>& pb_instances,
   const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
   const std::vector<size_t>& sb_instances, const bool& name_module_using_index,
-  const bool& perimeter_cb,
-  const bool& frame_view, const bool& verbose) {
+  const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
   /* Get the submodule of Switch blocks one by one, build connections between sb
@@ -1489,10 +1488,8 @@ static int build_tile_module(
   const TileAnnotation& tile_annotation, const CircuitLibrary& circuit_lib,
   const CircuitModelId& sram_model,
   const e_config_protocol_type& sram_orgz_type,
-  const bool& name_module_using_index,
-  const bool& perimeter_cb,
-  const bool& frame_view,
-  const bool& verbose) {
+  const bool& name_module_using_index, const bool& perimeter_cb,
+  const bool& frame_view, const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
   /* Create the module */
@@ -1702,19 +1699,16 @@ static int build_tile_module(
 /********************************************************************
  * Build all the tile modules
  *******************************************************************/
-int build_tile_modules(ModuleManager& module_manager,
-                       DecoderLibrary& decoder_lib,
-                       const FabricTile& fabric_tile, const DeviceGrid& grids,
-                       const VprDeviceAnnotation& vpr_device_annotation,
-                       const DeviceRRGSB& device_rr_gsb,
-                       const RRGraphView& rr_graph_view,
-                       const TileAnnotation& tile_annotation,
-                       const CircuitLibrary& circuit_lib,
-                       const CircuitModelId& sram_model,
-                       const e_config_protocol_type& sram_orgz_type,
-                       const bool& name_module_using_index,
-                       const bool& perimeter_cb,
-                       const bool& frame_view, const bool& verbose) {
+int build_tile_modules(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  const FabricTile& fabric_tile, const DeviceGrid& grids,
+  const VprDeviceAnnotation& vpr_device_annotation,
+  const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph_view,
+  const TileAnnotation& tile_annotation, const CircuitLibrary& circuit_lib,
+  const CircuitModelId& sram_model,
+  const e_config_protocol_type& sram_orgz_type,
+  const bool& name_module_using_index, const bool& perimeter_cb,
+  const bool& frame_view, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build tile modules for the FPGA fabric");
 
   int status_code = CMD_EXEC_SUCCESS;

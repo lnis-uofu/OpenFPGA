@@ -233,10 +233,9 @@ static void rec_print_verilog_logical_tile(
           std::string(physical_pb_type->name) + " -----"));
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, pb_module,
-                               options.explicit_port_mapping(),
-                               options.constant_undriven_inputs(),
-                               options.default_net_type());
+  write_verilog_module_to_file(
+    fp, module_manager, pb_module, options.explicit_port_mapping(),
+    options.constant_undriven_inputs(), options.default_net_type());
 
   print_verilog_comment(
     fp,
@@ -348,10 +347,9 @@ static void print_verilog_physical_tile_netlist(
   print_verilog_comment(
     fp, std::string("----- BEGIN Grid Verilog module: " +
                     module_manager.module_name(grid_module) + " -----"));
-  write_verilog_module_to_file(fp, module_manager, grid_module,
-                               options.explicit_port_mapping(),
-                               options.constant_undriven_inputs(),
-                               options.default_net_type());
+  write_verilog_module_to_file(
+    fp, module_manager, grid_module, options.explicit_port_mapping(),
+    options.constant_undriven_inputs(), options.default_net_type());
 
   print_verilog_comment(
     fp, std::string("----- END Grid Verilog module: " +

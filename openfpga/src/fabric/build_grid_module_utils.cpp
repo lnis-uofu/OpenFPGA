@@ -24,7 +24,8 @@ namespace openfpga {
  * 5. I/O grids in the center part of FPGA can have ports on any side
  *******************************************************************/
 std::vector<e_side> find_grid_module_pin_sides(
-  t_physical_tile_type_ptr grid_type_descriptor, const e_side& border_side, const bool& perimeter_cb) {
+  t_physical_tile_type_ptr grid_type_descriptor, const e_side& border_side,
+  const bool& perimeter_cb) {
   /* We must have an regular (non-I/O) type here */
   VTR_ASSERT(true == is_io_type(grid_type_descriptor));
   SideManager side_manager(border_side);
@@ -36,7 +37,8 @@ std::vector<e_side> find_grid_module_pin_sides(
   if (!perimeter_cb) {
     return std::vector<e_side>(1, side_manager.get_opposite());
   }
-  /* For cbs on perimeter, exclude the border side. All the other 3 sides are ok */
+  /* For cbs on perimeter, exclude the border side. All the other 3 sides are ok
+   */
   std::vector<e_side> pin_sides;
   pin_sides.reserve(3);
   for (e_side pin_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -66,8 +68,8 @@ void add_grid_module_net_connect_pb_graph_pin(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side, perimeter_cb);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }

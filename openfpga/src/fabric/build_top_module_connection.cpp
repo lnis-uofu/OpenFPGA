@@ -760,13 +760,15 @@ static void add_top_module_nets_connect_sb_and_cb(
     }
 
     if (RIGHT == side_manager.get_side() || TOP == side_manager.get_side()) {
-      /* Only for the condition where cbs are on perimeter, the neighbour cb will be invalid
-       * Bypass in such case on finding neighbour cbs
+      /* Only for the condition where cbs are on perimeter, the neighbour cb
+       * will be invalid Bypass in such case on finding neighbour cbs
        */
-      if (TOP == side_manager.get_side() && instance_sb_coordinate.y() == device_rr_gsb.get_gsb_range().y()) {
+      if (TOP == side_manager.get_side() &&
+          instance_sb_coordinate.y() == device_rr_gsb.get_gsb_range().y()) {
         continue;
       }
-      if (RIGHT == side_manager.get_side() && instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x()) {
+      if (RIGHT == side_manager.get_side() &&
+          instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x()) {
         continue;
       }
       const RRGSB& adjacent_gsb =

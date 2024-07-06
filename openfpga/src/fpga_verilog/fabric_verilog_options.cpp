@@ -54,7 +54,9 @@ e_verilog_default_net_type FabricVerilogOption::default_net_type() const {
   return default_net_type_;
 }
 
-bool FabricVerilogOption::constant_undriven_inputs() const { return constant_undriven_inputs_; }
+bool FabricVerilogOption::constant_undriven_inputs() const {
+  return constant_undriven_inputs_;
+}
 
 bool FabricVerilogOption::verbose_output() const { return verbose_output_; }
 

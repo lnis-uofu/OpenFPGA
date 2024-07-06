@@ -22,7 +22,7 @@
 namespace openfpga {
 
 /********************************************************************
- * With a given coordinate of a grid, find an existing fabric tile 
+ * With a given coordinate of a grid, find an existing fabric tile
  * or create a new fabric tile
  * - A grid may never exist in any fabric tile (no coordinate matches)
  *   Create a new one
@@ -30,13 +30,9 @@ namespace openfpga {
  *   Find the existing one
  *******************************************************************/
 static int find_or_create_one_fabric_tile_from_grid(
-  FabricTile& fabric_tile,
-  FabricTileId& curr_tile_id,
-  const DeviceGrid& grids,
-  const t_physical_tile_loc& tile_loc,
-  const bool& verbose) {
-  t_physical_tile_type_ptr phy_tile_type =
-    grids.get_physical_type(tile_loc);
+  FabricTile& fabric_tile, FabricTileId& curr_tile_id, const DeviceGrid& grids,
+  const t_physical_tile_loc& tile_loc, const bool& verbose) {
+  t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(tile_loc);
   vtr::Point<size_t> curr_tile_coord(tile_loc.x, tile_loc.y);
   vtr::Point<size_t> curr_gsb_coord(tile_loc.x, tile_loc.y);
 
@@ -71,8 +67,8 @@ static int find_or_create_one_fabric_tile_from_grid(
     }
   } else {
     /* Need to create a new tile here */
-    VTR_LOGV(verbose, "Create a regular tile[%lu][%lu]\n",
-             curr_tile_coord.x(), curr_tile_coord.y());
+    VTR_LOGV(verbose, "Create a regular tile[%lu][%lu]\n", curr_tile_coord.x(),
+             curr_tile_coord.y());
     curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
   }
 
@@ -100,7 +96,7 @@ static int find_or_create_one_fabric_tile_from_grid(
  * The gsb coordinate is the same as the grid coordinate when the
  * bottom-left style is considered
  *
- * ------------------------------ 
+ * ------------------------------
  *  +----------+ +----------+   ^
  *  | CBx      | | SB       |   |
  *  | [x][y]   | | [x][y]   |  GSB[x][y]
@@ -113,11 +109,11 @@ static int find_or_create_one_fabric_tile_from_grid(
  *
  *******************************************************************/
 static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
-                                            const DeviceGrid& grids,
-                                            const size_t& layer,
-                                            const RRGraphView& rr_graph,
-                                            const DeviceRRGSB& device_rr_gsb,
-                                            const bool& verbose) {
+                                               const DeviceGrid& grids,
+                                               const size_t& layer,
+                                               const RRGraphView& rr_graph,
+                                               const DeviceRRGSB& device_rr_gsb,
+                                               const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
   /* Walk through all the device rr_gsb and create tile one by one */
@@ -125,7 +121,8 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
     for (size_t iy = 0; iy < grids.height(); ++iy) {
       t_physical_tile_loc tile_loc(ix, iy, layer);
       FabricTileId curr_tile_id = FabricTileId::INVALID();
-      status_code = find_or_create_one_fabric_tile_from_grid(fabric_tile, curr_tile_id, grids, tile_loc, verbose);
+      status_code = find_or_create_one_fabric_tile_from_grid(
+        fabric_tile, curr_tile_id, grids, tile_loc, verbose);
       if (status_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -145,9 +142,12 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
                  curr_tile_coord.x(), curr_tile_coord.y());
         curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
       }
-      if (fabric_tile.valid_tile_id(curr_tile_id) && !device_rr_gsb.is_gsb_exist(rr_graph, curr_gsb_coord)) {
-        VTR_LOGV(verbose, "Skip to add routing to tile[%lu][%lu] as it is not required\n",
-                 curr_tile_coord.x(), curr_tile_coord.y());
+      if (fabric_tile.valid_tile_id(curr_tile_id) &&
+          !device_rr_gsb.is_gsb_exist(rr_graph, curr_gsb_coord)) {
+        VTR_LOGV(
+          verbose,
+          "Skip to add routing to tile[%lu][%lu] as it is not required\n",
+          curr_tile_coord.x(), curr_tile_coord.y());
         continue;
       }
       const RRGSB& curr_rr_gsb = device_rr_gsb.get_gsb(curr_gsb_coord);
@@ -155,17 +155,17 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
         if (curr_rr_gsb.is_cb_exist(cb_type)) {
           fabric_tile.add_cb_coordinate(curr_tile_id, cb_type,
                                         curr_rr_gsb.get_sb_coordinate());
-          VTR_LOGV(verbose, "Added %s connection block [%lu][%lu] to tile[%lu][%lu]\n",
-                   cb_type == CHANX ? "x-" : "y-", curr_rr_gsb.get_cb_x(cb_type), curr_rr_gsb.get_cb_y(cb_type),
-                   ix, iy);
+          VTR_LOGV(
+            verbose, "Added %s connection block [%lu][%lu] to tile[%lu][%lu]\n",
+            cb_type == CHANX ? "x-" : "y-", curr_rr_gsb.get_cb_x(cb_type),
+            curr_rr_gsb.get_cb_y(cb_type), ix, iy);
         }
       }
       if (curr_rr_gsb.is_sb_exist(rr_graph)) {
         fabric_tile.add_sb_coordinate(curr_tile_id,
                                       curr_rr_gsb.get_sb_coordinate());
         VTR_LOGV(verbose, "Added switch block [%lu][%lu] to tile[%lu][%lu]\n",
-                 curr_rr_gsb.get_sb_x(), curr_rr_gsb.get_sb_y(),
-                 ix, iy);
+                 curr_rr_gsb.get_sb_x(), curr_rr_gsb.get_sb_y(), ix, iy);
       }
     }
   }
@@ -173,19 +173,18 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
   return status_code;
 }
 
-
 /********************************************************************
  * Build tiles by following the top-left style.
  * - The programmble block, e.g., clb, is placed on the top-left corner
  * - The connection blocks and switch block are placed on the right and bottom
  *sides
  * Tile[x][y]
- * ------------------------------ 
+ * ------------------------------
  *  +----------+ +----------+   ^
  *  |   Grid   | | CBy      |   GSB[x][y]
  *  |  [x][y]  | | [x][y]   |   |
  *  +----------+ +----------+   v
- * ------------------------------ 
+ * ------------------------------
  *  +----------+ +----------+   ^
  *  | CBx      | | SB       |   |
  *  | [x][y-1] | | [x][y-1] |  GSB[x][y-1]
@@ -206,11 +205,13 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
     for (size_t iy = 0; iy < grids.height(); ++iy) {
       t_physical_tile_loc tile_loc(ix, iy, layer);
       FabricTileId curr_tile_id = FabricTileId::INVALID();
-      status_code = find_or_create_one_fabric_tile_from_grid(fabric_tile, curr_tile_id, grids, tile_loc, verbose);
+      status_code = find_or_create_one_fabric_tile_from_grid(
+        fabric_tile, curr_tile_id, grids, tile_loc, verbose);
       if (status_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
-      /* If no valid tile is created/found by the pb, check if there is any routing inside */
+      /* If no valid tile is created/found by the pb, check if there is any
+       * routing inside */
       vtr::Point<size_t> curr_tile_coord(tile_loc.x, tile_loc.y);
       vtr::Point<size_t> curr_gsb_coord(ix, iy);
       vtr::Point<size_t> neighbor_gsb_coord(ix, iy - 1);
@@ -223,8 +224,10 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
           }
         }
         if (device_rr_gsb.is_gsb_exist(rr_graph, neighbor_gsb_coord)) {
-          const RRGSB& routing_rr_gsb = device_rr_gsb.get_gsb(neighbor_gsb_coord);
-          if (routing_rr_gsb.is_cb_exist(CHANX) || routing_rr_gsb.is_sb_exist(rr_graph)) {
+          const RRGSB& routing_rr_gsb =
+            device_rr_gsb.get_gsb(neighbor_gsb_coord);
+          if (routing_rr_gsb.is_cb_exist(CHANX) ||
+              routing_rr_gsb.is_sb_exist(rr_graph)) {
             routing_exist = true;
           }
         }
@@ -246,28 +249,30 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
         if (curr_rr_gsb.is_cb_exist(CHANY)) {
           fabric_tile.add_cb_coordinate(curr_tile_id, CHANY,
                                         curr_rr_gsb.get_sb_coordinate());
-          VTR_LOGV(verbose, "Added y- connection block [%lu][%lu] to tile[%lu][%lu]\n",
-                   curr_rr_gsb.get_cb_x(CHANY), curr_rr_gsb.get_cb_y(CHANY),
-                   ix, iy);
+          VTR_LOGV(
+            verbose, "Added y- connection block [%lu][%lu] to tile[%lu][%lu]\n",
+            curr_rr_gsb.get_cb_x(CHANY), curr_rr_gsb.get_cb_y(CHANY), ix, iy);
         }
       }
       /* For the cbx and sb in the neighbour gsb */
       if (device_rr_gsb.is_gsb_exist(rr_graph, neighbor_gsb_coord)) {
-        const RRGSB& neighbor_rr_gsb = device_rr_gsb.get_gsb(neighbor_gsb_coord);
+        const RRGSB& neighbor_rr_gsb =
+          device_rr_gsb.get_gsb(neighbor_gsb_coord);
         if (neighbor_rr_gsb.is_cb_exist(CHANX)) {
           fabric_tile.add_cb_coordinate(curr_tile_id, CHANX,
                                         neighbor_rr_gsb.get_sb_coordinate());
 
-          VTR_LOGV(verbose, "Added x- connection block [%lu][%lu] to tile[%lu][%lu]\n",
-                   neighbor_rr_gsb.get_cb_x(CHANX), neighbor_rr_gsb.get_cb_y(CHANX),
-                   ix, iy);
+          VTR_LOGV(verbose,
+                   "Added x- connection block [%lu][%lu] to tile[%lu][%lu]\n",
+                   neighbor_rr_gsb.get_cb_x(CHANX),
+                   neighbor_rr_gsb.get_cb_y(CHANX), ix, iy);
         }
         if (neighbor_rr_gsb.is_sb_exist(rr_graph)) {
           fabric_tile.add_sb_coordinate(curr_tile_id,
                                         neighbor_rr_gsb.get_sb_coordinate());
           VTR_LOGV(verbose, "Added switch block [%lu][%lu] to tile[%lu][%lu]\n",
-                   neighbor_rr_gsb.get_sb_x(), neighbor_rr_gsb.get_sb_y(),
-                   ix, iy);
+                   neighbor_rr_gsb.get_sb_x(), neighbor_rr_gsb.get_sb_y(), ix,
+                   iy);
         }
       }
     }

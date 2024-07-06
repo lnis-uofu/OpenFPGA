@@ -145,13 +145,10 @@ static BasicPort generate_verilog_port_for_module_net(
  * Verilog wire writter function will use the output of this function
  * to write up local wire declaration in Verilog format
  *******************************************************************/
-static void
-find_verilog_module_local_undriven_wires(
+static void find_verilog_module_local_undriven_wires(
   std::map<std::string, std::vector<BasicPort>>& local_wires,
-  const ModuleManager& module_manager,
-  const ModuleId& module_id,
+  const ModuleManager& module_manager, const ModuleId& module_id,
   const std::vector<ModuleManager::e_module_port_type>& port_type_blacklist) {
-
   /* Local wires could also happen for undriven ports of child module */
   for (const ModuleId& child : module_manager.child_modules(module_id)) {
     for (size_t instance :
@@ -159,9 +156,11 @@ find_verilog_module_local_undriven_wires(
       for (const ModulePortId& child_port_id :
            module_manager.module_ports(child)) {
         BasicPort child_port = module_manager.module_port(child, child_port_id);
-        ModuleManager::e_module_port_type child_port_type = module_manager.port_type(child, child_port_id);
+        ModuleManager::e_module_port_type child_port_type =
+          module_manager.port_type(child, child_port_id);
         bool filter_out = false;
-        for (ModuleManager::e_module_port_type curr_port_type : port_type_blacklist) {
+        for (ModuleManager::e_module_port_type curr_port_type :
+             port_type_blacklist) {
           if (child_port_type == curr_port_type) {
             filter_out = true;
             break;
@@ -267,7 +266,9 @@ find_verilog_module_local_wires(const ModuleManager& module_manager,
     }
   }
 
-  find_verilog_module_local_undriven_wires(local_wires, module_manager, module_id, std::vector<ModuleManager::e_module_port_type>());
+  find_verilog_module_local_undriven_wires(
+    local_wires, module_manager, module_id,
+    std::vector<ModuleManager::e_module_port_type>());
 
   return local_wires;
 }
@@ -606,20 +607,22 @@ void write_verilog_module_to_file(
   /* Use constant to drive undriven local wires */
   if (constant_local_undriven_wires) {
     std::vector<ModuleManager::e_module_port_type> blacklist = {
-    ModuleManager::e_module_port_type::MODULE_GLOBAL_PORT, 
-    ModuleManager::e_module_port_type::MODULE_GPIN_PORT, 
-    ModuleManager::e_module_port_type::MODULE_GPOUT_PORT, 
-    ModuleManager::e_module_port_type::MODULE_GPIO_PORT,
-    ModuleManager::e_module_port_type::MODULE_INOUT_PORT,
-    ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT,
-    ModuleManager::e_module_port_type::MODULE_CLOCK_PORT
-    };
+      ModuleManager::e_module_port_type::MODULE_GLOBAL_PORT,
+      ModuleManager::e_module_port_type::MODULE_GPIN_PORT,
+      ModuleManager::e_module_port_type::MODULE_GPOUT_PORT,
+      ModuleManager::e_module_port_type::MODULE_GPIO_PORT,
+      ModuleManager::e_module_port_type::MODULE_INOUT_PORT,
+      ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT,
+      ModuleManager::e_module_port_type::MODULE_CLOCK_PORT};
     std::map<std::string, std::vector<BasicPort>> local_undriven_wires;
-    find_verilog_module_local_undriven_wires(local_undriven_wires, module_manager, module_id, blacklist);
+    find_verilog_module_local_undriven_wires(
+      local_undriven_wires, module_manager, module_id, blacklist);
     for (std::pair<std::string, std::vector<BasicPort>> port_group :
          local_undriven_wires) {
       for (const BasicPort& local_undriven_wire : port_group.second) {
-        print_verilog_wire_constant_values(fp, local_undriven_wire, std::vector<size_t>(local_undriven_wire.get_width(), 0));
+        print_verilog_wire_constant_values(
+          fp, local_undriven_wire,
+          std::vector<size_t>(local_undriven_wire.get_width(), 0));
       }
     }
   }

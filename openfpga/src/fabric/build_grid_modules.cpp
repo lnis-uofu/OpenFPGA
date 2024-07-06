@@ -42,8 +42,7 @@ static void add_grid_module_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side,
+  const TileAnnotation& tile_annotation, const e_side& border_side,
   const bool& perimeter_cb) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
@@ -54,8 +53,8 @@ static void add_grid_module_pb_type_ports(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side, perimeter_cb);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -1171,8 +1170,7 @@ static int build_physical_tile_module(
   const TileAnnotation& tile_annotation, const e_side& border_side,
   const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
   const bool& duplicate_grid_pin, const bool& group_config_block,
-  const bool& perimeter_cb,
-  const bool& verbose) {
+  const bool& perimeter_cb, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   /* Create a Module for the top-level physical block, and add to module manager
    */
@@ -1268,7 +1266,8 @@ static int build_physical_tile_module(
            module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_pb_type_ports(
           module_manager, grid_module, pb_module, child_instance, sub_tile,
-          vpr_device_annotation, phy_block_type, tile_annotation, border_side, perimeter_cb);
+          vpr_device_annotation, phy_block_type, tile_annotation, border_side,
+          perimeter_cb);
       }
     }
   } else {
@@ -1294,7 +1293,8 @@ static int build_physical_tile_module(
            module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_duplicated_pb_type_ports(
           module_manager, grid_module, pb_module, child_instance, sub_tile,
-          vpr_device_annotation, phy_block_type, tile_annotation, border_side, perimeter_cb);
+          vpr_device_annotation, phy_block_type, tile_annotation, border_side,
+          perimeter_cb);
       }
     }
   }
@@ -1450,8 +1450,8 @@ int build_grid_modules(
       status = build_physical_tile_module(
         module_manager, decoder_lib, device_annotation, circuit_lib,
         sram_orgz_type, sram_model, &physical_tile, tile_annotation, NUM_SIDES,
-        ql_memory_bank_config_setting, duplicate_grid_pin, group_config_block, device_ctx.arch->perimeter_cb,
-        verbose);
+        ql_memory_bank_config_setting, duplicate_grid_pin, group_config_block,
+        device_ctx.arch->perimeter_cb, verbose);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }

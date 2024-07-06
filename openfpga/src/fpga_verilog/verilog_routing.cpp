@@ -115,10 +115,9 @@ static void print_verilog_routing_connection_box_unique_module(
   VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, cb_module,
-                               options.explicit_port_mapping(),
-                               options.constant_undriven_inputs(),
-                               options.default_net_type());
+  write_verilog_module_to_file(
+    fp, module_manager, cb_module, options.explicit_port_mapping(),
+    options.constant_undriven_inputs(), options.default_net_type());
 
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -237,10 +236,9 @@ static void print_verilog_routing_switch_box_unique_module(
   VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, sb_module,
-                               options.explicit_port_mapping(),
-                               options.constant_undriven_inputs(),
-                               options.default_net_type());
+  write_verilog_module_to_file(
+    fp, module_manager, sb_module, options.explicit_port_mapping(),
+    options.constant_undriven_inputs(), options.default_net_type());
 
   /* Close file handler */
   fp.close();
