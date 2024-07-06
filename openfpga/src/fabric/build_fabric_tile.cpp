@@ -145,6 +145,11 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
                  curr_tile_coord.x(), curr_tile_coord.y());
         curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
       }
+      if (fabric_tile.valid_tile_id(curr_tile_id) && !device_rr_gsb.is_gsb_exist(rr_graph, curr_gsb_coord)) {
+        VTR_LOGV(verbose, "Skip to add routing to tile[%lu][%lu] as it is not required\n",
+                 curr_tile_coord.x(), curr_tile_coord.y());
+        continue;
+      }
       const RRGSB& curr_rr_gsb = device_rr_gsb.get_gsb(curr_gsb_coord);
       for (t_rr_type cb_type : {CHANX, CHANY}) {
         if (curr_rr_gsb.is_cb_exist(cb_type)) {
