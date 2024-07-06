@@ -194,6 +194,7 @@ echo -e "Testing tiles with routing tracks around I/O";
 run-task basic_tests/tile_organization/perimeter_cb $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Full testbench)";
 run-task basic_tests/tile_organization/homo_fabric_tile $@
+run-task basic_tests/tile_organization/homo_fabric_tile_bl $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
 run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile $@
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
