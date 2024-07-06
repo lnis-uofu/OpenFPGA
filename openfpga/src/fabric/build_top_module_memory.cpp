@@ -141,7 +141,7 @@ static void organize_top_module_tile_memory_modules(
   const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
 
-  vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y() - 1);
+  vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y());
 
   /* We do NOT consider SB and CBs if the gsb is not in the range! */
   if ((gsb_coord.x() < gsb_coord_range.x()) &&
