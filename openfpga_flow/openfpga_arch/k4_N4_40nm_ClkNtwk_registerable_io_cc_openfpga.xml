@@ -175,7 +175,10 @@
   <tile_annotations>
     <global_port name="clk" is_clock="true" default_val="0" clk_tree_name="clk_tree_2lvl">
       <tile name="clb" port="clk" x="-1" y="-1"/>
-      <tile name="io" port="clk" x="-1" y="-1"/>
+      <tile name="io_top" port="clk" x="-1" y="-1"/>
+      <tile name="io_right" port="clk" x="-1" y="-1"/>
+      <tile name="io_bottom" port="clk" x="-1" y="-1"/>
+      <tile name="io_left" port="clk" x="-1" y="-1"/>
     </global_port>
   </tile_annotations>
   <pb_type_annotations>
