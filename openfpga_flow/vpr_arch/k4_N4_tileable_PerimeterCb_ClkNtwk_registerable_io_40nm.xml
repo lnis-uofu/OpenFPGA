@@ -143,8 +143,8 @@
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <row type="io_top" starty="H-1" priority="90"/>
       <row type="io_bottom" starty="0" priority="91"/>
-      <column type="io_right" startx="W-1" priority="92"/>
-      <column type="io_left" startx="0" priority="93"/>
+      <col type="io_right" startx="W-1" priority="92"/>
+      <col type="io_left" startx="0" priority="93"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
@@ -153,8 +153,8 @@
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <row type="io_top" starty="H-1" priority="90"/>
       <row type="io_bottom" starty="0" priority="91"/>
-      <column type="io_right" startx="W-1" priority="92"/>
-      <column type="io_left" startx="0" priority="93"/>
+      <col type="io_right" startx="W-1" priority="92"/>
+      <col type="io_left" startx="0" priority="93"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
