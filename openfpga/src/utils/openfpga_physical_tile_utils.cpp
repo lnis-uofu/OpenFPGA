@@ -27,7 +27,7 @@ namespace openfpga {
  *******************************************************************/
 std::vector<e_side> find_physical_tile_pin_side(
   t_physical_tile_type_ptr physical_tile, const int& physical_pin,
-  const e_side& border_side) {
+  const e_side& border_side, const bool& perimeter_cb) {
   std::vector<e_side> pin_sides;
   for (const e_side& side_cand : {TOP, RIGHT, BOTTOM, LEFT}) {
     int pin_width_offset = physical_tile->pin_width_offset[physical_pin];
@@ -40,17 +40,20 @@ std::vector<e_side> find_physical_tile_pin_side(
 
   /* For regular grid, we should have pin only one side!
    * I/O grids: VPR creates the grid with duplicated pins on every side
-   * but the expected side (only used side) will be opposite side of the border
+   * - In regular cases: the expected side (only used side) will be on the opposite to the border
    * side!
+   * - When perimeter cb is on, the expected sides can be on any sides except the border side. But we only expect 1 side
    */
   if (NUM_SIDES == border_side) {
     VTR_ASSERT(1 == pin_sides.size());
-  } else {
+  } else if (!perimeter_cb) {
     SideManager side_manager(border_side);
     VTR_ASSERT(pin_sides.end() != std::find(pin_sides.begin(), pin_sides.end(),
                                             side_manager.get_opposite()));
     pin_sides.clear();
     pin_sides.push_back(side_manager.get_opposite());
+  } else {
+    VTR_ASSERT(1 == pin_sides.size() && pin_sides[0] != border_side);
   }
 
   return pin_sides;

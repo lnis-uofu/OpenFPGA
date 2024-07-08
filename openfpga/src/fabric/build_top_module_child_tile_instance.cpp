@@ -1295,7 +1295,7 @@ static int build_top_module_global_net_for_given_tile_module(
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Point<size_t>& grid_coordinate,
   const e_side& border_side, const vtr::Matrix<size_t>& tile_instance_ids,
-  const FabricTile& fabric_tile) {
+  const FabricTile& fabric_tile, const bool& perimeter_cb) {
   /* Get the tile module and instance */
   FabricTileId curr_fabric_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(grid_coordinate);
@@ -1392,7 +1392,7 @@ static int build_top_module_global_net_for_given_tile_module(
         size_t grid_pin_height =
           physical_tile->pin_height_offset[grid_pin_index];
         std::vector<e_side> pin_sides = find_physical_tile_pin_side(
-          physical_tile, grid_pin_index, border_side);
+          physical_tile, grid_pin_index, border_side, perimeter_cb);
 
         BasicPort grid_pin_info =
           vpr_device_annotation.physical_tile_pin_port_info(physical_tile,
@@ -1452,7 +1452,7 @@ static int build_top_module_global_net_from_tile_modules(
   const TileGlobalPortId& tile_global_port,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Matrix<size_t>& tile_instance_ids,
-  const FabricTile& fabric_tile) {
+  const FabricTile& fabric_tile, const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
@@ -1531,7 +1531,7 @@ static int build_top_module_global_net_from_tile_modules(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
           vtr::Point<size_t>(ix, iy), NUM_SIDES, tile_instance_ids,
-          fabric_tile);
+          fabric_tile, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1578,7 +1578,7 @@ static int build_top_module_global_net_from_tile_modules(
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          io_coordinate, io_side, tile_instance_ids, fabric_tile);
+          io_coordinate, io_side, tile_instance_ids, fabric_tile, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1600,7 +1600,7 @@ static int add_top_module_global_ports_from_tile_modules(
   const size_t& layer, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
-  const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup) {
+  const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup, const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module
@@ -1657,7 +1657,7 @@ static int add_top_module_global_ports_from_tile_modules(
       status = build_top_module_global_net_from_tile_modules(
         module_manager, top_module, top_module_port, tile_annotation,
         tile_global_port, vpr_device_annotation, grids, layer,
-        tile_instance_ids, fabric_tile);
+        tile_instance_ids, fabric_tile, perimeter_cb);
     }
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
@@ -1905,6 +1905,7 @@ int build_top_module_tile_child_instances(
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricKey& fabric_key,
   const bool& group_config_block, const bool& name_module_using_index,
+  const bool& perimeter_cb,
   const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
@@ -1942,7 +1943,7 @@ int build_top_module_tile_child_instances(
   status = add_top_module_global_ports_from_tile_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
     layer, rr_graph, device_rr_gsb, tile_instance_ids, fabric_tile, clk_ntwk,
-    rr_clock_lookup);
+    rr_clock_lookup, perimeter_cb);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

@@ -454,7 +454,9 @@ int build_top_module_fine_grained_child_instances(
   const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
   const bool& frame_view, const bool& compact_routing_hierarchy,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& group_config_block, const bool& verbose) {
+  const bool& group_config_block,
+  const bool& perimeter_cb,
+  const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
@@ -501,7 +503,7 @@ int build_top_module_fine_grained_child_instances(
   status = add_top_module_global_ports_from_grid_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
     layer, rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids,
-    clk_ntwk, rr_clock_lookup);
+    clk_ntwk, rr_clock_lookup, perimeter_cb);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

@@ -956,7 +956,8 @@ static int build_top_module_global_net_for_given_grid_module(
   const BasicPort& tile_port_to_connect,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Point<size_t>& grid_coordinate,
-  const e_side& border_side, const vtr::Matrix<size_t>& grid_instance_ids) {
+  const e_side& border_side, const vtr::Matrix<size_t>& grid_instance_ids,
+  const bool& perimeter_cb) {
   t_physical_tile_type_ptr physical_tile = grids.get_physical_type(
     t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
   /* Find the module name for this type of grid */
@@ -1033,7 +1034,7 @@ static int build_top_module_global_net_for_given_grid_module(
         size_t grid_pin_height =
           physical_tile->pin_height_offset[grid_pin_index];
         std::vector<e_side> pin_sides = find_physical_tile_pin_side(
-          physical_tile, grid_pin_index, border_side);
+          physical_tile, grid_pin_index, border_side, perimeter_cb);
 
         BasicPort grid_pin_info =
           vpr_device_annotation.physical_tile_pin_port_info(physical_tile,
@@ -1091,7 +1092,8 @@ static int build_top_module_global_net_from_grid_modules(
   const ModulePortId& top_module_port, const TileAnnotation& tile_annotation,
   const TileGlobalPortId& tile_global_port,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids) {
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
@@ -1169,7 +1171,7 @@ static int build_top_module_global_net_from_grid_modules(
         status = build_top_module_global_net_for_given_grid_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          vtr::Point<size_t>(ix, iy), NUM_SIDES, grid_instance_ids);
+          vtr::Point<size_t>(ix, iy), NUM_SIDES, grid_instance_ids, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1216,7 +1218,7 @@ static int build_top_module_global_net_from_grid_modules(
         status = build_top_module_global_net_for_given_grid_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          io_coordinate, io_side, grid_instance_ids);
+          io_coordinate, io_side, grid_instance_ids, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1317,7 +1319,8 @@ int add_top_module_global_ports_from_grid_modules(
   const DeviceRRGSB& device_rr_gsb,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
-  const RRClockSpatialLookup& rr_clock_lookup) {
+  const RRClockSpatialLookup& rr_clock_lookup,
+  const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module
@@ -1382,7 +1385,7 @@ int add_top_module_global_ports_from_grid_modules(
       status = build_top_module_global_net_from_grid_modules(
         module_manager, top_module, top_module_port, tile_annotation,
         tile_global_port, vpr_device_annotation, grids, layer,
-        grid_instance_ids);
+        grid_instance_ids, perimeter_cb);
     }
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
