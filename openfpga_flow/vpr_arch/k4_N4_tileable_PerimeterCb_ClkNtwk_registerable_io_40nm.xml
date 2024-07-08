@@ -94,7 +94,7 @@
           <loc side="right">io.outpad[0:1] io.inpad[0:1] io.clk</loc>
           <loc side="bottom"></loc>
           <loc side="top">io.outpad[2:2] io.inpad[2:2]</loc>
-          <loc side="left">io.outpad[3:4] io.inpad[3:4]</loc>
+          <loc side="left">io.outpad[3:3] io.inpad[3:3]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
