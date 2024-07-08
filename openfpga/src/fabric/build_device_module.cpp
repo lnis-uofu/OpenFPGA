@@ -143,8 +143,7 @@ int build_device_module_graph(
     sram_model, fabric_tile, name_module_using_index, frame_view,
     compress_routing, duplicate_grid_pin, fabric_key,
     generate_random_fabric_key, group_config_block,
-    vpr_device_ctx.arch->perimeter_cb,
-    verbose);
+    vpr_device_ctx.arch->perimeter_cb, verbose);
 
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;

@@ -40,9 +40,10 @@ std::vector<e_side> find_physical_tile_pin_side(
 
   /* For regular grid, we should have pin only one side!
    * I/O grids: VPR creates the grid with duplicated pins on every side
-   * - In regular cases: the expected side (only used side) will be on the opposite to the border
-   * side!
-   * - When perimeter cb is on, the expected sides can be on any sides except the border side. But we only expect 1 side
+   * - In regular cases: the expected side (only used side) will be on the
+   * opposite to the border side!
+   * - When perimeter cb is on, the expected sides can be on any sides except
+   * the border side. But we only expect 1 side
    */
   if (NUM_SIDES == border_side) {
     VTR_ASSERT(1 == pin_sides.size());
@@ -179,7 +180,8 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
     }
     if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
       VTR_LOG_ERROR(
-        "Invalid pin name '%s' whose subtile index is out of range, expect [%lu, "
+        "Invalid pin name '%s' whose subtile index is out of range, expect "
+        "[%lu, "
         "%lu]\n",
         pin_name.c_str(), sub_tile.capacity.low, sub_tile.capacity.high);
       exit(1);
@@ -205,7 +207,8 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       /* Reach here, we get the port we want, return the accumulated index */
       size_t accumulated_pin_idx =
         sub_tile_port.absolute_first_pin_index +
-        (sub_tile.num_phy_pins / sub_tile.capacity.total()) * (tile_info.get_lsb() - sub_tile.capacity.low) +
+        (sub_tile.num_phy_pins / sub_tile.capacity.total()) *
+          (tile_info.get_lsb() - sub_tile.capacity.low) +
         pin_info.get_lsb();
       return accumulated_pin_idx;
     }

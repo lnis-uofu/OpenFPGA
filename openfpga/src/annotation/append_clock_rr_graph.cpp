@@ -426,7 +426,8 @@ static void try_find_and_add_clock_track2ipin_node(
     if (grid_pin_idx == grid_type->num_pins) {
       continue;
     }
-    VTR_LOGV(verbose, "Found a valid pin (index=%d) in physical tile\n", grid_pin_idx);
+    VTR_LOGV(verbose, "Found a valid pin (index=%d) in physical tile\n",
+             grid_pin_idx);
     RRNodeId des_node = rr_graph_view.node_lookup().find_node(
       layer, grid_coord.x(), grid_coord.y(), IPIN, grid_pin_idx, pin_side);
     if (rr_graph_view.valid_node(des_node)) {
@@ -473,9 +474,9 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
   if (chan_type == CHANX) {
     /* Get the clock IPINs at the BOTTOM side of adjacent grids [x][y+1] */
     vtr::Point<size_t> bot_grid_coord(chan_coord.x(), chan_coord.y() + 1);
-    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, bot_grid_coord, BOTTOM,
-                                           clk_ntwk, clk_tree, clk_pin, verbose);
+    try_find_and_add_clock_track2ipin_node(
+      des_nodes, grids, rr_graph_view, layer, bot_grid_coord, BOTTOM, clk_ntwk,
+      clk_tree, clk_pin, verbose);
 
     /* Get the clock IPINs at the TOP side of adjacent grids [x][y] */
     vtr::Point<size_t> top_grid_coord(chan_coord.x(), chan_coord.y());
@@ -486,15 +487,15 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
     VTR_ASSERT(chan_type == CHANY);
     /* Get the clock IPINs at the LEFT side of adjacent grids [x][y+1] */
     vtr::Point<size_t> left_grid_coord(chan_coord.x() + 1, chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, left_grid_coord, LEFT,
-                                           clk_ntwk, clk_tree, clk_pin, verbose);
+    try_find_and_add_clock_track2ipin_node(
+      des_nodes, grids, rr_graph_view, layer, left_grid_coord, LEFT, clk_ntwk,
+      clk_tree, clk_pin, verbose);
 
     /* Get the clock IPINs at the RIGHT side of adjacent grids [x][y] */
     vtr::Point<size_t> right_grid_coord(chan_coord.x(), chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, right_grid_coord, RIGHT,
-                                           clk_ntwk, clk_tree, clk_pin, verbose);
+    try_find_and_add_clock_track2ipin_node(
+      des_nodes, grids, rr_graph_view, layer, right_grid_coord, RIGHT, clk_ntwk,
+      clk_tree, clk_pin, verbose);
   }
 
   return des_nodes;
@@ -816,8 +817,7 @@ static void add_rr_graph_clock_edges(
  *******************************************************************/
 int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
                           RRClockSpatialLookup& clk_rr_lookup,
-                          const ClockNetwork& clk_ntwk,
-                          const bool& verbose) {
+                          const ClockNetwork& clk_ntwk, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Appending programmable clock network to routing resource graph");
 

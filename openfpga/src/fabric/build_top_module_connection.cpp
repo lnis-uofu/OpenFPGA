@@ -1171,7 +1171,8 @@ static int build_top_module_global_net_from_grid_modules(
         status = build_top_module_global_net_for_given_grid_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          vtr::Point<size_t>(ix, iy), NUM_SIDES, grid_instance_ids, perimeter_cb);
+          vtr::Point<size_t>(ix, iy), NUM_SIDES, grid_instance_ids,
+          perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1319,8 +1320,7 @@ int add_top_module_global_ports_from_grid_modules(
   const DeviceRRGSB& device_rr_gsb,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
-  const RRClockSpatialLookup& rr_clock_lookup,
-  const bool& perimeter_cb) {
+  const RRClockSpatialLookup& rr_clock_lookup, const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module

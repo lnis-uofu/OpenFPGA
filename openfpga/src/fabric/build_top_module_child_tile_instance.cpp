@@ -1530,8 +1530,8 @@ static int build_top_module_global_net_from_tile_modules(
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          vtr::Point<size_t>(ix, iy), NUM_SIDES, tile_instance_ids,
-          fabric_tile, perimeter_cb);
+          vtr::Point<size_t>(ix, iy), NUM_SIDES, tile_instance_ids, fabric_tile,
+          perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1600,7 +1600,8 @@ static int add_top_module_global_ports_from_tile_modules(
   const size_t& layer, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
-  const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup, const bool& perimeter_cb) {
+  const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup,
+  const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module
@@ -1905,8 +1906,7 @@ int build_top_module_tile_child_instances(
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricKey& fabric_key,
   const bool& group_config_block, const bool& name_module_using_index,
-  const bool& perimeter_cb,
-  const bool& frame_view, const bool& verbose) {
+  const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
   status = add_top_module_tile_instances(module_manager, top_module,
