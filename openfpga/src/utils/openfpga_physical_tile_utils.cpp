@@ -207,7 +207,6 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
         sub_tile_port.absolute_first_pin_index +
         (sub_tile.num_phy_pins / sub_tile.capacity.total()) * (tile_info.get_lsb() - sub_tile.capacity.low) +
         pin_info.get_lsb();
-      VTR_LOG("Pin index: %lu\n", accumulated_pin_idx);
       return accumulated_pin_idx;
     }
   }

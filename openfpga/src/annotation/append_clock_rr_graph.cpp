@@ -415,22 +415,22 @@ static void try_find_and_add_clock_track2ipin_node(
   const RRGraphView& rr_graph_view, const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const e_side& pin_side,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
-  const ClockTreePinId& clk_pin) {
+  const ClockTreePinId& clk_pin, const bool& verbose) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_tap_to_ports(clk_tree, clk_pin, grid_coord)) {
-    VTR_LOG("Checking tap pin name: %s\n", tap_pin_name.c_str());
+    VTR_LOGV(verbose, "Checking tap pin name: %s\n", tap_pin_name.c_str());
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {
       continue;
     }
-    VTR_LOG("Found a valid pin in physical tile\n");
+    VTR_LOGV(verbose, "Found a valid pin (index=%d) in physical tile\n", grid_pin_idx);
     RRNodeId des_node = rr_graph_view.node_lookup().find_node(
       layer, grid_coord.x(), grid_coord.y(), IPIN, grid_pin_idx, pin_side);
     if (rr_graph_view.valid_node(des_node)) {
-      VTR_LOG("Found a valid pin in rr graph\n");
+      VTR_LOGV(verbose, "Found a valid pin in rr graph\n");
       des_nodes.push_back(des_node);
     }
   }
@@ -466,7 +466,8 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
   const t_rr_type& chan_type, const size_t& layer,
   const vtr::Point<size_t>& chan_coord, const ClockNetwork& clk_ntwk,
-  const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin) {
+  const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin,
+  const bool& verbose) {
   std::vector<RRNodeId> des_nodes;
 
   if (chan_type == CHANX) {
@@ -474,26 +475,26 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
     vtr::Point<size_t> bot_grid_coord(chan_coord.x(), chan_coord.y() + 1);
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
                                            layer, bot_grid_coord, BOTTOM,
-                                           clk_ntwk, clk_tree, clk_pin);
+                                           clk_ntwk, clk_tree, clk_pin, verbose);
 
     /* Get the clock IPINs at the TOP side of adjacent grids [x][y] */
     vtr::Point<size_t> top_grid_coord(chan_coord.x(), chan_coord.y());
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
                                            layer, top_grid_coord, TOP, clk_ntwk,
-                                           clk_tree, clk_pin);
+                                           clk_tree, clk_pin, verbose);
   } else {
     VTR_ASSERT(chan_type == CHANY);
     /* Get the clock IPINs at the LEFT side of adjacent grids [x][y+1] */
     vtr::Point<size_t> left_grid_coord(chan_coord.x() + 1, chan_coord.y());
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
                                            layer, left_grid_coord, LEFT,
-                                           clk_ntwk, clk_tree, clk_pin);
+                                           clk_ntwk, clk_tree, clk_pin, verbose);
 
     /* Get the clock IPINs at the RIGHT side of adjacent grids [x][y] */
     vtr::Point<size_t> right_grid_coord(chan_coord.x(), chan_coord.y());
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
                                            layer, right_grid_coord, RIGHT,
-                                           clk_ntwk, clk_tree, clk_pin);
+                                           clk_ntwk, clk_tree, clk_pin, verbose);
   }
 
   return des_nodes;
@@ -560,7 +561,7 @@ static void add_rr_graph_block_clock_edges(
             size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2ipin_node(
                    grids, rr_graph_view, chan_type, layer, chan_coord, clk_ntwk,
-                   itree, ClockTreePinId(ipin))) {
+                   itree, ClockTreePinId(ipin), verbose)) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(
