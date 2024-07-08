@@ -186,8 +186,6 @@ static int route_spine_taps(
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
   const ClockSpineId& ispine, const ClockTreePinId& ipin, const bool& verbose) {
-  std::vector<vtr::Point<int>> spine_coords =
-    clk_ntwk.spine_coordinates(ispine);
   size_t spine_tap_cnt = 0;
   /* Route the spine-to-IPIN connections (only for the last level) */
   if (clk_ntwk.is_last_level(ispine)) {
@@ -195,6 +193,8 @@ static int route_spine_taps(
              "Routing clock taps of spine '%s' for pin '%d' of tree '%s'...\n",
              clk_ntwk.spine_name(ispine).c_str(), size_t(ipin),
              clk_ntwk.tree_name(clk_tree).c_str());
+    std::vector<vtr::Point<int>> spine_coords =
+      clk_ntwk.spine_coordinates(ispine);
     /* Connect to any fan-out node which is IPIN */
     for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
       vtr::Point<int> src_coord = spine_coords[icoord];
