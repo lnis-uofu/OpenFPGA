@@ -751,9 +751,16 @@ static void add_rr_graph_clock_edges(
   const DeviceGrid& grids, const size_t& layer, const bool& perimeter_cb,
   const bool& through_channel, const ClockNetwork& clk_ntwk,
   const bool& verbose) {
+  vtr::Rect<size_t> chanx_bb(1, 0, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chanx_bb.set_xmin(0);
+    chanx_bb.set_xmax(grids.width());
+    chanx_bb.set_ymin(0);
+    chanx_bb.set_ymax(grids.height());
+  }
   /* Add edges which is driven by X-direction clock routing tracks */
-  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
-    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+  for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
+    for (size_t ix = chanx_bb.xmin(); ix < chanx_bb.xmax(); ++ix) {
       vtr::Point<size_t> chanx_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
@@ -768,8 +775,15 @@ static void add_rr_graph_clock_edges(
   }
 
   /* Add edges which is driven by Y-direction clock routing tracks */
-  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
-    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+  vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chany_bb.set_xmin(0);
+    chany_bb.set_xmax(grids.width());
+    chany_bb.set_ymin(0);
+    chany_bb.set_ymax(grids.height());
+  }
+  for (size_t ix = chany_bb.xmin(); ix < chany_bb.xmax(); ++ix) {
+    for (size_t iy = chany_bb.ymin(); iy < chany_bb.ymax(); ++iy) {
       vtr::Point<size_t> chany_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
