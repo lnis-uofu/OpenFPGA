@@ -44,14 +44,14 @@
         <input name="outpad" num_pins="1"/>
         <output name="inpad" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc in_type="frac" in_val="0.25" out_type="frac" out_val="0.20">
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
           <loc side="left">io_top[0:1].outpad[0:0] io_top[0:1].inpad[0:0]</loc>
           <loc side="top"></loc>
-          <loc side="right">io_top[2:3].outpad[0:0] io_top[2:3].inpad[0:0] io_top[0:5].clk[0:0]</loc>
-          <loc side="bottom">io_top[4:5].outpad[0:0] io_top[4:5].inpad[0:0]</loc>
+          <loc side="right">io_top[0:5].clk[0:0]</loc>
+          <loc side="bottom">io_top[2:5].outpad[0:0] io_top[2:5].inpad[0:0]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
@@ -63,7 +63,7 @@
         <input name="outpad" num_pins="1"/>
         <output name="inpad" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc in_type="frac" in_val="0.25" out_type="frac" out_val="0.20">
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
@@ -82,33 +82,33 @@
         <input name="outpad" num_pins="1"/>
         <output name="inpad" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc in_type="frac" in_val="0.25" out_type="frac" out_val="0.20">
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
           <loc side="right">io_bottom[0:1].outpad[0:0] io_bottom[0:1].inpad[0:0] io_bottom[0:3].clk[0:0]</loc>
           <loc side="bottom"></loc>
-          <loc side="top">io_bottom[2:2].outpad[0:0] io_bottom[2:2].inpad[0:0]</loc>
-          <loc side="left">io_bottom[3:3].outpad[0:0] io_bottom[3:3].inpad[0:0]</loc>
+          <loc side="top">io_bottom[2:3].outpad[0:0] io_bottom[2:3].inpad[0:0]</loc>
+          <loc side="left"></loc>
         </pinlocations>
       </sub_tile>
     </tile>
     <tile name="io_left" area="0">
-      <sub_tile name="io_left" capacity="6">
+      <sub_tile name="io_left" capacity="4">
         <equivalent_sites>
           <site pb_type="io"/>
         </equivalent_sites>
         <input name="outpad" num_pins="1"/>
         <output name="inpad" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc in_type="frac" in_val="0.25" out_type="frac" out_val="0.20">
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
-          <loc side="right">io_left[0:1].outpad[0:0] io_left[0:1].inpad[0:0] io_left[0:5].clk[0:0]</loc>
+          <loc side="right">io_left[0:1].outpad[0:0] io_left[0:1].inpad[0:0] io_left[0:3].clk[0:0]</loc>
           <loc side="left"></loc>
-          <loc side="top">io_left[2:3].outpad[0:0] io_left[2:3].inpad[0:0]</loc>
-          <loc side="bottom">io_left[4:5].outpad[0:0] io_left[4:5].inpad[0:0]</loc>
+          <loc side="top"></loc>
+          <loc side="bottom">io_left[2:3].outpad[0:0] io_left[2:3].inpad[0:0]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
@@ -120,14 +120,15 @@
         <input name="I" num_pins="10" equivalent="full"/>
         <output name="O" num_pins="4" equivalent="none"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc in_type="frac" in_val="0.25" out_type="frac" out_val="0.20">
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
-        <pinlocations pattern="custom"/>
-          <loc side="right">clb.I[0:4] clb.O[0:1]</loc>
-          <loc side="left">clb.clk</loc>
-          <loc side="top">clb.I[5:9] clb.O[2:3]</loc>
-          <loc side="bottom"></loc>
+        <pinlocations pattern="custom">
+          <loc side="right">clb.I[0:1] clb.O[0:0]</loc>
+          <loc side="left">clb.I[2:3] clb.O[1:1] clb.clk</loc>
+          <loc side="top">clb.I[4:6] clb.O[2:2]</loc>
+          <loc side="bottom">clb.I[7:9] clb.O[3:3]</loc>
+        </pinlocations>
       </sub_tile>
     </tile>
   </tiles>
