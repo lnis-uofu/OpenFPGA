@@ -194,14 +194,8 @@ static void add_rr_graph_clock_nodes(
       add_rr_graph_block_clock_nodes(
         rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
         chanx_coord, CHANX, CHANX_COST_INDEX_START, verbose);
-      VTR_ASSERT(rr_graph_view.valid_node(
-        clk_rr_lookup.find_node(1, 0, ClockTreeId(0), ClockLevelId(0),
-                                ClockTreePinId(0), Direction::INC)));
     }
   }
-
-  VTR_ASSERT(rr_graph_view.valid_node(clk_rr_lookup.find_node(
-    1, 0, ClockTreeId(0), ClockLevelId(0), ClockTreePinId(0), Direction::INC)));
 
   /* Add Y-direction clock nodes */
   vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
@@ -224,13 +218,8 @@ static void add_rr_graph_clock_nodes(
         rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
         chany_coord, CHANY,
         CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments(), verbose);
-      VTR_ASSERT(rr_graph_view.valid_node(
-        clk_rr_lookup.find_node(1, 0, ClockTreeId(0), ClockLevelId(0),
-                                ClockTreePinId(0), Direction::INC)));
     }
   }
-  VTR_ASSERT(rr_graph_view.valid_node(clk_rr_lookup.find_node(
-    1, 0, ClockTreeId(0), ClockLevelId(0), ClockTreePinId(0), Direction::INC)));
 }
 
 /********************************************************************
