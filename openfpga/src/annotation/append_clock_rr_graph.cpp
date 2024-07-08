@@ -80,7 +80,7 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
   }
 
   for (size_t ix = chany_bb.xmin(); ix < chany_bb.xmax(); ++ix) {
-    for (size_t iy = chany_bb.xmin(); iy < chany_bb.ymax(); ++iy) {
+    for (size_t iy = chany_bb.ymin(); iy < chany_bb.ymax(); ++iy) {
       vtr::Point<size_t> chany_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
@@ -212,7 +212,7 @@ static void add_rr_graph_clock_nodes(
     chany_bb.set_ymax(grids.height());
   }
   for (size_t ix = chany_bb.xmin(); ix < chany_bb.xmax(); ++ix) {
-    for (size_t iy = chany_bb.xmin(); iy < chany_bb.ymax(); ++iy) {
+    for (size_t iy = chany_bb.ymin(); iy < chany_bb.ymax(); ++iy) {
       vtr::Point<size_t> chany_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
