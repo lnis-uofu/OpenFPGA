@@ -144,9 +144,6 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
   }
   PortParser tile_parser(pin_tokens[0]);
   BasicPort tile_info = tile_parser.port();
-  if (tile_info.get_name() != std::string(physical_tile->name)) {
-    return pin_idx;
-  }
   if (!tile_info.is_valid()) {
     VTR_LOG_ERROR(
       "Invalid pin name '%s' whose subtile index is not valid, expect [0, "
@@ -160,13 +157,6 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       "Invalid pin name '%s' whose subtile index range should be 1. For "
       "example, clb[1:1]\n",
       pin_name.c_str());
-    exit(1);
-  }
-  if (tile_info.get_msb() > size_t(physical_tile->capacity) - 1) {
-    VTR_LOG_ERROR(
-      "Invalid pin name '%s' whose subtile index is out of range, expect [0, "
-      "%lu]\n",
-      pin_name.c_str(), physical_tile->capacity - 1);
     exit(1);
   }
   /* precheck: return unfound pin if the pin index does not match */
@@ -183,8 +173,16 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
 
   /* Spot the subtile by using the index */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
-    if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
+    /* Bypass unmatched subtiles*/
+    if (tile_info.get_name() != std::string(sub_tile.name)) {
       continue;
+    }
+    if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
+      VTR_LOG_ERROR(
+        "Invalid pin name '%s' whose subtile index is out of range, expect [%lu, "
+        "%lu]\n",
+        pin_name.c_str(), sub_tile.capacity.low, sub_tile.capacity.high);
+      exit(1);
     }
     for (const t_physical_tile_port& sub_tile_port : sub_tile.ports) {
       if (std::string(sub_tile_port.name) != pin_info.get_name()) {

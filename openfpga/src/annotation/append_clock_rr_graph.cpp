@@ -420,14 +420,17 @@ static void try_find_and_add_clock_track2ipin_node(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_tap_to_ports(clk_tree, clk_pin, grid_coord)) {
+    VTR_LOG("Checking tap pin name: %s\n", tap_pin_name.c_str());
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {
       continue;
     }
+    VTR_LOG("Found a valid pin in physical tile\n");
     RRNodeId des_node = rr_graph_view.node_lookup().find_node(
       layer, grid_coord.x(), grid_coord.y(), IPIN, grid_pin_idx, pin_side);
     if (rr_graph_view.valid_node(des_node)) {
+      VTR_LOG("Found a valid pin in rr graph\n");
       des_nodes.push_back(des_node);
     }
   }
