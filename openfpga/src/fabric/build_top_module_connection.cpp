@@ -1003,12 +1003,13 @@ static int build_top_module_global_net_for_given_grid_module(
               ref_tile_port.to_verilog_string().c_str());
             return CMD_EXEC_FATAL_ERROR;
           }
-          grid_pin_start_index = curr_sub_tile_start_pin_index + 
+          grid_pin_start_index =
+            curr_sub_tile_start_pin_index +
             (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
             tile_port.absolute_first_pin_index;
-          VTR_LOG(
-            "Index %lu for physical tile port '%s.%s.%s'\n!", grid_pin_start_index, 
-              physical_tile->name, sub_tile.name, ref_tile_port.to_verilog_string().c_str());
+          VTR_LOG("Index %lu for physical tile port '%s.%s.%s'\n!",
+                  grid_pin_start_index, physical_tile->name, sub_tile.name,
+                  ref_tile_port.to_verilog_string().c_str());
           physical_tile_port = tile_port;
           break;
         }
@@ -1081,7 +1082,8 @@ static int build_top_module_global_net_for_given_grid_module(
         }
       }
     }
-    /* Note that the start pin index for a new type of tile should be calculated by the accumulated number of pins of previous sub tiles */
+    /* Note that the start pin index for a new type of tile should be calculated
+     * by the accumulated number of pins of previous sub tiles */
     curr_sub_tile_start_pin_index += sub_tile.num_phy_pins;
   }
 
