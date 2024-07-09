@@ -67,7 +67,7 @@
         <pinlocations pattern="custom">
           <loc side="left"/>
           <loc side="top"/>
-          <loc side="right"></loc>
+          <loc side="right"/>
           <loc side="bottom">fpga_input[0:3].inpad</loc>
         </pinlocations>
       </sub_tile>
@@ -95,7 +95,7 @@
         <pinlocations pattern="custom">
           <loc side="left">fpga_input[0:3].inpad</loc>
           <loc side="right"/>
-          <loc side="top"></loc>
+          <loc side="top"/>
           <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
@@ -122,7 +122,7 @@
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="custom">
           <loc side="left"/>
-          <loc side="right"></loc>
+          <loc side="right"/>
           <loc side="top">fpga_input[0:3].inpad</loc>
           <loc side="bottom"/>
         </pinlocations>
@@ -152,7 +152,7 @@
           <loc side="left"/>
           <loc side="right">fpga_input[0:3].inpad</loc>
           <loc side="top"/>
-          <loc side="bottom"></loc>
+          <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
       <sub_tile name="fpga_output" capacity="2">
