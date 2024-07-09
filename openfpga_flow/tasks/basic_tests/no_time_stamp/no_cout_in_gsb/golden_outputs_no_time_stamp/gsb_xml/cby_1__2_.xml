@@ -1,44 +1,44 @@
 <rr_cb x="1" y="2" num_sides="4">
 	<IPIN side="right" index="0" node_id="299" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="520" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="503" index="1" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="508" index="10" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="513" index="11" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="520" index="0" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="503" index="1" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="508" index="10" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="513" index="11" segment_id="0"/>
 	</IPIN>
 	<IPIN side="left" index="0" node_id="252" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="500" index="2" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="505" index="3" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="510" index="12" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="515" index="13" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="500" index="2" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="505" index="3" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="510" index="12" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="515" index="13" segment_id="0"/>
 	</IPIN>
 	<IPIN side="left" index="1" node_id="253" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="502" index="4" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="507" index="5" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="512" index="14" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="523" index="15" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="502" index="4" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="507" index="5" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="512" index="14" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="523" index="15" segment_id="0"/>
 	</IPIN>
 	<IPIN side="left" index="2" node_id="254" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="504" index="6" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="521" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="524" index="16" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="519" index="17" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="504" index="6" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="521" index="7" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="524" index="16" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="519" index="17" segment_id="0"/>
 	</IPIN>
 	<IPIN side="left" index="3" node_id="255" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="522" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="511" index="9" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="516" index="18" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="525" index="19" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="522" index="8" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="511" index="9" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="516" index="18" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="525" index="19" segment_id="0"/>
 	</IPIN>
 	<IPIN side="left" index="4" node_id="256" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="520" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="503" index="1" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="508" index="10" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="513" index="11" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="520" index="0" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="503" index="1" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="508" index="10" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="513" index="11" segment_id="0"/>
 	</IPIN>
 	<IPIN side="left" index="5" node_id="257" mux_size="4">
-		<driver_node type="CHANY" side="top" node_id="500" index="2" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="505" index="3" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="510" index="12" segment_id="0"/>
-		<driver_node type="CHANY" side="top" node_id="515" index="13" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="500" index="2" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="505" index="3" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="510" index="12" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" node_id="515" index="13" segment_id="0"/>
 	</IPIN>
 </rr_cb>
