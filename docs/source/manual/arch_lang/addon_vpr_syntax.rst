@@ -88,6 +88,23 @@ Layout
 
   .. warning:: Do NOT enable ``shrink_boundary`` if you are not using the tileable routing resource graph generator!
 
+.. option:: perimeter_cb="<bool>"
+  
+  Allow connection blocks to appear around the perimeter programmable block (mainly I/Os). This is designed to enhance routability of I/Os on perimeter. Also strongly recommended when programmable clock network is required to touch clock pins on I/Os. As illustrated in :numref:`fig_perimeter_cb`, routing tracks can access three sides of each I/O when perimeter connection blocks are created. 
+  By default, it is ``false``.
+
+.. warning:: When enabled, please only place outputs at one side of I/Os. For example, outputs of an I/O on the top side can only occur on the bottom side of the I/O tile. Otherwise, routability loss may be expected, leading to some pins cannot be reachable. Enable the ``opin2all_sides`` to recover routability loss. 
+
+  .. _fig_perimeter_cb:
+  
+  .. figure:: ./figures/perimeter_cb.png
+     :width: 100%
+     :alt: Impact of perimeter_cb
+  
+     Impact on routing architecture when perimeter connection blocks are : (a) disabled; (b) enabled.
+
+  .. warning:: Do NOT enable ``perimeter_cb`` if you are not using the tileable routing resource graph generator!
+
 .. option:: opin2all_sides="<bool>"
 
   Allow each output pin of a programmable block to drive the routing tracks on all the sides of its adjacent switch block (see an illustrative example in :numref:`fig_opin2all_sides`). This can improve the routability of an FPGA fabric with an increase in the sizes of routing multiplexers in each switch block. 
