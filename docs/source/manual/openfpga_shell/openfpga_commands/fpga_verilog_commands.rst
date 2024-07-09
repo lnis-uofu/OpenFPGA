@@ -14,6 +14,14 @@ write_fabric_verilog
 
     Specify the output directory for the Verilog netlists. For example, ``--file /temp/fabric_netlist/``
 
+  .. option:: --constant_undriven_inputs
+
+  .. note:: This option is automatically enabled when the option ``perimeter_cb`` of tileable routing resource graph is enabled (see details in :ref`addon_vpr_syntax`). 
+
+  .. note:: Enable this option may shadow issues in your FPGA architecture, which causes them difficult to be found in design verification.
+   
+    Use constant gnd for undriven wires in Verilog netlists. Recommand to enable when there are boundary routing tracks in FPGA fabric.
+
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
