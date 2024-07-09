@@ -63,7 +63,7 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
       fp, module_manager, lut_module,
       options.explicit_port_mapping() ||
         circuit_lib.dump_explicit_port_map(lut_model),
-      options.default_net_type());
+      options.constant_undriven_inputs(), options.default_net_type());
   }
 
   /* Close the file handler */

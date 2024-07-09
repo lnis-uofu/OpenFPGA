@@ -45,17 +45,25 @@ static size_t estimate_clock_rr_graph_num_chan_nodes(
  *******************************************************************/
 static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
                                                 const size_t& layer,
+                                                const bool& perimeter_cb,
                                                 const bool& through_channel,
                                                 const ClockNetwork& clk_ntwk) {
   size_t num_nodes = 0;
+  vtr::Rect<size_t> chanx_bb(1, 0, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chanx_bb.set_xmin(0);
+    chanx_bb.set_xmax(grids.width());
+    chanx_bb.set_ymin(0);
+    chanx_bb.set_ymax(grids.height());
+  }
   /* Check the number of CHANX nodes required */
-  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
-    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+  for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
+    for (size_t ix = chanx_bb.xmin(); ix < chanx_bb.xmax(); ++ix) {
       vtr::Point<size_t> chanx_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chanx_exist(grids, layer, chanx_coord))) {
+          (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
       /* Estimate the routing tracks required by clock routing only */
@@ -63,13 +71,21 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
     }
   }
 
-  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
-    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+  vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chany_bb.set_xmin(0);
+    chany_bb.set_xmax(grids.width());
+    chany_bb.set_ymin(0);
+    chany_bb.set_ymax(grids.height());
+  }
+
+  for (size_t ix = chany_bb.xmin(); ix < chany_bb.xmax(); ++ix) {
+    for (size_t iy = chany_bb.ymin(); iy < chany_bb.ymax(); ++iy) {
       vtr::Point<size_t> chany_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chany_exist(grids, layer, chany_coord))) {
+          (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
       /* Estimate the routing tracks required by clock routing only */
@@ -151,56 +167,59 @@ static void add_rr_graph_block_clock_nodes(
 static void add_rr_graph_clock_nodes(
   RRGraphBuilder& rr_graph_builder, RRClockSpatialLookup& clk_rr_lookup,
   const RRGraphView& rr_graph_view, const DeviceGrid& grids,
-  const size_t& layer, const bool& through_channel,
+  const size_t& layer, const bool& perimeter_cb, const bool& through_channel,
   const ClockNetwork& clk_ntwk, const bool& verbose) {
   /* Pre-allocate memory: Must do otherwise data will be messed up! */
   clk_rr_lookup.reserve_nodes(grids.width(), grids.height(),
                               clk_ntwk.num_trees(), clk_ntwk.max_tree_depth(),
                               clk_ntwk.max_tree_width());
 
+  vtr::Rect<size_t> chanx_bb(1, 0, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chanx_bb.set_xmin(0);
+    chanx_bb.set_xmax(grids.width());
+    chanx_bb.set_ymin(0);
+    chanx_bb.set_ymax(grids.height());
+  }
   /* Add X-direction clock nodes */
-  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
-    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+  for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
+    for (size_t ix = chanx_bb.xmin(); ix < chanx_bb.xmax(); ++ix) {
       vtr::Point<size_t> chanx_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chanx_exist(grids, layer, chanx_coord))) {
+          (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_nodes(
         rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
         chanx_coord, CHANX, CHANX_COST_INDEX_START, verbose);
-      VTR_ASSERT(rr_graph_view.valid_node(
-        clk_rr_lookup.find_node(1, 0, ClockTreeId(0), ClockLevelId(0),
-                                ClockTreePinId(0), Direction::INC)));
     }
   }
 
-  VTR_ASSERT(rr_graph_view.valid_node(clk_rr_lookup.find_node(
-    1, 0, ClockTreeId(0), ClockLevelId(0), ClockTreePinId(0), Direction::INC)));
-
   /* Add Y-direction clock nodes */
-  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
-    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+  vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chany_bb.set_xmin(0);
+    chany_bb.set_xmax(grids.width());
+    chany_bb.set_ymin(0);
+    chany_bb.set_ymax(grids.height());
+  }
+  for (size_t ix = chany_bb.xmin(); ix < chany_bb.xmax(); ++ix) {
+    for (size_t iy = chany_bb.ymin(); iy < chany_bb.ymax(); ++iy) {
       vtr::Point<size_t> chany_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chany_exist(grids, layer, chany_coord))) {
+          (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_nodes(
         rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
         chany_coord, CHANY,
         CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments(), verbose);
-      VTR_ASSERT(rr_graph_view.valid_node(
-        clk_rr_lookup.find_node(1, 0, ClockTreeId(0), ClockLevelId(0),
-                                ClockTreePinId(0), Direction::INC)));
     }
   }
-  VTR_ASSERT(rr_graph_view.valid_node(clk_rr_lookup.find_node(
-    1, 0, ClockTreeId(0), ClockLevelId(0), ClockTreePinId(0), Direction::INC)));
 }
 
 /********************************************************************
@@ -396,19 +415,23 @@ static void try_find_and_add_clock_track2ipin_node(
   const RRGraphView& rr_graph_view, const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const e_side& pin_side,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
-  const ClockTreePinId& clk_pin) {
+  const ClockTreePinId& clk_pin, const bool& verbose) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_tap_to_ports(clk_tree, clk_pin, grid_coord)) {
+    VTR_LOGV(verbose, "Checking tap pin name: %s\n", tap_pin_name.c_str());
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {
       continue;
     }
+    VTR_LOGV(verbose, "Found a valid pin (index=%d) in physical tile\n",
+             grid_pin_idx);
     RRNodeId des_node = rr_graph_view.node_lookup().find_node(
       layer, grid_coord.x(), grid_coord.y(), IPIN, grid_pin_idx, pin_side);
     if (rr_graph_view.valid_node(des_node)) {
+      VTR_LOGV(verbose, "Found a valid pin in rr graph\n");
       des_nodes.push_back(des_node);
     }
   }
@@ -444,34 +467,35 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
   const t_rr_type& chan_type, const size_t& layer,
   const vtr::Point<size_t>& chan_coord, const ClockNetwork& clk_ntwk,
-  const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin) {
+  const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin,
+  const bool& verbose) {
   std::vector<RRNodeId> des_nodes;
 
   if (chan_type == CHANX) {
     /* Get the clock IPINs at the BOTTOM side of adjacent grids [x][y+1] */
     vtr::Point<size_t> bot_grid_coord(chan_coord.x(), chan_coord.y() + 1);
-    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, bot_grid_coord, BOTTOM,
-                                           clk_ntwk, clk_tree, clk_pin);
+    try_find_and_add_clock_track2ipin_node(
+      des_nodes, grids, rr_graph_view, layer, bot_grid_coord, BOTTOM, clk_ntwk,
+      clk_tree, clk_pin, verbose);
 
     /* Get the clock IPINs at the TOP side of adjacent grids [x][y] */
     vtr::Point<size_t> top_grid_coord(chan_coord.x(), chan_coord.y());
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
                                            layer, top_grid_coord, TOP, clk_ntwk,
-                                           clk_tree, clk_pin);
+                                           clk_tree, clk_pin, verbose);
   } else {
     VTR_ASSERT(chan_type == CHANY);
     /* Get the clock IPINs at the LEFT side of adjacent grids [x][y+1] */
     vtr::Point<size_t> left_grid_coord(chan_coord.x() + 1, chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, left_grid_coord, LEFT,
-                                           clk_ntwk, clk_tree, clk_pin);
+    try_find_and_add_clock_track2ipin_node(
+      des_nodes, grids, rr_graph_view, layer, left_grid_coord, LEFT, clk_ntwk,
+      clk_tree, clk_pin, verbose);
 
     /* Get the clock IPINs at the RIGHT side of adjacent grids [x][y] */
     vtr::Point<size_t> right_grid_coord(chan_coord.x(), chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, right_grid_coord, RIGHT,
-                                           clk_ntwk, clk_tree, clk_pin);
+    try_find_and_add_clock_track2ipin_node(
+      des_nodes, grids, rr_graph_view, layer, right_grid_coord, RIGHT, clk_ntwk,
+      clk_tree, clk_pin, verbose);
   }
 
   return des_nodes;
@@ -538,7 +562,7 @@ static void add_rr_graph_block_clock_edges(
             size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2ipin_node(
                    grids, rr_graph_view, chan_type, layer, chan_coord, clk_ntwk,
-                   itree, ClockTreePinId(ipin))) {
+                   itree, ClockTreePinId(ipin), verbose)) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(
@@ -729,16 +753,24 @@ static int add_rr_graph_opin2clk_edges(
 static void add_rr_graph_clock_edges(
   RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
   const RRClockSpatialLookup& clk_rr_lookup, const RRGraphView& rr_graph_view,
-  const DeviceGrid& grids, const size_t& layer, const bool& through_channel,
-  const ClockNetwork& clk_ntwk, const bool& verbose) {
+  const DeviceGrid& grids, const size_t& layer, const bool& perimeter_cb,
+  const bool& through_channel, const ClockNetwork& clk_ntwk,
+  const bool& verbose) {
+  vtr::Rect<size_t> chanx_bb(1, 0, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chanx_bb.set_xmin(0);
+    chanx_bb.set_xmax(grids.width());
+    chanx_bb.set_ymin(0);
+    chanx_bb.set_ymax(grids.height());
+  }
   /* Add edges which is driven by X-direction clock routing tracks */
-  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
-    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+  for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
+    for (size_t ix = chanx_bb.xmin(); ix < chanx_bb.xmax(); ++ix) {
       vtr::Point<size_t> chanx_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chanx_exist(grids, layer, chanx_coord))) {
+          (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_edges(rr_graph_builder, num_edges_to_create,
@@ -748,13 +780,20 @@ static void add_rr_graph_clock_edges(
   }
 
   /* Add edges which is driven by Y-direction clock routing tracks */
-  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
-    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+  vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
+  if (perimeter_cb) {
+    chany_bb.set_xmin(0);
+    chany_bb.set_xmax(grids.width());
+    chany_bb.set_ymin(0);
+    chany_bb.set_ymax(grids.height());
+  }
+  for (size_t ix = chany_bb.xmin(); ix < chany_bb.xmax(); ++ix) {
+    for (size_t iy = chany_bb.ymin(); iy < chany_bb.ymax(); ++iy) {
       vtr::Point<size_t> chany_coord(ix, iy);
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chany_exist(grids, layer, chany_coord))) {
+          (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_edges(rr_graph_builder, num_edges_to_create,
@@ -793,7 +832,8 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   /* Estimate the number of nodes and pre-allocate */
   size_t orig_num_nodes = vpr_device_ctx.rr_graph.num_nodes();
   size_t num_clock_nodes = estimate_clock_rr_graph_num_nodes(
-    vpr_device_ctx.grid, 0, vpr_device_ctx.arch->through_channel, clk_ntwk);
+    vpr_device_ctx.grid, 0, vpr_device_ctx.arch->perimeter_cb,
+    vpr_device_ctx.arch->through_channel, clk_ntwk);
   vpr_device_ctx.rr_graph_builder.unlock_storage();
   vpr_device_ctx.rr_graph_builder.reserve_nodes(num_clock_nodes +
                                                 orig_num_nodes);
@@ -803,10 +843,10 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
            num_clock_nodes, (float)(num_clock_nodes / orig_num_nodes));
 
   /* Add clock nodes */
-  add_rr_graph_clock_nodes(vpr_device_ctx.rr_graph_builder, clk_rr_lookup,
-                           vpr_device_ctx.rr_graph, vpr_device_ctx.grid, 0,
-                           vpr_device_ctx.arch->through_channel, clk_ntwk,
-                           verbose);
+  add_rr_graph_clock_nodes(
+    vpr_device_ctx.rr_graph_builder, clk_rr_lookup, vpr_device_ctx.rr_graph,
+    vpr_device_ctx.grid, 0, vpr_device_ctx.arch->perimeter_cb,
+    vpr_device_ctx.arch->through_channel, clk_ntwk, verbose);
   VTR_LOGV(verbose,
            "Added %lu clock nodes to routing "
            "resource graph.\n",
@@ -820,7 +860,8 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
     vpr_device_ctx.rr_graph_builder, num_clock_edges,
     static_cast<const RRClockSpatialLookup&>(clk_rr_lookup),
     vpr_device_ctx.rr_graph, vpr_device_ctx.grid, 0,
-    vpr_device_ctx.arch->through_channel, clk_ntwk, verbose);
+    vpr_device_ctx.arch->perimeter_cb, vpr_device_ctx.arch->through_channel,
+    clk_ntwk, verbose);
   VTR_LOGV(verbose,
            "Added %lu clock edges to routing "
            "resource graph.\n",

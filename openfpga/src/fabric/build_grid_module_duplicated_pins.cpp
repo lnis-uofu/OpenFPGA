@@ -55,7 +55,8 @@ void add_grid_module_duplicated_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation, const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side,
+  const bool& perimeter_cb) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(false == is_empty_type(grid_type_descriptor));
 
@@ -65,8 +66,8 @@ void add_grid_module_duplicated_pb_type_ports(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -172,7 +173,8 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
   const size_t& child_inst_subtile_index,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor, t_pb_graph_pin* pb_graph_pin,
-  const e_side& border_side, const e_pin2pin_interc_type& pin2pin_interc_type) {
+  const e_side& border_side, const bool& perimeter_cb,
+  const e_pin2pin_interc_type& pin2pin_interc_type) {
   /* Make sure this is ONLY applied to output pins */
   VTR_ASSERT(OUTPUT2OUTPUT_INTERC == pin2pin_interc_type);
 
@@ -182,8 +184,8 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -316,7 +318,8 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
   const ModuleId& child_module, const size_t& child_instance,
   const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation, const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side,
+  const bool& perimeter_cb) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(false == is_empty_type(grid_type_descriptor));
 
@@ -334,7 +337,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
         tile_annotation, &(top_pb_graph_node->input_pins[iport][ipin]),
-        border_side, INPUT2INPUT_INTERC);
+        border_side, perimeter_cb, INPUT2INPUT_INTERC);
     }
   }
 
@@ -345,7 +348,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
         &(top_pb_graph_node->output_pins[iport][ipin]), border_side,
-        OUTPUT2OUTPUT_INTERC);
+        perimeter_cb, OUTPUT2OUTPUT_INTERC);
     }
   }
 
@@ -356,7 +359,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
         tile_annotation, &(top_pb_graph_node->clock_pins[iport][ipin]),
-        border_side, INPUT2INPUT_INTERC);
+        border_side, perimeter_cb, INPUT2INPUT_INTERC);
     }
   }
 }
