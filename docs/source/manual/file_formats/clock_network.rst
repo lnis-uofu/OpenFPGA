@@ -14,6 +14,8 @@ Using the clock network description language, users can define multiple clock ne
 - A number of switch points which interconnects clock spines using programmable routing switches. See details in :ref:`file_formats_clock_network_switch_point`.
 - A number of tap points which connect the clock spines to programmable blocks, e.g., CLBs. See details in :ref:`file_formats_clock_network_tap_point`.
 
+The entry point of a clock tree must be at a valid connection block.
+
 .. note:: Please note that the levels of a clock network will be automatically inferred from the clock spines and switch points. Clock network will be **only** built based on the width and the number of levels, as well as the tap points.
 
 .. note:: The switch points and clock spines will be used to route a clock network. The switch points will not impact the physical clock network but only impact the configuration of the programmable routing switches in the physical clock network.
@@ -44,6 +46,17 @@ Using the clock network description language, users can define multiple clock ne
    :alt: An example of programmable clock network considering a 2x2 FPGA fabric
 
    An example of programmable clock network considering a 2x2 FPGA fabric
+
+Note that when the ``perimeter_cb`` is enabled for routing architecture (See details in :ref:`addon_vpr_syntax`), clock entry point can be indeed at the fringe of FPGA fabrics. See example in :numref:`prog_clock_network_example_2x2_perimeter_cb`. 
+
+.. _fig_prog_clock_network_example_2x2_perimeter_cb:
+
+.. figure:: figures/prog_clk_network_example_2x2_perimeter_cb.png
+   :width: 100%
+   :alt: An example of programmable clock network considering a 2x2 FPGA fabric with perimeter cb
+
+   An example of programmable clock network considering a 2x2 FPGA fabric with perimeter cb
+
 
 General Settings
 ^^^^^^^^^^^^^^^^
@@ -133,6 +146,8 @@ Clock Spine Settings
 
 The following syntax are applicable to the XML definition tagged by ``spine``.
 Note that a number of clock spines can be defined under the node ``clock_network``.
+
+.. note:: Use coordinates of connection blocks to define the starting and ending points of clock spines.
 
 .. option:: name="<string>"
 
