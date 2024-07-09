@@ -1007,9 +1007,6 @@ static int build_top_module_global_net_for_given_grid_module(
             curr_sub_tile_start_pin_index +
             (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
             tile_port.absolute_first_pin_index;
-          VTR_LOG("Index %lu for physical tile port '%s.%s.%s'\n!",
-                  grid_pin_start_index, physical_tile->name, sub_tile.name,
-                  ref_tile_port.to_verilog_string().c_str());
           physical_tile_port = tile_port;
           break;
         }
