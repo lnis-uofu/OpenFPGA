@@ -49,7 +49,7 @@
         </fc>
         <pinlocations pattern="custom">
           <loc side="left">io_top[0:1].outpad[0:0]</loc>
-          <loc side="top"></loc>
+          <loc side="top"/>
           <loc side="right">io_top[2:3].outpad io_top[0:5].clk[0:0]</loc>
           <loc side="bottom">io_top[4:5].outpad[0:0] io_top[0:5].inpad[0:0]</loc>
         </pinlocations>
@@ -68,7 +68,7 @@
         </fc>
         <pinlocations pattern="custom">
           <loc side="left">io_right[0:0].outpad[0:0] io_right[0:2].inpad[0:0] io_right[0:2].clk[0:0]</loc>
-          <loc side="right"></loc>
+          <loc side="right"/>
           <loc side="top">io_right[1:1].outpad[0:0]</loc>
           <loc side="bottom">io_right[2:2].outpad[0:0]</loc>
         </pinlocations>
@@ -87,7 +87,7 @@
         </fc>
         <pinlocations pattern="custom">
           <loc side="right">io_bottom[0:1].outpad[0:0] io_bottom[0:3].clk[0:0]</loc>
-          <loc side="bottom"></loc>
+          <loc side="bottom"/>
           <loc side="top">io_bottom[2:2].outpad[0:0] io_bottom[0:3].inpad[0:0]</loc>
           <loc side="left">io_bottom[3:3].outpad[0:0]</loc>
         </pinlocations>
@@ -106,7 +106,7 @@
         </fc>
         <pinlocations pattern="custom">
           <loc side="right">io_left[0:1].outpad[0:0] io_left[0:3].inpad[0:0] io_left[0:3].clk[0:0]</loc>
-          <loc side="left"></loc>
+          <loc side="left"/>
           <loc side="top">io_left[2:2].outpad[0:0]</loc>
           <loc side="bottom">io_left[3:3].outpad[0:0]</loc>
         </pinlocations>
