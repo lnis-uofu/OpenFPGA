@@ -187,6 +187,8 @@ Switch Point Settings
 The following syntax are applicable to the XML definition tagged by ``switch_point``.
 Note that a number of switch points can be defined under each clock spine ``spine``.
 
+.. note:: Use the coordinate of switch block to define switching points!
+
 .. option:: tap="<string>"
 
   Define which clock spine will be tapped from the current clock spine.
@@ -306,6 +308,8 @@ For example,
   </clock_network>
 
 where all the clock spines of the clock network ``clk_tree_0`` tap the clock pins ``clk`` of tile ``clb`` in a VPR architecture description file:
+
+.. note:: Use the name of ``subtile`` in the ``to_pin`` when there are a number of subtiles in your tile!
 
 .. code-block:: xml
 
