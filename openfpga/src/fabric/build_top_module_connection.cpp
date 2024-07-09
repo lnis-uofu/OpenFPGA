@@ -975,6 +975,7 @@ static int build_top_module_global_net_for_given_grid_module(
   /* Walk through each instance considering the unique sub tile and capacity
    * range, each instance may have an independent pin to be driven by a global
    * net! */
+  int curr_sub_tile_start_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
     int grid_pin_start_index = physical_tile->num_pins;
@@ -995,18 +996,19 @@ static int build_top_module_global_net_for_given_grid_module(
           /* Port size must match!!! */
           if (false == ref_tile_port.contained(tile_port_to_connect)) {
             VTR_LOG_ERROR(
-              "Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of "
-              "physical tile port '%s[%lu:%lu]'!",
+              "Tile annotation '%s' port '%s' is out of the range of "
+              "physical tile port '%s'!\n",
               tile_annotation.global_port_name(tile_global_port).c_str(),
-              tile_port_to_connect.get_name().c_str(),
-              tile_port_to_connect.get_lsb(), tile_port_to_connect.get_msb(),
-              ref_tile_port.get_name().c_str(), ref_tile_port.get_lsb(),
-              ref_tile_port.get_msb());
+              tile_port_to_connect.to_verilog_string().c_str(),
+              ref_tile_port.to_verilog_string().c_str());
             return CMD_EXEC_FATAL_ERROR;
           }
-          grid_pin_start_index =
+          grid_pin_start_index = curr_sub_tile_start_pin_index + 
             (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
             tile_port.absolute_first_pin_index;
+          VTR_LOG(
+            "Index %lu for physical tile port '%s.%s.%s'\n!", grid_pin_start_index, 
+              physical_tile->name, sub_tile.name, ref_tile_port.to_verilog_string().c_str());
           physical_tile_port = tile_port;
           break;
         }
@@ -1079,6 +1081,8 @@ static int build_top_module_global_net_for_given_grid_module(
         }
       }
     }
+    /* Note that the start pin index for a new type of tile should be calculated by the accumulated number of pins of previous sub tiles */
+    curr_sub_tile_start_pin_index += sub_tile.num_phy_pins;
   }
 
   return CMD_EXEC_SUCCESS;
@@ -1140,7 +1144,7 @@ static int build_top_module_global_net_from_grid_modules(
     if (true == out_of_range) {
       VTR_LOG_ERROR(
         "Coordinate (%lu, %lu) in tile annotation for tile '%s' is out of "
-        "range (%lu:%lu, %lu:%lu)!",
+        "range (%lu:%lu, %lu:%lu)!\n",
         range.x(), range.y(), tile_name.c_str(), start_coord.x(), end_coord.x(),
         start_coord.y(), end_coord.y());
       return CMD_EXEC_FATAL_ERROR;
