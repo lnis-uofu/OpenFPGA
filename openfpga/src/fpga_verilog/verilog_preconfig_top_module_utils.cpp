@@ -191,7 +191,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
             "verilog syntax\n",
             constrained_net_name.c_str(),
             netlist_annotation.block_name(atom_blk).c_str());
-           constrained_net_name = netlist_annotation.block_name(atom_blk);
+          constrained_net_name = netlist_annotation.block_name(atom_blk);
         }
         BasicPort benchmark_pin(constrained_net_name, 1);
         print_verilog_wire_connection(fp, module_global_pin, benchmark_pin,
