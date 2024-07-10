@@ -510,8 +510,8 @@ int route_clock_rr_graph(
 
   /* Build rr_node-to-net mapping for global nets */
   vtr::vector<RRNodeId, ClusterNetId> rr_node_gnets =
-    annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx, vpr_clustering_annotation,
-                                verbose);
+    annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx,
+                                vpr_clustering_annotation, verbose);
 
   /* Route spines one by one */
   for (auto itree : clk_ntwk.trees()) {
