@@ -130,7 +130,9 @@ static int write_xml_clock_spine_switch_point(
         clk_ntwk.internal_driver_from_pin(int_driver_id).c_str());
       write_xml_attribute(
         fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN,
-        clk_ntwk.internal_driver_to_pin(int_driver_id).to_verilog_string().c_str());
+        clk_ntwk.internal_driver_to_pin(int_driver_id)
+          .to_verilog_string()
+          .c_str());
       fp << "/>"
          << "\n";
     }

@@ -590,8 +590,7 @@ static void try_find_and_add_clock_opin2track_node(
   std::vector<RRNodeId>& opin_nodes, const DeviceGrid& grids,
   const RRGraphView& rr_graph_view, const size_t& layer,
   const vtr::Point<int>& grid_coord, const e_side& pin_side,
-  const ClockNetwork& clk_ntwk,
-  const ClockTreePinId& clk_pin,
+  const ClockNetwork& clk_ntwk, const ClockTreePinId& clk_pin,
   const ClockInternalDriverId& int_driver_id) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
@@ -637,8 +636,7 @@ static void try_find_and_add_clock_opin2track_node(
 static std::vector<RRNodeId> find_clock_opin2track_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
   const size_t& layer, const vtr::Point<int>& sb_coord,
-  const ClockNetwork& clk_ntwk,
-  const ClockTreePinId& clk_pin,
+  const ClockNetwork& clk_ntwk, const ClockTreePinId& clk_pin,
   const std::vector<ClockInternalDriverId>& int_driver_ids) {
   std::vector<RRNodeId> opin_nodes;
   /* Find opins from
@@ -661,9 +659,9 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
     vtr::Point<int> grid_coord = grid_coords[igrid];
     for (e_side grid_side : grid_sides[igrid]) {
       for (ClockInternalDriverId int_driver_id : int_driver_ids) {
-        try_find_and_add_clock_opin2track_node(opin_nodes, grids, rr_graph_view,
-                                               layer, grid_coord, grid_side,
-                                               clk_ntwk, clk_pin, int_driver_id);
+        try_find_and_add_clock_opin2track_node(
+          opin_nodes, grids, rr_graph_view, layer, grid_coord, grid_side,
+          clk_ntwk, clk_pin, int_driver_id);
       }
     }
   }

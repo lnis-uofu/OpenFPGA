@@ -169,9 +169,9 @@ static void read_xml_clock_spine_switch_point_internal_driver(
       XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_FROM_PIN, loc_data)
       .as_string();
   std::string int_driver_to_port_name =
-    get_attribute(
-      xml_int_driver,
-      XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN, loc_data)
+    get_attribute(xml_int_driver,
+                  XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN,
+                  loc_data)
       .as_string();
   clk_ntwk.add_spine_switch_point_internal_driver(spine_id, switch_point_id,
                                                   int_driver_from_port_name,

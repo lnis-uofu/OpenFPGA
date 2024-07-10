@@ -225,7 +225,8 @@ class ClockNetwork {
                                             const vtr::Point<int>& coord);
   ClockInternalDriverId add_spine_switch_point_internal_driver(
     const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
-    const std::string& internal_driver_from_port, const std::string& internal_driver_to_port);
+    const std::string& internal_driver_from_port,
+    const std::string& internal_driver_to_port);
   ClockTapId add_tree_tap(const ClockTreeId& tree_id,
                           const BasicPort& from_port,
                           const std::string& to_port);
