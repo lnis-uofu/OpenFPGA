@@ -4,7 +4,7 @@
 ////////////////////////////////////////
 `timescale 1ns / 1ps
 
-module clk_cond(rst_i, rst_cond_i, clk_i, d_i, q_o);
+module rst_cond(rst_i, rst_cond_i, clk_i, d_i, q_o);
 
 input wire rst_cond_i;
 input wire rst_i;
