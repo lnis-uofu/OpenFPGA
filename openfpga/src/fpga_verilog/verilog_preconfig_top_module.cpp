@@ -65,6 +65,10 @@ static void print_verilog_preconfig_top_module_ports(
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      VTR_LOG(
+        "Replace pin name '%s' with '%s' as it is renamed to comply verilog "
+        "syntax\n",
+        block_name.c_str(), netlist_annotation.block_name(atom_blk).c_str());
       block_name = netlist_annotation.block_name(atom_blk);
     }
     /* For output block, remove the prefix which is added by VPR */
@@ -445,8 +449,8 @@ int print_verilog_preconfig_top_module(
   /* Connect FPGA top module global ports to constant or benchmark global
    * signals! */
   status = print_verilog_preconfig_top_module_connect_global_ports(
-    fp, module_manager, core_module, pin_constraints, global_ports,
-    benchmark_clock_port_names,
+    fp, module_manager, core_module, pin_constraints, atom_ctx,
+    netlist_annotation, global_ports, benchmark_clock_port_names,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;

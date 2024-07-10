@@ -360,10 +360,16 @@ ClockNetwork::spine_switch_point_internal_drivers(
   return spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)];
 }
 
-std::string ClockNetwork::internal_driver_port(
+std::string ClockNetwork::internal_driver_from_pin(
   const ClockInternalDriverId& int_driver_id) const {
   VTR_ASSERT(valid_internal_driver_id(int_driver_id));
-  return internal_driver_ports_[int_driver_id];
+  return internal_driver_from_pins_[int_driver_id];
+}
+
+BasicPort ClockNetwork::internal_driver_to_pin(
+  const ClockInternalDriverId& int_driver_id) const {
+  VTR_ASSERT(valid_internal_driver_id(int_driver_id));
+  return internal_driver_to_pins_[int_driver_id];
 }
 
 std::vector<ClockTapId> ClockNetwork::tree_taps(
@@ -514,9 +520,6 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
       std::string flatten_tile_str =
         tile_info.get_name() + "[" + std::to_string(tile_idx) + "]";
       for (size_t& pin_idx : pin_info.pins()) {
-        if (pin_idx != size_t(clk_pin_id)) {
-          continue;
-        }
         std::string flatten_pin_str =
           pin_info.get_name() + "[" + std::to_string(pin_idx) + "]";
         flatten_taps.push_back(flatten_tile_str + "." + flatten_pin_str);
@@ -526,10 +529,30 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
   return flatten_taps;
 }
 
-std::vector<std::string> ClockNetwork::flatten_internal_driver_port(
-  const ClockInternalDriverId& int_driver_id) const {
+std::vector<std::string> ClockNetwork::flatten_internal_driver_from_pin(
+  const ClockInternalDriverId& int_driver_id,
+  const ClockTreePinId& clk_pin_id) const {
   std::vector<std::string> flatten_taps;
-  std::string tap_name = internal_driver_port(int_driver_id);
+  BasicPort des_pin = internal_driver_to_pin(int_driver_id);
+  if (!des_pin.is_valid()) {
+    VTR_LOG_ERROR(
+      "Invalid internal driver destination port name '%s' whose index is not "
+      "valid\n",
+      des_pin.to_verilog_string().c_str());
+    exit(1);
+  }
+  if (des_pin.get_width() != 1) {
+    VTR_LOG_ERROR(
+      "Invalid internal driver destination port name '%s' whose width is not "
+      "1\n",
+      des_pin.to_verilog_string().c_str());
+    exit(1);
+  }
+  if (des_pin.get_lsb() != size_t(clk_pin_id)) {
+    return flatten_taps;
+  }
+
+  std::string tap_name = internal_driver_from_pin(int_driver_id);
   StringToken tokenizer(tap_name);
   std::vector<std::string> pin_tokens = tokenizer.split(".");
   if (pin_tokens.size() != 2) {
@@ -768,12 +791,16 @@ ClockSwitchPointId ClockNetwork::add_spine_switch_point(
 
 ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
-  const std::string& int_driver_port) {
+  const std::string& int_driver_from_port,
+  const std::string& int_driver_to_port) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
+  /* Parse ports */
+  PortParser to_pin_parser(int_driver_to_port);
   /* Find any existing id for the driver port */
   for (ClockInternalDriverId int_driver_id : internal_driver_ids_) {
-    if (internal_driver_ports_[int_driver_id] == int_driver_port) {
+    if (internal_driver_from_pins_[int_driver_id] == int_driver_from_port &&
+        internal_driver_to_pins_[int_driver_id] == to_pin_parser.port()) {
       spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)]
         .push_back(int_driver_id);
       return int_driver_id;
@@ -783,7 +810,8 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   ClockInternalDriverId int_driver_id =
     ClockInternalDriverId(internal_driver_ids_.size());
   internal_driver_ids_.push_back(int_driver_id);
-  internal_driver_ports_.push_back(int_driver_port);
+  internal_driver_from_pins_.push_back(int_driver_from_port);
+  internal_driver_to_pins_.push_back(to_pin_parser.port());
   spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(
     int_driver_id);
   return int_driver_id;

@@ -126,8 +126,13 @@ static int write_xml_clock_spine_switch_point(
       openfpga::write_tab_to_file(fp, 4);
       fp << "<" << XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME;
       write_xml_attribute(
-        fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TILE_PIN,
-        clk_ntwk.internal_driver_port(int_driver_id).c_str());
+        fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_FROM_PIN,
+        clk_ntwk.internal_driver_from_pin(int_driver_id).c_str());
+      write_xml_attribute(
+        fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN,
+        clk_ntwk.internal_driver_to_pin(int_driver_id)
+          .to_verilog_string()
+          .c_str());
       fp << "/>"
          << "\n";
     }

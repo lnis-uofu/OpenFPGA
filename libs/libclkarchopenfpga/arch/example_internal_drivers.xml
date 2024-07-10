@@ -2,10 +2,10 @@
   <clock_network name="example_network" global_port="clk[0:7]"> 
     <spine name="spine_lvl3" start_x="0" start_y="2" end_x="2" end_y="2"> 
       <switch_point tap="spine_lvl2_upper" x="2" y="2"> 
-        <internal_driver tile_pin="clb.O[0:3]"/>
+        <internal_driver from_pin="clb.O[0:3]" to_pin="clk[1:1]"/>
       </switch_point>
       <switch_point tap="spine_lvl2_lower" x="2" y="2"> 
-        <internal_driver tile_pin="clb.O[0:3]"/>
+        <internal_driver from_pin="clb.O[0:3]" to_pin="clk[0:0]"/>
       </switch_point>
     </spine>  
     <spine name="spine_lvl2_upper" start_x="2" start_y="2" end_x="2" end_y="3"> 

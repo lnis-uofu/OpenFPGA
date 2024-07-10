@@ -132,7 +132,7 @@ Clock signals will be auto-detected and routed based on pin constraints which ar
 
     Specify the *Pin Constraints File* (PCF) when the clock network contains multiple clock pins. For example, ``-pin_constraints_file pin_constraints.xml``. Strongly recommend for multi-clock network. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
-.. note:: If there is a global net, e.g., ``clk`` or ``reset``, which will be driven by an internal resource, it should also be defined in the PCF file.
+  .. note:: If there is a global net, e.g., ``clk`` or ``reset``, which will be driven by an internal resource, it should also be defined in the PCF file.
 
   .. option:: --disable_unused_trees
 

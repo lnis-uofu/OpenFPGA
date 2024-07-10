@@ -28,7 +28,7 @@ The entry point of a clock tree must be at a valid connection block.
     <clock_network name="<string>" global_port="<int>"> 
       <spine name="<string>" start_x="<int>" start_y="<int>" end_x="<int>" end_y="<int>"> 
         <switch_point tap="<string>" x="<int>" y="<int>"> 
-          <internal_driver tile_pin="<string>"/>
+          <internal_driver from_pin="<string>" to_pin="<string>"/>
         </switch_point>
       </spine>  
       <taps>
@@ -213,19 +213,26 @@ where clock spine ``spine0`` will drive another clock spine ``spine1`` at (1, 1)
 
 For each switch point, outputs of neighbouring programmable blocks are allowed to drive the spine at next level, through syntax ``internal_driver``.
 
-.. option:: tile_pin="<string>"
+.. option:: from_pin="<string>"
 
   Define the pin of a programmable block as an internal driver to a clock network. The pin must be a valid pin defined in the VPR architecture description file.
+
+.. option:: to_pin="<string>"
+
+  Define the source pin of a clock network. The pin must be a valid pin of the global ports defined in the tile_annotation part of OpenFPGA architecture description file.
 
 For example, 
 
 .. code-block:: xml
 
-  <spine name="spine0" start_x="1" start_y="1" end_x="2" end_y="1">
-    <switch_point tap="spine1" x="1" y="1">
-      <internal_driver tile_pin="clb.O[0:1]"/>
-    </switch_point>
-  <spine>
+  <clock_network name="clk_tree_0" global_port="clk[0:1]">
+    <!-- Some clock spines -->
+    <spine name="spine0" start_x="1" start_y="1" end_x="2" end_y="1">
+      <switch_point tap="spine1" x="1" y="1">
+        <internal_driver from_pin="clb.O[0:1]" to_pin="clk[0:0]"/>
+      </switch_point>
+    <spine>
+  </clock_network>
 
 where the clock routing can be driven at (x=1,y=1) by the output pins ``O[0:3]`` of tile ``clb`` in a VPR architecture description file:
 
@@ -298,7 +305,7 @@ For example,
 
 .. code-block:: xml
 
-  <clock_network name="clk_tree_0" width="2">
+  <clock_network name="clk_tree_0" global_port="clk[0:1]">
     <!-- Some clock spines -->
     <taps>
       <all from_pin="clk[0:0]" to_pin="clb.clk[0:0]"/>

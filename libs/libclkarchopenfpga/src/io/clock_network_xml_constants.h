@@ -25,7 +25,9 @@ constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME = "switch_point";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME =
   "internal_driver";
 constexpr const char*
-  XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TILE_PIN = "tile_pin";
+  XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_FROM_PIN = "from_pin";
+constexpr const char*
+  XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN = "to_pin";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_TAP = "tap";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X = "x";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y = "y";
