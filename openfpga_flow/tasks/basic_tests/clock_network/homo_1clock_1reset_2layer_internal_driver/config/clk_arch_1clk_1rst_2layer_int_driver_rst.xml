@@ -17,10 +17,10 @@
   <clock_network name="rst_tree_2lvl" global_port="op_reset[0:0]"> 
     <spine name="rst_spine_lvl0" start_x="1" start_y="1" end_x="2" end_y="1"> 
       <switch_point tap="rst_rib_lvl1_sw0_upper" x="1" y="1"> 
-        <internal_driver tile_pin="clb.O[0:7]"/>
+        <internal_driver from_pin="clb.O[0:7]" to_pin="op_reset[0:0]"/>
       </switch_point>
       <switch_point tap="rst_rib_lvl1_sw0_lower" x="1" y="1"> 
-        <internal_driver tile_pin="clb.O[0:7]"/>
+        <internal_driver from_pin="clb.O[0:7]" to_pin="op_reset[0:0]"/>
       </switch_point>
       <switch_point tap="rst_rib_lvl1_sw1_upper" x="2" y="1"/> 
       <switch_point tap="rst_rib_lvl1_sw1_lower" x="2" y="1"/> 
