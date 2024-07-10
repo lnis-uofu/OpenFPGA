@@ -472,6 +472,7 @@ static int route_clock_tree_rr_graph(
  *******************************************************************/
 int route_clock_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation,
+  const VprClusteringAnnotation& vpr_clustering_annotation,
   const DeviceContext& vpr_device_ctx, const ClusteredNetlist& cluster_nlist,
   const PlacementContext& vpr_place_ctx,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
@@ -509,7 +510,7 @@ int route_clock_rr_graph(
 
   /* Build rr_node-to-net mapping for global nets */
   vtr::vector<RRNodeId, ClusterNetId> rr_node_gnets =
-    annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx,
+    annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx, vpr_clustering_annotation,
                                 verbose);
 
   /* Route spines one by one */

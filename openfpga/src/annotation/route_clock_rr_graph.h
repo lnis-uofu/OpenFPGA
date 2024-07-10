@@ -9,6 +9,7 @@
 #include "rr_clock_spatial_lookup.h"
 #include "vpr_context.h"
 #include "vpr_routing_annotation.h"
+#include "vpr_clustering_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -19,6 +20,7 @@ namespace openfpga {
 
 int route_clock_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation,
+  const VprClusteringAnnotation& vpr_clustering_annotation,
   const DeviceContext& vpr_device_ctx, const ClusteredNetlist& cluster_nlist,
   const PlacementContext& vpr_place_ctx,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
