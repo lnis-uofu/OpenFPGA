@@ -360,10 +360,16 @@ ClockNetwork::spine_switch_point_internal_drivers(
   return spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)];
 }
 
-std::string ClockNetwork::internal_driver_port(
+std::string ClockNetwork::internal_driver_from_pin(
   const ClockInternalDriverId& int_driver_id) const {
   VTR_ASSERT(valid_internal_driver_id(int_driver_id));
-  return internal_driver_ports_[int_driver_id];
+  return internal_driver_from_pins_[int_driver_id];
+}
+
+std::string ClockNetwork::internal_driver_to_pin(
+  const ClockInternalDriverId& int_driver_id) const {
+  VTR_ASSERT(valid_internal_driver_id(int_driver_id));
+  return internal_driver_to_pins_[int_driver_id];
 }
 
 std::vector<ClockTapId> ClockNetwork::tree_taps(
@@ -523,7 +529,7 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
   return flatten_taps;
 }
 
-std::vector<std::string> ClockNetwork::flatten_internal_driver_port(
+std::vector<std::string> ClockNetwork::flatten_internal_driver_from_pin(
   const ClockInternalDriverId& int_driver_id) const {
   std::vector<std::string> flatten_taps;
   std::string tap_name = internal_driver_port(int_driver_id);
@@ -765,12 +771,14 @@ ClockSwitchPointId ClockNetwork::add_spine_switch_point(
 
 ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
-  const std::string& int_driver_port) {
+  const std::string& int_driver_from_port,
+  const std::string& int_driver_to_port) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
   /* Find any existing id for the driver port */
   for (ClockInternalDriverId int_driver_id : internal_driver_ids_) {
-    if (internal_driver_ports_[int_driver_id] == int_driver_port) {
+    if (internal_driver_from_pins_[int_driver_id] == int_driver_from_port
+        && internal_driver_to_pins_[int_driver_id] == int_driver_to_port) {
       spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)]
         .push_back(int_driver_id);
       return int_driver_id;
@@ -780,7 +788,8 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   ClockInternalDriverId int_driver_id =
     ClockInternalDriverId(internal_driver_ids_.size());
   internal_driver_ids_.push_back(int_driver_id);
-  internal_driver_ports_.push_back(int_driver_port);
+  internal_driver_from_pins_.push_back(int_driver_port_from_port);
+  internal_driver_to_pins_.push_back(int_driver_port_to_port);
   spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(
     int_driver_id);
   return int_driver_id;
