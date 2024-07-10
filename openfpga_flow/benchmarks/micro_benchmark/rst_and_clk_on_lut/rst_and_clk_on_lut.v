@@ -4,7 +4,7 @@
 ////////////////////////////////////////
 `timescale 1ns / 1ps
 
-module rst_on_lut(a, b, c, q, out0, out1, clk, rst);
+module rst_and_clk_on_lut(a, b, c, q, out0, out1, clk, rst);
 
 input wire rst;
 input wire clk;
