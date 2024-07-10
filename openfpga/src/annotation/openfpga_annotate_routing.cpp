@@ -72,11 +72,22 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(
         break;
       }
       VTR_ASSERT(node_pin_num < phy_tile->num_pins);
+      t_rr_type rr_pin_type = IPIN;
+      if (phy_tile->class_inf[phy_tile->pin_class[node_pin_num]].type == RECEIVER) {
+        rr_pin_type = IPIN;
+      } else if (phy_tile->class_inf[phy_tile->pin_class[node_pin_num]].type == DRIVER) {
+        rr_pin_type = OPIN;
+      } else {
+        VTR_LOG_ERROR("When annotating global net '%s', invalid rr node pin type for '%s' pin '%d'\n",
+                 cluster_nlist.net_name(net_id).c_str(), phy_tile->name,
+                 node_pin_num);
+        exit(1);
+      }
       std::vector<RRNodeId> curr_rr_nodes =
         rr_graph.node_lookup().find_nodes_at_all_sides(
-          layer, blk_loc.loc.x, blk_loc.loc.y, IPIN, node_pin_num);
+          layer, blk_loc.loc.x, blk_loc.loc.y, rr_pin_type, node_pin_num);
       for (RRNodeId curr_rr_node : curr_rr_nodes) {
-        VTR_LOGV(verbose, "Annotate global net '%s' on '%s' pin '%d'\n",
+        VTR_LOGV(verbose, "on '%s' pin '%d'\n",
                  cluster_nlist.net_name(net_id).c_str(), phy_tile->name,
                  node_pin_num);
         rr_node_nets[curr_rr_node] = net_id;
