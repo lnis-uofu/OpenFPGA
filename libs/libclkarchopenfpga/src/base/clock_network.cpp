@@ -366,7 +366,7 @@ std::string ClockNetwork::internal_driver_from_pin(
   return internal_driver_from_pins_[int_driver_id];
 }
 
-std::string ClockNetwork::internal_driver_to_pin(
+BasicPort ClockNetwork::internal_driver_to_pin(
   const ClockInternalDriverId& int_driver_id) const {
   VTR_ASSERT(valid_internal_driver_id(int_driver_id));
   return internal_driver_to_pins_[int_driver_id];
@@ -530,9 +530,25 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
 }
 
 std::vector<std::string> ClockNetwork::flatten_internal_driver_from_pin(
-  const ClockInternalDriverId& int_driver_id) const {
+  const ClockInternalDriverId& int_driver_id,
+  const ClockTreePinId& clk_pin_id) const {
   std::vector<std::string> flatten_taps;
-  std::string tap_name = internal_driver_port(int_driver_id);
+  BasicPort des_pin = internal_driver_to_pin(int_driver_id);
+  if (!des_pin.is_valid()) {
+    VTR_LOG_ERROR("Invalid internal driver destination port name '%s' whose index is not valid\n",
+                  des_pin.to_verilog_string().c_str());
+    exit(1);
+  }
+  if (des_pin.get_width() != 1) {
+    VTR_LOG_ERROR("Invalid internal driver destination port name '%s' whose width is not 1\n",
+                  des_pin.to_verilog_string().c_str());
+    exit(1);
+  }
+  if (des_pin.get_lsb() != size_t(clk_pin_id)) {
+    return flatten_taps;
+  }
+
+  std::string tap_name = internal_driver_from_pin(int_driver_id);
   StringToken tokenizer(tap_name);
   std::vector<std::string> pin_tokens = tokenizer.split(".");
   if (pin_tokens.size() != 2) {
@@ -775,10 +791,12 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   const std::string& int_driver_to_port) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
+  /* Parse ports */
+  PortParser to_pin_parser(int_driver_to_port);
   /* Find any existing id for the driver port */
   for (ClockInternalDriverId int_driver_id : internal_driver_ids_) {
     if (internal_driver_from_pins_[int_driver_id] == int_driver_from_port
-        && internal_driver_to_pins_[int_driver_id] == int_driver_to_port) {
+        && internal_driver_to_pins_[int_driver_id] == to_pin_parser.port()) {
       spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)]
         .push_back(int_driver_id);
       return int_driver_id;
@@ -788,8 +806,8 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   ClockInternalDriverId int_driver_id =
     ClockInternalDriverId(internal_driver_ids_.size());
   internal_driver_ids_.push_back(int_driver_id);
-  internal_driver_from_pins_.push_back(int_driver_port_from_port);
-  internal_driver_to_pins_.push_back(int_driver_port_to_port);
+  internal_driver_from_pins_.push_back(int_driver_from_port);
+  internal_driver_to_pins_.push_back(to_pin_parser.port());
   spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(
     int_driver_id);
   return int_driver_id;

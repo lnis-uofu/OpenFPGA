@@ -590,11 +590,13 @@ static void try_find_and_add_clock_opin2track_node(
   std::vector<RRNodeId>& opin_nodes, const DeviceGrid& grids,
   const RRGraphView& rr_graph_view, const size_t& layer,
   const vtr::Point<int>& grid_coord, const e_side& pin_side,
-  const ClockNetwork& clk_ntwk, const ClockInternalDriverId& int_driver_id) {
+  const ClockNetwork& clk_ntwk,
+  const ClockTreePinId& clk_pin,
+  const ClockInternalDriverId& int_driver_id) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
-       clk_ntwk.flatten_internal_driver_port(int_driver_id)) {
+       clk_ntwk.flatten_internal_driver_from_pin(int_driver_id, clk_pin)) {
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {
@@ -636,6 +638,7 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
   const size_t& layer, const vtr::Point<int>& sb_coord,
   const ClockNetwork& clk_ntwk,
+  const ClockTreePinId& clk_pin,
   const std::vector<ClockInternalDriverId>& int_driver_ids) {
   std::vector<RRNodeId> opin_nodes;
   /* Find opins from
@@ -660,7 +663,7 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
       for (ClockInternalDriverId int_driver_id : int_driver_ids) {
         try_find_and_add_clock_opin2track_node(opin_nodes, grids, rr_graph_view,
                                                layer, grid_coord, grid_side,
-                                               clk_ntwk, int_driver_id);
+                                               clk_ntwk, clk_pin, int_driver_id);
       }
     }
   }
@@ -709,7 +712,7 @@ static int add_rr_graph_opin2clk_edges(
             clk_ntwk.spine_switch_point_internal_drivers(ispine,
                                                          switch_point_id);
           for (RRNodeId src_node : find_clock_opin2track_node(
-                 grids, rr_graph_view, layer, src_coord, clk_ntwk,
+                 grids, rr_graph_view, layer, src_coord, clk_ntwk, ipin,
                  int_driver_ids)) {
             /* Create edges */
             VTR_ASSERT(rr_graph_view.valid_node(des_node));

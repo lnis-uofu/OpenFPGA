@@ -138,8 +138,9 @@ class ClockNetwork {
   std::string internal_driver_from_pin(
     const ClockInternalDriverId& int_driver_id) const;
   std::vector<std::string> flatten_internal_driver_from_pin(
-    const ClockInternalDriverId& int_driver_id) const;
-  std::string internal_driver_to_pin(
+    const ClockInternalDriverId& int_driver_id,
+    const ClockTreePinId& clk_pin_id) const;
+  BasicPort internal_driver_to_pin(
     const ClockInternalDriverId& int_driver_id) const;
 
   /* Return the original list of tap pins that is in storage; useful for parsers
@@ -320,7 +321,7 @@ class ClockNetwork {
   vtr::vector<ClockInternalDriverId, ClockInternalDriverId>
     internal_driver_ids_;
   vtr::vector<ClockInternalDriverId, std::string> internal_driver_from_pins_;
-  vtr::vector<ClockInternalDriverId, std::string> internal_driver_to_pins_;
+  vtr::vector<ClockInternalDriverId, BasicPort> internal_driver_to_pins_;
   /* Basic information about tap */
   vtr::vector<ClockTapId, ClockTapId> tap_ids_;
   vtr::vector<ClockTapId, BasicPort> tap_from_ports_;
