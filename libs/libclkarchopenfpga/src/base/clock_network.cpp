@@ -514,9 +514,6 @@ std::vector<std::string> ClockNetwork::tree_flatten_tap_to_ports(
       std::string flatten_tile_str =
         tile_info.get_name() + "[" + std::to_string(tile_idx) + "]";
       for (size_t& pin_idx : pin_info.pins()) {
-        if (pin_idx != size_t(clk_pin_id)) {
-          continue;
-        }
         std::string flatten_pin_str =
           pin_info.get_name() + "[" + std::to_string(pin_idx) + "]";
         flatten_taps.push_back(flatten_tile_str + "." + flatten_pin_str);
