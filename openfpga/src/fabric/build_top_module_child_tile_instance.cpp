@@ -1216,11 +1216,11 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
   if (clk_ntwk.tree_width(clk_tree) !=
       module_manager.module_port(top_module, top_module_port).get_width()) {
     VTR_LOG(
-      "Clock tree '%s' does not have the same width '%lu' as the port '%'s of "
+      "Clock tree '%s' does not have the same width '%lu' as the port '%s' of "
       "FPGA top module",
       clk_tree_name.c_str(), clk_ntwk.tree_width(clk_tree),
       module_manager.module_port(top_module, top_module_port)
-        .get_name()
+        .to_verilog_string()
         .c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -1618,12 +1618,20 @@ static int add_top_module_global_ports_from_tile_modules(
       BasicPort global_port_to_add;
       global_port_to_add.set_name(
         tile_annotation.global_port_name(tile_global_port));
-      size_t max_port_size = 0;
-      for (const BasicPort& tile_port :
-           tile_annotation.global_port_tile_ports(tile_global_port)) {
-        max_port_size = std::max(tile_port.get_width(), max_port_size);
+      if (tile_annotation.global_port_thru_dedicated_network(
+            tile_global_port)) {
+        std::string clk_tree_name =
+          tile_annotation.global_port_clock_arch_tree_name(tile_global_port);
+        ClockTreeId clk_tree = clk_ntwk.find_tree(clk_tree_name);
+        global_port_to_add.set_width(clk_ntwk.tree_width(clk_tree));
+      } else {
+        size_t max_port_size = 0;
+        for (const BasicPort& tile_port :
+             tile_annotation.global_port_tile_ports(tile_global_port)) {
+          max_port_size = std::max(tile_port.get_width(), max_port_size);
+        }
+        global_port_to_add.set_width(max_port_size);
       }
-      global_port_to_add.set_width(max_port_size);
       global_ports_to_add.push_back(global_port_to_add);
     }
   }
