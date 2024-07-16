@@ -54,7 +54,7 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
     chanx_bb.set_xmin(0);
     chanx_bb.set_xmax(grids.width());
     chanx_bb.set_ymin(0);
-    chanx_bb.set_ymax(grids.height());
+    chanx_bb.set_ymax(grids.height() - 1);
   }
   /* Check the number of CHANX nodes required */
   for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
@@ -74,7 +74,7 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
   vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
   if (perimeter_cb) {
     chany_bb.set_xmin(0);
-    chany_bb.set_xmax(grids.width());
+    chany_bb.set_xmax(grids.width() - 1);
     chany_bb.set_ymin(0);
     chany_bb.set_ymax(grids.height());
   }
@@ -179,7 +179,7 @@ static void add_rr_graph_clock_nodes(
     chanx_bb.set_xmin(0);
     chanx_bb.set_xmax(grids.width());
     chanx_bb.set_ymin(0);
-    chanx_bb.set_ymax(grids.height());
+    chanx_bb.set_ymax(grids.height() - 1);
   }
   /* Add X-direction clock nodes */
   for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
@@ -201,7 +201,7 @@ static void add_rr_graph_clock_nodes(
   vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
   if (perimeter_cb) {
     chany_bb.set_xmin(0);
-    chany_bb.set_xmax(grids.width());
+    chany_bb.set_xmax(grids.width() - 1);
     chany_bb.set_ymin(0);
     chany_bb.set_ymax(grids.height());
   }
@@ -418,6 +418,7 @@ static void try_find_and_add_clock_track2ipin_node(
   const ClockTreePinId& clk_pin, const bool& verbose) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
+  VTR_LOGV(verbose, "Getting type of grid at (x=%d, y=%d)\n", grid_coord.x(), grid_coord.y());
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_tap_to_ports(clk_tree, clk_pin, grid_coord)) {
     VTR_LOGV(verbose, "Checking tap pin name: %s\n", tap_pin_name.c_str());
@@ -762,7 +763,7 @@ static void add_rr_graph_clock_edges(
     chanx_bb.set_xmin(0);
     chanx_bb.set_xmax(grids.width());
     chanx_bb.set_ymin(0);
-    chanx_bb.set_ymax(grids.height());
+    chanx_bb.set_ymax(grids.height() - 1);
   }
   /* Add edges which is driven by X-direction clock routing tracks */
   for (size_t iy = chanx_bb.ymin(); iy < chanx_bb.ymax(); ++iy) {
@@ -784,7 +785,7 @@ static void add_rr_graph_clock_edges(
   vtr::Rect<size_t> chany_bb(0, 1, grids.width() - 1, grids.height() - 1);
   if (perimeter_cb) {
     chany_bb.set_xmin(0);
-    chany_bb.set_xmax(grids.width());
+    chany_bb.set_xmax(grids.width() - 1);
     chany_bb.set_ymin(0);
     chany_bb.set_ymax(grids.height());
   }
