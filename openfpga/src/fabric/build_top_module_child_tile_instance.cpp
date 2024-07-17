@@ -1157,8 +1157,11 @@ static void organize_top_module_tile_based_memory_modules(
  ********************************************************************/
 static ModulePinInfo find_tile_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& tile_module,
-  const vtr::Point<size_t>& cb_coord_in_tile, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const t_rr_type& cb_type, const RRNodeId& chan_rr_node) {
+  const vtr::Point<size_t>& cb_coord_in_tile,
+  const size_t& cb_idx_in_tile,
+  const RRGraphView& rr_graph,
+  const RRGSB& rr_gsb, const t_rr_type& cb_type, const RRNodeId& chan_rr_node,
+  const bool& name_module_using_index) {
   ModulePinInfo input_port_info;
   /* Generate the input port object */
   switch (rr_graph.node_type(chan_rr_node)) {
@@ -1170,8 +1173,13 @@ static ModulePinInfo find_tile_module_chan_port(
       /* Create a port description for the middle output */
       std::string input_port_name = generate_cb_module_track_port_name(
         cb_type, IN_PORT, 0 == chan_node_track_id % 2);
+      std::string cb_instance_name_in_tile = generate_connection_block_module_name(cb_type, cb_coord_in_tile);
+      if (name_module_using_index) {
+        cb_instance_name_in_tile =
+          generate_connection_block_module_name_using_index(cb_type, cb_idx_in_tile);
+      }
       std::string tile_input_port_name = generate_tile_module_port_name(
-        generate_connection_block_module_name(cb_type, cb_coord_in_tile),
+        cb_instance_name_in_tile,
         input_port_name);
       /* Must find a valid port id in the Switch Block module */
       input_port_info.first =
@@ -1199,7 +1207,8 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
   const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
   const ClockNetwork& clk_ntwk, const std::string& clk_tree_name,
-  const RRClockSpatialLookup& rr_clock_lookup) {
+  const RRClockSpatialLookup& rr_clock_lookup,
+  const bool& name_module_using_index) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Ensure the clock arch tree name is valid */
@@ -1268,8 +1277,11 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
         fabric_tile.cb_coordinates(
           unique_fabric_tile_id, entry_track_type)[cb_idx_in_curr_fabric_tile];
       ModulePinInfo des_pin_info = find_tile_module_chan_port(
-        module_manager, tile_module, cb_coord_in_unique_fabric_tile, rr_graph,
-        rr_gsb, entry_track_type, entry_rr_node);
+        module_manager, tile_module, cb_coord_in_unique_fabric_tile,
+        cb_idx_in_curr_fabric_tile,
+        rr_graph,
+        rr_gsb, entry_track_type, entry_rr_node, 
+        name_module_using_index);
 
       /* Configure the net sink */
       BasicPort sink_port =
@@ -1601,7 +1613,7 @@ static int add_top_module_global_ports_from_tile_modules(
   const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
   const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup,
-  const bool& perimeter_cb) {
+  const bool& perimeter_cb, const bool& name_module_using_index) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module
@@ -1661,7 +1673,7 @@ static int add_top_module_global_ports_from_tile_modules(
         module_manager, top_module, top_module_port, rr_graph, device_rr_gsb,
         tile_instance_ids, fabric_tile, clk_ntwk,
         tile_annotation.global_port_clock_arch_tree_name(tile_global_port),
-        rr_clock_lookup);
+        rr_clock_lookup, name_module_using_index);
     } else {
       status = build_top_module_global_net_from_tile_modules(
         module_manager, top_module, top_module_port, tile_annotation,
@@ -1951,7 +1963,7 @@ int build_top_module_tile_child_instances(
   status = add_top_module_global_ports_from_tile_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
     layer, rr_graph, device_rr_gsb, tile_instance_ids, fabric_tile, clk_ntwk,
-    rr_clock_lookup, perimeter_cb);
+    rr_clock_lookup, perimeter_cb, name_module_using_index);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
