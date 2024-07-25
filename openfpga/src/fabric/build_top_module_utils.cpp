@@ -100,13 +100,13 @@ vtr::Point<size_t> find_top_module_gsb_coordinate_by_sb_side(
 
   vtr::Point<size_t> gsb_coordinate;
 
-  if ((TOP == sb_side) || (LEFT == sb_side)) {
+  if ((BOTTOM == sb_side) || (LEFT == sb_side)) {
     gsb_coordinate.set_x(rr_gsb.get_x());
     gsb_coordinate.set_y(rr_gsb.get_y());
     return gsb_coordinate;
   }
 
-  VTR_ASSERT((RIGHT == sb_side) || (BOTTOM == sb_side));
+  VTR_ASSERT((RIGHT == sb_side) || (TOP == sb_side));
 
   /* RIGHT side: x + 1 */
   if (RIGHT == sb_side) {
@@ -115,9 +115,9 @@ vtr::Point<size_t> find_top_module_gsb_coordinate_by_sb_side(
   }
 
   /* BOTTOM side: y - 1 */
-  if (BOTTOM == sb_side) {
+  if (TOP == sb_side) {
     gsb_coordinate.set_x(rr_gsb.get_x());
-    gsb_coordinate.set_y(rr_gsb.get_y() - 1);
+    gsb_coordinate.set_y(rr_gsb.get_y() + 1);
   }
 
   return gsb_coordinate;

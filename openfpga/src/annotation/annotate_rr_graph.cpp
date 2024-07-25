@@ -98,7 +98,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_range,
                           const size_t& layer,
                           const vtr::Point<size_t>& gsb_coord,
-                          const bool& include_clock) {
+                          const bool& perimeter_cb, const bool& include_clock) {
   /* Create an object to return */
   RRGSB rr_gsb;
 
@@ -126,7 +126,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
     switch (side) {
       case TOP: /* TOP = 0 */
-        /* For the border, we should take special care */
         if (gsb_coord.y() == gsb_range.y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
@@ -157,7 +156,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         break;
       case RIGHT: /* RIGHT = 1 */
-        /* For the border, we should take special care */
         if (gsb_coord.x() == gsb_range.x()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
@@ -189,8 +187,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
-        /* For the border, we should take special care */
-        if (gsb_coord.y() == 0) {
+        if (!perimeter_cb && gsb_coord.y() == 0) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -220,8 +217,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
-        /* For the border, we should take special care */
-        if (gsb_coord.x() == 0) {
+        if (!perimeter_cb && gsb_coord.x() == 0) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -333,11 +329,11 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       case RIGHT: /* RIGHT = 1 */
         /* For the bording, we should take special care */
         /* Check if TOP side chan width is 0 or not */
-        chan_side = TOP;
+        chan_side = BOTTOM;
         /* Build the connection block: ipin and ipin_grid_side */
-        /* LEFT side INPUT Pins of Grid[x+1][y+1] */
+        /* LEFT side INPUT Pins of Grid[x+1][y] */
         ix = rr_gsb.get_sb_x() + 1;
-        iy = rr_gsb.get_sb_y() + 1;
+        iy = rr_gsb.get_sb_y();
         ipin_rr_node_grid_side = LEFT;
         break;
       case BOTTOM: /* BOTTOM = 2*/
@@ -353,11 +349,11 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       case LEFT: /* LEFT = 3 */
         /* For the bording, we should take special care */
         /* Check if left side chan width is 0 or not */
-        chan_side = TOP;
+        chan_side = BOTTOM;
         /* Build the connection block: ipin and ipin_grid_side */
-        /* RIGHT side INPUT Pins of Grid[x][y+1] */
+        /* RIGHT side INPUT Pins of Grid[x][y] */
         ix = rr_gsb.get_sb_x();
-        iy = rr_gsb.get_sb_y() + 1;
+        iy = rr_gsb.get_sb_y();
         ipin_rr_node_grid_side = RIGHT;
         break;
       default:
@@ -420,6 +416,9 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
    */
   vtr::Point<size_t> gsb_range(vpr_device_ctx.grid.width() - 1,
                                vpr_device_ctx.grid.height() - 1);
+  if (vpr_device_ctx.arch->perimeter_cb) {
+    gsb_range.set(vpr_device_ctx.grid.width(), vpr_device_ctx.grid.height());
+  }
   device_rr_gsb.reserve(gsb_range);
 
   VTR_LOGV(verbose_output, "Start annotation GSB up to [%lu][%lu]\n",
@@ -434,11 +433,11 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        * the GSBs at the borderside correctly sort drive_rr_nodes should be
        * called if required by users
        */
-      const RRGSB& rr_gsb =
-        build_rr_gsb(vpr_device_ctx,
-                     vtr::Point<size_t>(vpr_device_ctx.grid.width() - 2,
-                                        vpr_device_ctx.grid.height() - 2),
-                     layer, vtr::Point<size_t>(ix, iy), include_clock);
+      vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
+                                       vpr_device_ctx.grid.height() - 1);
+      const RRGSB& rr_gsb = build_rr_gsb(
+        vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
+        vpr_device_ctx.arch->perimeter_cb, include_clock);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

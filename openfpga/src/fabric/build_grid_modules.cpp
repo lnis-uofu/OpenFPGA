@@ -42,7 +42,8 @@ static void add_grid_module_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation, const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side,
+  const bool& perimeter_cb) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
 
@@ -52,8 +53,8 @@ static void add_grid_module_pb_type_ports(
    * Otherwise, we will iterate all the 4 sides
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides =
-      find_grid_module_pin_sides(grid_type_descriptor, border_side);
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
+                                                border_side, perimeter_cb);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
@@ -125,7 +126,8 @@ static void add_grid_module_nets_connect_pb_type_ports(
   const ModuleId& child_module, const size_t& child_instance,
   const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation, const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side,
+  const bool& perimeter_cb) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
 
@@ -144,7 +146,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
         tile_annotation, &(top_pb_graph_node->input_pins[iport][ipin]),
-        border_side, INPUT2INPUT_INTERC);
+        border_side, perimeter_cb, INPUT2INPUT_INTERC);
     }
   }
 
@@ -155,7 +157,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
         tile_annotation, &(top_pb_graph_node->output_pins[iport][ipin]),
-        border_side, OUTPUT2OUTPUT_INTERC);
+        border_side, perimeter_cb, OUTPUT2OUTPUT_INTERC);
     }
   }
 
@@ -166,7 +168,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
         tile_annotation, &(top_pb_graph_node->clock_pins[iport][ipin]),
-        border_side, INPUT2INPUT_INTERC);
+        border_side, perimeter_cb, INPUT2INPUT_INTERC);
     }
   }
 }
@@ -1168,7 +1170,7 @@ static int build_physical_tile_module(
   const TileAnnotation& tile_annotation, const e_side& border_side,
   const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
   const bool& duplicate_grid_pin, const bool& group_config_block,
-  const bool& verbose) {
+  const bool& perimeter_cb, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   /* Create a Module for the top-level physical block, and add to module manager
    */
@@ -1247,7 +1249,7 @@ static int build_physical_tile_module(
     /* Default way to add these ports by following the definition in pb_types */
     add_grid_module_pb_type_ports(module_manager, grid_module,
                                   vpr_device_annotation, phy_block_type,
-                                  tile_annotation, border_side);
+                                  tile_annotation, border_side, perimeter_cb);
     /* Add module nets to connect the pb_type ports to sub modules */
     for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
       VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
@@ -1264,7 +1266,8 @@ static int build_physical_tile_module(
            module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_pb_type_ports(
           module_manager, grid_module, pb_module, child_instance, sub_tile,
-          vpr_device_annotation, phy_block_type, tile_annotation, border_side);
+          vpr_device_annotation, phy_block_type, tile_annotation, border_side,
+          perimeter_cb);
       }
     }
   } else {
@@ -1272,7 +1275,7 @@ static int build_physical_tile_module(
     /* Add these ports with duplication */
     add_grid_module_duplicated_pb_type_ports(
       module_manager, grid_module, vpr_device_annotation, phy_block_type,
-      tile_annotation, border_side);
+      tile_annotation, border_side, perimeter_cb);
 
     /* Add module nets to connect the duplicated pb_type ports to sub modules */
     for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
@@ -1290,7 +1293,8 @@ static int build_physical_tile_module(
            module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_duplicated_pb_type_ports(
           module_manager, grid_module, pb_module, child_instance, sub_tile,
-          vpr_device_annotation, phy_block_type, tile_annotation, border_side);
+          vpr_device_annotation, phy_block_type, tile_annotation, border_side,
+          perimeter_cb);
       }
     }
   }
@@ -1436,7 +1440,7 @@ int build_grid_modules(
           module_manager, decoder_lib, device_annotation, circuit_lib,
           sram_orgz_type, sram_model, &physical_tile, tile_annotation,
           io_type_side, ql_memory_bank_config_setting, duplicate_grid_pin,
-          group_config_block, verbose);
+          group_config_block, device_ctx.arch->perimeter_cb, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;
         }
@@ -1447,7 +1451,7 @@ int build_grid_modules(
         module_manager, decoder_lib, device_annotation, circuit_lib,
         sram_orgz_type, sram_model, &physical_tile, tile_annotation, NUM_SIDES,
         ql_memory_bank_config_setting, duplicate_grid_pin, group_config_block,
-        verbose);
+        device_ctx.arch->perimeter_cb, verbose);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }

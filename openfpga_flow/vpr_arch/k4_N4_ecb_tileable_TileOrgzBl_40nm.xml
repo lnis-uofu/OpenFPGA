@@ -65,10 +65,10 @@
         <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="custom">
-          <loc side="top">clb.clk</loc>
-          <loc side="right">clb.I2[0:3] clb.I3[0:3] clb.O[2:3]</loc>
+          <loc side="bottom">clb.clk</loc>
+          <loc side="top">clb.I2[0:3] clb.I3[0:3] clb.O[2:3]</loc>
           <loc side="left"/>
-          <loc side="bottom">clb.I0[0:3] clb.I1[0:3] clb.O[0:1]</loc>
+          <loc side="right">clb.I0[0:3] clb.I1[0:3] clb.O[0:1]</loc>
         </pinlocations>
       </sub_tile>
     </tile>

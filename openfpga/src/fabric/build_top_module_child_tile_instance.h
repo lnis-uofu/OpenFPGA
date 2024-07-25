@@ -44,7 +44,7 @@ int build_top_module_tile_child_instances(
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricKey& fabric_key,
   const bool& group_config_block, const bool& name_module_using_index,
-  const bool& frame_view, const bool& verbose);
+  const bool& perimeter_cb, const bool& frame_view, const bool& verbose);
 
 } /* end namespace openfpga */
 

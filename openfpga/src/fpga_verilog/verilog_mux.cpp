@@ -679,7 +679,7 @@ static void generate_verilog_mux_branch_module(
           fp, module_manager, mux_module,
           use_explicit_port_map ||
             circuit_lib.dump_explicit_port_map(mux_model),
-          default_net_type);
+          false, default_net_type);
         /* Add an empty line as a splitter */
         fp << std::endl;
       } else {
@@ -1423,7 +1423,7 @@ static void generate_verilog_mux_module(
          circuit_lib.dump_explicit_port_map(mux_model) ||
          circuit_lib.dump_explicit_port_map(
            circuit_lib.pass_gate_logic_model(mux_model))),
-        default_net_type);
+        false, default_net_type);
       /* Add an empty line as a splitter */
       fp << std::endl;
       break;

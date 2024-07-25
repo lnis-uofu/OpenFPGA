@@ -195,10 +195,10 @@
     <pb_type name="io[inpad_registered].ff" physical_pb_type_name="io[physical].ff"/>
     <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
     <pb_type name="io_input" physical_mode_name="physical" idle_mode_name="inpad"/>
-    <pb_type name="io_input[physical].iopad" circuit_model_name="GPIN" mode_bits="1"/>
+    <pb_type name="io_input[physical].iopad" circuit_model_name="GPIN"/>
     <pb_type name="io_input[physical].ff" circuit_model_name="DFFSRQ"/>
-    <pb_type name="io_input[inpad].inpad" physical_pb_type_name="io_input[physical].iopad" mode_bits="1"/>
-    <pb_type name="io_input[inpad_registered].inpad" physical_pb_type_name="io_input[physical].iopad" mode_bits="1"/>
+    <pb_type name="io_input[inpad].inpad" physical_pb_type_name="io_input[physical].iopad"/>
+    <pb_type name="io_input[inpad_registered].inpad" physical_pb_type_name="io_input[physical].iopad"/>
     <pb_type name="io_input[inpad_registered].ff" physical_pb_type_name="io_input[physical].ff"/>
     <!-- End physical pb_type binding in complex block IO -->
     <!-- physical pb_type binding in complex block CLB -->

@@ -141,7 +141,7 @@ static void organize_top_module_tile_memory_modules(
   const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
 
-  vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y() - 1);
+  vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y());
 
   /* We do NOT consider SB and CBs if the gsb is not in the range! */
   if ((gsb_coord.x() < gsb_coord_range.x()) &&
@@ -370,12 +370,13 @@ void build_top_module_configurable_regions(
  *   Note: the organization of inter-tile aims to reduce the wire length
  *         to connect between tiles. Therefore, it is organized as a snake
  *         where we can avoid long wires between rows and columns
+ *   Note: Corner I/Os only occur when perimeter cb is allowed
  *
  *    +--------------------------------------------------------+
- *    |              +------+------+-----+------+              |
- *    |              | I/O  | I/O  | ... | I/O  |              |
- *    |              | TOP  | TOP  |     | TOP  |              |
- *    |              +------+------+-----+------+              |
+ *    |  +------+    +------+------+-----+------+   +------+   |
+ *    |  | I/O  |    | I/O  | I/O  | ... | I/O  |   | I/O  |   |
+ *    |  | LEFT |    | TOP  | TOP  |     | TOP  |   | TOP  |   |
+ *    |  +------+    +------+------+-----+------+   +------+   |
  *    |           +---------------------------------->tail     |
  *    |  +------+ |  +------+------+-----+------+   +------+   |
  *    |  |      | |  |      |      |     |      |   |      |   |
@@ -397,10 +398,10 @@ void build_top_module_configurable_regions(
  *    |  | LEFT |    | [0]  |  [1] |     |  [i] | | |RIGHT |   |
  *    |  +------+    +------+------+-----+------+ | +------+   |
  *    +-------------------------------------------+            |
- *                   +------+------+-----+------+              |
- *                   | I/O  | I/O  | ... | I/O  |              |
- *                   |BOTTOM|BOTTOM|     |BOTTOM|              |
- *                   +------+------+-----+------+              |
+ *       +------+    +------+------+-----+------+   +------+   |
+ *       | I/O  |    | I/O  | I/O  | ... | I/O  |   | I/O  |   |
+ *       |BOTTOM|    |BOTTOM|BOTTOM|     |BOTTOM|   |RIGHT |   |
+ *       +------+    +------+------+-----+------+   +------+   |
  *        head >-----------------------------------------------+
  *
  * Inner tile connection:
@@ -458,12 +459,12 @@ void organize_top_module_memory_modules(
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coords;
 
   /* BOTTOM side I/Os */
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
     io_coords[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
   }
 
   /* RIGHT side I/Os */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
     io_coords[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
   }
 
@@ -483,13 +484,12 @@ void organize_top_module_memory_modules(
    *    +--------+ +--------+
    *
    */
-  for (size_t ix = grids.width() - 2; ix >= 1; --ix) {
+  for (size_t ix = grids.width() - 1; ix >= 1; --ix) {
     io_coords[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
   }
-  io_coords[TOP].push_back(vtr::Point<size_t>(0, grids.height() - 1));
 
   /* LEFT side I/Os */
-  for (size_t iy = grids.height() - 2; iy >= 1; --iy) {
+  for (size_t iy = grids.height() - 1; iy >= 1; --iy) {
     io_coords[LEFT].push_back(vtr::Point<size_t>(0, iy));
   }
 

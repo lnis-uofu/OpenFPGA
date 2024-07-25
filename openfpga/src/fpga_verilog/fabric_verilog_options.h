@@ -28,6 +28,7 @@ class FabricVerilogOption {
   bool compress_routing() const;
   e_verilog_default_net_type default_net_type() const;
   bool print_user_defined_template() const;
+  bool constant_undriven_inputs() const;
   bool verbose_output() const;
 
  public: /* Public mutators */
@@ -39,6 +40,7 @@ class FabricVerilogOption {
   void set_compress_routing(const bool& enabled);
   void set_print_user_defined_template(const bool& enabled);
   void set_default_net_type(const std::string& default_net_type);
+  void set_constant_undriven_inputs(const bool& enabled);
   void set_verbose_output(const bool& enabled);
 
  private: /* Internal Data */
@@ -50,6 +52,7 @@ class FabricVerilogOption {
   e_verilog_default_net_type default_net_type_;
   bool time_stamp_;
   bool use_relative_path_;
+  bool constant_undriven_inputs_;
   bool verbose_output_;
 };
 
