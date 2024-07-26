@@ -147,9 +147,9 @@ static size_t rec_estimate_device_bitstream_num_bits(
  * of the FPGA fabric that FPGA-X2P generates!
  * But it can be used to output a generic bitstream for VPR mapping FPGA
  *******************************************************************/
-BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
-                                        const OpenfpgaContext& openfpga_ctx,
-                                        const bool& verbose) {
+BitstreamManager build_device_bitstream(
+  const VprContext& vpr_ctx, const OpenfpgaContext& openfpga_ctx,
+  const std::string& overwrite_bitstream_file, const bool& verbose) {
   std::string timer_message =
     std::string("\nBuild fabric-independent bitstream for implementation '") +
     vpr_ctx.atom().nlist.netlist_name() + std::string("'\n");
@@ -218,7 +218,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
     openfpga_ctx.vpr_device_annotation(),
     openfpga_ctx.vpr_clustering_annotation(),
     openfpga_ctx.vpr_placement_annotation(),
-    openfpga_ctx.vpr_bitstream_annotation(), verbose);
+    openfpga_ctx.vpr_bitstream_annotation(), overwrite_bitstream_file, verbose);
   VTR_LOGV(verbose, "Done\n");
 
   /* Create bitstream from routing architectures */

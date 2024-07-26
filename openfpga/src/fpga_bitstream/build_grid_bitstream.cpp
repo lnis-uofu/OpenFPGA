@@ -3,6 +3,7 @@
  * for grids (CLBs, heterogenerous blocks, I/Os, etc.)
  *******************************************************************/
 #include <cmath>
+#include <fstream>
 #include <string>
 
 /* Headers from vtrutil library */
@@ -28,6 +29,242 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+struct OVERWRITE_BITS {
+  OVERWRITE_BITS(bool i, int s, int e, uint64_t b)
+    : incr(i), start(s), end(e), bits(b) {}
+  bool incr = true;
+  int start = -1;
+  int end = -1;
+  uint64_t bits = 0;
+};
+
+std::string M_TOP_NAME = "";
+std::string M_BLOCK_GRID_NAME = "";
+std::map<std::string, std::map<std::string, std::vector<OVERWRITE_BITS>>*>
+  M_OVERWRITE_GRID_BITS;
+std::map<std::string, std::vector<OVERWRITE_BITS>>* M_OVERWRITE_BITS = nullptr;
+
+/********************************************************************
+ * Track the fabric top name
+ *******************************************************************/
+static void track_fabric_top_name(const std::string& top) {
+  VTR_ASSERT(top.size());
+  M_TOP_NAME = top;
+}
+
+/********************************************************************
+ * Track the fabric grid name
+ *******************************************************************/
+static void track_physical_block_grid(const std::string& block) {
+  VTR_ASSERT(M_TOP_NAME.size());
+  VTR_ASSERT(block.size());
+  M_BLOCK_GRID_NAME = M_TOP_NAME + std::string(".") + block;
+  if (M_OVERWRITE_GRID_BITS.find(M_BLOCK_GRID_NAME) !=
+      M_OVERWRITE_GRID_BITS.end()) {
+    M_OVERWRITE_BITS = M_OVERWRITE_GRID_BITS[M_BLOCK_GRID_NAME];
+  } else {
+    M_OVERWRITE_BITS = nullptr;
+  }
+}
+
+/********************************************************************
+ * Trim whitespace
+ *******************************************************************/
+static void trim_white_space(std::string& line) {
+  const auto begin = line.find_first_not_of(" \t\r\n");
+  if (begin != std::string::npos) {
+    const auto end = line.find_last_not_of(" \t\r\n");
+    const auto count = end - begin + 1;
+    line = line.substr(begin, count);
+  }
+}
+
+/********************************************************************
+ * Split the line by delimiter
+ *******************************************************************/
+static std::vector<std::string> split_line_by(
+  std::string line, const std::string& delimiter = " \t") {
+  std::vector<std::string> results;
+  size_t index = line.find_first_of(delimiter);
+  trim_white_space(line);
+  while (index != std::string::npos) {
+    std::string result = line.substr(0, index);
+    trim_white_space(result);
+    results.push_back(result);
+    line = line.substr(index + 1);
+    trim_white_space(line);
+    index = line.find_first_of(delimiter);
+  }
+  if (line.size()) {
+    results.push_back(line);
+  }
+  return results;
+}
+
+/********************************************************************
+ * Check if the string is all number
+ *******************************************************************/
+static bool is_number(const std::string& s) {
+  std::string::const_iterator it = s.begin();
+  while (it != s.end() && std::isdigit(*it)) ++it;
+  return !s.empty() && it == s.end();
+}
+
+/********************************************************************
+ * Convert string to uint64_t
+ *******************************************************************/
+static uint64_t get_number(const std::string& s) {
+  uint64_t value = 0;
+  std::istringstream iss(s);
+  iss >> value;
+  return value;
+}
+
+/********************************************************************
+ * Cleanup
+ *******************************************************************/
+static void cleanup_overwrite() {
+  for (auto& iter : M_OVERWRITE_GRID_BITS) {
+    delete iter.second;
+  }
+  M_OVERWRITE_GRID_BITS.clear();
+  M_OVERWRITE_BITS = nullptr;
+}
+
+/********************************************************************
+ * Read the overwrite file
+ *******************************************************************/
+static void read_overwrite_file(const std::string& filepath) {
+  cleanup_overwrite();
+  if (filepath.size()) {
+    std::ifstream file(filepath.c_str());
+    if (file.is_open()) {
+      if (file.good()) {
+        std::string line = "";
+        while (std::getline(file, line)) {
+          trim_white_space(line);
+          if (line.size() && line[0] != '#') {
+            std::vector<std::string> words = split_line_by(line);
+            if (words.size() >= 3 && words[0].size() > 0 &&
+                words[1].size() > 0) {
+              // Prepare the pointer to fillup path and bits (speedup stuff)
+              M_OVERWRITE_BITS = nullptr;
+              if (M_OVERWRITE_GRID_BITS.find(words[0]) !=
+                  M_OVERWRITE_GRID_BITS.end()) {
+                M_OVERWRITE_BITS = M_OVERWRITE_GRID_BITS.at(words[0]);
+              }
+              std::string path = std::string(".") + words[1];
+              for (size_t i = 2; i < words.size(); i++) {
+                std::vector<std::string> values = split_line_by(words[i], "=");
+                bool incr = true;
+                int start = -1;
+                int end = -1;
+                uint64_t value = 0;
+                if (values.size() == 1) {
+                  if (is_number(values[0])) {
+                    value = get_number(values[0]);
+                  } else {
+                    // Bad
+                    continue;
+                  }
+                } else if (values.size() == 2) {
+                  if (values[0].size() >= 3 && values[0][0] == '[' &&
+                      values[0][values[0].size() - 1] == ']') {
+                    line = values[0].substr(1, values[0].size() - 2);
+                    trim_white_space(line);
+                    std::vector<std::string> range = split_line_by(line, ":");
+                    if (range.size() == 1 && is_number(range[0])) {
+                      start = get_number(range[0]);
+                      end = start;
+                    } else if (range.size() == 2 && is_number(range[0]) &&
+                               is_number(range[1])) {
+                      end = (int)(get_number(range[0]));
+                      start = (int)(get_number(range[1]));
+                      incr = end >= start;
+                    } else {
+                      // Bad
+                      continue;
+                    }
+                    if (is_number(values[1])) {
+                      value = get_number(values[1]);
+                    } else {
+                      // Bad
+                      continue;
+                    }
+                  } else {
+                    // Bad
+                    continue;
+                  }
+                } else {
+                  // Bad
+                  continue;
+                }
+                if ((start == -1 && end == -1) || (start >= 0 && end >= 0)) {
+                  if (M_OVERWRITE_BITS == nullptr) {
+                    M_OVERWRITE_BITS =
+                      new std::map<std::string, std::vector<OVERWRITE_BITS>>;
+                    M_OVERWRITE_GRID_BITS[words[0]] = M_OVERWRITE_BITS;
+                  }
+                  if (M_OVERWRITE_BITS->find(path) == M_OVERWRITE_BITS->end()) {
+                    (*M_OVERWRITE_BITS)[path] = {};
+                  }
+                  M_OVERWRITE_BITS->at(path).push_back(
+                    OVERWRITE_BITS(incr, start, end, value));
+                }
+              }
+            }
+          }
+        }
+      }
+      file.close();
+    }
+  }
+  M_OVERWRITE_BITS = nullptr;
+}
+
+/********************************************************************
+ * Overwrite the bits
+ *******************************************************************/
+static void overwrite_bits(const std::string& path, std::vector<bool>& bits) {
+  VTR_ASSERT(M_OVERWRITE_BITS != nullptr);
+  if (M_OVERWRITE_BITS->find(path) != M_OVERWRITE_BITS->end()) {
+    for (OVERWRITE_BITS& obits : M_OVERWRITE_BITS->at(path)) {
+      if (obits.start == -1 && obits.end == -1) {
+        for (int i = 0; i < int(bits.size()); i++) {
+          if (obits.bits & (1 << i)) {
+            bits[i] = true;
+          } else {
+            bits[i] = false;
+          }
+        }
+      } else {
+        int i = 0;
+        int start = obits.start;
+        while (true) {
+          if (start >= 0 && start < int(bits.size())) {
+            if (obits.bits & (1 << i)) {
+              bits[start] = true;
+            } else {
+              bits[start] = false;
+            }
+          } else {
+            break;
+          }
+          if (start == obits.end) {
+            break;
+          }
+          i++;
+          if (obits.incr) {
+            start++;
+          } else {
+            start--;
+          }
+        }
+      }
+    }
+  }
+}
 
 /********************************************************************
  * Decode mode bits "01..." to a bitstream vector
@@ -55,7 +292,7 @@ static void build_primitive_bitstream(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& device_annotation, const PhysicalPb& physical_pb,
   const PhysicalPbId& primitive_pb_id, t_pb_type* primitive_pb_type,
-  const bool& verbose) {
+  std::string config_instance_path, const bool& verbose) {
   /* Ensure a valid physical pritimive pb */
   if (nullptr == primitive_pb_type) {
     VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid primitive_pb_type!\n");
@@ -162,6 +399,11 @@ static void build_primitive_bitstream(
            bitstream_manager.block_name(parent_configurable_block).c_str());
 
   /* Add the bitstream to the bitstream manager */
+  if (M_OVERWRITE_BITS != nullptr) {
+    std::string path = config_instance_path + std::string(".") +
+                       bitstream_manager.block_name(mem_block);
+    overwrite_bits(path, mode_select_bitstream);
+  }
   bitstream_manager.add_block_bits(mem_block, mode_select_bitstream);
 }
 
@@ -185,7 +427,8 @@ static void build_physical_block_pin_interc_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation,
   const PhysicalPb& physical_pb, t_pb_graph_pin* des_pb_graph_pin,
-  t_mode* physical_mode, const bool& verbose) {
+  t_mode* physical_mode, std::string config_instance_path,
+  const bool& verbose) {
   /* Identify the number of fan-in (Consider interconnection edges of only
    * selected mode) */
   t_interconnect* cur_interc =
@@ -329,6 +572,11 @@ static void build_physical_block_pin_interc_bitstream(
                bitstream_manager.block_name(parent_configurable_block).c_str());
 
       /* Add the bistream to the bitstream manager */
+      if (M_OVERWRITE_BITS != nullptr) {
+        std::string path = config_instance_path + std::string(".") +
+                           bitstream_manager.block_name(mux_mem_block);
+        overwrite_bits(path, mux_bitstream);
+      }
       bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
       /* Record path ids, input and output nets */
       bitstream_manager.add_path_id_to_block(mux_mem_block, mux_input_pin_id);
@@ -385,7 +633,7 @@ static void build_physical_block_interc_port_bitstream(
   const VprBitstreamAnnotation& bitstream_annotation,
   t_pb_graph_node* physical_pb_graph_node, const PhysicalPb& physical_pb,
   const e_circuit_pb_port_type& pb_port_type, t_mode* physical_mode,
-  const bool& verbose) {
+  std::string config_instance_path, const bool& verbose) {
   switch (pb_port_type) {
     case CIRCUIT_PB_PORT_INPUT:
       for (int iport = 0; iport < physical_pb_graph_node->num_input_ports;
@@ -398,7 +646,7 @@ static void build_physical_block_interc_port_bitstream(
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->input_pins[iport][ipin]), physical_mode,
-            verbose);
+            config_instance_path, verbose);
         }
       }
       break;
@@ -413,7 +661,7 @@ static void build_physical_block_interc_port_bitstream(
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->output_pins[iport][ipin]), physical_mode,
-            verbose);
+            config_instance_path, verbose);
         }
       }
       break;
@@ -428,7 +676,7 @@ static void build_physical_block_interc_port_bitstream(
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->clock_pins[iport][ipin]), physical_mode,
-            verbose);
+            config_instance_path, verbose);
         }
       }
       break;
@@ -451,7 +699,8 @@ static void build_physical_block_interc_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation,
   t_pb_graph_node* physical_pb_graph_node, const PhysicalPb& physical_pb,
-  t_mode* physical_mode, const bool& verbose) {
+  t_mode* physical_mode, std::string config_instance_path,
+  const bool& verbose) {
   /* Check if the pb_graph node is valid or not */
   if (nullptr == physical_pb_graph_node) {
     VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid physical_pb_graph_node.\n");
@@ -472,7 +721,8 @@ static void build_physical_block_interc_bitstream(
     bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block,
     module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
     device_annotation, bitstream_annotation, physical_pb_graph_node,
-    physical_pb, CIRCUIT_PB_PORT_OUTPUT, physical_mode, verbose);
+    physical_pb, CIRCUIT_PB_PORT_OUTPUT, physical_mode, config_instance_path,
+    verbose);
 
   /* We check input_pins of child_pb_graph_node and its the input_edges
    * Iterate over the interconnections between inputs of physical_pb_graph_node
@@ -496,14 +746,14 @@ static void build_physical_block_interc_bitstream(
         parent_configurable_block, module_manager, module_name_map, circuit_lib,
         mux_lib, atom_ctx, device_annotation, bitstream_annotation,
         child_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_INPUT, physical_mode,
-        verbose);
+        config_instance_path, verbose);
       /* For clock pins, we should do the same work */
       build_physical_block_interc_port_bitstream(
         bitstream_manager, grouped_mem_inst_scoreboard,
         parent_configurable_block, module_manager, module_name_map, circuit_lib,
         mux_lib, atom_ctx, device_annotation, bitstream_annotation,
         child_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_CLOCK, physical_mode,
-        verbose);
+        config_instance_path, verbose);
     }
   }
 }
@@ -519,7 +769,8 @@ static void build_lut_bitstream(
   const VprDeviceAnnotation& device_annotation,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const PhysicalPb& physical_pb,
-  const PhysicalPbId& lut_pb_id, t_pb_type* lut_pb_type, const bool& verbose) {
+  const PhysicalPbId& lut_pb_id, t_pb_type* lut_pb_type,
+  std::string config_instance_path, const bool& verbose) {
   /* Ensure a valid physical pritimive pb */
   if (nullptr == lut_pb_type) {
     VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid lut_pb_type!\n");
@@ -688,6 +939,11 @@ static void build_lut_bitstream(
            bitstream_manager.block_name(parent_configurable_block).c_str());
 
   /* Add the bitstream to the bitstream manager */
+  if (M_OVERWRITE_BITS != nullptr) {
+    std::string path = config_instance_path + std::string(".") +
+                       bitstream_manager.block_name(mem_block);
+    overwrite_bits(path, lut_bitstream);
+  }
   bitstream_manager.add_block_bits(mem_block, lut_bitstream);
 }
 
@@ -712,7 +968,7 @@ static void rec_build_physical_block_bitstream(
   const VprBitstreamAnnotation& bitstream_annotation, const e_side& border_side,
   const PhysicalPb& physical_pb, const PhysicalPbId& pb_id,
   t_pb_graph_node* physical_pb_graph_node, const size_t& pb_graph_node_index,
-  const bool& verbose) {
+  std::string config_instance_path, const bool& verbose) {
   /* Get the physical pb_type that is linked to the pb_graph node */
   t_pb_type* physical_pb_type = physical_pb_graph_node->pb_type;
 
@@ -736,6 +992,7 @@ static void rec_build_physical_block_bitstream(
    * manager */
   std::string pb_block_name = generate_physical_block_instance_name(
     physical_pb_type, pb_graph_node_index);
+  config_instance_path += (std::string(".") + pb_block_name);
   /* If there are no physical memory blocks under the current module, use the
    * previous module, which is the physical memory block */
   ConfigBlockId pb_configurable_block = parent_configurable_block;
@@ -773,7 +1030,7 @@ static void rec_build_physical_block_bitstream(
           child_pb,
           &(physical_pb_graph_node
               ->child_pb_graph_nodes[physical_mode->index][ipb][jpb]),
-          jpb, verbose);
+          jpb, config_instance_path, verbose);
       }
     }
   }
@@ -788,10 +1045,10 @@ static void rec_build_physical_block_bitstream(
         /* Special case for LUT !!!
          * Mapped logical block information is stored in child_pbs of this pb!!!
          */
-        build_lut_bitstream(bitstream_manager, grouped_mem_inst_scoreboard,
-                            pb_configurable_block, device_annotation,
-                            module_manager, circuit_lib, mux_lib, physical_pb,
-                            pb_id, physical_pb_type, verbose);
+        build_lut_bitstream(
+          bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block,
+          device_annotation, module_manager, circuit_lib, mux_lib, physical_pb,
+          pb_id, physical_pb_type, config_instance_path, verbose);
         break;
       case CIRCUIT_MODEL_FF:
       case CIRCUIT_MODEL_HARDLOGIC:
@@ -800,7 +1057,7 @@ static void rec_build_physical_block_bitstream(
         build_primitive_bitstream(
           bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block,
           module_manager, circuit_lib, device_annotation, physical_pb, pb_id,
-          physical_pb_type, verbose);
+          physical_pb_type, config_instance_path, verbose);
         break;
       default:
         VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -817,7 +1074,7 @@ static void rec_build_physical_block_bitstream(
     bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block,
     module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
     device_annotation, bitstream_annotation, physical_pb_graph_node,
-    physical_pb, physical_mode, verbose);
+    physical_pb, physical_mode, config_instance_path, verbose);
 }
 
 /********************************************************************
@@ -866,7 +1123,7 @@ static void build_physical_block_bitstream(
   std::string grid_block_name = generate_grid_block_instance_name(
     grid_module_name_prefix, std::string(grid_type->name),
     is_io_type(grid_type), border_side, grid_coord_in_unique_tile);
-
+  track_physical_block_grid(grid_block_name);
   ConfigBlockId grid_configurable_block =
     bitstream_manager.add_block(grid_block_name);
   bitstream_manager.add_child_block(top_block, grid_configurable_block);
@@ -931,7 +1188,7 @@ static void build_physical_block_bitstream(
           grid_configurable_block, module_manager, module_name_map, circuit_lib,
           mux_lib, atom_ctx, device_annotation, bitstream_annotation,
           border_side, PhysicalPb(), PhysicalPbId::INVALID(),
-          lb_type->pb_graph_head, z, verbose);
+          lb_type->pb_graph_head, z, "", verbose);
       } else {
         const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
           place_annotation.grid_blocks(grid_coord)[z]);
@@ -946,7 +1203,7 @@ static void build_physical_block_bitstream(
           bitstream_manager, grouped_mem_inst_scoreboard,
           grid_configurable_block, module_manager, module_name_map, circuit_lib,
           mux_lib, atom_ctx, device_annotation, bitstream_annotation,
-          border_side, phy_pb, top_pb_id, pb_graph_head, z, verbose);
+          border_side, phy_pb, top_pb_id, pb_graph_head, z, "", verbose);
       }
     }
   }
@@ -966,8 +1223,12 @@ void build_grid_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const std::string& overwrite_bitstream_file, const bool& verbose) {
   VTR_LOGV(verbose, "Generating bitstream for core grids...");
+
+  /* Read file that might want to overwrite the bitstream */
+  read_overwrite_file(overwrite_bitstream_file);
 
   /* Generate bitstream for the core logic block one by one */
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
@@ -1002,7 +1263,7 @@ void build_grid_bitstream(
                  tile_inst_name.c_str(),
                  bitstream_manager.block_name(top_block).c_str());
       }
-
+      track_fabric_top_name(bitstream_manager.block_name(top_block));
       build_physical_block_bitstream(
         bitstream_manager, parent_block, module_manager, module_name_map,
         fabric_tile, curr_tile, circuit_lib, mux_lib, atom_ctx,
@@ -1050,7 +1311,7 @@ void build_grid_bitstream(
                  tile_inst_name.c_str(),
                  bitstream_manager.block_name(parent_block).c_str());
       }
-
+      track_fabric_top_name(bitstream_manager.block_name(top_block));
       build_physical_block_bitstream(
         bitstream_manager, parent_block, module_manager, module_name_map,
         fabric_tile, curr_tile, circuit_lib, mux_lib, atom_ctx,
@@ -1058,6 +1319,7 @@ void build_grid_bitstream(
         bitstream_annotation, grids, layer, io_coordinate, io_side, verbose);
     }
   }
+  cleanup_overwrite();
   VTR_LOGV(verbose, "Done\n");
 }
 
