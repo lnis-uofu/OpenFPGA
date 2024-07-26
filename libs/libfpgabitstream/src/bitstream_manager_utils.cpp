@@ -130,4 +130,21 @@ size_t rec_find_bitstream_manager_block_sum_of_bits(
   return sum_of_bits;
 }
 
+/********************************************************************
+ * Split the bit path with delimiter ".". The blocks is reversed
+ *******************************************************************/
+std::vector<std::string> reverse_split_bit_path_to_blocks(std::string path) {
+  std::vector<std::string> blocks;
+  size_t index = path.find_first_of(".");
+  while (index != std::string::npos) {
+    blocks.insert(blocks.begin(), path.substr(0, index));
+    path = path.substr(index + 1);
+    index = path.find_first_of(".");
+  }
+  if (path.size()) {
+    blocks.insert(blocks.begin(), path);
+  }
+  return blocks;
+}
+
 } /* end namespace openfpga */

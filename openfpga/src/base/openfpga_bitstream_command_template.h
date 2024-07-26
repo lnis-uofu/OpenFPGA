@@ -78,12 +78,6 @@ ShellCommandId add_build_arch_bitstream_command_template(
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");
 
-  /* Add an option '--overwrite_bitstream_file' */
-  CommandOptionId opt_overwrite_file =
-    shell_cmd.add_option("overwrite_bitstream_file", false,
-                         "file path to read to overwrite bitstream bits");
-  shell_cmd.set_option_require_value(opt_overwrite_file, openfpga::OPT_STRING);
-
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 

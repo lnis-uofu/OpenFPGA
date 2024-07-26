@@ -34,8 +34,7 @@ void build_grid_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation,
-  const std::string& overwrite_bitstream_file, const bool& verbose);
+  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose);
 
 } /* end namespace openfpga */
 

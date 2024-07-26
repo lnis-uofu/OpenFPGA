@@ -37,6 +37,12 @@ struct NonFabricBitstreamSetting {
   std::vector<NonFabricBitstreamPBSetting> pbs;
 };
 
+struct PathBitSetting {
+  PathBitSetting(const std::string& p, bool v) : path(p), value(v) {}
+  const std::string path = "";
+  const bool value = false;
+};
+
 /********************************************************************
  * A data structure to describe bitstream settings
  *
@@ -98,6 +104,7 @@ class BitstreamSetting {
   std::string default_path(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   std::vector<NonFabricBitstreamSetting> non_fabric() const;
+  std::vector<PathBitSetting> path_bit_settings() const;
 
  public: /* Public Mutators */
   BitstreamPbTypeSettingId add_bitstream_pb_type_setting(
@@ -119,6 +126,8 @@ class BitstreamSetting {
 
   void add_non_fabric(const std::string& name, const std::string& file);
   void add_non_fabric_pb(const std::string& pb, const std::string& content);
+
+  void add_path_bit_setting(const std::string& path, const bool value);
 
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
@@ -162,6 +171,7 @@ class BitstreamSetting {
   vtr::vector<BitstreamInterconnectSettingId, std::string>
     interconnect_default_paths_;
   std::vector<NonFabricBitstreamSetting> non_fabric_;
+  std::vector<PathBitSetting> path_bit_settings_;
 };
 
 }  // namespace openfpga

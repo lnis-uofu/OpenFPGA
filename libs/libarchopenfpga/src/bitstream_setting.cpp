@@ -106,6 +106,10 @@ std::vector<NonFabricBitstreamSetting> BitstreamSetting::non_fabric() const {
   return non_fabric_;
 }
 
+std::vector<PathBitSetting> BitstreamSetting::path_bit_settings() const {
+  return path_bit_settings_;
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -176,6 +180,12 @@ void BitstreamSetting::add_non_fabric_pb(const std::string& pb,
     VTR_ASSERT(content.size() > 6);
     non_fabric_.back().add_pb(pb, "attr", content.substr(6));
   }
+}
+
+void BitstreamSetting::add_path_bit_setting(const std::string& path,
+                                            const bool value) {
+  VTR_ASSERT(path.size());
+  path_bit_settings_.push_back(PathBitSetting(path, value));
 }
 
 /************************************************************************

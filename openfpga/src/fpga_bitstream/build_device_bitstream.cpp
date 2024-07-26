@@ -147,9 +147,9 @@ static size_t rec_estimate_device_bitstream_num_bits(
  * of the FPGA fabric that FPGA-X2P generates!
  * But it can be used to output a generic bitstream for VPR mapping FPGA
  *******************************************************************/
-BitstreamManager build_device_bitstream(
-  const VprContext& vpr_ctx, const OpenfpgaContext& openfpga_ctx,
-  const std::string& overwrite_bitstream_file, const bool& verbose) {
+BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
+                                        const OpenfpgaContext& openfpga_ctx,
+                                        const bool& verbose) {
   std::string timer_message =
     std::string("\nBuild fabric-independent bitstream for implementation '") +
     vpr_ctx.atom().nlist.netlist_name() + std::string("'\n");
@@ -218,7 +218,7 @@ BitstreamManager build_device_bitstream(
     openfpga_ctx.vpr_device_annotation(),
     openfpga_ctx.vpr_clustering_annotation(),
     openfpga_ctx.vpr_placement_annotation(),
-    openfpga_ctx.vpr_bitstream_annotation(), overwrite_bitstream_file, verbose);
+    openfpga_ctx.vpr_bitstream_annotation(), verbose);
   VTR_LOGV(verbose, "Done\n");
 
   /* Create bitstream from routing architectures */
@@ -230,6 +230,12 @@ BitstreamManager build_device_bitstream(
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.vpr_routing_annotation(),
     vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(),
     openfpga_ctx.flow_manager().compress_routing(), verbose);
+
+  /* Apply path bit value */
+  for (auto bit : openfpga_ctx.bitstream_setting().path_bit_settings()) {
+    bitstream_manager.set_path_bit(bit.path, bit.value);
+  }
+
   VTR_LOGV(verbose, "Done\n");
 
   VTR_LOGV(verbose, "Decoded %lu configuration bits into %lu blocks\n",

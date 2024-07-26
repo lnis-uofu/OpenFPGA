@@ -31,6 +31,8 @@ size_t find_bitstream_manager_config_bit_index_in_grandparent_block(
 size_t rec_find_bitstream_manager_block_sum_of_bits(
   const BitstreamManager& bitstream_manager, const ConfigBlockId& block);
 
+std::vector<std::string> reverse_split_bit_path_to_blocks(std::string path);
+
 } /* end namespace openfpga */
 
 #endif

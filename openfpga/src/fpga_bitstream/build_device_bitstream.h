@@ -16,9 +16,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-BitstreamManager build_device_bitstream(
-  const VprContext& vpr_ctx, const OpenfpgaContext& openfpga_ctx,
-  const std::string& overwrite_bitstream_file, const bool& verbose);
+BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
+                                        const OpenfpgaContext& openfpga_ctx,
+                                        const bool& verbose);
 
 } /* end namespace openfpga */
 
