@@ -1,3 +1,5 @@
+# This file is copied from fix_device_example_script.openfpga
+
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
 vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT}
@@ -7,6 +9,9 @@ read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+
+# Read OpenFPGA bitstream settings
+read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
@@ -34,14 +39,14 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml --overwrite_bitstream_file ../../../../config/overwrite_bitstream.txt
+build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
-write_fabric_bitstream --file fabric_bitstream.xml --format xml 
+write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist

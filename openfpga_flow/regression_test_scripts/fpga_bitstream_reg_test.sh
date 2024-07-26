@@ -16,7 +16,7 @@ run-task fpga_bitstream/generate_bitstream/configuration_chain/device_48x48 $@
 run-task fpga_bitstream/generate_bitstream/ql_memory_bank_shift_register/device_48x48 $@
 
 echo -e "Testing bitstream generation for an 4x4 FPGA device (overwrite IO tile bits)";
-run-task fpga_bitstream/generate_bitstream/configuration_chain/device_4x4_overwrite $@
+run-task fpga_bitstream/generate_bitstream/configuration_chain/device_4x4_PathBitSetting $@
 
 echo -e "Testing bitstream generation for an 96x96 FPGA device";
 run-task fpga_bitstream/generate_bitstream/configuration_chain/device_96x96 $@
