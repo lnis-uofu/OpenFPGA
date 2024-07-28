@@ -231,11 +231,6 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
     vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(),
     openfpga_ctx.flow_manager().compress_routing(), verbose);
 
-  /* Apply path bit value */
-  for (auto bit : openfpga_ctx.bitstream_setting().path_bit_settings()) {
-    bitstream_manager.set_path_bit(bit.path, bit.value);
-  }
-
   VTR_LOGV(verbose, "Done\n");
 
   VTR_LOGV(verbose, "Decoded %lu configuration bits into %lu blocks\n",

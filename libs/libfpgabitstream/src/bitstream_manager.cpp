@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "bitstream_manager_utils.h"
+#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -297,25 +298,27 @@ void BitstreamManager::add_output_net_id_to_block(
   block_output_net_ids_[block] = output_net_id;
 }
 
-void BitstreamManager::set_path_bit(const std::string& path, const bool value) {
+void BitstreamManager::overwrite_bitstream(const std::string& path,
+                                           const bool& value) {
   ConfigBlockId block;
-  std::vector<std::string> blocks =
-    reverse_split_bit_path_to_blocks((std::string)(path));
-  std::string block_name = "";
+  StringToken tokenizer(path);
+  std::vector<std::string> blocks = tokenizer.split(".");
+  std::reverse(blocks.begin(), blocks.end());
+  std::string current_block_name = "";
   bool match = false;
   for (size_t i = 0; i < bit_values_.size() && !match; i++) {
     block = bit_parent_blocks_[ConfigBitId(i)];
-    if (size_t(block) < num_blocks_) {
+    if (valid_block_id(block)) {
       size_t index = find_bitstream_manager_config_bit_index_in_parent_block(
         *this, ConfigBitId(i));
-      block_name = block_names_[block] + ("[" + std::to_string(index) + "]");
-      if (block_name == blocks[0]) {
+      current_block_name =
+        block_name(block) + ("[" + std::to_string(index) + "]");
+      if (current_block_name == blocks[0]) {
         match = true;
         for (size_t b = 1; b < blocks.size() && match; b++) {
-          valid_block_id(block);
-          block = parent_block_ids_[block];
-          if (size_t(block) < num_blocks_) {
-            if (block_names_[block] != blocks[b]) {
+          block = block_parent(block);
+          if (valid_block_id(block)) {
+            if (block_name(block) != blocks[b]) {
               match = false;
             }
           } else {
@@ -323,8 +326,7 @@ void BitstreamManager::set_path_bit(const std::string& path, const bool value) {
           }
         }
         if (match) {
-          valid_block_id(block);
-          if (parent_block_ids_[block] == ConfigBlockId::INVALID()) {
+          if (!valid_block_id(block_parent(block))) {
             bit_values_[ConfigBitId(i)] = value ? '1' : '0';
           } else {
             match = false;

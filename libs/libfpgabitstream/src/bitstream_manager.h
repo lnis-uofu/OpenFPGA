@@ -214,7 +214,7 @@ class BitstreamManager {
                                   const std::string& output_net_id);
 
   /* Set bit to the bitstream at the given path */
-  void set_path_bit(const std::string& path, const bool value);
+  void overwrite_bitstream(const std::string& path, const bool& value);
 
  public: /* Public Validators */
   bool valid_bit_id(const ConfigBitId& bit_id) const;

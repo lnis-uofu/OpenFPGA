@@ -37,12 +37,6 @@ struct NonFabricBitstreamSetting {
   std::vector<NonFabricBitstreamPBSetting> pbs;
 };
 
-struct PathBitSetting {
-  PathBitSetting(const std::string& p, bool v) : path(p), value(v) {}
-  const std::string path = "";
-  const bool value = false;
-};
-
 /********************************************************************
  * A data structure to describe bitstream settings
  *
@@ -67,11 +61,15 @@ class BitstreamSetting {
   typedef vtr::vector<BitstreamInterconnectSettingId,
                       BitstreamInterconnectSettingId>::const_iterator
     bitstream_interconnect_setting_iterator;
+  typedef vtr::vector<OverwriteBitstreamId,
+                      OverwriteBitstreamId>::const_iterator
+    overwrite_bitstream_iterator;
   /* Create range */
   typedef vtr::Range<bitstream_pb_type_setting_iterator>
     bitstream_pb_type_setting_range;
   typedef vtr::Range<bitstream_interconnect_setting_iterator>
     bitstream_interconnect_setting_range;
+  typedef vtr::Range<overwrite_bitstream_iterator> overwrite_bitstream_range;
 
  public: /* Constructors */
   BitstreamSetting();
@@ -79,6 +77,7 @@ class BitstreamSetting {
  public: /* Accessors: aggregates */
   bitstream_pb_type_setting_range pb_type_settings() const;
   bitstream_interconnect_setting_range interconnect_settings() const;
+  overwrite_bitstream_range overwrite_bitstreams() const;
 
  public: /* Public Accessors */
   std::string pb_type_name(
@@ -104,7 +103,8 @@ class BitstreamSetting {
   std::string default_path(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   std::vector<NonFabricBitstreamSetting> non_fabric() const;
-  std::vector<PathBitSetting> path_bit_settings() const;
+  std::string overwrite_bitstream_path(const OverwriteBitstreamId& id) const;
+  bool overwrite_bitstream_value(const OverwriteBitstreamId& id) const;
 
  public: /* Public Mutators */
   BitstreamPbTypeSettingId add_bitstream_pb_type_setting(
@@ -127,13 +127,15 @@ class BitstreamSetting {
   void add_non_fabric(const std::string& name, const std::string& file);
   void add_non_fabric_pb(const std::string& pb, const std::string& content);
 
-  void add_path_bit_setting(const std::string& path, const bool value);
+  OverwriteBitstreamId add_overwrite_bitstream(const std::string& path,
+                                               const bool& value);
 
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
   bool valid_bitstream_interconnect_setting_id(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
+  bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
 
  private: /* Internal data */
   /* Pb type -related settings
@@ -171,7 +173,10 @@ class BitstreamSetting {
   vtr::vector<BitstreamInterconnectSettingId, std::string>
     interconnect_default_paths_;
   std::vector<NonFabricBitstreamSetting> non_fabric_;
-  std::vector<PathBitSetting> path_bit_settings_;
+  vtr::vector<OverwriteBitstreamId, OverwriteBitstreamId>
+    overwrite_bitstream_ids_;
+  vtr::vector<OverwriteBitstreamId, std::string> overwrite_bitstream_paths_;
+  vtr::vector<OverwriteBitstreamId, bool> overwrite_bitstream_values_;
 };
 
 }  // namespace openfpga

@@ -105,17 +105,21 @@ static void read_xml_non_fabric_bitstream_setting(
 /********************************************************************
  * Parse XML description for a bit setting under a <bit> XML node
  *******************************************************************/
-static void read_xml_overwrite_bit_setting(
+static void read_xml_overwrite_bitstream_setting(
   pugi::xml_node& xml_overwrite_bitstream, const pugiutil::loc_data& loc_data,
   openfpga::BitstreamSetting& bitstream_setting) {
+  // Loopthrough bit
   for (pugi::xml_node xml_bit : xml_overwrite_bitstream.children()) {
+    if (xml_bit.name() != std::string("bit")) {
+      bad_tag(xml_bit, loc_data, xml_overwrite_bitstream, {"bit"});
+    }
     const std::string& path_attr =
       get_attribute(xml_bit, "path", loc_data).as_string();
     const std::string& value_attr =
       get_attribute(xml_bit, "value", loc_data).as_string();
     VTR_ASSERT(value_attr == "0" || value_attr == "1");
     /* Add to bit */
-    bitstream_setting.add_path_bit_setting(path_attr, value_attr == "1");
+    bitstream_setting.add_overwrite_bitstream(path_attr, value_attr == "1");
   }
 }
 
@@ -150,7 +154,8 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
                                             bitstream_setting);
     } else {
       VTR_ASSERT_SAFE(xml_child.name() == std::string("overwrite_bitstream"));
-      read_xml_overwrite_bit_setting(xml_child, loc_data, bitstream_setting);
+      read_xml_overwrite_bitstream_setting(xml_child, loc_data,
+                                           bitstream_setting);
     }
   }
 
