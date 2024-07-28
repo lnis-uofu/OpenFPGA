@@ -16,7 +16,9 @@ This can define a hard-coded bitstream for a reconfigurable resource in FPGA fab
     <non_fabric name="<string>" file="<string>">
       <pb name="<string>" type="<string>" content="<string>"/>
     </non_fabric>
-    <bit value="<0 or 1>" path="<string>"/>
+    <overwrite_bitstream>
+      <bit value="<0 or 1>" path="<string>"/>
+    </overwrite_bitstream>
   </openfpga_bitstream_setting>
 
 pb_type-related Settings
@@ -117,12 +119,16 @@ The following syntax are applicable to the XML definition tagged by ``non_fabric
 
   The content of the ``pb_type`` data to be extracted. For example, ``content=".param INIT_i"`` means that the data will be extracted from the ``.param INIT_i`` line defined under the ``.blif model``.
 
-bit-related Settings
+overwrite_bitstream-related Settings
 ^^^^^^^^^^^^^^^^^^^^
 
-This is to allow user to set particular bit using full path in the hierarchy of FPGA fabric
+This is to allow user to set value of a list of bits which is represented using full path in the hierarchy of FPGA fabric
 
-The following syntax are applicable to the XML definition tagged by ``bit`` in bitstream setting files.
+This ``overwrite_bitstream`` settings has the highest priority than loading any external bitstream file
+
+Each bit to overwrite is represented by one ``bit`` child node/tag
+
+The following syntax are applicable to the XML definition tagged by ``bit`` node under ``overwrite_bitstream`` setting.
 
 .. option:: value="<0 or 1>"
 
