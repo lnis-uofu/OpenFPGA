@@ -120,7 +120,7 @@ The following syntax are applicable to the XML definition tagged by ``non_fabric
   The content of the ``pb_type`` data to be extracted. For example, ``content=".param INIT_i"`` means that the data will be extracted from the ``.param INIT_i`` line defined under the ``.blif model``.
 
 overwrite_bitstream-related Settings
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is to allow user to set value of a list of bits which is represented using full path in the hierarchy of FPGA fabric
 
