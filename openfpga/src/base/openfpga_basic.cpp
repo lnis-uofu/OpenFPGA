@@ -68,8 +68,14 @@ int call_external_command(const Command& cmd,
     VTR_LOG("Processer is not available");
     return CMD_EXEC_FATAL_ERROR;
   }
-
-  return system(cmd_ss.c_str());
+  
+  int status = system(cmd_ss.c_str());
+  if (status & 0xFF) {
+    // First 8 bits are system signals
+    return 1;
+  }
+  // real return was actually shifted 8 bits
+  return status >> 8;
 }
 
 } /* end namespace openfpga */

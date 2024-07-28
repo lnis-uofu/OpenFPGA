@@ -1,9 +1,0 @@
-<!--
-////////////////////////////////////////////////////////////////////////////////
-# THIS FILE WAS AUTOMATICALLY GENERATED FROM DO NOT EDIT
-////////////////////////////////////////////////////////////////////////////////
--->
-<openfpga_bitstream_setting>
-  <bit value="0" path="fpga_top.grid_io_left_0__1_.logical_tile_io_mode_io__7.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem[0]"/>
-  <bit value="0" path="fpga_top.grid_io_bottom_3__0_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem[0]"/>
-</openfpga_bitstream_setting>

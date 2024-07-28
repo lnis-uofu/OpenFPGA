@@ -105,16 +105,18 @@ static void read_xml_non_fabric_bitstream_setting(
 /********************************************************************
  * Parse XML description for a bit setting under a <bit> XML node
  *******************************************************************/
-static void read_xml_bit_setting(
-  pugi::xml_node& xml_bit, const pugiutil::loc_data& loc_data,
+static void read_xml_overwrite_bit_setting(
+  pugi::xml_node& xml_overwrite_bitstream, const pugiutil::loc_data& loc_data,
   openfpga::BitstreamSetting& bitstream_setting) {
-  const std::string& path_attr =
-    get_attribute(xml_bit, "path", loc_data).as_string();
-  const std::string& value_attr =
-    get_attribute(xml_bit, "value", loc_data).as_string();
-  VTR_ASSERT_SAFE(value_attr == "0" || value_attr == "1");
-  /* Add to bit */
-  bitstream_setting.add_path_bit_setting(path_attr, value_attr == "1");
+  for (pugi::xml_node xml_bit : xml_overwrite_bitstream.children()) {
+    const std::string& path_attr =
+      get_attribute(xml_bit, "path", loc_data).as_string();
+    const std::string& value_attr =
+      get_attribute(xml_bit, "value", loc_data).as_string();
+    VTR_ASSERT(value_attr == "0" || value_attr == "1");
+    /* Add to bit */
+    bitstream_setting.add_path_bit_setting(path_attr, value_attr == "1");
+  }
 }
 
 /********************************************************************
@@ -132,9 +134,9 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
     if ((xml_child.name() != std::string("pb_type")) &&
         (xml_child.name() != std::string("interconnect")) &&
         (xml_child.name() != std::string("non_fabric")) &&
-        (xml_child.name() != std::string("bit"))) {
+        (xml_child.name() != std::string("overwrite_bitstream"))) {
       bad_tag(xml_child, loc_data, Node,
-              {"pb_type | interconnect | non_fabric | bit"});
+              {"pb_type | interconnect | non_fabric | overwrite_bitstream"});
     }
 
     if (xml_child.name() == std::string("pb_type")) {
@@ -147,8 +149,8 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
       read_xml_non_fabric_bitstream_setting(xml_child, loc_data,
                                             bitstream_setting);
     } else {
-      VTR_ASSERT_SAFE(xml_child.name() == std::string("bit"));
-      read_xml_bit_setting(xml_child, loc_data, bitstream_setting);
+      VTR_ASSERT_SAFE(xml_child.name() == std::string("overwrite_bitstream"));
+      read_xml_overwrite_bit_setting(xml_child, loc_data, bitstream_setting);
     }
   }
 
