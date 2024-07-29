@@ -1,6 +1,6 @@
 # Majority of the content refer to fix_device_example_script.openfpga
 
-ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} run_golden"
+ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} run_golden ${OPENFPGA_PATH}"
 
 ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} generate_testcase"
 

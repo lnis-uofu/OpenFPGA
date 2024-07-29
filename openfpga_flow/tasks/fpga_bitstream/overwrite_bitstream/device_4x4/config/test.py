@@ -49,7 +49,8 @@ def read_bitstream_annotation_xml(file) :
 
 if sys.argv[1] == "run_golden" :
 
-  openfpga_exe = os.path.abspath("../../../../../../../../../build/openfpga/openfpga")
+  assert len(sys.argv) >= 3
+  openfpga_exe = os.path.abspath("%s/build/openfpga/openfpga" % sys.argv[2])
   assert os.path.exists(openfpga_exe)
   shutil.rmtree("golden", ignore_errors=True)
   os.mkdir("golden")
