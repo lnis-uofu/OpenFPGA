@@ -1,8 +1,8 @@
-# This file is copied from fix_device_example_script.openfpga
+# Majority of the content refer to fix_device_example_script.openfpga
 
-ext_exec --command "python3 ../../../../config/test.py run_golden"
+ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} run_golden"
 
-ext_exec --command "python3 ../../../../config/test.py generate_testcase"
+ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} generate_testcase"
 
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
@@ -47,7 +47,7 @@ build_fabric_bitstream --verbose
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
-ext_exec --command "python3 ../../../../config/test.py validate"
+ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} validate"
 
 # Finish and exit OpenFPGA
 exit
