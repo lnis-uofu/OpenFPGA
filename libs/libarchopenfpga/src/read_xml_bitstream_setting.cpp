@@ -119,7 +119,7 @@ static void read_xml_overwrite_bitstream_setting(
       get_attribute(xml_bit, "value", loc_data).as_string();
     if (value_attr != "0" && value_attr != "1") {
       archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_bit),
-                     "Invalid value of overwrite_bitstream bit");
+                     "Invalid value of overwrite_bitstream bit. Expect [0|1]");
     }
     /* Add to bit */
     bitstream_setting.add_overwrite_bitstream(path_attr, value_attr == "1");

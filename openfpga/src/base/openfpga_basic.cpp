@@ -69,13 +69,19 @@ int call_external_command(const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  // Refer https://pubs.opengroup.org/onlinepubs/009695399/functions/system.html
+  // Refer
+  // https://pubs.opengroup.org/onlinepubs/009695399/functions/waitpid.html
   int status = system(cmd_ss.c_str());
-  if (status & 0xFF) {
-    // First 8 bits are system signals
-    return 1;
+  if (WIFEXITED(status)) {
+    // This is normal program exit, WEXITSTATUS() will help you shift the status
+    // accordingly (status >> 8)
+    // Becareful if the final status is 2 or beyond, program will not error
+    // as it is treated as CMD_EXEC_MINOR_ERROR
+    return WEXITSTATUS(status);
   }
-  // real return was actually shifted 8 bits
-  return status >> 8;
+  // Program maybe terminated because of various killed or stopped signal
+  return CMD_EXEC_FATAL_ERROR;
 }
 
 } /* end namespace openfpga */

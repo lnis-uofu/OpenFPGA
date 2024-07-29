@@ -5,6 +5,7 @@
 
 #include <algorithm>
 
+#include "arch_error.h"
 #include "bitstream_manager_utils.h"
 #include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
@@ -300,39 +301,73 @@ void BitstreamManager::add_output_net_id_to_block(
 
 void BitstreamManager::overwrite_bitstream(const std::string& path,
                                            const bool& value) {
-  ConfigBlockId block;
-  StringToken tokenizer(path);
-  std::vector<std::string> blocks = tokenizer.split(".");
-  std::reverse(blocks.begin(), blocks.end());
-  std::string current_block_name = "";
-  bool match = false;
-  for (size_t i = 0; i < bit_values_.size() && !match; i++) {
-    block = bit_parent_blocks_[ConfigBitId(i)];
-    if (valid_block_id(block)) {
-      size_t index = find_bitstream_manager_config_bit_index_in_parent_block(
-        *this, ConfigBitId(i));
-      current_block_name =
-        block_name(block) + ("[" + std::to_string(index) + "]");
-      if (current_block_name == blocks[0]) {
-        match = true;
-        for (size_t b = 1; b < blocks.size() && match; b++) {
-          block = block_parent(block);
-          if (valid_block_id(block)) {
-            if (block_name(block) != blocks[b]) {
-              match = false;
-            }
-          } else {
-            match = false;
-          }
-        }
-        if (match) {
-          if (!valid_block_id(block_parent(block))) {
-            bit_values_[ConfigBitId(i)] = value ? '1' : '0';
-          } else {
-            match = false;
-          }
+  bool bad_format = true;
+  size_t index = path.rfind("[");
+  std::string bit_string = "";
+  if (index != std::string::npos && path[path.size() - 1] == ']') {
+    bit_string = path.substr(index + 1, path.size() - index - 2);
+    bad_format = bit_string.size() == 0;
+    auto iter = bit_string.begin();
+    while (!bad_format && iter != bit_string.end()) {
+      bad_format = !std::isdigit(*iter);
+      iter++;
+    }
+  }
+  if (bad_format) {
+    archfpga_throw(__FILE__, __LINE__,
+                   "overwrite_bitstream bit path '%s' does not match format "
+                   "<full path in the hierarchy of FPGA fabric>[bit index]",
+                   path.c_str());
+  } else {
+    size_t bit = (size_t)(std::stoi(bit_string));
+    StringToken tokenizer(path.substr(0, index));
+    std::vector<std::string> blocks = tokenizer.split(".");
+    std::vector<ConfigBlockId> block_ids;
+    ConfigBlockId block_id = ConfigBlockId::INVALID();
+    size_t found = 0;
+    for (size_t i = 0; i < blocks.size(); i++) {
+      if (i == 0) {
+        block_ids = find_bitstream_manager_top_blocks(*this);
+      } else {
+        block_ids = block_children(block_id);
+      }
+      // Reset
+      block_id = ConfigBlockId::INVALID();
+      // Find the one from the list that match the name
+      for (auto id : block_ids) {
+        if (block_name(id) == blocks[i]) {
+          block_id = id;
+          break;
         }
       }
+      if (block_id != ConfigBlockId::INVALID()) {
+        // Found one that match the name
+        found++;
+        if (found == blocks.size()) {
+          // Last one, no more child must end here
+          if (block_children(block_id).size() == 0) {
+            std::vector<ConfigBitId> ids = block_bits(block_id);
+            if (bit < ids.size()) {
+              VTR_ASSERT(valid_bit_id(ids[bit]));
+              bit_values_[ids[bit]] = value ? '1' : '0';
+            } else {
+              // No configuration bits at all or out of range, invalidate
+              found = 0;
+            }
+          } else {
+            // There are more child, hence the path still no end, invalidate
+            found = 0;
+          }
+        }
+      } else {
+        // Cannot match the name, just stop
+        break;
+      }
+    }
+    if (found != blocks.size()) {
+      archfpga_throw(__FILE__, __LINE__,
+                     "Failed to find path '%s' to overwrite bitstream",
+                     path.c_str());
     }
   }
 }

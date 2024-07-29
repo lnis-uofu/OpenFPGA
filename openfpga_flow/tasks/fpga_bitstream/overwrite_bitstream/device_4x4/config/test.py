@@ -100,7 +100,6 @@ else :
   gtree = ET.parse("golden/fabric_bitstream.xml")
   tree = ET.parse("fabric_bitstream.xml")
   bitstream_annotation = read_bitstream_annotation_xml("bitstream_annotation.xml")
-  status = 0
   checked_count = 0
   for gregion, region in zip(gtree.getroot(), tree.getroot()) :
     for gbit, bit in zip(gregion, region) :
