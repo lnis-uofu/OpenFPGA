@@ -1157,11 +1157,9 @@ static void organize_top_module_tile_based_memory_modules(
  ********************************************************************/
 static ModulePinInfo find_tile_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& tile_module,
-  const vtr::Point<size_t>& cb_coord_in_tile,
-  const size_t& cb_idx_in_tile,
-  const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const t_rr_type& cb_type, const RRNodeId& chan_rr_node,
-  const bool& name_module_using_index) {
+  const vtr::Point<size_t>& cb_coord_in_tile, const size_t& cb_idx_in_tile,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRNodeId& chan_rr_node, const bool& name_module_using_index) {
   ModulePinInfo input_port_info;
   /* Generate the input port object */
   switch (rr_graph.node_type(chan_rr_node)) {
@@ -1173,14 +1171,15 @@ static ModulePinInfo find_tile_module_chan_port(
       /* Create a port description for the middle output */
       std::string input_port_name = generate_cb_module_track_port_name(
         cb_type, IN_PORT, 0 == chan_node_track_id % 2);
-      std::string cb_instance_name_in_tile = generate_connection_block_module_name(cb_type, cb_coord_in_tile);
+      std::string cb_instance_name_in_tile =
+        generate_connection_block_module_name(cb_type, cb_coord_in_tile);
       if (name_module_using_index) {
         cb_instance_name_in_tile =
-          generate_connection_block_module_name_using_index(cb_type, cb_idx_in_tile);
+          generate_connection_block_module_name_using_index(cb_type,
+                                                            cb_idx_in_tile);
       }
       std::string tile_input_port_name = generate_tile_module_port_name(
-        cb_instance_name_in_tile,
-        input_port_name);
+        cb_instance_name_in_tile, input_port_name);
       /* Must find a valid port id in the Switch Block module */
       input_port_info.first =
         module_manager.find_module_port(tile_module, tile_input_port_name);
@@ -1278,10 +1277,8 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
           unique_fabric_tile_id, entry_track_type)[cb_idx_in_curr_fabric_tile];
       ModulePinInfo des_pin_info = find_tile_module_chan_port(
         module_manager, tile_module, cb_coord_in_unique_fabric_tile,
-        cb_idx_in_curr_fabric_tile,
-        rr_graph,
-        rr_gsb, entry_track_type, entry_rr_node, 
-        name_module_using_index);
+        cb_idx_in_curr_fabric_tile, rr_graph, rr_gsb, entry_track_type,
+        entry_rr_node, name_module_using_index);
 
       /* Configure the net sink */
       BasicPort sink_port =

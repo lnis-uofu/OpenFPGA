@@ -418,7 +418,8 @@ static void try_find_and_add_clock_track2ipin_node(
   const ClockTreePinId& clk_pin, const bool& verbose) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
-  VTR_LOGV(verbose, "Getting type of grid at (x=%d, y=%d)\n", grid_coord.x(), grid_coord.y());
+  VTR_LOGV(verbose, "Getting type of grid at (x=%d, y=%d)\n", grid_coord.x(),
+           grid_coord.y());
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_tap_to_ports(clk_tree, clk_pin, grid_coord)) {
     VTR_LOGV(verbose, "Checking tap pin name: %s\n", tap_pin_name.c_str());
