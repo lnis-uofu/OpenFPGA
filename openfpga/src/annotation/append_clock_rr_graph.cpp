@@ -402,61 +402,6 @@ static std::vector<RRNodeId> find_clock_track2track_node(
     des_nodes.push_back(right_des_node);
   }
 
-  /* U-turn or straight connections */
-  vtr::Point<size_t> top_des_coord = chan_coord;
-  Direction top_direction = direction;
-  t_rr_type top_des_chan_type = chan_type;
-  if (chan_type == CHANX) {
-    if (direction == Direction::INC) {
-      /*
-       *      ^
-       *      |
-       *      +
-       *      |
-       *      ^
-       *      |
-       */
-      right_direction = Direction::DEC;
-    } else {
-      /*
-       *      ^
-       *      |
-       *      +<--
-       */
-      VTR_ASSERT(direction == Direction::DEC);
-      right_direction = Direction::INC;
-      right_des_coord.set_x(right_des_coord.x() - 1);
-      right_des_coord.set_y(right_des_coord.y() + 1);
-    }
-  } else {
-    VTR_ASSERT(chan_type == CHANY);
-    right_des_chan_type = CHANX;
-    if (direction == Direction::INC) {
-      /*
-       *      +-->
-       *      ^
-       *      |
-       */
-      right_des_coord.set_x(right_des_coord.x() + 1);
-    } else {
-      VTR_ASSERT(direction == Direction::DEC);
-      /*
-       *      |
-       *      v
-       *   <--+
-       */
-      right_des_coord.set_y(right_des_coord.y() - 1);
-    }
-  }
-  RRNodeId right_des_node =
-    clk_rr_lookup.find_node(right_des_coord.x(), right_des_coord.y(), clk_tree,
-                            next_clk_lvl, clk_pin, right_direction);
-  if (rr_graph_view.valid_node(right_des_node)) {
-    VTR_ASSERT(right_des_chan_type == rr_graph_view.node_type(right_des_node));
-    des_nodes.push_back(right_des_node);
-  }
-
-
   return des_nodes;
 }
 
