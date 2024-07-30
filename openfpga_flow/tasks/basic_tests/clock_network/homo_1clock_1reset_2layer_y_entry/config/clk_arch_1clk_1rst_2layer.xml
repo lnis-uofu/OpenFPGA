@@ -21,10 +21,10 @@
       <switch_point tap="rst_rib_lvl1_sw1_upper" x="1" y="2"/> 
       <switch_point tap="rst_rib_lvl1_sw1_lower" x="1" y="2"/> 
     </spine>  
-    <spine name="rst_rib_lvl1_sw0_upper" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANY" direction="INC_DIRECTION"/>
-    <spine name="rst_rib_lvl1_sw0_lower" start_x="1" start_y="1" end_x="1" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
-    <spine name="rst_rib_lvl1_sw1_upper" start_x="2" start_y="2" end_x="2" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
-    <spine name="rst_rib_lvl1_sw1_lower" start_x="1" start_y="2" end_x="1" end_y="2" type="CHANY" direction="DEC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw0_upper" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANX" direction="INC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw0_lower" start_x="1" start_y="1" end_x="1" end_y="1" type="CHANX" direction="DEC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw1_upper" start_x="2" start_y="2" end_x="2" end_y="2" type="CHANX" direction="INC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw1_lower" start_x="1" start_y="2" end_x="1" end_y="2" type="CHANX" direction="DEC_DIRECTION"/>
     <taps>
       <all from_pin="op_reset[0:0]" to_pin="clb[0:0].reset[0:0]"/>
     </taps>
