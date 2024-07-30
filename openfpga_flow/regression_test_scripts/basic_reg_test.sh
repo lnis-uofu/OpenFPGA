@@ -235,6 +235,7 @@ run-task basic_tests/global_tile_ports/global_tile_4clock --default_tool_path ${
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@
 
 echo -e "Testing programmable clock architecture";
+run-task basic_tests/clock_network/homo_1clock_1reset_1layer_2entry $@
 run-task basic_tests/clock_network/homo_1clock_2layer $@
 run-task basic_tests/clock_network/homo_1clock_2layer_full_tb $@
 run-task basic_tests/clock_network/homo_2clock_2layer $@
