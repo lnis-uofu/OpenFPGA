@@ -1288,8 +1288,8 @@ static int build_top_module_global_net_from_clock_arch_tree(
 
       /* Get the connection block module and instance at the entry point */
       vtr::Point<size_t> entry_cb_coord(entry_point.x(), entry_point.y());
-      const RRGSB& rr_gsb = device_rr_gsb.get_gsb_by_cb_coordinate(
-        entry_cb_coord);
+      const RRGSB& rr_gsb =
+        device_rr_gsb.get_gsb_by_cb_coordinate(entry_cb_coord);
       vtr::Point<size_t> entry_unique_cb_coord =
         device_rr_gsb.get_cb_unique_module(entry_track_type, entry_cb_coord)
           .get_cb_coordinate(entry_track_type);
