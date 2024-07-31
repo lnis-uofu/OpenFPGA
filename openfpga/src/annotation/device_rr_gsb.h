@@ -40,7 +40,7 @@ class DeviceRRGSB {
     const; /* Get a rr switch block in the array with a coordinate */
   /* Get a gsb using its connection block coordinate */
   const RRGSB& get_gsb_by_cb_coordinate(
-    const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const;
+    const vtr::Point<size_t>& coordinate) const;
   size_t get_num_gsb_unique_module()
     const; /* get the number of unique mirrors of GSB */
   size_t get_num_sb_unique_module()

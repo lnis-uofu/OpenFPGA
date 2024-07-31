@@ -1253,7 +1253,7 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
 
       /* Get the tile module and instance at the entry point */
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb_by_cb_coordinate(
-        entry_track_type, vtr::Point<size_t>(entry_point.x(), entry_point.y()));
+        vtr::Point<size_t>(entry_point.x(), entry_point.y()));
       vtr::Point<size_t> cb_coord_in_tile = rr_gsb.get_sb_coordinate();
       FabricTileId curr_fabric_tile_id = fabric_tile.find_tile_by_cb_coordinate(
         entry_track_type, cb_coord_in_tile);

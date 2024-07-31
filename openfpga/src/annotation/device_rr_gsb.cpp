@@ -45,7 +45,7 @@ const RRGSB& DeviceRRGSB::get_gsb(const size_t& x, const size_t& y) const {
 
 /* Get a rr switch block in the array with a coordinate */
 const RRGSB& DeviceRRGSB::get_gsb_by_cb_coordinate(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  const vtr::Point<size_t>& coordinate) const {
   vtr::Point<size_t> gsb_coord = coordinate;
   VTR_ASSERT(validate_coordinate(gsb_coord));
 
