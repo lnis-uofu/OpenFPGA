@@ -5,6 +5,10 @@
 
 #include <algorithm>
 
+#include "arch_error.h"
+#include "bitstream_manager_utils.h"
+#include "openfpga_port_parser.h"
+#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -294,6 +298,69 @@ void BitstreamManager::add_output_net_id_to_block(
 
   /* Add the bit to the block */
   block_output_net_ids_[block] = output_net_id;
+}
+
+void BitstreamManager::overwrite_bitstream(const std::string& path,
+                                           const bool& value) {
+  PortParser port_parser(path, PORT_PARSER_SUPPORT_SINGLE_INDEX_FORMAT);
+  if (!port_parser.valid()) {
+    archfpga_throw(__FILE__, __LINE__,
+                   "overwrite_bitstream bit path '%s' does not match format "
+                   "<full path in the hierarchy of FPGA fabric>[bit index]",
+                   path.c_str());
+  } else {
+    BasicPort port = port_parser.port();
+    size_t bit = port.get_lsb();
+    StringToken tokenizer(port.get_name());
+    std::vector<std::string> blocks = tokenizer.split(".");
+    std::vector<ConfigBlockId> block_ids;
+    ConfigBlockId block_id = ConfigBlockId::INVALID();
+    size_t found = 0;
+    for (size_t i = 0; i < blocks.size(); i++) {
+      if (i == 0) {
+        block_ids = find_bitstream_manager_top_blocks(*this);
+      } else {
+        block_ids = block_children(block_id);
+      }
+      // Reset
+      block_id = ConfigBlockId::INVALID();
+      // Find the one from the list that match the name
+      for (auto id : block_ids) {
+        if (block_name(id) == blocks[i]) {
+          block_id = id;
+          break;
+        }
+      }
+      if (block_id != ConfigBlockId::INVALID()) {
+        // Found one that match the name
+        found++;
+        if (found == blocks.size()) {
+          // Last one, no more child must end here
+          if (block_children(block_id).size() == 0) {
+            std::vector<ConfigBitId> ids = block_bits(block_id);
+            if (bit < ids.size()) {
+              VTR_ASSERT(valid_bit_id(ids[bit]));
+              bit_values_[ids[bit]] = value ? '1' : '0';
+            } else {
+              // No configuration bits at all or out of range, invalidate
+              found = 0;
+            }
+          } else {
+            // There are more child, hence the path still no end, invalidate
+            found = 0;
+          }
+        }
+      } else {
+        // Cannot match the name, just stop
+        break;
+      }
+    }
+    if (found != blocks.size()) {
+      archfpga_throw(__FILE__, __LINE__,
+                     "Failed to find path '%s' to overwrite bitstream",
+                     path.c_str());
+    }
+  }
 }
 
 /******************************************************************************

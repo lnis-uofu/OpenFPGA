@@ -16,6 +16,7 @@
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
+#include "overwrite_bitstream.h"
 #include "read_xml_arch_bitstream.h"
 #include "report_bitstream_distribution.h"
 #include "vtr_log.h"
@@ -46,6 +47,10 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.mutable_bitstream_manager() = build_device_bitstream(
       g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
   }
+
+  overwrite_bitstream(openfpga_ctx.mutable_bitstream_manager(),
+                      openfpga_ctx.bitstream_setting(),
+                      cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_write_file)) {
     std::string src_dir_path =
