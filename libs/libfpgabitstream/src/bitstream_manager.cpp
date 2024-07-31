@@ -7,6 +7,7 @@
 
 #include "arch_error.h"
 #include "bitstream_manager_utils.h"
+#include "openfpga_port_parser.h"
 #include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -301,26 +302,16 @@ void BitstreamManager::add_output_net_id_to_block(
 
 void BitstreamManager::overwrite_bitstream(const std::string& path,
                                            const bool& value) {
-  bool bad_format = true;
-  size_t index = path.rfind("[");
-  std::string bit_string = "";
-  if (index != std::string::npos && path[path.size() - 1] == ']') {
-    bit_string = path.substr(index + 1, path.size() - index - 2);
-    bad_format = bit_string.size() == 0;
-    auto iter = bit_string.begin();
-    while (!bad_format && iter != bit_string.end()) {
-      bad_format = !std::isdigit(*iter);
-      iter++;
-    }
-  }
-  if (bad_format) {
+  PortParser port_parser(path, PORT_PARSER_SUPPORT_SINGLE_INDEX_FORMAT);
+  if (!port_parser.valid()) {
     archfpga_throw(__FILE__, __LINE__,
                    "overwrite_bitstream bit path '%s' does not match format "
                    "<full path in the hierarchy of FPGA fabric>[bit index]",
                    path.c_str());
   } else {
-    size_t bit = (size_t)(std::stoi(bit_string));
-    StringToken tokenizer(path.substr(0, index));
+    BasicPort port = port_parser.port();
+    size_t bit = port.get_lsb();
+    StringToken tokenizer(port.get_name());
     std::vector<std::string> blocks = tokenizer.split(".");
     std::vector<ConfigBlockId> block_ids;
     ConfigBlockId block_id = ConfigBlockId::INVALID();
