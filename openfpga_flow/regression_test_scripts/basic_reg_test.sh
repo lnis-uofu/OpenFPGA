@@ -220,6 +220,7 @@ run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_glob
 
 echo -e "Module naming";
 run-task basic_tests/module_naming/using_index $@
+run-task basic_tests/module_naming/fabric_tile_clkntwk_io_subtile_using_index $@
 run-task basic_tests/module_naming/renaming_rules $@
 run-task basic_tests/module_naming/renaming_rules_strong $@
 run-task basic_tests/module_naming/renaming_rules_on_indexed_names $@
@@ -234,12 +235,14 @@ run-task basic_tests/global_tile_ports/global_tile_4clock --default_tool_path ${
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@
 
 echo -e "Testing programmable clock architecture";
+run-task basic_tests/clock_network/homo_1clock_1reset_1layer_2entry $@
 run-task basic_tests/clock_network/homo_1clock_2layer $@
 run-task basic_tests/clock_network/homo_1clock_2layer_full_tb $@
 run-task basic_tests/clock_network/homo_2clock_2layer $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused_tree $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_y_entry $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_syntax $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_disable_unused_spines $@
