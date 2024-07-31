@@ -16,6 +16,9 @@ This can define a hard-coded bitstream for a reconfigurable resource in FPGA fab
     <non_fabric name="<string>" file="<string>">
       <pb name="<string>" type="<string>" content="<string>"/>
     </non_fabric>
+    <overwrite_bitstream>
+      <bit value="<0 or 1>" path="<string>"/>
+    </overwrite_bitstream>
   </openfpga_bitstream_setting>
 
 pb_type-related Settings
@@ -75,7 +78,7 @@ The following syntax are applicable to the XML definition tagged by ``interconne
   The default path can be either ``iopad.inpad`` or ``ff.Q`` which corresponds to the first input and the second input respectively.
 
 non_fabric-related Settings
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is special syntax to extract PB defined parameter or attribute and save the data into dedicated JSON file outside of fabric bitstream
 
@@ -97,7 +100,7 @@ The following syntax are applicable to the XML definition tagged by ``non_fabric
 
     file="bram.json"
 
-.. option:: ``pb`` child element name="<string: pb_type child name>"
+.. option:: pb child element name="<string: pb_type child name>"
 
   Together with ``pb_type`` top level name, that is the source of the ``pb_type`` bitstream
 
@@ -112,6 +115,33 @@ The following syntax are applicable to the XML definition tagged by ``non_fabric
 
   The final ``pb_type`` name is "bram.bram_lr[mem_36K_tdp].mem_36K"
 
-.. option:: ``pb`` child element content="<string>"
+.. option:: pb child element content="<string>"
 
   The content of the ``pb_type`` data to be extracted. For example, ``content=".param INIT_i"`` means that the data will be extracted from the ``.param INIT_i`` line defined under the ``.blif model``.
+
+overwrite_bitstream-related Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is to allow user to set value of a list of bits which is represented using full path in the hierarchy of FPGA fabric
+
+This ``overwrite_bitstream`` settings has the highest priority than loading any external bitstream file
+
+Each bit to overwrite is represented by one ``bit`` child node/tag
+
+The following syntax are applicable to the XML definition tagged by ``bit`` node under ``overwrite_bitstream`` setting.
+
+.. option:: value="<0 or 1>"
+
+  The boolean ``0`` or ``1`` that will be set. For example, 
+
+  .. code-block:: xml
+
+    value="0"
+    
+.. option:: path="<string>"
+
+  ``path`` represents the location of this block in FPGA fabric, i.e., the full path in the hierarchy of FPGA fabric.
+
+  .. code-block:: xml
+
+    path="fpga_top.grid_clb_1__2_.logical_tile_clb_mode_clb__0.mem_fle_9_in_5[0]"

@@ -213,6 +213,9 @@ class BitstreamManager {
   void add_output_net_id_to_block(const ConfigBlockId& block,
                                   const std::string& output_net_id);
 
+  /* Set bit to the bitstream at the given path */
+  void overwrite_bitstream(const std::string& path, const bool& value);
+
  public: /* Public Validators */
   bool valid_bit_id(const ConfigBitId& bit_id) const;
 
