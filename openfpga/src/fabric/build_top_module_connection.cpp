@@ -1287,12 +1287,15 @@ static int build_top_module_global_net_from_clock_arch_tree(
                                   clk_ntwk.spine_level(spine), pin, entry_dir);
 
       /* Get the connection block module and instance at the entry point */
-      const RRGSB& rr_gsb = device_rr_gsb.get_gsb_by_cb_coordinate(
-        entry_track_type, vtr::Point<size_t>(entry_point.x(), entry_point.y()));
-      ModuleId cb_module =
-        module_manager.find_module(generate_connection_block_module_name(
-          entry_track_type,
-          vtr::Point<size_t>(entry_point.x(), entry_point.y())));
+      vtr::Point<size_t> entry_cb_coord(entry_point.x(), entry_point.y());
+      const RRGSB& rr_gsb =
+        device_rr_gsb.get_gsb_by_cb_coordinate(entry_cb_coord);
+      vtr::Point<size_t> entry_unique_cb_coord =
+        device_rr_gsb.get_cb_unique_module(entry_track_type, entry_cb_coord)
+          .get_cb_coordinate(entry_track_type);
+      std::string cb_module_name = generate_connection_block_module_name(
+        entry_track_type, entry_unique_cb_coord);
+      ModuleId cb_module = module_manager.find_module(cb_module_name);
       size_t cb_instance =
         cb_instance_ids.at(entry_track_type)[entry_point.x()][entry_point.y()];
       ModulePinInfo des_pin_info = find_connection_block_module_chan_port(

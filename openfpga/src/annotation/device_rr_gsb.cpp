@@ -45,19 +45,8 @@ const RRGSB& DeviceRRGSB::get_gsb(const size_t& x, const size_t& y) const {
 
 /* Get a rr switch block in the array with a coordinate */
 const RRGSB& DeviceRRGSB::get_gsb_by_cb_coordinate(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  const vtr::Point<size_t>& coordinate) const {
   vtr::Point<size_t> gsb_coord = coordinate;
-  /* TODO move the coordinate conversion to RRGSB */
-  switch (cb_type) {
-    case CHANX:
-      break;
-    case CHANY:
-      gsb_coord.set_y(gsb_coord.y() - 1);
-      break;
-    default:
-      VTR_LOG("Invalid type of connection block!\n");
-      exit(1);
-  }
   VTR_ASSERT(validate_coordinate(gsb_coord));
 
   return rr_gsb_[gsb_coord.x()][gsb_coord.y()];
