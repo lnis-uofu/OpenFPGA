@@ -80,7 +80,7 @@ static void update_cluster_pin_with_post_routing_results(
     } else if (perimeter_cb) {
       /* When perimeter connection blcoks are allowed, I/O pins may occur on any
        * side but the border side */
-      VTR_ASSERT(pin_sides.end() !=
+      VTR_ASSERT(pin_sides.end() ==
                  std::find(pin_sides.begin(), pin_sides.end(), border_side));
       VTR_ASSERT(1 == pin_sides.size());
       pin_side = pin_sides[0];
