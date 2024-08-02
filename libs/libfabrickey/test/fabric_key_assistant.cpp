@@ -43,7 +43,7 @@ static int check_input_and_ref_key_alias_match(
     std::vector<openfpga::FabricKeyId> input_found_keys =
       input_key.find_key_by_alias(curr_alias);
     float progress = static_cast<float>(num_ref_keys_checked) /
-               static_cast<float>(ref_key.num_keys()) * 100.0;
+                     static_cast<float>(ref_key.num_keys()) * 100.0;
     VTR_LOGV(verbose, "[%lu%] Checking key alias '%s'\r", size_t(progress),
              curr_alias.c_str());
     if (input_found_keys.empty()) {
@@ -74,7 +74,7 @@ static int check_input_and_ref_key_alias_match(
       std::vector<openfpga::FabricKeyId> ref_found_keys =
         ref_key.find_key_by_alias(curr_alias);
       float progress = static_cast<float>(num_input_keys_checked) /
-                 static_cast<float>(input_key.num_keys()) * 100.0;
+                       static_cast<float>(input_key.num_keys()) * 100.0;
       VTR_LOGV(verbose, "[%lu%] Checking key alias '%s'\r", size_t(progress),
                curr_alias.c_str());
       if (ref_found_keys.empty()) {
