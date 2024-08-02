@@ -18,7 +18,9 @@ void update_pb_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
   const PlacementContext& placement_ctx,
   const VprRoutingAnnotation& vpr_routing_annotation,
-  VprClusteringAnnotation& vpr_clustering_annotation, const bool& verbose);
+  VprClusteringAnnotation& vpr_clustering_annotation,
+  const bool& perimeter_cb,
+  const bool& verbose);
 
 } /* end namespace openfpga */
 
