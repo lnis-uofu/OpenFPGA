@@ -924,6 +924,79 @@ ShellCommandId add_write_fabric_pin_physical_location_command_template(
   return shell_cmd_id;
 }
 
+
+/********************************************************************
+ * - Add a command to Shell environment: read_unique_blocks
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_read_unique_blocks_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("read_unique_blocks");
+
+  /* Add an option '--file' */
+  shell_cmd.add_option(
+    "file", true,
+    "unique blocks xml file");
+
+  /* Add an option '--type' */
+  shell_cmd.add_option("type", true,
+                       "the file type of input file");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'compact_routing_hierarchy' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Preload unique blocks from xml file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, read_unique_blocks_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+
+/********************************************************************
+ * - Add a command to Shell environment: write_unique_blocks
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_unique_blocks_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_unique_blocks");
+
+  /* Add an option '--file' */
+  shell_cmd.add_option(
+    "file", true,
+    "unique blocks xml file");
+
+  /* Add an option '--type' */
+  shell_cmd.add_option("type", true,
+                       "the file type of input file");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'compact_routing_hierarchy' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Preload unique blocks from xml file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_unique_blocks_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -1175,8 +1248,21 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   add_write_fabric_pin_physical_location_command_template<T>(
     shell, openfpga_setup_cmd_class,
     cmd_dependency_write_fabric_pin_physical_location, hidden);
-}
 
+  /********************************
+   * Command 'read_unique_blocks'
+   */
+  add_read_unique_blocks_command_template<T>(
+    shell, openfpga_setup_cmd_class, std::vector<openfpga::ShellCommandId>(), hidden);
+
+  /********************************
+   * Command 'write_unique_blocks'
+   */
+  add_write_unique_blocks_command_template<T>(
+    shell, openfpga_setup_cmd_class, std::vector<openfpga::ShellCommandId>(), hidden);
+
+  
+}
 } /* end namespace openfpga */
 
 #endif
