@@ -548,7 +548,8 @@ static void add_rr_graph_block_clock_edges(
             size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2track_node(
                    rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type,
-                   chan_coord, itree, ilvl, ClockTreePinId(ipin), node_dir, verbose)) {
+                   chan_coord, itree, ilvl, ClockTreePinId(ipin), node_dir,
+                   verbose)) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(
@@ -606,7 +607,8 @@ static void try_find_and_add_clock_opin2track_node(
     RRNodeId opin_node = rr_graph_view.node_lookup().find_node(
       layer, grid_coord.x(), grid_coord.y(), OPIN, grid_pin_idx, pin_side);
     if (rr_graph_view.valid_node(opin_node)) {
-      VTR_LOGV(verbose, "Connected OPIN '%s' to clock network\n", tap_pin_name.c_str());
+      VTR_LOGV(verbose, "Connected OPIN '%s' to clock network\n",
+               tap_pin_name.c_str());
       opin_nodes.push_back(opin_node);
     }
   }
@@ -704,9 +706,9 @@ static int add_rr_graph_opin2clk_edges(
           vtr::Point<int> des_coord = clk_ntwk.spine_start_point(des_spine);
           Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
           ClockLevelId des_spine_level = clk_ntwk.spine_level(des_spine);
-          RRNodeId des_node =
-            clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                                    des_spine_level, ipin, des_spine_direction, verbose);
+          RRNodeId des_node = clk_rr_lookup.find_node(
+            des_coord.x(), des_coord.y(), clk_tree, des_spine_level, ipin,
+            des_spine_direction, verbose);
           /* Walk through each qualified OPIN, build edges */
           vtr::Point<int> src_coord =
             clk_ntwk.spine_switch_point(ispine, switch_point_id);

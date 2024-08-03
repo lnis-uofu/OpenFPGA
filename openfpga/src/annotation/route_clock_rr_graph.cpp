@@ -108,12 +108,12 @@ static int route_clock_spine_switch_point(
   Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
   ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
   ClockLevelId des_spine_level = clk_ntwk.spine_level(des_spine);
-  RRNodeId src_node =
-    clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                            src_spine_level, ipin, src_spine_direction, verbose);
-  RRNodeId des_node =
-    clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                            des_spine_level, ipin, des_spine_direction, verbose);
+  RRNodeId src_node = clk_rr_lookup.find_node(src_coord.x(), src_coord.y(),
+                                              clk_tree, src_spine_level, ipin,
+                                              src_spine_direction, verbose);
+  RRNodeId des_node = clk_rr_lookup.find_node(des_coord.x(), des_coord.y(),
+                                              clk_tree, des_spine_level, ipin,
+                                              des_spine_direction, verbose);
   VTR_ASSERT(rr_graph.valid_node(src_node));
   VTR_ASSERT(rr_graph.valid_node(des_node));
   /* Internal drivers may appear at the switch point. Check if there are
@@ -200,9 +200,9 @@ static int route_spine_taps(
       vtr::Point<int> src_coord = spine_coords[icoord];
       Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
       ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
-      RRNodeId src_node =
-        clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                                src_spine_level, ipin, src_spine_direction, verbose);
+      RRNodeId src_node = clk_rr_lookup.find_node(
+        src_coord.x(), src_coord.y(), clk_tree, src_spine_level, ipin,
+        src_spine_direction, verbose);
       for (RREdgeId edge : rr_graph.edge_range(src_node)) {
         RRNodeId des_node = rr_graph.edge_sink_node(edge);
         if (rr_graph.node_type(des_node) == IPIN) {
@@ -389,12 +389,12 @@ static int rec_expand_and_route_clock_spine(
     Direction des_spine_direction = clk_ntwk.spine_direction(curr_spine);
     ClockLevelId src_spine_level = clk_ntwk.spine_level(curr_spine);
     ClockLevelId des_spine_level = clk_ntwk.spine_level(curr_spine);
-    RRNodeId src_node =
-      clk_rr_lookup.find_node(src_coord.x(), src_coord.y(), clk_tree,
-                              src_spine_level, curr_pin, src_spine_direction, verbose);
-    RRNodeId des_node =
-      clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                              des_spine_level, curr_pin, des_spine_direction, verbose);
+    RRNodeId src_node = clk_rr_lookup.find_node(
+      src_coord.x(), src_coord.y(), clk_tree, src_spine_level, curr_pin,
+      src_spine_direction, verbose);
+    RRNodeId des_node = clk_rr_lookup.find_node(
+      des_coord.x(), des_coord.y(), clk_tree, des_spine_level, curr_pin,
+      des_spine_direction, verbose);
     VTR_ASSERT(rr_graph.valid_node(src_node));
     VTR_ASSERT(rr_graph.valid_node(des_node));
     VTR_LOGV(verbose,

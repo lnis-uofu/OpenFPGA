@@ -1282,9 +1282,9 @@ static int build_top_module_global_net_from_clock_arch_tree(
       Direction entry_dir = clk_ntwk.spine_direction(spine);
       t_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
       /* Find the routing resource node of the entry point */
-      RRNodeId entry_rr_node =
-        rr_clock_lookup.find_node(entry_point.x(), entry_point.y(), clk_tree,
-                                  clk_ntwk.spine_level(spine), pin, entry_dir, false);
+      RRNodeId entry_rr_node = rr_clock_lookup.find_node(
+        entry_point.x(), entry_point.y(), clk_tree, clk_ntwk.spine_level(spine),
+        pin, entry_dir, false);
 
       /* Get the connection block module and instance at the entry point */
       vtr::Point<size_t> entry_cb_coord(entry_point.x(), entry_point.y());
