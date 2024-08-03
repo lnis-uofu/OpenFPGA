@@ -97,13 +97,14 @@ static int route_clock_spine_switch_point(
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
   const ClockSpineId& ispine, const ClockTreePinId& ipin,
   const ClockSwitchPointId& switch_point_id, const bool& verbose) {
-  VTR_LOGV(verbose, "Routing switch points of spine '%s'...\n",
-           clk_ntwk.spine_name(ispine).c_str());
   vtr::Point<int> src_coord =
     clk_ntwk.spine_switch_point(ispine, switch_point_id);
   ClockSpineId des_spine =
     clk_ntwk.spine_switch_point_tap(ispine, switch_point_id);
   vtr::Point<int> des_coord = clk_ntwk.spine_start_point(des_spine);
+  VTR_LOGV(verbose, "Routing switch points from spine '%s' to spine '%s'...\n",
+           clk_ntwk.spine_name(ispine).c_str(),
+           clk_ntwk.spine_name(des_spine).c_str());
   Direction src_spine_direction = clk_ntwk.spine_direction(ispine);
   Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
   ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
