@@ -36,7 +36,8 @@ static void update_cluster_pin_with_post_routing_results(
   const VprRoutingAnnotation& vpr_routing_annotation,
   VprClusteringAnnotation& vpr_clustering_annotation, const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const ClusterBlockId& blk_id,
-  const e_side& border_side, const size_t& z, const bool& verbose) {
+  const e_side& border_side, const size_t& z, const bool& perimeter_cb,
+  const bool& verbose) {
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
   auto physical_tile = device_ctx.grid.get_physical_type(
@@ -74,6 +75,13 @@ static void update_cluster_pin_with_post_routing_results(
      */
     e_side pin_side = NUM_SIDES;
     if (NUM_SIDES == border_side) {
+      VTR_ASSERT(1 == pin_sides.size());
+      pin_side = pin_sides[0];
+    } else if (perimeter_cb) {
+      /* When perimeter connection blcoks are allowed, I/O pins may occur on any
+       * side but the border side */
+      VTR_ASSERT(pin_sides.end() ==
+                 std::find(pin_sides.begin(), pin_sides.end(), border_side));
       VTR_ASSERT(1 == pin_sides.size());
       pin_side = pin_sides[0];
     } else {
@@ -188,7 +196,8 @@ void update_pb_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
   const PlacementContext& placement_ctx,
   const VprRoutingAnnotation& vpr_routing_annotation,
-  VprClusteringAnnotation& vpr_clustering_annotation, const bool& verbose) {
+  VprClusteringAnnotation& vpr_clustering_annotation, const bool& perimeter_cb,
+  const bool& verbose) {
   /* Ensure a clean start: remove all the remapping results from VTR's
    * post-routing clustering result sync-up */
   vpr_clustering_annotation.clear_net_remapping();
@@ -219,7 +228,7 @@ void update_pb_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
           vpr_clustering_annotation, layer, grid_coord, cluster_blk_id,
           NUM_SIDES, placement_ctx.block_locs[cluster_blk_id].loc.sub_tile,
-          verbose);
+          perimeter_cb, verbose);
       }
     }
   }
@@ -250,7 +259,8 @@ void update_pb_pin_with_post_routing_results(
         update_cluster_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
           vpr_clustering_annotation, layer, io_coord, cluster_blk_id, io_side,
-          placement_ctx.block_locs[cluster_blk_id].loc.sub_tile, verbose);
+          placement_ctx.block_locs[cluster_blk_id].loc.sub_tile, perimeter_cb,
+          verbose);
       }
     }
   }

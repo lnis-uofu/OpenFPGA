@@ -198,6 +198,7 @@ run-task basic_tests/tile_organization/homo_fabric_tile_bl $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
 run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile $@
 run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_global_tile_clock $@
+run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_pb_pin_fixup $@
 run-task basic_tests/tile_organization/fabric_tile_clkntwk_io_subtile $@
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
@@ -242,6 +243,7 @@ run-task basic_tests/clock_network/homo_2clock_2layer $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused_tree $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer $@
+run-task basic_tests/clock_network/homo_1clock_1reset_3layer_2entry $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_y_entry $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_syntax $@

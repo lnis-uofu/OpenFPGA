@@ -10,7 +10,8 @@ RRClockSpatialLookup::RRClockSpatialLookup() {}
 RRNodeId RRClockSpatialLookup::find_node(int x, int y, const ClockTreeId& tree,
                                          const ClockLevelId& lvl,
                                          const ClockTreePinId& pin,
-                                         const Direction& direction) const {
+                                         const Direction& direction,
+                                         const bool& verbose) const {
   size_t dir = size_t(direction);
   /* Pre-check: the x, y, side and ptc should be non negative numbers!
    * Otherwise, return an invalid id */
@@ -25,33 +26,33 @@ RRNodeId RRClockSpatialLookup::find_node(int x, int y, const ClockTreeId& tree,
    * - Return an invalid id if any out-of-range is detected
    */
   if (size_t(dir) >= rr_node_indices_.size()) {
-    VTR_LOG("Direction out of range");
+    VTR_LOGV(verbose, "Direction out of range\n");
     return RRNodeId::INVALID();
   }
 
   if (size_t(x) >= rr_node_indices_[dir].dim_size(0)) {
-    VTR_LOG("X out of range");
+    VTR_LOGV(verbose, "X out of range\n");
     return RRNodeId::INVALID();
   }
 
   if (size_t(y) >= rr_node_indices_[dir].dim_size(1)) {
-    VTR_LOG("Y out of range");
+    VTR_LOG("Y out of range\n");
     return RRNodeId::INVALID();
   }
 
   if (size_t(tree) >= rr_node_indices_[dir][x][y].size()) {
-    VTR_LOG("Tree id out of range");
+    VTR_LOGV(verbose, "Tree id out of range\n");
     return RRNodeId::INVALID();
   }
 
   if (size_t(lvl) == rr_node_indices_[dir][x][y][size_t(tree)].size()) {
-    VTR_LOG("Level id out of range");
+    VTR_LOGV(verbose, "Level id out of range\n");
     return RRNodeId::INVALID();
   }
 
   if (size_t(pin) ==
       rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].size()) {
-    VTR_LOG("Pin id out of range");
+    VTR_LOGV(verbose, "Pin id out of range\n");
     return RRNodeId::INVALID();
   }
 

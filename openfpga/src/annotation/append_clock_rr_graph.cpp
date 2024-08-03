@@ -262,7 +262,7 @@ static std::vector<RRNodeId> find_clock_track2track_node(
   const RRClockSpatialLookup& clk_rr_lookup, const t_rr_type& chan_type,
   const vtr::Point<size_t>& chan_coord, const ClockTreeId& clk_tree,
   const ClockLevelId& clk_lvl, const ClockTreePinId& clk_pin,
-  const Direction& direction) {
+  const Direction& direction, const bool& verbose) {
   std::vector<RRNodeId> des_nodes;
 
   /* Straight connection */
@@ -285,7 +285,7 @@ static std::vector<RRNodeId> find_clock_track2track_node(
   }
   RRNodeId straight_des_node =
     clk_rr_lookup.find_node(straight_des_coord.x(), straight_des_coord.y(),
-                            clk_tree, clk_lvl, clk_pin, direction);
+                            clk_tree, clk_lvl, clk_pin, direction, verbose);
   if (rr_graph_view.valid_node(straight_des_node)) {
     VTR_ASSERT(chan_type == rr_graph_view.node_type(straight_des_node));
     des_nodes.push_back(straight_des_node);
@@ -344,7 +344,7 @@ static std::vector<RRNodeId> find_clock_track2track_node(
   }
   RRNodeId left_des_node =
     clk_rr_lookup.find_node(left_des_coord.x(), left_des_coord.y(), clk_tree,
-                            next_clk_lvl, clk_pin, left_direction);
+                            next_clk_lvl, clk_pin, left_direction, verbose);
   if (rr_graph_view.valid_node(left_des_node)) {
     VTR_ASSERT(left_des_chan_type == rr_graph_view.node_type(left_des_node));
     des_nodes.push_back(left_des_node);
@@ -396,7 +396,7 @@ static std::vector<RRNodeId> find_clock_track2track_node(
   }
   RRNodeId right_des_node =
     clk_rr_lookup.find_node(right_des_coord.x(), right_des_coord.y(), clk_tree,
-                            next_clk_lvl, clk_pin, right_direction);
+                            next_clk_lvl, clk_pin, right_direction, verbose);
   if (rr_graph_view.valid_node(right_des_node)) {
     VTR_ASSERT(right_des_chan_type == rr_graph_view.node_type(right_des_node));
     des_nodes.push_back(right_des_node);
@@ -535,7 +535,7 @@ static void add_rr_graph_block_clock_edges(
           /* find the driver clock node through lookup */
           RRNodeId src_node =
             clk_rr_lookup.find_node(chan_coord.x(), chan_coord.y(), itree, ilvl,
-                                    ClockTreePinId(ipin), node_dir);
+                                    ClockTreePinId(ipin), node_dir, verbose);
           VTR_LOGV(verbose,
                    "Try to find node '%lu' from clock node lookup (x='%lu' "
                    "y='%lu' tree='%lu' level='%lu' pin='%lu' direction='%s')\n",
@@ -548,7 +548,8 @@ static void add_rr_graph_block_clock_edges(
             size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2track_node(
                    rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type,
-                   chan_coord, itree, ilvl, ClockTreePinId(ipin), node_dir)) {
+                   chan_coord, itree, ilvl, ClockTreePinId(ipin), node_dir,
+                   verbose)) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(
@@ -593,7 +594,7 @@ static void try_find_and_add_clock_opin2track_node(
   const RRGraphView& rr_graph_view, const size_t& layer,
   const vtr::Point<int>& grid_coord, const e_side& pin_side,
   const ClockNetwork& clk_ntwk, const ClockTreePinId& clk_pin,
-  const ClockInternalDriverId& int_driver_id) {
+  const ClockInternalDriverId& int_driver_id, const bool& verbose) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
@@ -606,6 +607,8 @@ static void try_find_and_add_clock_opin2track_node(
     RRNodeId opin_node = rr_graph_view.node_lookup().find_node(
       layer, grid_coord.x(), grid_coord.y(), OPIN, grid_pin_idx, pin_side);
     if (rr_graph_view.valid_node(opin_node)) {
+      VTR_LOGV(verbose, "Connected OPIN '%s' to clock network\n",
+               tap_pin_name.c_str());
       opin_nodes.push_back(opin_node);
     }
   }
@@ -639,7 +642,8 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
   const size_t& layer, const vtr::Point<int>& sb_coord,
   const ClockNetwork& clk_ntwk, const ClockTreePinId& clk_pin,
-  const std::vector<ClockInternalDriverId>& int_driver_ids) {
+  const std::vector<ClockInternalDriverId>& int_driver_ids,
+  const bool& verbose) {
   std::vector<RRNodeId> opin_nodes;
   /* Find opins from
    * - Grid[x][y+1] on right and bottom sides
@@ -663,7 +667,7 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
       for (ClockInternalDriverId int_driver_id : int_driver_ids) {
         try_find_and_add_clock_opin2track_node(
           opin_nodes, grids, rr_graph_view, layer, grid_coord, grid_side,
-          clk_ntwk, clk_pin, int_driver_id);
+          clk_ntwk, clk_pin, int_driver_id, verbose);
       }
     }
   }
@@ -702,9 +706,9 @@ static int add_rr_graph_opin2clk_edges(
           vtr::Point<int> des_coord = clk_ntwk.spine_start_point(des_spine);
           Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
           ClockLevelId des_spine_level = clk_ntwk.spine_level(des_spine);
-          RRNodeId des_node =
-            clk_rr_lookup.find_node(des_coord.x(), des_coord.y(), clk_tree,
-                                    des_spine_level, ipin, des_spine_direction);
+          RRNodeId des_node = clk_rr_lookup.find_node(
+            des_coord.x(), des_coord.y(), clk_tree, des_spine_level, ipin,
+            des_spine_direction, verbose);
           /* Walk through each qualified OPIN, build edges */
           vtr::Point<int> src_coord =
             clk_ntwk.spine_switch_point(ispine, switch_point_id);
@@ -713,7 +717,7 @@ static int add_rr_graph_opin2clk_edges(
                                                          switch_point_id);
           for (RRNodeId src_node : find_clock_opin2track_node(
                  grids, rr_graph_view, layer, src_coord, clk_ntwk, ipin,
-                 int_driver_ids)) {
+                 int_driver_ids, verbose)) {
             /* Create edges */
             VTR_ASSERT(rr_graph_view.valid_node(des_node));
             rr_graph_builder.create_edge(
