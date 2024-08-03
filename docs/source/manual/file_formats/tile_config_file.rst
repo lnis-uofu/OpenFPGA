@@ -28,6 +28,8 @@ Detailed syntax are presented as follows.
 
   The ``top_left`` is a shortcut to define the organization for all the tiles. :numref:`fig_tile_style_top_left` shows an example of tiles in the top-left sytle, where the programmable block locates in the top-left corner of all the tiles, surrounded by two connection blocks and one switch blocks.
 
+  The ``bottom_left`` is a shortcut to define the organization for all the tiles. :numref:`fig_tile_style_bottom_left` shows an example of tiles in the bottom-left sytle, where the programmable block locates in the bottom-left corner of all the tiles, surrounded by two connection blocks and one switch blocks.
+
 .. _fig_tile_style_top_left:
 
 .. figure:: ./figures/tile_style_top_left.png
@@ -37,8 +39,6 @@ Detailed syntax are presented as follows.
    An example of top-left style of a tile in FPGA fabric
 
   
-  The ``bottom_left`` is a shortcut to define the organization for all the tiles. :numref:`fig_tile_style_bottom_left` shows an example of tiles in the bottom-left sytle, where the programmable block locates in the bottom-left corner of all the tiles, surrounded by two connection blocks and one switch blocks.
-
 .. _fig_tile_style_bottom_left:
 
 .. figure:: ./figures/tile_style_bottom_left.png
