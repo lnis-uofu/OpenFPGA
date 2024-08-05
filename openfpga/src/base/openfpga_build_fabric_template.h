@@ -474,7 +474,7 @@ int write_fabric_pin_physical_location_template(
 }
 
 template <class T>
-int read_unique_blocks_template(const T& openfpga_ctx, const Command& cmd,
+int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
                                 const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
@@ -490,12 +490,12 @@ int read_unique_blocks_template(const T& openfpga_ctx, const Command& cmd,
   std::string file_name = cmd_context.option_value(cmd, opt_file);
   std::string file_type = cmd_context.option_value(cmd, opt_type);
   /* Write hierarchy to a file */
-  return read_xml_unique_blocks(file_name.c_str(), file_type.c_str(),
+  return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(), file_type.c_str(),
                                 cmd_context.option_enable(cmd, opt_verbose));
 }
 
 template <class T>
-int write_unique_blocks_template(const T& openfpga_ctx, const Command& cmd,
+int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
                                  const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
@@ -512,7 +512,7 @@ int write_unique_blocks_template(const T& openfpga_ctx, const Command& cmd,
   std::string file_type = cmd_context.option_value(cmd, opt_type);
 
   /* Write hierarchy to a file */
-  return read_xml_unique_blocks(file_name.c_str(), file_type.c_str(),
+  return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(), file_type.c_str(),
                                  cmd_context.option_enable(cmd, opt_verbose));
 }
 

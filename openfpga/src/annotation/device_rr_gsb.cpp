@@ -562,4 +562,37 @@ size_t DeviceRRGSB::get_cb_unique_module_index(
   return cb_unique_module_id;
 }
 
+void DeviceRRGSB::load_unique_cb_module_from_user_input(int x, int y){
+
+
+
+
+}
+
+void DeviceRRGSB::load_unique_sb_module_from_user_input(int ix, int iy){
+  vtr::Point<size_t> sb_coordinate(ix, iy);
+  bool is_unique_module = true;
+  
+  for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
+  /* Check whether the input module exists.*/
+    if (sb_unique_module_[id].x() == ix && sb_unique_module_[id].y() == iy){
+      is_unique_module = false;
+      sb_unique_module_id_[ix][iy] = id;
+      break;
+    }
+  }
+  if (true == is_unique_module) {
+    sb_unique_module_.push_back(sb_coordinate);
+    /* Record the id of unique mirror */
+    sb_unique_module_id_[ix][iy] =sb_unique_module_.size() - 1;
+  }
+}
+
+void DeviceRRGSB::load_unique_gsb_module_from_user_input(int x, int y){
+
+
+
+
+}
+
 } /* End namespace openfpga*/
