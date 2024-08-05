@@ -1,6 +1,6 @@
 /********************************************************************
  * This file includes the top-level function of this library
- * which reads an XML of a fabric key to the associated
+ * which reads an XML of unique routing blocks to the associated
  * data structures
  *******************************************************************/
 #include <string>
@@ -23,49 +23,13 @@
 #include "read_xml_util.h"
 
 /********************************************************************
- * Parse XML codes of a <key> to an object of FabricKey
+ * Parse XML codes of a <instance> to an object of unique_blocks
  *******************************************************************/
-static void read_xml_unique_block_info(
-  pugi::xml_node& xml_pin_constraint, const pugiutil::loc_data& loc_data) {
-    std::string pass = "pass here";
-//   /* Create a new design constraint in the storage */
-//   RepackDesignConstraintId design_constraint_id =
-//     repack_design_constraints.create_design_constraint(
-//       RepackDesignConstraints::IGNORE_NET);
-
-//   if (false == repack_design_constraints.valid_design_constraint_id(
-//                  design_constraint_id)) {
-//     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin_constraint),
-//                    "Fail to create design constraint!\n");
-//   }
-
-//   std::string pin_ctx_to_parse =
-//     get_attribute(xml_pin_constraint, "pin", loc_data).as_string();
-//   openfpga::StringToken pin_tokenizer(pin_ctx_to_parse);
-//   std::vector<std::string> pin_info = pin_tokenizer.split('.');
-//   /* Expect two contents, otherwise error out */
-//   if (pin_info.size() != 2) {
-//     std::string err_msg =
-//       std::string("Invalid content '") + pin_ctx_to_parse +
-//       std::string("' to skip, expect <pb_type_name>.<pin>\n");
-//     VTR_LOG_ERROR(err_msg.c_str());
-//     VTR_ASSERT(pin_info.size() == 2);
-//   }
-//   std::string pb_type_name = pin_info[0];
-//   openfpga::PortParser port_parser(pin_info[1]);
-//   openfpga::BasicPort curr_port = port_parser.port();
-//   if (!curr_port.is_valid()) {
-//     std::string err_msg =
-//       std::string("Invalid pin definition '") + pin_ctx_to_parse +
-//       std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
-//     VTR_LOG_ERROR(err_msg.c_str());
-//     VTR_ASSERT(curr_port.is_valid());
-//   }
-//   repack_design_constraints.set_pb_type(design_constraint_id, pb_type_name);
-//   repack_design_constraints.set_pin(design_constraint_id, curr_port);
-//   repack_design_constraints.set_net(
-//     design_constraint_id,
-//     get_attribute(xml_pin_constraint, "name", loc_data).as_string());
+static void read_xml_unique_instance_info(pugi::xml_node& xml_instance_info,
+                                          const pugiutil::loc_data& loc_data) {
+  std::string pass = "pass here";
+  std::string instance_x = get_attribute(xml_instance_info, "x", loc_data).as_string();
+  std::string instance_y = get_attribute(xml_instance_info, "y", loc_data).as_string();
 }
 
 /********************************************************************
@@ -76,7 +40,7 @@ int read_xml_unique_blocks(const char* file_name, const char* file_type,
                            bool verbose) {
   vtr::ScopedStartFinishTimer timer("Read unique blocks xml file");
 
-//   RepackDesignConstraints repack_design_constraints;
+  //   RepackDesignConstraints repack_design_constraints;
 
   /* Parse the file */
   pugi::xml_document doc;
@@ -85,8 +49,7 @@ int read_xml_unique_blocks(const char* file_name, const char* file_type,
   try {
     loc_data = pugiutil::load_xml(doc, file_name);
 
-    pugi::xml_node xml_root =
-      get_single_child(doc, "unique_blocks", loc_data);
+    pugi::xml_node xml_root = get_single_child(doc, "unique_blocks", loc_data);
 
     // size_t num_design_constraints =
     //   std::distance(xml_root.children().begin(), xml_root.children().end());
@@ -97,12 +60,24 @@ int read_xml_unique_blocks(const char* file_name, const char* file_type,
     for (pugi::xml_node xml_block_info : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
       if (xml_block_info.name() == std::string("block")) {
-        read_xml_unique_block_info(xml_block_info, loc_data);
+        std::string type =
+          get_attribute(xml_block_info, "type", loc_data).as_string();
+        std::string block_x =
+          get_attribute(xml_block_info, "x", loc_data).as_string();
+        std::string block_y =
+          get_attribute(xml_block_info, "y", loc_data).as_string();
+        for (pugi::xml_node xml_instance_info : xml_block_info.children()) {
+          if (xml_instance_info.name() == std::string("instance")) {
+            read_xml_unique_instance_info(xml_instance_info, loc_data);
+          }
+          // read_xml_unique_instance_info(xml_instance_info, loc_data);
+        }
       } else {
-        bad_tag(xml_block_info, loc_data, xml_root,
-                {"block"});
+        bad_tag(xml_block_info, loc_data, xml_root, {"block"});
         return 1;
       }
+      // std::cout << "what is the root name: " << xml_block_info.name() <<
+      // std::endl;
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(file_name, e.line(), "%s", e.what());
