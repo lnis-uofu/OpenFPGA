@@ -572,9 +572,8 @@ static void write_verilog_instance_to_file(std::fstream& fp,
  *******************************************************************/
 void write_verilog_module_to_file(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const bool& use_explicit_port_map,
-  const bool& constant_local_undriven_wires,
-  const e_verilog_default_net_type& default_net_type) {
+  const ModuleId& module_id,
+  const FabricVerilogOption& options) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Ensure we have a valid module_id */
@@ -582,7 +581,7 @@ void write_verilog_module_to_file(
 
   /* Print module declaration */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   default_net_type);
+                                   options.default_net_type());
 
   /* Print an empty line as splitter */
   fp << std::endl;
@@ -595,7 +594,7 @@ void write_verilog_module_to_file(
     for (const BasicPort& local_wire : port_group.second) {
       /* When default net type is wire, we can skip single-bit wires whose LSB
        * is 0 */
-      if ((VERILOG_DEFAULT_NET_TYPE_WIRE == default_net_type) &&
+      if ((VERILOG_DEFAULT_NET_TYPE_WIRE == options.default_net_type()) &&
           (1 == local_wire.get_width()) && (0 == local_wire.get_lsb())) {
         continue;
       }
@@ -605,7 +604,7 @@ void write_verilog_module_to_file(
   }
 
   /* Use constant to drive undriven local wires */
-  if (constant_local_undriven_wires) {
+  if (options.constant_local_undriven_inputs() != FabricVerilogOption::e_undriven_input_type::NONE) {
     std::vector<ModuleManager::e_module_port_type> blacklist = {
       ModuleManager::e_module_port_type::MODULE_GLOBAL_PORT,
       ModuleManager::e_module_port_type::MODULE_GPIN_PORT,
@@ -620,9 +619,15 @@ void write_verilog_module_to_file(
     for (std::pair<std::string, std::vector<BasicPort>> port_group :
          local_undriven_wires) {
       for (const BasicPort& local_undriven_wire : port_group.second) {
-        print_verilog_wire_constant_values(
-          fp, local_undriven_wire,
-          std::vector<size_t>(local_undriven_wire.get_width(), 0));
+        if (options.constant_local_undriven_inputs_use_bus()) {
+          print_verilog_wire_constant_values(
+            fp, local_undriven_wire,
+            std::vector<size_t>(local_undriven_wire.get_width(), options.constant_local_undriven_inputs_value()));
+        } else {
+          print_verilog_wire_constant_values_bit_blast(
+            fp, local_undriven_wire,
+            std::vector<size_t>(local_undriven_wire.get_width(), options.constant_local_undriven_inputs_value()));
+        }
       }
     }
   }
@@ -653,7 +658,7 @@ void write_verilog_module_to_file(
       /* Print an instance */
       write_verilog_instance_to_file(fp, module_manager, module_id,
                                      child_module, instance,
-                                     use_explicit_port_map);
+                                     options.use_explicit_port_map());
       /* Print an empty line as splitter */
       fp << std::endl;
     }
@@ -661,7 +666,7 @@ void write_verilog_module_to_file(
 
   /* Print an end for the module */
   print_verilog_module_end(fp, module_manager.module_name(module_id),
-                           default_net_type);
+                           options.default_net_type());
 
   /* Print an empty line as splitter */
   fp << std::endl;

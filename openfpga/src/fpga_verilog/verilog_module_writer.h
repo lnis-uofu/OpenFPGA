@@ -8,6 +8,7 @@
 
 #include "module_manager.h"
 #include "verilog_port_types.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -18,9 +19,8 @@ namespace openfpga {
 
 void write_verilog_module_to_file(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const bool& use_explicit_port_map,
-  const bool& constant_local_undriven_wires,
-  const e_verilog_default_net_type& default_net_type);
+  const ModuleId& module_id, 
+  const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

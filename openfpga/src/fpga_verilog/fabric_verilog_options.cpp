@@ -21,7 +21,8 @@ FabricVerilogOption::FabricVerilogOption() {
   default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
   time_stamp_ = true;
   use_relative_path_ = false;
-  constant_undriven_inputs_ = false;
+  constant_undriven_inputs_ = FabricVerilogOption::e_undriven_input_type::NONE;
+  CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_ = {"none", "bus0", "bus1", "bit0", "bit1"};
   verbose_output_ = false;
 }
 
@@ -54,8 +55,31 @@ e_verilog_default_net_type FabricVerilogOption::default_net_type() const {
   return default_net_type_;
 }
 
-bool FabricVerilogOption::constant_undriven_inputs() const {
+FabricVerilogOption::e_undriven_input_type FabricVerilogOption::constant_undriven_inputs() const {
   return constant_undriven_inputs_;
+}
+
+bool FabricVerilogOption::constant_undriven_inputs_use_bus() const {
+  return constant_undriven_inputs_ == FabricVerilogOption::e_undriven_input_type::BUS0
+       || constant_undriven_inputs_ == FabricVerilogOption::e_undriven_input_type::BUS1;
+}
+
+size_t FabricVerilogOption::constant_undriven_inputs_value() const {
+  if (constant_undriven_inputs_ == FabricVerilogOption::e_undriven_input_type::BUS1
+       || constant_undriven_inputs_ == FabricVerilogOption::e_undriven_input_type::BIT1) {
+    return 1;
+  }
+  return 0;
+}
+
+std::string FabricVerilogOption::full_constant_undriven_input_type_str() const;
+  std::string full_type_str("[");
+  for (size_t itype = 0; itype < FabricVerilogOption::e_undriven_input_type::NUM_TYPES; ++itype) {
+    full_type_str += std::string(CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_[itype]) + std::string("|");
+  }
+  full_type_str.pop_back();
+  full_type_str += std::string("]");
+  return full_type_str;
 }
 
 bool FabricVerilogOption::verbose_output() const { return verbose_output_; }
@@ -111,8 +135,24 @@ void FabricVerilogOption::set_default_net_type(
   }
 }
 
-void FabricVerilogOption::set_constant_undriven_inputs(const bool& enabled) {
-  constant_undriven_inputs_ = enabled;
+bool FabricVerilogOption::set_constant_undriven_inputs(const std::string& type_str) {
+  bool valid_type = false;
+  for (size_t itype = 0; itype < FabricVerilogOption::e_undriven_input_type::NUM_TYPES; ++itype) {
+    if (std::string(CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_[itype]) == type_str) {
+      constant_undriven_inputs_ = static_cast<FabricVerilogOption::e_undriven_input_type>(itype);
+      valid_type = true;
+      break;
+    }
+  }
+  if (!valid_type) {
+    VTR_LOG_ERROR("Invalid types for undriven inputs: %s. Expect %s\n", type_str.c_str(), full_constant_undriven_input_type_str().c_str());
+  }
+  return valid_type;
+}
+
+bool FabricVerilogOption::set_constant_undriven_inputs(const FabricVerilogOption::e_undriven_input_type& type) {
+  constant_undriven_inputs_ = type;
+  return type != FabricVerilogOption::e_undriven_input_type::NUM_TYPES;
 }
 
 void FabricVerilogOption::set_verbose_output(const bool& enabled) {

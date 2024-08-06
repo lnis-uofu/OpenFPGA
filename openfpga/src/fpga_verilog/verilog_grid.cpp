@@ -113,9 +113,9 @@ static void print_verilog_primitive_block(
            module_manager.module_name(primitive_module).c_str());
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, primitive_module, true,
-                               options.constant_undriven_inputs(),
-                               options.default_net_type());
+  FabricVerilogOption curr_options = options;
+  curr_options.set_explicit_port_mapping(true);
+  write_verilog_module_to_file(fp, module_manager, primitive_module, curr_options);
 
   /* Close file handler */
   fp.close();
@@ -234,8 +234,7 @@ static void rec_print_verilog_logical_tile(
 
   /* Write the verilog module */
   write_verilog_module_to_file(
-    fp, module_manager, pb_module, options.explicit_port_mapping(),
-    options.constant_undriven_inputs(), options.default_net_type());
+    fp, module_manager, pb_module, options);
 
   print_verilog_comment(
     fp,
@@ -348,8 +347,7 @@ static void print_verilog_physical_tile_netlist(
     fp, std::string("----- BEGIN Grid Verilog module: " +
                     module_manager.module_name(grid_module) + " -----"));
   write_verilog_module_to_file(
-    fp, module_manager, grid_module, options.explicit_port_mapping(),
-    options.constant_undriven_inputs(), options.default_net_type());
+    fp, module_manager, grid_module, options);
 
   print_verilog_comment(
     fp, std::string("----- END Grid Verilog module: " +
