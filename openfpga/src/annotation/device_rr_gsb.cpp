@@ -562,20 +562,17 @@ size_t DeviceRRGSB::get_cb_unique_module_index(
   return cb_unique_module_id;
 }
 
-void DeviceRRGSB::load_unique_cb_module_from_user_input(int x, int y){
+void DeviceRRGSB::preload_unique_cbx_module(int x, int y) {}
 
+void DeviceRRGSB::preload_unique_cby_module(int x, int y) {}
 
-
-
-}
-
-void DeviceRRGSB::load_unique_sb_module_from_user_input(int ix, int iy){
+void DeviceRRGSB::preload_unique_sb_module(int ix, int iy) {
   vtr::Point<size_t> sb_coordinate(ix, iy);
   bool is_unique_module = true;
-  
+
   for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
-  /* Check whether the input module exists.*/
-    if (sb_unique_module_[id].x() == ix && sb_unique_module_[id].y() == iy){
+    /* Check whether the input module exists.*/
+    if (sb_unique_module_[id].x() == ix && sb_unique_module_[id].y() == iy) {
       is_unique_module = false;
       sb_unique_module_id_[ix][iy] = id;
       break;
@@ -584,15 +581,39 @@ void DeviceRRGSB::load_unique_sb_module_from_user_input(int ix, int iy){
   if (true == is_unique_module) {
     sb_unique_module_.push_back(sb_coordinate);
     /* Record the id of unique mirror */
-    sb_unique_module_id_[ix][iy] =sb_unique_module_.size() - 1;
+    sb_unique_module_id_[ix][iy] = sb_unique_module_.size() - 1;
   }
 }
 
-void DeviceRRGSB::load_unique_gsb_module_from_user_input(int x, int y){
+/* need to preload after cb and sb are preloaded */
+void DeviceRRGSB::preload_unique_gsb_module(int ix, int iy) {
+  // vtr::Point<size_t> gsb_coordinate(ix, iy);
+  // bool is_unique_module = true;
 
-
-
-
+  // for (size_t id = 0; id < get_num_gsb_unique_module(); ++id) {
+  //   const vtr::Point<size_t>& gsb_unique_module_coordinate =
+  //     gsb_unique_module_[id];
+  //   if ((sb_unique_module_id_[ix][iy] ==
+  //        sb_unique_module_id_[gsb_unique_module_coordinate.x()]
+  //                            [gsb_unique_module_coordinate.y()]) &&
+  //       (cbx_unique_module_id_[ix][iy] ==
+  //        cbx_unique_module_id_[gsb_unique_module_coordinate.x()]
+  //                             [gsb_unique_module_coordinate.y()]) &&
+  //       (cby_unique_module_id_[ix][iy] ==
+  //        cby_unique_module_id_[gsb_unique_module_coordinate.x()]
+  //                             [gsb_unique_module_coordinate.y()])) {
+  //     /* This is a mirror, raise the flag and we finish */
+  //     is_unique_module = false;
+  //     /* Record the id of unique mirror */
+  //     gsb_unique_module_id_[ix][iy] = id;
+  //     break;
+  //   }
+  // }
+  // if (true == is_unique_module) {
+  //   add_gsb_unique_module(gsb_coordinate);
+  //   /* Record the id of unique mirror */
+  //   gsb_unique_module_id_[ix][iy] = get_num_gsb_unique_module() - 1;
+  // }
 }
 
 } /* End namespace openfpga*/

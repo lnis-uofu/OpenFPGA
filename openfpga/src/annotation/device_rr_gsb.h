@@ -95,9 +95,10 @@ class DeviceRRGSB {
                                      automatically identify and update the lists
                                      of unique mirrors and rotatable mirrors */
   void clear();                   /* clean the content */
-  void load_unique_cb_module_from_user_input(int x, int y);
-  void load_unique_sb_module_from_user_input(int x, int y);
-  void load_unique_gsb_module_from_user_input(int x, int y);
+  void preload_unique_cbx_module(int x, int y);
+  void preload_unique_cby_module(int x, int y);
+  void preload_unique_sb_module(int x, int y);
+  void preload_unique_gsb_module(int x, int y);
  private:                         /* Internal cleaners */
   void clear_gsb();               /* clean the content */
   void clear_cb_unique_module(const t_rr_type& cb_type); /* clean the content */

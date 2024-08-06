@@ -42,15 +42,15 @@ void read_xml_unique_instance_info(T& device_rr_gsb,
                                    pugi::xml_node& xml_instance_info,
                                    const pugiutil::loc_data& loc_data,
                                    std::string type) {
-  std::string pass = "pass here";
   int instance_x = get_attribute(xml_instance_info, "x", loc_data).as_int();
   int instance_y = get_attribute(xml_instance_info, "y", loc_data).as_int();
   if (type == "sb") {
-    device_rr_gsb.load_unique_sb_module_from_user_input(instance_x, instance_y);
+    device_rr_gsb.preload_unique_sb_module(instance_x, instance_y);
   } else if (type == "cb") {
     // read_cb_unique_blocks();
     std::cout << "By pass here" << std::endl;
   } else if (type == "gsb") {
+    /* should grab coordinates first and then by pass it to preload gsb*/
     std::cout << "By pass here" << std::endl;
     // read_gsb_unique_blocks();
   }
