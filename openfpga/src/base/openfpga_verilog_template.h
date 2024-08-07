@@ -64,8 +64,8 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
     options.set_constant_undriven_inputs(cmd_context.option_value(cmd, opt_constant_undriven_inputs));
   }
   if (g_vpr_ctx.device().arch->perimeter_cb) {
-    if (FabricVerilogOptions::e_undriven_input_type::NONE == options.constant_undriven_inputs()) {
-      options.set_constant_undriven_inputs(FabricVerilogOptions::e_undriven_input_type::BUS0);
+    if (FabricVerilogOption::e_undriven_input_type::NONE == options.constant_undriven_inputs()) {
+      options.set_constant_undriven_inputs(FabricVerilogOption::e_undriven_input_type::BUS0);
       VTR_LOG(
         "Automatically enable the constant_undriven_input option as perimeter "
         "connection blocks are seen in FPGA fabric\n");

@@ -676,7 +676,7 @@ static void generate_verilog_mux_branch_module(
         VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
         FabricVerilogOption curr_options = options;
         curr_options.set_explicit_port_mapping(
-          use_explicit_port_map ||
+          curr_options.explicit_port_mapping() ||
             circuit_lib.dump_explicit_port_map(mux_model));
         curr_options.set_constant_undriven_inputs(FabricVerilogOption::e_undriven_input_type::NONE);
         write_verilog_module_to_file(
@@ -688,13 +688,13 @@ static void generate_verilog_mux_branch_module(
         /* Behavioral verilog requires customized generation */
         print_verilog_cmos_mux_branch_module_behavioral(
           module_manager, circuit_lib, fp, mux_model, module_name, mux_graph,
-          default_net_type);
+          options.default_net_type());
       }
       break;
     case CIRCUIT_MODEL_DESIGN_RRAM:
       generate_verilog_rram_mux_branch_module(
         module_manager, circuit_lib, fp, mux_model, module_name, mux_graph,
-        default_net_type, circuit_lib.dump_structural_verilog(mux_model));
+        options.default_net_type(), circuit_lib.dump_structural_verilog(mux_model));
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -1403,8 +1403,8 @@ static void generate_verilog_rram_mux_module(
 static void generate_verilog_mux_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
-  const ModuleNameMap& module_name_map, const bool& use_explicit_port_map,
-  const e_verilog_default_net_type& default_net_type) {
+  const ModuleNameMap& module_name_map,
+  const FabricVerilogOption& options) {
   std::string module_name =
     generate_mux_subckt_name(circuit_lib, mux_model,
                              find_mux_num_datapath_inputs(
@@ -1420,13 +1420,13 @@ static void generate_verilog_mux_module(
       ModuleId mux_module = module_manager.find_module(module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
       FabricVerilogOption curr_options = options;
-      curr_option.set_explict_port_mapping(
-        (use_explicit_port_map ||
+      curr_options.set_explicit_port_mapping(
+        (curr_options.explicit_port_mapping() ||
          circuit_lib.dump_explicit_port_map(mux_model) ||
          circuit_lib.dump_explicit_port_map(
            circuit_lib.pass_gate_logic_model(mux_model)))
       );
-      curr_option.set_constant_undriven_inputs(FabricVerilogOption::e_undriven_input_type::NONE);
+      curr_options.set_constant_undriven_inputs(FabricVerilogOption::e_undriven_input_type::NONE);
       write_verilog_module_to_file(
         fp, module_manager, mux_module,
         curr_options);
@@ -1438,7 +1438,7 @@ static void generate_verilog_mux_module(
       /* TODO: RRAM-based Multiplexer Verilog module generation */
       generate_verilog_rram_mux_module(module_manager, circuit_lib, fp,
                                        mux_model, module_name, mux_graph,
-                                       default_net_type);
+                                       options.default_net_type());
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -1545,8 +1545,7 @@ static void print_verilog_submodule_mux_top_modules(
     /* Create MUX circuits */
     generate_verilog_mux_module(module_manager, circuit_lib, fp,
                                 mux_circuit_model, mux_graph, module_name_map,
-                                options.explicit_port_mapping(),
-                                options.default_net_type());
+                                options);
   }
 
   /* Close the file stream */

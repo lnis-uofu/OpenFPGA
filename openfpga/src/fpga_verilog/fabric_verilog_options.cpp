@@ -72,9 +72,9 @@ size_t FabricVerilogOption::constant_undriven_inputs_value() const {
   return 0;
 }
 
-std::string FabricVerilogOption::full_constant_undriven_input_type_str() const;
+std::string FabricVerilogOption::full_constant_undriven_input_type_str() const {
   std::string full_type_str("[");
-  for (size_t itype = 0; itype < FabricVerilogOption::e_undriven_input_type::NUM_TYPES; ++itype) {
+  for (size_t itype = 0; itype < size_t(FabricVerilogOption::e_undriven_input_type::NUM_TYPES); ++itype) {
     full_type_str += std::string(CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_[itype]) + std::string("|");
   }
   full_type_str.pop_back();
@@ -137,7 +137,7 @@ void FabricVerilogOption::set_default_net_type(
 
 bool FabricVerilogOption::set_constant_undriven_inputs(const std::string& type_str) {
   bool valid_type = false;
-  for (size_t itype = 0; itype < FabricVerilogOption::e_undriven_input_type::NUM_TYPES; ++itype) {
+  for (size_t itype = 0; itype < size_t(FabricVerilogOption::e_undriven_input_type::NUM_TYPES); ++itype) {
     if (std::string(CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_[itype]) == type_str) {
       constant_undriven_inputs_ = static_cast<FabricVerilogOption::e_undriven_input_type>(itype);
       valid_type = true;

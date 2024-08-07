@@ -73,7 +73,7 @@ class FabricVerilogOption {
   bool time_stamp_;
   bool use_relative_path_;
   e_undriven_input_type constant_undriven_inputs_;
-  std::array<const char*, FabricVerilogOption::e_undriven_input_type::NUM_TYPES> CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_; //String versions of constant undriven input types
+  std::array<const char*, size_t(FabricVerilogOption::e_undriven_input_type::NUM_TYPES)> CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_; //String versions of constant undriven input types
   bool verbose_output_;
 };
 
