@@ -20,12 +20,12 @@
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
+#include "read_xml_unique_blocks.h"
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 #include "write_xml_fabric_pin_physical_location.h"
 #include "write_xml_module_name_map.h"
-#include "read_xml_unique_blocks.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -490,8 +490,13 @@ int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   std::string file_name = cmd_context.option_value(cmd, opt_file);
   std::string file_type = cmd_context.option_value(cmd, opt_type);
   /* Write hierarchy to a file */
-  return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(), file_type.c_str(),
-                                cmd_context.option_enable(cmd, opt_verbose));
+  if (file_type == "xml") {
+    return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
+                                  file_type.c_str(),
+                                  cmd_context.option_enable(cmd, opt_verbose));
+  } else {
+    VTR_LOG_ERROR("file type %s not supported", file_type);
+  }
 }
 
 template <class T>
@@ -512,8 +517,9 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   std::string file_type = cmd_context.option_value(cmd, opt_type);
 
   /* Write hierarchy to a file */
-  return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(), file_type.c_str(),
-                                 cmd_context.option_enable(cmd, opt_verbose));
+  return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
+                                file_type.c_str(),
+                                cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */
