@@ -14,13 +14,13 @@ write_fabric_verilog
 
     Specify the output directory for the Verilog netlists. For example, ``--file /temp/fabric_netlist/``
 
-  .. option:: --constant_undriven_inputs
+  .. option:: --constant_undriven_inputs <string>
 
-  .. note:: This option is automatically enabled when the option ``perimeter_cb`` of tileable routing resource graph is enabled (see details in :ref`addon_vpr_syntax`). 
+  .. note:: This option is automatically enabled and set to ``bus0`` when the option ``perimeter_cb`` of tileable routing resource graph is enabled (see details in :ref`addon_vpr_syntax`). 
 
   .. note:: Enable this option may shadow issues in your FPGA architecture, which causes them difficult to be found in design verification.
    
-    Use constant gnd for undriven wires in Verilog netlists. Recommand to enable when there are boundary routing tracks in FPGA fabric.
+    Can be [``none`` | ``bus0`` | ``bus1`` | ``bit0`` | ``bit1`` ]. Use constant 0 or 1 for undriven wires in Verilog netlists. Recommand to enable when there are boundary routing tracks in FPGA fabric. When ``bus0`` or ``bus1`` are set, the constant wiring will be done in a bus format. When ``bit0`` or ``bit1`` are set, the constant wiring will be done in a bit-blast style. Suggest to use bit-blast style only when downstream Verilog parsers do not support bus format. By default, it is ``none``. 
 
   .. option:: --default_net_type <string>
 

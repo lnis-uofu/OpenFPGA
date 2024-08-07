@@ -117,6 +117,13 @@ run-task fpga_verilog/verilog_netlist_formats/implicit_verilog_default_nettype_w
 echo -e "Testing explicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire $@
 
+echo -e "Testing undriven net wiring in Verilog generation";
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_none $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus0 $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus1 $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit0 $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit1 $@
+
 echo -e "Testing Verilog generation with flatten routing modules";
 run-task fpga_verilog/flatten_routing $@
 
