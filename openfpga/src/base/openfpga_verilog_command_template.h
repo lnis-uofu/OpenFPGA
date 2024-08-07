@@ -32,7 +32,7 @@ ShellCommandId add_write_fabric_verilog_command_template(
 
   /* Add an option '--constant_undriven_inputs' */
   CommandOptionId const_undriven_inputs_opt = shell_cmd.add_option(
-    "constant_undriven_inputs", true,
+    "constant_undriven_inputs", false,
     "Can be [none|bus0|bus1|bit0|bit1]. Use constant vdd/gnd for undriven "
     "wires in Verilog netlists. Recommand to "
     "enable when there are boundary routing tracks in FPGA fabric");
