@@ -677,11 +677,11 @@ static void generate_verilog_mux_branch_module(
         FabricVerilogOption curr_options = options;
         curr_options.set_explicit_port_mapping(
           curr_options.explicit_port_mapping() ||
-            circuit_lib.dump_explicit_port_map(mux_model));
-        curr_options.set_constant_undriven_inputs(FabricVerilogOption::e_undriven_input_type::NONE);
-        write_verilog_module_to_file(
-          fp, module_manager, mux_module,
-          curr_options);
+          circuit_lib.dump_explicit_port_map(mux_model));
+        curr_options.set_constant_undriven_inputs(
+          FabricVerilogOption::e_undriven_input_type::NONE);
+        write_verilog_module_to_file(fp, module_manager, mux_module,
+                                     curr_options);
         /* Add an empty line as a splitter */
         fp << std::endl;
       } else {
@@ -694,7 +694,8 @@ static void generate_verilog_mux_branch_module(
     case CIRCUIT_MODEL_DESIGN_RRAM:
       generate_verilog_rram_mux_branch_module(
         module_manager, circuit_lib, fp, mux_model, module_name, mux_graph,
-        options.default_net_type(), circuit_lib.dump_structural_verilog(mux_model));
+        options.default_net_type(),
+        circuit_lib.dump_structural_verilog(mux_model));
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -1403,8 +1404,7 @@ static void generate_verilog_rram_mux_module(
 static void generate_verilog_mux_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
-  const ModuleNameMap& module_name_map,
-  const FabricVerilogOption& options) {
+  const ModuleNameMap& module_name_map, const FabricVerilogOption& options) {
   std::string module_name =
     generate_mux_subckt_name(circuit_lib, mux_model,
                              find_mux_num_datapath_inputs(
@@ -1424,12 +1424,11 @@ static void generate_verilog_mux_module(
         (curr_options.explicit_port_mapping() ||
          circuit_lib.dump_explicit_port_map(mux_model) ||
          circuit_lib.dump_explicit_port_map(
-           circuit_lib.pass_gate_logic_model(mux_model)))
-      );
-      curr_options.set_constant_undriven_inputs(FabricVerilogOption::e_undriven_input_type::NONE);
-      write_verilog_module_to_file(
-        fp, module_manager, mux_module,
-        curr_options);
+           circuit_lib.pass_gate_logic_model(mux_model))));
+      curr_options.set_constant_undriven_inputs(
+        FabricVerilogOption::e_undriven_input_type::NONE);
+      write_verilog_module_to_file(fp, module_manager, mux_module,
+                                   curr_options);
       /* Add an empty line as a splitter */
       fp << std::endl;
       break;

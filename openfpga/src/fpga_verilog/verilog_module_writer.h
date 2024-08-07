@@ -6,9 +6,9 @@
  *******************************************************************/
 #include <fstream>
 
+#include "fabric_verilog_options.h"
 #include "module_manager.h"
 #include "verilog_port_types.h"
-#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -17,10 +17,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_verilog_module_to_file(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, 
-  const FabricVerilogOption& options);
+void write_verilog_module_to_file(std::fstream& fp,
+                                  const ModuleManager& module_manager,
+                                  const ModuleId& module_id,
+                                  const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

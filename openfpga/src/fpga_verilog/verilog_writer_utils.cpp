@@ -843,7 +843,9 @@ void print_verilog_wire_constant_values_bit_blast(
 
   for (size_t ipin : output_port.pins()) {
     BasicPort curr_pin(output_port.get_name(), ipin, ipin);
-    print_verilog_wire_constant_values(fp, curr_pin, std::vector<size_t>(curr_pin.get_width(), const_values[ipin]));
+    print_verilog_wire_constant_values(
+      fp, curr_pin,
+      std::vector<size_t>(curr_pin.get_width(), const_values[ipin]));
   }
 }
 

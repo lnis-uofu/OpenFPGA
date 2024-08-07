@@ -570,10 +570,10 @@ static void write_verilog_instance_to_file(std::fstream& fp,
  * This is a key function, maybe most frequently called in our Verilog writer
  * Note that file stream must be valid
  *******************************************************************/
-void write_verilog_module_to_file(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id,
-  const FabricVerilogOption& options) {
+void write_verilog_module_to_file(std::fstream& fp,
+                                  const ModuleManager& module_manager,
+                                  const ModuleId& module_id,
+                                  const FabricVerilogOption& options) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Ensure we have a valid module_id */
@@ -604,7 +604,8 @@ void write_verilog_module_to_file(
   }
 
   /* Use constant to drive undriven local wires */
-  if (options.constant_undriven_inputs() != FabricVerilogOption::e_undriven_input_type::NONE) {
+  if (options.constant_undriven_inputs() !=
+      FabricVerilogOption::e_undriven_input_type::NONE) {
     std::vector<ModuleManager::e_module_port_type> blacklist = {
       ModuleManager::e_module_port_type::MODULE_GLOBAL_PORT,
       ModuleManager::e_module_port_type::MODULE_GPIN_PORT,
@@ -622,11 +623,13 @@ void write_verilog_module_to_file(
         if (options.constant_undriven_inputs_use_bus()) {
           print_verilog_wire_constant_values(
             fp, local_undriven_wire,
-            std::vector<size_t>(local_undriven_wire.get_width(), options.constant_undriven_inputs_value()));
+            std::vector<size_t>(local_undriven_wire.get_width(),
+                                options.constant_undriven_inputs_value()));
         } else {
           print_verilog_wire_constant_values_bit_blast(
             fp, local_undriven_wire,
-            std::vector<size_t>(local_undriven_wire.get_width(), options.constant_undriven_inputs_value()));
+            std::vector<size_t>(local_undriven_wire.get_width(),
+                                options.constant_undriven_inputs_value()));
         }
       }
     }

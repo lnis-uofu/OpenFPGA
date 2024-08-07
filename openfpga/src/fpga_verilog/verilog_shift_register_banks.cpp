@@ -56,8 +56,7 @@ void print_verilog_submodule_shift_register_banks(
   for (const ModuleId& sr_module : blwl_sr_banks.bl_bank_unique_modules()) {
     VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
     /* Write the module content in Verilog format */
-    write_verilog_module_to_file(
-      fp, module_manager, sr_module, options);
+    write_verilog_module_to_file(fp, module_manager, sr_module, options);
 
     /* Add an empty line as a splitter */
     fp << std::endl;
@@ -66,8 +65,7 @@ void print_verilog_submodule_shift_register_banks(
   for (const ModuleId& sr_module : blwl_sr_banks.wl_bank_unique_modules()) {
     VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
     /* Write the module content in Verilog format */
-    write_verilog_module_to_file(
-      fp, module_manager, sr_module, options);
+    write_verilog_module_to_file(fp, module_manager, sr_module, options);
 
     /* Add an empty line as a splitter */
     fp << std::endl;

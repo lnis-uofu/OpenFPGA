@@ -16,14 +16,15 @@ namespace openfpga {
  *******************************************************************/
 class FabricVerilogOption {
  public: /* Types */
-   enum class e_undriven_input_type {
-     NONE = 0, /* Leave undriven input to be dangling */
-     BUS0, /* Wire to a bus format of constant 0 */
-     BUS1, /* Wire to a bus format of constant 1 */
-     BIT0, /* Wire to a blast-bit format of constant 0 */
-     BIT1, /* Wire to a blast-bit format of constant 1 */
-     NUM_TYPES
-   };
+  enum class e_undriven_input_type {
+    NONE = 0, /* Leave undriven input to be dangling */
+    BUS0,     /* Wire to a bus format of constant 0 */
+    BUS1,     /* Wire to a bus format of constant 1 */
+    BIT0,     /* Wire to a blast-bit format of constant 0 */
+    BIT1,     /* Wire to a blast-bit format of constant 1 */
+    NUM_TYPES
+  };
+
  public: /* Public constructor */
   /* Set default options */
   FabricVerilogOption();
@@ -38,9 +39,11 @@ class FabricVerilogOption {
   e_verilog_default_net_type default_net_type() const;
   bool print_user_defined_template() const;
   e_undriven_input_type constant_undriven_inputs() const;
-  /* Identify if a bus format should be applied when wiring undriven inputs to constants */
+  /* Identify if a bus format should be applied when wiring undriven inputs to
+   * constants */
   bool constant_undriven_inputs_use_bus() const;
-  /* Identify the logic value should be applied when wiring undriven inputs to constants */
+  /* Identify the logic value should be applied when wiring undriven inputs to
+   * constants */
   size_t constant_undriven_inputs_value() const;
   std::string full_constant_undriven_input_type_str() const;
   bool verbose_output() const;
@@ -54,9 +57,9 @@ class FabricVerilogOption {
   void set_compress_routing(const bool& enabled);
   void set_print_user_defined_template(const bool& enabled);
   void set_default_net_type(const std::string& default_net_type);
-  /** Decode the type from string to enumeration 
-   * "none" -> NONE, "bus0" -> BUS0, "bus1" -> BUS1, "bit0" -> BIT0, "bit1" -> BIT1
-   * For invalid types, error out
+  /** Decode the type from string to enumeration
+   * "none" -> NONE, "bus0" -> BUS0, "bus1" -> BUS1, "bit0" -> BIT0, "bit1" ->
+   * BIT1 For invalid types, error out
    */
   bool set_constant_undriven_inputs(const std::string& type_str);
   /** For invalid types, error out */
@@ -73,7 +76,10 @@ class FabricVerilogOption {
   bool time_stamp_;
   bool use_relative_path_;
   e_undriven_input_type constant_undriven_inputs_;
-  std::array<const char*, size_t(FabricVerilogOption::e_undriven_input_type::NUM_TYPES)> CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_; //String versions of constant undriven input types
+  std::array<const char*,
+             size_t(FabricVerilogOption::e_undriven_input_type::NUM_TYPES)>
+    CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_;  // String versions of constant
+                                           // undriven input types
   bool verbose_output_;
 };
 
