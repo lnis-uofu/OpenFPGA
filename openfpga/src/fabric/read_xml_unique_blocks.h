@@ -27,6 +27,8 @@
 #include "read_xml_unique_blocks.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
+#include "write_xml_utils.h"
+#include "openfpga_digest.h"
 
 /********************************************************************
  * Parse XML codes of a <instance> to an object of unique_blocks
@@ -135,10 +137,10 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
                                                  instance_coords);
         } else if (type == "cby") {
           device_rr_gsb.preload_unique_cb_module(block_coordinate,
-                                                  instance_coords, CHANY);
+                                                 instance_coords, CHANY);
         } else if (type == "cbx") {
           device_rr_gsb.preload_unique_cb_module(block_coordinate,
-                                                  instance_coords, CHANX);
+                                                 instance_coords, CHANX);
         } else {
           VTR_LOG_ERROR("Unexpected type!");
         }
@@ -155,6 +157,73 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
   }
 
   return 0;
+}
+
+
+template <class T>
+int write_xml_sb_blocks(std::fstream& fp, const T& openfpga_ctx) {
+  std::map<int, vtr::Point<size_t>> id_unique_block_map;
+  std::map<int, std::vector<vtr::Point<size_t>>> id_instance_map;
+  openfpga_ctx.device_rr_gsb().get_id_unique_block_map(id_unique_block_map);
+  openfpga_ctx.device_rr_gsb().get_id_instance_map(id_instance_map);
+
+  /* Validate the file stream */
+  if (false == openfpga::valid_file_stream(fp)) {
+    return 2;
+  }
+  for (const auto& pair : id_unique_block_map) {
+    openfpga::write_tab_to_file(fp, 1);
+    fp << "<block";
+    write_xml_attribute(fp, "type", "sb");
+    write_xml_attribute(fp, "x", pair.second.x());
+    write_xml_attribute(fp, "y", pair.second.y());
+
+    fp << "/>"
+       << "\n";
+
+    for (const auto& instance_info : id_instance_map[pair.first]) {
+      openfpga::write_tab_to_file(fp, 2);
+      fp << "<instance";
+      write_xml_attribute(fp, "x", instance_info.x());
+      write_xml_attribute(fp, "y", instance_info.y());
+
+      fp << "/>"
+         << "\n";
+    }
+  }
+
+  return 0;
+}
+
+template <class T>
+int write_xml_unique_blocks(const T& openfpga_ctx, const char* fname,
+                            const char* file_type, bool verbose_output) {
+  vtr::ScopedStartFinishTimer timer("Write unique blocks...");
+
+  /* Create a file handler */
+  std::fstream fp;
+  /* Open the file stream */
+  fp.open(std::string(fname), std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  /* Write the root node */
+  fp << "<unique_blocks>"
+     << "\n";
+
+  int err_code = 0;
+  
+  err_code += write_xml_sb_blocks(fp, openfpga_ctx);
+
+  /* Finish writing the root node */
+  fp << "</unique_blocks>"
+     << "\n";
+
+  /* Close the file stream */
+  fp.close();
+
+  return err_code;
 }
 
 #endif

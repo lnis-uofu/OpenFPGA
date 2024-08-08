@@ -517,11 +517,10 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   std::string file_type = cmd_context.option_value(cmd, opt_type);
 
   /* Write hierarchy to a file */
-  return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
+  return write_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
                                 file_type.c_str(),
                                 cmd_context.option_enable(cmd, opt_verbose));
 }
-
 } /* end namespace openfpga */
 
 #endif

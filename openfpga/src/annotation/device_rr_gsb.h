@@ -103,6 +103,11 @@ class DeviceRRGSB {
     const vtr::Point<size_t> block_coordinate,
     const std::vector<vtr::Point<size_t>> instance_coords);
 
+  void get_id_instance_map(
+    std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const;
+  void get_id_unique_block_map(
+    std::map<int, vtr::Point<size_t>>& id_unique_block_map) const;
+
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
   void clear_cb_unique_module(const t_rr_type& cb_type); /* clean the content */
