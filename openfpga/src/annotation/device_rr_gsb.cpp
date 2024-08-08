@@ -621,7 +621,7 @@ void DeviceRRGSB::preload_unique_sb_module(
   }
 }
 
-void DeviceRRGSB::get_id_unique_block_map(
+void DeviceRRGSB::get_id_unique_sb_block_map(
   std::map<int, vtr::Point<size_t>>& id_unique_block_map) const {
   for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
     const auto& unique_block_coord = sb_unique_module_[id];
@@ -631,7 +631,7 @@ void DeviceRRGSB::get_id_unique_block_map(
   }
 }
 
-void DeviceRRGSB::get_id_instance_map(
+void DeviceRRGSB::get_id_sb_instance_map(
   std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const {
   for (size_t location_x = 0; location_x < sb_unique_module_id_.size();
        ++location_x) {
@@ -643,4 +643,51 @@ void DeviceRRGSB::get_id_instance_map(
     }
   }
 }
+
+void DeviceRRGSB::get_id_unique_cbx_block_map(
+  std::map<int, vtr::Point<size_t>>& id_unique_block_map) const {
+  for (size_t id = 0; id < get_num_cb_unique_module(CHANX); ++id) {
+    const auto& unique_block_coord = cbx_unique_module_[id];
+    auto unique_module_id =
+      cbx_unique_module_id_[unique_block_coord.x()][unique_block_coord.y()];
+    id_unique_block_map[unique_module_id] = unique_block_coord;
+  }
+}
+
+void DeviceRRGSB::get_id_cbx_instance_map(
+  std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const {
+  for (size_t location_x = 0; location_x < cbx_unique_module_id_.size();
+       ++location_x) {
+    for (size_t location_y = 0; location_y < cbx_unique_module_id_[0].size();
+         ++location_y) {
+      auto unique_module_id = cbx_unique_module_id_[location_x][location_y];
+      vtr::Point<size_t> instance_coord(location_x, location_y);
+      id_instance_map[unique_module_id].push_back(instance_coord);
+    }
+  }
+}
+
+void DeviceRRGSB::get_id_unique_cby_block_map(
+  std::map<int, vtr::Point<size_t>>& id_unique_block_map) const {
+  for (size_t id = 0; id < get_num_cb_unique_module(CHANY); ++id) {
+    const auto& unique_block_coord = cby_unique_module_[id];
+    auto unique_module_id =
+      cby_unique_module_id_[unique_block_coord.x()][unique_block_coord.y()];
+    id_unique_block_map[unique_module_id] = unique_block_coord;
+  }
+}
+
+void DeviceRRGSB::get_id_cby_instance_map(
+  std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const {
+  for (size_t location_x = 0; location_x < cby_unique_module_id_.size();
+       ++location_x) {
+    for (size_t location_y = 0; location_y < cby_unique_module_id_[0].size();
+         ++location_y) {
+      auto unique_module_id = cby_unique_module_id_[location_x][location_y];
+      vtr::Point<size_t> instance_coord(location_x, location_y);
+      id_instance_map[unique_module_id].push_back(instance_coord);
+    }
+  }
+}
+
 } /* End namespace openfpga*/

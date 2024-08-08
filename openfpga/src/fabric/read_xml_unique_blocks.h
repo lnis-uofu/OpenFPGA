@@ -4,7 +4,7 @@
 /********************************************************************
  * This file includes the top-level function of this library
  * which reads an XML of unique routing blocks to the associated
- * data structures
+ * data structures device_rr_gsb
  *******************************************************************/
 
 #include <string>
@@ -24,14 +24,15 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "device_rr_gsb_utils.h"
+#include "openfpga_digest.h"
 #include "read_xml_unique_blocks.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
 #include "write_xml_utils.h"
-#include "openfpga_digest.h"
 
 /********************************************************************
- * Parse XML codes of a <instance> to an object of unique_blocks
+ * Parse XML codes of a <instance> to an object of device_rr_gsb
+ * instance is the mirror module of unique module. 
  *******************************************************************/
 vtr::Point<size_t> read_xml_unique_instance_info(
   pugi::xml_node& xml_instance_info, const pugiutil::loc_data& loc_data) {
@@ -93,8 +94,7 @@ void report_unique_module_status(T& openfpga_ctx, bool verbose_output) {
             1.));
 }
 /********************************************************************
- * Parse XML codes about <repack_design_constraints> to an object of
- *RepackDesignConstraints
+ * Parse XML codes about <unique_blocks> to an object of device_rr_gsb
  *******************************************************************/
 template <class T>
 int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
@@ -159,14 +159,10 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
   return 0;
 }
 
-
-template <class T>
-int write_xml_sb_blocks(std::fstream& fp, const T& openfpga_ctx) {
-  std::map<int, vtr::Point<size_t>> id_unique_block_map;
-  std::map<int, std::vector<vtr::Point<size_t>>> id_instance_map;
-  openfpga_ctx.device_rr_gsb().get_id_unique_block_map(id_unique_block_map);
-  openfpga_ctx.device_rr_gsb().get_id_instance_map(id_instance_map);
-
+int write_xml_block(
+  std::map<int, vtr::Point<size_t>>& id_unique_block_map,
+  std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map,
+  std::fstream& fp, std::string type) {
   /* Validate the file stream */
   if (false == openfpga::valid_file_stream(fp)) {
     return 2;
@@ -174,11 +170,11 @@ int write_xml_sb_blocks(std::fstream& fp, const T& openfpga_ctx) {
   for (const auto& pair : id_unique_block_map) {
     openfpga::write_tab_to_file(fp, 1);
     fp << "<block";
-    write_xml_attribute(fp, "type", "sb");
+    write_xml_attribute(fp, "type", type.c_str());
     write_xml_attribute(fp, "x", pair.second.x());
     write_xml_attribute(fp, "y", pair.second.y());
 
-    fp << "/>"
+    fp << ">"
        << "\n";
 
     for (const auto& instance_info : id_instance_map[pair.first]) {
@@ -190,6 +186,9 @@ int write_xml_sb_blocks(std::fstream& fp, const T& openfpga_ctx) {
       fp << "/>"
          << "\n";
     }
+    openfpga::write_tab_to_file(fp, 1);
+    fp << "</block>"
+       << "\n";
   }
 
   return 0;
@@ -213,8 +212,23 @@ int write_xml_unique_blocks(const T& openfpga_ctx, const char* fname,
      << "\n";
 
   int err_code = 0;
-  
-  err_code += write_xml_sb_blocks(fp, openfpga_ctx);
+  std::map<int, vtr::Point<size_t>> id_unique_block_map;
+  std::map<int, std::vector<vtr::Point<size_t>>> id_instance_map;
+  openfpga_ctx.device_rr_gsb().get_id_unique_sb_block_map(id_unique_block_map);
+  openfpga_ctx.device_rr_gsb().get_id_sb_instance_map(id_instance_map);
+  err_code += write_xml_block(id_unique_block_map, id_instance_map, fp, "sb");
+
+  id_unique_block_map.clear();
+  id_instance_map.clear();
+  openfpga_ctx.device_rr_gsb().get_id_unique_cbx_block_map(id_unique_block_map);
+  openfpga_ctx.device_rr_gsb().get_id_cbx_instance_map(id_instance_map);
+  err_code += write_xml_block(id_unique_block_map, id_instance_map, fp, "cbx");
+
+  id_unique_block_map.clear();
+  id_instance_map.clear();
+  openfpga_ctx.device_rr_gsb().get_id_unique_cby_block_map(id_unique_block_map);
+  openfpga_ctx.device_rr_gsb().get_id_cby_instance_map(id_instance_map);
+  err_code += write_xml_block(id_unique_block_map, id_instance_map, fp, "cby");
 
   /* Finish writing the root node */
   fp << "</unique_blocks>"
