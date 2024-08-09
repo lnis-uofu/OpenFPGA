@@ -152,6 +152,10 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       pin_name.c_str(), physical_tile->capacity - 1);
     exit(1);
   }
+  /* Bypass unmatched subtiles*/
+  if (tile_info.get_name() != std::string(physical_tile->name)) {
+    return pin_idx;
+  }
   /* precheck: return unfound pin if the subtile index does not match */
   if (tile_info.get_width() != 1) {
     VTR_LOG_ERROR(
@@ -175,9 +179,6 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
   /* Spot the subtile by using the index */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     /* Bypass unmatched subtiles*/
-    if (tile_info.get_name() != std::string(sub_tile.name)) {
-      continue;
-    }
     if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
       VTR_LOG_ERROR(
         "Invalid pin name '%s' whose subtile index is out of range, expect "
