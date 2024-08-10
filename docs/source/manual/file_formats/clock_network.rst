@@ -308,20 +308,25 @@ For example,
   <clock_network name="clk_tree_0" global_port="clk[0:1]">
     <!-- Some clock spines -->
     <taps>
-      <all from_pin="clk[0:0]" to_pin="clb.clk[0:0]"/>
-      <region from_pin="clk[1:1]" to_pin="clb.clk[1:1]" start_x="1" start_y="1" end_x="4" end_y="4" repeat_x="2" repeat_y="2"/>
-      <single from_pin="clk[1:1]" to_pin="clb.clk[1:1]" x="2" y="2"/>
+      <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
+      <region from_pin="clk[1:1]" to_pin="clb[1:1].clk[1:1]" start_x="1" start_y="1" end_x="4" end_y="4" repeat_x="2" repeat_y="2"/>
+      <single from_pin="clk[1:1]" to_pin="clb[2:2].clk[1:1]" x="2" y="2"/>
     </taps>
   </clock_network>
 
 where all the clock spines of the clock network ``clk_tree_0`` tap the clock pins ``clk`` of tile ``clb`` in a VPR architecture description file:
 
-.. note:: Use the name of ``subtile`` in the ``to_pin`` when there are a number of subtiles in your tile!
+.. note:: Use the name of ``tile`` in the ``to_pin`` when there are a number of subtiles in your tile! Use the absolute index for the subtile in the tile.
 
 .. code-block:: xml
 
   <tile name="clb">
-   <sub_tile name="clb">
+   <!-- subtile index ranges [0:0] -->
+   <sub_tile name="clbM" capacity="1">
+     <clock name="clk" num_pins="2"/>
+   </sub_tile>
+   <!-- subtile index ranges [1:2] -->
+   <sub_tile name="clbA" capacity="2">
      <clock name="clk" num_pins="2"/>
    </sub_tile>
   </tile>

@@ -152,6 +152,10 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       pin_name.c_str(), physical_tile->capacity - 1);
     exit(1);
   }
+  /* Bypass unmatched subtiles*/
+  if (tile_info.get_name() != std::string(physical_tile->name)) {
+    return pin_idx;
+  }
   /* precheck: return unfound pin if the subtile index does not match */
   if (tile_info.get_width() != 1) {
     VTR_LOG_ERROR(
@@ -173,18 +177,12 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
   }
 
   /* Spot the subtile by using the index */
+  size_t acc_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     /* Bypass unmatched subtiles*/
-    if (tile_info.get_name() != std::string(sub_tile.name)) {
-      continue;
-    }
     if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
-      VTR_LOG_ERROR(
-        "Invalid pin name '%s' whose subtile index is out of range, expect "
-        "[%lu, "
-        "%lu]\n",
-        pin_name.c_str(), sub_tile.capacity.low, sub_tile.capacity.high);
-      exit(1);
+      acc_pin_index += sub_tile.num_phy_pins;
+      continue;
     }
     for (const t_physical_tile_port& sub_tile_port : sub_tile.ports) {
       if (std::string(sub_tile_port.name) != pin_info.get_name()) {
@@ -206,7 +204,7 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       }
       /* Reach here, we get the port we want, return the accumulated index */
       size_t accumulated_pin_idx =
-        sub_tile_port.absolute_first_pin_index +
+        acc_pin_index + sub_tile_port.absolute_first_pin_index +
         (sub_tile.num_phy_pins / sub_tile.capacity.total()) *
           (tile_info.get_lsb() - sub_tile.capacity.low) +
         pin_info.get_lsb();
