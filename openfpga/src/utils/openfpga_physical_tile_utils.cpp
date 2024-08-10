@@ -177,9 +177,11 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
   }
 
   /* Spot the subtile by using the index */
+  size_t acc_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     /* Bypass unmatched subtiles*/
     if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
+      acc_pin_index += sub_tile.num_phy_pins;
       continue;
     }
     for (const t_physical_tile_port& sub_tile_port : sub_tile.ports) {
@@ -202,6 +204,7 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       }
       /* Reach here, we get the port we want, return the accumulated index */
       size_t accumulated_pin_idx =
+        acc_pin_index +
         sub_tile_port.absolute_first_pin_index +
         (sub_tile.num_phy_pins / sub_tile.capacity.total()) *
           (tile_info.get_lsb() - sub_tile.capacity.low) +
