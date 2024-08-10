@@ -200,6 +200,7 @@ run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile 
 run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_global_tile_clock $@
 run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_pb_pin_fixup $@
 run-task basic_tests/tile_organization/fabric_tile_clkntwk_io_subtile $@
+run-task basic_tests/tile_organization/fabric_tile_clkntwk_registerable_io_subtile $@
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_4x4_preconfig $@
