@@ -204,8 +204,7 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       }
       /* Reach here, we get the port we want, return the accumulated index */
       size_t accumulated_pin_idx =
-        acc_pin_index +
-        sub_tile_port.absolute_first_pin_index +
+        acc_pin_index + sub_tile_port.absolute_first_pin_index +
         (sub_tile.num_phy_pins / sub_tile.capacity.total()) *
           (tile_info.get_lsb() - sub_tile.capacity.low) +
         pin_info.get_lsb();
