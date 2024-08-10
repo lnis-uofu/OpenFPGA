@@ -188,7 +188,7 @@
   </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
-    <pb_type name="fpga_input" physical_mode_name="physical">
+    <pb_type name="fpga_input" physical_mode_name="physical"/>
     <pb_type name="fpga_output" physical_mode_name="physical"/>
     <pb_type name="fpga_input[physical].iopad" circuit_model_name="GPIN"/>
     <pb_type name="fpga_output[physical].iopad" circuit_model_name="GPOUT"/>
