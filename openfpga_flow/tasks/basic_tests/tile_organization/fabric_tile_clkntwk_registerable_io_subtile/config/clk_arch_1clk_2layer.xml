@@ -16,10 +16,10 @@
     <spine name="rib_lvl1_sw2_lower" start_x="2" start_y="1" end_x="2" end_y="0" type="CHANY" direction="DEC_DIRECTION"/>
     <taps>
       <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
-      <all from_pin="clk[0:0]" to_pin="io_top[0:5].clk[0:0]"/>
-      <all from_pin="clk[0:0]" to_pin="io_right[0:2].clk[0:0]"/>
-      <all from_pin="clk[0:0]" to_pin="io_bottom[0:3].clk[0:0]"/>
-      <all from_pin="clk[0:0]" to_pin="io_left[0:3].clk[0:0]"/>
+      <all from_pin="clk[0:0]" to_pin="io_top[0:11].clk[0:0]"/>
+      <all from_pin="clk[0:0]" to_pin="io_right[0:5].clk[0:0]"/>
+      <all from_pin="clk[0:0]" to_pin="io_bottom[0:7].clk[0:0]"/>
+      <all from_pin="clk[0:0]" to_pin="io_left[0:7].clk[0:0]"/>
     </taps>
   </clock_network>  
 </clock_networks> 
