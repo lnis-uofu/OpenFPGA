@@ -288,6 +288,23 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
             is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) {
           continue;
         }
+        if (vpr_device_ctx.rr_graph.num_configurable_edges(inode)) {
+          /* If none of the outgoing edges drive any input node in this GSB, also skip it */
+          bool drive_local_inputs = false;
+          for (auto iedge : vpr_device_ctx.rr_graph.num_edges(inode)) {
+            RRNodeId des_node = vpr_device_ctx.rr_graph.edge_sink_node(iedge);
+            e_side curr_node_side = NUM_SIDES;
+            int curr_node_idx = -1;
+            rr_gsb.get_node_side_and_index(vpr_device_ctx.rr_graph, des_node, curr_node_side, curr_node_idx);  
+            if (NUM_SIDES != curr_node_side && -1 != curr_node_idx) {
+              drive_local_inputs = true;
+              break;
+            }
+          }
+          if (!drive_local_inputs) {
+            continue;
+          }
+        }
 
         /* Grid[x+1][y+1] Bottom side outputs pins */
         rr_gsb.add_opin_node(inode, side_manager.get_side());
