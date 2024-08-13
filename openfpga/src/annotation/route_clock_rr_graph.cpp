@@ -317,6 +317,15 @@ static int rec_expand_and_route_clock_spine(
   if (curr_tap_usage) {
     curr_spine_usage = true;
   }
+  /* If no taps are routed, this spine is not used. Early exit */
+  if (!curr_tap_usage && clk_ntwk.is_last_level(curr_spine)) {
+    spine_usage = false;
+    VTR_LOGV(verbose,
+             "Disable last-level spine '%s' as "
+             "none of the taps are not used\n",
+             clk_ntwk.spine_name(curr_spine).c_str());
+    return CMD_EXEC_SUCCESS;
+  }
 
   std::vector<vtr::Point<int>> spine_coords =
     clk_ntwk.spine_coordinates(curr_spine);
