@@ -333,14 +333,11 @@ static int rec_expand_and_route_clock_spine(
    * As such, it is easy to turn off spines by any stop.
    * The spine should go in a straight line, connect all the stops on the line
    */
-  bool prev_stop_usage = false;
+  bool prev_stop_usage = curr_tap_usage;
   std::reverse(spine_coords.begin(), spine_coords.end());
   for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
     vtr::Point<int> switch_point_coord = spine_coords[icoord];
     bool curr_stop_usage = false;
-    if (icoord == 0) {
-      prev_stop_usage = true; /* The first stop is always used */
-    }
     /* Expand on the switching point here */
     for (ClockSwitchPointId switch_point_id :
          clk_ntwk.find_spine_switch_points_with_coord(curr_spine,
