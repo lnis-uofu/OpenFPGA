@@ -317,6 +317,15 @@ static int rec_expand_and_route_clock_spine(
   if (curr_tap_usage) {
     curr_spine_usage = true;
   }
+  /* If no taps are routed, this spine is not used. Early exit */
+  if (!curr_tap_usage && clk_ntwk.is_last_level(curr_spine)) {
+    spine_usage = false;
+    VTR_LOGV(verbose,
+             "Disable last-level spine '%s' as "
+             "none of the taps are not used\n",
+             clk_ntwk.spine_name(curr_spine).c_str());
+    return CMD_EXEC_SUCCESS;
+  }
 
   std::vector<vtr::Point<int>> spine_coords =
     clk_ntwk.spine_coordinates(curr_spine);
@@ -324,14 +333,11 @@ static int rec_expand_and_route_clock_spine(
    * As such, it is easy to turn off spines by any stop.
    * The spine should go in a straight line, connect all the stops on the line
    */
-  bool prev_stop_usage = false;
+  bool prev_stop_usage = curr_tap_usage;
   std::reverse(spine_coords.begin(), spine_coords.end());
   for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
     vtr::Point<int> switch_point_coord = spine_coords[icoord];
     bool curr_stop_usage = false;
-    if (icoord == 0) {
-      prev_stop_usage = true; /* The first stop is always used */
-    }
     /* Expand on the switching point here */
     for (ClockSwitchPointId switch_point_id :
          clk_ntwk.find_spine_switch_points_with_coord(curr_spine,
