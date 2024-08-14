@@ -180,7 +180,7 @@ static int update_cluster_pin_with_post_routing_results(
           "Following info is for debugging:\n",
           physical_tile->name,
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
-            ->to_string(),
+            ->to_string().c_str(),
           pin_sides.size());
         for (e_side curr_side : pin_sides) {
           VTR_LOG_ERROR("\t%s\n", SideManager(curr_side).c_str());
@@ -198,7 +198,7 @@ static int update_cluster_pin_with_post_routing_results(
           "not physically possible.\n",
           physical_tile->name,
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
-            ->to_string(),
+            ->to_string().c_str(),
           SideManager(border_side).c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -208,7 +208,7 @@ static int update_cluster_pin_with_post_routing_results(
           "Following info is for debugging:\n",
           physical_tile->name,
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
-            ->to_string(),
+            ->to_string().c_str(),
           pin_sides.size());
         for (e_side curr_side : pin_sides) {
           VTR_LOG_ERROR("\t%s\n", SideManager(curr_side).c_str());
@@ -225,7 +225,7 @@ static int update_cluster_pin_with_post_routing_results(
           "found on the following sides:\n",
           physical_tile->name,
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
-            ->to_string(),
+            ->to_string().c_str(),
           SideManager(side_manager.get_opposite()).c_str());
         for (e_side curr_side : pin_sides) {
           VTR_LOG_ERROR("\t%s\n", SideManager(curr_side).c_str());
@@ -270,7 +270,7 @@ static int update_cluster_pin_with_post_routing_results(
                clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
                grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
-                 ->to_string());
+                 ->to_string().c_str());
       continue;
     }
 
