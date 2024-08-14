@@ -30,6 +30,7 @@ namespace openfpga {
  *    - find the net id for the node in routing context
  *    - find the net id for the node in clustering context
  *    - if the net id does not match, we update the clustering context
+ * TODO: For global net which was remapped during routing, no tracking can be found. Packer only keeps an out-of-date record on its pin mapping. Router does not assign it to a new pin. So we have to restore the pin mapping. The strategy is to find the first unused pin in the same port as it was mapped by the packer.
  *******************************************************************/
 static void update_cluster_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
