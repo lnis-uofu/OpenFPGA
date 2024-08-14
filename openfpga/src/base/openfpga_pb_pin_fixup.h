@@ -14,7 +14,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void update_pb_pin_with_post_routing_results(
+int update_pb_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
   const PlacementContext& placement_ctx,
   const VprRoutingAnnotation& vpr_routing_annotation,
