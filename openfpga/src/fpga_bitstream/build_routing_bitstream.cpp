@@ -380,7 +380,8 @@ static void build_connection_block_interc_bitstream(
   const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
 
-  VTR_LOGV(verbose, "\tGenerating bitstream for IPIN '%lu'\n", ipin_index);
+  VTR_LOGV(verbose, "\tGenerating bitstream for IPIN '%lu'. Details: %s\n",
+           ipin_index, rr_graph.node_coordinate_to_string(src_rr_node).c_str());
 
   /* Consider configurable edges only */
   std::vector<RREdgeId> driver_rr_edges =

@@ -38,15 +38,12 @@ int pb_pin_fixup_template(T& openfpga_context, const Command& cmd,
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Apply fix-up to each grid */
-  update_pb_pin_with_post_routing_results(
+  return update_pb_pin_with_post_routing_results(
     g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.placement(),
     openfpga_context.vpr_routing_annotation(),
     openfpga_context.mutable_vpr_clustering_annotation(),
     g_vpr_ctx.device().arch->perimeter_cb,
     cmd_context.option_enable(cmd, opt_verbose));
-
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
