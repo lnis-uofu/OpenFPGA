@@ -24,54 +24,63 @@
 namespace openfpga {
 
 /********************************************************************
- * For global net which was remapped during routing, no tracking can be found. Packer only keeps an out-of-date record on its pin mapping. Router does not assign it to a new pin. So we have to restore the pin mapping. The strategy is to find the first unused pin in the same port as it was mapped by the packer.
+ * For global net which was remapped during routing, no tracking can be found.
+ *Packer only keeps an out-of-date record on its pin mapping. Router does not
+ *assign it to a new pin. So we have to restore the pin mapping. The strategy is
+ *to find the first unused pin in the same port as it was mapped by the packer.
  *******************************************************************/
-static int update_cluster_pin_global_net_with_post_routing_results(const ClusteringContext& clustering_ctx,
-                                                                   VprClusteringAnnotation& clustering_annotation, 
-                                                                   const ClusterBlockId& blk_id,
-                                                                   t_logical_block_type_ptr logical_block,
-                                                                   size_t& num_fixup,
-                                                                   const bool& verbose) {
+static int update_cluster_pin_global_net_with_post_routing_results(
+  const ClusteringContext& clustering_ctx,
+  VprClusteringAnnotation& clustering_annotation, const ClusterBlockId& blk_id,
+  t_logical_block_type_ptr logical_block, size_t& num_fixup,
+  const bool& verbose) {
   /* Reassign global nets to unused pins in the same port where they were mapped
    * NO optimization is done here!!! First find first fit
    */
-  for (int pb_type_pin = 0; pb_type_pin < logical_block->pb_type->num_pins; ++pb_type_pin) {
-    const t_pb_graph_pin* pb_graph_pin = get_pb_graph_node_pin_from_block_pin(blk_id, pb_type_pin);
+  for (int pb_type_pin = 0; pb_type_pin < logical_block->pb_type->num_pins;
+       ++pb_type_pin) {
+    const t_pb_graph_pin* pb_graph_pin =
+      get_pb_graph_node_pin_from_block_pin(blk_id, pb_type_pin);
 
     /* Limitation: bypass output pins now
-     * TODO: This is due to the 'instance' equivalence port 
+     * TODO: This is due to the 'instance' equivalence port
      * where outputs may be swapped. This definitely requires re-run of packing
      * It can not be solved by swapping routing traces now
      */
     if (OUT_PORT == pb_graph_pin->port->type) {
-        continue;
+      continue;
     }
 
     /* Sanity check to ensure the pb_graph_pin is the top-level */
     VTR_ASSERT(pb_graph_pin->parent_node->is_root());
 
     /* Focus on global net only */
-    ClusterNetId global_net_id = clustering_ctx.clb_nlist.block_net(blk_id, pb_type_pin);
+    ClusterNetId global_net_id =
+      clustering_ctx.clb_nlist.block_net(blk_id, pb_type_pin);
     if (!clustering_ctx.clb_nlist.valid_net_id(global_net_id)) {
-        continue;
+      continue;
     }
-    if ((clustering_ctx.clb_nlist.valid_net_id(global_net_id))
-        && (!clustering_ctx.clb_nlist.net_is_ignored(global_net_id))) {
-        continue;
+    if ((clustering_ctx.clb_nlist.valid_net_id(global_net_id)) &&
+        (!clustering_ctx.clb_nlist.net_is_ignored(global_net_id))) {
+      continue;
     }
     /* Skip this pin: it is consistent in pre- and post- routing results */
     if (!clustering_annotation.is_net_renamed(blk_id, pb_type_pin)) {
-        continue;
+      continue;
     }
     /* This net has been remapped, find the first unused pin in the same port
-     * Get the offset of the pin index in the port, based on which we can infer the pin index in the context of logical block 
+     * Get the offset of the pin index in the port, based on which we can infer
+     * the pin index in the context of logical block
      */
     size_t cand_pin_start = pb_type_pin - pb_graph_pin->pin_number;
     size_t cand_pin_end = cand_pin_start + pb_graph_pin->port->num_pins;
     bool found_cand = false;
-    for (size_t cand_pin = cand_pin_start; cand_pin < cand_pin_end; ++cand_pin) {
-      ClusterNetId cand_pin_net_id = clustering_ctx.clb_nlist.block_net(blk_id, cand_pin);
-      const t_pb_graph_pin* cand_pb_graph_pin = get_pb_graph_node_pin_from_block_pin(blk_id, cand_pin);
+    for (size_t cand_pin = cand_pin_start; cand_pin < cand_pin_end;
+         ++cand_pin) {
+      ClusterNetId cand_pin_net_id =
+        clustering_ctx.clb_nlist.block_net(blk_id, cand_pin);
+      const t_pb_graph_pin* cand_pb_graph_pin =
+        get_pb_graph_node_pin_from_block_pin(blk_id, cand_pin);
       if (!clustering_annotation.is_net_renamed(blk_id, cand_pin)) {
         cand_pin_net_id = clustering_annotation.net(blk_id, cand_pin);
       }
@@ -84,20 +93,21 @@ static int update_cluster_pin_global_net_with_post_routing_results(const Cluster
       /* Add to net modification */
       clustering_annotation.rename_net(blk_id, cand_pin, global_net_id);
       VTR_LOGV(verbose,
-             "Remap clustered block '%s' global net '%s' to pin '%s'\n",
-             clustering_ctx.clb_nlist.block_pb(blk_id)->name,
-             clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
-             cand_pb_graph_pin->to_string().c_str());
+               "Remap clustered block '%s' global net '%s' to pin '%s'\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+               clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
+               cand_pb_graph_pin->to_string().c_str());
       found_cand = true;
       break;
     }
     /* Error out if no candidates are found */
     if (!found_cand) {
       VTR_LOG_ERROR(
-             "Failed to find any unused pin in the same port to remap clustered block '%s' global net '%s' (was mapped to pin '%s').\n",
-             clustering_ctx.clb_nlist.block_pb(blk_id)->name,
-             clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
-             pb_graph_pin->to_string().c_str());
+        "Failed to find any unused pin in the same port to remap clustered "
+        "block '%s' global net '%s' (was mapped to pin '%s').\n",
+        clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+        clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
+        pb_graph_pin->to_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     /* Update fixup counter */
@@ -113,7 +123,11 @@ static int update_cluster_pin_global_net_with_post_routing_results(const Cluster
  *    - find the net id for the node in routing context
  *    - find the net id for the node in clustering context
  *    - if the net id does not match, we update the clustering context
- * TODO: For global net which was remapped during routing, no tracking can be found. Packer only keeps an out-of-date record on its pin mapping. Router does not assign it to a new pin. So we have to restore the pin mapping. The strategy is to find the first unused pin in the same port as it was mapped by the packer.
+ * TODO: For global net which was remapped during routing, no tracking can be
+ *found. Packer only keeps an out-of-date record on its pin mapping. Router does
+ *not assign it to a new pin. So we have to restore the pin mapping. The
+ *strategy is to find the first unused pin in the same port as it was mapped by
+ *the packer.
  *******************************************************************/
 static int update_cluster_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
@@ -121,8 +135,7 @@ static int update_cluster_pin_with_post_routing_results(
   VprClusteringAnnotation& vpr_clustering_annotation, const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const ClusterBlockId& blk_id,
   const e_side& border_side, const size_t& z, const bool& perimeter_cb,
-  size_t& num_fixup,
-  const bool& verbose) {
+  size_t& num_fixup, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
@@ -162,10 +175,13 @@ static int update_cluster_pin_with_post_routing_results(
     e_side pin_side = NUM_SIDES;
     if (NUM_SIDES == border_side) {
       if (1 != pin_sides.size()) {
-        VTR_LOG_ERROR("For tile '%s', found pin '%s' on %lu sides. Expect only 1. Following info is for debugging:\n",
-                      physical_tile->name,
-                      get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string(),
-                      pin_sides.size());
+        VTR_LOG_ERROR(
+          "For tile '%s', found pin '%s' on %lu sides. Expect only 1. "
+          "Following info is for debugging:\n",
+          physical_tile->name,
+          get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+            ->to_string(),
+          pin_sides.size());
         for (e_side curr_side : pin_sides) {
           VTR_LOG_ERROR("\t%s\n", SideManager(curr_side).c_str());
         }
@@ -176,18 +192,24 @@ static int update_cluster_pin_with_post_routing_results(
       /* When perimeter connection blcoks are allowed, I/O pins may occur on any
        * side but the border side */
       if (pin_sides.end() !=
-                 std::find(pin_sides.begin(), pin_sides.end(), border_side)) {
-        VTR_LOG_ERROR("For tile '%s', found pin '%s' on the boundary side '%s', which is not physically possible.\n",
-                      physical_tile->name,
-                      get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string(),
-                      SideManager(border_side).c_str());
+          std::find(pin_sides.begin(), pin_sides.end(), border_side)) {
+        VTR_LOG_ERROR(
+          "For tile '%s', found pin '%s' on the boundary side '%s', which is "
+          "not physically possible.\n",
+          physical_tile->name,
+          get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+            ->to_string(),
+          SideManager(border_side).c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
       if (1 != pin_sides.size()) {
-        VTR_LOG_ERROR("For tile '%s', found pin '%s' on %lu sides. Expect only 1. Following info is for debugging:\n",
-                      physical_tile->name,
-                      get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string(),
-                      pin_sides.size());
+        VTR_LOG_ERROR(
+          "For tile '%s', found pin '%s' on %lu sides. Expect only 1. "
+          "Following info is for debugging:\n",
+          physical_tile->name,
+          get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+            ->to_string(),
+          pin_sides.size());
         for (e_side curr_side : pin_sides) {
           VTR_LOG_ERROR("\t%s\n", SideManager(curr_side).c_str());
         }
@@ -196,13 +218,15 @@ static int update_cluster_pin_with_post_routing_results(
       pin_side = pin_sides[0];
     } else {
       SideManager side_manager(border_side);
-      if (pin_sides.end() == std::find(pin_sides.begin(),
-                                              pin_sides.end(),
-                                              side_manager.get_opposite())) {
-        VTR_LOG_ERROR("For boundary tile '%s', expect pin '%s' only on the side '%s' but found on the following sides:\n",
-                      physical_tile->name,
-                      get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string(),
-                      SideManager(side_manager.get_opposite()).c_str());
+      if (pin_sides.end() == std::find(pin_sides.begin(), pin_sides.end(),
+                                       side_manager.get_opposite())) {
+        VTR_LOG_ERROR(
+          "For boundary tile '%s', expect pin '%s' only on the side '%s' but "
+          "found on the following sides:\n",
+          physical_tile->name,
+          get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+            ->to_string(),
+          SideManager(side_manager.get_opposite()).c_str());
         for (e_side curr_side : pin_sides) {
           VTR_LOG_ERROR("\t%s\n", SideManager(curr_side).c_str());
         }
@@ -240,38 +264,40 @@ static int update_cluster_pin_with_post_routing_results(
     if ((ClusterNetId::INVALID() != cluster_net_id) &&
         (ClusterNetId::INVALID() == routing_net_id) &&
         (true == clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id))) {
-      VTR_LOGV(
-        verbose,
-        "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
-        "it is not routed\n",
-        clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-        grid_coord.y(),
-        get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string());
+      VTR_LOGV(verbose,
+               "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
+               "it is not routed\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
+               grid_coord.y(),
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+                 ->to_string());
       continue;
     }
 
     /* Ignore used in local cluster only, reserved one CLB pin */
     if ((ClusterNetId::INVALID() != cluster_net_id) &&
         (0 == clustering_ctx.clb_nlist.net_sinks(cluster_net_id).size())) {
-      VTR_LOGV(
-        verbose,
-        "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
-        "it is a local net inside the cluster\n",
-        clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-        grid_coord.y(),
-        get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string().c_str());
+      VTR_LOGV(verbose,
+               "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
+               "it is a local net inside the cluster\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
+               grid_coord.y(),
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+                 ->to_string()
+                 .c_str());
       continue;
     }
 
     /* If matched, we finish here */
     if (routing_net_id == cluster_net_id) {
-      VTR_LOGV(
-        verbose,
-        "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
-        "it matches cluster routing\n",
-        clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-        grid_coord.y(),
-        get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string().c_str());
+      VTR_LOGV(verbose,
+               "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
+               "it matches cluster routing\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
+               grid_coord.y(),
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+                 ->to_string()
+                 .c_str());
       continue;
     }
 
@@ -288,23 +314,22 @@ static int update_cluster_pin_with_post_routing_results(
       cluster_net_name = clustering_ctx.clb_nlist.net_name(cluster_net_id);
     }
 
-    VTR_LOGV(
-      verbose,
-      "Fixed up net '%s' mapping mismatch at clustered block '%s' pin "
-      "'grid[%ld][%ld].%s' (was net '%s')\n",
-      routing_net_name.c_str(), clustering_ctx.clb_nlist.block_pb(blk_id)->name,
-      grid_coord.x(), grid_coord.y(),
-      get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->to_string().c_str(),
-      cluster_net_name.c_str());
+    VTR_LOGV(verbose,
+             "Fixed up net '%s' mapping mismatch at clustered block '%s' pin "
+             "'grid[%ld][%ld].%s' (was net '%s')\n",
+             routing_net_name.c_str(),
+             clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
+             grid_coord.y(),
+             get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
+               ->to_string()
+               .c_str(),
+             cluster_net_name.c_str());
     num_fixup++;
   }
-  /* 2nd round of fixup: focus on global nets */ 
-  status = update_cluster_pin_global_net_with_post_routing_results(clustering_ctx,
-                                                                   vpr_clustering_annotation, 
-                                                                   blk_id,
-                                                                   logical_block,
-                                                                   num_fixup,
-                                                                   verbose);
+  /* 2nd round of fixup: focus on global nets */
+  status = update_cluster_pin_global_net_with_post_routing_results(
+    clustering_ctx, vpr_clustering_annotation, blk_id, logical_block, num_fixup,
+    verbose);
   return status;
 }
 
