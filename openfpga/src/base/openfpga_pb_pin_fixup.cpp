@@ -72,8 +72,10 @@ static int update_cluster_pin_global_net_with_post_routing_results(
      * Get the offset of the pin index in the port, based on which we can infer
      * the pin index in the context of logical block
      */
-    VTR_LOG("Searching for a candidate pin to accomodate global net '%s' was lost during routing optimization\n",
-            clustering_ctx.clb_nlist.net_name(global_net_id).c_str());
+    VTR_LOG(
+      "Searching for a candidate pin to accomodate global net '%s' was lost "
+      "during routing optimization\n",
+      clustering_ctx.clb_nlist.net_name(global_net_id).c_str());
     size_t cand_pin_start = pb_type_pin - pb_graph_pin->pin_number;
     size_t cand_pin_end = cand_pin_start + pb_graph_pin->port->num_pins;
     bool found_cand = false;
