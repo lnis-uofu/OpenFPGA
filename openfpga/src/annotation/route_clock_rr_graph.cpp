@@ -370,6 +370,7 @@ static int rec_expand_and_route_clock_spine(
    */
   bool prev_stop_usage = false;
   if (clk_ntwk.is_last_level(curr_spine)) {
+    curr_spine_usage = curr_tap_usage;
     prev_stop_usage = curr_tap_usage;
   }
   std::reverse(spine_coords.begin(), spine_coords.end());
