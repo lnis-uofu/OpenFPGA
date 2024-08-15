@@ -383,7 +383,9 @@ static int rec_expand_and_route_clock_spine(
                switch_point_coord.y());
       continue;
     }
-    /* If there are any stop is used, mark this spine is used. This is to avoid that a spine is marked unused when only its 1st stop is actually used. The skip condition may cause this. */
+    /* If there are any stop is used, mark this spine is used. This is to avoid
+     * that a spine is marked unused when only its 1st stop is actually used.
+     * The skip condition may cause this. */
     if (curr_stop_usage) {
       curr_spine_usage = true;
     }
