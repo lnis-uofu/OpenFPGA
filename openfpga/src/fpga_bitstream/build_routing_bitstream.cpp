@@ -60,14 +60,17 @@ static void build_switch_block_mux_bitstream(
    * - There is a net mapped to cur_rr_node: we find the path id
    */
   int path_id = DEFAULT_PATH_ID;
-  VTR_LOGV(verbose, "Prev node '%lu' for src_node '%lu'\n", size_t(routing_annotation.rr_node_prev_node(cur_rr_node)), size_t(cur_rr_node));
+  VTR_LOGV(verbose, "Prev node '%lu' for src_node '%lu'\n",
+           size_t(routing_annotation.rr_node_prev_node(cur_rr_node)),
+           size_t(cur_rr_node));
   AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
   if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
     /* We must have a valid previous node that is supposed to drive the source
      * node! */
     VTR_ASSERT(routing_annotation.rr_node_prev_node(cur_rr_node));
     for (size_t inode = 0; inode < drive_rr_nodes.size(); ++inode) {
-      VTR_LOGV(verbose, "Path: %lu -> Driver node '%lu' for src_node '%lu'\n", inode, size_t(drive_rr_nodes[inode]), size_t(cur_rr_node));
+      VTR_LOGV(verbose, "Path: %lu -> Driver node '%lu' for src_node '%lu'\n",
+               inode, size_t(drive_rr_nodes[inode]), size_t(cur_rr_node));
       if ((input_nets[inode] == output_net) &&
           (drive_rr_nodes[inode] ==
            routing_annotation.rr_node_prev_node(cur_rr_node))) {
