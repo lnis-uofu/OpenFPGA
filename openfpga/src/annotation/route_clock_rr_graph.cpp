@@ -333,7 +333,10 @@ static int rec_expand_and_route_clock_spine(
    * As such, it is easy to turn off spines by any stop.
    * The spine should go in a straight line, connect all the stops on the line
    */
-  bool prev_stop_usage = curr_tap_usage;
+  bool prev_stop_usage = false;
+  if (clk_ntwk.is_last_level(curr_spine)) {
+    prev_stop_usage = curr_tap_usage;
+  }
   std::reverse(spine_coords.begin(), spine_coords.end());
   for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
     vtr::Point<int> switch_point_coord = spine_coords[icoord];
@@ -379,6 +382,12 @@ static int rec_expand_and_route_clock_spine(
                clk_ntwk.spine_name(curr_spine).c_str(), switch_point_coord.x(),
                switch_point_coord.y());
       continue;
+    }
+    /* If there are any stop is used, mark this spine is used. This is to avoid
+     * that a spine is marked unused when only its 1st stop is actually used.
+     * The skip condition may cause this. */
+    if (curr_stop_usage) {
+      curr_spine_usage = true;
     }
     /* Skip the first stop */
     if (icoord == spine_coords.size() - 1) {
