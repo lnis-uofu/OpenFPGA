@@ -139,11 +139,11 @@ static int route_clock_spine_switch_point(
    */
   if (clk_ntwk.spine_track_type(ispine) == CHANX &&
       src_spine_direction == Direction::DEC) {
-    src_coord.set_x(src_coord.x() + 1);
+    src_coord.set_x(des_coord.x() + 1);
   }
   if (clk_ntwk.spine_track_type(ispine) == CHANY &&
       src_spine_direction == Direction::DEC) {
-    src_coord.set_y(src_coord.y() + 1);
+    src_coord.set_y(des_coord.y() + 1);
   }
   RRNodeId src_node = clk_rr_lookup.find_node(src_coord.x(), src_coord.y(),
                                               clk_tree, src_spine_level, ipin,
