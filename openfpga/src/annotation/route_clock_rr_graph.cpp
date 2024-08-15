@@ -109,6 +109,38 @@ static int route_clock_spine_switch_point(
   Direction des_spine_direction = clk_ntwk.spine_direction(des_spine);
   ClockLevelId src_spine_level = clk_ntwk.spine_level(ispine);
   ClockLevelId des_spine_level = clk_ntwk.spine_level(des_spine);
+  /* Special for DEC_DIR CHANX and CHANY, there should be a offset on the source coordinate 
+   * Note that in the following condition, the switching point occurs in switch block (x, y)
+   *              INC CHANY (x, y + 1)
+   *                      ^
+   *                      |
+   * INC CHANX (x, y) --->+<---- DEC CHANX (x + 1, y)
+   *                      |
+   *                      v
+   *              DEC CHANY (x, y)
+   *
+   * Note that in the following condition, the switching point occurs in switch block (x, y)
+   *              DEC CHANY (x, y + 1)
+   *                      |
+   *                      v
+   * DEC CHANX (x, y) <---+----> INC CHANX (x + 1, y)
+   *                      ^
+   *                      |
+   *              INC CHANY (x, y)
+   * From the user point of view, the switching point should only occur in a switch block
+   * So the coordinate of a switch block should be provided as the coordinate of switching point
+   * However, the src node and des node may not follow the switch block coordinate!
+   * In short, the src coordinate requires an adjustment only when
+   * - The src is an CHANX in DEC
+   * - The src is an CHANY in DEC
+   * No adjustment is required for des node as it always comes from the starting point of the des spine
+   */
+  if (clk_ntwk.spine_track_type(ispine) == CHANX && src_spine_direction == Direction::DEC) {
+    src_coord.set_x(src_coord.x() + 1);
+  }
+  if (clk_ntwk.spine_track_type(ispine) == CHANY && src_spine_direction == Direction::DEC) {
+    src_coord.set_y(src_coord.y() + 1);
+  }
   RRNodeId src_node = clk_rr_lookup.find_node(src_coord.x(), src_coord.y(),
                                               clk_tree, src_spine_level, ipin,
                                               src_spine_direction, verbose);
@@ -160,10 +192,10 @@ static int route_clock_spine_switch_point(
     return CMD_EXEC_SUCCESS; /* Used internal driver, early pass */
   }
   VTR_LOGV(verbose,
-           "Routed switch points of spine '%s' from (x=%lu, y=%lu) to spine "
-           "'%s' at (x=%lu, y=%lu)\n",
-           clk_ntwk.spine_name(ispine).c_str(), src_coord.x(), src_coord.y(),
-           clk_ntwk.spine_name(des_spine).c_str(), des_coord.x(),
+           "Routed switch points of spine '%s' (node '%lu') from (x=%lu, y=%lu) to spine "
+           "'%s' (node '%lu') at (x=%lu, y=%lu)\n",
+           clk_ntwk.spine_name(ispine).c_str(), size_t(src_node), src_coord.x(), src_coord.y(),
+           clk_ntwk.spine_name(des_spine).c_str(), size_t(des_node), des_coord.x(),
            des_coord.y());
   vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node, src_node);
   /* It could happen that there is no net mapped some clock pin, skip the
@@ -314,11 +346,8 @@ static int rec_expand_and_route_clock_spine(
   if (CMD_EXEC_SUCCESS != status) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (curr_tap_usage) {
-    curr_spine_usage = true;
-  }
   /* If no taps are routed, this spine is not used. Early exit */
-  if (!curr_tap_usage && clk_ntwk.is_last_level(curr_spine)) {
+  if (disable_unused_spines && !curr_tap_usage && clk_ntwk.is_last_level(curr_spine)) {
     spine_usage = false;
     VTR_LOGV(verbose,
              "Disable last-level spine '%s' as "
@@ -386,9 +415,6 @@ static int rec_expand_and_route_clock_spine(
     /* If there are any stop is used, mark this spine is used. This is to avoid
      * that a spine is marked unused when only its 1st stop is actually used.
      * The skip condition may cause this. */
-    if (curr_stop_usage) {
-      curr_spine_usage = true;
-    }
     /* Skip the first stop */
     if (icoord == spine_coords.size() - 1) {
       continue;
