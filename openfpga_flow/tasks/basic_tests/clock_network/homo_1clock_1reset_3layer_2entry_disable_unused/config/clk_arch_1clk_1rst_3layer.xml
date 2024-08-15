@@ -1,0 +1,72 @@
+<clock_networks default_segment="L1" default_tap_switch="ipin_cblock" default_driver_switch="0"> 
+  <clock_network name="clk_tree_2lvl" global_port="op_clk[0:0]"> 
+    <spine name="clk_spine_lvl0_botm0" start_x="1" start_y="1" end_x="1" end_y="2"> 
+      <switch_point tap="clk_spine_lvl1_right" x="1" y="2"/> 
+    </spine>
+    <spine name="clk_spine_lvl0_botm1" start_x="2" start_y="1" end_x="2" end_y="2"> 
+      <switch_point tap="clk_spine_lvl1_left" x="2" y="2"/> 
+    </spine>
+    <spine name="clk_spine_lvl1_left" start_x="2" start_y="2" end_x="1" end_y="2"> 
+      <switch_point tap="clk_rib_lvl2_x0y2_upper" x="0" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x0y2_lower" x="0" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x1y2_upper" x="1" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x1y2_lower" x="1" y="2"/> 
+    </spine>  
+    <spine name="clk_spine_lvl1_right" start_x="2" start_y="2" end_x="4" end_y="2"> 
+      <switch_point tap="clk_rib_lvl2_x2y2_upper" x="2" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x2y2_lower" x="2" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x3y2_upper" x="3" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x3y2_lower" x="3" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x4y2_upper" x="4" y="2"/> 
+      <switch_point tap="clk_rib_lvl2_x4y2_lower" x="4" y="2"/> 
+    </spine>  
+    <spine name="clk_rib_lvl2_x0y2_upper" start_x="0" start_y="3" end_x="0" end_y="4"/>
+    <spine name="clk_rib_lvl2_x0y2_lower" start_x="0" start_y="2" end_x="0" end_y="1"/>
+    <spine name="clk_rib_lvl2_x1y2_upper" start_x="1" start_y="3" end_x="1" end_y="4"/>
+    <spine name="clk_rib_lvl2_x1y2_lower" start_x="1" start_y="2" end_x="1" end_y="1"/>
+    <spine name="clk_rib_lvl2_x2y2_upper" start_x="2" start_y="3" end_x="2" end_y="4"/>
+    <spine name="clk_rib_lvl2_x2y2_lower" start_x="2" start_y="2" end_x="2" end_y="1"/>
+    <spine name="clk_rib_lvl2_x3y2_upper" start_x="3" start_y="3" end_x="3" end_y="4"/>
+    <spine name="clk_rib_lvl2_x3y2_lower" start_x="3" start_y="2" end_x="3" end_y="1"/>
+    <spine name="clk_rib_lvl2_x4y2_upper" start_x="4" start_y="3" end_x="4" end_y="4"/>
+    <spine name="clk_rib_lvl2_x4y2_lower" start_x="4" start_y="2" end_x="4" end_y="1"/>
+    <taps>
+      <all from_pin="op_clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
+    </taps>
+  </clock_network>  
+  <clock_network name="rst_tree_2lvl" global_port="op_reset[0:0]"> 
+    <spine name="rst_spine_lvl0_botm0" start_x="1" start_y="1" end_x="1" end_y="2"> 
+      <switch_point tap="rst_spine_lvl1_right" x="1" y="2"/> 
+    </spine>
+    <spine name="rst_spine_lvl0_botm1" start_x="2" start_y="1" end_x="2" end_y="2"> 
+      <switch_point tap="rst_spine_lvl1_left" x="2" y="2"/> 
+    </spine>
+    <spine name="rst_spine_lvl1_left" start_x="2" start_y="2" end_x="1" end_y="2"> 
+      <switch_point tap="rst_rib_lvl2_x0y2_upper" x="0" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x0y2_lower" x="0" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x1y2_upper" x="1" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x1y2_lower" x="1" y="2"/> 
+    </spine>  
+    <spine name="rst_spine_lvl1_right" start_x="2" start_y="2" end_x="4" end_y="2"> 
+      <switch_point tap="rst_rib_lvl2_x2y2_upper" x="2" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x2y2_lower" x="2" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x3y2_upper" x="3" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x3y2_lower" x="3" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x4y2_upper" x="4" y="2"/> 
+      <switch_point tap="rst_rib_lvl2_x4y2_lower" x="4" y="2"/> 
+    </spine>  
+    <spine name="rst_rib_lvl2_x0y2_upper" start_x="0" start_y="3" end_x="0" end_y="4"/>
+    <spine name="rst_rib_lvl2_x0y2_lower" start_x="0" start_y="2" end_x="0" end_y="1"/>
+    <spine name="rst_rib_lvl2_x1y2_upper" start_x="1" start_y="3" end_x="1" end_y="4"/>
+    <spine name="rst_rib_lvl2_x1y2_lower" start_x="1" start_y="2" end_x="1" end_y="1"/>
+    <spine name="rst_rib_lvl2_x2y2_upper" start_x="2" start_y="3" end_x="2" end_y="4"/>
+    <spine name="rst_rib_lvl2_x2y2_lower" start_x="2" start_y="2" end_x="2" end_y="1"/>
+    <spine name="rst_rib_lvl2_x3y2_upper" start_x="3" start_y="3" end_x="3" end_y="4"/>
+    <spine name="rst_rib_lvl2_x3y2_lower" start_x="3" start_y="2" end_x="3" end_y="1"/>
+    <spine name="rst_rib_lvl2_x4y2_upper" start_x="4" start_y="3" end_x="4" end_y="4"/>
+    <spine name="rst_rib_lvl2_x4y2_lower" start_x="4" start_y="2" end_x="4" end_y="1"/>
+    <taps>
+      <all from_pin="op_reset[0:0]" to_pin="clb[0:0].reset[0:0]"/>
+    </taps>
+  </clock_network>  
+</clock_networks> 
