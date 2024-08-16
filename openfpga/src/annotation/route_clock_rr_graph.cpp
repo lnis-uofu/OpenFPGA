@@ -411,6 +411,9 @@ static int rec_expand_and_route_clock_spine(
         return CMD_EXEC_FATAL_ERROR;
       }
     }
+    if (curr_stop_usage) {
+      curr_spine_usage = true;
+    }
     if (disable_unused_spines && !curr_stop_usage && !prev_stop_usage) {
       VTR_LOGV(verbose,
                "Disconnect backbone of spine '%s' at (x=%lu, y=%lu) as "
