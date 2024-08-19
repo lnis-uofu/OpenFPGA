@@ -571,8 +571,8 @@ void DeviceRRGSB::preload_unique_cb_module(
   size_t limit_y;
   switch (cb_type) {
     case CHANX:
-      limit_x = cby_unique_module_id_.size();
-      limit_y = cby_unique_module_id_[0].size();
+      limit_x = cbx_unique_module_id_.size();
+      limit_y = cbx_unique_module_id_[0].size();
       break;
     case CHANY:
       limit_x = cby_unique_module_id_.size();
