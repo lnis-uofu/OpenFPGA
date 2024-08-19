@@ -111,7 +111,8 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
 
     /* get device_rr_gsb data type and initialize it*/
     openfpga::DeviceRRGSB& device_rr_gsb = openfpga_ctx.mutable_device_rr_gsb();
-    device_rr_gsb.clear();
+    /* clear unique modules */
+    device_rr_gsb.clear_unique_modules();
 
     /* load unique blocks xml file and set up device_rr_gdb */
     for (pugi::xml_node xml_block_info : xml_root.children()) {

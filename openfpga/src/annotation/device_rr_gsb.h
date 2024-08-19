@@ -102,7 +102,7 @@ class DeviceRRGSB {
   void preload_unique_sb_module(
     const vtr::Point<size_t> block_coordinate,
     const std::vector<vtr::Point<size_t>> instance_coords);
-
+  void clear_unique_modules();
   void get_id_sb_instance_map(
     std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const;
   void get_id_unique_sb_block_map(

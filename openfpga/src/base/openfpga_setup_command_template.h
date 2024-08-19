@@ -391,6 +391,10 @@ ShellCommandId add_build_fabric_command_template(
                        "Compress the number of unique routing modules by "
                        "identifying the unique GSBs");
 
+  /* Add an option '--preload' */
+  shell_cmd.add_option("preload", false,
+                       "preload unique routing modules from user input xml file");
+
   /* Add an option '--duplicate_grid_pin' */
   shell_cmd.add_option("duplicate_grid_pin", false,
                        "Duplicate the pins on the same side of a grid");

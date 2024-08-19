@@ -101,6 +101,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
                           const CommandContext& cmd_context) {
   CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
+  CommandOptionId opt_preload = cmd.option("preload");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_gen_random_fabric_key =
     cmd.option("generate_random_fabric_key");
@@ -143,10 +144,15 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     }
   }
 
-  if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
+  if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
+      false == cmd_context.option_enable(cmd, opt_preload)) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
+    openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
+  }
+
+  if (cmd_context.option_enable(cmd, opt_preload)){
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
@@ -518,8 +524,8 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
 
   /* Write hierarchy to a file */
   return write_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
-                                file_type.c_str(),
-                                cmd_context.option_enable(cmd, opt_verbose));
+                                 file_type.c_str(),
+                                 cmd_context.option_enable(cmd, opt_verbose));
 }
 } /* end namespace openfpga */
 

@@ -421,6 +421,19 @@ void DeviceRRGSB::clear() {
   clear_sb_unique_module_id();
 }
 
+void DeviceRRGSB::clear_unique_modules(){
+  /* clean unique module lists */
+  clear_cb_unique_module(CHANX);
+  clear_cb_unique_module_id(CHANX);
+
+  clear_cb_unique_module(CHANY);
+  clear_cb_unique_module_id(CHANY);
+
+  clear_sb_unique_module();
+  clear_sb_unique_module_id();
+}
+
+
 void DeviceRRGSB::clear_gsb() {
   /* clean gsb array */
   for (size_t x = 0; x < rr_gsb_.size(); ++x) {
@@ -572,18 +585,15 @@ void DeviceRRGSB::preload_unique_cb_module(
   switch (cb_type) {
     case CHANX:
       limit_x = cbx_unique_module_id_.size();
-      limit_y = cbx_unique_module_id_[0].size();
       break;
     case CHANY:
       limit_x = cby_unique_module_id_.size();
-      limit_y = cby_unique_module_id_[0].size();
       break;
     default:
       VTR_LOG_ERROR("Invalid type");
   }
 
   VTR_ASSERT(block_coordinate.x() < limit_x);
-  VTR_ASSERT(block_coordinate.y() < limit_y);
   add_cb_unique_module(cb_type, block_coordinate);
   /* Record the id of unique mirror */
   set_cb_unique_module_id(cb_type, block_coordinate,
@@ -593,7 +603,6 @@ void DeviceRRGSB::preload_unique_cb_module(
   for (auto instance_location : instance_coords) {
     /* Record the id of unique mirror */
     VTR_ASSERT(instance_location.x() < limit_x);
-    VTR_ASSERT(instance_location.y() < limit_y);
     set_cb_unique_module_id(
       cb_type, instance_location,
       cbx_unique_module_id_[block_coordinate.x()][block_coordinate.y()]);
@@ -605,7 +614,6 @@ void DeviceRRGSB::preload_unique_sb_module(
   const std::vector<vtr::Point<size_t>> instance_coords) {
   /*input block coordinate should be within gsb coord range*/
   VTR_ASSERT(block_coordinate.x() < sb_unique_module_id_.size());
-  VTR_ASSERT(block_coordinate.y() < sb_unique_module_id_[0].size());
   sb_unique_module_.push_back(block_coordinate);
   /* Record the id of unique module */
   sb_unique_module_id_[block_coordinate.x()][block_coordinate.y()] =
@@ -615,7 +623,6 @@ void DeviceRRGSB::preload_unique_sb_module(
    * the unique module */
   for (auto instance_location : instance_coords) {
     VTR_ASSERT(instance_location.x() < sb_unique_module_id_.size());
-    VTR_ASSERT(instance_location.y() < sb_unique_module_id_[0].size());
     sb_unique_module_id_[instance_location.x()][instance_location.y()] =
       sb_unique_module_id_[block_coordinate.x()][block_coordinate.y()];
   }
