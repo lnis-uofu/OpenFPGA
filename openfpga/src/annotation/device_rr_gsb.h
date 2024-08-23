@@ -68,11 +68,14 @@ class DeviceRRGSB {
   size_t get_cb_unique_module_index(const t_rr_type& cb_type,
                                     const vtr::Point<size_t>& coordinate) const;
 
- public: /* Mutators */
+ public:                          /* Mutators */
+  void build_gsb_unique_module(); /* Add a switch block to the array, which will
+                                     automatically identify and update the lists
+                                     of unique mirrors and rotatable mirrors */
   void reserve(
     const vtr::Point<size_t>& coordinate); /* Pre-allocate the rr_switch_block
                                               array that the device requires */
-  void reserve_sb_unique_submodule_id(
+  void reserve_unique_modules(
     const vtr::Point<size_t>&
       coordinate); /* Pre-allocate the rr_sb_unique_module_id matrix that the
                       device requires */
@@ -95,10 +98,13 @@ class DeviceRRGSB {
                                      automatically identify and update the lists
                                      of unique mirrors and rotatable mirrors */
   void clear();                   /* clean the content */
-  void preload_unique_cb_module(
+  void print_txt();
+  void preload_unique_cbx_module(
     const vtr::Point<size_t> block_coordinate,
-    const std::vector<vtr::Point<size_t>> instance_coords,
-    const t_rr_type& cb_type);
+    const std::vector<vtr::Point<size_t>> instance_coords);
+  void preload_unique_cby_module(
+    const vtr::Point<size_t> block_coordinate,
+    const std::vector<vtr::Point<size_t>> instance_coords);
   void preload_unique_sb_module(
     const vtr::Point<size_t> block_coordinate,
     const std::vector<vtr::Point<size_t>> instance_coords);
@@ -154,10 +160,8 @@ class DeviceRRGSB {
     const t_rr_type&
       cb_type); /* Add a switch block to the array, which will automatically
                    identify and update the lists of unique side module */
-  void build_gsb_unique_module(); /* Add a switch block to the array, which will
-                                     automatically identify and update the lists
-                                     of unique mirrors and rotatable mirrors */
- private:                         /* Internal Data */
+
+ private: /* Internal Data */
   std::vector<std::vector<RRGSB>> rr_gsb_;
 
   std::vector<std::vector<size_t>>

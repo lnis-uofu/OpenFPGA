@@ -150,9 +150,8 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
-  }
-
-  if (cmd_context.option_enable(cmd, opt_preload)){
+  } else if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
+      true == cmd_context.option_enable(cmd, opt_preload)){
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 

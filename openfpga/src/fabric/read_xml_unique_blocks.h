@@ -32,7 +32,7 @@
 
 /********************************************************************
  * Parse XML codes of a <instance> to an object of device_rr_gsb
- * instance is the mirror module of unique module. 
+ * instance is the mirror module of unique module.
  *******************************************************************/
 vtr::Point<size_t> read_xml_unique_instance_info(
   pugi::xml_node& xml_instance_info, const pugiutil::loc_data& loc_data) {
@@ -113,7 +113,9 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
     openfpga::DeviceRRGSB& device_rr_gsb = openfpga_ctx.mutable_device_rr_gsb();
     /* clear unique modules */
     device_rr_gsb.clear_unique_modules();
-
+     vtr::Point<size_t> grid_coord(g_vpr_ctx.device().grid.width() - 1,
+                               g_vpr_ctx.device().grid.height() - 1);
+    device_rr_gsb.reserve_unique_modules(grid_coord);
     /* load unique blocks xml file and set up device_rr_gdb */
     for (pugi::xml_node xml_block_info : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
@@ -137,11 +139,11 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
           device_rr_gsb.preload_unique_sb_module(block_coordinate,
                                                  instance_coords);
         } else if (type == "cby") {
-          device_rr_gsb.preload_unique_cb_module(block_coordinate,
-                                                 instance_coords, CHANY);
+          device_rr_gsb.preload_unique_cby_module(block_coordinate,
+                                                 instance_coords);
         } else if (type == "cbx") {
-          device_rr_gsb.preload_unique_cb_module(block_coordinate,
-                                                 instance_coords, CHANX);
+          device_rr_gsb.preload_unique_cbx_module(block_coordinate,
+                                                 instance_coords);
         } else {
           VTR_LOG_ERROR("Unexpected type!");
         }
@@ -150,13 +152,15 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
         return 1;
       }
     }
+    device_rr_gsb.build_gsb_unique_module();
+    device_rr_gsb.print_txt();
     if (verbose_output) {
       report_unique_module_status(openfpga_ctx, true);
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(file_name, e.line(), "%s", e.what());
   }
-
+  
   return 0;
 }
 
@@ -179,13 +183,18 @@ int write_xml_block(
        << "\n";
 
     for (const auto& instance_info : id_instance_map[pair.first]) {
-      openfpga::write_tab_to_file(fp, 2);
-      fp << "<instance";
-      write_xml_attribute(fp, "x", instance_info.x());
-      write_xml_attribute(fp, "y", instance_info.y());
+      if (instance_info.x() == pair.second.x() &&
+          instance_info.y() == pair.second.y()) {
+            ;  
+      }else{
+        openfpga::write_tab_to_file(fp, 2);
+        fp << "<instance";
+        write_xml_attribute(fp, "x", instance_info.x());
+        write_xml_attribute(fp, "y", instance_info.y());
 
-      fp << "/>"
-         << "\n";
+        fp << "/>"
+           << "\n";
+      }
     }
     openfpga::write_tab_to_file(fp, 1);
     fp << "</block>"
