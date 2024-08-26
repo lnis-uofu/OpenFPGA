@@ -20,6 +20,7 @@
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
+#include "read_write_xml_unique_blocks.h"
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -100,6 +101,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
                           const CommandContext& cmd_context) {
   CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
+  CommandOptionId opt_preload = cmd.option("preload_unique_blocks");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_gen_random_fabric_key =
     cmd.option("generate_random_fabric_key");
@@ -142,10 +144,14 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     }
   }
 
-  if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
+  if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
+      false == cmd_context.option_enable(cmd, opt_preload)) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
+    openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
+  } else if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
+      true == cmd_context.option_enable(cmd, opt_preload)){
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
@@ -472,6 +478,54 @@ int write_fabric_pin_physical_location_template(
     cmd_context.option_enable(cmd, opt_verbose));
 }
 
+template <class T>
+int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
+                                const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_type = cmd.option("type");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+  std::string file_type = cmd_context.option_value(cmd, opt_type);
+  /* Write hierarchy to a file */
+  if (file_type == "xml") {
+    return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
+                                  file_type.c_str(),
+                                  cmd_context.option_enable(cmd, opt_verbose));
+  } else {
+    VTR_LOG_ERROR("file type %s not supported", file_type);
+  }
+}
+
+template <class T>
+int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
+                                 const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_type = cmd.option("type");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+  std::string file_type = cmd_context.option_value(cmd, opt_type);
+
+  /* Write hierarchy to a file */
+  return write_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
+                                 file_type.c_str(),
+                                 cmd_context.option_enable(cmd, opt_verbose));
+}
 } /* end namespace openfpga */
 
 #endif
