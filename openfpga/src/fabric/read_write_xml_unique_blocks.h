@@ -2,9 +2,11 @@
 #define READ_WRITE_XML_UNIQUE_BLOCKS_H
 
 /********************************************************************
- * This file includes the top-level function of this library
- * which reads an XML of unique routing blocks to the associated
- * data structures device_rr_gsb
+ * This file includes the top-level functions of this library
+ * which includes:
+ *  -- reads an XML file of unique blocks to the associated
+ * data structures: device_rr_gsb
+ * -- write device__rr_gsb's info about unique blocks to a xml file
  *******************************************************************/
 
 #include <string>
@@ -32,7 +34,7 @@
 
 /********************************************************************
  * Parse XML codes of a <instance> to an object of device_rr_gsb
- * instance is the mirror module of unique module.
+ * instance is the mirror of unique module.
  *******************************************************************/
 vtr::Point<size_t> read_xml_unique_instance_info(
   pugi::xml_node& xml_instance_info, const pugiutil::loc_data& loc_data) {
@@ -157,7 +159,7 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
 
     /* get device_rr_gsb data type and initialize it*/
     openfpga::DeviceRRGSB& device_rr_gsb = openfpga_ctx.mutable_device_rr_gsb();
-    /* clear unique modules */
+    /* clear unique modules & reserve memory to relavant vectors */
     device_rr_gsb.clear_unique_modules();
      vtr::Point<size_t> grid_coord(g_vpr_ctx.device().grid.width() - 1,
                                g_vpr_ctx.device().grid.height() - 1);
@@ -179,8 +181,7 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
             instance_coords.push_back(instance_coordinate);
           }
         }
-        /* get block coordinate and instance coordinate, try to setup device rr
-         * gsb */
+        /* get block coordinate and instance coordinate, try to setup device_rr_gsb */
         if (type == "sb") {
           device_rr_gsb.preload_unique_sb_module(block_coordinate,
                                                  instance_coords);
@@ -198,6 +199,7 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
         return 1;
       }
     }
+    /* As preloading gsb hasn't been developed, we should build gsb using the preloaded cbs and sbs*/
     device_rr_gsb.build_gsb_unique_module();
     if (verbose_output) {
       report_unique_module_status_read(openfpga_ctx, true);

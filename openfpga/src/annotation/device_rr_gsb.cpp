@@ -2,11 +2,9 @@
  * Member functions for class DeviceRRGSB
  ***********************************************************************/
 
-#include "device_rr_gsb.h"
-
 #include <fstream>
 #include <iostream>
-
+#include "device_rr_gsb.h"
 #include "rr_gsb_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -582,20 +580,19 @@ size_t DeviceRRGSB::get_cb_unique_module_index(
 void DeviceRRGSB::preload_unique_cbx_module(
   const vtr::Point<size_t> block_coordinate,
   const std::vector<vtr::Point<size_t>> instance_coords) {
-  /* Add to list if this is a unique mirror*/
+  /*check whether the preloaded value exceeds the limit */
   size_t limit_x = cbx_unique_module_id_.size();
   size_t limit_y = cbx_unique_module_id_[0].size();
-
   VTR_ASSERT(block_coordinate.x() < limit_x);
   VTR_ASSERT(block_coordinate.y() < limit_y);
   add_cb_unique_module(CHANX, block_coordinate);
-  /* Record the id of unique mirror */
+  /* preload the unique block */
   set_cb_unique_module_id(CHANX, block_coordinate,
                           get_num_cb_unique_module(CHANX) - 1);
 
-  /* Traverse the unique_mirror list and set up its module id */
+  /* preload the instances of the unique block. Instance will have the same id
+   * as the unique block */
   for (auto instance_location : instance_coords) {
-    /* Record the id of unique mirror */
     VTR_ASSERT(instance_location.x() < limit_x);
     VTR_ASSERT(instance_location.y() < limit_y);
     set_cb_unique_module_id(
@@ -607,20 +604,20 @@ void DeviceRRGSB::preload_unique_cbx_module(
 void DeviceRRGSB::preload_unique_cby_module(
   const vtr::Point<size_t> block_coordinate,
   const std::vector<vtr::Point<size_t>> instance_coords) {
-  /* Add to list if this is a unique mirror*/
+  /*check whether the preloaded value exceeds the limit */
   size_t limit_x = cby_unique_module_id_.size();
   size_t limit_y = cby_unique_module_id_[0].size();
 
   VTR_ASSERT(block_coordinate.x() < limit_x);
   VTR_ASSERT(block_coordinate.y() < limit_y);
   add_cb_unique_module(CHANY, block_coordinate);
-  /* Record the id of unique mirror */
+  /* preload the unique block */
   set_cb_unique_module_id(CHANY, block_coordinate,
                           get_num_cb_unique_module(CHANY) - 1);
 
-  /* Traverse the unique_mirror list and set up its module id */
+  /* preload the instances of the unique block. Instance will have the same id
+   * as the unique block */
   for (auto instance_location : instance_coords) {
-    /* Record the id of unique mirror */
     VTR_ASSERT(instance_location.x() < limit_x);
     VTR_ASSERT(instance_location.y() < limit_y);
     set_cb_unique_module_id(
@@ -632,7 +629,7 @@ void DeviceRRGSB::preload_unique_cby_module(
 void DeviceRRGSB::preload_unique_sb_module(
   const vtr::Point<size_t> block_coordinate,
   const std::vector<vtr::Point<size_t>> instance_coords) {
-  /*input block coordinate should be within gsb coord range*/
+  /*check whether the preloaded value exceeds the limit */
   VTR_ASSERT(block_coordinate.x() < sb_unique_module_id_.size());
   VTR_ASSERT(block_coordinate.y() < sb_unique_module_id_[0].size());
   sb_unique_module_.push_back(block_coordinate);
@@ -650,6 +647,11 @@ void DeviceRRGSB::preload_unique_sb_module(
   }
 }
 
+/*The following four functions will allow us to get
+The map between (id,mirror instance coord), (id, unique block coord)
+As the unique block and its mirror instances share the same id, we can get the
+map between (unique block coord, mirror instance coord) 
+*/
 void DeviceRRGSB::get_id_unique_sb_block_map(
   std::map<int, vtr::Point<size_t>>& id_unique_block_map) const {
   for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
