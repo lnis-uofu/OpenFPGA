@@ -1,5 +1,5 @@
-#ifndef READ_XML_UNIQUE_BLOCKS_H
-#define READ_XML_UNIQUE_BLOCKS_H
+#ifndef READ_WRITE_XML_UNIQUE_BLOCKS_H
+#define READ_WRITE_XML_UNIQUE_BLOCKS_H
 
 /********************************************************************
  * This file includes the top-level function of this library
@@ -25,7 +25,7 @@
 #include "arch_error.h"
 #include "device_rr_gsb_utils.h"
 #include "openfpga_digest.h"
-#include "read_xml_unique_blocks.h"
+#include "read_write_xml_unique_blocks.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
 #include "write_xml_utils.h"
@@ -43,23 +43,16 @@ vtr::Point<size_t> read_xml_unique_instance_info(
 }
 
 template <class T>
-void report_unique_module_status(T& openfpga_ctx, bool verbose_output) {
+void report_unique_module_status_read(T& openfpga_ctx, bool verbose_output) {
   /* Report the stats */
   VTR_LOGV(
     verbose_output,
-    "Detected %lu unique X-direction connection blocks from a total of %d "
-    "(compression rate=%.2f%)\n",
-    openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX),
-    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX),
-    100. *
-      ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
-                                                CHANX) /
-         (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX) -
-       1.));
+    "Read %lu unique X-direction connection blocks ",
+    openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX));
 
   VTR_LOGV(
     verbose_output,
-    "Detected %lu unique Y-direction connection blocks from a total of %d "
+    "Read %lu unique Y-direction connection blocks from a total of %d "
     "(compression rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY),
     find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY),
@@ -71,7 +64,7 @@ void report_unique_module_status(T& openfpga_ctx, bool verbose_output) {
 
   VTR_LOGV(
     verbose_output,
-    "Detected %lu unique switch blocks from a total of %d (compression "
+    "Read %lu unique switch blocks from a total of %d (compression "
     "rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_sb_unique_module(),
     find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb(),
@@ -82,7 +75,60 @@ void report_unique_module_status(T& openfpga_ctx, bool verbose_output) {
             1.));
 
   VTR_LOG(
-    "Detected %lu unique general switch blocks from a total of %d "
+    "Read %lu unique general switch blocks from a total of %d "
+    "(compression "
+    "rate=%.2f%)\n",
+    openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
+    find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb(),
+                                       g_vpr_ctx.device().rr_graph),
+    100. * ((float)find_device_rr_gsb_num_gsb_modules(
+              openfpga_ctx.device_rr_gsb(), g_vpr_ctx.device().rr_graph) /
+              (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() -
+            1.));
+}
+
+
+template <class T>
+void report_unique_module_status_write(T& openfpga_ctx, bool verbose_output) {
+  /* Report the stats */
+  VTR_LOGV(
+    verbose_output,
+    "Write %lu unique X-direction connection blocks from a total of %d "
+    "(compression rate=%.2f%)\n",
+    openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX),
+    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX),
+    100. *
+      ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
+                                                CHANX) /
+         (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX) -
+       1.));
+
+  VTR_LOGV(
+    verbose_output,
+    "Write %lu unique Y-direction connection blocks from a total of %d "
+    "(compression rate=%.2f%)\n",
+    openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY),
+    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY),
+    100. *
+      ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
+                                                CHANY) /
+         (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY) -
+       1.));
+
+  VTR_LOGV(
+    verbose_output,
+    "Write %lu unique switch blocks from a total of %d (compression "
+    "rate=%.2f%)\n",
+    openfpga_ctx.device_rr_gsb().get_num_sb_unique_module(),
+    find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb(),
+                                      g_vpr_ctx.device().rr_graph),
+    100. * ((float)find_device_rr_gsb_num_sb_modules(
+              openfpga_ctx.device_rr_gsb(), g_vpr_ctx.device().rr_graph) /
+              (float)openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() -
+            1.));
+
+  VTR_LOG(
+    "Write %lu unique general switch blocks from a total of %d "
     "(compression "
     "rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
@@ -153,9 +199,8 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
       }
     }
     device_rr_gsb.build_gsb_unique_module();
-    device_rr_gsb.print_txt();
     if (verbose_output) {
-      report_unique_module_status(openfpga_ctx, true);
+      report_unique_module_status_read(openfpga_ctx, true);
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(file_name, e.line(), "%s", e.what());
@@ -208,7 +253,7 @@ template <class T>
 int write_xml_unique_blocks(const T& openfpga_ctx, const char* fname,
                             const char* file_type, bool verbose_output) {
   vtr::ScopedStartFinishTimer timer("Write unique blocks...");
-
+  VTR_ASSERT(strcmp(file_type, "xml") == 0);
   /* Create a file handler */
   std::fstream fp;
   /* Open the file stream */
@@ -246,7 +291,9 @@ int write_xml_unique_blocks(const T& openfpga_ctx, const char* fname,
 
   /* Close the file stream */
   fp.close();
-
+  if (verbose_output) {
+    report_unique_module_status_write(openfpga_ctx, true);
+  }
   return err_code;
 }
 

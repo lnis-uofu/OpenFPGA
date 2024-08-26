@@ -98,7 +98,6 @@ class DeviceRRGSB {
                                      automatically identify and update the lists
                                      of unique mirrors and rotatable mirrors */
   void clear();                   /* clean the content */
-  void print_txt();
   void preload_unique_cbx_module(
     const vtr::Point<size_t> block_coordinate,
     const std::vector<vtr::Point<size_t>> instance_coords);

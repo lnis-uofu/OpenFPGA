@@ -20,7 +20,7 @@
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
-#include "read_xml_unique_blocks.h"
+#include "read_write_xml_unique_blocks.h"
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -101,7 +101,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
                           const CommandContext& cmd_context) {
   CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
-  CommandOptionId opt_preload = cmd.option("preload");
+  CommandOptionId opt_preload = cmd.option("preload_unique_blocks");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_gen_random_fabric_key =
     cmd.option("generate_random_fabric_key");

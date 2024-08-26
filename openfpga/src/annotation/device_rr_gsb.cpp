@@ -367,34 +367,7 @@ void DeviceRRGSB::build_gsb_unique_module() {
     }
   }
 }
-void DeviceRRGSB::print_txt() {
-  std::ofstream outFile(
-    "/home/linear/project/test_data/and2/config/output_read.txt");
-  outFile << "################# sb_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < sb_unique_module_id_.size(); i++) {
-    for (int j = 0; j < sb_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << sb_unique_module_id_[i][j] << "\n";
-    }
-  }
-  outFile << "################# cbx_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < cbx_unique_module_id_.size(); i++) {
-    for (int j = 0; j < cbx_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << cbx_unique_module_id_[i][j] << "\n";
-    }
-  }
-  outFile << "################# cby_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < cby_unique_module_id_.size(); i++) {
-    for (int j = 0; j < cby_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << cby_unique_module_id_[i][j] << "\n";
-    }
-  }
-  outFile << "################# gsb_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < gsb_unique_module_id_.size(); i++) {
-    for (int j = 0; j < gsb_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << gsb_unique_module_id_[i][j] << "\n";
-    }
-  }
-}
+
 void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_sb_unique_module(rr_graph);
 
@@ -402,32 +375,6 @@ void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_cb_unique_module(rr_graph, CHANY);
 
   build_gsb_unique_module();
-  std::ofstream outFile(
-    "/home/linear/project/test_data/and2/config/output.txt");
-  outFile << "################# sb_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < sb_unique_module_id_.size(); i++) {
-    for (int j = 0; j < sb_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << sb_unique_module_id_[i][j] << "\n";
-    }
-  }
-  outFile << "################# cbx_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < cbx_unique_module_id_.size(); i++) {
-    for (int j = 0; j < cbx_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << cbx_unique_module_id_[i][j] << "\n";
-    }
-  }
-  outFile << "################# cby_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < cby_unique_module_id_.size(); i++) {
-    for (int j = 0; j < cby_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << cby_unique_module_id_[i][j] << "\n";
-    }
-  }
-  outFile << "################# gsb_unique_module_id_ #########" << "\n";
-  for (int i = 0; i < gsb_unique_module_id_.size(); i++) {
-    for (int j = 0; j < gsb_unique_module_id_[0].size(); j++) {
-      outFile << i << "," << j << ":" << gsb_unique_module_id_[i][j] << "\n";
-    }
-  }
 }
 
 void DeviceRRGSB::add_gsb_unique_module(const vtr::Point<size_t>& coordinate) {
