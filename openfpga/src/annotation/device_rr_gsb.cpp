@@ -1,9 +1,6 @@
 /************************************************************************
  * Member functions for class DeviceRRGSB
  ***********************************************************************/
-
-#include <fstream>
-#include <iostream>
 #include "device_rr_gsb.h"
 #include "rr_gsb_utils.h"
 #include "vtr_assert.h"
