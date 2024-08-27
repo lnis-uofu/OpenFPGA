@@ -47,10 +47,8 @@ vtr::Point<size_t> read_xml_unique_instance_info(
 template <class T>
 void report_unique_module_status_read(T& openfpga_ctx, bool verbose_output) {
   /* Report the stats */
-  VTR_LOGV(
-    verbose_output,
-    "Read %lu unique X-direction connection blocks ",
-    openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX));
+  VTR_LOGV(verbose_output, "Read %lu unique X-direction connection blocks ",
+           openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX));
 
   VTR_LOGV(
     verbose_output,
@@ -88,7 +86,6 @@ void report_unique_module_status_read(T& openfpga_ctx, bool verbose_output) {
               (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() -
             1.));
 }
-
 
 template <class T>
 void report_unique_module_status_write(T& openfpga_ctx, bool verbose_output) {
@@ -161,8 +158,8 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
     openfpga::DeviceRRGSB& device_rr_gsb = openfpga_ctx.mutable_device_rr_gsb();
     /* clear unique modules & reserve memory to relavant vectors */
     device_rr_gsb.clear_unique_modules();
-     vtr::Point<size_t> grid_coord(g_vpr_ctx.device().grid.width() - 1,
-                               g_vpr_ctx.device().grid.height() - 1);
+    vtr::Point<size_t> grid_coord(g_vpr_ctx.device().grid.width() - 1,
+                                  g_vpr_ctx.device().grid.height() - 1);
     device_rr_gsb.reserve_unique_modules(grid_coord);
     /* load unique blocks xml file and set up device_rr_gdb */
     for (pugi::xml_node xml_block_info : xml_root.children()) {
@@ -181,16 +178,17 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
             instance_coords.push_back(instance_coordinate);
           }
         }
-        /* get block coordinate and instance coordinate, try to setup device_rr_gsb */
+        /* get block coordinate and instance coordinate, try to setup
+         * device_rr_gsb */
         if (type == "sb") {
           device_rr_gsb.preload_unique_sb_module(block_coordinate,
                                                  instance_coords);
         } else if (type == "cby") {
           device_rr_gsb.preload_unique_cby_module(block_coordinate,
-                                                 instance_coords);
+                                                  instance_coords);
         } else if (type == "cbx") {
           device_rr_gsb.preload_unique_cbx_module(block_coordinate,
-                                                 instance_coords);
+                                                  instance_coords);
         } else {
           VTR_LOG_ERROR("Unexpected type!");
         }
@@ -199,7 +197,8 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
         return 1;
       }
     }
-    /* As preloading gsb hasn't been developed, we should build gsb using the preloaded cbs and sbs*/
+    /* As preloading gsb hasn't been developed, we should build gsb using the
+     * preloaded cbs and sbs*/
     device_rr_gsb.build_gsb_unique_module();
     if (verbose_output) {
       report_unique_module_status_read(openfpga_ctx, true);
@@ -207,7 +206,7 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(file_name, e.line(), "%s", e.what());
   }
-  
+
   return 0;
 }
 
@@ -232,8 +231,8 @@ int write_xml_block(
     for (const auto& instance_info : id_instance_map[pair.first]) {
       if (instance_info.x() == pair.second.x() &&
           instance_info.y() == pair.second.y()) {
-            ;  
-      }else{
+        ;
+      } else {
         openfpga::write_tab_to_file(fp, 2);
         fp << "<instance";
         write_xml_attribute(fp, "x", instance_info.x());

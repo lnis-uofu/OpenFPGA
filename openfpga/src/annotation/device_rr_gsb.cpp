@@ -2,6 +2,7 @@
  * Member functions for class DeviceRRGSB
  ***********************************************************************/
 #include "device_rr_gsb.h"
+
 #include "rr_gsb_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -647,7 +648,7 @@ void DeviceRRGSB::preload_unique_sb_module(
 /*The following four functions will allow us to get
 The map between (id,mirror instance coord), (id, unique block coord)
 As the unique block and its mirror instances share the same id, we can get the
-map between (unique block coord, mirror instance coord) 
+map between (unique block coord, mirror instance coord)
 */
 void DeviceRRGSB::get_id_unique_sb_block_map(
   std::map<int, vtr::Point<size_t>>& id_unique_block_map) const {
