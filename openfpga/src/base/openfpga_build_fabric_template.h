@@ -16,11 +16,11 @@
 #include "fabric_key_writer.h"
 #include "globals.h"
 #include "openfpga_naming.h"
+#include "read_write_xml_unique_blocks.h"
 #include "read_xml_fabric_key.h"
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
-#include "read_write_xml_unique_blocks.h"
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -151,7 +151,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     /* Update flow manager to enable compress routing */
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   } else if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
-      true == cmd_context.option_enable(cmd, opt_preload)){
+             true == cmd_context.option_enable(cmd, opt_preload)) {
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
@@ -500,7 +500,7 @@ int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
                                   file_type.c_str(),
                                   cmd_context.option_enable(cmd, opt_verbose));
   } else {
-    VTR_LOG_ERROR("file type %s not supported", file_type);
+    VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
   }
 }
 
@@ -522,9 +522,13 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   std::string file_type = cmd_context.option_value(cmd, opt_type);
 
   /* Write unique blocks to a file */
-  return write_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
-                                 file_type.c_str(),
-                                 cmd_context.option_enable(cmd, opt_verbose));
+  if (file_type == "xml") {
+    return write_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
+                                   file_type.c_str(),
+                                   cmd_context.option_enable(cmd, opt_verbose));
+  } else {
+    VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
+  }
 }
 } /* end namespace openfpga */
 
