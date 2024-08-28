@@ -16,16 +16,17 @@
 #include "fabric_key_writer.h"
 #include "globals.h"
 #include "openfpga_naming.h"
-#include "read_write_xml_unique_blocks.h"
 #include "read_xml_fabric_key.h"
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
+#include "read_xml_unique_blocks.h"
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 #include "write_xml_fabric_pin_physical_location.h"
 #include "write_xml_module_name_map.h"
+#include "write_xml_unique_blocks.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -496,8 +497,8 @@ int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   std::string file_type = cmd_context.option_value(cmd, opt_type);
   /* read unique blocks from a file */
   if (file_type == "xml") {
-    return read_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
-                                  file_type.c_str(),
+    return read_xml_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
+                                  file_name.c_str(),
                                   cmd_context.option_enable(cmd, opt_verbose));
   } else {
     VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
@@ -524,8 +525,8 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
 
   /* Write unique blocks to a file */
   if (file_type == "xml") {
-    return write_xml_unique_blocks(openfpga_ctx, file_name.c_str(),
-                                   file_type.c_str(),
+    return write_xml_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
+                                   file_name.c_str(),
                                    cmd_context.option_enable(cmd, opt_verbose));
   } else {
     VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
