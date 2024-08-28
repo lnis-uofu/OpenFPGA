@@ -34,12 +34,26 @@
  *******************************************************************/
 namespace openfpga {
 
-vtr::Point<size_t> read_xml_unique_instance_info(
-  pugi::xml_node& xml_instance_info, const pugiutil::loc_data& loc_data) {
-  int instance_x = get_attribute(xml_instance_info, "x", loc_data).as_int();
-  int instance_y = get_attribute(xml_instance_info, "y", loc_data).as_int();
-  vtr::Point<size_t> instance_coordinate(instance_x, instance_y);
-  return instance_coordinate;
+std::vector<vtr::Point<size_t>> read_xml_unique_instance_coords(
+  const pugi::xml_node& xml_block_info, const pugiutil::loc_data& loc_data) {
+  std::vector<vtr::Point<size_t>> instance_coords;
+  for (pugi::xml_node xml_instance_info : xml_block_info.children()) {
+    if (xml_instance_info.name() == std::string("instance")) {
+      int instance_x = get_attribute(xml_instance_info, "x", loc_data).as_int();
+      int instance_y = get_attribute(xml_instance_info, "y", loc_data).as_int();
+      vtr::Point<size_t> instance_coordinate(instance_x, instance_y);
+      instance_coords.push_back(instance_coordinate);
+    }
+  }
+  return instance_coords;
+}
+
+vtr::Point<size_t> read_xml_unique_block_coord(
+  const pugi::xml_node& xml_block_info, const pugiutil::loc_data& loc_data) {
+  int block_x = get_attribute(xml_block_info, "x", loc_data).as_int();
+  int block_y = get_attribute(xml_block_info, "y", loc_data).as_int();
+  vtr::Point<size_t> block_coordinate(block_x, block_y);
+  return block_coordinate;
 }
 
 void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
@@ -113,17 +127,11 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
       if (xml_block_info.name() == std::string("block")) {
         std::string type =
           get_attribute(xml_block_info, "type", loc_data).as_string();
-        int block_x = get_attribute(xml_block_info, "x", loc_data).as_int();
-        int block_y = get_attribute(xml_block_info, "y", loc_data).as_int();
-        vtr::Point<size_t> block_coordinate(block_x, block_y);
-        std::vector<vtr::Point<size_t>> instance_coords;
-        for (pugi::xml_node xml_instance_info : xml_block_info.children()) {
-          if (xml_instance_info.name() == std::string("instance")) {
-            auto instance_coordinate =
-              read_xml_unique_instance_info(xml_instance_info, loc_data);
-            instance_coords.push_back(instance_coordinate);
-          }
-        }
+        vtr::Point<size_t> block_coordinate =
+          read_xml_unique_block_coord(xml_block_info, loc_data);
+        std::vector<vtr::Point<size_t>> instance_coords =
+          read_xml_unique_instance_coords(xml_block_info, loc_data);
+
         /* get block coordinate and instance coordinate, try to setup
          * device_rr_gsb */
         if (type == "sb") {
