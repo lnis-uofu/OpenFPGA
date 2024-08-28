@@ -1269,15 +1269,21 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   /********************************
    * Command 'read_unique_blocks'
    */
+  std::vector<ShellCommandId> cmd_dependency_read_unique_blocks_command;
+  cmd_dependency_read_unique_blocks_command.push_back(
+    link_arch_cmd_id);
   add_read_unique_blocks_command_template<T>(
-    shell, openfpga_setup_cmd_class, std::vector<openfpga::ShellCommandId>(),
+    shell, openfpga_setup_cmd_class, cmd_dependency_read_unique_blocks_command,
     hidden);
 
   /********************************
    * Command 'write_unique_blocks'
    */
+  std::vector<ShellCommandId> cmd_dependency_write_unique_blocks_command;
+  cmd_dependency_write_unique_blocks_command.push_back(
+    build_fabric_cmd_id);
   add_write_unique_blocks_command_template<T>(
-    shell, openfpga_setup_cmd_class, std::vector<openfpga::ShellCommandId>(),
+    shell, openfpga_setup_cmd_class, cmd_dependency_write_unique_blocks_command,
     hidden);
 }
 } /* end namespace openfpga */
