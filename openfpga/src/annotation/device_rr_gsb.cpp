@@ -66,6 +66,9 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
   }
 }
 
+void DeviceRRGSB::init_preload_flag() { preload_ = false; }
+void DeviceRRGSB::set_preload_flag(const bool flag) { preload_ = flag; }
+bool DeviceRRGSB::get_preload_flag() const { return preload_; }
 /* Identify if a GSB actually exists at a location */
 bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
                                const vtr::Point<size_t> coord) const {
@@ -420,6 +423,7 @@ void DeviceRRGSB::clear() {
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
+  init_preload_flag();
 }
 
 void DeviceRRGSB::clear_unique_modules() {
@@ -432,6 +436,7 @@ void DeviceRRGSB::clear_unique_modules() {
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
+  init_preload_flag();
 }
 
 void DeviceRRGSB::clear_gsb() {

@@ -102,7 +102,6 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
                           const CommandContext& cmd_context) {
   CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
-  CommandOptionId opt_preload = cmd.option("preload_unique_blocks");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_gen_random_fabric_key =
     cmd.option("generate_random_fabric_key");
@@ -146,13 +145,13 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
-      false == cmd_context.option_enable(cmd, opt_preload)) {
+      false == openfpga_ctx.device_rr_gsb().get_preload_flag()) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   } else if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
-             true == cmd_context.option_enable(cmd, opt_preload)) {
+             true == openfpga_ctx.device_rr_gsb().get_preload_flag()) {
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 

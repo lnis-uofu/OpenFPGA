@@ -155,6 +155,7 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     /* As preloading gsb hasn't been developed, we should build gsb using the
      * preloaded cbs and sbs*/
     device_rr_gsb.build_gsb_unique_module();
+    device_rr_gsb.set_preload_flag(true);
     if (verbose_output) {
       report_unique_module_status_read(device_rr_gsb, true);
     }
