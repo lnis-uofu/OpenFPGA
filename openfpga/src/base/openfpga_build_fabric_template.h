@@ -501,6 +501,7 @@ int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
                                   cmd_context.option_enable(cmd, opt_verbose));
   } else {
     VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
+    return CMD_EXEC_FATAL_ERROR;
   }
 }
 
@@ -528,6 +529,7 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
                                    cmd_context.option_enable(cmd, opt_verbose));
   } else {
     VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
+    return CMD_EXEC_FATAL_ERROR;
   }
 }
 } /* end namespace openfpga */

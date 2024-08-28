@@ -947,13 +947,15 @@ ShellCommandId add_read_unique_blocks_command_template(
   Command shell_cmd("read_unique_blocks");
 
   /* Add an option '--file' */
-  CommandOptionId opt_file =
-    shell_cmd.add_option("file", true, "specify the unique blocks xml file");
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "specify the file which contains unique block information");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
   /* Add an option '--type' */
-  CommandOptionId opt_type = shell_cmd.add_option(
-    "type", true, "specify the type of the unique blocks xml file");
+  CommandOptionId opt_type =
+    shell_cmd.add_option("type", true,
+                         "Specify the type of the unique blocks file "
+                         "[xml|bin]. If not specified, by default it is XML.");
   shell_cmd.set_option_require_value(opt_type, openfpga::OPT_STRING);
 
   /* Add an option '--verbose' */
@@ -984,13 +986,16 @@ ShellCommandId add_write_unique_blocks_command_template(
   Command shell_cmd("write_unique_blocks");
 
   /* Add an option '--file' */
-  CommandOptionId opt_file =
-    shell_cmd.add_option("file", true, "specify the unique blocks xml file");
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true,
+    "specify the file which we will write unique block information to");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
   /* Add an option '--type' */
-  CommandOptionId opt_type = shell_cmd.add_option(
-    "type", true, "specify the type of the unique blocks xml file");
+  CommandOptionId opt_type =
+    shell_cmd.add_option("type", true,
+                         "Specify the type of the unique blocks file "
+                         "[xml|bin]. If not specified, by default it is XML.");
   shell_cmd.set_option_require_value(opt_type, openfpga::OPT_STRING);
 
   /* Add an option '--verbose' */

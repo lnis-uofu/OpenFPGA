@@ -36,6 +36,9 @@
  * Parse XML codes of a <instance> to an object of device_rr_gsb
  * instance is the mirror of unique module.
  *******************************************************************/
+namespace openfpga {
+vtr::Point<size_t> read_xml_unique_instance_info;
+int write_xml_block;
 vtr::Point<size_t> read_xml_unique_instance_info(
   pugi::xml_node& xml_instance_info, const pugiutil::loc_data& loc_data) {
   int instance_x = get_attribute(xml_instance_info, "x", loc_data).as_int();
@@ -190,7 +193,9 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
           device_rr_gsb.preload_unique_cbx_module(block_coordinate,
                                                   instance_coords);
         } else {
-          VTR_LOG_ERROR("Unexpected type!");
+          archfpga_throw(loc_data.filename_c_str(),
+                         loc_data.line(xml_block_info),
+                         "Invalid block type '%s'\n", type);
         }
       } else {
         bad_tag(xml_block_info, loc_data, xml_root, {"block"});
@@ -202,6 +207,7 @@ int read_xml_unique_blocks(T& openfpga_ctx, const char* file_name,
     device_rr_gsb.build_gsb_unique_module();
     if (verbose_output) {
       report_unique_module_status_read(openfpga_ctx, true);
+      return 0;
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(file_name, e.line(), "%s", e.what());
@@ -294,8 +300,10 @@ int write_xml_unique_blocks(const T& openfpga_ctx, const char* fname,
   fp.close();
   if (verbose_output) {
     report_unique_module_status_write(openfpga_ctx, true);
+    return err_code;
   }
   return err_code;
 }
+}  // namespace openfpga
 
 #endif
