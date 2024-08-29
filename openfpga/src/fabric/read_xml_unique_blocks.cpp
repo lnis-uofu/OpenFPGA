@@ -146,7 +146,7 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
         } else {
           archfpga_throw(loc_data.filename_c_str(),
                          loc_data.line(xml_block_info),
-                         "Invalid block type '%s'\n", type);
+                         "Invalid block type '%s'\n", type.c_str());
         }
       } else {
         bad_tag(xml_block_info, loc_data, xml_root, {"block"});
