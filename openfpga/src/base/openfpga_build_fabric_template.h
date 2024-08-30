@@ -145,7 +145,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
-      false == openfpga_ctx.device_rr_gsb().get_preload_flag()) {
+      false == openfpga_ctx.device_rr_gsb().get_is_dirty_flag()) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */

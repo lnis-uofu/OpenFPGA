@@ -66,9 +66,9 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
   }
 }
 
-void DeviceRRGSB::init_preload_flag() { preload_ = false; }
-void DeviceRRGSB::set_preload_flag(const bool flag) { preload_ = flag; }
-bool DeviceRRGSB::get_preload_flag() const { return preload_; }
+void DeviceRRGSB::init_is_dirty_flag() { is_dirty_ = false; }
+void DeviceRRGSB::set_is_dirty_flag(const bool flag) { is_dirty_ = flag; }
+bool DeviceRRGSB::get_is_dirty_flag() const { return is_dirty_; }
 /* Identify if a GSB actually exists at a location */
 bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
                                const vtr::Point<size_t> coord) const {
@@ -363,6 +363,7 @@ void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_cb_unique_module(rr_graph, CHANY);
 
   build_gsb_unique_module();
+  set_is_dirty_flag(true);
 }
 
 void DeviceRRGSB::add_gsb_unique_module(const vtr::Point<size_t>& coordinate) {
@@ -423,7 +424,7 @@ void DeviceRRGSB::clear() {
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
-  init_preload_flag();
+  init_is_dirty_flag();
 }
 
 void DeviceRRGSB::clear_unique_modules() {
@@ -436,7 +437,7 @@ void DeviceRRGSB::clear_unique_modules() {
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
-  init_preload_flag();
+  init_is_dirty_flag();
 }
 
 void DeviceRRGSB::clear_gsb() {

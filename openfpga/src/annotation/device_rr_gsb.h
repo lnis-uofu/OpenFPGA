@@ -69,8 +69,8 @@ class DeviceRRGSB {
                                     const vtr::Point<size_t>& coordinate) const;
 
  public: /* Mutators */
-  void set_preload_flag(const bool flag);
-  bool get_preload_flag() const;
+  void set_is_dirty_flag(const bool flag);
+  bool get_is_dirty_flag() const;
   void build_gsb_unique_module(); /* Add a switch block to the array, which will
                                      automatically identify and update the lists
                                      of unique mirrors and rotatable mirrors */
@@ -126,7 +126,7 @@ class DeviceRRGSB {
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
   void clear_cb_unique_module(const t_rr_type& cb_type); /* clean the content */
-  void init_preload_flag();
+  void init_is_dirty_flag();
   void clear_cb_unique_module_id(
     const t_rr_type& cb_type);       /* clean the content */
   void clear_sb_unique_module();     /* clean the content */
@@ -165,7 +165,7 @@ class DeviceRRGSB {
 
  private: /* Internal Data */
   std::vector<std::vector<RRGSB>> rr_gsb_;
-  bool preload_;  // is_valid
+  bool is_dirty_ = false;  // is_valid
 
   std::vector<std::vector<size_t>>
     gsb_unique_module_id_; /* A map from rr_gsb to its unique mirror */
