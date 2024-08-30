@@ -998,7 +998,7 @@ ShellCommandId add_write_unique_blocks_command_template(
 
   /* Add command 'compact_routing_hierarchy' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Preload unique blocks from xml file", hidden);
+    shell.add_command(shell_cmd, "Write unique blocks to a xml file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_unique_blocks_template<T>);
