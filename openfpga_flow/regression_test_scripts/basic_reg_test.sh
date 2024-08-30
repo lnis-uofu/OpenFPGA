@@ -21,6 +21,9 @@ run-task basic_tests/preload_rr_graph/preload_rr_graph_bin $@
 echo -e "Testing preloading unique blocks"
 run-task basic_tests/preload_unique_blocks/write_unique_blocks $@
 run-task basic_tests/preload_unique_blocks/read_unique_blocks $@
+run-task basic_tests/preload_unique_blocks/write_unique_blocks_full_flow $@
+run-task basic_tests/preload_unique_blocks/read_unique_blocks_full_flow $@
+
 
 echo -e "Testing testbenches using fpga core wrapper"
 run-task basic_tests/full_testbench/fpga_core_wrapper $@
