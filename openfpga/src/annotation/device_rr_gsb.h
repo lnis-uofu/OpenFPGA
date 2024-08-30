@@ -165,7 +165,7 @@ class DeviceRRGSB {
 
  private: /* Internal Data */
   std::vector<std::vector<RRGSB>> rr_gsb_;
-  bool preload_;
+  bool preload_;  // is_valid
 
   std::vector<std::vector<size_t>>
     gsb_unique_module_id_; /* A map from rr_gsb to its unique mirror */

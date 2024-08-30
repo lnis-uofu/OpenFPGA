@@ -523,6 +523,7 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   std::string file_type = cmd_context.option_value(cmd, opt_type);
 
   /* Write unique blocks to a file */
+  /* add check flag */
   if (file_type == "xml") {
     return write_xml_unique_blocks(openfpga_ctx.device_rr_gsb(),
                                    file_name.c_str(),
