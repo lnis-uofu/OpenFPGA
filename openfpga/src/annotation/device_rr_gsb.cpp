@@ -582,8 +582,8 @@ size_t DeviceRRGSB::get_cb_unique_module_index(
 }
 
 void DeviceRRGSB::preload_unique_cbx_module(
-  const vtr::Point<size_t> block_coordinate,
-  const std::vector<vtr::Point<size_t>> instance_coords) {
+  const vtr::Point<size_t>& block_coordinate,
+  const std::vector<vtr::Point<size_t>>& instance_coords) {
   /*check whether the preloaded value exceeds the limit */
   size_t limit_x = cbx_unique_module_id_.size();
   size_t limit_y = cbx_unique_module_id_[0].size();
@@ -606,8 +606,8 @@ void DeviceRRGSB::preload_unique_cbx_module(
 }
 
 void DeviceRRGSB::preload_unique_cby_module(
-  const vtr::Point<size_t> block_coordinate,
-  const std::vector<vtr::Point<size_t>> instance_coords) {
+  const vtr::Point<size_t>& block_coordinate,
+  const std::vector<vtr::Point<size_t>>& instance_coords) {
   /*check whether the preloaded value exceeds the limit */
   size_t limit_x = cby_unique_module_id_.size();
   size_t limit_y = cby_unique_module_id_[0].size();
@@ -631,8 +631,8 @@ void DeviceRRGSB::preload_unique_cby_module(
 }
 
 void DeviceRRGSB::preload_unique_sb_module(
-  const vtr::Point<size_t> block_coordinate,
-  const std::vector<vtr::Point<size_t>> instance_coords) {
+  const vtr::Point<size_t>& block_coordinate,
+  const std::vector<vtr::Point<size_t>>& instance_coords) {
   /*check whether the preloaded value exceeds the limit */
   VTR_ASSERT(block_coordinate.x() < sb_unique_module_id_.size());
   VTR_ASSERT(block_coordinate.y() < sb_unique_module_id_[0].size());
