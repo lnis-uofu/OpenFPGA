@@ -935,16 +935,16 @@ ShellCommandId add_report_reference_command_template(
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("report_reference");
   /* Add an option '--file' in short '-f'*/
-  CommandOptionId opt_file = shell_cmd.add_option(
-    "file", true,
-    "specify the file to output results");
+  CommandOptionId opt_file =
+    shell_cmd.add_option("file", true, "specify the file to output results");
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
   /* Add an option '--module'*/
-  CommandOptionId opt_module = shell_cmd.add_option(
-    "module", false,
-    "specify the module under which the references of child modules will be reported");
+  CommandOptionId opt_module =
+    shell_cmd.add_option("module", false,
+                         "specify the module under which the references of "
+                         "child modules will be reported");
   shell_cmd.set_option_require_value(opt_module, openfpga::OPT_STRING);
 
   /* Add an option '--no_time_stamp' */
@@ -954,13 +954,14 @@ ShellCommandId add_report_reference_command_template(
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
   /* Add command to the Shell */
-  ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd,
-    "report the number of instances for each unique module, under a given module",
-    hidden);
+  ShellCommandId shell_cmd_id =
+    shell.add_command(shell_cmd,
+                      "report the number of instances for each unique module, "
+                      "under a given module",
+                      hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_const_execute_function(
-    shell_cmd_id, report_reference_template<T>);
+  shell.set_command_const_execute_function(shell_cmd_id,
+                                           report_reference_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -1225,11 +1226,9 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
    */
   /* The command should NOT be executed before 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency_report_reference;
-  cmd_dependency_report_reference.push_back(
-    build_fabric_cmd_id);
+  cmd_dependency_report_reference.push_back(build_fabric_cmd_id);
   add_report_reference_command_template<T>(
-    shell, openfpga_setup_cmd_class,
-    cmd_dependency_report_reference, hidden);
+    shell, openfpga_setup_cmd_class, cmd_dependency_report_reference, hidden);
 }
 
 } /* end namespace openfpga */

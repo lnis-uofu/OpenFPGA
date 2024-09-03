@@ -14,11 +14,9 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
-int report_reference(const char* fname,
-                     const std::string& module_name,
+int report_reference(const char* fname, const std::string& module_name,
                      const ModuleManager& module_manager,
-                     const bool& include_time_stamp,
-                     const bool& verbose);
+                     const bool& include_time_stamp, const bool& verbose);
 } /* end namespace openfpga */
 
 #endif

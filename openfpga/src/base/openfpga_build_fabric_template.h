@@ -21,10 +21,10 @@
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
 #include "rename_modules.h"
+#include "report_reference.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 #include "write_xml_fabric_pin_physical_location.h"
-#include "report_reference.h"
 #include "write_xml_module_name_map.h"
 
 /* begin namespace openfpga */
@@ -477,9 +477,8 @@ int write_fabric_pin_physical_location_template(
  *  Report reference to a file
  *******************************************************************/
 template <class T>
-int  report_reference_template(
-  const T& openfpga_ctx, const Command& cmd,
-  const CommandContext& cmd_context) {
+int report_reference_template(const T& openfpga_ctx, const Command& cmd,
+                              const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
@@ -500,10 +499,10 @@ int  report_reference_template(
   }
 
   /* Write hierarchy to a file */
-  return report_reference(
-    file_name.c_str(), module_name, openfpga_ctx.module_graph(),
-    !cmd_context.option_enable(cmd, opt_no_time_stamp),
-    cmd_context.option_enable(cmd, opt_verbose));
+  return report_reference(file_name.c_str(), module_name,
+                          openfpga_ctx.module_graph(),
+                          !cmd_context.option_enable(cmd, opt_no_time_stamp),
+                          cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */

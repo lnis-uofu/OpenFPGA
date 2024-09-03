@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include <string>
 #include <iomanip>
+#include <string>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -16,7 +16,6 @@
 /* Headers from openfpgautil library */
 #include "command_exit_codes.h"
 #include "openfpga_digest.h"
-
 #include "report_reference.h"
 
 /* begin namespace openfpga */
@@ -25,11 +24,9 @@ namespace openfpga {
 /********************************************************************
  * Top-level function
  *******************************************************************/
-int report_reference(const char* fname,
-                     const std::string& module_name,
+int report_reference(const char* fname, const std::string& module_name,
                      const ModuleManager& module_manager,
-                     const bool& include_time_stamp,
-                     const bool& verbose) {
+                     const bool& include_time_stamp, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Report reference");
 
   std::fstream fp;
@@ -43,43 +40,58 @@ int report_reference(const char* fname,
   }
 
   ModuleId parent_module = module_manager.find_module(module_name);
-  if (ModuleId::INVALID() == parent_module){
+  if (ModuleId::INVALID() == parent_module) {
     VTR_LOG_ERROR("Module %s doesn't exist\n", module_name.c_str());
     return CMD_EXEC_MINOR_ERROR;
   }
 
-  if (module_manager.child_modules(parent_module).size() < 1){
+  if (module_manager.child_modules(parent_module).size() < 1) {
     VTR_LOG_ERROR("Module %s hasn't any child module\n", module_name.c_str());
     return CMD_EXEC_MINOR_ERROR;
   }
 
-  VTR_LOG("------------------------------------------------------------------------------\n");
-  VTR_LOG("Module                                                         Reference count\n");
-  VTR_LOG("------------------------------------------------------------------------------\n");
+  VTR_LOG(
+    "--------------------------------------------------------------------------"
+    "----\n");
+  VTR_LOG(
+    "Module                                                         Reference "
+    "count\n");
+  VTR_LOG(
+    "--------------------------------------------------------------------------"
+    "----\n");
   size_t ref_cnt = 0;
-  for (ModuleId child_module : module_manager.child_modules(parent_module)){
+  for (ModuleId child_module : module_manager.child_modules(parent_module)) {
     std::string child_module_name = module_manager.module_name(child_module);
-    std::vector<size_t> child_inst_vec = module_manager.child_module_instances(parent_module, child_module);
-    for (size_t pos = 0; pos < child_module_name.length(); pos += 70){
+    std::vector<size_t> child_inst_vec =
+      module_manager.child_module_instances(parent_module, child_module);
+    for (size_t pos = 0; pos < child_module_name.length(); pos += 70) {
       if (pos > 0) VTR_LOG("\n");
       VTR_LOG("%-70s", child_module_name.substr(pos).c_str());
     }
     VTR_LOG(" %7d\n", child_inst_vec.size());
     ref_cnt += child_inst_vec.size();
   }
-  VTR_LOG("------------------------------------------------------------------------------\n");
-  VTR_LOG("Total %zu modules %zu references\n", module_manager.child_modules(parent_module).size(), ref_cnt);
-  VTR_LOG("------------------------------------------------------------------------------\n");
+  VTR_LOG(
+    "--------------------------------------------------------------------------"
+    "----\n");
+  VTR_LOG("Total %zu modules %zu references\n",
+          module_manager.child_modules(parent_module).size(), ref_cnt);
+  VTR_LOG(
+    "--------------------------------------------------------------------------"
+    "----\n");
 
   fp << "references:" << std::endl;
-  for (ModuleId child_module : module_manager.child_modules(parent_module)){
+  for (ModuleId child_module : module_manager.child_modules(parent_module)) {
     std::string child_module_name = module_manager.module_name(child_module);
-    std::vector<size_t> child_inst_vec = module_manager.child_module_instances(parent_module, child_module);
+    std::vector<size_t> child_inst_vec =
+      module_manager.child_module_instances(parent_module, child_module);
     fp << "- module: " << child_module_name.c_str() << "\n"
        << "  reference count: " << child_inst_vec.size() << "\n"
-       << "  instances:" << "\n";
-    for (size_t inst_id : child_inst_vec){
-      std::string inst_name = module_manager.instance_name(parent_module, child_module, inst_id);
+       << "  instances:"
+       << "\n";
+    for (size_t inst_id : child_inst_vec) {
+      std::string inst_name =
+        module_manager.instance_name(parent_module, child_module, inst_id);
       fp << "    - " << inst_name.c_str() << "\n";
     }
   }
