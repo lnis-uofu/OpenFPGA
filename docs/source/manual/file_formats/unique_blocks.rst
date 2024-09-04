@@ -14,7 +14,7 @@ Unique blocks can be applied to various blocks, each of which can be of type ``c
 
   For each block, a set of keys can be defined. For unique blocks, both keys and instances can be specified. However, if a unique block does not have an instance, only keys are permitted.
  
-  - ``type`` specifies the type of the unique block in the FPGA fabric. Valid values for ``type`` are ``cbx``, ``cby`` or ``sb``.
+  - ``type`` specifies the type of the unique block. Valid values for ``type`` are ``cbx``, ``cby`` or ``sb``.
 
   - ``x`` represents the x-coordinate of the unique block.
 
