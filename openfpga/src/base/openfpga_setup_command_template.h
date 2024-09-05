@@ -710,6 +710,12 @@ ShellCommandId add_route_clock_rr_graph_command_template(
   shell_cmd.set_option_short_name(opt_file, "pcf");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  shell_cmd.add_option("disable_unused_trees", false,
+                       "Disable entire clock trees when they are not used by "
+                       "any clock nets. Useful to reduce clock power");
+  shell_cmd.add_option("disable_unused_spines", false,
+                       "Disable part of the clock tree which are used by clock "
+                       "nets. Useful to reduce clock power");
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
@@ -949,14 +955,14 @@ ShellCommandId add_report_reference_command_template(
 
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
-                       "Do not print time stamp in output files");
+                       "do not print time stamp in output files");
 
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
-                      "report the number of instances for each unique module, "
+                      "report all instances of each unique module, "
                       "under a given module",
                       hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
@@ -1224,9 +1230,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   /********************************
    * Command 'report_reference'
    */
-  /* The command should NOT be executed before 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency_report_reference;
-  cmd_dependency_report_reference.push_back(build_fabric_cmd_id);
   add_report_reference_command_template<T>(
     shell, openfpga_setup_cmd_class, cmd_dependency_report_reference, hidden);
 }

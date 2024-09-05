@@ -46,7 +46,7 @@ int report_reference(const char* fname, const std::string& module_name,
   }
 
   if (module_manager.child_modules(parent_module).size() < 1) {
-    VTR_LOG_ERROR("Module %s hasn't any child module\n", module_name.c_str());
+    VTR_LOG_ERROR("Module %s contains no child module\n", module_name.c_str());
     return CMD_EXEC_MINOR_ERROR;
   }
 
@@ -64,11 +64,7 @@ int report_reference(const char* fname, const std::string& module_name,
     std::string child_module_name = module_manager.module_name(child_module);
     std::vector<size_t> child_inst_vec =
       module_manager.child_module_instances(parent_module, child_module);
-    for (size_t pos = 0; pos < child_module_name.length(); pos += 70) {
-      if (pos > 0) VTR_LOG("\n");
-      VTR_LOG("%-70s", child_module_name.substr(pos).c_str());
-    }
-    VTR_LOG(" %7d\n", child_inst_vec.size());
+    VTR_LOG("%-s %d\n", child_module_name.c_str(), child_inst_vec.size());
     ref_cnt += child_inst_vec.size();
   }
   VTR_LOG(
@@ -79,6 +75,11 @@ int report_reference(const char* fname, const std::string& module_name,
   VTR_LOG(
     "--------------------------------------------------------------------------"
     "----\n");
+
+  if (verbose) {
+    fp << "\nTotal " << module_manager.child_modules(parent_module).size()
+       << " modules " << ref_cnt << " references\n";
+  }
 
   fp << "references:" << std::endl;
   for (ModuleId child_module : module_manager.child_modules(parent_module)) {
@@ -92,7 +93,7 @@ int report_reference(const char* fname, const std::string& module_name,
     for (size_t inst_id : child_inst_vec) {
       std::string inst_name =
         module_manager.instance_name(parent_module, child_module, inst_id);
-      fp << "    - " << inst_name.c_str() << "\n";
+      if (inst_name.size() > 0) fp << "    - " << inst_name.c_str() << "\n";
     }
   }
 
