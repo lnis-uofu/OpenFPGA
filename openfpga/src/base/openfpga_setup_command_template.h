@@ -1230,7 +1230,10 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   /********************************
    * Command 'report_reference'
    */
+  /* The command should NOT be executed before 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency_report_reference;
+  cmd_dependency_write_fabric_pin_physical_location.push_back(
+    build_fabric_cmd_id);
   add_report_reference_command_template<T>(
     shell, openfpga_setup_cmd_class, cmd_dependency_report_reference, hidden);
 }
