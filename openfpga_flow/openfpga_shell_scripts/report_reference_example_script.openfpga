@@ -23,7 +23,7 @@ lut_truth_table_fixup
 #  - Enabled frame view creation to save runtime and memory
 #    Note that this is turned on when bitstream generation 
 #    is the ONLY purpose of the flow!!!
-build_fabric --compress_routing --frame_view #--verbose
+#build_fabric --compress_routing --frame_view #--verbose
 
 # Report reference to a file
 report_reference ${OPENFPGA_REPORT_REFERENCE_OPTIONS}
