@@ -125,11 +125,10 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
         cmd.option_name(opt_duplicate_grid_pin).c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+    if (!openfpga_ctx.device_rr_gsb().is_compressed()) {
       VTR_LOG_ERROR(
-        "Option '%s' requires options '%s' to be enabled due to a conflict!\n",
-        cmd.option_name(opt_group_tile).c_str(),
-        cmd.option_name(opt_compress_routing).c_str());
+        "Option '%s' requires unique blocks to be valid due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
   }
@@ -145,13 +144,12 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
-      false == openfpga_ctx.device_rr_gsb().get_is_dirty_flag()) {
+      false == openfpga_ctx.device_rr_gsb().is_compressed()) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
-  } else if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
-             true == openfpga_ctx.device_rr_gsb().get_is_dirty_flag()) {
+  } else if (true == openfpga_ctx.device_rr_gsb().is_compressed()) {
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
@@ -180,7 +178,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
    */
   TileConfig tile_config;
   if (cmd_context.option_enable(cmd, opt_group_tile)) {
-    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+    if (!openfpga_ctx.device_rr_gsb().is_compressed()) {
       VTR_LOG_ERROR(
         "Group tile is applicable only when compress routing is enabled!\n");
       return CMD_EXEC_FATAL_ERROR;
@@ -198,7 +196,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.mutable_fabric_tile(), openfpga_ctx.mutable_module_name_map(),
     const_cast<const T&>(openfpga_ctx), g_vpr_ctx.device(),
     cmd_context.option_enable(cmd, opt_frame_view),
-    cmd_context.option_enable(cmd, opt_compress_routing),
+    openfpga_ctx.device_rr_gsb().is_compressed(),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
     predefined_fabric_key, tile_config,
     cmd_context.option_enable(cmd, opt_group_config_block),
