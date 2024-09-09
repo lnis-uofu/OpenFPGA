@@ -26,7 +26,9 @@ lut_truth_table_fixup
 build_fabric --compress_routing --frame_view #--verbose
 
 # Report reference to a file
-report_reference ${OPENFPGA_REPORT_REFERENCE_OPTIONS}
+report_reference ${OPENFPGA_REPORT_REFERENCE_MODULE_OPTIONS}
+report_reference ${OPENFPGA_REPORT_REFERENCE_VERBOSE_OPTIONS}
+report_reference ${OPENFPGA_REPORT_REFERENCE_NO_TIME_STAMP_OPTIONS}
 
 # Finish and exit OpenFPGA
 exit
