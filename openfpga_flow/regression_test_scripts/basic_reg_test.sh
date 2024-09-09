@@ -23,6 +23,7 @@ run-task basic_tests/preload_unique_blocks/write_unique_blocks $@
 run-task basic_tests/preload_unique_blocks/read_unique_blocks $@
 run-task basic_tests/preload_unique_blocks/write_unique_blocks_full_flow $@
 run-task basic_tests/preload_unique_blocks/read_unique_blocks_full_flow $@
+run-task basic_tests/preload_unique_blocks/read_write_unique_blocks $@
 
 
 echo -e "Testing testbenches using fpga core wrapper"
