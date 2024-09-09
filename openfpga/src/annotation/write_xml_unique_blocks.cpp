@@ -123,7 +123,7 @@ void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
 int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output) {
   vtr::ScopedStartFinishTimer timer("Write unique blocks...");
-  if (device_rr_gsb.get_is_dirty_flag() == false) {
+  if (device_rr_gsb.is_compressed() == false) {
     VTR_LOG_ERROR("unique_blocks are empty!");
     return CMD_EXEC_FATAL_ERROR;
   }

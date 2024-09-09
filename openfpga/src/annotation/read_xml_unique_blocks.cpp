@@ -118,7 +118,7 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     /* clear unique modules & reserve memory to relavant vectors */
     device_rr_gsb.clear_unique_modules();
     // vtr::Point<size_t> grid_coord(rr_gsb_.size());
-    device_rr_gsb.reserve_unique_modules(grid_coord);
+    device_rr_gsb.reserve_unique_modules();
 
     /* load unique blocks xml file and set up device_rr_gdb */
     for (pugi::xml_node xml_block_info : xml_root.children()) {

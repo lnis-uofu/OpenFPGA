@@ -175,9 +175,9 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
 void DeviceRRGSB::reserve_unique_modules() {
   /* As rr_gsb_ has been built, it has valid size. Will reserve space for unique
    * blocks according to rr_gsb_'s size*/
-  sb_unique_module_id_.resize(rr_gsb_.x());
-  cbx_unique_module_id_.resize(rr_gsb_.x());
-  cby_unique_module_id_.resize(rr_gsb_.x());
+  sb_unique_module_id_.resize(rr_gsb_.size());
+  cbx_unique_module_id_.resize(rr_gsb_.size());
+  cby_unique_module_id_.resize(rr_gsb_.size());
 
   for (std::size_t i = 0; i < rr_gsb_.size(); ++i) {
     sb_unique_module_id_[i].resize(rr_gsb_[i].size());

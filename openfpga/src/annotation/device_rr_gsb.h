@@ -76,9 +76,7 @@ class DeviceRRGSB {
   void reserve(
     const vtr::Point<size_t>& coordinate); /* Pre-allocate the rr_switch_block
                                               array that the device requires */
-  void reserve_unique_modules(
-    const vtr::Point<size_t>&
-      coordinate); /* Pre-allocate the rr_sb_unique_module_id matrix that the
+  void reserve_unique_modules(); /* Pre-allocate the rr_sb_unique_module_id matrix that the
                       device requires */
   void resize_upon_need(
     const vtr::Point<size_t>&
