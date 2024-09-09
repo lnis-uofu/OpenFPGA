@@ -68,7 +68,7 @@ static int vpr(int argc, char** argv) {
      */
     /* vpr_free_all(Arch, vpr_setup); */
 
-    VTR_LOG("VPR suceeded\n");
+    VTR_LOG("VPR succeeded\n");
 
   } catch (const tatum::Error& tatum_error) {
     VTR_LOG_ERROR("%s\n", format_tatum_error(tatum_error).c_str());
