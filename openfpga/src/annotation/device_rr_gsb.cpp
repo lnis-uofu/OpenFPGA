@@ -66,7 +66,6 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
   }
 }
 
-
 bool DeviceRRGSB::is_compressed() const { return is_compressed_; }
 /* Identify if a GSB actually exists at a location */
 bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
@@ -173,16 +172,17 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
     cby_unique_module_id_[x].resize(coordinate.y());
   }
 }
-void DeviceRRGSB::reserve_unique_modules(const vtr::Point<size_t>& coordinate) {
-  sb_unique_module_id_.resize(coordinate.x());
-  cbx_unique_module_id_.resize(coordinate.x());
-  cby_unique_module_id_.resize(coordinate.x());
+void DeviceRRGSB::reserve_unique_modules() {
+  /* As rr_gsb_ has been built, it has valid size. Will reserve space for unique
+   * blocks according to rr_gsb_'s size*/
+  sb_unique_module_id_.resize(rr_gsb_.x());
+  cbx_unique_module_id_.resize(rr_gsb_.x());
+  cby_unique_module_id_.resize(rr_gsb_.x());
 
-  for (size_t x = 0; x < coordinate.x(); ++x) {
-    sb_unique_module_id_[x].resize(coordinate.y());
-
-    cbx_unique_module_id_[x].resize(coordinate.y());
-    cby_unique_module_id_[x].resize(coordinate.y());
+  for (std::size_t i = 0; i < rr_gsb_.size(); ++i) {
+    sb_unique_module_id_[i].resize(rr_gsb_[i].size());
+    cbx_unique_module_id_[i].resize(rr_gsb_[i].size());
+    cby_unique_module_id_[i].resize(rr_gsb_[i].size());
   }
 }
 
@@ -353,6 +353,7 @@ void DeviceRRGSB::build_gsb_unique_module() {
       }
     }
   }
+  is_compressed_ = true;
 }
 
 void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
@@ -361,8 +362,7 @@ void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_cb_unique_module(rr_graph, CHANX);
   build_cb_unique_module(rr_graph, CHANY);
 
-  build_gsb_unique_module();
-  is_compressed_ = true;
+  build_gsb_unique_module(); /*is_compressed_ flip inside build_gsb_unique_module*/
 }
 
 void DeviceRRGSB::add_gsb_unique_module(const vtr::Point<size_t>& coordinate) {

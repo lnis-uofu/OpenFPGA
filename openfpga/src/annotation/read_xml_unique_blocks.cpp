@@ -117,8 +117,7 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     pugi::xml_node xml_root = get_single_child(doc, "unique_blocks", loc_data);
     /* clear unique modules & reserve memory to relavant vectors */
     device_rr_gsb.clear_unique_modules();
-    vtr::Point<size_t> grid_coord(g_vpr_ctx.device().grid.width() - 1,
-                                  g_vpr_ctx.device().grid.height() - 1);
+    // vtr::Point<size_t> grid_coord(rr_gsb_.size());
     device_rr_gsb.reserve_unique_modules(grid_coord);
 
     /* load unique blocks xml file and set up device_rr_gdb */
@@ -155,7 +154,6 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     /* As preloading gsb hasn't been developed, we should build gsb using the
      * preloaded cbs and sbs*/
     device_rr_gsb.build_gsb_unique_module();
-    device_rr_gsb.set_is_dirty_flag(true);
     if (verbose_output) {
       report_unique_module_status_read(device_rr_gsb, true);
     }
