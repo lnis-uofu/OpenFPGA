@@ -324,6 +324,8 @@ ShellCommandId add_pb_pin_fixup_command_template(
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("pb_pin_fixup");
 
+  /* Add an option '--map_global_net_to_msb' */
+  shell_cmd.add_option("map_global_net_to_msb", false, "If specified, any global net including clock, reset etc, will be mapped to a best-fit Most Significant Bit (MSB) of input ports of programmable blocks. If not specified, a best-fit Least Significant Bit (LSB) will be the default choice");
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
