@@ -81,7 +81,7 @@ static int update_cluster_pin_global_net_with_post_routing_results(
     size_t cand_pin_start = pb_type_pin - pb_graph_pin->pin_number;
     size_t cand_pin_end = cand_pin_start + pb_graph_pin->port->num_pins;
     std::vector<size_t> cand_pins(pb_graph_pin->port->num_pins);
-    std::itoa(cand_pins.begin(), cand_pins.end(), cand_pin_start);
+    std::iota(cand_pins.begin(), cand_pins.end(), cand_pin_start);
     if (map_gnet2msb) {
       std::reverse(cand_pins.begin(), cand_pins.end());
     }
