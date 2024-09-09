@@ -32,8 +32,8 @@ namespace openfpga {
 static int update_cluster_pin_global_net_with_post_routing_results(
   const ClusteringContext& clustering_ctx,
   VprClusteringAnnotation& clustering_annotation, const ClusterBlockId& blk_id,
-  t_logical_block_type_ptr logical_block, size_t& num_fixup,
-  const bool& verbose) {
+  t_logical_block_type_ptr logical_block, const bool& map_gnet2msb,
+  size_t& num_fixup, const bool& verbose) {
   /* Reassign global nets to unused pins in the same port where they were mapped
    * NO optimization is done here!!! First find first fit
    */
@@ -77,10 +77,13 @@ static int update_cluster_pin_global_net_with_post_routing_results(
       "during routing optimization\n",
       clustering_ctx.clb_nlist.net_name(global_net_id).c_str());
     size_t cand_pin_start = pb_type_pin - pb_graph_pin->pin_number;
-    size_t cand_pin_end = cand_pin_start + pb_graph_pin->port->num_pins;
+    std::vector<size_t> cand_pins(pb_graph_pin->port->num_pins);
+    std::iota(cand_pins.begin(), cand_pins.end(), cand_pin_start);
+    if (map_gnet2msb) {
+      std::reverse(cand_pins.begin(), cand_pins.end());
+    }
     bool found_cand = false;
-    for (size_t cand_pin = cand_pin_start; cand_pin < cand_pin_end;
-         ++cand_pin) {
+    for (size_t cand_pin : cand_pins) {
       ClusterNetId cand_pin_net_id =
         clustering_ctx.clb_nlist.block_net(blk_id, cand_pin);
       const t_pb_graph_pin* cand_pb_graph_pin =
@@ -139,7 +142,7 @@ static int update_cluster_pin_with_post_routing_results(
   VprClusteringAnnotation& vpr_clustering_annotation, const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const ClusterBlockId& blk_id,
   const e_side& border_side, const size_t& z, const bool& perimeter_cb,
-  size_t& num_fixup, const bool& verbose) {
+  const bool& map_gnet2msb, size_t& num_fixup, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
@@ -337,8 +340,8 @@ static int update_cluster_pin_with_post_routing_results(
   }
   /* 2nd round of fixup: focus on global nets */
   status = update_cluster_pin_global_net_with_post_routing_results(
-    clustering_ctx, vpr_clustering_annotation, blk_id, logical_block, num_fixup,
-    verbose);
+    clustering_ctx, vpr_clustering_annotation, blk_id, logical_block,
+    map_gnet2msb, num_fixup, verbose);
   return status;
 }
 
@@ -351,9 +354,12 @@ int update_pb_pin_with_post_routing_results(
   const PlacementContext& placement_ctx,
   const VprRoutingAnnotation& vpr_routing_annotation,
   VprClusteringAnnotation& vpr_clustering_annotation, const bool& perimeter_cb,
-  const bool& verbose) {
+  const bool& map_gnet2msb, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   size_t num_fixup = 0;
+  /* Confirm options */
+  VTR_LOGV(verbose && map_gnet2msb,
+           "User choose to map global net to the best fit MSB of input port\n");
   /* Ensure a clean start: remove all the remapping results from VTR's
    * post-routing clustering result sync-up */
   vpr_clustering_annotation.clear_net_remapping();
@@ -384,7 +390,7 @@ int update_pb_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
           vpr_clustering_annotation, layer, grid_coord, cluster_blk_id,
           NUM_SIDES, placement_ctx.block_locs[cluster_blk_id].loc.sub_tile,
-          perimeter_cb, num_fixup, verbose);
+          perimeter_cb, map_gnet2msb, num_fixup, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;
         }
@@ -419,7 +425,7 @@ int update_pb_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
           vpr_clustering_annotation, layer, io_coord, cluster_blk_id, io_side,
           placement_ctx.block_locs[cluster_blk_id].loc.sub_tile, perimeter_cb,
-          num_fixup, verbose);
+          map_gnet2msb, num_fixup, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;
         }
