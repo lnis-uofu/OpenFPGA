@@ -79,7 +79,6 @@ static int update_cluster_pin_global_net_with_post_routing_results(
       "during routing optimization\n",
       clustering_ctx.clb_nlist.net_name(global_net_id).c_str());
     size_t cand_pin_start = pb_type_pin - pb_graph_pin->pin_number;
-    size_t cand_pin_end = cand_pin_start + pb_graph_pin->port->num_pins;
     std::vector<size_t> cand_pins(pb_graph_pin->port->num_pins);
     std::iota(cand_pins.begin(), cand_pins.end(), cand_pin_start);
     if (map_gnet2msb) {
@@ -363,7 +362,7 @@ int update_pb_pin_with_post_routing_results(
   int status = CMD_EXEC_SUCCESS;
   size_t num_fixup = 0;
   /* Confirm options */
-  VTR_LOGV(verbose && map_gnet2msb, "User choose to map global net to the best fit MSB of input port\n")
+  VTR_LOGV(verbose && map_gnet2msb, "User choose to map global net to the best fit MSB of input port\n");
   /* Ensure a clean start: remove all the remapping results from VTR's
    * post-routing clustering result sync-up */
   vpr_clustering_annotation.clear_net_remapping();
