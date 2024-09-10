@@ -525,3 +525,26 @@ write_fabric_pin_physical_location
   .. option:: --verbose
 
     Show verbose log
+
+.. _openfpga_setup_commands_report_reference:
+
+report_reference
+~~~~~~~~~~~~~~~~~~~~
+
+  Write reference information of each child module under a given parent module to a YAML file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name to write the reference information
+
+  .. option:: --module <string>
+
+    Specify the parent module name, under which the references of each child module will be reported.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose info
