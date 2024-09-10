@@ -362,7 +362,8 @@ void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_cb_unique_module(rr_graph, CHANX);
   build_cb_unique_module(rr_graph, CHANY);
 
-  build_gsb_unique_module(); /*is_compressed_ flip inside build_gsb_unique_module*/
+  build_gsb_unique_module(); /*is_compressed_ flip inside
+                                build_gsb_unique_module*/
 }
 
 void DeviceRRGSB::add_gsb_unique_module(const vtr::Point<size_t>& coordinate) {

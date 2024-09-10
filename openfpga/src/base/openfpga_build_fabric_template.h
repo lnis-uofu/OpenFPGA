@@ -125,12 +125,6 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
         cmd.option_name(opt_duplicate_grid_pin).c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    if (!openfpga_ctx.device_rr_gsb().is_compressed()) {
-      VTR_LOG_ERROR(
-        "Option '%s' requires unique blocks to be valid due to a conflict!\n",
-        cmd.option_name(opt_group_tile).c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
   }
   /* Conflicts: duplicate_grid_pin does not support any port merge */
   if (cmd_context.option_enable(cmd, opt_duplicate_grid_pin)) {
@@ -153,6 +147,14 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
+  if (cmd_context.option_enable(cmd, opt_group_tile)) {
+    if (!openfpga_ctx.device_rr_gsb().is_compressed()) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires unique blocks to be valid due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
   VTR_LOG("\n");
 
   /* Record the execution status in curr_status for each command
