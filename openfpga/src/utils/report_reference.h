@@ -25,9 +25,6 @@ int write_reference_to_file(const char* fname, const ModuleId& parent_module,
                             const ModuleManager& module_manager,
                             const bool& include_time_stamp,
                             const bool& verbose);
-
-void write_module_to_file(const char* fname,
-                          const ModuleManager& module_manager);
 } /* end namespace openfpga */
 
 #endif

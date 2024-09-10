@@ -33,8 +33,6 @@ int report_reference(const char* fname, const std::string& module_name,
   ModuleId parent_module = module_manager.find_module(module_name);
   if (false == module_manager.valid_module_id(parent_module)) {
     VTR_LOG_ERROR("Module %s doesn't exist\n", module_name.c_str());
-
-    if (verbose) write_module_to_file(fname, module_manager);
     return CMD_EXEC_FATAL_ERROR;
   }
 
@@ -120,44 +118,6 @@ int write_reference_to_file(const char* fname, const ModuleId& parent_module,
 
   fp.close();
   return CMD_EXEC_SUCCESS;
-}
-
-/********************************************************************
- * write all modules to a given file
- *******************************************************************/
-void write_module_to_file(const char* fname,
-                          const ModuleManager& module_manager) {
-  std::fstream fp;
-  fp.open(std::string(fname), std::fstream::out | std::fstream::trunc);
-  openfpga::check_file_stream(fname, fp);
-
-  fp << "module_count: " << module_manager.modules().size() << std::endl;
-
-  for (ModuleId curr_module : module_manager.modules()) {
-    std::string curr_module_name = module_manager.module_name(curr_module);
-    fp << "module: " << curr_module_name.c_str() << std::endl;
-
-    for (ModuleId child_module : module_manager.child_modules(curr_module)) {
-      std::string child_module_name = module_manager.module_name(child_module);
-      std::vector<size_t> child_inst_vec =
-        module_manager.child_module_instances(curr_module, child_module);
-      fp << "  - child_module:" << child_module_name.c_str() << std::endl
-         << "    instance_count:" << child_inst_vec.size() << std::endl
-         << "    instances:" << std::endl;
-
-      for (size_t inst_id : child_inst_vec) {
-        std::string inst_name =
-          module_manager.instance_name(curr_module, child_module, inst_id);
-        fp << "      - ";
-        if (true == inst_name.empty()) {
-          fp << generate_instance_name(child_module_name, inst_id) << std::endl;
-        } else {
-          fp << inst_name << std::endl;
-        }
-      }
-    }
-  }
-  fp.close();
 }
 
 } /* end namespace openfpga */
