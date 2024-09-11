@@ -47,3 +47,5 @@ OpenFPGA widely uses XML format for interchangeable files
    fabric_hierarchy_file
 
    reference_file
+
+   unique_blocks
