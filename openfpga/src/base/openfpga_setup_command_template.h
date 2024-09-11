@@ -1016,11 +1016,11 @@ ShellCommandId add_write_unique_blocks_command_template(
 }
 
  
- *******************************************************************/
+ /******************************************************************
  * - Add a command to Shell environment: report_reference
  * - Add associated options
  * - Add command dependency
- *******************************************************************/
+ ******************************************************************/
 template <class T>
 ShellCommandId add_report_reference_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
@@ -1320,7 +1320,6 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   cmd_dependency_report_reference.push_back(build_fabric_cmd_id);
   add_report_reference_command_template<T>(
     shell, openfpga_setup_cmd_class, cmd_dependency_report_reference, hidden);
-}
 
   /********************************
    * Command 'read_unique_blocks'
