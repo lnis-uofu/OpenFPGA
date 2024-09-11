@@ -32,45 +32,41 @@
  * instance is the mirror of unique module.
  *******************************************************************/
 namespace openfpga {
-
-int write_xml_block(
-  std::map<int, vtr::Point<size_t>>& id_unique_block_map,
-  std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map,
-  std::fstream& fp, std::string type) {
-  /* Validate the file stream */
+int write_xml_atom_block(std::fstream& fp,
+                         const std::vector<vtr::Point<size_t>>& instance_map,
+                         const vtr::Point<size_t>& unique_block_coord,
+                         std::string type) {
   if (false == openfpga::valid_file_stream(fp)) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  for (const auto& pair : id_unique_block_map) {
-    openfpga::write_tab_to_file(fp, 1);
-    fp << "<block";
-    write_xml_attribute(fp, "type", type.c_str());
-    write_xml_attribute(fp, "x", pair.second.x());
-    write_xml_attribute(fp, "y", pair.second.y());
 
-    fp << ">"
-       << "\n";
+  openfpga::write_tab_to_file(fp, 1);
+  fp << "<block";
+  write_xml_attribute(fp, "type", type.c_str());
+  write_xml_attribute(fp, "x", unique_block_coord.x());
+  write_xml_attribute(fp, "y", unique_block_coord.y());
 
-    for (const auto& instance_info : id_instance_map[pair.first]) {
-      if (instance_info.x() == pair.second.x() &&
-          instance_info.y() == pair.second.y()) {
-        ;
-      } else {
-        openfpga::write_tab_to_file(fp, 2);
-        fp << "<instance";
-        write_xml_attribute(fp, "x", instance_info.x());
-        write_xml_attribute(fp, "y", instance_info.y());
+  fp << ">"
+     << "\n";
 
-        fp << "/>"
-           << "\n";
-      }
+  for (const auto& instance_info : instance_map) {
+    if (instance_info.x() == unique_block_coord.x() &&
+        instance_info.y() == unique_block_coord.y()) {
+      ;
+    } else {
+      openfpga::write_tab_to_file(fp, 2);
+      fp << "<instance";
+      write_xml_attribute(fp, "x", instance_info.x());
+      write_xml_attribute(fp, "y", instance_info.y());
+
+      fp << "/>"
+         << "\n";
     }
-    openfpga::write_tab_to_file(fp, 1);
-    fp << "</block>"
-       << "\n";
   }
-
-  return CMD_EXEC_SUCCESS;
+  openfpga::write_tab_to_file(fp, 1);
+  fp << "</block>"
+     << "\n";
+  return openfpga::CMD_EXEC_SUCCESS;
 }
 
 void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
@@ -139,24 +135,45 @@ int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   fp << "<unique_blocks>"
      << "\n";
 
-  int err_code = 0;
-  std::map<int, vtr::Point<size_t>> id_unique_block_map;
-  std::map<int, std::vector<vtr::Point<size_t>>> id_instance_map;
-  device_rr_gsb.get_id_unique_sb_block_map(id_unique_block_map);
-  device_rr_gsb.get_id_sb_instance_map(id_instance_map);
-  err_code += write_xml_block(id_unique_block_map, id_instance_map, fp, "sb");
+  for (size_t id = 0; id < device_rr_gsb.get_num_sb_unique_module(); ++id) {
+    const auto unique_block_coord = device_rr_gsb.get_sb_unique_block_coord(id);
+    const std::vector<vtr::Point<size_t>> instance_map =
+      device_rr_gsb.get_sb_unique_block_instance_coord(unique_block_coord);
+    int status_code =
+      write_xml_atom_block(fp, instance_map, unique_block_coord, "sb");
+    if (status_code != 0) {
+      VTR_LOG_ERROR("write sb unique blocks into xml file failed!");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
-  id_unique_block_map.clear();
-  id_instance_map.clear();
-  device_rr_gsb.get_id_unique_cbx_block_map(id_unique_block_map);
-  device_rr_gsb.get_id_cbx_instance_map(id_instance_map);
-  err_code += write_xml_block(id_unique_block_map, id_instance_map, fp, "cbx");
+  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(CHANX);
+       ++id) {
+    const auto unique_block_coord =
+      device_rr_gsb.get_cbx_unique_block_coord(id);
+    const std::vector<vtr::Point<size_t>> instance_map =
+      device_rr_gsb.get_cbx_unique_block_instance_coord(unique_block_coord);
+    int status_code =
+      write_xml_atom_block(fp, instance_map, unique_block_coord, "cbx");
+    if (status_code != 0) {
+      VTR_LOG_ERROR("write cbx unique blocks into xml file failed!");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
-  id_unique_block_map.clear();
-  id_instance_map.clear();
-  device_rr_gsb.get_id_unique_cby_block_map(id_unique_block_map);
-  device_rr_gsb.get_id_cby_instance_map(id_instance_map);
-  err_code += write_xml_block(id_unique_block_map, id_instance_map, fp, "cby");
+  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(CHANY);
+       ++id) {
+    const auto unique_block_coord =
+      device_rr_gsb.get_cby_unique_block_coord(id);
+    const std::vector<vtr::Point<size_t>> instance_map =
+      device_rr_gsb.get_cby_unique_block_instance_coord(unique_block_coord);
+    int status_code =
+      write_xml_atom_block(fp, instance_map, unique_block_coord, "cby");
+    if (status_code != 0) {
+      VTR_LOG_ERROR("write cby unique blocks into xml file failed!");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
   /* Finish writing the root node */
   fp << "</unique_blocks>"
@@ -168,10 +185,6 @@ int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
     report_unique_module_status_write(device_rr_gsb, true);
   }
 
-  if (err_code >= 1) {
-    return CMD_EXEC_FATAL_ERROR;
-  } else {
-    return CMD_EXEC_SUCCESS;
-  }
+  return CMD_EXEC_SUCCESS;
 }
 }  // namespace openfpga

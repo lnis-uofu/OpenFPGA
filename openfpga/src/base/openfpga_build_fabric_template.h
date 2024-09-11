@@ -479,15 +479,14 @@ int write_fabric_pin_physical_location_template(
     cmd_context.option_enable(cmd, opt_verbose));
 }
 
-
 template <class T>
 int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
                                 const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_type = cmd.option("type");
-  
-    /* Check the option '--file' is enabled or not
+
+  /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction
    */
@@ -520,7 +519,7 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
    */
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
-  
+
   std::string file_name = cmd_context.option_value(cmd, opt_file);
   std::string file_type = cmd_context.option_value(cmd, opt_type);
   /* Write unique blocks to a file */
@@ -534,7 +533,6 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 }
-  
 
 /********************************************************************
  *  Report reference to a file

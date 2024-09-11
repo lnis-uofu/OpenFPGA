@@ -939,7 +939,7 @@ ShellCommandId add_write_fabric_pin_physical_location_command_template(
 
 /********************************************************************
  * - Add a command to Shell environment: read_unique_blocks
-  * - Add associated options
+ * - Add associated options
  * - Add command dependency
  *******************************************************************/
 template <class T>
@@ -1015,8 +1015,7 @@ ShellCommandId add_write_unique_blocks_command_template(
   return shell_cmd_id;
 }
 
- 
- /******************************************************************
+/******************************************************************
  * - Add a command to Shell environment: report_reference
  * - Add associated options
  * - Add command dependency

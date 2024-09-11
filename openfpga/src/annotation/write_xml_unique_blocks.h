@@ -30,10 +30,10 @@
  *******************************************************************/
 namespace openfpga {
 
-int write_xml_block(
-  std::map<int, vtr::Point<size_t>>& id_unique_block_map,
-  std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map,
-  std::fstream& fp, std::string type);
+int write_xml_atom_block(std::fstream& fp,
+                         const std::vector<vtr::Point<size_t>>& instance_map,
+                         const vtr::Point<size_t>& unique_block_coord,
+                         std::string type);
 void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
                                        bool verbose_output);
 int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,

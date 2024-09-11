@@ -43,8 +43,19 @@ class DeviceRRGSB {
     const vtr::Point<size_t>& coordinate) const;
   size_t get_num_gsb_unique_module()
     const; /* get the number of unique mirrors of GSB */
-  size_t get_num_sb_unique_module()
-    const; /* get the number of unique mirrors of switch blocks */
+
+  size_t get_num_sb_unique_module() const;
+  vtr::Point<size_t> get_sb_unique_block_coord(size_t id) const;
+  std::vector<vtr::Point<size_t>> get_sb_unique_block_instance_coord(
+    const vtr::Point<size_t>& unique_block_coord) const;
+
+  vtr::Point<size_t> get_cbx_unique_block_coord(size_t id) const;
+  std::vector<vtr::Point<size_t>> get_cbx_unique_block_instance_coord(
+    const vtr::Point<size_t>& unique_block_coord) const;
+  vtr::Point<size_t> get_cby_unique_block_coord(size_t id) const;
+  std::vector<vtr::Point<size_t>> get_cby_unique_block_instance_coord(
+    const vtr::Point<size_t>& unique_block_coord) const;
+
   const RRGSB& get_gsb_unique_module(
     const size_t& index) const; /* Get a rr-gsb which is a unique mirror */
   const RRGSB& get_sb_unique_module(const size_t& index)
@@ -107,18 +118,6 @@ class DeviceRRGSB {
     const vtr::Point<size_t>& block_coordinate,
     const std::vector<vtr::Point<size_t>>& instance_coords);
   void clear_unique_modules();
-  void get_id_sb_instance_map(
-    std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const;
-  void get_id_unique_sb_block_map(
-    std::map<int, vtr::Point<size_t>>& id_unique_block_map) const;
-  void get_id_cbx_instance_map(
-    std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const;
-  void get_id_unique_cbx_block_map(
-    std::map<int, vtr::Point<size_t>>& id_unique_block_map) const;
-  void get_id_cby_instance_map(
-    std::map<int, std::vector<vtr::Point<size_t>>>& id_instance_map) const;
-  void get_id_unique_cby_block_map(
-    std::map<int, vtr::Point<size_t>>& id_unique_block_map) const;
 
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
