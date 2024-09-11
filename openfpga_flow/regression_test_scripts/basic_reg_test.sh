@@ -258,6 +258,7 @@ run-task basic_tests/clock_network/homo_1clock_1reset_3layer_2entry_disable_unus
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_y_entry $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut_pb_pin_fixup $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut_pb_pin_fixup_msb $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_syntax $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_disable_unused_spines $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_internal_driver $@
@@ -322,6 +323,10 @@ run-task basic_tests/no_time_stamp/device_1x1 $@
 run-task basic_tests/no_time_stamp/device_4x4 $@
 run-task basic_tests/no_time_stamp/no_cout_in_gsb $@
 run-task basic_tests/no_time_stamp/dump_waveform $@
+
+echo -e "Testing report reference to file";
+run-task basic_tests/report_reference $@
+
 # Run git-diff to ensure no changes on the golden netlists
 # Switch to root path in case users are running the tests in another location
 cd ${OPENFPGA_PATH}

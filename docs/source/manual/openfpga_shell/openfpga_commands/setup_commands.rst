@@ -235,6 +235,10 @@ pb_pin_fixup
   .. warning:: This feature has been integrated into VPR to provide accurate timing analysis results at post-routing stage. However, this command provides a light fix-up (not as thorough as the one in VPR) but bring more flexibility in support some architecture without local routing. Suggest to enable it when your architecture does not have local routing for *Look-Up Tables* (LUTs) but you want to enable logic equivalent for input pins of LUTs
 
   .. warning:: This command may be deprecated in future
+
+  .. option:: --map_global_net_to_msb
+
+    If specified, any global net including clock, reset etc, will be mapped to a best-fit Most Significant Bit (MSB) of input ports of programmable blocks. If not specified, a best-fit Least Significant Bit (LSB) will be the default choice. For example, when ``--clock_modeling ideal`` is selected when running VPR, global nets will not be routed and their pin mapping on programmable blocks may be revoked by other nets due to optimization. Therefore, this command will restore the pin mapping for the global nets and pick a spare pin on programmable blocks. This option is to set a preference when mapping the global nets to spare pins.
   
   .. option:: --verbose
 
@@ -521,3 +525,26 @@ write_fabric_pin_physical_location
   .. option:: --verbose
 
     Show verbose log
+
+.. _openfpga_setup_commands_report_reference:
+
+report_reference
+~~~~~~~~~~~~~~~~~~~~
+
+  Write reference information of each child module under a given parent module to a YAML file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name to write the reference information
+
+  .. option:: --module <string>
+
+    Specify the parent module name, under which the references of each child module will be reported.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose info

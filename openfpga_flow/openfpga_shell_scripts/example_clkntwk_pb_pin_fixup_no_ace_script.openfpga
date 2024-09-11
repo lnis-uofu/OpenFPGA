@@ -22,7 +22,7 @@ append_clock_rr_graph
 # to debug use --verbose options
 link_openfpga_arch --sort_gsb_chan_node_in_edges
 
-pb_pin_fixup --verbose
+pb_pin_fixup ${OPENFPGA_PB_PIN_FIXUP_OPTIONS}
 
 # Route clock based on clock network definition
 route_clock_rr_graph ${OPENFPGA_ROUTE_CLOCK_OPTIONS} --pin_constraints_file ${OPENFPGA_PIN_CONSTRAINTS_FILE}
