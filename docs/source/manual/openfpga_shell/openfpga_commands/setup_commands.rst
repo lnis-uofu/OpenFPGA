@@ -548,3 +548,41 @@ report_reference
   .. option:: --verbose
 
     Show verbose info
+
+.. _openfpga_setup_commands_read_unique_blocks:
+
+read_unique_blocks
+~~~~~~~~~~~~~~~~~~~~
+
+  Read information of unique blocks from a given file 
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file which contains unique block information
+
+  .. option:: --type <string>
+
+    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML
+  
+  .. option:: --verbose
+
+    Show verbose info
+
+.. _openfpga_setup_commands_write_unique_blocks:
+
+write_unique_blocks
+~~~~~~~~~~~~~~~~~~~~~
+
+  Write information of unique blocks from internal data structure to a given file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file which we will write unique block information to
+
+  .. option:: --type <string>
+
+    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML
+  
+  .. option:: --verbose
+
+    Show verbose info
