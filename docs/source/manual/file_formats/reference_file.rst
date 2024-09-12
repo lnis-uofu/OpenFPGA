@@ -14,9 +14,9 @@ An example of the file is shown as follows.
 
 .. code-block:: yaml
 
-Date: Mon Sep  9 16:41:53 2024
+  Date: Mon Sep  9 16:41:53 2024
 
-#the instance names are given during netlist generation
+  #the instance names are given during netlist generation
 
   references:
     - module: grid_io_top
