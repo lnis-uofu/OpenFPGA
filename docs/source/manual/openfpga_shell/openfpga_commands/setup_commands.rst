@@ -554,15 +554,15 @@ report_reference
 read_unique_blocks
 ~~~~~~~~~~~~~~~~~~~~
 
-  Read information of unique blocks from a given file 
+  Read information of unique blocks from a given file.
 
   .. option:: --file <string> 
 
-    Specify the file which contains unique block information. See details in :ref:`_file_formats_unique_blocks`
+    Specify the file which contains unique block information. See details in :ref:`file_formats_unique_blocks`.
 
   .. option:: --type <string>
 
-    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML
+    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML.
   
   .. option:: --verbose
 
@@ -573,15 +573,15 @@ read_unique_blocks
 write_unique_blocks
 ~~~~~~~~~~~~~~~~~~~~~
 
-  Write information of unique blocks from internal data structure to a given file
+  Write information of unique blocks from internal data structure to a given file.
 
   .. option:: --file <string> 
 
-    Specify the file which we will write unique block information to. See details in :ref:`_file_formats_unique_blocks`
+    Specify the file which we will write unique block information to. See details in :ref:`file_formats_unique_blocks`.
 
   .. option:: --type <string>
 
-    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML
+    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML.
   
   .. option:: --verbose
 

@@ -1,7 +1,7 @@
 .. _file_formats_unique_blocks:
 
 Unique Blocks (.xml)
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 A unique blocks file is formatted in XML. The unique blocks can be of type ``cbx``, ``cby``, or ``sb``. As illustrated by the XML code below, the file includes the type and coordinates of these unique blocks, as well as the coordinates of their corresponding instances.
 
