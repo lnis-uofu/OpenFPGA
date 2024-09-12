@@ -535,7 +535,7 @@ report_reference
 
   .. option:: --file <string> or -f <string>
 
-    Specify the file name to write the reference information
+    Specify the file name to write the reference information. See details in :ref:`file_format_reference_file`.
 
   .. option:: --module <string>
 
