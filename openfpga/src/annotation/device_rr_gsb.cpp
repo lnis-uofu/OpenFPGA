@@ -128,7 +128,8 @@ vtr::Point<size_t> DeviceRRGSB::get_cbx_unique_block_coord(size_t id) const {
   return cbx_unique_module_[id];
 }
 
-/* get the coordinates of the instances of a unique connection block of CHANX type */
+/* get the coordinates of the instances of a unique connection block of CHANX
+ * type */
 std::vector<vtr::Point<size_t>>
 DeviceRRGSB::get_cbx_unique_block_instance_coord(
   const vtr::Point<size_t>& unique_block_coord) const {
@@ -155,7 +156,8 @@ vtr::Point<size_t> DeviceRRGSB::get_cby_unique_block_coord(size_t id) const {
   return cby_unique_module_[id];
 }
 
-/* get the coordinates of the instances of a unique connection block of CHANY type */
+/* get the coordinates of the instances of a unique connection block of CHANY
+ * type */
 std::vector<vtr::Point<size_t>>
 DeviceRRGSB::get_cby_unique_block_instance_coord(
   const vtr::Point<size_t>& unique_block_coord) const {

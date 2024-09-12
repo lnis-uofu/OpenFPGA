@@ -24,10 +24,10 @@
  * This file includes the top-level functions of this library
  * which includes:
  *  -- write the unique blocks' information in the associated data structures:
- *device_rr_gsb to a XML file 
+ *device_rr_gsb to a XML file
  *******************************************************************/
 namespace openfpga {
-  
+
 /*Write unique blocks and their corresponding instances' information from
  *device_rr_gsb to a XML file*/
 int write_xml_atom_block(std::fstream& fp,
