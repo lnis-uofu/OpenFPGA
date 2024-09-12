@@ -1,12 +1,4 @@
 
-/********************************************************************
- * This file includes the top-level functions of this library
- * which includes:
- *  -- reads an XML file of unique blocks to the associated
- * data structures: device_rr_gsb
- * -- write device__rr_gsb's info about unique blocks to a xml file
- *******************************************************************/
-
 #include <string>
 
 /* Headers from pugi XML library */
@@ -27,11 +19,17 @@
 #include "rr_gsb.h"
 #include "write_xml_unique_blocks.h"
 #include "write_xml_utils.h"
+
 /********************************************************************
- * Parse XML codes of a <instance> to an object of device_rr_gsb
- * instance is the mirror of unique module.
+ * This file includes the top-level functions of this library
+ * which includes:
+ *  -- write the unique blocks' information in the associated data structures:
+ *device_rr_gsb to a XML file 
  *******************************************************************/
 namespace openfpga {
+  
+/*Write unique blocks and their corresponding instances' information from
+ *device_rr_gsb to a XML file*/
 int write_xml_atom_block(std::fstream& fp,
                          const std::vector<vtr::Point<size_t>>& instance_map,
                          const vtr::Point<size_t>& unique_block_coord,
@@ -69,6 +67,7 @@ int write_xml_atom_block(std::fstream& fp,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
+/* Report information about written unique blocks */
 void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
                                        bool verbose_output) {
   /* Report the stats */
@@ -116,6 +115,7 @@ void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
             1.));
 }
 
+/*Top level function to write the xml file of unique blocks*/
 int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output) {
   vtr::ScopedStartFinishTimer timer("Write unique blocks...");

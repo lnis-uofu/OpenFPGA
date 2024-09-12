@@ -44,17 +44,24 @@ class DeviceRRGSB {
   size_t get_num_gsb_unique_module()
     const; /* get the number of unique mirrors of GSB */
 
-  size_t get_num_sb_unique_module() const;
-  vtr::Point<size_t> get_sb_unique_block_coord(size_t id) const;
+  size_t get_num_sb_unique_module()
+    const; /* get the number of unique mirrors of SB */
+  vtr::Point<size_t> get_sb_unique_block_coord(
+    size_t id) const; /* get the coordinate of a unique switch block */
   std::vector<vtr::Point<size_t>> get_sb_unique_block_instance_coord(
-    const vtr::Point<size_t>& unique_block_coord) const;
+    const vtr::Point<size_t>& unique_block_coord)
+    const; /* get the coordinates of the instances of a unique switch block */
 
-  vtr::Point<size_t> get_cbx_unique_block_coord(size_t id) const;
+  vtr::Point<size_t> get_cbx_unique_block_coord(
+    size_t id) const; /* get the coordinate of a unique connection block of CHANX type */
   std::vector<vtr::Point<size_t>> get_cbx_unique_block_instance_coord(
-    const vtr::Point<size_t>& unique_block_coord) const;
-  vtr::Point<size_t> get_cby_unique_block_coord(size_t id) const;
+    const vtr::Point<size_t>& unique_block_coord)
+    const; /* get the coordinates of the instances of a unique connection block of CHANX type*/
+  vtr::Point<size_t> get_cby_unique_block_coord(
+    size_t id) const; /* get the coordinate of a unique connection block of CHANY type */
   std::vector<vtr::Point<size_t>> get_cby_unique_block_instance_coord(
-    const vtr::Point<size_t>& unique_block_coord) const;
+    const vtr::Point<size_t>& unique_block_coord)
+    const; /* get the coordinates of the instances of a unique connection block of CHANY type */
 
   const RRGSB& get_gsb_unique_module(
     const size_t& index) const; /* Get a rr-gsb which is a unique mirror */
@@ -110,14 +117,22 @@ class DeviceRRGSB {
   void clear();                   /* clean the content */
   void preload_unique_cbx_module(
     const vtr::Point<size_t>& block_coordinate,
-    const std::vector<vtr::Point<size_t>>& instance_coords);
+    const std::vector<vtr::Point<size_t>>&
+      instance_coords); /* preload unique CBX blocks and their corresponding
+                           instance information. This function will be called
+                           when read_unique_blocks command invoked */
   void preload_unique_cby_module(
     const vtr::Point<size_t>& block_coordinate,
-    const std::vector<vtr::Point<size_t>>& instance_coords);
-  void preload_unique_sb_module(
-    const vtr::Point<size_t>& block_coordinate,
-    const std::vector<vtr::Point<size_t>>& instance_coords);
-  void clear_unique_modules();
+    const std::vector<vtr::Point<size_t>>&
+      instance_coords); /* preload unique CBY blocks and their corresponding
+instance information. This function will be called
+when read_unique_blocks command invoked */
+  void preload_unique_sb_module(const vtr::Point<size_t>& block_coordinate,
+                                const std::vector<vtr::Point<size_t>>&
+                                  instance_coords); /* preload unique SB blocks
+                   and their corresponding instance information. This function
+                   will be called when read_unique_blocks command invoked */
+  void clear_unique_modules();/* clean the content of unique blocks*/
 
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
@@ -160,7 +175,7 @@ class DeviceRRGSB {
 
  private: /* Internal Data */
   std::vector<std::vector<RRGSB>> rr_gsb_;
-  bool is_compressed_ = false;  // is_valid
+  bool is_compressed_ = false;  /* True if the unique blocks have been preloaded or built */
 
   std::vector<std::vector<size_t>>
     gsb_unique_module_id_; /* A map from rr_gsb to its unique mirror */

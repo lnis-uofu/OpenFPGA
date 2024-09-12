@@ -1323,6 +1323,8 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   /********************************
    * Command 'read_unique_blocks'
    */
+  /* The command should NOT be executed before
+   * 'link_openfpga_arch' */
   std::vector<ShellCommandId> cmd_dependency_read_unique_blocks_command;
   cmd_dependency_read_unique_blocks_command.push_back(link_arch_cmd_id);
   add_read_unique_blocks_command_template<T>(

@@ -65,8 +65,9 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
       exit(1);
   }
 }
-
+/* Identify if unique blocks are preloaded or built */
 bool DeviceRRGSB::is_compressed() const { return is_compressed_; }
+
 /* Identify if a GSB actually exists at a location */
 bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
                                const vtr::Point<size_t> coord) const {
@@ -96,10 +97,12 @@ size_t DeviceRRGSB::get_num_sb_unique_module() const {
   return sb_unique_module_.size();
 }
 
+/* get the coordinate of unique mirrors of switch blocks */
 vtr::Point<size_t> DeviceRRGSB::get_sb_unique_block_coord(size_t id) const {
   return sb_unique_module_[id];
 }
 
+/* get the coordinates of the instances of a unique switch block */
 std::vector<vtr::Point<size_t>> DeviceRRGSB::get_sb_unique_block_instance_coord(
   const vtr::Point<size_t>& unique_block_coord) const {
   auto unique_module_id =
@@ -120,10 +123,12 @@ std::vector<vtr::Point<size_t>> DeviceRRGSB::get_sb_unique_block_instance_coord(
   return instance_map;
 }
 
+/* get the coordinate of unique mirrors of connection blocks of CHANX type */
 vtr::Point<size_t> DeviceRRGSB::get_cbx_unique_block_coord(size_t id) const {
   return cbx_unique_module_[id];
 }
 
+/* get the coordinates of the instances of a unique connection block of CHANX type */
 std::vector<vtr::Point<size_t>>
 DeviceRRGSB::get_cbx_unique_block_instance_coord(
   const vtr::Point<size_t>& unique_block_coord) const {
@@ -145,10 +150,12 @@ DeviceRRGSB::get_cbx_unique_block_instance_coord(
   return instance_map;
 }
 
+/* get the coordinate of unique mirrors of connection blocks of CHANY type */
 vtr::Point<size_t> DeviceRRGSB::get_cby_unique_block_coord(size_t id) const {
   return cby_unique_module_[id];
 }
 
+/* get the coordinates of the instances of a unique connection block of CHANY type */
 std::vector<vtr::Point<size_t>>
 DeviceRRGSB::get_cby_unique_block_instance_coord(
   const vtr::Point<size_t>& unique_block_coord) const {
@@ -246,6 +253,7 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
     cby_unique_module_id_[x].resize(coordinate.y());
   }
 }
+
 void DeviceRRGSB::reserve_unique_modules() {
   /* As rr_gsb_ has been built, it has valid size. Will reserve space for
    * unique blocks according to rr_gsb_'s size*/
@@ -658,6 +666,11 @@ size_t DeviceRRGSB::get_cb_unique_module_index(
   return cb_unique_module_id;
 }
 
+/************************************************************************
+ * Preload unique blocks
+ ***********************************************************************/
+/* preload unique cbx blocks and their corresponding instance information. This
+ * function will be called when read_unique_blocks command invoked */
 void DeviceRRGSB::preload_unique_cbx_module(
   const vtr::Point<size_t>& block_coordinate,
   const std::vector<vtr::Point<size_t>>& instance_coords) {
@@ -682,6 +695,8 @@ void DeviceRRGSB::preload_unique_cbx_module(
   }
 }
 
+/* preload unique cby blocks and their corresponding instance information. This
+ * function will be called when read_unique_blocks command invoked */
 void DeviceRRGSB::preload_unique_cby_module(
   const vtr::Point<size_t>& block_coordinate,
   const std::vector<vtr::Point<size_t>>& instance_coords) {
@@ -707,6 +722,8 @@ void DeviceRRGSB::preload_unique_cby_module(
   }
 }
 
+/* preload unique sb blocks and their corresponding instance information. This
+ * function will be called when read_unique_blocks command invoked */
 void DeviceRRGSB::preload_unique_sb_module(
   const vtr::Point<size_t>& block_coordinate,
   const std::vector<vtr::Point<size_t>>& instance_coords) {

@@ -1,14 +1,6 @@
 #ifndef WRITE_XML_UNIQUE_BLOCKS_H
 #define WRITE_XML_UNIQUE_BLOCKS_H
 
-/********************************************************************
- * This file includes the top-level functions of this library
- * which includes:
- *  -- reads an XML file of unique blocks to the associated
- * data structures: device_rr_gsb
- * -- write device__rr_gsb's info about unique blocks to a xml file
- *******************************************************************/
-
 #include <string>
 
 /* Headers from pugi XML library */
@@ -24,18 +16,21 @@
 #include "arch_error.h"
 #include "device_rr_gsb_utils.h"
 
-/********************************************************************
- * Parse XML codes of a <instance> to an object of device_rr_gsb
- * instance is the mirror of unique module.
- *******************************************************************/
-namespace openfpga {
 
+/********************************************************************
+ * This file includes the top-level functions of this library
+ * which includes:
+ *  -- write the unique blocks' information in the associated data structures:
+ *device_rr_gsb to a XML file 
+ *******************************************************************/
+
+namespace openfpga {
 int write_xml_atom_block(std::fstream& fp,
                          const std::vector<vtr::Point<size_t>>& instance_map,
                          const vtr::Point<size_t>& unique_block_coord,
                          std::string type);
 void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
-                                       bool verbose_output);
+                                       bool verbose_output); /*report status of written info*/
 int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output);
 }  // namespace openfpga
