@@ -556,9 +556,9 @@ read_unique_blocks
 
   Read information of unique blocks from a given file 
 
-  .. option:: --file <string> or -f <string>
+  .. option:: --file <string> 
 
-    Specify the file which contains unique block information
+    Specify the file which contains unique block information. See details in :ref:`_file_formats_unique_blocks`
 
   .. option:: --type <string>
 
@@ -575,9 +575,9 @@ write_unique_blocks
 
   Write information of unique blocks from internal data structure to a given file
 
-  .. option:: --file <string> or -f <string>
+  .. option:: --file <string> 
 
-    Specify the file which we will write unique block information to
+    Specify the file which we will write unique block information to. See details in :ref:`_file_formats_unique_blocks`
 
   .. option:: --type <string>
 
