@@ -639,7 +639,7 @@ Standard Cell Multiplexer
     <port type="sram" prefix="sram" size="3"/>
   </circuit_model>
 
-This example shows (see an illustative example in :numref:`fig_stdcellmux`(a)):
+This example shows (see an illustative example in :numref:`fig_stdcellmux` (a)):
   - A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
   - All the inputs will be buffered using the circuit model ``inv1x``
   - All the outputs will be buffered using the circuit model ``tapbuf4``
@@ -660,7 +660,7 @@ Alternatively, user can specify a different standard cell MUX2 at the last stage
     <port type="sram" prefix="sram" size="3"/>
   </circuit_model>
 
-This example shows (see an illustative example in :numref:`fig_stdcellmux`(b)):
+This example shows (see an illustative example in :numref:`fig_stdcellmux` (b)):
   - A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
   - The last stage A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
   - All the inputs will be buffered using the circuit model ``inv1x``
