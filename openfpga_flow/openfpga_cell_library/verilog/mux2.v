@@ -54,6 +54,55 @@ module MUX2(
 
 endmodule
 
+module MUX2D2(
+    // iVerilog is buggy on the 'input A' declaration when deposit initial
+    // values 
+	input [0:0] AA,   // Data input 0
+	input [0:0] BB,   // Data input 1
+	input [0:0] SS0, // Select port
+	output [0:0] YY  // Data output
+	);
+  
+	assign YY = SS0 ? BB : AA;
+
+// Note: 
+//	 MUX2 appears will appear in LUTs, routing multiplexers,
+//   being a component in combinational loops
+//   To help convergence in simulation 
+//   i.e., to avoid the X (undetermined) signals,
+//   the following timing constraints and signal initialization 
+//   has to be added!
+
+`ifdef ENABLE_TIMING
+// ------ BEGIN Pin-to-pin Timing constraints -----
+	specify
+		(AA => YY) = (0.001, 0.001);
+		(BB => YY) = (0.001, 0.001);
+		(SS0 => YY) = (0.001, 0.001);
+	endspecify
+// ------ END Pin-to-pin Timing constraints -----
+`endif
+
+`ifdef ENABLE_SIGNAL_INITIALIZATION
+// ------ BEGIN driver initialization -----
+	initial begin
+	`ifdef ENABLE_FORMAL_VERIFICATION
+		$deposit(AA, 1'b0);
+		$deposit(BB, 1'b0);
+		$deposit(SS0, 1'b0);
+	`else
+		$deposit(AA, $random);
+		$deposit(BB, $random);
+		$deposit(SS0, $random);
+	`endif
+
+	end
+// ------ END driver initialization -----
+`endif
+
+endmodule
+
+
 //-----------------------------------------------------
 // Design Name : CARRY_MUX2
 // File Name   : mux2.v
