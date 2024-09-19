@@ -833,18 +833,23 @@ static void read_xml_circuit_model(pugi::xml_node& xml_model,
       model, get_attribute(xml_pass_gate_logic, "circuit_model_name", loc_data)
                .as_string());
     /* Last stage pass gate is optional */
-    size_t num_last_stage_pgl = count_children(xml_model, "last_stage_pass_gate_logic", loc_data, pugiutil::ReqOpt::OPTIONAL);
+    size_t num_last_stage_pgl =
+      count_children(xml_model, "last_stage_pass_gate_logic", loc_data,
+                     pugiutil::ReqOpt::OPTIONAL);
     if (0 < num_last_stage_pgl) {
       auto xml_last_stage_pass_gate_logic =
         get_single_child(xml_model, "last_stage_pass_gate_logic", loc_data);
       circuit_lib.set_model_last_stage_pass_gate_logic(
-        model, get_attribute(xml_last_stage_pass_gate_logic, "circuit_model_name", loc_data)
+        model, get_attribute(xml_last_stage_pass_gate_logic,
+                             "circuit_model_name", loc_data)
                  .as_string());
     } else {
-      /* By default, assume the last stage circuit model is the same as others */
+      /* By default, assume the last stage circuit model is the same as others
+       */
       circuit_lib.set_model_last_stage_pass_gate_logic(
-        model, get_attribute(xml_pass_gate_logic, "circuit_model_name", loc_data)
-                 .as_string());
+        model,
+        get_attribute(xml_pass_gate_logic, "circuit_model_name", loc_data)
+          .as_string());
     }
   }
 

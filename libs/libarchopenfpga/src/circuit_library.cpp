@@ -1530,8 +1530,8 @@ void CircuitLibrary::set_model_pass_gate_logic(const CircuitModelId& model_id,
 }
 
 /* Set pass-gate logic information of a circuit model */
-void CircuitLibrary::set_model_last_stage_pass_gate_logic(const CircuitModelId& model_id,
-                                               const std::string& model_name) {
+void CircuitLibrary::set_model_last_stage_pass_gate_logic(
+  const CircuitModelId& model_id, const std::string& model_name) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   last_stage_pass_gate_logic_model_names_[model_id] = model_name;

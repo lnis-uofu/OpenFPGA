@@ -597,7 +597,9 @@ static void write_xml_circuit_model(std::fstream& fp, const char* fname,
        << "<last_stage_pass_gate_logic";
     write_xml_attribute(
       fp, "circuit_model_name",
-      circuit_lib.model_name(circuit_lib.last_stage_pass_gate_logic_model(model)).c_str());
+      circuit_lib
+        .model_name(circuit_lib.last_stage_pass_gate_logic_model(model))
+        .c_str());
     fp << "/>"
        << "\n";
   }
