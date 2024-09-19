@@ -53,6 +53,7 @@ Here, we focus these common syntax and we will detail special syntax in :ref:`ci
     <input_buffer exist="<string>" circuit_model_name="<string>"/>
     <output_buffer exist="<string>" circuit_model_name="<string>"/>
     <pass_gate_logic type="<string>" circuit_model_name="<string>"/>
+    <last_stage_pass_gate_logic type="<string>" circuit_model_name="<string>"/>
     <port type="<string>" prefix="<string>" lib_name="<string>" size="<int>" default_val="<int>" circuit_model_name="<string>" mode_select="<bool>" is_global="<bool>" is_set="<bool>" is_reset="<bool>" is_config_enable="<bool>"/>
     <!-- more ports -->
   </circuit_model>
@@ -129,12 +130,16 @@ Input and Output Buffers
 Pass Gate Logic
 ^^^^^^^^^^^^^^^
 
+.. note:: pass-gate logic are used in building multiplexers and LUTs.
+
 .. option:: <pass_gate_logic circuit_model_name="<string>"/>
 
   - ``circuit_model_name="<string>"`` Specify the name of the circuit model which is used to implement pass-gate logic, the type of specified circuit model should be ``pass_gate``.
 
-.. note:: pass-gate logic are used in building multiplexers and LUTs.
 
+.. option:: <last_stage_pass_gate_logic circuit_model_name="<string>"/>
+
+  - ``circuit_model_name="<string>"`` Specify the name of the circuit model which is used to implement the pass-gate logic at last stage of multiplexer, the type of specified circuit model should be ``pass_gate``. The type of the pass-gate logic circuit model must be a standard cell MUX2!
 
 .. _circuit_library_circuit_port:
 

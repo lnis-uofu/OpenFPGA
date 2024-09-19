@@ -272,7 +272,11 @@ class CircuitLibrary {
     const CircuitModelId& model_id) const;
   /* Pass-gate-logic information */
   CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
+  CircuitModelId last_stage_pass_gate_logic_model(
+    const CircuitModelId& model_id) const;
   std::string pass_gate_logic_model_name(const CircuitModelId& model_id) const;
+  std::string last_stage_pass_gate_logic_model_name(
+    const CircuitModelId& model_id) const;
   enum e_circuit_model_pass_gate_logic_type pass_gate_logic_type(
     const CircuitModelId& model_id) const;
   float pass_gate_logic_pmos_size(const CircuitModelId& model_id) const;
@@ -448,6 +452,8 @@ class CircuitLibrary {
   /* Pass-gate-related parameters */
   void set_model_pass_gate_logic(const CircuitModelId& model_id,
                                  const std::string& model_name);
+  void set_model_last_stage_pass_gate_logic(const CircuitModelId& model_id,
+                                            const std::string& model_name);
   /* Port information */
   CircuitPortId add_model_port(const CircuitModelId& model_id,
                                const enum e_circuit_model_port_type& port_type);
@@ -664,6 +670,10 @@ class CircuitLibrary {
   /* Pass-gate-related parameters */
   vtr::vector<CircuitModelId, std::string> pass_gate_logic_model_names_;
   vtr::vector<CircuitModelId, CircuitModelId> pass_gate_logic_model_ids_;
+  vtr::vector<CircuitModelId, std::string>
+    last_stage_pass_gate_logic_model_names_;
+  vtr::vector<CircuitModelId, CircuitModelId>
+    last_stage_pass_gate_logic_model_ids_;
 
   /* Port information */
   vtr::vector<CircuitPortId, CircuitPortId> port_ids_;

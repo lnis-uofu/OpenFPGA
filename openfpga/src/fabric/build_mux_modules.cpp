@@ -496,6 +496,71 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
     module_manager.module_port(std_cell_module_id, std_cell_module_output);
   VTR_ASSERT(1 == std_cell_module_output_port.get_width());
 
+  /* Find module information of the standard cell MUX2 */
+  CircuitModelId last_stage_std_cell_model =
+    circuit_lib.last_stage_pass_gate_logic_model(mux_model);
+  std::string last_stage_std_cell_module_name =
+    circuit_lib.model_name(last_stage_std_cell_model);
+  /* Get the moduleId for the submodule */
+  ModuleId last_stage_std_cell_module_id =
+    module_manager.find_module(last_stage_std_cell_module_name);
+  /* We must have one */
+  VTR_ASSERT(ModuleId::INVALID() != last_stage_std_cell_module_id);
+
+  /* Find the input ports and output ports of the standard cell */
+  std::vector<CircuitPortId> last_stage_std_cell_input_ports =
+    circuit_lib.model_ports_by_type(last_stage_std_cell_model,
+                                    CIRCUIT_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> last_stage_std_cell_output_ports =
+    circuit_lib.model_ports_by_type(last_stage_std_cell_model,
+                                    CIRCUIT_MODEL_PORT_OUTPUT, true);
+  /* Quick check the requirements on port map */
+  VTR_ASSERT(3 == last_stage_std_cell_input_ports.size());
+  VTR_ASSERT(1 == last_stage_std_cell_output_ports.size());
+
+  /* Find the module ports of the standard cell MUX2 module */
+  std::vector<ModulePortId> last_stage_std_cell_module_inputs;
+  std::vector<BasicPort> last_stage_std_cell_module_input_ports;
+  /* Input 0 port is the first data path input of the tgate, whose size must be
+   * 1 ! */
+  for (size_t port_id = 0; port_id < 2; ++port_id) {
+    last_stage_std_cell_module_inputs.push_back(module_manager.find_module_port(
+      last_stage_std_cell_module_id,
+      circuit_lib.port_prefix(last_stage_std_cell_input_ports[port_id])));
+    VTR_ASSERT(true == module_manager.valid_module_port_id(
+                         last_stage_std_cell_module_id,
+                         last_stage_std_cell_module_inputs[port_id]));
+    last_stage_std_cell_module_input_ports.push_back(
+      module_manager.module_port(last_stage_std_cell_module_id,
+                                 last_stage_std_cell_module_inputs[port_id]));
+    VTR_ASSERT(1 ==
+               last_stage_std_cell_module_input_ports[port_id].get_width());
+  }
+
+  /* Mem port is the memory of the standard cell MUX2, whose size must be 1 ! */
+  ModulePortId last_stage_std_cell_module_mem = module_manager.find_module_port(
+    last_stage_std_cell_module_id,
+    circuit_lib.port_prefix(last_stage_std_cell_input_ports[2]));
+  VTR_ASSERT(true ==
+             module_manager.valid_module_port_id(
+               last_stage_std_cell_module_id, last_stage_std_cell_module_mem));
+  BasicPort last_stage_std_cell_module_mem_port = module_manager.module_port(
+    last_stage_std_cell_module_id, last_stage_std_cell_module_mem);
+  VTR_ASSERT(1 == last_stage_std_cell_module_mem_port.get_width());
+
+  /* Output port is the data path output of the standard cell MUX2, whose size
+   * must be 1 ! */
+  ModulePortId last_stage_std_cell_module_output =
+    module_manager.find_module_port(
+      last_stage_std_cell_module_id,
+      circuit_lib.port_prefix(last_stage_std_cell_output_ports[0]));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(
+                       last_stage_std_cell_module_id,
+                       last_stage_std_cell_module_output));
+  BasicPort last_stage_std_cell_module_output_port = module_manager.module_port(
+    last_stage_std_cell_module_id, last_stage_std_cell_module_output);
+  VTR_ASSERT(1 == last_stage_std_cell_module_output_port.get_width());
+
   /* Cache Net ids for each level of the multiplexer */
   std::vector<std::vector<ModuleNetId>> module_nets_by_level;
   module_nets_by_level.resize(mux_graph.num_node_levels());
@@ -518,11 +583,16 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
     /* To match the standard cell MUX2: We should have only 2 input_nodes */
     VTR_ASSERT(2 == branch_size);
 
+    /* Last stage MUX model may have a different name */
+    ModuleId curr_stage_std_cell_module_id = std_cell_module_id;
+    if (true == mux_graph.is_node_output(node)) {
+      curr_stage_std_cell_module_id = last_stage_std_cell_module_id;
+    }
     /* Find the instance id */
     size_t std_cell_instance_id =
-      module_manager.num_instance(mux_module, std_cell_module_id);
+      module_manager.num_instance(mux_module, curr_stage_std_cell_module_id);
     /* Add the module to mux_module */
-    module_manager.add_child_module(mux_module, std_cell_module_id);
+    module_manager.add_child_module(mux_module, curr_stage_std_cell_module_id);
 
     /* Get the node level and index in the current level */
     size_t output_node_level = mux_graph.node_level(node);
@@ -530,9 +600,9 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
     /* Set a name for the instance */
     std::string std_cell_instance_name = generate_mux_branch_instance_name(
       output_node_level, output_node_index_at_level, false);
-    module_manager.set_child_instance_name(mux_module, std_cell_module_id,
-                                           std_cell_instance_id,
-                                           std_cell_instance_name);
+    module_manager.set_child_instance_name(
+      mux_module, curr_stage_std_cell_module_id, std_cell_instance_id,
+      std_cell_instance_name);
 
     /* Add module nets to wire to next stage modules */
     ModuleNetId branch_net;
@@ -540,13 +610,18 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
       /* This is an output node, we should use existing output nets */
       MuxOutputId output_id = mux_graph.output_id(node);
       branch_net = mux_module_output_nets[output_id];
+      module_manager.add_module_net_source(
+        mux_module, branch_net, curr_stage_std_cell_module_id,
+        std_cell_instance_id, last_stage_std_cell_module_output,
+        last_stage_std_cell_module_output_port.get_lsb());
     } else {
       VTR_ASSERT(false == mux_graph.is_node_output(node));
       branch_net = module_manager.create_module_net(mux_module);
+      module_manager.add_module_net_source(
+        mux_module, branch_net, curr_stage_std_cell_module_id,
+        std_cell_instance_id, std_cell_module_output,
+        std_cell_module_output_port.get_lsb());
     }
-    module_manager.add_module_net_source(
-      mux_module, branch_net, std_cell_module_id, std_cell_instance_id,
-      std_cell_module_output, std_cell_module_output_port.get_lsb());
 
     /* Record the module net id in the cache */
     module_nets_by_level[output_node_level][output_node_index_at_level] =
@@ -567,10 +642,17 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
      * Note that standard cell MUX2 only needs mem but NOT mem_inv
      */
     for (const MuxMemId& mem : mems) {
-      module_manager.add_module_net_sink(
-        mux_module, mux_module_mem_nets[mem], std_cell_module_id,
-        std_cell_instance_id, std_cell_module_mem,
-        std_cell_module_mem_port.get_lsb());
+      if (true == mux_graph.is_node_output(node)) {
+        module_manager.add_module_net_sink(
+          mux_module, mux_module_mem_nets[mem], last_stage_std_cell_module_id,
+          std_cell_instance_id, last_stage_std_cell_module_mem,
+          last_stage_std_cell_module_mem_port.get_lsb());
+      } else {
+        module_manager.add_module_net_sink(
+          mux_module, mux_module_mem_nets[mem], std_cell_module_id,
+          std_cell_instance_id, std_cell_module_mem,
+          std_cell_module_mem_port.get_lsb());
+      }
     }
 
     /* Wire the branch module inputs to the nets in previous stage */
@@ -602,8 +684,15 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
           mux_module, mux_module_input_nets[input_id], std_cell_module_id,
           std_cell_instance_id, std_cell_module_inputs[node_id],
           std_cell_module_input_ports[node_id].get_lsb());
+      } else if (true == mux_graph.is_node_output(node)) {
+        /* Find the input port of standard cell */
+        module_manager.add_module_net_sink(
+          mux_module,
+          module_nets_by_level[input_node_level][input_node_index_at_level],
+          last_stage_std_cell_module_id, std_cell_instance_id,
+          last_stage_std_cell_module_inputs[node_id],
+          last_stage_std_cell_module_input_ports[node_id].get_lsb());
       } else {
-        VTR_ASSERT(false == mux_graph.is_node_input(input_nodes[node_id]));
         /* Find the input port of standard cell */
         module_manager.add_module_net_sink(
           mux_module,

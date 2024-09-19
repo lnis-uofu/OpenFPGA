@@ -259,6 +259,28 @@ CircuitModelId CircuitLibrary::pass_gate_logic_model(
   return pgl_model_id;
 }
 
+/* Find the id of pass-gate circuit model
+ * Two cases to be considered:
+ * 1. this is a pass-gate circuit model, just find the data and return
+ * 2. this circuit model includes a pass-gate, find the link to pass-gate
+ * circuit model and go recursively
+ */
+CircuitModelId CircuitLibrary::last_stage_pass_gate_logic_model(
+  const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+
+  /* Return the data if this is a pass-gate circuit model */
+  if (CIRCUIT_MODEL_PASSGATE == model_type(model_id)) {
+    return model_ids_[model_id];
+  }
+
+  /* Otherwise, we need to make sure this circuit model contains a pass-gate */
+  CircuitModelId pgl_model_id = last_stage_pass_gate_logic_model_ids_[model_id];
+  VTR_ASSERT(CircuitModelId::INVALID() != pgl_model_id);
+  return pgl_model_id;
+}
+
 /* Find the name of pass-gate circuit model
  * Two cases to be considered:
  * 1. this is a pass-gate circuit model, just find the data and return
@@ -277,6 +299,26 @@ std::string CircuitLibrary::pass_gate_logic_model_name(
 
   /* Otherwise, we need to make sure this circuit model contains a pass-gate */
   return pass_gate_logic_model_names_[model_id];
+}
+
+/* Find the name of pass-gate circuit model
+ * Two cases to be considered:
+ * 1. this is a pass-gate circuit model, just find the data and return
+ * 2. this circuit model includes a pass-gate, find the link to pass-gate
+ * circuit model and go recursively
+ */
+std::string CircuitLibrary::last_stage_pass_gate_logic_model_name(
+  const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+
+  /* Return the data if this is a pass-gate circuit model */
+  if (CIRCUIT_MODEL_PASSGATE == model_type(model_id)) {
+    return model_names_[model_id];
+  }
+
+  /* Otherwise, we need to make sure this circuit model contains a pass-gate */
+  return last_stage_pass_gate_logic_model_names_[model_id];
 }
 
 /* Return the type of pass gate logic module, only applicable to circuit model
@@ -1262,6 +1304,8 @@ CircuitModelId CircuitLibrary::add_model(
   /* Pass-gate-related parameters */
   pass_gate_logic_model_names_.emplace_back();
   pass_gate_logic_model_ids_.emplace_back(CircuitModelId::INVALID());
+  last_stage_pass_gate_logic_model_names_.emplace_back();
+  last_stage_pass_gate_logic_model_ids_.emplace_back(CircuitModelId::INVALID());
 
   /* Delay information */
   delay_types_.emplace_back();
@@ -1482,6 +1526,15 @@ void CircuitLibrary::set_model_pass_gate_logic(const CircuitModelId& model_id,
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   pass_gate_logic_model_names_[model_id] = model_name;
+  return;
+}
+
+/* Set pass-gate logic information of a circuit model */
+void CircuitLibrary::set_model_last_stage_pass_gate_logic(
+  const CircuitModelId& model_id, const std::string& model_name) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  last_stage_pass_gate_logic_model_names_[model_id] = model_name;
   return;
 }
 
@@ -2174,6 +2227,12 @@ void CircuitLibrary::link_pass_gate_logic_model(
   }
   pass_gate_logic_model_ids_[model_id] =
     model(pass_gate_logic_model_names_[model_id]);
+  /* Get the circuit model id by name, skip those with empty names*/
+  if (true == last_stage_pass_gate_logic_model_names_[model_id].empty()) {
+    return;
+  }
+  last_stage_pass_gate_logic_model_ids_[model_id] =
+    model(last_stage_pass_gate_logic_model_names_[model_id]);
   return;
 }
 

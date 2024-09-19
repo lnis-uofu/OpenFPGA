@@ -593,6 +593,15 @@ static void write_xml_circuit_model(std::fstream& fp, const char* fname,
       circuit_lib.model_name(circuit_lib.pass_gate_logic_model(model)).c_str());
     fp << "/>"
        << "\n";
+    fp << "\t\t\t"
+       << "<last_stage_pass_gate_logic";
+    write_xml_attribute(
+      fp, "circuit_model_name",
+      circuit_lib
+        .model_name(circuit_lib.last_stage_pass_gate_logic_model(model))
+        .c_str());
+    fp << "/>"
+       << "\n";
   }
 
   /* Write the ports of circuit model */
