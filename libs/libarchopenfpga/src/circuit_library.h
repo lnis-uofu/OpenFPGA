@@ -274,6 +274,7 @@ class CircuitLibrary {
   CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
   CircuitModelId last_stage_pass_gate_logic_model(const CircuitModelId& model_id) const;
   std::string pass_gate_logic_model_name(const CircuitModelId& model_id) const;
+  std::string last_stage_pass_gate_logic_model_name(const CircuitModelId& model_id) const;
   enum e_circuit_model_pass_gate_logic_type pass_gate_logic_type(
     const CircuitModelId& model_id) const;
   float pass_gate_logic_pmos_size(const CircuitModelId& model_id) const;

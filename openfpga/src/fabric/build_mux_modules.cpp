@@ -498,7 +498,7 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
   VTR_ASSERT(1 == std_cell_module_output_port.get_width());
 
   /* Find module information of the standard cell MUX2 */
-  CircuitModelId last_stage_std_cell_model = circuit_lib.model_last_stage_pass_gate_model(mux_model);
+  CircuitModelId last_stage_std_cell_model = circuit_lib.last_stage_pass_gate_logic_model(mux_model);
   std::string last_stage_std_cell_module_name = circuit_lib.model_name(last_stage_std_cell_model);
   /* Get the moduleId for the submodule */
   ModuleId last_stage_std_cell_module_id =
@@ -640,7 +640,7 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
       } else {
         module_manager.add_module_net_sink(
           mux_module, mux_module_mem_nets[mem], last_stage_std_cell_module_id,
-          last_stage_std_cell_instance_id, last_stage_std_cell_module_mem,
+          std_cell_instance_id, last_stage_std_cell_module_mem,
           last_stage_std_cell_module_mem_port.get_lsb());
       }
     }
