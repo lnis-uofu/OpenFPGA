@@ -634,14 +634,14 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
     for (const MuxMemId& mem : mems) {
       if (true == mux_graph.is_node_output(node)) {
         module_manager.add_module_net_sink(
-          mux_module, mux_module_mem_nets[mem], std_cell_module_id,
-          std_cell_instance_id, std_cell_module_mem,
-          std_cell_module_mem_port.get_lsb());
-      } else {
-        module_manager.add_module_net_sink(
           mux_module, mux_module_mem_nets[mem], last_stage_std_cell_module_id,
           std_cell_instance_id, last_stage_std_cell_module_mem,
           last_stage_std_cell_module_mem_port.get_lsb());
+      } else {
+        module_manager.add_module_net_sink(
+          mux_module, mux_module_mem_nets[mem], std_cell_module_id,
+          std_cell_instance_id, std_cell_module_mem,
+          std_cell_module_mem_port.get_lsb());
       }
     }
 
