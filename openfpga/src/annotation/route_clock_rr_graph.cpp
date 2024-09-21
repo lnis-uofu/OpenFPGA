@@ -455,8 +455,7 @@ static int rec_expand_and_route_clock_spine(
      * global net is mapped to the internal driver, use it as the previous
      * node  */
     size_t use_int_driver = 0;
-    if (!clk_ntwk.spine_intermediate_drivers(curr_spine, des_coord)
-           .empty() &&
+    if (!clk_ntwk.spine_intermediate_drivers(curr_spine, des_coord).empty() &&
         tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
       for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
         RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
