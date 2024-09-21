@@ -761,23 +761,13 @@ static int add_rr_graph_opin2clk_intermediate_edges(
           /* Get the rr node of destination spine */
           Direction des_spine_direction = clk_ntwk.spine_direction(ispine);
           ClockLevelId des_spine_level = clk_ntwk.spine_level(ispine);
-          vtr::Point<int> des_coord;
+          vtr::Point<int> des_coord(coord.x(), coord.y());
           /* des node depends on the type of routing track and direction. But it should be a starting point at the current SB[x][y] */
           if (des_spine_direction == Direction::INC && clk_ntwk.spine_track_type(ispine) == CHANX) {
             des_coord.set_x(coord.x() + 1);
-            des_coord.set_y(coord.y());
-          } 
-          if (des_spine_direction == Direction::DEC && clk_ntwk.spine_track_type(ispine) == CHANX) {
-            des_coord.set_x(coord.x());
-            des_coord.set_y(coord.y());
           } 
           if (des_spine_direction == Direction::INC && clk_ntwk.spine_track_type(ispine) == CHANY) {
-            des_coord.set_x(coord.x());
             des_coord.set_y(coord.y() + 1);
-          } 
-          if (des_spine_direction == Direction::DEC && clk_ntwk.spine_track_type(ispine) == CHANY) {
-            des_coord.set_x(coord.x());
-            des_coord.set_y(coord.y());
           } 
           RRNodeId des_node = clk_rr_lookup.find_node(
             des_coord.x(), des_coord.y(), clk_tree, des_spine_level, ipin,
