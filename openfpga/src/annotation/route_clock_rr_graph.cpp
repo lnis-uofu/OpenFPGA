@@ -450,10 +450,13 @@ static int rec_expand_and_route_clock_spine(
         int_driver_coord.set_y(des_coord.y() - 1);
       }
 
-      if (!clk_ntwk.spine_intermediate_drivers(curr_spine, int_driver_coord).empty() &&
+      if (!clk_ntwk.spine_intermediate_drivers(curr_spine, int_driver_coord)
+             .empty() &&
           tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
-        VTR_LOGV(verbose, "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
-                 des_coord.x(), des_coord.y(), clk_ntwk.spine_name(curr_spine).c_str());
+        VTR_LOGV(verbose,
+                 "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
+                 des_coord.x(), des_coord.y(),
+                 clk_ntwk.spine_name(curr_spine).c_str());
         for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
           RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
           if (OPIN != rr_graph.node_type(opin_node)) {
@@ -479,7 +482,8 @@ static int rec_expand_and_route_clock_spine(
       }
       if (use_int_driver > 1) {
         VTR_LOG_ERROR(
-          "Found %lu internal drivers for the intermediate point (%lu, %lu) for "
+          "Found %lu internal drivers for the intermediate point (%lu, %lu) "
+          "for "
           "spine '%s'!\n Expect only 1!\n",
           use_int_driver, des_coord.x(), des_coord.y(),
           clk_ntwk.spine_name(curr_spine).c_str());
@@ -523,10 +527,12 @@ static int rec_expand_and_route_clock_spine(
       int_driver_coord.set_y(des_coord.y() - 1);
     }
 
-    if (!clk_ntwk.spine_intermediate_drivers(curr_spine, int_driver_coord).empty() &&
+    if (!clk_ntwk.spine_intermediate_drivers(curr_spine, int_driver_coord)
+           .empty() &&
         tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
-      VTR_LOGV(verbose, "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
-               des_coord.x(), des_coord.y(), clk_ntwk.spine_name(curr_spine).c_str());
+      VTR_LOGV(
+        verbose, "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
+        des_coord.x(), des_coord.y(), clk_ntwk.spine_name(curr_spine).c_str());
       for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
         RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
         if (OPIN != rr_graph.node_type(opin_node)) {
