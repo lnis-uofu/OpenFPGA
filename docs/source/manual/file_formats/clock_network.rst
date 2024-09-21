@@ -224,7 +224,10 @@ For example,
     <spine>
   </clock_network>
 
-where the clock routing can be driven at (x=1,y=1) by the output pins ``O[0:3]`` of tile ``clb`` in a VPR architecture description file:
+
+where clock spine ``spine0`` will be driven by other programmable blocks at (1, 1), as highlighted in purple in the :numref:`fig_prog_clock_network_example_2x2_perimeter_cb`
+
+To be specific, the clock routing can be driven at (x=1,y=1) by the output pins ``O[0:3]`` of tile ``clb`` in a VPR architecture description file:
 
 .. code-block:: xml
 
