@@ -270,6 +270,18 @@ vtr::Point<int> ClockNetwork::spine_end_point(
   return spine_end_points_[spine_id];
 }
 
+std::vector<ClockInternalDriverId> ClockNetwork::spine_intermediate_drivers(
+  const ClockSpineId& spine_id, const vtr::Point<int>& coord) const {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  /* Convert coord to a unique string */
+  std::string coord_str = std::to_string(coord.x()) + std::string(",") + std::to_string(coord.y());
+  auto result = spine_intermediate_drivers_[spine_id].find(coord_str);
+  if (result == spine_intermediate_drivers_[spine_id].end()) {
+    return std::vector<ClockInternalDriverId>();
+  }
+  return result->second;
+}
+
 ClockLevelId ClockNetwork::spine_level(const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_id(spine_id));
   if (is_dirty_) {
@@ -624,6 +636,7 @@ void ClockNetwork::reserve_spines(const size_t& num_spines) {
   spine_switch_points_.reserve(num_spines);
   spine_switch_coords_.reserve(num_spines);
   spine_switch_internal_drivers_.reserve(num_spines);
+  spine_intermediate_drivers_.reserve(num_spines);
   spine_parents_.reserve(num_spines);
   spine_children_.reserve(num_spines);
   spine_parent_trees_.reserve(num_spines);
@@ -716,6 +729,7 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_switch_points_.emplace_back();
   spine_switch_coords_.emplace_back();
   spine_switch_internal_drivers_.emplace_back();
+  spine_intermediate_drivers_.emplace_back();
   spine_parents_.emplace_back();
   spine_children_.emplace_back();
   spine_parent_trees_.emplace_back();
@@ -815,6 +829,45 @@ ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
   spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(
     int_driver_id);
   return int_driver_id;
+}
+
+ClockInternalDriverId ClockNetwork::add_spine_intermediate_driver(
+  const ClockSpineId& spine_id, const vtr::Point<int>& coord,
+  const std::string& int_driver_from_port,
+  const std::string& int_driver_to_port) {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  /* Convert coord to a unique string */
+  std::string coord_str = std::to_string(coord.x()) + std::string(",") + std::to_string(coord.y());
+  /* Parse ports */
+  PortParser to_pin_parser(int_driver_to_port);
+  /* Find any existing id for the driver port */
+  ClockInternalDriverId int_driver_id_to_add = ClockInternalDriverId(internal_driver_ids_.size());
+  for (ClockInternalDriverId int_driver_id : internal_driver_ids_) {
+    if (internal_driver_from_pins_[int_driver_id] == int_driver_from_port &&
+        internal_driver_to_pins_[int_driver_id] == to_pin_parser.port()) {
+      int_driver_id_to_add = int_driver_id;
+      break;
+    }
+  }
+  /* Reaching here, no existing id can be reused, create a new one */
+  if (int_driver_id_to_add == ClockInternalDriverId(internal_driver_ids_.size())) {
+    internal_driver_ids_.push_back(int_driver_id_to_add);
+    internal_driver_from_pins_.push_back(int_driver_from_port);
+    internal_driver_to_pins_.push_back(to_pin_parser.port());
+  }
+  /* Add it to existing map, avoid duplicated id */
+  auto result = spine_intermediate_drivers_[spine_id].find(coord_str);
+  if (result == spine_intermediate_drivers_[spine_id].end()) {
+    spine_intermediate_drivers_[spine_id][coord_str].push_back(int_driver_id_to_add);
+  } else {
+    if (std::find(result->second.begin(), result->second.end(), int_driver_id_to_add) == result->second.end()) {
+      result->second.push_back(int_driver_id_to_add);
+    } else {
+      VTR_LOG_WARN("Skip intermediate driver (from_port='%s', to_port='%s') at (%s) as it is duplicated in the clock architecture description file!\n",
+                   int_driver_from_port.c_str(), int_driver_to_port.c_str(), coord_str.c_str());
+    }
+  }
+  return int_driver_id_to_add;
 }
 
 ClockTapId ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,

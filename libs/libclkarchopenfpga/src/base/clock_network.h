@@ -97,6 +97,8 @@ class ClockNetwork {
   std::string spine_name(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_end_point(const ClockSpineId& spine_id) const;
+  std::vector<ClockInternalDriverId> spine_intermediate_drivers(const ClockSpineId& spine_id, const vtr::Point<int>& coord) const;
+  
   /* Return the level where the spine locates in the multi-layer clock tree
    * structure */
   ClockLevelId spine_level(const ClockSpineId& spine_id) const;
@@ -227,6 +229,10 @@ class ClockNetwork {
     const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
     const std::string& internal_driver_from_port,
     const std::string& internal_driver_to_port);
+  ClockInternalDriverId add_spine_intermediate_driver(
+    const ClockSpineId& spine_id, const vtr::Point<int>& coord,
+    const std::string& internal_driver_from_port,
+    const std::string& internal_driver_to_port);
   ClockTapId add_tree_tap(const ClockTreeId& tree_id,
                           const BasicPort& from_port,
                           const std::string& to_port);
@@ -314,6 +320,7 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
   vtr::vector<ClockSpineId, std::vector<std::vector<ClockInternalDriverId>>>
     spine_switch_internal_drivers_;
+  vtr::vector<ClockSpineId, std::map<std::string, std::vector<ClockInternalDriverId>>> spine_intermediate_drivers_;
   vtr::vector<ClockSpineId, ClockSpineId> spine_parents_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_children_;
   vtr::vector<ClockSpineId, ClockTreeId> spine_parent_trees_;
