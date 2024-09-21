@@ -427,6 +427,52 @@ static int rec_expand_and_route_clock_spine(
      * The skip condition may cause this. */
     /* Skip the first stop */
     if (icoord == spine_coords.size() - 1) {
+      vtr::Point<int> des_coord = spine_coords[icoord];
+      Direction des_spine_direction = clk_ntwk.spine_direction(curr_spine);
+      ClockLevelId des_spine_level = clk_ntwk.spine_level(curr_spine);
+      RRNodeId des_node = clk_rr_lookup.find_node(
+        des_coord.x(), des_coord.y(), clk_tree, des_spine_level, curr_pin,
+        des_spine_direction, verbose);
+      VTR_ASSERT(rr_graph.valid_node(des_node));
+
+      /* Internal drivers may appear at the intermediate. Check if there are
+       * any defined and related rr_node found as incoming edges. If the
+       * global net is mapped to the internal driver, use it as the previous
+       * node  */
+      size_t use_int_driver = 0;
+      if (!clk_ntwk.spine_intermediate_drivers(curr_spine, des_coord).empty() &&
+          tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
+        for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
+          RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
+          if (OPIN != rr_graph.node_type(opin_node)) {
+            continue;
+          }
+          if (rr_node_gnets[opin_node] != tree2clk_pin_map.at(curr_pin)) {
+            continue;
+          }
+          /* This is the opin node we need, use it as the internal driver */
+          vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
+                                                       opin_node);
+          vpr_routing_annotation.set_rr_node_net(opin_node,
+                                                 tree2clk_pin_map.at(curr_pin));
+          vpr_routing_annotation.set_rr_node_net(des_node,
+                                                 tree2clk_pin_map.at(curr_pin));
+          use_int_driver++;
+          VTR_LOGV(verbose,
+                   "Routed intermediate point of spine '%s' at "
+                   "(%lu, %lu) using internal driver\n",
+                   clk_ntwk.spine_name(curr_spine).c_str(), des_coord.x(),
+                   des_coord.y());
+        }
+      }
+      if (use_int_driver > 1) {
+        VTR_LOG_ERROR(
+          "Found %lu internal drivers for the intermediate point (%lu, %lu) for "
+          "spine '%s'!\n Expect only 1!\n",
+          use_int_driver, des_coord.x(), des_coord.y(),
+          clk_ntwk.spine_name(curr_spine).c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
       continue;
     }
     /* Connect only when next stop is used */
