@@ -21,12 +21,15 @@ constexpr const char* XML_CLOCK_SPINE_ATTRIBUTE_END_X = "end_x";
 constexpr const char* XML_CLOCK_SPINE_ATTRIBUTE_END_Y = "end_y";
 constexpr const char* XML_CLOCK_SPINE_ATTRIBUTE_TYPE = "type";
 constexpr const char* XML_CLOCK_SPINE_ATTRIBUTE_DIRECTION = "direction";
-constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME = "intermediate_driver";
+constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME =
+  "intermediate_driver";
 constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_TAP_NODE_NAME = "tap";
 constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X = "x";
 constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y = "y";
-constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN = "from_pin";
-constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN = "to_pin";
+constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN =
+  "from_pin";
+constexpr const char* XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN =
+  "to_pin";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME = "switch_point";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME =
   "internal_driver";

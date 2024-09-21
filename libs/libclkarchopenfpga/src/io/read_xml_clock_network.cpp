@@ -191,17 +191,17 @@ static void read_xml_clock_spine_intermediate_driver_tap(
   }
 
   std::string int_driver_from_port_name =
-    get_attribute(
-      xml_int_driver,
-      XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN, loc_data)
+    get_attribute(xml_int_driver,
+                  XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN,
+                  loc_data)
       .as_string();
   std::string int_driver_to_port_name =
     get_attribute(xml_int_driver,
                   XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN,
                   loc_data)
       .as_string();
-  clk_ntwk.add_spine_intermediate_driver(spine_id, spine_coord, int_driver_from_port_name,
-                                         int_driver_to_port_name);
+  clk_ntwk.add_spine_intermediate_driver(
+    spine_id, spine_coord, int_driver_from_port_name, int_driver_to_port_name);
 }
 
 /********************************************************************
@@ -266,12 +266,14 @@ static void read_xml_clock_spine_intermediate_driver(
                    "Invalid id of a clock spine!\n");
   }
 
-  int tap_x = get_attribute(xml_driver,
-                            XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X, loc_data)
-                .as_int();
-  int tap_y = get_attribute(xml_driver,
-                            XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y, loc_data)
-                .as_int();
+  int tap_x =
+    get_attribute(xml_driver, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X,
+                  loc_data)
+      .as_int();
+  int tap_y =
+    get_attribute(xml_driver, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y,
+                  loc_data)
+      .as_int();
 
   /* Add internal drivers if possible */
   for (pugi::xml_node xml_int_driver : xml_driver.children()) {
@@ -279,7 +281,8 @@ static void read_xml_clock_spine_intermediate_driver(
     if (xml_int_driver.name() ==
         std::string(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_TAP_NODE_NAME)) {
       read_xml_clock_spine_intermediate_driver_tap(
-        xml_int_driver, loc_data, clk_ntwk, spine_id, vtr::Point<int>(tap_x, tap_y));
+        xml_int_driver, loc_data, clk_ntwk, spine_id,
+        vtr::Point<int>(tap_x, tap_y));
     } else {
       bad_tag(xml_int_driver, loc_data, xml_driver,
               {XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_TAP_NODE_NAME});
@@ -392,13 +395,14 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
       read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk,
                                         spine_id);
     } else if (xml_switch_point.name() ==
-        std::string(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME)) {
-      read_xml_clock_spine_intermediate_driver(xml_switch_point, loc_data, clk_ntwk,
-                                  spine_id);
+               std::string(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME)) {
+      read_xml_clock_spine_intermediate_driver(xml_switch_point, loc_data,
+                                               clk_ntwk, spine_id);
 
     } else {
       bad_tag(xml_switch_point, loc_data, xml_spine,
-              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME});
+              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME,
+               XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME});
     }
   }
 }

@@ -145,15 +145,18 @@ static int write_xml_clock_spine_switch_point(
 static int write_xml_clock_spine_intermediate_drivers(
   std::fstream& fp, const ClockNetwork& clk_ntwk, const ClockSpineId& spine_id,
   const vtr::Point<int>& coord) {
-  std::vector<ClockInternalDriverId> int_drivers = clk_ntwk.spine_intermediate_drivers(spine_id, coord);
+  std::vector<ClockInternalDriverId> int_drivers =
+    clk_ntwk.spine_intermediate_drivers(spine_id, coord);
   if (int_drivers.empty()) {
     return 0;
   }
   openfpga::write_tab_to_file(fp, 3);
   fp << "<" << XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME << "";
 
-  write_xml_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X, coord.x());
-  write_xml_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y, coord.y());
+  write_xml_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X,
+                      coord.x());
+  write_xml_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y,
+                      coord.y());
 
   for (ClockInternalDriverId int_driver_id : int_drivers) {
     openfpga::write_tab_to_file(fp, 4);
@@ -161,11 +164,11 @@ static int write_xml_clock_spine_intermediate_drivers(
     write_xml_attribute(
       fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN,
       clk_ntwk.internal_driver_from_pin(int_driver_id).c_str());
-    write_xml_attribute(
-      fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN,
-      clk_ntwk.internal_driver_to_pin(int_driver_id)
-        .to_verilog_string()
-        .c_str());
+    write_xml_attribute(fp,
+                        XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN,
+                        clk_ntwk.internal_driver_to_pin(int_driver_id)
+                          .to_verilog_string()
+                          .c_str());
     fp << "/>"
        << "\n";
   }
@@ -173,7 +176,6 @@ static int write_xml_clock_spine_intermediate_drivers(
 
   return 0;
 }
-
 
 static int write_xml_clock_spine(std::fstream& fp, const ClockNetwork& clk_ntwk,
                                  const ClockSpineId& spine_id) {
