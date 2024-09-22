@@ -293,13 +293,12 @@ static int route_spine_taps(
   return CMD_EXEC_SUCCESS;
 }
 
-
 /********************************************************************
  * Recursively route a clock spine on an existing routing resource graph
  *******************************************************************/
 static int route_spine_intermediate_drivers(
-  VprRoutingAnnotation& vpr_routing_annotation,
-  const RRGraphView& rr_graph, const RRClockSpatialLookup& clk_rr_lookup,
+  VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
+  const RRClockSpatialLookup& clk_rr_lookup,
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
@@ -321,10 +320,9 @@ static int route_spine_intermediate_drivers(
          .spine_intermediate_drivers_by_routing_track(curr_spine, des_coord)
          .empty() &&
       tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
-    VTR_LOGV(verbose,
-             "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
-             des_coord.x(), des_coord.y(),
-             clk_ntwk.spine_name(curr_spine).c_str());
+    VTR_LOGV(
+      verbose, "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
+      des_coord.x(), des_coord.y(), clk_ntwk.spine_name(curr_spine).c_str());
     for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
       RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
       if (OPIN != rr_graph.node_type(opin_node)) {
@@ -495,12 +493,13 @@ static int rec_expand_and_route_clock_spine(
     if (icoord == spine_coords.size() - 1) {
       vtr::Point<int> des_coord = spine_coords[icoord];
 
-      int use_int_driver = route_spine_intermediate_drivers(vpr_routing_annotation,
-                          rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map,
-                          clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord, verbose); 
+      int use_int_driver = route_spine_intermediate_drivers(
+        vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets,
+        tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord,
+        verbose);
       if (use_int_driver > 1) {
         return CMD_EXEC_FATAL_ERROR;
-      } 
+      }
       continue;
     }
     /* Connect only when next stop is used */
@@ -528,12 +527,13 @@ static int rec_expand_and_route_clock_spine(
      * any defined and related rr_node found as incoming edges. If the
      * global net is mapped to the internal driver, use it as the previous
      * node  */
-    int use_int_driver = route_spine_intermediate_drivers(vpr_routing_annotation,
-                        rr_graph, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map,
-                        clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord, verbose); 
+    int use_int_driver = route_spine_intermediate_drivers(
+      vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets,
+      tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord,
+      verbose);
     if (use_int_driver > 1) {
       return CMD_EXEC_FATAL_ERROR;
-    } 
+    }
     if (use_int_driver == 1) {
       continue; /* Used internal driver, early pass. */
     }
