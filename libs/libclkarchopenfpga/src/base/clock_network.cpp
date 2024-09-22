@@ -283,6 +283,39 @@ std::vector<ClockInternalDriverId> ClockNetwork::spine_intermediate_drivers(
   return result->second;
 }
 
+vtr::Point<int> ClockNetwork::spine_intermediate_driver_routing_track_coord(const ClockSpineId& spine_id, const vtr::Point<int>& coord) const {
+  vtr::Point<int> des_coord(coord.x(), coord.y());
+  Direction des_spine_direction = spine_direction(spine_id);
+  /* des node depends on the type of routing track and direction. But it
+   * should be a starting point at the current SB[x][y] */
+  if (des_spine_direction == Direction::INC &&
+      spine_track_type(spine_id) == CHANX) {
+    des_coord.set_x(coord.x() + 1);
+  }
+  if (des_spine_direction == Direction::INC &&
+      spine_track_type(spine_id) == CHANY) {
+    des_coord.set_y(coord.y() + 1);
+  }
+  return des_coord;
+}
+
+std::vector<ClockInternalDriverId> ClockNetwork::spine_intermediate_drivers_by_routing_track(
+    const ClockSpineId& spine_id, const vtr::Point<int>& track_coord) const {
+  vtr::Point<int> des_coord(track_coord.x(), track_coord.y());
+  Direction des_spine_direction = spine_direction(spine_id);
+  /* des node depends on the type of routing track and direction. But it
+   * should be a starting point at the current SB[x][y] */
+  if (des_spine_direction == Direction::INC &&
+      spine_track_type(spine_id) == CHANX) {
+    des_coord.set_x(track_coord.x() - 1);
+  }
+  if (des_spine_direction == Direction::INC &&
+      spine_track_type(spine_id) == CHANY) {
+    des_coord.set_y(track_coord.y() - 1);
+  }
+  return spine_intermediate_drivers(spine_id, des_coord); 
+}
+
 ClockLevelId ClockNetwork::spine_level(const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_id(spine_id));
   if (is_dirty_) {
