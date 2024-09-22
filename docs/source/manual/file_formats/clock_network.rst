@@ -27,6 +27,9 @@ The entry point of a clock tree must be at a valid connection block.
   <clock_networks default_segment="<string>" default_tap_switch="<string>" default_driver_switch="<string>"> 
     <clock_network name="<string>" global_port="<int>"> 
       <spine name="<string>" start_x="<int>" start_y="<int>" end_x="<int>" end_y="<int>"> 
+        <intermediate_driver x="<int>" y="<int>">
+          <tap from_pin="<string>" to_pin="<string>"/>
+        </intermediate_driver> 
         <switch_point tap="<string>" x="<int>" y="<int>"> 
           <internal_driver from_pin="<string>" to_pin="<string>"/>
         </switch_point>
@@ -178,6 +181,62 @@ For example,
 where a horizental clock spine ``spine0`` is defined which spans from (1, 1) to (2, 1), as highlighted in orange in the :numref:`fig_prog_clock_network_example_2x2`
 
 .. note:: We only support clock spines in horizental and vertical directions. Diagonal clock spine is not supported!
+
+.. _file_formats_clock_network_intermediate_driver:
+
+Intermediate Driver
+^^^^^^^^^^^^^^^^^^^
+
+The following syntax are applicable to the XML definition tagged by ``intermediate_driver``
+Note that a number of intermediate drivers can be defined under each clock spine ``spine``.
+
+.. option:: x="<int>"
+
+  The coordinate X where the intermediate driver should occur on the spine. Must be a valid coordinate within the range of the current clock spine and the clock spine to be tapped.
+
+.. option:: y="<int>"
+
+  The coordinate Y where the intermediate driver should occur on the spine. Must be a valid coordinate within the range of the current clock spine and the clock spine to be tapped.
+
+.. note:: The intermeidate driver is different than the internal driver (see details in :ref:`file_formats_clock_network_switch_point`). Intermediate driver may occur in any mid points of a spine, while internal driver occurs **ONLY** on the switch points between spines.
+
+Under each intermediate driver, a number of tap points can be specified.
+For each tap point, outputs of neighbouring programmable blocks are allowed to drive the spine through syntax ``tap``.
+
+.. option:: from_pin="<string>"
+
+  Define the pin of a programmable block as an internal driver to a clock network. The pin must be a valid pin defined in the VPR architecture description file.
+
+.. option:: to_pin="<string>"
+
+  Define the source pin of a clock network. The pin must be a valid pin of the global ports defined in the tile_annotation part of OpenFPGA architecture description file.
+
+For example, 
+
+.. code-block:: xml
+
+  <clock_network name="clk_tree_0" global_port="clk[0:1]">
+    <!-- Some clock spines -->
+    <spine name="spine0" start_x="1" start_y="1" end_x="2" end_y="1">
+      <intermediate_driver x="1" y="1">
+        <tap from_pin="clb.O[0:1]" to_pin="clk[0:0]"/>
+      </intermediate_driver>
+    <spine>
+  </clock_network>
+
+
+where clock spine ``spine0`` will be driven by other programmable blocks at (1, 1), as highlighted in purple in the :numref:`fig_prog_clock_network_example_2x2_perimeter_cb`
+
+To be specific, the clock routing can be driven at (x=1,y=1) by the output pins ``O[0:3]`` of tile ``clb`` in a VPR architecture description file:
+
+.. code-block:: xml
+
+  <tile name="clb">
+   <sub_tile name="clb">
+     <output name="O" num_pins="8"/>
+   </sub_tile>
+  </tile>
+
 
 .. _file_formats_clock_network_switch_point:
 

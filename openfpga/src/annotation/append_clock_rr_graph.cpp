@@ -737,6 +737,67 @@ static int add_rr_graph_opin2clk_edges(
 }
 
 /********************************************************************
+ * Add edges between OPIN of programmable blocks and clock routing tracks
+ * Note that such edges only occur at the intermeidate points of spines
+ * Different from add_rr_graph_opin2clk_edges(), we follow the clock spines
+ *here By expanding on intermediate points, internal drivers will be added
+ *******************************************************************/
+static int add_rr_graph_opin2clk_intermediate_edges(
+  RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
+  const RRClockSpatialLookup& clk_rr_lookup, const RRGraphView& rr_graph_view,
+  const DeviceGrid& grids, const size_t& layer, const ClockNetwork& clk_ntwk,
+  const bool& verbose) {
+  size_t edge_count = 0;
+  for (ClockTreeId clk_tree : clk_ntwk.trees()) {
+    for (ClockSpineId ispine : clk_ntwk.spines(clk_tree)) {
+      VTR_LOGV(verbose, "Finding internal drivers on spine '%s'...\n",
+               clk_ntwk.spine_name(ispine).c_str());
+      for (auto ipin : clk_ntwk.pins(clk_tree)) {
+        for (const vtr::Point<int>& coord :
+             clk_ntwk.spine_coordinates(ispine)) {
+          if (clk_ntwk.spine_intermediate_drivers(ispine, coord).empty()) {
+            continue;
+          }
+          size_t curr_edge_count = edge_count;
+          /* Get the rr node of destination spine */
+          Direction des_spine_direction = clk_ntwk.spine_direction(ispine);
+          ClockLevelId des_spine_level = clk_ntwk.spine_level(ispine);
+          vtr::Point<int> des_coord =
+            clk_ntwk.spine_intermediate_driver_routing_track_coord(ispine,
+                                                                   coord);
+          RRNodeId des_node = clk_rr_lookup.find_node(
+            des_coord.x(), des_coord.y(), clk_tree, des_spine_level, ipin,
+            des_spine_direction, verbose);
+          if (!rr_graph_view.valid_node(des_node)) {
+            continue;
+          }
+          /* Walk through each qualified OPIN, build edges */
+          std::vector<ClockInternalDriverId> int_driver_ids =
+            clk_ntwk.spine_intermediate_drivers(ispine, coord);
+          for (RRNodeId src_node : find_clock_opin2track_node(
+                 grids, rr_graph_view, layer, coord, clk_ntwk, ipin,
+                 int_driver_ids, verbose)) {
+            /* Create edges */
+            VTR_ASSERT(rr_graph_view.valid_node(des_node));
+            rr_graph_builder.create_edge(
+              src_node, des_node, clk_ntwk.default_driver_switch(), false);
+            edge_count++;
+          }
+          VTR_LOGV(verbose,
+                   "\tWill add %lu edges from OPINs as intermediate drivers at "
+                   "(x=%lu, y=%lu)\n",
+                   edge_count - curr_edge_count, des_coord.x(), des_coord.y());
+        }
+      }
+    }
+  }
+  /* Allocate edges */
+  rr_graph_builder.build_edges(true);
+  num_edges_to_create += edge_count;
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * Add edges to interconnect clock nodes
  * Walk through the routing tracks in each connection block (driver nodes)
  * and add edge to their fan-out clock nodes
@@ -812,6 +873,9 @@ static void add_rr_graph_clock_edges(
   add_rr_graph_opin2clk_edges(rr_graph_builder, num_edges_to_create,
                               clk_rr_lookup, rr_graph_view, grids, layer,
                               clk_ntwk, verbose);
+  add_rr_graph_opin2clk_intermediate_edges(
+    rr_graph_builder, num_edges_to_create, clk_rr_lookup, rr_graph_view, grids,
+    layer, clk_ntwk, verbose);
 }
 
 /********************************************************************
