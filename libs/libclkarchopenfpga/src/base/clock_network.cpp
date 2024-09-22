@@ -283,7 +283,8 @@ std::vector<ClockInternalDriverId> ClockNetwork::spine_intermediate_drivers(
   return result->second;
 }
 
-vtr::Point<int> ClockNetwork::spine_intermediate_driver_routing_track_coord(const ClockSpineId& spine_id, const vtr::Point<int>& coord) const {
+vtr::Point<int> ClockNetwork::spine_intermediate_driver_routing_track_coord(
+  const ClockSpineId& spine_id, const vtr::Point<int>& coord) const {
   vtr::Point<int> des_coord(coord.x(), coord.y());
   Direction des_spine_direction = spine_direction(spine_id);
   /* des node depends on the type of routing track and direction. But it
@@ -299,8 +300,9 @@ vtr::Point<int> ClockNetwork::spine_intermediate_driver_routing_track_coord(cons
   return des_coord;
 }
 
-std::vector<ClockInternalDriverId> ClockNetwork::spine_intermediate_drivers_by_routing_track(
-    const ClockSpineId& spine_id, const vtr::Point<int>& track_coord) const {
+std::vector<ClockInternalDriverId>
+ClockNetwork::spine_intermediate_drivers_by_routing_track(
+  const ClockSpineId& spine_id, const vtr::Point<int>& track_coord) const {
   vtr::Point<int> des_coord(track_coord.x(), track_coord.y());
   Direction des_spine_direction = spine_direction(spine_id);
   /* des node depends on the type of routing track and direction. But it
@@ -313,7 +315,7 @@ std::vector<ClockInternalDriverId> ClockNetwork::spine_intermediate_drivers_by_r
       spine_track_type(spine_id) == CHANY) {
     des_coord.set_y(track_coord.y() - 1);
   }
-  return spine_intermediate_drivers(spine_id, des_coord); 
+  return spine_intermediate_drivers(spine_id, des_coord);
 }
 
 ClockLevelId ClockNetwork::spine_level(const ClockSpineId& spine_id) const {

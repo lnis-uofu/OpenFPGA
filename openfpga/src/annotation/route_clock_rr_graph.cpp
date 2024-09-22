@@ -440,7 +440,8 @@ static int rec_expand_and_route_clock_spine(
        * global net is mapped to the internal driver, use it as the previous
        * node  */
       size_t use_int_driver = 0;
-      if (!clk_ntwk.spine_intermediate_drivers_by_routing_track(curr_spine, des_coord)
+      if (!clk_ntwk
+             .spine_intermediate_drivers_by_routing_track(curr_spine, des_coord)
              .empty() &&
           tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
         VTR_LOGV(verbose,
@@ -507,7 +508,8 @@ static int rec_expand_and_route_clock_spine(
      * global net is mapped to the internal driver, use it as the previous
      * node  */
     size_t use_int_driver = 0;
-    if (!clk_ntwk.spine_intermediate_drivers_by_routing_track(curr_spine, des_coord)
+    if (!clk_ntwk
+           .spine_intermediate_drivers_by_routing_track(curr_spine, des_coord)
            .empty() &&
         tree2clk_pin_map.find(curr_pin) != tree2clk_pin_map.end()) {
       VTR_LOGV(

@@ -100,10 +100,22 @@ class ClockNetwork {
   /* Find the intermediate drivers by the SB coordinate */
   std::vector<ClockInternalDriverId> spine_intermediate_drivers(
     const ClockSpineId& spine_id, const vtr::Point<int>& coord) const;
-  /* Find the coordinate of routing track which the intermediate driver will driver. Note that the coordinate may be different than the coordinate of intermeidate driver. One of the exceptions lies in the CHANX with INC direction, which starts actually on the routing tracks on the right side of a SB, resulting in x -> x + 1. Another exception is on the CHANY with INC direction, which starts actually on the routing tracks on the top side of a SB, resulting in y - > y + 1. This function is to provide an official conversion the coordinates. */
-  vtr::Point<int> spine_intermediate_driver_routing_track_coord(const ClockSpineId& spine_id, const vtr::Point<int>& coord) const;
-  /* Find the intermediate drivers by the routing track starting point. Note that the routing track starting point may be different from the SB coordinate. See the exceptions in the spine_intermediate_driver_track_coord() */
-  std::vector<ClockInternalDriverId> spine_intermediate_drivers_by_routing_track(
+  /* Find the coordinate of routing track which the intermediate driver will
+   * driver. Note that the coordinate may be different than the coordinate of
+   * intermeidate driver. One of the exceptions lies in the CHANX with INC
+   * direction, which starts actually on the routing tracks on the right side of
+   * a SB, resulting in x -> x + 1. Another exception is on the CHANY with INC
+   * direction, which starts actually on the routing tracks on the top side of a
+   * SB, resulting in y - > y + 1. This function is to provide an official
+   * conversion the coordinates. */
+  vtr::Point<int> spine_intermediate_driver_routing_track_coord(
+    const ClockSpineId& spine_id, const vtr::Point<int>& coord) const;
+  /* Find the intermediate drivers by the routing track starting point. Note
+   * that the routing track starting point may be different from the SB
+   * coordinate. See the exceptions in the
+   * spine_intermediate_driver_track_coord() */
+  std::vector<ClockInternalDriverId>
+  spine_intermediate_drivers_by_routing_track(
     const ClockSpineId& spine_id, const vtr::Point<int>& track_coord) const;
 
   /* Return the level where the spine locates in the multi-layer clock tree
@@ -279,6 +291,7 @@ class ClockNetwork {
   /* Validate the internal data. Required to ensure clean data before usage. If
    * validation is successful, is_valid() will return true */
   bool validate() const;
+
  private: /* Public invalidators/validators */
   /* Ensure tree data is clean. All the spines are valid, and switch points are
    * valid */
