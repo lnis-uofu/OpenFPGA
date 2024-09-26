@@ -154,4 +154,10 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     archfpga_throw(file_name, e.line(), "%s", e.what());
   }
 }
+
+int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
+                           bool verbose_output) {
+  return 0;
+}
+
 }  // namespace openfpga

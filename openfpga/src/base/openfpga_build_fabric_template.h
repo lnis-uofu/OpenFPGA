@@ -500,6 +500,10 @@ int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
     return read_xml_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
                                   file_name.c_str(),
                                   cmd_context.option_enable(cmd, opt_verbose));
+  } else if (file_type == "bin") {
+    return read_bin_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
+                                  file_name.c_str(),
+                                  cmd_context.option_enable(cmd, opt_verbose));
   } else {
     VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
     return CMD_EXEC_FATAL_ERROR;
@@ -526,6 +530,10 @@ int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
   /* add check flag */
   if (file_type == "xml") {
     return write_xml_unique_blocks(openfpga_ctx.device_rr_gsb(),
+                                   file_name.c_str(),
+                                   cmd_context.option_enable(cmd, opt_verbose));
+  } else if (file_type == "bin") {
+    return write_bin_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
                                    file_name.c_str(),
                                    cmd_context.option_enable(cmd, opt_verbose));
   } else {

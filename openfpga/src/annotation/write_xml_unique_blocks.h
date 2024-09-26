@@ -33,5 +33,7 @@ void report_unique_module_status_write(
   bool verbose_output); /*report status of written info*/
 int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output);
+int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
+                            bool verbose_output);
 }  // namespace openfpga
 #endif

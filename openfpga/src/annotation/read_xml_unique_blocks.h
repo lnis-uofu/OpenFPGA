@@ -15,7 +15,7 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "device_rr_gsb_utils.h"
-
+#include "unique_blocks_uxsdcxx.capnp.h"
 /********************************************************************
  * This file includes the top-level functions of this library
  * which includes:
@@ -34,6 +34,9 @@ void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
                                       bool verbose_output);
 
 int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
+                           bool verbose_output);
+
+int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
                            bool verbose_output);
 }  // namespace openfpga
 #endif

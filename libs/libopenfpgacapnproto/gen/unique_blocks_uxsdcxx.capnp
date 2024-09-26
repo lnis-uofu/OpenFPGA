@@ -11,19 +11,28 @@ using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("uniqueblockcap");
 
 enum BlockType {
-	cbx @0;
-	cby @1;
-	sb @2;
+    cbx @0;
+    cby @1;
+    sb @2;
 }
 
 struct BlockInfo {
-	type @0: BlockType;
-	x @1: Int32;
-	y @2: Int32;
+    type @0: BlockType;
+    x @1: Int32;
+    y @2: Int32;
+}
+
+struct InstanceInfo {
+    x @0: Int32;
+    y @1: Int32;
 }
 
 
-struct InstanceInfo {
-	x @0 :Int32;
-	y @1 :Int32;
+struct UniqueBlockPacked {
+    blockInfo @0: BlockInfo;
+    instanceList @1: List(InstanceInfo);
+}
+
+struct UniqueBlockCompactInfo {
+    atomInfo @0: List(UniqueBlockPacked);
 }

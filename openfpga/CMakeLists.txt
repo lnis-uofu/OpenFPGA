@@ -44,7 +44,9 @@ target_link_libraries(libopenfpga
                       libnamemanager
                       libtileconfig
                       libpugixml
-                      libvpr)
+                      libvpr
+                      libopenfpgacapnproto
+                      )
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})
