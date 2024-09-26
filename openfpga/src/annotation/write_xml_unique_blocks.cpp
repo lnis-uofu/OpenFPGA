@@ -225,29 +225,83 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                           device_rr_gsb.get_num_cb_unique_module(CHANX) +
                           device_rr_gsb.get_num_cb_unique_module(CHANY);
   unique_blocks.initAtomInfo(num_unique_blocks);
-  for (size_t id = 0; id < device_rr_gsb.get_num_sb_unique_module(); ++id) {
-    const auto unique_block_coord = device_rr_gsb.get_sb_unique_block_coord(id);
-    const std::vector<vtr::Point<size_t>> instance_map =
-      device_rr_gsb.get_sb_unique_block_instance_coord(unique_block_coord);
+  // for (size_t id = 0; id < device_rr_gsb.get_num_sb_unique_module(); ++id) {
+  //   const auto unique_block_coord = device_rr_gsb.get_sb_unique_block_coord(id);
+  //   const std::vector<vtr::Point<size_t>> instance_map =
+  //     device_rr_gsb.get_sb_unique_block_instance_coord(unique_block_coord);
 
-      auto unique_block = unique_blocks[id];
-      auto block_info = unique_block.initBlockInfo();
-      block_info.setX(unique_block_coord.x());
-      block_info.setY(unique_block_coord.y());
-      block_info.setType(SB);
-      auto instance_list = unique_block.initInstanceList(instance_map.size());
-      for (size_t instance_id = 0 ; instance_id < instance_map; instance_id ++){
-        if (instance_map[instance_id].x() == unique_block_coord.x() &&
-            instance_map[instance_id].y() == unique_block_coord.y()) {
-          ;
-        } else {
-            auto instance = instance_list[instance_id];
-            instance.setX(instance_map[instance_id].x());
-            instance.setY(instance_map[instance_id].y());
-        }
-      }
-  }
-  writeMessageToFile(fname, &builder);
+  //   auto unique_block = unique_blocks[id];
+  //   auto block_info = unique_block.initBlockInfo();
+  //   block_info.setX(unique_block_coord.x());
+  //   block_info.setY(unique_block_coord.y());
+  //   block_info.setType(SB);
+  //   auto instance_list = unique_block.initInstanceList(instance_map.size());
+  //   for (size_t instance_id = 0; instance_id < instance_map; instance_id++) {
+  //     if (instance_map[instance_id].x() == unique_block_coord.x() &&
+  //         instance_map[instance_id].y() == unique_block_coord.y()) {
+  //       ;
+  //     } else {
+  //       auto instance = instance_list[instance_id];
+  //       instance.setX(instance_map[instance_id].x());
+  //       instance.setY(instance_map[instance_id].y());
+  //     }
+  //   }
+  // }
+
+
+  // for (size_t id = device_rr_gsb.get_num_sb_unique_module();
+  //      id < device_rr_gsb.get_num_sb_unique_module() +
+  //             device_rr_gsb.get_num_cb_unique_module(CHANX);
+  //      ++id) {
+  //   const auto unique_block_coord = device_rr_gsb.get_cbx_unique_block_coord(id);
+  //   const std::vector<vtr::Point<size_t>> instance_map =
+  //     device_rr_gsb.get_cbx_unique_block_instance_coord(unique_block_coord);
+
+  //   auto unique_block = unique_blocks[id];
+  //   auto block_info = unique_block.initBlockInfo();
+  //   block_info.setX(unique_block_coord.x());
+  //   block_info.setY(unique_block_coord.y());
+  //   block_info.setType(SB);
+  //   auto instance_list = unique_block.initInstanceList(instance_map.size());
+  //   for (size_t instance_id = 0; instance_id < instance_map; instance_id++) {
+  //     if (instance_map[instance_id].x() == unique_block_coord.x() &&
+  //         instance_map[instance_id].y() == unique_block_coord.y()) {
+  //       ;
+  //     } else {
+  //       auto instance = instance_list[instance_id];
+  //       instance.setX(instance_map[instance_id].x());
+  //       instance.setY(instance_map[instance_id].y());
+  //     }
+  //   }
+  // }
+
+  
+  // for (size_t id = device_rr_gsb.get_num_sb_unique_module();
+  //      id < device_rr_gsb.get_num_sb_unique_module() +
+  //             device_rr_gsb.get_num_cb_unique_module(CHANY);
+  //      ++id) {
+  //   const auto unique_block_coord = device_rr_gsb.get_cby_unique_block_coord(id);
+  //   const std::vector<vtr::Point<size_t>> instance_map =
+  //     device_rr_gsb.get_cby_unique_block_instance_coord(unique_block_coord);
+
+  //   auto unique_block = unique_blocks[id];
+  //   auto block_info = unique_block.initBlockInfo();
+  //   block_info.setX(unique_block_coord.x());
+  //   block_info.setY(unique_block_coord.y());
+  //   block_info.setType(SB);
+  //   auto instance_list = unique_block.initInstanceList(instance_map.size());
+  //   for (size_t instance_id = 0; instance_id < instance_map; instance_id++) {
+  //     if (instance_map[instance_id].x() == unique_block_coord.x() &&
+  //         instance_map[instance_id].y() == unique_block_coord.y()) {
+  //       ;
+  //     } else {
+  //       auto instance = instance_list[instance_id];
+  //       instance.setX(instance_map[instance_id].x());
+  //       instance.setY(instance_map[instance_id].y());
+  //     }
+  //   }
+  // }
+  // writeMessageToFile(fname, &builder);
   return 0;
 }
 
