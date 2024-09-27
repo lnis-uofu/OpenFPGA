@@ -116,7 +116,7 @@ std::vector<vtr::Point<size_t>> DeviceRRGSB::get_sb_unique_block_instance_coord(
         sb_unique_module_id_[location_x][location_y];
       if (unique_module_id_instance == unique_module_id) {
         vtr::Point<size_t> instance_coord(location_x, location_y);
-        if (instance_coord != unique_block_coord){
+        if (instance_coord != unique_block_coord) {
           instance_map.push_back(instance_coord);
         }
       }
@@ -146,7 +146,7 @@ DeviceRRGSB::get_cbx_unique_block_instance_coord(
         cbx_unique_module_id_[location_x][location_y];
       if (unique_module_id_instance == unique_module_id) {
         vtr::Point<size_t> instance_coord(location_x, location_y);
-        if (instance_coord != unique_block_coord){
+        if (instance_coord != unique_block_coord) {
           instance_map.push_back(instance_coord);
         }
       }
@@ -176,7 +176,7 @@ DeviceRRGSB::get_cby_unique_block_instance_coord(
         cby_unique_module_id_[location_x][location_y];
       if (unique_module_id_instance == unique_module_id) {
         vtr::Point<size_t> instance_coord(location_x, location_y);
-        if (instance_coord != unique_block_coord){
+        if (instance_coord != unique_block_coord) {
           instance_map.push_back(instance_coord);
         }
       }

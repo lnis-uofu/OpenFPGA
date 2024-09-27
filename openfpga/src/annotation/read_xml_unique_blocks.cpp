@@ -197,21 +197,10 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
   if (root.hasAtomInfo()) {
     auto block_list = root.getAtomInfo();
     for (auto unqiue_block : block_list) {
-      auto block_info = unique_block.getBlockInfo();
-      std::string type = block_info.getType().Cstr();
-      int block_x = block_info.getX();
-      int block_y = block_info.getY();
-      vtr::Point<size_t> block_coordinate(block_x, block_y);
-      if (unique_block.hasInstanceList()) {
-        auto instance_list = unique_block.getInstanceList();
-        std::vector<vtr::Point<size_t>> instance_coords;
-        for (auto instance : instance_list) {
-          int instance_x = instance.getX();
-          int instance_y = instance.getY();
-          vtr::Point<size_t> instance_coordinate(instance_x, instance_y);
-          instance_coords.push_back(instance_coordinate);
-        }
-      }
+      vtr::Point<size_t> block_coordinate =
+        read_bin_unique_block_coord(unique_block);
+      std::vector<vtr::Point<size_t>> instance_coords =
+        read_bin_unique_instance_coords(unique_block);
       /* get block coordinate and instance coordinate, try to setup
        * device_rr_gsb */
       if (type == "sb") {

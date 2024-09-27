@@ -43,7 +43,7 @@ vtr::Point<size_t> read_bin_unique_block_coord(
   const uniqueblockcap::BlockInfo::Reader& unique_block);
 
 int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
-                           bool verbose_output)
+                           bool verbose_output);
 }  // namespace openfpga
 
 #endif

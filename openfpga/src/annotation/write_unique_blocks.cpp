@@ -56,8 +56,7 @@ int write_xml_atom_block(std::fstream& fp,
     write_xml_attribute(fp, "y", instance_info.y());
 
     fp << "/>"
-        << "\n";
-    
+       << "\n";
   }
   openfpga::write_tab_to_file(fp, 1);
   fp << "</block>"
