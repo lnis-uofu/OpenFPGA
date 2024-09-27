@@ -27,7 +27,7 @@
 #include "vtr_time.h"
 #include "write_xml_fabric_pin_physical_location.h"
 #include "write_xml_module_name_map.h"
-#include "write_xml_unique_blocks.h"
+#include "write_unique_blocks.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

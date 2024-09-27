@@ -19,7 +19,7 @@
 #include "read_xml_util.h"
 #include "rr_gsb.h"
 #include "unique_blocks_uxsdcxx.capnp.h"
-#include "write_xml_unique_blocks.h"
+#include "write_unique_blocks.h"
 #include "write_xml_utils.h"
 
 /********************************************************************
