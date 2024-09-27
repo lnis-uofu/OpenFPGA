@@ -18,13 +18,13 @@ enum BlockType {
 
 struct BlockInfo {
     type @0: BlockType;
-    x @1: Int32;
-    y @2: Int32;
+    x @1: UInt32;
+    y @2: UInt32;
 }
 
 struct InstanceInfo {
-    x @0: Int32;
-    y @1: Int32;
+    x @0: UInt32;
+    y @1: UInt32;
 }
 
 
