@@ -224,7 +224,6 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
     const auto unique_block_coord = device_rr_gsb.get_sb_unique_block_coord(id);
     const std::vector<vtr::Point<size_t>> instance_map =
       device_rr_gsb.get_sb_unique_block_instance_coord(unique_block_coord);
-    std::cout << "what is instance size:  " << instance_map.size() << std::endl;
     auto unique_block = block_list[id];
     int status_code =
       write_bin_atom_block(instance_map, unique_block_coord,
