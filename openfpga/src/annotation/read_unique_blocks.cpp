@@ -18,7 +18,7 @@
 #include "device_rr_gsb_utils.h"
 #include "mmap_file.h"
 #include "openfpga_digest.h"
-#include "read_xml_unique_blocks.h"
+#include "read_unique_blocks.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
 #include "unique_blocks_uxsdcxx.capnp.h"

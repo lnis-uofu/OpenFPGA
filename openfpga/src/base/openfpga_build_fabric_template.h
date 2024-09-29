@@ -20,7 +20,7 @@
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
-#include "read_xml_unique_blocks.h"
+#include "read_unique_blocks.h"
 #include "rename_modules.h"
 #include "report_reference.h"
 #include "vtr_log.h"
