@@ -111,7 +111,6 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     pugi::xml_node xml_root = get_single_child(doc, "unique_blocks", loc_data);
     /* clear unique modules & reserve memory to relavant vectors */
     device_rr_gsb.clear_unique_modules();
-    // vtr::Point<size_t> grid_coord(rr_gsb_.size());
     device_rr_gsb.reserve_unique_modules();
 
     /* load unique blocks xml file and set up device_rr_gdb */
@@ -159,7 +158,7 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
 
 /*read the instances' coordinate of a unique block from a bin file*/
 std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
-  const uniqueblockcap::BlockInfo::Reader& unique_block) {
+  const uniqueblockcap::UniqueBlockPacked::Reader& unique_block) {
   std::vector<vtr::Point<size_t>> instance_coords;
   if (unique_block.hasInstanceList()) {
     auto instance_list = unique_block.getInstanceList();
@@ -175,11 +174,12 @@ std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
 
 /*read the unique block coordinate from a bin file */
 vtr::Point<size_t> read_bin_unique_block_coord(
-  const uniqueblockcap::BlockInfo::Reader& unique_block) {
+  const uniqueblockcap::BlockInfo::Reader& unique_block, std::string type) {
   auto block_info = unique_block.getBlockInfo();
   std::string type = block_info.getType().Cstr();
   int block_x = block_info.getX();
   int block_y = block_info.getY();
+  type = block_info.getType();
   vtr::Point<size_t> block_coordinate(block_x, block_y);
   return block_coordinate;
 }
@@ -189,27 +189,27 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
                            bool verbose_output) {
   /* clear unique modules & reserve memory to relavant vectors */
   device_rr_gsb.clear_unique_modules();
-  // vtr::Point<size_t> grid_coord(rr_gsb_.size());
   device_rr_gsb.reserve_unique_modules();
   MmapFile f(file_name);
-  ::uniqueblockcap::FlatArrayMessageReader reader(f.getData());
+  ::capnp::FlatArrayMessageReader reader(f.getData());
   auto root = reader.getRoot<uniqueblockcap::UniqueBlockCompactInfo>();
   if (root.hasAtomInfo()) {
     auto block_list = root.getAtomInfo();
     for (auto unqiue_block : block_list) {
+      std::string type;
       vtr::Point<size_t> block_coordinate =
-        read_bin_unique_block_coord(unique_block);
+        read_bin_unique_block_coord(unique_block, type); /*get block coordinate and type*/
       std::vector<vtr::Point<size_t>> instance_coords =
-        read_bin_unique_instance_coords(unique_block);
+        read_bin_unique_instance_coords(unique_block); /* get a list of instance coordinates*/
       /* get block coordinate and instance coordinate, try to setup
        * device_rr_gsb */
-      if (type == "sb") {
+      if (type == uniqueblockcap::BlockType::SB) {
         device_rr_gsb.preload_unique_sb_module(block_coordinate,
                                                instance_coords);
-      } else if (type == "cby") {
+      } else if (type == uniqueblockcap::BlockType::CBY) {
         device_rr_gsb.preload_unique_cby_module(block_coordinate,
                                                 instance_coords);
-      } else if (type == "cbx") {
+      } else if (type == uniqueblockcap::BlockType::CBX) {
         device_rr_gsb.preload_unique_cbx_module(block_coordinate,
                                                 instance_coords);
       }

@@ -40,7 +40,7 @@ std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
   const uniqueblockcap::BlockInfo::Reader& unique_block);
 
 vtr::Point<size_t> read_bin_unique_block_coord(
-  const uniqueblockcap::BlockInfo::Reader& unique_block);
+  const uniqueblockcap::BlockInfo::Reader& unique_block, std::string& type);
 
 int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
                            bool verbose_output);
