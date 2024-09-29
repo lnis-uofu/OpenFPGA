@@ -21,7 +21,7 @@ read_unique_blocks --file ${READ_UNIQUE_BLOCKS_XML} --verbose --type xml
 # Build the module graph
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
-build_fabric --compress_routing  #--verbose
+build_fabric  #--verbose
 
 #write unique blocks xml file 
 write_unique_blocks --file ./write_unique_block.xml --verbose --type xml

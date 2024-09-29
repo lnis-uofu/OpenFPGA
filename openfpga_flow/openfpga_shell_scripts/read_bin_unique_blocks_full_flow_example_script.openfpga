@@ -22,7 +22,7 @@ ${OPENFPGA_PB_PIN_FIXUP_COMMAND}
 lut_truth_table_fixup
 
 # preload unique blocks from the provided xml file 
-read_unique_blocks --file ${READ_UNIQUE_BLOCKS_XML} --verbose --type xml
+read_unique_blocks --file ${READ_UNIQUE_BLOCKS_BIN} --verbose --type bin
 
 # Build the module graph
 #  - Enabled compression on routing architecture modules
