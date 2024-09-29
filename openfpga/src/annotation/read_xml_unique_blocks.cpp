@@ -1,3 +1,7 @@
+#include <capnp/message.h>
+#include <capnp/serialize.h>
+#include <kj/io.h>
+
 #include <string>
 /* Headers from pugi XML library */
 #include "pugixml.hpp"
@@ -174,9 +178,9 @@ std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
 
 /*read the unique block coordinate from a bin file */
 vtr::Point<size_t> read_bin_unique_block_coord(
-  const uniqueblockcap::BlockInfo::Reader& unique_block, std::string type) {
+  const uniqueblockcap::UniqueBlockPacked::Reader& unique_block,
+  uniqueblockcap::BlockType& type) {
   auto block_info = unique_block.getBlockInfo();
-  std::string type = block_info.getType().Cstr();
   int block_x = block_info.getX();
   int block_y = block_info.getY();
   type = block_info.getType();
@@ -195,12 +199,13 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
   auto root = reader.getRoot<uniqueblockcap::UniqueBlockCompactInfo>();
   if (root.hasAtomInfo()) {
     auto block_list = root.getAtomInfo();
-    for (auto unqiue_block : block_list) {
-      std::string type;
-      vtr::Point<size_t> block_coordinate =
-        read_bin_unique_block_coord(unique_block, type); /*get block coordinate and type*/
+    for (auto unique_block : block_list) {
+      uniqueblockcap::BlockType type;
+      vtr::Point<size_t> block_coordinate = read_bin_unique_block_coord(
+        unique_block, type); /*get block coordinate and type*/
       std::vector<vtr::Point<size_t>> instance_coords =
-        read_bin_unique_instance_coords(unique_block); /* get a list of instance coordinates*/
+        read_bin_unique_instance_coords(
+          unique_block); /* get a list of instance coordinates*/
       /* get block coordinate and instance coordinate, try to setup
        * device_rr_gsb */
       if (type == uniqueblockcap::BlockType::SB) {
