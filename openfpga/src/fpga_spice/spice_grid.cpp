@@ -393,8 +393,8 @@ void print_spice_grids(NetlistManager& netlist_manager,
        *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
        *   we will generate one module for each border side
        * - If a I/O block locates in the center of FPGA fabric:
-       *   we will generate one module with NUM_2D_SIDES (same treatment as regular
-       * grids)
+       *   we will generate one module with NUM_2D_SIDES (same treatment as
+       * regular grids)
        */
       std::set<e_side> io_type_sides =
         find_physical_io_tile_located_sides(device_ctx.grid, &physical_tile);
@@ -407,7 +407,8 @@ void print_spice_grids(NetlistManager& netlist_manager,
     } else {
       /* For CLB and heterogenenous blocks */
       print_spice_physical_tile_netlist(netlist_manager, module_manager,
-                                        subckt_dir, &physical_tile, NUM_2D_SIDES);
+                                        subckt_dir, &physical_tile,
+                                        NUM_2D_SIDES);
     }
   }
   VTR_LOG("Building physical tiles...");
