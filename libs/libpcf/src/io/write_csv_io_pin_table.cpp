@@ -52,7 +52,7 @@ int write_csv_io_pin_table(const char* fname, const IoPinTable& io_pin_table) {
   /* Print data */
   for (const IoPinTableId& pin_id : io_pin_table.pins()) {
     std::vector<std::string> data_row_str;
-    data_row_str.push_back(SIDE_STRING[io_pin_table.pin_side(pin_id)]);
+    data_row_str.push_back(TOTAL_2D_SIDE_STRINGS[io_pin_table.pin_side(pin_id)]);
     data_row_str.push_back(
       generate_xml_port_name(io_pin_table.internal_pin(pin_id)));
     data_row_str.push_back(

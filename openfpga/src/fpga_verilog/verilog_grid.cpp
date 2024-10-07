@@ -445,7 +445,7 @@ void print_verilog_grids(
       /* For CLB and heterogenenous blocks */
       print_verilog_physical_tile_netlist(
         netlist_manager, module_manager, module_name_map, subckt_dir,
-        subckt_dir_name, &physical_tile, NUM_SIDES, options);
+        subckt_dir_name, &physical_tile, NUM_2D_SIDES, options);
     }
   }
   VTR_LOG("Building physical tiles...");

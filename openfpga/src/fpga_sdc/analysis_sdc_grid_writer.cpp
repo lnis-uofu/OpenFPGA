@@ -693,7 +693,7 @@ void print_analysis_sdc_disable_unused_grids(
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
       print_analysis_sdc_disable_unused_grid(
         fp, vtr::Point<size_t>(ix, iy), grids, device_annotation,
-        cluster_annotation, place_annotation, module_manager, NUM_SIDES);
+        cluster_annotation, place_annotation, module_manager, NUM_2D_SIDES);
     }
   }
 

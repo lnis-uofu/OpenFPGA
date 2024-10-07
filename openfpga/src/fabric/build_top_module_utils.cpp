@@ -79,7 +79,7 @@ std::string generate_grid_module_port_name_in_top_module(
  * RIGHT/LEFT side: CHANX
  *******************************************************************/
 t_rr_type find_top_module_cb_type_by_sb_side(const e_side& sb_side) {
-  VTR_ASSERT(NUM_SIDES != sb_side);
+  VTR_ASSERT(NUM_2D_SIDES != sb_side);
 
   if ((TOP == sb_side) || (BOTTOM == sb_side)) {
     return CHANY;
@@ -96,7 +96,7 @@ t_rr_type find_top_module_cb_type_by_sb_side(const e_side& sb_side) {
  *******************************************************************/
 vtr::Point<size_t> find_top_module_gsb_coordinate_by_sb_side(
   const RRGSB& rr_gsb, const e_side& sb_side) {
-  VTR_ASSERT(NUM_SIDES != sb_side);
+  VTR_ASSERT(NUM_2D_SIDES != sb_side);
 
   vtr::Point<size_t> gsb_coordinate;
 

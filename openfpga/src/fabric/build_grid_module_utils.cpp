@@ -30,7 +30,7 @@ std::vector<e_side> find_grid_module_pin_sides(
   VTR_ASSERT(true == is_io_type(grid_type_descriptor));
   SideManager side_manager(border_side);
 
-  if (NUM_SIDES == border_side) {
+  if (NUM_2D_SIDES == border_side) {
     return {TOP, RIGHT, BOTTOM, LEFT};
   }
 

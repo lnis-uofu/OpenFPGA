@@ -60,14 +60,14 @@ static std::string parse_direct_port(const std::string& direct_tile_inf) {
 
 /***************************************************************************************
  * Check if a pin is located on a given side of physical tile
- * If the given side is NUM_SIDES, we will search all the sides
+ * If the given side is NUM_2D_SIDES, we will search all the sides
  ***************************************************************************************/
 static bool is_pin_locate_at_physical_tile_side(
   t_physical_tile_type_ptr physical_tile, const size_t& pin_width_offset,
   const size_t& pin_height_offset, const size_t& pin_id,
   const e_side& pin_side) {
-  if (NUM_SIDES == pin_side) {
-    for (size_t side = 0; side < NUM_SIDES; ++side) {
+  if (NUM_2D_SIDES == pin_side) {
+    for (size_t side = 0; side < NUM_2D_SIDES; ++side) {
       if (true == physical_tile->pinloc[pin_width_offset][pin_height_offset]
                                        [side][pin_id]) {
         return true;
@@ -418,7 +418,7 @@ static void build_inner_column_row_tile_direct(
       }
 
       /* Search all the sides, the from pin may locate any side!
-       * Note: the vpr_direct.from_side is NUM_SIDES, which is unintialized
+       * Note: the vpr_direct.from_side is NUM_2D_SIDES, which is unintialized
        * This should be reported to VPR!!!
        */
       for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -453,7 +453,7 @@ static void build_inner_column_row_tile_direct(
         }
 
         /* Search all the sides, the to pin may locate any side!
-         * Note: the vpr_direct.to_side is NUM_SIDES, which is unintialized
+         * Note: the vpr_direct.to_side is NUM_2D_SIDES, which is unintialized
          * This should be reported to VPR!!!
          */
         for (const e_side& to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -482,10 +482,10 @@ static void build_inner_column_row_tile_direct(
                      "%s[%lu][%lu].%s[%lu] at side '%s'\n",
                      from_tile_name.c_str(), x, y,
                      from_tile_port.get_name().c_str(), from_pins[ipin],
-                     SIDE_STRING[from_side], to_tile_name.c_str(),
+                     TOTAL_2D_SIDE_STRINGS[from_side], to_tile_name.c_str(),
                      to_grid_coord.x(), to_grid_coord.y(),
                      to_tile_port.get_name().c_str(), to_pins[ipin],
-                     SIDE_STRING[to_side]);
+                     TOTAL_2D_SIDE_STRINGS[to_side]);
             TileDirectId tile_direct_id = tile_direct.add_direct(
               from_grid_coord, from_side, from_pins[ipin], to_grid_coord,
               to_side, to_pins[ipin]);
@@ -593,7 +593,7 @@ static void build_inter_column_row_tile_direct(
       }
 
       /* Search all the sides, the from pin may locate any side!
-       * Note: the vpr_direct.from_side is NUM_SIDES, which is unintialized
+       * Note: the vpr_direct.from_side is NUM_2D_SIDES, which is unintialized
        * This should be reported to VPR!!!
        */
       for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -623,7 +623,7 @@ static void build_inter_column_row_tile_direct(
         }
 
         /* Search all the sides, the to pin may locate any side!
-         * Note: the vpr_direct.to_side is NUM_SIDES, which is unintialized
+         * Note: the vpr_direct.to_side is NUM_2D_SIDES, which is unintialized
          * This should be reported to VPR!!!
          */
         for (const e_side& to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -655,10 +655,10 @@ static void build_inter_column_row_tile_direct(
                      "%s[%lu][%lu].%s[%lu] at side '%s'\n",
                      from_tile_name.c_str(), from_grid_coord.x(),
                      from_grid_coord.y(), from_tile_port.get_name().c_str(),
-                     from_pins[ipin], SIDE_STRING[from_side],
+                     from_pins[ipin], TOTAL_2D_SIDE_STRINGS[from_side],
                      to_tile_name.c_str(), to_grid_coord.x(), to_grid_coord.y(),
                      to_tile_port.get_name().c_str(), to_pins[ipin],
-                     SIDE_STRING[to_side]);
+                     TOTAL_2D_SIDE_STRINGS[to_side]);
 
             TileDirectId tile_direct_id = tile_direct.add_direct(
               from_grid_coord, from_side, from_pins[ipin], to_grid_coord,
@@ -704,7 +704,7 @@ static void build_inter_column_row_tile_direct(
     }
 
     /* Search all the sides, the from pin may locate any side!
-     * Note: the vpr_direct.from_side is NUM_SIDES, which is unintialized
+     * Note: the vpr_direct.from_side is NUM_2D_SIDES, which is unintialized
      * This should be reported to VPR!!!
      */
     for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -734,7 +734,7 @@ static void build_inter_column_row_tile_direct(
       }
 
       /* Search all the sides, the to pin may locate any side!
-       * Note: the vpr_direct.to_side is NUM_SIDES, which is unintialized
+       * Note: the vpr_direct.to_side is NUM_2D_SIDES, which is unintialized
        * This should be reported to VPR!!!
        */
       for (const e_side& to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
@@ -766,10 +766,10 @@ static void build_inter_column_row_tile_direct(
                    "at side '%s'\n",
                    from_tile_name.c_str(), from_grid_coord.x(),
                    from_grid_coord.y(), from_tile_port.get_name().c_str(),
-                   from_pins[ipin], SIDE_STRING[from_side],
+                   from_pins[ipin], TOTAL_2D_SIDE_STRINGS[from_side],
                    to_tile_name.c_str(), to_grid_coord.x(), to_grid_coord.y(),
                    to_tile_port.get_name().c_str(), to_pins[ipin],
-                   SIDE_STRING[to_side]);
+                   TOTAL_2D_SIDE_STRINGS[to_side]);
 
           TileDirectId tile_direct_id =
             tile_direct.add_direct(from_grid_coord, from_side, from_pins[ipin],

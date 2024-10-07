@@ -1430,7 +1430,7 @@ int build_grid_modules(
        *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
        *   we will generate one module for each border side
        * - If a I/O block locates in the center of FPGA fabric:
-       *   we will generate one module with NUM_SIDES (same treatment as regular
+       *   we will generate one module with NUM_2D_SIDES (same treatment as regular
        * grids)
        */
       std::set<e_side> io_type_sides =
@@ -1449,7 +1449,7 @@ int build_grid_modules(
       /* For CLB and heterogenenous blocks */
       status = build_physical_tile_module(
         module_manager, decoder_lib, device_annotation, circuit_lib,
-        sram_orgz_type, sram_model, &physical_tile, tile_annotation, NUM_SIDES,
+        sram_orgz_type, sram_model, &physical_tile, tile_annotation, NUM_2D_SIDES,
         ql_memory_bank_config_setting, duplicate_grid_pin, group_config_block,
         device_ctx.arch->perimeter_cb, verbose);
       if (status != CMD_EXEC_SUCCESS) {

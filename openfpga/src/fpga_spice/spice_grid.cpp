@@ -274,7 +274,7 @@ static void print_spice_physical_tile_netlist(
   const e_side& border_side) {
   /* Check code: if this is an IO block, the border side MUST be valid */
   if (true == is_io_type(phy_block_type)) {
-    VTR_ASSERT(NUM_SIDES != border_side);
+    VTR_ASSERT(NUM_2D_SIDES != border_side);
   }
 
   /* Give a name to the Verilog netlist */
@@ -393,7 +393,7 @@ void print_spice_grids(NetlistManager& netlist_manager,
        *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
        *   we will generate one module for each border side
        * - If a I/O block locates in the center of FPGA fabric:
-       *   we will generate one module with NUM_SIDES (same treatment as regular
+       *   we will generate one module with NUM_2D_SIDES (same treatment as regular
        * grids)
        */
       std::set<e_side> io_type_sides =
@@ -407,7 +407,7 @@ void print_spice_grids(NetlistManager& netlist_manager,
     } else {
       /* For CLB and heterogenenous blocks */
       print_spice_physical_tile_netlist(netlist_manager, module_manager,
-                                        subckt_dir, &physical_tile, NUM_SIDES);
+                                        subckt_dir, &physical_tile, NUM_2D_SIDES);
     }
   }
   VTR_LOG("Building physical tiles...");
