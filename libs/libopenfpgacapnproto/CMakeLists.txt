@@ -19,6 +19,7 @@ endif()
 # Create generated headers from capnp schema files
 #
 # Each schema used should appear here.
+
 set(CAPNP_DEFS
     gen/unique_blocks_uxsdcxx.capnp
 )
@@ -28,8 +29,6 @@ capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS
 )
 
 
-set(IC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../vtr-verilog-to-routing/libs/EXTERNAL/libinterchange/interchange)
-set(CAPNPC_SRC_PREFIX ${IC_DIR})
 
 find_program(WGET wget REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -51,20 +50,6 @@ add_custom_target(
 
 set(CAPNPC_IMPORT_DIRS)
 list(APPEND CAPNPC_IMPORT_DIRS ${CMAKE_CURRENT_BINARY_DIR}/schema)
-
-set(IC_PROTOS)
-set(IC_SRCS)
-set(IC_HDRS)
-foreach(PROTO ${IC_PROTOS})
-    capnp_generate_cpp(
-        IC_SRC
-        IC_HDR
-        ${IC_DIR}/${PROTO}
-    )
-    list(APPEND IC_SRCS ${IC_SRC})
-    list(APPEND IC_HDRS ${IC_HDR})
-    list(APPEND CAPNP_DEFS ${IC_DIR}/${PROTO})
-endforeach()
 
 
 install(FILES ${CAPNP_DEFS} DESTINATION ${CMAKE_INSTALL_DATADIR}/openfpga)
@@ -108,7 +93,7 @@ add_custom_target(
         unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_capnp.h
         unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_interface.h
         ${CMAKE_CURRENT_SOURCE_DIR}/gen
-    COMMAND ${CMAKE_COMMAND} -E copy unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.capnp ${CMAKE_CURRENT_SOURCE_DIR}/gen
+    COMMAND ${CMAKE_COMMAND} -E copy unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.capnp ${CMAKE_CURRENT_SOURCE_DIR}/../libopenfpgacapnproto/gen
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen/unique_blocks.xsd
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

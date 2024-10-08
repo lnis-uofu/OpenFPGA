@@ -50,7 +50,7 @@ Capnproto schemas
 -----------------
 
 libopenfpgacapnproto should contain all capnproto schema definitions used within
-VTR.  To add a new schema:
+Openfpga.  To add a new schema:
 1. Add the schema to git in `libs/libopenfpgacapnproto/`
 2. Add the schema file name to `capnp_generate_cpp` invocation in
    `libs/libopenfpgacapnproto/CMakeLists.txt`.
