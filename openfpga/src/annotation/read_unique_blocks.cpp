@@ -196,7 +196,7 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
   device_rr_gsb.reserve_unique_modules();
   MmapFile f(file_name);
   ::capnp::FlatArrayMessageReader reader(f.getData());
-  auto root = reader.getRoot<uniqueblockcap::UniqueBlockCompactInfo>();
+  auto root = reader.getRoot<uniqueblockcap::UniqueBlocks>();
   if (root.hasAtomInfo()) {
     auto block_list = root.getAtomInfo();
     for (auto unique_block : block_list) {

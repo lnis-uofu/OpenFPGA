@@ -212,7 +212,7 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output) {
   ::capnp::MallocMessageBuilder builder;
   auto unique_blocks =
-    builder.initRoot<uniqueblockcap::UniqueBlockCompactInfo>();
+    builder.initRoot<uniqueblockcap::UniqueBlocks>();
   int num_unique_blocks = device_rr_gsb.get_num_sb_unique_module() +
                           device_rr_gsb.get_num_cb_unique_module(CHANX) +
                           device_rr_gsb.get_num_cb_unique_module(CHANY);

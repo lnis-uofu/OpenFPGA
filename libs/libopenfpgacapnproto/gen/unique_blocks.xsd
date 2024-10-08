@@ -1,30 +1,6 @@
 <?xml version="1.0"?>
-<!--
-  Copyright 2018 Jeppe Johansen
-
-  XML 1.0 Schema for unique blocks data structure developed based on documentation here:
-  
--->
-
-<!--
-  The root of the XSD file is the xs:schema.  With the xs:schema are 3 types
-  relevant to the code generated:
-
-- xs:complexType : This defines a child tag within the schema.  Most of the
-                   schema is made of these.
-- xs:simpleType : These define string enumerations (e.g. the "switch" tag
-                  "type" enumeration).
-- xs:element : There is one xs:element that is the direct child of the root
-               xs:schema, and this the definition of the root tag.
-
-  In addition to being used for code generation, this schema can be used to
-  validate whether an unique block XML conforms to this schema.
-
-  Additional documentation is available at
-  https://github.com/duck2/uxsdcxx/blob/master/README.md
-
--->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
   <!-- Enumeration for BlockType -->
   <xs:simpleType name="BlockType">
     <xs:restriction base="xs:string">
@@ -34,48 +10,35 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- BlockInfo Structure -->
+  <!-- BlockInfo Structure (using attributes for type, x, and y) -->
   <xs:complexType name="BlockInfo">
-    <xs:sequence>
-      <xs:element name="type" type="BlockType"/>
-      <xs:element name="x" type="xs:unsignedInt"/>
-      <xs:element name="y" type="xs:unsignedInt"/>
-    </xs:sequence>
+    <xs:attribute name="type" type="BlockType"/>
+    <xs:attribute name="x" type="xs:unsignedInt"/>
+    <xs:attribute name="y" type="xs:unsignedInt"/>
   </xs:complexType>
 
-  <!-- InstanceInfo Structure -->
+  <!-- InstanceInfo Structure (using attributes for x and y) -->
   <xs:complexType name="InstanceInfo">
-    <xs:sequence>
-      <xs:element name="x" type="xs:unsignedInt"/>
-      <xs:element name="y" type="xs:unsignedInt"/>
-    </xs:sequence>
+    <xs:attribute name="x" type="xs:unsignedInt"/>
+    <xs:attribute name="y" type="xs:unsignedInt"/>
   </xs:complexType>
 
-  <!-- UniqueBlockPacked Structure -->
+  <!-- UniqueBlockPacked Structure (blockInfo as element, instance list as sequence) -->
   <xs:complexType name="UniqueBlockPacked">
     <xs:sequence>
       <xs:element name="blockInfo" type="BlockInfo"/>
-      <xs:element name="instanceList">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="instance" type="InstanceInfo" maxOccurs="unbounded"/>
-          </xs:sequence>
-        </xs:complexType> <!-- A list of IncetanceInfo -->
-      </xs:element>
+      <xs:element name="instance" type="InstanceInfo" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
-  <!-- UniqueBlockCompactInfo Structure -->
-  <xs:complexType name="UniqueBlockCompactInfo">
-    <xs:sequence>
-      <xs:element name="atomInfo">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="uniqueBlockPacked" type="UniqueBlockPacked" maxOccurs="unbounded"/>
-          </xs:sequence>
-        </xs:complexType> <!-- A list of uniqueBlockPacked -->
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
+  <!-- Root element definition combined with UniqueBlockCompactInfo structure -->
+  <xs:element name="unique_blocks">
+    <xs:complexType>
+      <xs:sequence>
+        <!-- Directly include atomInfo (previously part of UniqueBlockCompactInfo) -->
+        <xs:element name="atomInfo" type="UniqueBlockPacked" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
 </xs:schema>

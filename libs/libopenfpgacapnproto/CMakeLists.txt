@@ -44,6 +44,10 @@ add_custom_command(
         -O ${JAVA_SCHEMA}
 )
 
+add_custom_target(
+    get_java_capnp_schema_openfpga
+    DEPENDS ${JAVA_SCHEMA}
+)
 
 set(CAPNPC_IMPORT_DIRS)
 list(APPEND CAPNPC_IMPORT_DIRS ${CMAKE_CURRENT_BINARY_DIR}/schema)
@@ -76,7 +80,9 @@ add_library(libopenfpgacapnproto STATIC
 
 
 add_dependencies(libopenfpgacapnproto
-    get_java_capnp_schema)
+    get_java_capnp_schema_openfpga
+    generate_unique_block_capnp
+    )
 
 
 target_include_directories(libopenfpgacapnproto PUBLIC
@@ -97,7 +103,7 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E chdir unique_blocks_capnproto_generate git clone https://github.com/duck2/uxsdcxx
     COMMAND python3 -mpip install --user -r unique_blocks_capnproto_generate/uxsdcxx/requirements.txt
     COMMAND ${CMAKE_COMMAND} -E chdir unique_blocks_capnproto_generate python3 uxsdcxx/uxsdcxx.py ${CMAKE_CURRENT_SOURCE_DIR}/gen/unique_blocks.xsd
-    COMMAND ${CMAKE_COMMAND} -E copy
+    COMMAND ${CMAKE_COMMAND} -E chdir unique_blocks_capnproto_generate python3 uxsdcxx/uxsdcap.py ${CMAKE_CURRENT_SOURCE_DIR}/gen/unique_blocks.xsd
         unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.h
         unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_capnp.h
         unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_interface.h
