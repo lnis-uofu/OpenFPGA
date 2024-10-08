@@ -1007,7 +1007,7 @@ void build_grid_bitstream(
         bitstream_manager, parent_block, module_manager, module_name_map,
         fabric_tile, curr_tile, circuit_lib, mux_lib, atom_ctx,
         device_annotation, cluster_annotation, place_annotation,
-        bitstream_annotation, grids, layer, grid_coord, NUM_SIDES, verbose);
+        bitstream_annotation, grids, layer, grid_coord, NUM_2D_SIDES, verbose);
     }
   }
   VTR_LOGV(verbose, "Done\n");

@@ -173,7 +173,7 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
       /* Add a grid module to top_module*/
       vtr::Point<size_t> grid_coord(ix, iy);
       grid_instance_ids[ix][iy] = add_top_module_grid_instance(
-        module_manager, top_module, phy_tile_type, NUM_SIDES, grid_coord);
+        module_manager, top_module, phy_tile_type, NUM_2D_SIDES, grid_coord);
     }
   }
 
@@ -427,7 +427,7 @@ static void add_top_module_io_children(
     std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
     std::string grid_module_name = generate_grid_block_module_name(
       grid_module_name_prefix, std::string(grid_type->name),
-      is_io_type(grid_type), NUM_SIDES);
+      is_io_type(grid_type), NUM_2D_SIDES);
     ModuleId grid_module = module_manager.find_module(grid_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
     /* Add a I/O children to top_module*/

@@ -42,7 +42,7 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(
     for (ClusterPinId pin_id : cluster_nlist.net_pins(net_id)) {
       ClusterBlockId block_id = cluster_nlist.pin_block(pin_id);
       t_block_loc blk_loc = get_block_loc(block_id, false);
-      int phy_pin = placement_ctx.physical_pins[pin_id];
+      int phy_pin = placement_ctx.physical_pins()[pin_id];
       t_physical_tile_type_ptr phy_tile = device_ctx.grid.get_physical_type(
         t_physical_tile_loc(blk_loc.loc.x, blk_loc.loc.y, 0));
       int node_pin_num = phy_tile->num_pins;

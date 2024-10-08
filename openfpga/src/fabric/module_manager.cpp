@@ -797,7 +797,7 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
   /* Deposit invalid value for each side */
-  port_sides_[module].push_back(NUM_SIDES);
+  port_sides_[module].push_back(NUM_2D_SIDES);
   port_is_wire_[module].push_back(false);
   port_is_mappable_io_[module].push_back(false);
   port_is_register_[module].push_back(false);

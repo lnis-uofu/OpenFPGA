@@ -143,7 +143,7 @@ ModulePinInfo find_switch_block_module_chan_port(
   int index = rr_gsb.get_node_index(rr_graph, cur_rr_node, chan_side,
                                     cur_rr_node_direction);
   /* Make sure this node is included in this sb_info */
-  VTR_ASSERT((-1 != index) && (NUM_SIDES != chan_side));
+  VTR_ASSERT((-1 != index) && (NUM_2D_SIDES != chan_side));
 
   std::string chan_port_name = generate_sb_module_track_port_name(
     rr_graph.node_type(rr_gsb.get_chan_node(chan_side, index)), chan_side,
@@ -194,7 +194,7 @@ ModulePinInfo find_switch_block_module_input_port(
       /* Find the side where the grid pin locates in the grid */
       enum e_side grid_pin_side =
         get_rr_graph_single_node_side(rr_graph, input_rr_node);
-      VTR_ASSERT(NUM_SIDES != grid_pin_side);
+      VTR_ASSERT(NUM_2D_SIDES != grid_pin_side);
 
       std::string input_port_name = generate_sb_module_grid_port_name(
         input_side, grid_pin_side, grids, vpr_device_annotation, rr_graph,
@@ -235,12 +235,12 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(
 
   for (const RRNodeId& input_rr_node : input_rr_nodes) {
     /* Find the side where the input locates in the Switch Block */
-    enum e_side input_pin_side = NUM_SIDES;
+    enum e_side input_pin_side = NUM_2D_SIDES;
     /* The input could be at any side of the switch block, find it */
     int index = -1;
     rr_gsb.get_node_side_and_index(rr_graph, input_rr_node, IN_PORT,
                                    input_pin_side, index);
-    VTR_ASSERT(NUM_SIDES != input_pin_side);
+    VTR_ASSERT(NUM_2D_SIDES != input_pin_side);
     VTR_ASSERT(-1 != index);
 
     input_ports.push_back(find_switch_block_module_input_port(
@@ -302,12 +302,12 @@ ModulePortId find_connection_block_module_ipin_port(
                                 rr_graph.node_ylow(src_rr_node));
   /* Search all the sides of a SB, see this drive_rr_node is an INPUT of this SB
    */
-  enum e_side cb_ipin_side = NUM_SIDES;
+  enum e_side cb_ipin_side = NUM_2D_SIDES;
   int cb_ipin_index = -1;
   rr_gsb.get_node_side_and_index(rr_graph, src_rr_node, OUT_PORT, cb_ipin_side,
                                  cb_ipin_index);
   /* We need to be sure that drive_rr_node is part of the CB */
-  VTR_ASSERT((-1 != cb_ipin_index) && (NUM_SIDES != cb_ipin_side));
+  VTR_ASSERT((-1 != cb_ipin_index) && (NUM_2D_SIDES != cb_ipin_side));
   std::string port_name = generate_cb_module_grid_port_name(
     cb_ipin_side, grids, vpr_device_annotation, rr_graph,
     rr_gsb.get_ipin_node(cb_ipin_side, cb_ipin_index));
@@ -332,12 +332,12 @@ ModulePortId find_connection_block_module_opin_port(
   VTR_ASSERT(OPIN == rr_graph.node_type(src_rr_node));
   /* Search all the sides of a SB, see this drive_rr_node is an INPUT of this SB
    */
-  enum e_side cb_opin_side = NUM_SIDES;
+  enum e_side cb_opin_side = NUM_2D_SIDES;
   int cb_opin_index = -1;
   rr_gsb.get_node_side_and_index(rr_graph, src_rr_node, IN_PORT, cb_opin_side,
                                  cb_opin_index);
   /* We need to be sure that drive_rr_node is part of the CB */
-  VTR_ASSERT((-1 != cb_opin_index) && (NUM_SIDES != cb_opin_side));
+  VTR_ASSERT((-1 != cb_opin_index) && (NUM_2D_SIDES != cb_opin_side));
   std::string port_name = generate_cb_module_grid_port_name(
     cb_opin_side, grids, vpr_device_annotation, rr_graph,
     rr_gsb.get_opin_node(cb_opin_side, cb_opin_index));

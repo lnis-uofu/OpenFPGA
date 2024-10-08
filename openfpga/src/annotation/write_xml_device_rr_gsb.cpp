@@ -149,7 +149,7 @@ static void write_rr_gsb_chan_connection_to_xml(
     } else {
       for (const RREdgeId& driver_rr_edge : driver_rr_edges) {
         const RRNodeId& driver_rr_node = rr_graph.edge_src_node(driver_rr_edge);
-        e_side driver_node_side = NUM_SIDES;
+        e_side driver_node_side = NUM_2D_SIDES;
         int driver_node_index = -1;
         rr_gsb.get_node_side_and_index(rr_graph, driver_rr_node, IN_PORT,
                                        driver_node_side, driver_node_index);

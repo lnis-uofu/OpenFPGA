@@ -323,7 +323,7 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
          *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
          *   we will generate one module for each border side
          * - If a I/O block locates in the center of FPGA fabric:
-         *   we will generate one module with NUM_SIDES (same treatment as
+         *   we will generate one module with NUM_2D_SIDES (same treatment as
          * regular grids)
          */
         std::set<e_side> io_type_sides =
@@ -361,7 +361,7 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
         /* For CLB and heterogenenous blocks */
         std::string grid_module_name = generate_grid_block_module_name(
           std::string(GRID_MODULE_NAME_PREFIX), std::string(physical_tile.name),
-          is_io_type(&physical_tile), NUM_SIDES);
+          is_io_type(&physical_tile), NUM_2D_SIDES);
         /* Find the module Id */
         ModuleId grid_module = module_manager.find_module(grid_module_name);
         VTR_ASSERT(true == module_manager.valid_module_id(grid_module));

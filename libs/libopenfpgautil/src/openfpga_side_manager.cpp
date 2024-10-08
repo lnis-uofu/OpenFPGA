@@ -9,7 +9,7 @@ namespace openfpga {
 /* Constructors */
 SideManager::SideManager(enum e_side side) { side_ = side; }
 
-SideManager::SideManager() { side_ = NUM_SIDES; }
+SideManager::SideManager() { side_ = NUM_2D_SIDES; }
 
 SideManager::SideManager(size_t side) { set_side(side); }
 
@@ -27,7 +27,7 @@ enum e_side SideManager::get_opposite() const {
     case LEFT:
       return RIGHT;
     default:
-      return NUM_SIDES;
+      return NUM_2D_SIDES;
   }
 }
 
@@ -42,7 +42,7 @@ enum e_side SideManager::get_rotate_clockwise() const {
     case LEFT:
       return TOP;
     default:
-      return NUM_SIDES;
+      return NUM_2D_SIDES;
   }
 }
 
@@ -57,12 +57,12 @@ enum e_side SideManager::get_rotate_counterclockwise() const {
     case LEFT:
       return BOTTOM;
     default:
-      return NUM_SIDES;
+      return NUM_2D_SIDES;
   }
 }
 
 bool SideManager::validate() const {
-  if (NUM_SIDES == side_) {
+  if (NUM_2D_SIDES == side_) {
     return false;
   }
   return true;
@@ -139,7 +139,7 @@ void SideManager::set_side(size_t side) {
       side_ = LEFT;
       return;
     default:
-      side_ = NUM_SIDES;
+      side_ = NUM_2D_SIDES;
       return;
   }
 }

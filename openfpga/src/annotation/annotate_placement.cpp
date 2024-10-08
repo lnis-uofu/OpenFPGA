@@ -25,10 +25,10 @@ void annotate_mapped_blocks(const DeviceContext& device_ctx,
 
   place_annotation.init_mapped_blocks(device_ctx.grid);
   for (const ClusterBlockId& blk_id : cluster_ctx.clb_nlist.blocks()) {
-    vtr::Point<size_t> grid_coord(place_ctx.block_locs[blk_id].loc.x,
-                                  place_ctx.block_locs[blk_id].loc.y);
+    vtr::Point<size_t> grid_coord(place_ctx.block_locs()[blk_id].loc.x,
+                                  place_ctx.block_locs()[blk_id].loc.y);
     place_annotation.add_mapped_block(
-      grid_coord, place_ctx.block_locs[blk_id].loc.sub_tile, blk_id);
+      grid_coord, place_ctx.block_locs()[blk_id].loc.sub_tile, blk_id);
   }
   VTR_LOG("Done\n");
 }
