@@ -35,10 +35,10 @@ find_program(WGET wget REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # Add Java schema
-set(JAVA_SCHEMA ${CMAKE_CURRENT_BINARY_DIR}/../../vtr-verilog-to-routing/libs/libvtrcapnproto/schema/capnp/java.capnp)
+set(JAVA_SCHEMA ${CMAKE_CURRENT_BINARY_DIR}/schema/capnp/java.capnp)
 add_custom_command(
     OUTPUT ${JAVA_SCHEMA}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/../../vtr-verilog-to-routing/libs/libvtrcapnproto/schema/capnp/
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/schema/capnp/
     COMMAND ${WGET}
         https://raw.githubusercontent.com/capnproto/capnproto-java/master/compiler/src/main/schema/capnp/java.capnp
         -O ${JAVA_SCHEMA}
@@ -46,7 +46,7 @@ add_custom_command(
 
 
 set(CAPNPC_IMPORT_DIRS)
-list(APPEND CAPNPC_IMPORT_DIRS ${CMAKE_CURRENT_BINARY_DIR}/../../vtr-verilog-to-routing/libs/libvtrcapnproto/schema)
+list(APPEND CAPNPC_IMPORT_DIRS ${CMAKE_CURRENT_BINARY_DIR}/schema)
 
 set(IC_PROTOS)
 set(IC_SRCS)
@@ -87,4 +87,22 @@ target_include_directories(libopenfpgacapnproto PUBLIC
 target_link_libraries(libopenfpgacapnproto
     libopenfpgautil
     CapnProto::capnp
+)
+
+
+add_custom_target(
+    generate_unique_block_capnp
+    COMMAND ${CMAKE_COMMAND} -E remove_directory unique_blocks_capnproto_generate
+    COMMAND ${CMAKE_COMMAND} -E make_directory unique_blocks_capnproto_generate
+    COMMAND ${CMAKE_COMMAND} -E chdir unique_blocks_capnproto_generate git clone https://github.com/duck2/uxsdcxx
+    COMMAND python3 -mpip install --user -r unique_blocks_capnproto_generate/uxsdcxx/requirements.txt
+    COMMAND ${CMAKE_COMMAND} -E chdir unique_blocks_capnproto_generate python3 uxsdcxx/uxsdcxx.py ${CMAKE_CURRENT_SOURCE_DIR}/gen/unique_blocks.xsd
+    COMMAND ${CMAKE_COMMAND} -E copy
+        unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.h
+        unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_capnp.h
+        unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_interface.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/gen
+    COMMAND ${CMAKE_COMMAND} -E copy unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.capnp ${CMAKE_CURRENT_SOURCE_DIR}/gen
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen/unique_blocks.xsd
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
