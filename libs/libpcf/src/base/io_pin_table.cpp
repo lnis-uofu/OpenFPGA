@@ -84,7 +84,7 @@ IoPinTableId IoPinTable::create_pin() {
   pin_ids_.push_back(pin_id);
   internal_pins_.emplace_back();
   external_pins_.emplace_back();
-  pin_sides_.emplace_back(NUM_SIDES);
+  pin_sides_.emplace_back(NUM_2D_SIDES);
   pin_directions_.emplace_back(NUM_IO_DIRECTIONS);
 
   return pin_id;

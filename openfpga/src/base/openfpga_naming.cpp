@@ -1091,7 +1091,7 @@ std::string generate_grid_block_prefix(const std::string& prefix,
                                        const e_side& io_side) {
   std::string block_prefix(prefix);
 
-  if (NUM_SIDES != io_side) {
+  if (NUM_2D_SIDES != io_side) {
     SideManager side_manager(io_side);
     block_prefix += std::string(side_manager.to_string());
     block_prefix += std::string("_");
@@ -1110,7 +1110,7 @@ std::string generate_grid_block_netlist_name(const std::string& block_name,
   /* Add the name of physical block */
   std::string module_name(block_name);
 
-  if ((true == is_block_io) && (NUM_SIDES != io_side)) {
+  if ((true == is_block_io) && (NUM_2D_SIDES != io_side)) {
     SideManager side_manager(io_side);
     module_name += std::string("_");
     module_name += std::string(side_manager.to_string());
@@ -1385,7 +1385,7 @@ std::string generate_physical_block_instance_name(t_pb_type* pb_type,
  * This function try to infer if a grid locates at the border of a
  * FPGA fabric, i.e., TOP/RIGHT/BOTTOM/LEFT sides
  * 1. if this grid is on the border, it will return the side it locates,
- * 2. if this grid is in the center, it will return an valid value NUM_SIDES
+ * 2. if this grid is in the center, it will return an valid value NUM_2D_SIDES
  *
  * In this function, we assume that the corner grids are actually empty!
  *
@@ -1412,7 +1412,7 @@ std::string generate_physical_block_instance_name(t_pb_type* pb_type,
  *******************************************************************/
 e_side find_grid_border_side(const vtr::Point<size_t>& device_size,
                              const vtr::Point<size_t>& grid_coordinate) {
-  e_side grid_side = NUM_SIDES;
+  e_side grid_side = NUM_2D_SIDES;
 
   if (device_size.y() - 1 == grid_coordinate.y()) {
     return TOP;

@@ -154,7 +154,7 @@ static void extract_device_non_fabric_pb_bitstream(
       // Get the mapped blocks to this grid
       for (int isubtile = 0; isubtile < grid_type->capacity; ++isubtile) {
         ClusterBlockId cluster_blk_id =
-          placement_ctx.grid_blocks.block_at_location(
+          placement_ctx.grid_blocks().block_at_location(
             {(int)ix, (int)iy, (int)isubtile, (int)layer});
         if (grid_count) {
           fp << ",";

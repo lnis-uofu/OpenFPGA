@@ -179,8 +179,8 @@ static int update_cluster_pin_with_post_routing_results(
      * but the expected side (only used side) will be opposite side of the
      * border side!
      */
-    e_side pin_side = NUM_SIDES;
-    if (NUM_SIDES == border_side) {
+    e_side pin_side = NUM_2D_SIDES;
+    if (NUM_2D_SIDES == border_side) {
       if (1 != pin_sides.size()) {
         VTR_LOG_ERROR(
           "For tile '%s', found pin '%s' on %lu sides. Expect only 1. "
@@ -377,7 +377,7 @@ int update_pb_pin_with_post_routing_results(
       /* Get the mapped blocks to this grid */
       for (int isubtile = 0; isubtile < phy_tile->capacity; ++isubtile) {
         ClusterBlockId cluster_blk_id =
-          placement_ctx.grid_blocks.block_at_location(
+          placement_ctx.grid_blocks().block_at_location(
             {(int)x, (int)y, (int)isubtile, (int)layer});
         /* Skip invalid ids */
         if (ClusterBlockId::INVALID() == cluster_blk_id) {
@@ -389,7 +389,7 @@ int update_pb_pin_with_post_routing_results(
         status = update_cluster_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
           vpr_clustering_annotation, layer, grid_coord, cluster_blk_id,
-          NUM_SIDES, placement_ctx.block_locs[cluster_blk_id].loc.sub_tile,
+          NUM_2D_SIDES, placement_ctx.block_locs()[cluster_blk_id].loc.sub_tile,
           perimeter_cb, map_gnet2msb, num_fixup, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;
@@ -414,7 +414,7 @@ int update_pb_pin_with_post_routing_results(
       /* Get the mapped blocks to this grid */
       for (int isubtile = 0; isubtile < phy_tile_type->capacity; ++isubtile) {
         ClusterBlockId cluster_blk_id =
-          placement_ctx.grid_blocks.block_at_location(
+          placement_ctx.grid_blocks().block_at_location(
             {(int)io_coord.x(), (int)io_coord.y(), (int)isubtile, (int)layer});
         /* Skip invalid ids */
         if (ClusterBlockId::INVALID() == cluster_blk_id) {
@@ -424,7 +424,7 @@ int update_pb_pin_with_post_routing_results(
         status = update_cluster_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
           vpr_clustering_annotation, layer, io_coord, cluster_blk_id, io_side,
-          placement_ctx.block_locs[cluster_blk_id].loc.sub_tile, perimeter_cb,
+          placement_ctx.block_locs()[cluster_blk_id].loc.sub_tile, perimeter_cb,
           map_gnet2msb, num_fixup, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;

@@ -529,7 +529,7 @@ void organize_top_module_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol.type(),
       sram_model, grids, grid_instance_ids, device_rr_gsb, rr_graph,
       sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
-      core_coord, NUM_SIDES);
+      core_coord, NUM_2D_SIDES);
   }
 
   /* Split memory modules into different regions */

@@ -1539,8 +1539,8 @@ static int build_top_module_global_net_from_tile_modules(
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          vtr::Point<size_t>(ix, iy), NUM_SIDES, tile_instance_ids, fabric_tile,
-          perimeter_cb);
+          vtr::Point<size_t>(ix, iy), NUM_2D_SIDES, tile_instance_ids,
+          fabric_tile, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }

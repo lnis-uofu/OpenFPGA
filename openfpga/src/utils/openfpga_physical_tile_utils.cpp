@@ -45,7 +45,7 @@ std::vector<e_side> find_physical_tile_pin_side(
    * - When perimeter cb is on, the expected sides can be on any sides except
    * the border side. But we only expect 1 side
    */
-  if (NUM_SIDES == border_side) {
+  if (NUM_2D_SIDES == border_side) {
     VTR_ASSERT(1 == pin_sides.size());
   } else if (!perimeter_cb) {
     SideManager side_manager(border_side);
@@ -92,10 +92,10 @@ std::set<e_side> find_physical_io_tile_located_sides(
   /* Search the core part */
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
-      /* If located in center, we add a NUM_SIDES and finish */
+      /* If located in center, we add a NUM_2D_SIDES and finish */
       if (physical_tile ==
           grids.get_physical_type(t_physical_tile_loc(ix, iy, 0))) {
-        io_sides.insert(NUM_SIDES);
+        io_sides.insert(NUM_2D_SIDES);
         center_io = true;
         break;
       }
@@ -112,7 +112,7 @@ std::set<e_side> find_physical_io_tile_located_sides(
 
   for (const e_side& fpga_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[fpga_side]) {
-      /* If located in center, we add a NUM_SIDES and finish */
+      /* If located in center, we add a NUM_2D_SIDES and finish */
       if (physical_tile == grids.get_physical_type(t_physical_tile_loc(
                              io_coordinate.x(), io_coordinate.y(), 0))) {
         io_sides.insert(fpga_side);
