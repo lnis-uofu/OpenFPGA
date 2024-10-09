@@ -1,5 +1,5 @@
-#ifndef READ_XML_UNIQUE_BLOCKS_H
-#define READ_XML_UNIQUE_BLOCKS_H
+#ifndef READ_XML_UNIQUE_BLOCKS_XML_H
+#define READ_XML_UNIQUE_BLOCKS_XML_H
 
 #include <string>
 
@@ -34,15 +34,6 @@ void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
                                       bool verbose_output);
 
 int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
-                           bool verbose_output);
-
-std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
-  const ucap::Uniqueblockpacked::Reader& unique_block);
-
-vtr::Point<size_t> read_bin_unique_block_coord(
-  const ucap::Uniqueblockpacked::Reader& unique_block, ucap::Blocktype& type);
-
-int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
                            bool verbose_output);
 }  // namespace openfpga
 

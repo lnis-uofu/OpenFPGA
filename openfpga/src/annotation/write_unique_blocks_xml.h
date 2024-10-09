@@ -1,5 +1,5 @@
-#ifndef WRITE_XML_UNIQUE_BLOCKS_H
-#define WRITE_XML_UNIQUE_BLOCKS_H
+#ifndef WRITE_XML_UNIQUE_BLOCKS_XML_H
+#define WRITE_XML_UNIQUE_BLOCKS_XML_H
 
 #include <string>
 
@@ -33,11 +33,5 @@ void report_unique_module_status_write(
   bool verbose_output); /*report status of written info*/
 int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output);
-int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
-                            bool verbose_output);
-int write_bin_atom_block(const std::vector<vtr::Point<size_t>>& instance_map,
-                         const vtr::Point<size_t>& unique_block_coord,
-                         const ucap::Blocktype type,
-                         ucap::Uniqueblockpacked::Builder& root);
 }  // namespace openfpga
 #endif
