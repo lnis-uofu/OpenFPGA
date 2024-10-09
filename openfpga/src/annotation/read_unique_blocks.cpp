@@ -162,10 +162,10 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
 
 /*read the instances' coordinate of a unique block from a bin file*/
 std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
-  const uniqueblockcap::UniqueBlockPacked::Reader& unique_block) {
+  const ucap::Uniqueblockpacked::Reader& unique_block) {
   std::vector<vtr::Point<size_t>> instance_coords;
-  if (unique_block.hasInstanceList()) {
-    auto instance_list = unique_block.getInstanceList();
+  if (unique_block.hasInstances()) {
+    auto instance_list = unique_block.getInstances();
     for (auto instance : instance_list) {
       int instance_x = instance.getX();
       int instance_y = instance.getY();
@@ -178,9 +178,8 @@ std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
 
 /*read the unique block coordinate from a bin file */
 vtr::Point<size_t> read_bin_unique_block_coord(
-  const uniqueblockcap::UniqueBlockPacked::Reader& unique_block,
-  uniqueblockcap::BlockType& type) {
-  auto block_info = unique_block.getBlockInfo();
+  const ucap::Uniqueblockpacked::Reader& unique_block, ucap::Blocktype& type) {
+  auto block_info = unique_block.getBlockinfo();
   int block_x = block_info.getX();
   int block_y = block_info.getY();
   type = block_info.getType();
@@ -196,11 +195,11 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
   device_rr_gsb.reserve_unique_modules();
   MmapFile f(file_name);
   ::capnp::FlatArrayMessageReader reader(f.getData());
-  auto root = reader.getRoot<uniqueblockcap::UniqueBlocks>();
-  if (root.hasAtomInfo()) {
-    auto block_list = root.getAtomInfo();
+  auto root = reader.getRoot<ucap::UniqueBlocks>();
+  if (root.hasAtominfos()) {
+    auto block_list = root.getAtominfos();
     for (auto unique_block : block_list) {
-      uniqueblockcap::BlockType type;
+      ucap::Blocktype type;
       vtr::Point<size_t> block_coordinate = read_bin_unique_block_coord(
         unique_block, type); /*get block coordinate and type*/
       std::vector<vtr::Point<size_t>> instance_coords =
@@ -208,15 +207,18 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
           unique_block); /* get a list of instance coordinates*/
       /* get block coordinate and instance coordinate, try to setup
        * device_rr_gsb */
-      if (type == uniqueblockcap::BlockType::SB) {
+      if (type == ucap::Blocktype::SB) {
         device_rr_gsb.preload_unique_sb_module(block_coordinate,
                                                instance_coords);
-      } else if (type == uniqueblockcap::BlockType::CBY) {
+      } else if (type == ucap::Blocktype::CBY) {
         device_rr_gsb.preload_unique_cby_module(block_coordinate,
                                                 instance_coords);
-      } else if (type == uniqueblockcap::BlockType::CBX) {
+      } else if (type == ucap::Blocktype::CBX) {
         device_rr_gsb.preload_unique_cbx_module(block_coordinate,
                                                 instance_coords);
+      } else if (type == ucap::Blocktype::UXSD_INVALID) {
+        VTR_LOG_ERROR("Invalid block type!");
+        return CMD_EXEC_FATAL_ERROR;
       }
     }
   }
