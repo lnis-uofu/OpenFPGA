@@ -4,35 +4,31 @@
 #
 # Cmdline: uxsdcxx/uxsdcap.py /home/jrlin/add_feature/bin_format/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.h unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_capnp.h unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_interface.h /home/jrlin/add_feature/bin_format/OpenFPGA/libs/libopenfpgacapnproto/gen
 # Input file: /home/jrlin/add_feature/bin_format/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd
-# md5sum of input file: 6fd16e8f6b3530e875f67cea3044e719
+# md5sum of input file: 1db9d740309076fa51f61413bae1e072
 
-@0xf133a161f333ac8a;
+@0xc5f2ef95c322aac3;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
-enum Blocktype {
+enum Type {
 	uxsdInvalid @0;
 	cbx @1;
 	cby @2;
 	sb @3;
 }
 
-struct Blockinfo {
-	type @0 :Blocktype;
-	x @1 :UInt32;
-	y @2 :UInt32;
-}
-
-struct Instanceinfo {
+struct Instance {
 	x @0 :UInt32;
 	y @1 :UInt32;
 }
 
-struct Uniqueblockpacked {
-	blockinfo @0 :Blockinfo;
-	instances @1 :List(Instanceinfo);
+struct Block {
+	type @0 :Type;
+	x @1 :UInt32;
+	y @2 :UInt32;
+	instances @3 :List(Instance);
 }
 
 struct UniqueBlocks {
-	atominfos @0 :List(Uniqueblockpacked);
+	blocks @0 :List(Block);
 }

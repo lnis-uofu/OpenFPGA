@@ -24,10 +24,10 @@
  *******************************************************************/
 namespace openfpga {
 std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
-  const ucap::Uniqueblockpacked::Reader& unique_block);
+  const ucap::Block::Reader& unique_block);
 
 vtr::Point<size_t> read_bin_unique_block_coord(
-  const ucap::Uniqueblockpacked::Reader& unique_block, ucap::Blocktype& type);
+  const ucap::Block::Reader& unique_block, ucap::Type& type);
 
 int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
                            bool verbose_output);

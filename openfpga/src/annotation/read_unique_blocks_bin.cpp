@@ -35,7 +35,7 @@ namespace openfpga {
 
 /*read the instances' coordinate of a unique block from a bin file*/
 std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
-  const ucap::Uniqueblockpacked::Reader& unique_block) {
+  const ucap::Block::Reader& unique_block) {
   std::vector<vtr::Point<size_t>> instance_coords;
   if (unique_block.hasInstances()) {
     auto instance_list = unique_block.getInstances();
@@ -51,11 +51,10 @@ std::vector<vtr::Point<size_t>> read_bin_unique_instance_coords(
 
 /*read the unique block coordinate from a bin file */
 vtr::Point<size_t> read_bin_unique_block_coord(
-  const ucap::Uniqueblockpacked::Reader& unique_block, ucap::Blocktype& type) {
-  auto block_info = unique_block.getBlockinfo();
-  int block_x = block_info.getX();
-  int block_y = block_info.getY();
-  type = block_info.getType();
+  const ucap::Block::Reader& unique_block, ucap::Type& type) {
+  int block_x = unique_block.getX();
+  int block_y = unique_block.getY();
+  type = unique_block.getType();
   vtr::Point<size_t> block_coordinate(block_x, block_y);
   return block_coordinate;
 }
@@ -69,10 +68,10 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
   MmapFile f(file_name);
   ::capnp::FlatArrayMessageReader reader(f.getData());
   auto root = reader.getRoot<ucap::UniqueBlocks>();
-  if (root.hasAtominfos()) {
-    auto block_list = root.getAtominfos();
+  if (root.hasBlocks()) {
+    auto block_list = root.getBlocks();
     for (auto unique_block : block_list) {
-      ucap::Blocktype type;
+      ucap::Type type;
       vtr::Point<size_t> block_coordinate = read_bin_unique_block_coord(
         unique_block, type); /*get block coordinate and type*/
       std::vector<vtr::Point<size_t>> instance_coords =
@@ -80,16 +79,16 @@ int read_bin_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
           unique_block); /* get a list of instance coordinates*/
       /* get block coordinate and instance coordinate, try to setup
        * device_rr_gsb */
-      if (type == ucap::Blocktype::SB) {
+      if (type == ucap::Type::SB) {
         device_rr_gsb.preload_unique_sb_module(block_coordinate,
                                                instance_coords);
-      } else if (type == ucap::Blocktype::CBY) {
+      } else if (type == ucap::Type::CBY) {
         device_rr_gsb.preload_unique_cby_module(block_coordinate,
                                                 instance_coords);
-      } else if (type == ucap::Blocktype::CBX) {
+      } else if (type == ucap::Type::CBX) {
         device_rr_gsb.preload_unique_cbx_module(block_coordinate,
                                                 instance_coords);
-      } else if (type == ucap::Blocktype::UXSD_INVALID) {
+      } else if (type == ucap::Type::UXSD_INVALID) {
         VTR_LOG_ERROR("Invalid block type!");
         return CMD_EXEC_FATAL_ERROR;
       }

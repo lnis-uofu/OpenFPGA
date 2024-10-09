@@ -2,7 +2,7 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
   
   <!-- Enumeration for BlockType -->
-  <xs:simpleType name="BlockType">
+  <xs:simpleType name="type">
     <xs:restriction base="xs:string">
       <xs:enumeration value="cbx"/>
       <xs:enumeration value="cby"/>
@@ -10,33 +10,27 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- BlockInfo Structure (using attributes for type, x, and y) -->
-  <xs:complexType name="BlockInfo">
-    <xs:attribute name="type" type="BlockType"/>
-    <xs:attribute name="x" type="xs:unsignedInt"/>
-    <xs:attribute name="y" type="xs:unsignedInt"/>
-  </xs:complexType>
-
   <!-- InstanceInfo Structure (using attributes for x and y) -->
-  <xs:complexType name="InstanceInfo">
-    <xs:attribute name="x" type="xs:unsignedInt"/>
-    <xs:attribute name="y" type="xs:unsignedInt"/>
+  <xs:complexType name="instance">
+    <xs:attribute name="x" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="y" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
 
-  <!-- UniqueBlockPacked Structure (blockInfo, list of instances) -->
-  <xs:complexType name="UniqueBlockPacked">
-    <xs:sequence>
-      <xs:element name="blockInfo" type="BlockInfo"/>
-      <xs:element name="instance" type="InstanceInfo" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
+  <!-- BlockInfo Structure (using attributes for type, x, and y, and instances as children) -->
+<xs:complexType name="block">
+  <xs:sequence>
+    <xs:element name="instance" type="instance" minOccurs="0" maxOccurs="unbounded" />
+  </xs:sequence>
+  <xs:attribute name="type" type="type" use="required" />
+  <xs:attribute name="x" type="xs:unsignedInt" use="required" />
+  <xs:attribute name="y" type="xs:unsignedInt" use="required" />
+</xs:complexType>
 
-  <!-- Root element definition combined with UniqueBlockCompactInfo structure -->
+  <!-- Root element definition -->
   <xs:element name="unique_blocks">
     <xs:complexType>
       <xs:sequence>
-        <!-- Directly include atomInfo (previously part of UniqueBlockCompactInfo) -->
-        <xs:element name="atomInfo" type="UniqueBlockPacked" maxOccurs="unbounded"/>
+        <xs:element name="block" type="block" maxOccurs="unbounded"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>

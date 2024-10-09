@@ -34,12 +34,10 @@ namespace openfpga {
  * instances' info)into capnp builder */
 int write_bin_atom_block(const std::vector<vtr::Point<size_t>>& instance_map,
                          const vtr::Point<size_t>& unique_block_coord,
-                         const ucap::Blocktype type,
-                         ucap::Uniqueblockpacked::Builder& root) {
-  auto block_info = root.initBlockinfo();
-  block_info.setX(unique_block_coord.x());
-  block_info.setY(unique_block_coord.y());
-  block_info.setType(type);
+                         const ucap::Type type, ucap::Block::Builder& root) {
+  root.setX(unique_block_coord.x());
+  root.setY(unique_block_coord.y());
+  root.setType(type);
   if (instance_map.size() > 0) {
     auto instance_list = root.initInstances(instance_map.size());
     for (size_t instance_id = 0; instance_id < instance_map.size();
@@ -60,7 +58,7 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   int num_unique_blocks = device_rr_gsb.get_num_sb_unique_module() +
                           device_rr_gsb.get_num_cb_unique_module(CHANX) +
                           device_rr_gsb.get_num_cb_unique_module(CHANY);
-  auto block_list = unique_blocks.initAtominfos(num_unique_blocks);
+  auto block_list = unique_blocks.initBlocks(num_unique_blocks);
 
   /*write switch blocks into bin file */
   for (size_t id = 0; id < device_rr_gsb.get_num_sb_unique_module(); ++id) {
@@ -69,7 +67,7 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
       device_rr_gsb.get_sb_unique_block_instance_coord(unique_block_coord);
     auto unique_block = block_list[id];
     int status_code = write_bin_atom_block(instance_map, unique_block_coord,
-                                           ucap::Blocktype::SB, unique_block);
+                                           ucap::Type::SB, unique_block);
     if (status_code != 0) {
       VTR_LOG_ERROR("write sb unique blocks into bin file failed!");
       return CMD_EXEC_FATAL_ERROR;
@@ -86,7 +84,7 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
     int block_id = id + device_rr_gsb.get_num_sb_unique_module();
     auto unique_block = block_list[block_id];
     int status_code = write_bin_atom_block(instance_map, unique_block_coord,
-                                           ucap::Blocktype::CBX, unique_block);
+                                           ucap::Type::CBX, unique_block);
     if (status_code != 0) {
       VTR_LOG_ERROR("write cbx unique blocks into bin file failed!");
       return CMD_EXEC_FATAL_ERROR;
@@ -104,7 +102,7 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                    device_rr_gsb.get_num_cb_unique_module(CHANX);
     auto unique_block = block_list[block_id];
     int status_code = write_bin_atom_block(instance_map, unique_block_coord,
-                                           ucap::Blocktype::CBY, unique_block);
+                                           ucap::Type::CBY, unique_block);
     if (status_code != 0) {
       VTR_LOG_ERROR("write cby unique blocks into bin file failed!");
       return CMD_EXEC_FATAL_ERROR;

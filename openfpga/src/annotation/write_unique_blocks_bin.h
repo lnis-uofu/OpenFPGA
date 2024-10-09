@@ -28,7 +28,6 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output);
 int write_bin_atom_block(const std::vector<vtr::Point<size_t>>& instance_map,
                          const vtr::Point<size_t>& unique_block_coord,
-                         const ucap::Blocktype type,
-                         ucap::Uniqueblockpacked::Builder& root);
+                         const ucap::Type type, ucap::Block::Builder& root);
 }  // namespace openfpga
 #endif
