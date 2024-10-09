@@ -1,10 +1,11 @@
 
-#include <string>
+#include <capnp/message.h>
 
+#include <string>
 /* Headers from pugi XML library */
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"
-
+#include "serdes_utils.h"
 /* Headers from vtr util library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -17,7 +18,8 @@
 #include "openfpga_digest.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
-#include "write_xml_unique_blocks.h"
+#include "unique_blocks_uxsdcxx.capnp.h"
+#include "write_unique_blocks_xml.h"
 #include "write_xml_utils.h"
 
 /********************************************************************
@@ -48,18 +50,13 @@ int write_xml_atom_block(std::fstream& fp,
      << "\n";
 
   for (const auto& instance_info : instance_map) {
-    if (instance_info.x() == unique_block_coord.x() &&
-        instance_info.y() == unique_block_coord.y()) {
-      ;
-    } else {
-      openfpga::write_tab_to_file(fp, 2);
-      fp << "<instance";
-      write_xml_attribute(fp, "x", instance_info.x());
-      write_xml_attribute(fp, "y", instance_info.y());
+    openfpga::write_tab_to_file(fp, 2);
+    fp << "<instance";
+    write_xml_attribute(fp, "x", instance_info.x());
+    write_xml_attribute(fp, "y", instance_info.y());
 
-      fp << "/>"
-         << "\n";
-    }
+    fp << "/>"
+       << "\n";
   }
   openfpga::write_tab_to_file(fp, 1);
   fp << "</block>"

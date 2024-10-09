@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <!-- Enumeration for BlockType -->
+  <xs:simpleType name="type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="cbx"/>
+      <xs:enumeration value="cby"/>
+      <xs:enumeration value="sb"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- InstanceInfo Structure (using attributes for x and y) -->
+  <xs:complexType name="instance">
+    <xs:attribute name="x" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="y" type="xs:unsignedInt" use="required"/>
+  </xs:complexType>
+
+  <!-- BlockInfo Structure (using attributes for type, x, and y, and instances as children) -->
+<xs:complexType name="block">
+  <xs:sequence>
+    <xs:element name="instance" type="instance" minOccurs="0" maxOccurs="unbounded" />
+  </xs:sequence>
+  <xs:attribute name="type" type="type" use="required" />
+  <xs:attribute name="x" type="xs:unsignedInt" use="required" />
+  <xs:attribute name="y" type="xs:unsignedInt" use="required" />
+</xs:complexType>
+
+  <!-- Root element definition -->
+  <xs:element name="unique_blocks">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="block" type="block" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

@@ -21,13 +21,13 @@ ${OPENFPGA_PB_PIN_FIXUP_COMMAND}
 # Apply fix-up to Look-Up Table truth tables based on packing results
 lut_truth_table_fixup
 
-# preload unique blocks from the provided xml file 
-read_unique_blocks --file ${READ_UNIQUE_BLOCKS_XML} --verbose --type xml
+# preload unique blocks from the provided file 
+read_unique_blocks --file ${READ_UNIQUE_BLOCKS} --verbose --type ${OPENFPGA_UNIQUE_BLOCK_FILE} 
 
 # Build the module graph
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
-build_fabric --compress_routing --group_tile ${OPENFPGA_GROUP_TILE_CONFIG_FILE} #--verbose
+build_fabric --group_tile ${OPENFPGA_GROUP_TILE_CONFIG_FILE} #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows

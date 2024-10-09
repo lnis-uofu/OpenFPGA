@@ -1,3 +1,4 @@
+
 #include <string>
 /* Headers from pugi XML library */
 #include "pugixml.hpp"
@@ -12,10 +13,12 @@
 #include "arch_error.h"
 #include "command_exit_codes.h"
 #include "device_rr_gsb_utils.h"
+#include "mmap_file.h"
 #include "openfpga_digest.h"
-#include "read_xml_unique_blocks.h"
+#include "read_unique_blocks_xml.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
+#include "unique_blocks_uxsdcxx.capnp.h"
 #include "write_xml_utils.h"
 
 /********************************************************************
@@ -109,7 +112,6 @@ int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
     pugi::xml_node xml_root = get_single_child(doc, "unique_blocks", loc_data);
     /* clear unique modules & reserve memory to relavant vectors */
     device_rr_gsb.clear_unique_modules();
-    // vtr::Point<size_t> grid_coord(rr_gsb_.size());
     device_rr_gsb.reserve_unique_modules();
 
     /* load unique blocks xml file and set up device_rr_gdb */

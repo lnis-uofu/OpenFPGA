@@ -1,5 +1,5 @@
-#ifndef READ_XML_UNIQUE_BLOCKS_H
-#define READ_XML_UNIQUE_BLOCKS_H
+#ifndef READ_XML_UNIQUE_BLOCKS_XML_H
+#define READ_XML_UNIQUE_BLOCKS_XML_H
 
 #include <string>
 
@@ -15,7 +15,7 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "device_rr_gsb_utils.h"
-
+#include "unique_blocks_uxsdcxx.capnp.h"
 /********************************************************************
  * This file includes the top-level functions of this library
  * which includes:
@@ -36,4 +36,5 @@ void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
 int read_xml_unique_blocks(DeviceRRGSB& device_rr_gsb, const char* file_name,
                            bool verbose_output);
 }  // namespace openfpga
+
 #endif
