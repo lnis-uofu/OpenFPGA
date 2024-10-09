@@ -1,6 +1,3 @@
-#include <capnp/message.h>
-#include <capnp/serialize.h>
-#include <kj/io.h>
 
 #include <string>
 /* Headers from pugi XML library */
