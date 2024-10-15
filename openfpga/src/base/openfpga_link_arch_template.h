@@ -90,7 +90,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   // rr_graph from an external file
   g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
   annotate_vpr_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
-                            g_vpr_ctx.routing(),
                             openfpga_ctx.mutable_vpr_routing_annotation(),
                             cmd_context.option_enable(cmd, opt_verbose));
 
