@@ -554,6 +554,12 @@ static void annotate_rr_switch_circuit_models(
        rr_switch_id++) {
     std::string switch_name(
       vpr_device_ctx.rr_graph.rr_switch()[RRSwitchId(rr_switch_id)].name);
+
+    /* Skip flat router-generated internal switches */
+    if (switch_name.rfind(VPR_INTERNAL_SWITCH_NAME, 0) == 0) {
+      continue;
+    }
+
     /* Skip the delayless switch, which is only used by the edges between
      * - SOURCE and OPIN
      * - IPIN and SINK

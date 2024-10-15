@@ -52,11 +52,18 @@ static void build_routing_arch_mux_library(
         VTR_ASSERT(1 == driver_switches.size());
         const CircuitModelId& rr_switch_circuit_model =
           vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
+
+        /* Skip flat router-generated internal switches (not relevant) */
+        auto switch_name = rr_graph.rr_switch_inf(driver_switches[0]).name;
+        if (switch_name.rfind(VPR_INTERNAL_SWITCH_NAME, 0) == 0) {
+          continue;
+        }
+
         /* we should select a circuit model for the routing resource switch */
         if (CircuitModelId::INVALID() == rr_switch_circuit_model) {
           VTR_LOG_ERROR(
             "Unable to find the circuit model for rr_switch '%s'!\n",
-            rr_graph.rr_switch_inf(driver_switches[0]).name.c_str());
+            switch_name.c_str());
           VTR_LOG("Node type: %s\n", rr_graph.node_type_string(node));
           VTR_LOG("Node coordinate: %s\n",
                   rr_graph.node_coordinate_to_string(node).c_str());

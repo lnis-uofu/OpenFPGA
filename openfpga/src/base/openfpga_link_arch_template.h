@@ -94,7 +94,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
                             cmd_context.option_enable(cmd, opt_verbose));
 
   annotate_rr_node_previous_nodes(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
-                                  g_vpr_ctx.routing(),
                                   openfpga_ctx.mutable_vpr_routing_annotation(),
                                   cmd_context.option_enable(cmd, opt_verbose));
 
