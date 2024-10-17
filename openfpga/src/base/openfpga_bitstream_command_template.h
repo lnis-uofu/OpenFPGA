@@ -81,6 +81,9 @@ ShellCommandId add_build_arch_bitstream_command_template(
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
+  /* Add an option '--fix_unmapped_mux_selection' */
+  shell_cmd.add_option("fix_unmapped_mux_selection", false, "Try to connect unmapped mux outputs to unmapped inputs");
+
   /* Add command 'build_architecture_bitstream' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Build fabric-independent bitstream database", hidden);
