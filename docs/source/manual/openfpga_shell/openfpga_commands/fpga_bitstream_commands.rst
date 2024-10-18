@@ -59,6 +59,10 @@ build_architecture_bitstream
 
     Show verbose log
 
+  .. option:: --fix_unmapped_mux_selection
+
+    Try to connect unmapped mux outputs to unmapped inputs. Only effective if there is no constant input to muxes.
+
 build_fabric_bitstream
 ~~~~~~~~~~~~~~~~~~~~~~
 
