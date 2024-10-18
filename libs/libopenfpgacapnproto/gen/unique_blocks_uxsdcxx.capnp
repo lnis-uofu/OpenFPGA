@@ -2,11 +2,11 @@
 # https://github.com/duck2/uxsdcxx
 # Modify only if your build process doesn't involve regenerating this file.
 #
-# Cmdline: uxsdcxx/uxsdcap.py /home/jrlin/add_feature/bin_format/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.h unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_capnp.h unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_interface.h /home/jrlin/add_feature/bin_format/OpenFPGA/libs/libopenfpgacapnproto/gen
-# Input file: /home/jrlin/add_feature/bin_format/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd
+# Cmdline: uxsdcxx/uxsdcap.py /home/xifan/github/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd unique_blocks_capnproto_generate/unique_blocks_uxsdcxx.h unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_capnp.h unique_blocks_capnproto_generate/unique_blocks_uxsdcxx_interface.h /home/xifan/github/OpenFPGA/libs/libopenfpgacapnproto/gen
+# Input file: /home/xifan/github/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd
 # md5sum of input file: 1db9d740309076fa51f61413bae1e072
 
-@0xc5f2ef95c322aac3;
+@0xb1073886de13324f;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
