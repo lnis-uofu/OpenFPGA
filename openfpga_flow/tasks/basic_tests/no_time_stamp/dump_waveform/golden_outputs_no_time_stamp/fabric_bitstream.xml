@@ -314,11 +314,11 @@
 		</bit>
 		<bit id="373" value="0" path="fpga_top.cby_1__1_.mem_left_ipin_5.mem_out[0]">
 		</bit>
-		<bit id="372" value="0" path="fpga_top.cby_1__1_.mem_left_ipin_4.mem_out[2]">
+		<bit id="372" value="1" path="fpga_top.cby_1__1_.mem_left_ipin_4.mem_out[2]">
 		</bit>
 		<bit id="371" value="0" path="fpga_top.cby_1__1_.mem_left_ipin_4.mem_out[1]">
 		</bit>
-		<bit id="370" value="0" path="fpga_top.cby_1__1_.mem_left_ipin_4.mem_out[0]">
+		<bit id="370" value="1" path="fpga_top.cby_1__1_.mem_left_ipin_4.mem_out[0]">
 		</bit>
 		<bit id="369" value="0" path="fpga_top.cby_1__1_.mem_left_ipin_3.mem_out[2]">
 		</bit>
@@ -398,7 +398,7 @@
 		</bit>
 		<bit id="331" value="0" path="fpga_top.cbx_1__1_.mem_bottom_ipin_2.mem_out[0]">
 		</bit>
-		<bit id="330" value="1" path="fpga_top.cbx_1__1_.mem_bottom_ipin_1.mem_out[2]">
+		<bit id="330" value="0" path="fpga_top.cbx_1__1_.mem_bottom_ipin_1.mem_out[2]">
 		</bit>
 		<bit id="329" value="0" path="fpga_top.cbx_1__1_.mem_bottom_ipin_1.mem_out[1]">
 		</bit>
@@ -448,9 +448,9 @@
 		</bit>
 		<bit id="306" value="0" path="fpga_top.sb_1__1_.mem_left_track_9.mem_out[0]">
 		</bit>
-		<bit id="305" value="0" path="fpga_top.sb_1__1_.mem_left_track_7.mem_out[1]">
+		<bit id="305" value="1" path="fpga_top.sb_1__1_.mem_left_track_7.mem_out[1]">
 		</bit>
-		<bit id="304" value="0" path="fpga_top.sb_1__1_.mem_left_track_7.mem_out[0]">
+		<bit id="304" value="1" path="fpga_top.sb_1__1_.mem_left_track_7.mem_out[0]">
 		</bit>
 		<bit id="303" value="0" path="fpga_top.sb_1__1_.mem_left_track_5.mem_out[1]">
 		</bit>
@@ -606,17 +606,17 @@
 		</bit>
 		<bit id="227" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_23.mem_out[0]">
 		</bit>
-		<bit id="226" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_21.mem_out[1]">
+		<bit id="226" value="1" path="fpga_top.sb_0__1_.mem_bottom_track_21.mem_out[1]">
 		</bit>
-		<bit id="225" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_21.mem_out[0]">
+		<bit id="225" value="1" path="fpga_top.sb_0__1_.mem_bottom_track_21.mem_out[0]">
 		</bit>
 		<bit id="224" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_19.mem_out[1]">
 		</bit>
 		<bit id="223" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_19.mem_out[0]">
 		</bit>
-		<bit id="222" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_17.mem_out[1]">
+		<bit id="222" value="1" path="fpga_top.sb_0__1_.mem_bottom_track_17.mem_out[1]">
 		</bit>
-		<bit id="221" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_17.mem_out[0]">
+		<bit id="221" value="1" path="fpga_top.sb_0__1_.mem_bottom_track_17.mem_out[0]">
 		</bit>
 		<bit id="220" value="0" path="fpga_top.sb_0__1_.mem_bottom_track_15.mem_out[2]">
 		</bit>
@@ -724,7 +724,7 @@
 		</bit>
 		<bit id="168" value="1" path="fpga_top.grid_io_top_1__2_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
-		<bit id="167" value="0" path="fpga_top.grid_io_top_1__2_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
+		<bit id="167" value="1" path="fpga_top.grid_io_top_1__2_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
 		<bit id="166" value="1" path="fpga_top.grid_io_top_1__2_.logical_tile_io_mode_io__0.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
@@ -734,7 +734,7 @@
 		</bit>
 		<bit id="163" value="1" path="fpga_top.grid_io_right_2__1_.logical_tile_io_mode_io__5.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
-		<bit id="162" value="1" path="fpga_top.grid_io_right_2__1_.logical_tile_io_mode_io__4.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
+		<bit id="162" value="0" path="fpga_top.grid_io_right_2__1_.logical_tile_io_mode_io__4.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
 		<bit id="161" value="1" path="fpga_top.grid_io_right_2__1_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
@@ -922,7 +922,7 @@
 		</bit>
 		<bit id="69" value="0" path="fpga_top.sb_1__0_.mem_top_track_8.mem_out[1]">
 		</bit>
-		<bit id="68" value="0" path="fpga_top.sb_1__0_.mem_top_track_8.mem_out[0]">
+		<bit id="68" value="1" path="fpga_top.sb_1__0_.mem_top_track_8.mem_out[0]">
 		</bit>
 		<bit id="67" value="0" path="fpga_top.sb_1__0_.mem_top_track_6.mem_out[1]">
 		</bit>
@@ -930,7 +930,7 @@
 		</bit>
 		<bit id="65" value="0" path="fpga_top.sb_1__0_.mem_top_track_4.mem_out[1]">
 		</bit>
-		<bit id="64" value="0" path="fpga_top.sb_1__0_.mem_top_track_4.mem_out[0]">
+		<bit id="64" value="1" path="fpga_top.sb_1__0_.mem_top_track_4.mem_out[0]">
 		</bit>
 		<bit id="63" value="0" path="fpga_top.sb_1__0_.mem_top_track_2.mem_out[2]">
 		</bit>
@@ -948,17 +948,17 @@
 		</bit>
 		<bit id="56" value="0" path="fpga_top.sb_0__0_.mem_right_track_24.mem_out[0]">
 		</bit>
-		<bit id="55" value="0" path="fpga_top.sb_0__0_.mem_right_track_22.mem_out[1]">
+		<bit id="55" value="1" path="fpga_top.sb_0__0_.mem_right_track_22.mem_out[1]">
 		</bit>
-		<bit id="54" value="0" path="fpga_top.sb_0__0_.mem_right_track_22.mem_out[0]">
+		<bit id="54" value="1" path="fpga_top.sb_0__0_.mem_right_track_22.mem_out[0]">
 		</bit>
 		<bit id="53" value="0" path="fpga_top.sb_0__0_.mem_right_track_20.mem_out[1]">
 		</bit>
 		<bit id="52" value="0" path="fpga_top.sb_0__0_.mem_right_track_20.mem_out[0]">
 		</bit>
-		<bit id="51" value="0" path="fpga_top.sb_0__0_.mem_right_track_18.mem_out[1]">
+		<bit id="51" value="1" path="fpga_top.sb_0__0_.mem_right_track_18.mem_out[1]">
 		</bit>
-		<bit id="50" value="0" path="fpga_top.sb_0__0_.mem_right_track_18.mem_out[0]">
+		<bit id="50" value="1" path="fpga_top.sb_0__0_.mem_right_track_18.mem_out[0]">
 		</bit>
 		<bit id="49" value="0" path="fpga_top.sb_0__0_.mem_right_track_16.mem_out[1]">
 		</bit>
