@@ -60,6 +60,7 @@ int read_pcf(const char* fname, PcfData& pcf_data,
           break;  // or ignore the full line comment and move on
         } else {
           if (reduce_error_to_warning) {
+            VTR_LOG_WARN("Unknown command '%s'!\n", word.c_str());
             break;
           } else {
             /* Reach unknown command for OpenFpga, error out */
