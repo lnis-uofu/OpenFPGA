@@ -28,6 +28,8 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
+  CommandOptionId opt_constant_undriven_inputs =
+    cmd.option("constant_undriven_inputs");
   CommandOptionId opt_include_timing = cmd.option("include_timing");
   CommandOptionId opt_print_user_defined_template =
     cmd.option("print_user_defined_template");
@@ -56,6 +58,22 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   }
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
+  /* For perimeter cb, enable the constant-zero undriven inputs, unless it is
+   * defined by user. Throw error if the constant inputs are not selected! */
+  if (cmd_context.option_enable(cmd, opt_constant_undriven_inputs)) {
+    options.set_constant_undriven_inputs(
+      cmd_context.option_value(cmd, opt_constant_undriven_inputs));
+  }
+  if (g_vpr_ctx.device().arch->perimeter_cb) {
+    if (FabricVerilogOption::e_undriven_input_type::NONE ==
+        options.constant_undriven_inputs()) {
+      options.set_constant_undriven_inputs(
+        FabricVerilogOption::e_undriven_input_type::BUS0);
+      VTR_LOG(
+        "Automatically enable the constant_undriven_input option as perimeter "
+        "connection blocks are seen in FPGA fabric\n");
+    }
+  }
 
   return fpga_fabric_verilog(
     openfpga_ctx.mutable_module_graph(),
@@ -74,6 +92,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
                                   const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_bitstream = cmd.option("bitstream");
+  CommandOptionId opt_sim = cmd.option("simulator");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
@@ -132,6 +151,11 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
       read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
   }
 
+  /* Configure the simulator */
+  if (true == cmd_context.option_enable(cmd, opt_sim)) {
+    options.set_simulator_type(cmd_context.option_value(cmd, opt_sim));
+  }
+
   return fpga_verilog_full_testbench(
     openfpga_ctx.module_graph(), openfpga_ctx.bitstream_manager(),
     openfpga_ctx.fabric_bitstream(), openfpga_ctx.blwl_shift_register_banks(),
@@ -163,6 +187,7 @@ int write_preconfigured_fabric_wrapper_template(
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_embed_bitstream = cmd.option("embed_bitstream");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_dump_waveform = cmd.option("dump_waveform");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -178,6 +203,7 @@ int write_preconfigured_fabric_wrapper_template(
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_include_signal_init(
     cmd_context.option_enable(cmd, opt_include_signal_init));
+  options.set_dump_waveform(cmd_context.option_enable(cmd, opt_dump_waveform));
   options.set_print_formal_verification_top_netlist(true);
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {

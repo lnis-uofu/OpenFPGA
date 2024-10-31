@@ -53,6 +53,9 @@ apt-get install -y \
     gcc-10 \
     g++-11 \
     gcc-11 \
+    clang-11 \
     clang-12 \
-    clang-format-12 \
+    clang-13 \
+    clang-14 \
+    clang-format-14 \
     libxml2-utils

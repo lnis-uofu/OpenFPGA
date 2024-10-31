@@ -619,6 +619,14 @@ This example shows:
 
 Standard Cell Multiplexer
 `````````````````````````
+.. _fig_stdcellmux:
+
+.. figure:: ./figures/stdcellmux.png
+   :width: 100%
+   :alt: Examples of MUX built with standard cells
+
+   An example of a multiplexer built with standard cells: (a) all the MUX2 are the same; (b) the MUX2 at the last stage is a different one 
+
 .. code-block:: xml
 
   <circuit_model type="mux" name="mux_stdcell" prefix="mux_stdcell">
@@ -631,8 +639,30 @@ Standard Cell Multiplexer
     <port type="sram" prefix="sram" size="3"/>
   </circuit_model>
 
-This example shows:
+This example shows (see an illustative example in :numref:`fig_stdcellmux` (a)):
   - A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
+  - All the inputs will be buffered using the circuit model ``inv1x``
+  - All the outputs will be buffered using the circuit model ``tapbuf4``
+  - The multiplexer will have 4 inputs and 3 SRAMs to control which datapath to propagate
+
+Alternatively, user can specify a different standard cell MUX2 at the last stage.
+
+.. code-block:: xml
+
+  <circuit_model type="mux" name="mux_stdcell" prefix="mux_stdcell">
+    <design_technology type="cmos" structure="tree"/>
+    <input_buffer exist="on" circuit_model_name="inv1x"/>
+    <output_buffer exist="on" circuit_model_name="tapdrive4"/>
+    <pass_gate_logic circuit_model_name="MUX2"/>
+    <last_stage_pass_gate_logic circuit_model_name="MUX2D2"/>
+    <port type="input" prefix="in" size="4"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="sram" prefix="sram" size="3"/>
+  </circuit_model>
+
+This example shows (see an illustative example in :numref:`fig_stdcellmux` (b)):
+  - A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
+  - The last stage A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
   - All the inputs will be buffered using the circuit model ``inv1x``
   - All the outputs will be buffered using the circuit model ``tapbuf4``
   - The multiplexer will have 4 inputs and 3 SRAMs to control which datapath to propagate

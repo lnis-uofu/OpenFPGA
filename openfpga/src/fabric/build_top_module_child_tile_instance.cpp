@@ -802,13 +802,13 @@ static int build_top_module_tile_nets_between_sb_and_cb(
      * is_cb_exist() FOr RIGHT and BOTTOM side, find the adjacent RRGSB and then
      * use is_cb_exist()
      */
-    if (TOP == side_manager.get_side() || LEFT == side_manager.get_side()) {
+    if (BOTTOM == side_manager.get_side() || LEFT == side_manager.get_side()) {
       if (false == rr_gsb.is_cb_exist(cb_type)) {
         continue;
       }
     }
 
-    if (RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side()) {
+    if (RIGHT == side_manager.get_side() || TOP == side_manager.get_side()) {
       const RRGSB& adjacent_gsb =
         device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
       if (false == adjacent_gsb.is_cb_exist(cb_type)) {
@@ -1157,8 +1157,9 @@ static void organize_top_module_tile_based_memory_modules(
  ********************************************************************/
 static ModulePinInfo find_tile_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& tile_module,
-  const vtr::Point<size_t>& cb_coord_in_tile, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const t_rr_type& cb_type, const RRNodeId& chan_rr_node) {
+  const vtr::Point<size_t>& cb_coord_in_tile, const size_t& cb_idx_in_tile,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRNodeId& chan_rr_node, const bool& name_module_using_index) {
   ModulePinInfo input_port_info;
   /* Generate the input port object */
   switch (rr_graph.node_type(chan_rr_node)) {
@@ -1170,9 +1171,15 @@ static ModulePinInfo find_tile_module_chan_port(
       /* Create a port description for the middle output */
       std::string input_port_name = generate_cb_module_track_port_name(
         cb_type, IN_PORT, 0 == chan_node_track_id % 2);
+      std::string cb_instance_name_in_tile =
+        generate_connection_block_module_name(cb_type, cb_coord_in_tile);
+      if (name_module_using_index) {
+        cb_instance_name_in_tile =
+          generate_connection_block_module_name_using_index(cb_type,
+                                                            cb_idx_in_tile);
+      }
       std::string tile_input_port_name = generate_tile_module_port_name(
-        generate_connection_block_module_name(cb_type, cb_coord_in_tile),
-        input_port_name);
+        cb_instance_name_in_tile, input_port_name);
       /* Must find a valid port id in the Switch Block module */
       input_port_info.first =
         module_manager.find_module_port(tile_module, tile_input_port_name);
@@ -1199,7 +1206,8 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
   const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
   const ClockNetwork& clk_ntwk, const std::string& clk_tree_name,
-  const RRClockSpatialLookup& rr_clock_lookup) {
+  const RRClockSpatialLookup& rr_clock_lookup,
+  const bool& name_module_using_index) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Ensure the clock arch tree name is valid */
@@ -1216,11 +1224,11 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
   if (clk_ntwk.tree_width(clk_tree) !=
       module_manager.module_port(top_module, top_module_port).get_width()) {
     VTR_LOG(
-      "Clock tree '%s' does not have the same width '%lu' as the port '%'s of "
+      "Clock tree '%s' does not have the same width '%lu' as the port '%s' of "
       "FPGA top module",
       clk_tree_name.c_str(), clk_ntwk.tree_width(clk_tree),
       module_manager.module_port(top_module, top_module_port)
-        .get_name()
+        .to_verilog_string()
         .c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -1239,13 +1247,13 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
       Direction entry_dir = clk_ntwk.spine_direction(spine);
       t_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
       /* Find the routing resource node of the entry point */
-      RRNodeId entry_rr_node =
-        rr_clock_lookup.find_node(entry_point.x(), entry_point.y(), clk_tree,
-                                  clk_ntwk.spine_level(spine), pin, entry_dir);
+      RRNodeId entry_rr_node = rr_clock_lookup.find_node(
+        entry_point.x(), entry_point.y(), clk_tree, clk_ntwk.spine_level(spine),
+        pin, entry_dir, false);
 
       /* Get the tile module and instance at the entry point */
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb_by_cb_coordinate(
-        entry_track_type, vtr::Point<size_t>(entry_point.x(), entry_point.y()));
+        vtr::Point<size_t>(entry_point.x(), entry_point.y()));
       vtr::Point<size_t> cb_coord_in_tile = rr_gsb.get_sb_coordinate();
       FabricTileId curr_fabric_tile_id = fabric_tile.find_tile_by_cb_coordinate(
         entry_track_type, cb_coord_in_tile);
@@ -1268,8 +1276,9 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
         fabric_tile.cb_coordinates(
           unique_fabric_tile_id, entry_track_type)[cb_idx_in_curr_fabric_tile];
       ModulePinInfo des_pin_info = find_tile_module_chan_port(
-        module_manager, tile_module, cb_coord_in_unique_fabric_tile, rr_graph,
-        rr_gsb, entry_track_type, entry_rr_node);
+        module_manager, tile_module, cb_coord_in_unique_fabric_tile,
+        cb_idx_in_curr_fabric_tile, rr_graph, rr_gsb, entry_track_type,
+        entry_rr_node, name_module_using_index);
 
       /* Configure the net sink */
       BasicPort sink_port =
@@ -1295,7 +1304,7 @@ static int build_top_module_global_net_for_given_tile_module(
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Point<size_t>& grid_coordinate,
   const e_side& border_side, const vtr::Matrix<size_t>& tile_instance_ids,
-  const FabricTile& fabric_tile) {
+  const FabricTile& fabric_tile, const bool& perimeter_cb) {
   /* Get the tile module and instance */
   FabricTileId curr_fabric_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(grid_coordinate);
@@ -1392,7 +1401,7 @@ static int build_top_module_global_net_for_given_tile_module(
         size_t grid_pin_height =
           physical_tile->pin_height_offset[grid_pin_index];
         std::vector<e_side> pin_sides = find_physical_tile_pin_side(
-          physical_tile, grid_pin_index, border_side);
+          physical_tile, grid_pin_index, border_side, perimeter_cb);
 
         BasicPort grid_pin_info =
           vpr_device_annotation.physical_tile_pin_port_info(physical_tile,
@@ -1452,7 +1461,7 @@ static int build_top_module_global_net_from_tile_modules(
   const TileGlobalPortId& tile_global_port,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Matrix<size_t>& tile_instance_ids,
-  const FabricTile& fabric_tile) {
+  const FabricTile& fabric_tile, const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
 
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
@@ -1530,8 +1539,8 @@ static int build_top_module_global_net_from_tile_modules(
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          vtr::Point<size_t>(ix, iy), NUM_SIDES, tile_instance_ids,
-          fabric_tile);
+          vtr::Point<size_t>(ix, iy), NUM_2D_SIDES, tile_instance_ids,
+          fabric_tile, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1578,7 +1587,7 @@ static int build_top_module_global_net_from_tile_modules(
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
           tile_global_port, tile_port, vpr_device_annotation, grids, layer,
-          io_coordinate, io_side, tile_instance_ids, fabric_tile);
+          io_coordinate, io_side, tile_instance_ids, fabric_tile, perimeter_cb);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
         }
@@ -1600,7 +1609,8 @@ static int add_top_module_global_ports_from_tile_modules(
   const size_t& layer, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
-  const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup) {
+  const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup,
+  const bool& perimeter_cb, const bool& name_module_using_index) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module
@@ -1617,12 +1627,20 @@ static int add_top_module_global_ports_from_tile_modules(
       BasicPort global_port_to_add;
       global_port_to_add.set_name(
         tile_annotation.global_port_name(tile_global_port));
-      size_t max_port_size = 0;
-      for (const BasicPort& tile_port :
-           tile_annotation.global_port_tile_ports(tile_global_port)) {
-        max_port_size = std::max(tile_port.get_width(), max_port_size);
+      if (tile_annotation.global_port_thru_dedicated_network(
+            tile_global_port)) {
+        std::string clk_tree_name =
+          tile_annotation.global_port_clock_arch_tree_name(tile_global_port);
+        ClockTreeId clk_tree = clk_ntwk.find_tree(clk_tree_name);
+        global_port_to_add.set_width(clk_ntwk.tree_width(clk_tree));
+      } else {
+        size_t max_port_size = 0;
+        for (const BasicPort& tile_port :
+             tile_annotation.global_port_tile_ports(tile_global_port)) {
+          max_port_size = std::max(tile_port.get_width(), max_port_size);
+        }
+        global_port_to_add.set_width(max_port_size);
       }
-      global_port_to_add.set_width(max_port_size);
       global_ports_to_add.push_back(global_port_to_add);
     }
   }
@@ -1652,12 +1670,12 @@ static int add_top_module_global_ports_from_tile_modules(
         module_manager, top_module, top_module_port, rr_graph, device_rr_gsb,
         tile_instance_ids, fabric_tile, clk_ntwk,
         tile_annotation.global_port_clock_arch_tree_name(tile_global_port),
-        rr_clock_lookup);
+        rr_clock_lookup, name_module_using_index);
     } else {
       status = build_top_module_global_net_from_tile_modules(
         module_manager, top_module, top_module_port, tile_annotation,
         tile_global_port, vpr_device_annotation, grids, layer,
-        tile_instance_ids, fabric_tile);
+        tile_instance_ids, fabric_tile, perimeter_cb);
     }
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
@@ -1905,7 +1923,7 @@ int build_top_module_tile_child_instances(
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricKey& fabric_key,
   const bool& group_config_block, const bool& name_module_using_index,
-  const bool& frame_view, const bool& verbose) {
+  const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
   status = add_top_module_tile_instances(module_manager, top_module,
@@ -1942,7 +1960,7 @@ int build_top_module_tile_child_instances(
   status = add_top_module_global_ports_from_tile_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
     layer, rr_graph, device_rr_gsb, tile_instance_ids, fabric_tile, clk_ntwk,
-    rr_clock_lookup);
+    rr_clock_lookup, perimeter_cb, name_module_using_index);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

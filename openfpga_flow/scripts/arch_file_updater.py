@@ -26,6 +26,7 @@ error_codes = {"SUCCESS": 0, "ERROR": 1, "OPTION_ERROR": 2, "FILE_ERROR": 3}
 #####################################################################
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
+
 #####################################################################
 # Upgrade an architecture XML file from version 1.1 syntax to version 1.2
 # Change rules:

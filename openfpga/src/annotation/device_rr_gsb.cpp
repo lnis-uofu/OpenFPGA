@@ -45,19 +45,8 @@ const RRGSB& DeviceRRGSB::get_gsb(const size_t& x, const size_t& y) const {
 
 /* Get a rr switch block in the array with a coordinate */
 const RRGSB& DeviceRRGSB::get_gsb_by_cb_coordinate(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  const vtr::Point<size_t>& coordinate) const {
   vtr::Point<size_t> gsb_coord = coordinate;
-  /* TODO move the coordinate conversion to RRGSB */
-  switch (cb_type) {
-    case CHANX:
-      break;
-    case CHANY:
-      gsb_coord.set_y(gsb_coord.y() - 1);
-      break;
-    default:
-      VTR_LOG("Invalid type of connection block!\n");
-      exit(1);
-  }
   VTR_ASSERT(validate_coordinate(gsb_coord));
 
   return rr_gsb_[gsb_coord.x()][gsb_coord.y()];
@@ -76,6 +65,8 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
       exit(1);
   }
 }
+/* Identify if unique blocks are preloaded or built */
+bool DeviceRRGSB::is_compressed() const { return is_compressed_; }
 
 /* Identify if a GSB actually exists at a location */
 bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
@@ -104,6 +95,94 @@ bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
 /* get the number of unique mirrors of switch blocks */
 size_t DeviceRRGSB::get_num_sb_unique_module() const {
   return sb_unique_module_.size();
+}
+
+/* get the coordinate of unique mirrors of switch blocks */
+vtr::Point<size_t> DeviceRRGSB::get_sb_unique_block_coord(size_t id) const {
+  return sb_unique_module_[id];
+}
+
+/* get the coordinates of the instances of a unique switch block */
+std::vector<vtr::Point<size_t>> DeviceRRGSB::get_sb_unique_block_instance_coord(
+  const vtr::Point<size_t>& unique_block_coord) const {
+  auto unique_module_id =
+    sb_unique_module_id_[unique_block_coord.x()][unique_block_coord.y()];
+  std::vector<vtr::Point<size_t>> instance_map;
+  for (size_t location_x = 0; location_x < sb_unique_module_id_.size();
+       ++location_x) {
+    for (size_t location_y = 0; location_y < sb_unique_module_id_[0].size();
+         ++location_y) {
+      auto unique_module_id_instance =
+        sb_unique_module_id_[location_x][location_y];
+      if (unique_module_id_instance == unique_module_id) {
+        vtr::Point<size_t> instance_coord(location_x, location_y);
+        if (instance_coord != unique_block_coord) {
+          instance_map.push_back(instance_coord);
+        }
+      }
+    }
+  }
+  return instance_map;
+}
+
+/* get the coordinate of unique mirrors of connection blocks of CHANX type */
+vtr::Point<size_t> DeviceRRGSB::get_cbx_unique_block_coord(size_t id) const {
+  return cbx_unique_module_[id];
+}
+
+/* get the coordinates of the instances of a unique connection block of CHANX
+ * type */
+std::vector<vtr::Point<size_t>>
+DeviceRRGSB::get_cbx_unique_block_instance_coord(
+  const vtr::Point<size_t>& unique_block_coord) const {
+  auto unique_module_id =
+    cbx_unique_module_id_[unique_block_coord.x()][unique_block_coord.y()];
+  std::vector<vtr::Point<size_t>> instance_map;
+  for (size_t location_x = 0; location_x < cbx_unique_module_id_.size();
+       ++location_x) {
+    for (size_t location_y = 0; location_y < cbx_unique_module_id_[0].size();
+         ++location_y) {
+      auto unique_module_id_instance =
+        cbx_unique_module_id_[location_x][location_y];
+      if (unique_module_id_instance == unique_module_id) {
+        vtr::Point<size_t> instance_coord(location_x, location_y);
+        if (instance_coord != unique_block_coord) {
+          instance_map.push_back(instance_coord);
+        }
+      }
+    }
+  }
+  return instance_map;
+}
+
+/* get the coordinate of unique mirrors of connection blocks of CHANY type */
+vtr::Point<size_t> DeviceRRGSB::get_cby_unique_block_coord(size_t id) const {
+  return cby_unique_module_[id];
+}
+
+/* get the coordinates of the instances of a unique connection block of CHANY
+ * type */
+std::vector<vtr::Point<size_t>>
+DeviceRRGSB::get_cby_unique_block_instance_coord(
+  const vtr::Point<size_t>& unique_block_coord) const {
+  auto unique_module_id =
+    cby_unique_module_id_[unique_block_coord.x()][unique_block_coord.y()];
+  std::vector<vtr::Point<size_t>> instance_map;
+  for (size_t location_x = 0; location_x < cby_unique_module_id_.size();
+       ++location_x) {
+    for (size_t location_y = 0; location_y < cby_unique_module_id_[0].size();
+         ++location_y) {
+      auto unique_module_id_instance =
+        cby_unique_module_id_[location_x][location_y];
+      if (unique_module_id_instance == unique_module_id) {
+        vtr::Point<size_t> instance_coord(location_x, location_y);
+        if (instance_coord != unique_block_coord) {
+          instance_map.push_back(instance_coord);
+        }
+      }
+    }
+  }
+  return instance_map;
 }
 
 /* get the number of unique mirrors of switch blocks */
@@ -183,6 +262,20 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
   }
 }
 
+void DeviceRRGSB::reserve_unique_modules() {
+  /* As rr_gsb_ has been built, it has valid size. Will reserve space for
+   * unique blocks according to rr_gsb_'s size*/
+  sb_unique_module_id_.resize(rr_gsb_.size());
+  cbx_unique_module_id_.resize(rr_gsb_.size());
+  cby_unique_module_id_.resize(rr_gsb_.size());
+
+  for (std::size_t i = 0; i < rr_gsb_.size(); ++i) {
+    sb_unique_module_id_[i].resize(rr_gsb_[i].size());
+    cbx_unique_module_id_[i].resize(rr_gsb_[i].size());
+    cby_unique_module_id_[i].resize(rr_gsb_[i].size());
+  }
+}
+
 /* Resize rr_switch_block array is needed*/
 void DeviceRRGSB::resize_upon_need(const vtr::Point<size_t>& coordinate) {
   if (coordinate.x() + 1 > rr_gsb_.size()) {
@@ -203,8 +296,8 @@ void DeviceRRGSB::resize_upon_need(const vtr::Point<size_t>& coordinate) {
   }
 }
 
-/* Add a switch block to the array, which will automatically identify and update
- * the lists of unique mirrors and rotatable mirrors */
+/* Add a switch block to the array, which will automatically identify and
+ * update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::add_rr_gsb(const vtr::Point<size_t>& coordinate,
                              const RRGSB& rr_gsb) {
   /* Resize upon needs*/
@@ -226,8 +319,8 @@ RRGSB& DeviceRRGSB::get_mutable_gsb(const size_t& x, const size_t& y) {
   return get_mutable_gsb(coordinate);
 }
 
-/* Add a switch block to the array, which will automatically identify and update
- * the lists of unique mirrors and rotatable mirrors */
+/* Add a switch block to the array, which will automatically identify and
+ * update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
                                          const t_rr_type& cb_type) {
   /* Make sure a clean start */
@@ -243,7 +336,8 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
         continue;
       }
 
-      /* Traverse the unique_mirror list and check it is an mirror of another */
+      /* Traverse the unique_mirror list and check it is an mirror of another
+       */
       for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
         const RRGSB& unique_module = get_cb_unique_module(cb_type, id);
         if (true == is_cb_mirror(rr_graph, device_annotation_, rr_gsb_[ix][iy],
@@ -266,8 +360,8 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
   }
 }
 
-/* Add a switch block to the array, which will automatically identify and update
- * the lists of unique mirrors and rotatable mirrors */
+/* Add a switch block to the array, which will automatically identify and
+ * update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph) {
   /* Make sure a clean start */
   clear_sb_unique_module();
@@ -278,7 +372,8 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph) {
       bool is_unique_module = true;
       vtr::Point<size_t> sb_coordinate(ix, iy);
 
-      /* Traverse the unique_mirror list and check it is an mirror of another */
+      /* Traverse the unique_mirror list and check it is an mirror of another
+       */
       for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
         /* Check if the two modules have the same submodules,
          * if so, these two modules are the same, indicating the sb is not
@@ -305,8 +400,8 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph) {
   }
 }
 
-/* Add a switch block to the array, which will automatically identify and update
- * the lists of unique mirrors and rotatable mirrors */
+/* Add a switch block to the array, which will automatically identify and
+ * update the lists of unique mirrors and rotatable mirrors */
 
 /* Find repeatable GSB block in the array */
 void DeviceRRGSB::build_gsb_unique_module() {
@@ -318,11 +413,12 @@ void DeviceRRGSB::build_gsb_unique_module() {
       bool is_unique_module = true;
       vtr::Point<size_t> gsb_coordinate(ix, iy);
 
-      /* Traverse the unique_mirror list and check it is an mirror of another */
+      /* Traverse the unique_mirror list and check it is an mirror of another
+       */
       for (size_t id = 0; id < get_num_gsb_unique_module(); ++id) {
         /* We have alreay built sb and cb unique module list
-         * We just need to check if the unique module id of SBs, CBX and CBY are
-         * the same or not
+         * We just need to check if the unique module id of SBs, CBX and CBY
+         * are the same or not
          */
         const vtr::Point<size_t>& gsb_unique_module_coordinate =
           gsb_unique_module_[id];
@@ -350,6 +446,7 @@ void DeviceRRGSB::build_gsb_unique_module() {
       }
     }
   }
+  is_compressed_ = true;
 }
 
 void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
@@ -358,7 +455,8 @@ void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_cb_unique_module(rr_graph, CHANX);
   build_cb_unique_module(rr_graph, CHANY);
 
-  build_gsb_unique_module();
+  build_gsb_unique_module(); /*is_compressed_ flip inside
+                                build_gsb_unique_module*/
 }
 
 void DeviceRRGSB::add_gsb_unique_module(const vtr::Point<size_t>& coordinate) {
@@ -419,6 +517,20 @@ void DeviceRRGSB::clear() {
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
+  is_compressed_ = false;
+}
+
+void DeviceRRGSB::clear_unique_modules() {
+  /* clean unique module lists */
+  clear_cb_unique_module(CHANX);
+  clear_cb_unique_module_id(CHANX);
+
+  clear_cb_unique_module(CHANY);
+  clear_cb_unique_module_id(CHANY);
+
+  clear_sb_unique_module();
+  clear_sb_unique_module_id();
+  is_compressed_ = false;
 }
 
 void DeviceRRGSB::clear_gsb() {
@@ -562,4 +674,82 @@ size_t DeviceRRGSB::get_cb_unique_module_index(
   return cb_unique_module_id;
 }
 
+/************************************************************************
+ * Preload unique blocks
+ ***********************************************************************/
+/* preload unique cbx blocks and their corresponding instance information. This
+ * function will be called when read_unique_blocks command invoked */
+void DeviceRRGSB::preload_unique_cbx_module(
+  const vtr::Point<size_t>& block_coordinate,
+  const std::vector<vtr::Point<size_t>>& instance_coords) {
+  /*check whether the preloaded value exceeds the limit */
+  size_t limit_x = cbx_unique_module_id_.size();
+  size_t limit_y = cbx_unique_module_id_[0].size();
+  VTR_ASSERT(block_coordinate.x() < limit_x);
+  VTR_ASSERT(block_coordinate.y() < limit_y);
+  add_cb_unique_module(CHANX, block_coordinate);
+  /* preload the unique block */
+  set_cb_unique_module_id(CHANX, block_coordinate,
+                          get_num_cb_unique_module(CHANX) - 1);
+
+  /* preload the instances of the unique block. Instance will have the same id
+   * as the unique block */
+  for (auto instance_location : instance_coords) {
+    VTR_ASSERT(instance_location.x() < limit_x);
+    VTR_ASSERT(instance_location.y() < limit_y);
+    set_cb_unique_module_id(
+      CHANX, instance_location,
+      cbx_unique_module_id_[block_coordinate.x()][block_coordinate.y()]);
+  }
+}
+
+/* preload unique cby blocks and their corresponding instance information. This
+ * function will be called when read_unique_blocks command invoked */
+void DeviceRRGSB::preload_unique_cby_module(
+  const vtr::Point<size_t>& block_coordinate,
+  const std::vector<vtr::Point<size_t>>& instance_coords) {
+  /*check whether the preloaded value exceeds the limit */
+  size_t limit_x = cby_unique_module_id_.size();
+  size_t limit_y = cby_unique_module_id_[0].size();
+
+  VTR_ASSERT(block_coordinate.x() < limit_x);
+  VTR_ASSERT(block_coordinate.y() < limit_y);
+  add_cb_unique_module(CHANY, block_coordinate);
+  /* preload the unique block */
+  set_cb_unique_module_id(CHANY, block_coordinate,
+                          get_num_cb_unique_module(CHANY) - 1);
+
+  /* preload the instances of the unique block. Instance will have the same id
+   * as the unique block */
+  for (auto instance_location : instance_coords) {
+    VTR_ASSERT(instance_location.x() < limit_x);
+    VTR_ASSERT(instance_location.y() < limit_y);
+    set_cb_unique_module_id(
+      CHANY, instance_location,
+      cby_unique_module_id_[block_coordinate.x()][block_coordinate.y()]);
+  }
+}
+
+/* preload unique sb blocks and their corresponding instance information. This
+ * function will be called when read_unique_blocks command invoked */
+void DeviceRRGSB::preload_unique_sb_module(
+  const vtr::Point<size_t>& block_coordinate,
+  const std::vector<vtr::Point<size_t>>& instance_coords) {
+  /*check whether the preloaded value exceeds the limit */
+  VTR_ASSERT(block_coordinate.x() < sb_unique_module_id_.size());
+  VTR_ASSERT(block_coordinate.y() < sb_unique_module_id_[0].size());
+  sb_unique_module_.push_back(block_coordinate);
+  /* Record the id of unique module */
+  sb_unique_module_id_[block_coordinate.x()][block_coordinate.y()] =
+    sb_unique_module_.size() - 1;
+
+  /* each mirror instance of the unique module will have the same module id as
+   * the unique module */
+  for (auto instance_location : instance_coords) {
+    VTR_ASSERT(instance_location.x() < sb_unique_module_id_.size());
+    VTR_ASSERT(instance_location.y() < sb_unique_module_id_[0].size());
+    sb_unique_module_id_[instance_location.x()][instance_location.y()] =
+      sb_unique_module_id_[block_coordinate.x()][block_coordinate.y()];
+  }
+}
 } /* End namespace openfpga*/

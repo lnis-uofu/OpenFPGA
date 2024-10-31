@@ -2,7 +2,6 @@
 
 set -e
 source openfpga.sh
-PYTHON_EXEC=python3.8
 ###############################################
 # OpenFPGA Shell with VPR8
 ##############################################
@@ -85,6 +84,7 @@ run-task fpga_verilog/mux_design/tree_structure $@
 
 echo -e "Testing Verilog generation with routing multiplexers implemented by standard cell MUX2";
 run-task fpga_verilog/mux_design/stdcell_mux2 $@
+run-task fpga_verilog/mux_design/stdcell_mux2_last_stage $@
 
 echo -e "Testing Verilog generation with routing multiplexers implemented by local encoders";
 run-task fpga_verilog/mux_design/local_encoder $@
@@ -117,6 +117,13 @@ run-task fpga_verilog/verilog_netlist_formats/implicit_verilog_default_nettype_w
 
 echo -e "Testing explicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire $@
+
+echo -e "Testing undriven net wiring in Verilog generation";
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_none $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus0 $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus1 $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit0 $@
+run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit1 $@
 
 echo -e "Testing Verilog generation with flatten routing modules";
 run-task fpga_verilog/flatten_routing $@

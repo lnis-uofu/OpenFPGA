@@ -30,7 +30,11 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   time_unit_ = 1E-3;
   time_stamp_ = true;
   use_relative_path_ = false;
+  simulator_type_ = e_simulator_type::IVERILOG;
+  dump_waveform_ = false;
   verbose_output_ = false;
+
+  SIMULATOR_TYPE_STRING_ = {{"iverilog", "vcs"}};
 }
 
 /**************************************************
@@ -84,6 +88,8 @@ bool VerilogTestbenchOption::include_signal_init() const {
   return include_signal_init_;
 }
 
+bool VerilogTestbenchOption::dump_waveform() const { return dump_waveform_; }
+
 bool VerilogTestbenchOption::no_self_checking() const {
   return reference_benchmark_file_path_.empty();
 }
@@ -106,6 +112,11 @@ bool VerilogTestbenchOption::use_relative_path() const {
 }
 
 bool VerilogTestbenchOption::verbose_output() const { return verbose_output_; }
+
+VerilogTestbenchOption::e_simulator_type
+VerilogTestbenchOption::simulator_type() const {
+  return simulator_type_;
+}
 
 /******************************************************************************
  * Private Mutators
@@ -198,6 +209,10 @@ void VerilogTestbenchOption::set_include_signal_init(const bool& enabled) {
   include_signal_init_ = enabled;
 }
 
+void VerilogTestbenchOption::set_dump_waveform(const bool& enabled) {
+  dump_waveform_ = enabled;
+}
+
 void VerilogTestbenchOption::set_default_net_type(
   const std::string& default_net_type) {
   /* Decode from net type string */;
@@ -257,6 +272,54 @@ void VerilogTestbenchOption::set_use_relative_path(const bool& enabled) {
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {
   verbose_output_ = enabled;
+}
+
+int VerilogTestbenchOption::set_simulator_type(const std::string& value) {
+  simulator_type_ = str2simulator_type(value);
+  return valid_simulator_type(simulator_type_);
+}
+
+std::string VerilogTestbenchOption::simulator_type_all2str() const {
+  std::string full_types = "[";
+  for (int itype = size_t(VerilogTestbenchOption::e_simulator_type::IVERILOG);
+       itype != size_t(VerilogTestbenchOption::e_simulator_type::NUM_TYPES);
+       ++itype) {
+    full_types += std::string(SIMULATOR_TYPE_STRING_[itype]) + std::string("|");
+  }
+  full_types.pop_back();
+  full_types += "]";
+  return full_types;
+}
+
+VerilogTestbenchOption::e_simulator_type
+VerilogTestbenchOption::str2simulator_type(const std::string& type_str,
+                                           const bool& verbose) const {
+  for (int itype = size_t(VerilogTestbenchOption::e_simulator_type::IVERILOG);
+       itype != size_t(VerilogTestbenchOption::e_simulator_type::NUM_TYPES);
+       ++itype) {
+    if (type_str == std::string(SIMULATOR_TYPE_STRING_[itype])) {
+      return static_cast<VerilogTestbenchOption::e_simulator_type>(itype);
+    }
+  }
+  VTR_LOGV_ERROR(verbose, "Invalid simulator type! Expect %s\n",
+                 simulator_type_all2str().c_str());
+  return VerilogTestbenchOption::e_simulator_type::NUM_TYPES;
+}
+
+std::string VerilogTestbenchOption::simulator_type2str(
+  const VerilogTestbenchOption::e_simulator_type& sim_type,
+  const bool& verbose) const {
+  if (!valid_simulator_type(sim_type)) {
+    VTR_LOGV_ERROR(verbose, "Invalid type for simulator! Expect %s\n",
+                   simulator_type_all2str().c_str());
+    return std::string();
+  }
+  return std::string(SIMULATOR_TYPE_STRING_[size_t(sim_type)]);
+}
+
+bool VerilogTestbenchOption::valid_simulator_type(
+  const VerilogTestbenchOption::e_simulator_type& sim_type) const {
+  return sim_type != VerilogTestbenchOption::e_simulator_type::NUM_TYPES;
 }
 
 } /* end namespace openfpga */

@@ -25,21 +25,107 @@
 namespace openfpga {  // Begin namespace openfpga
 
 /********************************************************************
- * Parse XML codes of a <tap> to an object of ClockNetwork
+ * Parse XML codes of a <all> to an object of ClockNetwork
  *******************************************************************/
-static void read_xml_clock_tree_tap(pugi::xml_node& xml_tap,
-                                    const pugiutil::loc_data& loc_data,
-                                    ClockNetwork& clk_ntwk,
-                                    const ClockTreeId& tree_id) {
+static void read_xml_clock_tree_tap_type_all(pugi::xml_node& xml_tap,
+                                             const pugiutil::loc_data& loc_data,
+                                             ClockNetwork& clk_ntwk,
+                                             const ClockTreeId& tree_id) {
   if (!clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
                    "Invalid id of a clock tree!\n");
   }
 
-  std::string tile_pin_name =
-    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN, loc_data)
+  std::string from_pin_name =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN, loc_data)
       .as_string();
-  clk_ntwk.add_tree_tap(tree_id, tile_pin_name);
+  std::string to_pin_name =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
+      .as_string();
+  PortParser from_port_parser(from_pin_name);
+  clk_ntwk.add_tree_tap(tree_id, from_port_parser.port(), to_pin_name);
+}
+
+/********************************************************************
+ * Parse XML codes of a <single> to an object of ClockNetwork
+ *******************************************************************/
+static void read_xml_clock_tree_tap_type_single(
+  pugi::xml_node& xml_tap, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+  if (!clk_ntwk.valid_tree_id(tree_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
+                   "Invalid id of a clock tree!\n");
+  }
+
+  std::string from_pin_name =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN, loc_data)
+      .as_string();
+  std::string to_pin_name =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
+      .as_string();
+  PortParser from_port_parser(from_pin_name);
+  ClockTapId tap_id =
+    clk_ntwk.add_tree_tap(tree_id, from_port_parser.port(), to_pin_name);
+
+  /* Single tap only require a coordinate */
+  size_t tap_x = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_X,
+                               loc_data, pugiutil::ReqOpt::REQUIRED)
+                   .as_int();
+  size_t tap_y = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y,
+                               loc_data, pugiutil::ReqOpt::REQUIRED)
+                   .as_int();
+  clk_ntwk.set_tap_bounding_box(tap_id,
+                                vtr::Rect<size_t>(tap_x, tap_y, tap_x, tap_y));
+}
+
+/********************************************************************
+ * Parse XML codes of a <region> to an object of ClockNetwork
+ *******************************************************************/
+static void read_xml_clock_tree_tap_type_region(
+  pugi::xml_node& xml_tap, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+  if (!clk_ntwk.valid_tree_id(tree_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
+                   "Invalid id of a clock tree!\n");
+  }
+
+  std::string from_pin_name =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN, loc_data)
+      .as_string();
+  std::string to_pin_name =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN, loc_data)
+      .as_string();
+  PortParser from_port_parser(from_pin_name);
+  ClockTapId tap_id =
+    clk_ntwk.add_tree_tap(tree_id, from_port_parser.port(), to_pin_name);
+
+  /* Region require a bounding box */
+  size_t tap_start_x =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX, loc_data,
+                  pugiutil::ReqOpt::REQUIRED)
+      .as_int();
+  size_t tap_start_y =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY, loc_data,
+                  pugiutil::ReqOpt::REQUIRED)
+      .as_int();
+  size_t tap_end_x = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX,
+                                   loc_data, pugiutil::ReqOpt::REQUIRED)
+                       .as_int();
+  size_t tap_end_y = get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY,
+                                   loc_data, pugiutil::ReqOpt::REQUIRED)
+                       .as_int();
+  clk_ntwk.set_tap_bounding_box(
+    tap_id, vtr::Rect<size_t>(tap_start_x, tap_start_y, tap_end_x, tap_end_y));
+
+  /* Default step is all 1 */
+  size_t tap_step_x =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATX, loc_data)
+      .as_int(1);
+  size_t tap_step_y =
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATY, loc_data)
+      .as_int(1);
+  clk_ntwk.set_tap_step_x(tap_id, tap_step_x);
+  clk_ntwk.set_tap_step_y(tap_id, tap_step_y);
 }
 
 static void read_xml_clock_tree_taps(pugi::xml_node& xml_taps,
@@ -48,12 +134,74 @@ static void read_xml_clock_tree_taps(pugi::xml_node& xml_taps,
                                      const ClockTreeId& tree_id) {
   for (pugi::xml_node xml_tap : xml_taps.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_tap.name() == std::string(XML_CLOCK_TREE_TAP_NODE_NAME)) {
-      read_xml_clock_tree_tap(xml_tap, loc_data, clk_ntwk, tree_id);
+    if (xml_tap.name() == std::string(XML_CLOCK_TREE_TAP_ALL_NODE_NAME)) {
+      read_xml_clock_tree_tap_type_all(xml_tap, loc_data, clk_ntwk, tree_id);
+    } else if (xml_tap.name() ==
+               std::string(XML_CLOCK_TREE_TAP_REGION_NODE_NAME)) {
+      read_xml_clock_tree_tap_type_region(xml_tap, loc_data, clk_ntwk, tree_id);
+    } else if (xml_tap.name() ==
+               std::string(XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME)) {
+      read_xml_clock_tree_tap_type_single(xml_tap, loc_data, clk_ntwk, tree_id);
     } else {
-      bad_tag(xml_taps, loc_data, xml_tap, {XML_CLOCK_TREE_TAP_NODE_NAME});
+      bad_tag(
+        xml_taps, loc_data, xml_tap,
+        {XML_CLOCK_TREE_TAP_ALL_NODE_NAME, XML_CLOCK_TREE_TAP_REGION_NODE_NAME,
+         XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME});
     }
   }
+}
+
+/********************************************************************
+ * Parse XML codes of a <switch_point> to an object of ClockNetwork
+ *******************************************************************/
+static void read_xml_clock_spine_switch_point_internal_driver(
+  pugi::xml_node& xml_int_driver, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id,
+  const ClockSwitchPointId& switch_point_id) {
+  if (!clk_ntwk.valid_spine_id(spine_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_int_driver),
+                   "Invalid id of a clock spine!\n");
+  }
+
+  std::string int_driver_from_port_name =
+    get_attribute(
+      xml_int_driver,
+      XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_FROM_PIN, loc_data)
+      .as_string();
+  std::string int_driver_to_port_name =
+    get_attribute(xml_int_driver,
+                  XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN,
+                  loc_data)
+      .as_string();
+  clk_ntwk.add_spine_switch_point_internal_driver(spine_id, switch_point_id,
+                                                  int_driver_from_port_name,
+                                                  int_driver_to_port_name);
+}
+
+/********************************************************************
+ * Parse XML codes of a <tap> to an object of ClockNetwork
+ *******************************************************************/
+static void read_xml_clock_spine_intermediate_driver_tap(
+  pugi::xml_node& xml_int_driver, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id,
+  const vtr::Point<int>& spine_coord) {
+  if (!clk_ntwk.valid_spine_id(spine_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_int_driver),
+                   "Invalid id of a clock spine!\n");
+  }
+
+  std::string int_driver_from_port_name =
+    get_attribute(xml_int_driver,
+                  XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN,
+                  loc_data)
+      .as_string();
+  std::string int_driver_to_port_name =
+    get_attribute(xml_int_driver,
+                  XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN,
+                  loc_data)
+      .as_string();
+  clk_ntwk.add_spine_intermediate_driver(
+    spine_id, spine_coord, int_driver_from_port_name, int_driver_to_port_name);
 }
 
 /********************************************************************
@@ -90,8 +238,56 @@ static void read_xml_clock_spine_switch_point(
                             XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y, loc_data)
                 .as_int();
 
-  clk_ntwk.add_spine_switch_point(spine_id, tap_spine_id,
-                                  vtr::Point<int>(tap_x, tap_y));
+  ClockSwitchPointId switch_point_id = clk_ntwk.add_spine_switch_point(
+    spine_id, tap_spine_id, vtr::Point<int>(tap_x, tap_y));
+
+  /* Add internal drivers if possible */
+  for (pugi::xml_node xml_int_driver : xml_switch_point.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_int_driver.name() ==
+        std::string(XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME)) {
+      read_xml_clock_spine_switch_point_internal_driver(
+        xml_int_driver, loc_data, clk_ntwk, spine_id, switch_point_id);
+    } else {
+      bad_tag(xml_int_driver, loc_data, xml_switch_point,
+              {XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME});
+    }
+  }
+}
+
+/********************************************************************
+ * Parse XML codes of a <driver> to an object of ClockNetwork
+ *******************************************************************/
+static void read_xml_clock_spine_intermediate_driver(
+  pugi::xml_node& xml_driver, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id) {
+  if (!clk_ntwk.valid_spine_id(spine_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_driver),
+                   "Invalid id of a clock spine!\n");
+  }
+
+  int tap_x =
+    get_attribute(xml_driver, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X,
+                  loc_data)
+      .as_int();
+  int tap_y =
+    get_attribute(xml_driver, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y,
+                  loc_data)
+      .as_int();
+
+  /* Add internal drivers if possible */
+  for (pugi::xml_node xml_int_driver : xml_driver.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_int_driver.name() ==
+        std::string(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_TAP_NODE_NAME)) {
+      read_xml_clock_spine_intermediate_driver_tap(
+        xml_int_driver, loc_data, clk_ntwk, spine_id,
+        vtr::Point<int>(tap_x, tap_y));
+    } else {
+      bad_tag(xml_int_driver, loc_data, xml_driver,
+              {XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_TAP_NODE_NAME});
+    }
+  }
 }
 
 /********************************************************************
@@ -198,9 +394,15 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
         std::string(XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME)) {
       read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk,
                                         spine_id);
+    } else if (xml_switch_point.name() ==
+               std::string(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME)) {
+      read_xml_clock_spine_intermediate_driver(xml_switch_point, loc_data,
+                                               clk_ntwk, spine_id);
+
     } else {
       bad_tag(xml_switch_point, loc_data, xml_spine,
-              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME});
+              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME,
+               XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME});
     }
   }
 }
@@ -212,14 +414,18 @@ static void read_xml_clock_tree(pugi::xml_node& xml_clk_tree,
                                 const pugiutil::loc_data& loc_data,
                                 ClockNetwork& clk_ntwk) {
   std::string clk_tree_name =
-    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_NAME, loc_data)
+    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_NAME, loc_data,
+                  pugiutil::ReqOpt::REQUIRED)
       .as_string();
-  int clk_tree_width =
-    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_WIDTH, loc_data)
-      .as_int();
+  std::string clk_global_port_str =
+    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_GLOBAL_PORT, loc_data,
+                  pugiutil::ReqOpt::REQUIRED)
+      .as_string();
 
   /* Create a new tree in the storage */
-  ClockTreeId tree_id = clk_ntwk.create_tree(clk_tree_name, clk_tree_width);
+  PortParser gport_parser(clk_global_port_str);
+  ClockTreeId tree_id =
+    clk_ntwk.create_tree(clk_tree_name, gport_parser.port());
 
   if (false == clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clk_tree),
@@ -263,11 +469,17 @@ ClockNetwork read_xml_clock_network(const char* fname) {
         .as_string();
     clk_ntwk.set_default_segment_name(default_segment_name);
 
-    std::string default_switch_name =
-      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SWITCH,
+    std::string default_tap_switch_name =
+      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_TAP_SWITCH,
                     loc_data)
         .as_string();
-    clk_ntwk.set_default_switch_name(default_switch_name);
+    clk_ntwk.set_default_tap_switch_name(default_tap_switch_name);
+
+    std::string default_driver_switch_name =
+      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_DRIVER_SWITCH,
+                    loc_data)
+        .as_string();
+    clk_ntwk.set_default_driver_switch_name(default_driver_switch_name);
 
     size_t num_trees =
       std::distance(xml_root.children().begin(), xml_root.children().end());

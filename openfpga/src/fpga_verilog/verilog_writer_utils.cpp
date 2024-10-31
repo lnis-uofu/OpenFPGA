@@ -832,6 +832,24 @@ void print_verilog_wire_constant_values(
 }
 
 /********************************************************************
+ * Generate a wire connection, that assigns constant values to a
+ * Verilog port
+ *******************************************************************/
+void print_verilog_wire_constant_values_bit_blast(
+  std::fstream& fp, const BasicPort& output_port,
+  const std::vector<size_t>& const_values) {
+  /* Make sure we have a valid file handler*/
+  VTR_ASSERT(true == valid_file_stream(fp));
+
+  for (size_t ipin : output_port.pins()) {
+    BasicPort curr_pin(output_port.get_name(), ipin, ipin);
+    print_verilog_wire_constant_values(
+      fp, curr_pin,
+      std::vector<size_t>(curr_pin.get_width(), const_values[ipin]));
+  }
+}
+
+/********************************************************************
  * Deposit constant values to a Verilog port
  *******************************************************************/
 void print_verilog_deposit_wire_constant_values(

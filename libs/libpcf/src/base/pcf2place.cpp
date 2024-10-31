@@ -41,6 +41,8 @@ int pcf2place(const PcfData& pcf_data,
     VTR_LOG("PCF basic check passed\n");
   }
 
+  /* Map from location to net */
+  std::map<std::array<size_t, 3>, std::string> net_map;
   /* Build the I/O place */
   for (const PcfIoConstraintId& io_id : pcf_data.io_constraints()) {
     /* Find the net name */
@@ -99,6 +101,20 @@ int pcf2place(const PcfData& pcf_data,
         "external pin '%s[%lu]' through an internal pin '%s[%lu]'!\n",
         x, y, z, net.c_str(), ext_pin.get_name().c_str(), ext_pin.get_lsb(),
         int_pin.get_name().c_str(), int_pin.get_lsb());
+      continue;
+    }
+
+    std::array<size_t, 3> loc = {x, y, z};
+    auto itr = net_map.find(loc);
+    if (itr == net_map.end()) {
+      net_map.insert({loc, net});
+    } else {
+      VTR_LOG_ERROR(
+        "Illegal pin constraint: Two nets '%s' and '%s' are mapped to the I/O "
+        "pin '%s[%lu]' which belongs to the same coordinate (%ld, %ld, %ld)!\n",
+        itr->second.c_str(), net.c_str(), int_pin.get_name().c_str(),
+        int_pin.get_lsb(), x, y, z);
+      num_err++;
       continue;
     }
 

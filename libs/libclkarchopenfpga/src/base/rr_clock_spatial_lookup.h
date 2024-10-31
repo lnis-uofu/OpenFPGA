@@ -58,7 +58,7 @@ class RRClockSpatialLookup {
    */
   RRNodeId find_node(int x, int y, const ClockTreeId& tree,
                      const ClockLevelId& lvl, const ClockTreePinId& pin,
-                     const Direction& direction) const;
+                     const Direction& direction, const bool& verbose) const;
 
   /* -- Mutators -- */
  public:

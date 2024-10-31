@@ -41,3 +41,11 @@ OpenFPGA widely uses XML format for interchangeable files
    module_naming_file
 
    tile_config_file
+
+   fabric_pin_physical_location_file
+
+   fabric_hierarchy_file
+
+   reference_file
+
+   unique_blocks

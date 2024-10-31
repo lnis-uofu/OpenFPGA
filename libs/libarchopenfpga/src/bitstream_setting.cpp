@@ -24,6 +24,12 @@ BitstreamSetting::interconnect_settings() const {
                          interconnect_setting_ids_.end());
 }
 
+BitstreamSetting::overwrite_bitstream_range
+BitstreamSetting::overwrite_bitstreams() const {
+  return vtr::make_range(overwrite_bitstream_ids_.begin(),
+                         overwrite_bitstream_ids_.end());
+}
+
 /************************************************************************
  * Constructors
  ***********************************************************************/
@@ -102,6 +108,22 @@ std::string BitstreamSetting::default_path(
   return interconnect_default_paths_[interconnect_setting_id];
 }
 
+std::vector<NonFabricBitstreamSetting> BitstreamSetting::non_fabric() const {
+  return non_fabric_;
+}
+
+std::string BitstreamSetting::overwrite_bitstream_path(
+  const OverwriteBitstreamId& id) const {
+  VTR_ASSERT(true == valid_overwrite_bitstream_id(id));
+  return overwrite_bitstream_paths_[id];
+}
+
+bool BitstreamSetting::overwrite_bitstream_value(
+  const OverwriteBitstreamId& id) const {
+  VTR_ASSERT(true == valid_overwrite_bitstream_id(id));
+  return overwrite_bitstream_values_[id];
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -154,6 +176,41 @@ BitstreamSetting::add_bitstream_interconnect_setting(
   return interc_setting_id;
 }
 
+void BitstreamSetting::add_non_fabric(const std::string& name,
+                                      const std::string& file) {
+  VTR_ASSERT(name.size());
+  VTR_ASSERT(file.size());
+  non_fabric_.push_back(NonFabricBitstreamSetting(name, file));
+}
+
+void BitstreamSetting::add_non_fabric_pb(const std::string& pb,
+                                         const std::string& content) {
+  VTR_ASSERT(non_fabric_.size());
+  VTR_ASSERT(content.find(".param ") == 0 || content.find(".attr ") == 0);
+  if (content.find(".param ") == 0) {
+    VTR_ASSERT(content.size() > 7);
+    non_fabric_.back().add_pb(pb, "param", content.substr(7));
+  } else {
+    VTR_ASSERT(content.size() > 6);
+    non_fabric_.back().add_pb(pb, "attr", content.substr(6));
+  }
+}
+
+OverwriteBitstreamId BitstreamSetting::add_overwrite_bitstream(
+  const std::string& path, const bool& value) {
+  VTR_ASSERT(path.size());
+  VTR_ASSERT(overwrite_bitstream_ids_.size() ==
+             overwrite_bitstream_paths_.size());
+  VTR_ASSERT(overwrite_bitstream_paths_.size() ==
+             overwrite_bitstream_values_.size());
+  OverwriteBitstreamId id =
+    OverwriteBitstreamId(overwrite_bitstream_ids_.size());
+  overwrite_bitstream_ids_.push_back(id);
+  overwrite_bitstream_paths_.push_back(path);
+  overwrite_bitstream_values_.push_back(value);
+  return id;
+}
+
 /************************************************************************
  * Public Validators
  ***********************************************************************/
@@ -168,6 +225,16 @@ bool BitstreamSetting::valid_bitstream_interconnect_setting_id(
   return (size_t(interconnect_setting_id) < interconnect_setting_ids_.size()) &&
          (interconnect_setting_id ==
           interconnect_setting_ids_[interconnect_setting_id]);
+}
+
+bool BitstreamSetting::valid_overwrite_bitstream_id(
+  const OverwriteBitstreamId& id) const {
+  VTR_ASSERT(overwrite_bitstream_ids_.size() ==
+             overwrite_bitstream_paths_.size());
+  VTR_ASSERT(overwrite_bitstream_paths_.size() ==
+             overwrite_bitstream_values_.size());
+  return (size_t(id) < overwrite_bitstream_ids_.size()) &&
+         (id == overwrite_bitstream_ids_[id]);
 }
 
 }  // namespace openfpga

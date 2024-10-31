@@ -304,6 +304,12 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(
   return ports;
 }
 
+e_side ModuleManager::port_side(const ModuleId& module_id,
+                                const ModulePortId& port_id) const {
+  VTR_ASSERT(valid_module_port_id(module_id, port_id));
+  return port_sides_[module_id][port_id];
+}
+
 /* Find a list of port ids of a module by a given types */
 std::vector<ModulePortId> ModuleManager::module_port_ids_by_type(
   const ModuleId& module_id, const enum e_module_port_type& port_type) const {
@@ -746,6 +752,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_is_wire_.emplace_back();
   port_is_mappable_io_.emplace_back();
   port_is_register_.emplace_back();
+  port_sides_.emplace_back();
   port_preproc_flags_.emplace_back();
 
   num_nets_.emplace_back(0);
@@ -789,6 +796,8 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   port_ids_[module].push_back(port);
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
+  /* Deposit invalid value for each side */
+  port_sides_[module].push_back(NUM_2D_SIDES);
   port_is_wire_[module].push_back(false);
   port_is_mappable_io_[module].push_back(false);
   port_is_register_[module].push_back(false);
@@ -891,6 +900,15 @@ void ModuleManager::set_port_preproc_flag(const ModuleId& module,
   /* Must find something, otherwise drop an error */
   VTR_ASSERT(valid_module_port_id(module, port));
   port_preproc_flags_[module][port] = preproc_flag;
+}
+
+/* Set the side for a pin of a port port */
+void ModuleManager::set_port_side(const ModuleId& module,
+                                  const ModulePortId& port,
+                                  const e_side& pin_side) {
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(valid_module_port_id(module, port));
+  port_sides_[module][port] = pin_side;
 }
 
 /* Add a child module to a parent module */

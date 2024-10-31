@@ -34,8 +34,7 @@ static int check_input_and_ref_key_alias_match(
   const openfpga::FabricKey& input_key, const openfpga::FabricKey& ref_key,
   const bool& verbose) {
   size_t num_errors = 0;
-  size_t num_keys_checked = 0;
-  float progress = 0.;
+  size_t num_ref_keys_checked = 0;
   VTR_LOG(
     "Checking key alias matching between reference key and input keys...\n");
   for (openfpga::FabricKeyId key_id : ref_key.keys()) {
@@ -43,8 +42,8 @@ static int check_input_and_ref_key_alias_match(
     std::string curr_alias = ref_key.key_alias(key_id);
     std::vector<openfpga::FabricKeyId> input_found_keys =
       input_key.find_key_by_alias(curr_alias);
-    progress = static_cast<float>(num_keys_checked) /
-               static_cast<float>(ref_key.num_keys()) * 100.0;
+    float progress = static_cast<float>(num_ref_keys_checked) /
+                     static_cast<float>(ref_key.num_keys()) * 100.0;
     VTR_LOGV(verbose, "[%lu%] Checking key alias '%s'\r", size_t(progress),
              curr_alias.c_str());
     if (input_found_keys.empty()) {
@@ -61,11 +60,40 @@ static int check_input_and_ref_key_alias_match(
         curr_alias.c_str(), size_t(key_id), input_found_keys.size());
       num_errors++;
     }
-    num_keys_checked++;
+    num_ref_keys_checked++;
   }
   VTR_LOG(
     "Checking key alias matching between reference key and input keys... %s\n",
     num_errors ? "[Fail]" : "[Pass]");
+  /* If failed, provide a detailed diff on the key alias */
+  if (num_errors) {
+    size_t num_input_keys_checked = 0;
+    for (openfpga::FabricKeyId key_id : input_key.keys()) {
+      /* Note that this is slow. May consider to build a map first */
+      std::string curr_alias = input_key.key_alias(key_id);
+      std::vector<openfpga::FabricKeyId> ref_found_keys =
+        ref_key.find_key_by_alias(curr_alias);
+      float progress = static_cast<float>(num_input_keys_checked) /
+                       static_cast<float>(input_key.num_keys()) * 100.0;
+      VTR_LOGV(verbose, "[%lu%] Checking key alias '%s'\r", size_t(progress),
+               curr_alias.c_str());
+      if (ref_found_keys.empty()) {
+        VTR_LOG_ERROR(
+          "Invalid alias '%s' in the input key (id='%lu'), which does not "
+          "exist in the reference key!\n",
+          curr_alias.c_str(), size_t(key_id));
+        num_errors++;
+      }
+      if (ref_found_keys.size() > 1) {
+        VTR_LOG_ERROR(
+          "Invalid alias '%s' in the reference key (id='%lu'), which have been "
+          "found %lu times!\n",
+          curr_alias.c_str(), size_t(key_id), ref_found_keys.size());
+        num_errors++;
+      }
+      num_input_keys_checked++;
+    }
+  }
   return num_errors ? openfpga::CMD_EXEC_FATAL_ERROR
                     : openfpga::CMD_EXEC_SUCCESS;
 }

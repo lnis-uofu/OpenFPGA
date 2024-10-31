@@ -1,0 +1,35 @@
+<clock_networks default_segment="L1" default_tap_switch="ipin_cblock" default_driver_switch="0"> 
+  <clock_network name="clk_tree_2lvl" global_port="op_clk[0:0]"> 
+    <spine name="clk_spine_lvl0" start_x="1" start_y="1" end_x="2" end_y="1"> 
+      <switch_point tap="clk_rib_lvl1_sw0_upper" x="1" y="1"/> 
+      <switch_point tap="clk_rib_lvl1_sw0_lower" x="1" y="1"/> 
+      <switch_point tap="clk_rib_lvl1_sw1_upper" x="2" y="1"/> 
+      <switch_point tap="clk_rib_lvl1_sw1_lower" x="2" y="1"/> 
+    </spine>  
+    <spine name="clk_rib_lvl1_sw0_upper" start_x="1" start_y="2" end_x="1" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
+    <spine name="clk_rib_lvl1_sw0_lower" start_x="1" start_y="1" end_x="1" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
+    <spine name="clk_rib_lvl1_sw1_upper" start_x="2" start_y="2" end_x="2" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
+    <spine name="clk_rib_lvl1_sw1_lower" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
+    <taps>
+      <all from_pin="op_clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
+    </taps>
+  </clock_network>  
+  <clock_network name="rst_tree_2lvl" global_port="op_reset[0:0]"> 
+    <spine name="rst_spine_lvl0" start_x="1" start_y="1" end_x="2" end_y="1"> 
+      <intermediate_driver x="1" y="1">
+        <tap from_pin="clb.O[0:7]" to_pin="op_reset[0:0]"/>
+      </intermediate_driver>
+      <switch_point tap="rst_rib_lvl1_sw0_upper" x="1" y="1"/> 
+      <switch_point tap="rst_rib_lvl1_sw0_lower" x="1" y="1"/> 
+      <switch_point tap="rst_rib_lvl1_sw1_upper" x="2" y="1"/> 
+      <switch_point tap="rst_rib_lvl1_sw1_lower" x="2" y="1"/> 
+    </spine>  
+    <spine name="rst_rib_lvl1_sw0_upper" start_x="1" start_y="2" end_x="1" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw0_lower" start_x="1" start_y="1" end_x="1" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw1_upper" start_x="2" start_y="2" end_x="2" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
+    <spine name="rst_rib_lvl1_sw1_lower" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
+    <taps>
+      <all from_pin="op_reset[0:0]" to_pin="clb[0:0].reset[0:0]"/>
+    </taps>
+  </clock_network>  
+</clock_networks> 

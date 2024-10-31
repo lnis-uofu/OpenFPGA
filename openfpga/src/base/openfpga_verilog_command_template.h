@@ -30,6 +30,15 @@ ShellCommandId add_write_fabric_verilog_command_template(
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--constant_undriven_inputs' */
+  CommandOptionId const_undriven_inputs_opt = shell_cmd.add_option(
+    "constant_undriven_inputs", false,
+    "Can be [none|bus0|bus1|bit0|bit1]. Use constant vdd/gnd for undriven "
+    "wires in Verilog netlists. Recommand to "
+    "enable when there are boundary routing tracks in FPGA fabric");
+  shell_cmd.set_option_require_value(const_undriven_inputs_opt,
+                                     openfpga::OPT_STRING);
+
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
                        "Use explicit port mapping in Verilog netlists");
@@ -103,6 +112,11 @@ ShellCommandId add_write_full_testbench_command_template(
   CommandOptionId bitstream_opt = shell_cmd.add_option(
     "bitstream", true, "specify the bitstream to be loaded in the testbench");
   shell_cmd.set_option_require_value(bitstream_opt, openfpga::OPT_STRING);
+
+  /* add an option '--simulator'*/
+  CommandOptionId sim_opt = shell_cmd.add_option(
+    "simulator", false, "specify the simulator to be used for the testbench");
+  shell_cmd.set_option_require_value(sim_opt, openfpga::OPT_STRING);
 
   /* add an option '--fabric_netlist_file_path'*/
   CommandOptionId fabric_netlist_opt =
@@ -244,6 +258,10 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
   /* add an option '--include_signal_init' */
   shell_cmd.add_option("include_signal_init", false,
                        "initialize all the signals in verilog testbenches");
+
+  /* add an option '--dump_waveform' */
+  shell_cmd.add_option("dump_waveform", false,
+                       "add waveform output commands to the output file");
 
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,

@@ -13,6 +13,7 @@ This example demonstrates the ``OpenFPGA_Arch`` class which parses the
 Author: Ganesh Gore
 
 """
+
 import math
 import svgwrite
 from svgwrite.container import Group

@@ -6,12 +6,36 @@
  * which are used by OpenFPGA
  *******************************************************************/
 #include <string>
+#include <vector>
 
 #include "bitstream_setting_fwd.h"
 #include "vtr_vector.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
+
+struct NonFabricBitstreamPBSetting {
+  NonFabricBitstreamPBSetting(const std::string& p = "",
+                              const std::string& t = "",
+                              const std::string& c = "")
+    : pb(p), type(t), content(c) {}
+  const std::string pb = "";
+  const std::string type = "";
+  const std::string content = "";
+};
+
+struct NonFabricBitstreamSetting {
+  NonFabricBitstreamSetting(const std::string& n = "",
+                            const std::string& f = "")
+    : name(n), file(f) {}
+  void add_pb(const std::string& p, const std::string& t,
+              const std::string& c) {
+    pbs.push_back(NonFabricBitstreamPBSetting(p, t, c));
+  }
+  const std::string name = "";
+  const std::string file = "";
+  std::vector<NonFabricBitstreamPBSetting> pbs;
+};
 
 /********************************************************************
  * A data structure to describe bitstream settings
@@ -37,11 +61,15 @@ class BitstreamSetting {
   typedef vtr::vector<BitstreamInterconnectSettingId,
                       BitstreamInterconnectSettingId>::const_iterator
     bitstream_interconnect_setting_iterator;
+  typedef vtr::vector<OverwriteBitstreamId,
+                      OverwriteBitstreamId>::const_iterator
+    overwrite_bitstream_iterator;
   /* Create range */
   typedef vtr::Range<bitstream_pb_type_setting_iterator>
     bitstream_pb_type_setting_range;
   typedef vtr::Range<bitstream_interconnect_setting_iterator>
     bitstream_interconnect_setting_range;
+  typedef vtr::Range<overwrite_bitstream_iterator> overwrite_bitstream_range;
 
  public: /* Constructors */
   BitstreamSetting();
@@ -49,6 +77,7 @@ class BitstreamSetting {
  public: /* Accessors: aggregates */
   bitstream_pb_type_setting_range pb_type_settings() const;
   bitstream_interconnect_setting_range interconnect_settings() const;
+  overwrite_bitstream_range overwrite_bitstreams() const;
 
  public: /* Public Accessors */
   std::string pb_type_name(
@@ -73,6 +102,9 @@ class BitstreamSetting {
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   std::string default_path(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
+  std::vector<NonFabricBitstreamSetting> non_fabric() const;
+  std::string overwrite_bitstream_path(const OverwriteBitstreamId& id) const;
+  bool overwrite_bitstream_value(const OverwriteBitstreamId& id) const;
 
  public: /* Public Mutators */
   BitstreamPbTypeSettingId add_bitstream_pb_type_setting(
@@ -92,11 +124,18 @@ class BitstreamSetting {
     const std::vector<std::string>& parent_mode_names,
     const std::string& default_path);
 
+  void add_non_fabric(const std::string& name, const std::string& file);
+  void add_non_fabric_pb(const std::string& pb, const std::string& content);
+
+  OverwriteBitstreamId add_overwrite_bitstream(const std::string& path,
+                                               const bool& value);
+
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
   bool valid_bitstream_interconnect_setting_id(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
+  bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
 
  private: /* Internal data */
   /* Pb type -related settings
@@ -133,6 +172,11 @@ class BitstreamSetting {
     interconnect_parent_mode_names_;
   vtr::vector<BitstreamInterconnectSettingId, std::string>
     interconnect_default_paths_;
+  std::vector<NonFabricBitstreamSetting> non_fabric_;
+  vtr::vector<OverwriteBitstreamId, OverwriteBitstreamId>
+    overwrite_bitstream_ids_;
+  vtr::vector<OverwriteBitstreamId, std::string> overwrite_bitstream_paths_;
+  vtr::vector<OverwriteBitstreamId, bool> overwrite_bitstream_values_;
 };
 
 }  // namespace openfpga

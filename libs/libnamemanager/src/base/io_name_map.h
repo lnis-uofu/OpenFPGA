@@ -4,7 +4,10 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
+#include <array>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "openfpga_port.h"
 

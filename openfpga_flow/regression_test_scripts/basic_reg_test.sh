@@ -2,7 +2,6 @@
 
 set -e
 source openfpga.sh
-PYTHON_EXEC=python3.8
 ###############################################
 # OpenFPGA Shell with VPR8
 ##############################################
@@ -14,6 +13,20 @@ run-task basic_tests/vpr_standalone $@
 echo -e "Test source commands in openfpga shell"
 run-task basic_tests/source_command/source_string $@
 run-task basic_tests/source_command/source_file $@
+
+echo -e "Testing preloading rr_graph"
+run-task basic_tests/preload_rr_graph/preload_rr_graph_xml $@
+run-task basic_tests/preload_rr_graph/preload_rr_graph_bin $@
+
+echo -e "Testing preloading unique blocks"
+run-task basic_tests/preload_unique_blocks/write_unique_blocks_full_flow $@
+run-task basic_tests/preload_unique_blocks/read_unique_blocks_full_flow $@
+run-task basic_tests/preload_unique_blocks/read_write_unique_blocks $@
+run-task basic_tests/preload_unique_blocks/read_write_unique_blocks_bin $@
+run-task basic_tests/preload_unique_blocks/write_bin_unique_blocks_full_flow $@
+run-task basic_tests/preload_unique_blocks/read_unique_blocks_bin    $@
+run-task basic_tests/preload_unique_blocks/read_bin_write_xml $@
+
 
 echo -e "Testing testbenches using fpga core wrapper"
 run-task basic_tests/full_testbench/fpga_core_wrapper $@
@@ -78,10 +91,14 @@ run-task basic_tests/full_testbench/ql_memory_bank $@
 run-task basic_tests/full_testbench/ql_memory_bank_use_wlr $@
 run-task basic_tests/full_testbench/multi_region_ql_memory_bank $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten $@
+run-task basic_tests/full_testbench/ql_memory_bank_flatten_defined_wl $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain $@
+
+echo -e "Testing simulator support";
+run-task basic_tests/full_testbench/ql_memory_bank_shift_register_vcs $@
 
 echo -e "Testing testbenches without self checking features";
 run-task basic_tests/full_testbench/full_testbench_without_self_checking $@
@@ -168,6 +185,8 @@ echo -e "Testing K4N4 support clock generation by internal resources";
 run-task basic_tests/k4_series/k4n4_clk_gen $@
 echo -e "Testing K4N4 support reset generation by internal resources";
 run-task basic_tests/k4_series/k4n4_rst_gen $@
+echo -e "Testing enhanced connection blocks"
+run-task basic_tests/k4_series/k4n4_ecb $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
@@ -181,10 +200,17 @@ run-task basic_tests/tile_organization/tileable_io $@
 echo -e "Testing tiles with I/O consisting of subtiles";
 run-task basic_tests/tile_organization/io_subtile $@
 run-task basic_tests/tile_organization/io_subtile_strong $@
+echo -e "Testing tiles with routing tracks around I/O";
+run-task basic_tests/tile_organization/perimeter_cb $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Full testbench)";
 run-task basic_tests/tile_organization/homo_fabric_tile $@
+run-task basic_tests/tile_organization/homo_fabric_tile_bl $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
 run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile $@
+run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_global_tile_clock $@
+run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_pb_pin_fixup $@
+run-task basic_tests/tile_organization/fabric_tile_clkntwk_io_subtile $@
+run-task basic_tests/tile_organization/fabric_tile_clkntwk_registerable_io_subtile $@
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_4x4_preconfig $@
@@ -192,6 +218,7 @@ run-task basic_tests/tile_organization/homo_fabric_tile_global_tile_clock $@
 run-task basic_tests/tile_organization/homo_fabric_tile_adder_chain $@
 run-task basic_tests/tile_organization/homo_fabric_tile_clkntwk $@
 run-task basic_tests/tile_organization/hetero_fabric_tile $@
+run-task basic_tests/tile_organization/homo_fabric_tile_ecb_2x2_preconfig $@
 
 echo -e "Testing group config block";
 run-task basic_tests/group_config_block/group_config_block_homo_full_testbench $@
@@ -205,6 +232,7 @@ run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_glob
 
 echo -e "Module naming";
 run-task basic_tests/module_naming/using_index $@
+run-task basic_tests/module_naming/fabric_tile_clkntwk_io_subtile_using_index $@
 run-task basic_tests/module_naming/renaming_rules $@
 run-task basic_tests/module_naming/renaming_rules_strong $@
 run-task basic_tests/module_naming/renaming_rules_on_indexed_names $@
@@ -215,13 +243,28 @@ run-task basic_tests/global_tile_ports/global_tile_clock_subtile $@
 run-task basic_tests/global_tile_ports/global_tile_clock_subtile_port_merge $@
 run-task basic_tests/global_tile_ports/global_tile_clock_subtile_port_merge_fabric_tile_group_config $@
 run-task basic_tests/global_tile_ports/global_tile_reset $@
-run-task basic_tests/global_tile_ports/global_tile_4clock $@
+run-task basic_tests/global_tile_ports/global_tile_4clock --default_tool_path ${OPENFPGA_PATH}/openfpga_flow/misc/fpgaflow_default_tool_path_timing.conf $@
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@
 
 echo -e "Testing programmable clock architecture";
+run-task basic_tests/clock_network/homo_1clock_1reset_1layer_2entry $@
 run-task basic_tests/clock_network/homo_1clock_2layer $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_dec $@
 run-task basic_tests/clock_network/homo_1clock_2layer_full_tb $@
 run-task basic_tests/clock_network/homo_2clock_2layer $@
+run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused $@
+run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused_tree $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer $@
+run-task basic_tests/clock_network/homo_1clock_1reset_3layer_2entry $@
+run-task basic_tests/clock_network/homo_1clock_1reset_3layer_2entry_disable_unused $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_y_entry $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut_pb_pin_fixup $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_on_lut_pb_pin_fixup_msb $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_syntax $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_disable_unused_spines $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_internal_driver $@
+run-task basic_tests/clock_network/homo_1clock_1reset_2layer_intermediate_driver $@
 
 echo -e "Testing configuration chain of a K4N4 FPGA using .blif generated by yosys+verific";
 run-task basic_tests/verific_test $@
@@ -248,6 +291,12 @@ run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_sb $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing $@
+
+echo -e "Testing fabric pin physical location file"
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_default $@
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_for_tiles $@
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_show_invalid_sides $@
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_wildcards $@
 
 echo -e "Testing bus group features";
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
@@ -276,6 +325,11 @@ echo -e "Testing output files without time stamp";
 run-task basic_tests/no_time_stamp/device_1x1 $@
 run-task basic_tests/no_time_stamp/device_4x4 $@
 run-task basic_tests/no_time_stamp/no_cout_in_gsb $@
+run-task basic_tests/no_time_stamp/dump_waveform $@
+
+echo -e "Testing report reference to file";
+run-task basic_tests/report_reference $@
+
 # Run git-diff to ensure no changes on the golden netlists
 # Switch to root path in case users are running the tests in another location
 cd ${OPENFPGA_PATH}

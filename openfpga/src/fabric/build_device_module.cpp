@@ -88,8 +88,9 @@ int build_device_module_graph(
     module_manager, decoder_lib, vpr_device_ctx,
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.mux_lib(), openfpga_ctx.arch().tile_annotations,
-    openfpga_ctx.arch().config_protocol.type(), sram_model, duplicate_grid_pin,
-    group_config_block, verbose);
+    openfpga_ctx.arch().config_protocol.type(), sram_model,
+    openfpga_ctx.arch().config_protocol.ql_memory_bank_config_setting(),
+    duplicate_grid_pin, group_config_block, verbose);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -127,7 +128,8 @@ int build_device_module_graph(
       openfpga_ctx.device_rr_gsb(), vpr_device_ctx.rr_graph,
       openfpga_ctx.arch().tile_annotations, openfpga_ctx.arch().circuit_lib,
       sram_model, openfpga_ctx.arch().config_protocol.type(),
-      name_module_using_index, frame_view, verbose);
+      name_module_using_index, vpr_device_ctx.arch->perimeter_cb, frame_view,
+      verbose);
   }
 
   /* Build FPGA fabric top-level module */
@@ -140,7 +142,8 @@ int build_device_module_graph(
     openfpga_ctx.arch().arch_direct, openfpga_ctx.arch().config_protocol,
     sram_model, fabric_tile, name_module_using_index, frame_view,
     compress_routing, duplicate_grid_pin, fabric_key,
-    generate_random_fabric_key, group_config_block, verbose);
+    generate_random_fabric_key, group_config_block,
+    vpr_device_ctx.arch->perimeter_cb, verbose);
 
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;

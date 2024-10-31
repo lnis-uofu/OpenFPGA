@@ -48,6 +48,7 @@ logger = logging.getLogger("OpenFPGA_Task_logs")
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Read commandline arguments
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+task_script_dir = os.path.dirname(os.path.abspath(__file__))
 parser = argparse.ArgumentParser()
 parser.add_argument("tasks", nargs="+")
 parser.add_argument(
@@ -76,12 +77,17 @@ parser.add_argument("--continue_on_fail", action="store_true", help="Exit script
 parser.add_argument(
     "--show_thread_logs", action="store_true", help="Skips logs from running thread"
 )
+parser.add_argument(
+    "--default_tool_path",
+    type=str,
+    default=os.path.join(task_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"),
+    help="The configuraton file contains paths to tools as well as keywords to be extracted from logs",
+)
 args = parser.parse_args()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Read script configuration file
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = {
     "PATH": {
         "OPENFPGA_FLOW_PATH": task_script_dir,
@@ -407,6 +413,7 @@ def generate_each_task_actions(taskname):
                     task_conf=task_conf,
                 )
                 command += ["--flow_config", curr_task_conf_file]
+                command += ["--default_tool_path", args.default_tool_path]
                 flow_run_cmd_list.append(
                     {
                         "arch": arch,

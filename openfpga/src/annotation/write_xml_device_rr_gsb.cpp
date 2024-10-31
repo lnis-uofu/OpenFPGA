@@ -149,7 +149,7 @@ static void write_rr_gsb_chan_connection_to_xml(
     } else {
       for (const RREdgeId& driver_rr_edge : driver_rr_edges) {
         const RRNodeId& driver_rr_node = rr_graph.edge_src_node(driver_rr_edge);
-        e_side driver_node_side = NUM_SIDES;
+        e_side driver_node_side = NUM_2D_SIDES;
         int driver_node_index = -1;
         rr_gsb.get_node_side_and_index(rr_graph, driver_rr_node, IN_PORT,
                                        driver_node_side, driver_node_index);
@@ -166,7 +166,7 @@ static void write_rr_gsb_chan_connection_to_xml(
             fp << "\" node_id=\"" << size_t(driver_rr_node) << "\" grid_side=\""
                << grid_side.to_string() << "\" sb_module_pin_name=\""
                << generate_sb_module_grid_port_name(
-                    gsb_side, driver_node_side, vpr_device_grid,
+                    gsb_side, grid_side.get_side(), vpr_device_grid,
                     vpr_device_annotation, rr_graph, driver_rr_node);
           }
           fp << "\"/>" << std::endl;

@@ -16,13 +16,19 @@
 #include "fabric_key_writer.h"
 #include "globals.h"
 #include "openfpga_naming.h"
+#include "read_unique_blocks_bin.h"
+#include "read_unique_blocks_xml.h"
 #include "read_xml_fabric_key.h"
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
 #include "rename_modules.h"
+#include "report_reference.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "write_unique_blocks_bin.h"
+#include "write_unique_blocks_xml.h"
+#include "write_xml_fabric_pin_physical_location.h"
 #include "write_xml_module_name_map.h"
 
 /* begin namespace openfpga */
@@ -122,13 +128,6 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
         cmd.option_name(opt_duplicate_grid_pin).c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
-      VTR_LOG_ERROR(
-        "Option '%s' requires options '%s' to be enabled due to a conflict!\n",
-        cmd.option_name(opt_group_tile).c_str(),
-        cmd.option_name(opt_compress_routing).c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
   }
   /* Conflicts: duplicate_grid_pin does not support any port merge */
   if (cmd_context.option_enable(cmd, opt_duplicate_grid_pin)) {
@@ -141,13 +140,24 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     }
   }
 
-  if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
+  if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
+      false == openfpga_ctx.device_rr_gsb().is_compressed()) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
+  } else if (true == openfpga_ctx.device_rr_gsb().is_compressed()) {
+    openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
+  if (cmd_context.option_enable(cmd, opt_group_tile)) {
+    if (!openfpga_ctx.device_rr_gsb().is_compressed()) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires unique blocks to be valid due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
   VTR_LOG("\n");
 
   /* Record the execution status in curr_status for each command
@@ -173,7 +183,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
    */
   TileConfig tile_config;
   if (cmd_context.option_enable(cmd, opt_group_tile)) {
-    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+    if (!openfpga_ctx.device_rr_gsb().is_compressed()) {
       VTR_LOG_ERROR(
         "Group tile is applicable only when compress routing is enabled!\n");
       return CMD_EXEC_FATAL_ERROR;
@@ -191,7 +201,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.mutable_fabric_tile(), openfpga_ctx.mutable_module_name_map(),
     const_cast<const T&>(openfpga_ctx), g_vpr_ctx.device(),
     cmd_context.option_enable(cmd, opt_frame_view),
-    cmd_context.option_enable(cmd, opt_compress_routing),
+    openfpga_ctx.device_rr_gsb().is_compressed(),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
     predefined_fabric_key, tile_config,
     cmd_context.option_enable(cmd, opt_group_config_block),
@@ -269,6 +279,8 @@ template <class T>
 int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
                                     const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_exclude_empty_modules =
+    cmd.option("exclude_empty_modules");
 
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
@@ -277,6 +289,19 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_file = cmd.option("file");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  CommandOptionId opt_module = cmd.option("module");
+  std::string root_module =
+    openfpga_ctx.module_name_map().name(generate_fpga_top_module_name());
+  if (true == cmd_context.option_enable(cmd, opt_module)) {
+    root_module = cmd_context.option_value(cmd, opt_module);
+  }
+
+  CommandOptionId opt_filter = cmd.option("filter");
+  std::string filter("*");
+  if (true == cmd_context.option_enable(cmd, opt_filter)) {
+    filter = cmd_context.option_value(cmd, opt_filter);
+  }
 
   /* Default depth requirement, will not stop until the leaf */
   int depth = -1;
@@ -296,7 +321,9 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
   /* Write hierarchy to a file */
   return write_fabric_hierarchy_to_text_file(
     openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(), hie_file_name,
-    size_t(depth), cmd_context.option_enable(cmd, opt_verbose));
+    root_module, filter, size_t(depth),
+    cmd_context.option_enable(cmd, opt_exclude_empty_modules),
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************
@@ -417,6 +444,131 @@ int write_module_naming_rules_template(const T& openfpga_ctx,
     file_name.c_str(), openfpga_ctx.module_name_map(),
     !cmd_context.option_enable(cmd, opt_no_time_stamp),
     cmd_context.option_enable(cmd, opt_verbose));
+}
+
+/********************************************************************
+ * Write fabric pin physical location to a file
+ *******************************************************************/
+template <class T>
+int write_fabric_pin_physical_location_template(
+  const T& openfpga_ctx, const Command& cmd,
+  const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_show_invalid_side = cmd.option("show_invalid_side");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+
+  std::string module_name("*"); /* Use a wildcard for everything */
+  CommandOptionId opt_module = cmd.option("module");
+  if (true == cmd_context.option_enable(cmd, opt_module)) {
+    module_name = cmd_context.option_value(cmd, opt_module);
+  }
+
+  /* Write hierarchy to a file */
+  return write_xml_fabric_pin_physical_location(
+    file_name.c_str(), module_name, openfpga_ctx.module_graph(),
+    cmd_context.option_enable(cmd, opt_show_invalid_side),
+    !cmd_context.option_enable(cmd, opt_no_time_stamp),
+    cmd_context.option_enable(cmd, opt_verbose));
+}
+
+template <class T>
+int read_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
+                                const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_type = cmd.option("type");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+  std::string file_type = cmd_context.option_value(cmd, opt_type);
+  /* read unique blocks from a file */
+  if (file_type == "xml") {
+    return read_xml_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
+                                  file_name.c_str(),
+                                  cmd_context.option_enable(cmd, opt_verbose));
+  } else if (file_type == "bin") {
+    return read_bin_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
+                                  file_name.c_str(),
+                                  cmd_context.option_enable(cmd, opt_verbose));
+  } else {
+    VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+}
+
+template <class T>
+int write_unique_blocks_template(T& openfpga_ctx, const Command& cmd,
+                                 const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_type = cmd.option("type");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+  std::string file_type = cmd_context.option_value(cmd, opt_type);
+  /* Write unique blocks to a file */
+  /* add check flag */
+  if (file_type == "xml") {
+    return write_xml_unique_blocks(openfpga_ctx.device_rr_gsb(),
+                                   file_name.c_str(),
+                                   cmd_context.option_enable(cmd, opt_verbose));
+  } else if (file_type == "bin") {
+    return write_bin_unique_blocks(openfpga_ctx.mutable_device_rr_gsb(),
+                                   file_name.c_str(),
+                                   cmd_context.option_enable(cmd, opt_verbose));
+  } else {
+    VTR_LOG_ERROR("file type %s not supported", file_type.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+}
+
+/********************************************************************
+ *  Report reference to a file
+ *******************************************************************/
+template <class T>
+int report_reference_template(const T& openfpga_ctx, const Command& cmd,
+                              const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+
+  CommandOptionId opt_file = cmd.option("file");
+
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+
+  std::string module_name("*"); /* Use a wildcard for everything */
+  CommandOptionId opt_module = cmd.option("module");
+  if (true == cmd_context.option_enable(cmd, opt_module)) {
+    module_name = cmd_context.option_value(cmd, opt_module);
+  }
+  /* Write hierarchy to a file */
+  return report_reference(file_name.c_str(), module_name,
+                          openfpga_ctx.module_graph(),
+                          !cmd_context.option_enable(cmd, opt_no_time_stamp),
+                          cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */

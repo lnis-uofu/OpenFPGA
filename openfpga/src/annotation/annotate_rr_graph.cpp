@@ -98,7 +98,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_range,
                           const size_t& layer,
                           const vtr::Point<size_t>& gsb_coord,
-                          const bool& include_clock) {
+                          const bool& perimeter_cb, const bool& include_clock) {
   /* Create an object to return */
   RRGSB rr_gsb;
 
@@ -120,13 +120,12 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       rr_gsb.get_side_block_coordinate(side_manager.get_side());
     RRChan rr_chan;
     std::vector<std::vector<RRNodeId>> temp_opin_rr_nodes(2);
-    enum e_side opin_grid_side[2] = {NUM_SIDES, NUM_SIDES};
+    enum e_side opin_grid_side[2] = {NUM_2D_SIDES, NUM_2D_SIDES};
     enum PORTS chan_dir_to_port_dir_mapping[2] = {
       OUT_PORT, IN_PORT}; /* 0: INC_DIRECTION => ?; 1: DEC_DIRECTION => ? */
 
     switch (side) {
       case TOP: /* TOP = 0 */
-        /* For the border, we should take special care */
         if (gsb_coord.y() == gsb_range.y()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
@@ -157,7 +156,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         break;
       case RIGHT: /* RIGHT = 1 */
-        /* For the border, we should take special care */
         if (gsb_coord.x() == gsb_range.x()) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
@@ -189,8 +187,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
-        /* For the border, we should take special care */
-        if (gsb_coord.y() == 0) {
+        if (!perimeter_cb && gsb_coord.y() == 0) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -220,8 +217,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
-        /* For the border, we should take special care */
-        if (gsb_coord.x() == 0) {
+        if (!perimeter_cb && gsb_coord.x() == 0) {
           rr_gsb.clear_one_side(side_manager.get_side());
           break;
         }
@@ -305,8 +301,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     /* Clear the temp data */
     temp_opin_rr_nodes[0].clear();
     temp_opin_rr_nodes[1].clear();
-    opin_grid_side[0] = NUM_SIDES;
-    opin_grid_side[1] = NUM_SIDES;
+    opin_grid_side[0] = NUM_2D_SIDES;
+    opin_grid_side[1] = NUM_2D_SIDES;
   }
 
   /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
@@ -333,11 +329,11 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       case RIGHT: /* RIGHT = 1 */
         /* For the bording, we should take special care */
         /* Check if TOP side chan width is 0 or not */
-        chan_side = TOP;
+        chan_side = BOTTOM;
         /* Build the connection block: ipin and ipin_grid_side */
-        /* LEFT side INPUT Pins of Grid[x+1][y+1] */
+        /* LEFT side INPUT Pins of Grid[x+1][y] */
         ix = rr_gsb.get_sb_x() + 1;
-        iy = rr_gsb.get_sb_y() + 1;
+        iy = rr_gsb.get_sb_y();
         ipin_rr_node_grid_side = LEFT;
         break;
       case BOTTOM: /* BOTTOM = 2*/
@@ -353,11 +349,11 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       case LEFT: /* LEFT = 3 */
         /* For the bording, we should take special care */
         /* Check if left side chan width is 0 or not */
-        chan_side = TOP;
+        chan_side = BOTTOM;
         /* Build the connection block: ipin and ipin_grid_side */
-        /* RIGHT side INPUT Pins of Grid[x][y+1] */
+        /* RIGHT side INPUT Pins of Grid[x][y] */
         ix = rr_gsb.get_sb_x();
-        iy = rr_gsb.get_sb_y() + 1;
+        iy = rr_gsb.get_sb_y();
         ipin_rr_node_grid_side = RIGHT;
         break;
       default:
@@ -398,6 +394,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     temp_ipin_rr_nodes.clear();
   }
 
+  /* Build OPIN node lists for connection blocks */
+  rr_gsb.build_cb_opin_nodes(vpr_device_ctx.rr_graph);
+
   return rr_gsb;
 }
 
@@ -417,6 +416,9 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
    */
   vtr::Point<size_t> gsb_range(vpr_device_ctx.grid.width() - 1,
                                vpr_device_ctx.grid.height() - 1);
+  if (vpr_device_ctx.arch->perimeter_cb) {
+    gsb_range.set(vpr_device_ctx.grid.width(), vpr_device_ctx.grid.height());
+  }
   device_rr_gsb.reserve(gsb_range);
 
   VTR_LOGV(verbose_output, "Start annotation GSB up to [%lu][%lu]\n",
@@ -431,11 +433,11 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        * the GSBs at the borderside correctly sort drive_rr_nodes should be
        * called if required by users
        */
-      const RRGSB& rr_gsb =
-        build_rr_gsb(vpr_device_ctx,
-                     vtr::Point<size_t>(vpr_device_ctx.grid.width() - 2,
-                                        vpr_device_ctx.grid.height() - 2),
-                     layer, vtr::Point<size_t>(ix, iy), include_clock);
+      vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
+                                       vpr_device_ctx.grid.height() - 1);
+      const RRGSB& rr_gsb = build_rr_gsb(
+        vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
+        vpr_device_ctx.arch->perimeter_cb, include_clock);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
@@ -701,12 +703,24 @@ static void annotate_direct_circuit_models(
     }
 
     /* Check the circuit model type */
-    if (CIRCUIT_MODEL_WIRE !=
-        openfpga_arch.circuit_lib.model_type(circuit_model)) {
+    if (openfpga_arch.arch_direct.type(direct_id) !=
+          e_direct_type::PART_OF_CB &&
+        CIRCUIT_MODEL_WIRE !=
+          openfpga_arch.circuit_lib.model_type(circuit_model)) {
       VTR_LOG_ERROR(
         "Require circuit model type '%s' for a direct connection '%s'!\nPlease "
         "check your OpenFPGA architecture XML!\n",
         CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_WIRE], direct_name.c_str());
+      exit(1);
+    }
+    if (openfpga_arch.arch_direct.type(direct_id) ==
+          e_direct_type::PART_OF_CB &&
+        CIRCUIT_MODEL_MUX !=
+          openfpga_arch.circuit_lib.model_type(circuit_model)) {
+      VTR_LOG_ERROR(
+        "Require circuit model type '%s' for a direct connection '%s'!\nPlease "
+        "check your OpenFPGA architecture XML!\n",
+        CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_MUX], direct_name.c_str());
       exit(1);
     }
 

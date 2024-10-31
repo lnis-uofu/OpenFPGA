@@ -801,6 +801,60 @@ static size_t check_io_circuit_model(const CircuitLibrary& circuit_lib) {
 }
 
 /************************************************************************
+ * Check the last stage pass gate logic model is the same type as default
+ ***********************************************************************/
+static size_t check_pass_gate_circuit_model_consistency(
+  const CircuitLibrary& circuit_lib) {
+  size_t num_err = 0;
+
+  for (const CircuitModelId& mux_model :
+       circuit_lib.models_by_type(CIRCUIT_MODEL_MUX)) {
+    CircuitModelId pgl_model = circuit_lib.pass_gate_logic_model(mux_model);
+    CircuitModelId last_stage_pgl_model =
+      circuit_lib.last_stage_pass_gate_logic_model(mux_model);
+    if (!circuit_lib.valid_model_id(pgl_model)) {
+      VTR_LOGF_ERROR(
+        __FILE__, __LINE__,
+        "The pass-gate logic circuit model '%s' of '%s' is not valid!\n",
+        circuit_lib.pass_gate_logic_model_name(mux_model).c_str(),
+        circuit_lib.model_name(mux_model).c_str());
+      num_err++;
+    }
+    if (!circuit_lib.valid_model_id(last_stage_pgl_model)) {
+      VTR_LOGF_ERROR(
+        __FILE__, __LINE__,
+        "The last stage pass-gate logic circuit model '%s' of '%s' is not "
+        "valid!\n",
+        circuit_lib.last_stage_pass_gate_logic_model_name(mux_model).c_str(),
+        circuit_lib.model_name(mux_model).c_str());
+      num_err++;
+    }
+    if (circuit_lib.model_type(pgl_model) !=
+        circuit_lib.model_type(last_stage_pgl_model)) {
+      VTR_LOGF_ERROR(
+        __FILE__, __LINE__,
+        "The last stage pass-gate logic circuit model '%s' of '%s' should be "
+        "the same type as its regular pass-gate logic model '%s'!\n",
+        circuit_lib.model_name(last_stage_pgl_model).c_str(),
+        circuit_lib.model_name(mux_model).c_str(),
+        circuit_lib.model_name(pgl_model).c_str());
+      num_err++;
+    }
+    if (pgl_model != last_stage_pgl_model &&
+        circuit_lib.gate_type(pgl_model) != CIRCUIT_MODEL_GATE_MUX2) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "The last stage pass-gate logic circuit model '%s' of "
+                     "'%s' should be a MUX2 gate!\n",
+                     circuit_lib.model_name(last_stage_pgl_model).c_str(),
+                     circuit_lib.model_name(mux_model).c_str());
+      num_err++;
+    }
+  }
+
+  return num_err;
+}
+
+/************************************************************************
  * Check points to make sure we have a valid circuit library
  * Detailed checkpoints:
  * 1. Circuit models have unique names
@@ -919,6 +973,9 @@ bool check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   /* 11. Check power-gated inverter/buffer models */
   num_err += check_power_gated_circuit_models(circuit_lib);
+
+  /* 12. Check pass-gate logic model consistency */
+  num_err += check_pass_gate_circuit_model_consistency(circuit_lib);
 
   /* If we have any errors, exit */
 

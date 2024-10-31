@@ -57,11 +57,12 @@ static void print_verilog_mux_memory_module(
       ModuleId mem_module = module_manager.find_module(module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
       /* Write the module content in Verilog format */
-      write_verilog_module_to_file(
-        fp, module_manager, mem_module,
+      FabricVerilogOption curr_options = options;
+      curr_options.set_explicit_port_mapping(
         options.explicit_port_mapping() ||
-          circuit_lib.dump_explicit_port_map(mux_model),
-        options.default_net_type());
+        circuit_lib.dump_explicit_port_map(mux_model));
+      write_verilog_module_to_file(fp, module_manager, mem_module,
+                                   curr_options);
 
       /* Add an empty line as a splitter */
       fp << std::endl;
@@ -80,11 +81,8 @@ static void print_verilog_mux_memory_module(
       if (module_manager.valid_module_id(feedthru_mem_module)) {
         VTR_ASSERT(true == module_manager.valid_module_id(feedthru_mem_module));
         /* Write the module content in Verilog format */
-        write_verilog_module_to_file(
-          fp, module_manager, feedthru_mem_module,
-          options.explicit_port_mapping() ||
-            circuit_lib.dump_explicit_port_map(mux_model),
-          options.default_net_type());
+        write_verilog_module_to_file(fp, module_manager, feedthru_mem_module,
+                                     curr_options);
 
         /* Add an empty line as a splitter */
         fp << std::endl;
@@ -205,10 +203,11 @@ void print_verilog_submodule_memories(
     ModuleId mem_module = module_manager.find_module(module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
     /* Write the module content in Verilog format */
-    write_verilog_module_to_file(fp, module_manager, mem_module,
-                                 options.explicit_port_mapping() ||
-                                   circuit_lib.dump_explicit_port_map(model),
-                                 options.default_net_type());
+    FabricVerilogOption curr_options = options;
+    curr_options.set_explicit_port_mapping(
+      options.explicit_port_mapping() ||
+      circuit_lib.dump_explicit_port_map(model));
+    write_verilog_module_to_file(fp, module_manager, mem_module, curr_options);
 
     /* Add an empty line as a splitter */
     fp << std::endl;
@@ -226,9 +225,7 @@ void print_verilog_submodule_memories(
     if (module_manager.valid_module_id(feedthru_mem_module)) {
       /* Write the module content in Verilog format */
       write_verilog_module_to_file(fp, module_manager, feedthru_mem_module,
-                                   options.explicit_port_mapping() ||
-                                     circuit_lib.dump_explicit_port_map(model),
-                                   options.default_net_type());
+                                   curr_options);
 
       /* Add an empty line as a splitter */
       fp << std::endl;
@@ -239,9 +236,7 @@ void print_verilog_submodule_memories(
   for (ModuleId mem_group_module : module_manager.modules_by_usage(
          ModuleManager::e_module_usage_type::MODULE_CONFIG_GROUP)) {
     /* Write the module content in Verilog format */
-    write_verilog_module_to_file(fp, module_manager, mem_group_module,
-                                 options.explicit_port_mapping(),
-                                 options.default_net_type());
+    write_verilog_module_to_file(fp, module_manager, mem_group_module, options);
 
     /* Add an empty line as a splitter */
     fp << std::endl;

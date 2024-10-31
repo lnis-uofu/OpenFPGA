@@ -1,0 +1,36 @@
+<clock_networks default_segment="seg_len1" default_tap_switch="fast_switch" default_driver_switch="slow_switch"> 
+  <clock_network name="example_network" global_port="clk[0:7]"> 
+    <spine name="spine_lvl3" start_x="0" start_y="2" end_x="2" end_y="2"> 
+      <intermediate_driver x="1" y="2">
+        <tap from_pin="clb.O[0:0]" to_pin="clk[0:0]"/>
+        <tap from_pin="clb.O[1:1]" to_pin="clk[1:1]"/>
+        <tap from_pin="clb.O[2:3]" to_pin="clk[2:2]"/>
+      </intermediate_driver>
+      <switch_point tap="spine_lvl2_upper" x="2" y="2"> 
+        <internal_driver from_pin="clb.O[0:3]" to_pin="clk[1:1]"/>
+      </switch_point>
+      <switch_point tap="spine_lvl2_lower" x="2" y="2"> 
+        <internal_driver from_pin="clb.O[0:3]" to_pin="clk[0:0]"/>
+      </switch_point>
+    </spine>  
+    <spine name="spine_lvl2_upper" start_x="2" start_y="2" end_x="2" end_y="3"> 
+      <switch_point tap="rib_lvl1_upper_left" x="2" y="3"/> 
+      <switch_point tap="rib_lvl1_upper_right" x="2" y="3"/> 
+    </spine> 
+    <spine name="spine_lvl2_lower" start_x="2" start_y="2" end_x="2" end_y="1"> 
+      <switch_point tap="rib_lvl1_lower_left" x="2" y="1"/> 
+      <switch_point tap="rib_lvl1_lower_right" x="2" y="1"/> 
+    </spine> 
+    <spine name="rib_lvl1_upper_left" start_x="2" start_y="3" end_x="1" end_y="3"/>
+    <spine name="rib_lvl1_upper_right" start_x="2" start_y="3" end_x="3" end_y="3"/> 
+    <spine name="rib_lvl1_lower_left" start_x="2" start_y="1" end_x="1" end_y="1"/> 
+    <spine name="rib_lvl1_lower_right" start_x="2" start_y="1" end_x="3" end_y="1"/> 
+    <taps>
+      <all from_pin="clk[0:0]" to_pin="io[0:23].clk[0:0]"/>
+      <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[1:1]"/>
+      <all from_pin="clk[0:0]" to_pin="dsp[0:0].clk[2:2]"/>
+      <single from_pin="clk[0:0]" to_pin="bram[0:0].clk[3:7]" x="1" y="1"/>
+      <region from_pin="clk[0:0]" to_pin="bram[0:0].clk[3:7]" start_x="1" end_x="10" repeat_x="2" start_y="8" end_y="20" repeat_y="8"/>
+    </taps>
+  </clock_network>  
+</clock_networks> 

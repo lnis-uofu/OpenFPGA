@@ -14,6 +14,14 @@ write_fabric_verilog
 
     Specify the output directory for the Verilog netlists. For example, ``--file /temp/fabric_netlist/``
 
+  .. option:: --constant_undriven_inputs <string>
+
+  .. note:: This option is automatically enabled and set to ``bus0`` when the option ``perimeter_cb`` of tileable routing resource graph is enabled (see details in :ref`addon_vpr_syntax`). 
+
+  .. note:: Enable this option may shadow issues in your FPGA architecture, which causes them difficult to be found in design verification.
+   
+    Can be [``none`` | ``bus0`` | ``bus1`` | ``bit0`` | ``bit1`` ]. Use constant 0 or 1 for undriven wires in Verilog netlists. Recommand to enable when there are boundary routing tracks in FPGA fabric. When ``bus0`` or ``bus1`` are set, the constant wiring will be done in a bus format. When ``bit0`` or ``bit1`` are set, the constant wiring will be done in a bit-blast style. Suggest to use bit-blast style only when downstream Verilog parsers do not support bus format. By default, it is ``none``. 
+
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
@@ -60,6 +68,10 @@ write_full_testbench
   .. option:: --bitstream <string>     
 
     The bitstream file to be loaded to the full testbench, which should be in the same file format that OpenFPGA can outputs (See detailes in :ref:`file_formats_fabric_bitstream_plain_text`). For example, ``--bitstream and2.bit``
+
+  .. option:: --simulator <string>     
+
+    Specify the type of simulator which the full testbench will be used for. Currently support ``iverilog`` | ``vcs``. By default, assume the simulator is iverilog. For example, ``--simulator iverilog``. For different types of simulator, some syntax in the testbench may differ to help fast convergence.
 
   .. option:: --fabric_netlist_file_path <string>
 
@@ -171,6 +183,10 @@ __ iverilog_website_
     .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
+
+  .. option:: --dump_waveform
+
+    Enable waveform output when runnign HDL simulation on the preconfigured wrapper. When enabled, waveform files can be outputted in two formats: ``fsdb`` and ``vcd`` through preprocessing flags ``DUMP_FSDB`` and ``DUMP_VCD`` respectively. For example, when using VCS,. the flag can be activiated by ``+define+DUMP_FSDB=1``.
 
   .. option:: --no_time_stamp
 

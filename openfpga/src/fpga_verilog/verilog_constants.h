@@ -61,6 +61,11 @@ constexpr const char* FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME =
 constexpr const char* FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX =
   "_top_formal_verification_random_tb";
 
+constexpr const char* VERILOG_FSDB_PREPROC_FLAG =
+  "DUMP_FSDB";  // the flag to enable fsdb waveform output during compilation
+constexpr const char* VERILOG_VCD_PREPROC_FLAG =
+  "DUMP_VCD";  // the flag to enable vcd waveform output during compilation
+
 #define VERILOG_DEFAULT_SIGNAL_INIT_VALUE 0
 
 #endif

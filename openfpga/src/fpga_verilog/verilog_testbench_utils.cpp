@@ -383,9 +383,9 @@ void print_verilog_testbench_connect_fpga_ios(
 
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
       size_t temp_io_index = io_location_map.io_index(
-        place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-        place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
         module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */
@@ -1342,6 +1342,36 @@ void print_verilog_testbench_signal_initialization(
       signal_init_circuit_ports.at(signal_init_circuit_model), module_manager,
       top_module, primitive_module, deposit_random_values);
   }
+}
+
+/********************************************************************
+ * Print waveform output commands: support both VCD and FSDB
+ *******************************************************************/
+void print_verilog_testbench_dump_waveform(std::fstream& fp,
+                                           const std::string& circuit_name,
+                                           const std::string& uut_name) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  print_verilog_comment(
+    fp, std::string("------ Use " + std::string(VERILOG_FSDB_PREPROC_FLAG) +
+                    " to enable FSDB waveform output -----"));
+  print_verilog_preprocessing_flag(fp, std::string(VERILOG_FSDB_PREPROC_FLAG));
+  fp << "initial begin\n";
+  fp << "\t$fsdbDumpfile(\"" << circuit_name << ".fsdb\");\n";
+  fp << "\t$fsdbDumpvars(0, \"" << uut_name << "\");\n";
+  fp << "end\n";
+  print_verilog_endif(fp);
+
+  print_verilog_comment(
+    fp, std::string("------ Use " + std::string(VERILOG_VCD_PREPROC_FLAG) +
+                    " to enable VCD waveform output -----"));
+  print_verilog_preprocessing_flag(fp, std::string(VERILOG_VCD_PREPROC_FLAG));
+  fp << "initial begin\n";
+  fp << "\t$dumpfile(\"" << circuit_name << ".vcd\");\n";
+  fp << "\t$dumpvars(0, \"" << uut_name << "\");\n";
+  fp << "end\n";
+  print_verilog_endif(fp);
 }
 
 } /* end namespace openfpga */

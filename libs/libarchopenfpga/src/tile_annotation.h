@@ -54,6 +54,8 @@ class TileAnnotation {
   bool global_port_is_clock(const TileGlobalPortId& global_port_id) const;
   bool global_port_is_set(const TileGlobalPortId& global_port_id) const;
   bool global_port_is_reset(const TileGlobalPortId& global_port_id) const;
+  bool global_port_thru_dedicated_network(
+    const TileGlobalPortId& global_port_id) const;
   std::string global_port_clock_arch_tree_name(
     const TileGlobalPortId& global_port_id) const;
   size_t global_port_default_value(

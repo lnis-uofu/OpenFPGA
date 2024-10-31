@@ -59,11 +59,11 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
     ModuleId lut_module = module_manager.find_module(
       module_name_map.name(circuit_lib.model_name(lut_model)));
     VTR_ASSERT(true == module_manager.valid_module_id(lut_module));
-    write_verilog_module_to_file(
-      fp, module_manager, lut_module,
+    FabricVerilogOption curr_options = options;
+    curr_options.set_explicit_port_mapping(
       options.explicit_port_mapping() ||
-        circuit_lib.dump_explicit_port_map(lut_model),
-      options.default_net_type());
+      circuit_lib.dump_explicit_port_map(lut_model));
+    write_verilog_module_to_file(fp, module_manager, lut_module, curr_options);
   }
 
   /* Close the file handler */

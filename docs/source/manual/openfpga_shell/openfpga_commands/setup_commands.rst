@@ -130,8 +130,17 @@ Clock signals will be auto-detected and routed based on pin constraints which ar
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
-    Specify the *Pin Constraints File* (PCF) when the clock network contains multiple clock pins. For example, ``-pin_constraints_file pin_constraints.xml``
-    Strongly recommend for multi-clock network. See detailed file format about :ref:`file_format_pin_constraints_file`.
+    Specify the *Pin Constraints File* (PCF) when the clock network contains multiple clock pins. For example, ``-pin_constraints_file pin_constraints.xml``. Strongly recommend for multi-clock network. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. note:: If there is a global net, e.g., ``clk`` or ``reset``, which will be driven by an internal resource, it should also be defined in the PCF file.
+
+  .. option:: --disable_unused_trees
+
+    Disable entire clock trees when they are not used by any clock nets. Useful to reduce clock power
+
+  .. option:: --disable_unused_spines
+ 
+    Disable part of the clock tree which are used by clock nets. Useful to reduce clock power
 
   .. option:: --verbose
 
@@ -226,6 +235,10 @@ pb_pin_fixup
   .. warning:: This feature has been integrated into VPR to provide accurate timing analysis results at post-routing stage. However, this command provides a light fix-up (not as thorough as the one in VPR) but bring more flexibility in support some architecture without local routing. Suggest to enable it when your architecture does not have local routing for *Look-Up Tables* (LUTs) but you want to enable logic equivalent for input pins of LUTs
 
   .. warning:: This command may be deprecated in future
+
+  .. option:: --map_global_net_to_msb
+
+    If specified, any global net including clock, reset etc, will be mapped to a best-fit Most Significant Bit (MSB) of input ports of programmable blocks. If not specified, a best-fit Least Significant Bit (LSB) will be the default choice. For example, when ``--clock_modeling ideal`` is selected when running VPR, global nets will not be routed and their pin mapping on programmable blocks may be revoked by other nets due to optimization. Therefore, this command will restore the pin mapping for the global nets and pick a spare pin on programmable blocks. This option is to set a preference when mapping the global nets to spare pins.
   
   .. option:: --verbose
 
@@ -359,19 +372,32 @@ add_fpga_core_to_fabric
 
     Show verbose log
 
+.. _openfpga_setup_commands_write_fabric_hierarchy:
 
 write_fabric_hierarchy
 ~~~~~~~~~~~~~~~~~~~~~~
 
-  Write the hierarchy of FPGA fabric graph to a plain-text file
+  Write the hierarchy of FPGA fabric graph to a YAML file
   
   .. option:: --file <string> or -f <string>
   
-    Specify the file name to write the hierarchy. 
+    Specify the file name to write the hierarchy.  See details in :ref:`file_format_fabric_hierarchy_file`.
 
   .. option:: --depth <int>
 
     Specify at which depth of the fabric module graph should the writer stop outputting. The root module start from depth 0. For example, if you want a two-level hierarchy, you should specify depth as 1. 
+
+  .. option:: --module <regexp>
+
+    Specify the root module name(s) which should be considered. By default, it is ``fpga_top``. Note that regular expression is supported. For example, ``grid_*`` will output all the modules with a prefix of ``grid_``
+
+  .. option:: --filter <regexp>
+
+    Specify the filter which allows user to select modules to appear under each root module tree. By default, it is ``*``. Regular expression is supported. For example, ``*mux*`` will output all the modules which contains ``mux``. In the other words, the filter defines a white list.
+
+  .. option:: --exclude_empty_modules
+
+    Exclude modules with no qualified children (match the names defined through filter) from the output file
 
   .. option:: --verbose
 
@@ -392,7 +418,7 @@ write_fabric_io_info
 
   .. option:: --no_time_stamp
 
-    Do not print time stamp in bitstream files
+    Do not print time stamp in output files
 
   .. option:: --verbose
 
@@ -433,7 +459,7 @@ pcf2place
 
   .. option:: --no_time_stamp
 
-    Do not print time stamp in bitstream files
+    Do not print time stamp in output files
 
   .. option:: --verbose
 
@@ -467,8 +493,98 @@ write_module_naming_rules
 
   .. option:: --no_time_stamp
 
-    Do not print time stamp in bitstream files
+    Do not print time stamp in output files
 
   .. option:: --verbose
 
     Show verbose log
+
+.. _openfpga_setup_commands_write_fabric_pin_physical_location:
+
+write_fabric_pin_physical_location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the physical location of each pin for each module of an FPGA fabric to a given file
+
+  .. option:: --file <string>
+  
+    Specify the file path to be written to. See details in :ref:`file_format_fabric_pin_physical_location_file`.
+
+  .. option:: --module <string>
+  
+    Specify the name of modules to be considered. Support regular expression, e.g., ``tile*``. When provided, only pins of selected modules will be outputted. By default, a wildcard ``*`` is considered, which means all the modules will be considered.
+
+  .. option:: --show_invalid_side
+
+    Show sides for each pin, even these pin does not have a specific valid side. This is mainly used for debugging.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose log
+
+.. _openfpga_setup_commands_report_reference:
+
+report_reference
+~~~~~~~~~~~~~~~~~~~~
+
+  Write reference information of each child module under a given parent module to a YAML file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name to write the reference information. See details in :ref:`file_format_reference_file`.
+
+  .. option:: --module <string>
+
+    Specify the parent module name, under which the references of each child module will be reported.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose info
+
+
+.. _openfpga_setup_commands_read_unique_blocks:
+
+read_unique_blocks
+~~~~~~~~~~~~~~~~~~~~
+
+  Read information of unique blocks from a given file.
+
+  .. option:: --file <string> 
+
+    Specify the file which contains unique block information. See details in :ref:`file_formats_unique_blocks`.
+
+  .. option:: --type <string>
+
+    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML.
+  
+  .. option:: --verbose
+
+    Show verbose info
+
+.. _openfpga_setup_commands_write_unique_blocks:
+
+write_unique_blocks
+~~~~~~~~~~~~~~~~~~~~~
+
+  Write information of unique blocks from internal data structure to a given file.
+
+  .. option:: --file <string> 
+
+    Specify the file which we will write unique block information to. See details in :ref:`file_formats_unique_blocks`.
+
+  .. option:: --type <string>
+
+    Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML.
+  
+  .. option:: --verbose
+
+    Show verbose info
+

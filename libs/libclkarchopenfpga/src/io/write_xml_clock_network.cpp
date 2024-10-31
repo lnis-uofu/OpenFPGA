@@ -28,14 +28,66 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
                                      const ClockTreeId& tree_id) {
   openfpga::write_tab_to_file(fp, 3);
   fp << "<" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
-  for (const std::string& tile_pin_name : clk_ntwk.tree_taps(tree_id)) {
-    openfpga::write_tab_to_file(fp, 4);
-    fp << "<" << XML_CLOCK_TREE_TAP_NODE_NAME << "";
-
-    write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN,
-                        tile_pin_name.c_str());
-    fp << "/>"
-       << "\n";
+  /* Depends on the type */
+  for (ClockTapId tap_id : clk_ntwk.tree_taps(tree_id)) {
+    switch (clk_ntwk.tap_type(tap_id)) {
+      case ClockNetwork::e_tap_type::ALL: {
+        openfpga::write_tab_to_file(fp, 4);
+        fp << "<" << XML_CLOCK_TREE_TAP_ALL_NODE_NAME << "";
+        write_xml_attribute(
+          fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+          clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
+                            clk_ntwk.tap_to_port(tap_id).c_str());
+        fp << "/>"
+           << "\n";
+        break;
+      }
+      case ClockNetwork::e_tap_type::SINGLE: {
+        openfpga::write_tab_to_file(fp, 4);
+        fp << "<" << XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME << "";
+        write_xml_attribute(
+          fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+          clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
+                            clk_ntwk.tap_to_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_X,
+                            clk_ntwk.tap_x(tap_id));
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y,
+                            clk_ntwk.tap_y(tap_id));
+        fp << "/>"
+           << "\n";
+        break;
+      }
+      case ClockNetwork::e_tap_type::REGION: {
+        openfpga::write_tab_to_file(fp, 4);
+        fp << "<" << XML_CLOCK_TREE_TAP_REGION_NODE_NAME << "";
+        write_xml_attribute(
+          fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+          clk_ntwk.tap_from_port(tap_id).to_verilog_string().c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
+                            clk_ntwk.tap_to_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX,
+                            clk_ntwk.tap_bounding_box(tap_id).xmin());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY,
+                            clk_ntwk.tap_bounding_box(tap_id).ymin());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX,
+                            clk_ntwk.tap_bounding_box(tap_id).xmax());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY,
+                            clk_ntwk.tap_bounding_box(tap_id).ymax());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATX,
+                            clk_ntwk.tap_step_x(tap_id));
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATY,
+                            clk_ntwk.tap_step_y(tap_id));
+        fp << "/>"
+           << "\n";
+        break;
+      }
+      default: {
+        VTR_LOG_ERROR("Invalid type of tap point!\n");
+        return 1;
+      }
+    }
   }
 
   openfpga::write_tab_to_file(fp, 3);
@@ -60,8 +112,67 @@ static int write_xml_clock_spine_switch_point(
   write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X, coord.x());
   write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y, coord.y());
 
-  fp << "/>"
-     << "\n";
+  /* Optional: internal drivers */
+  if (clk_ntwk.spine_switch_point_internal_drivers(spine_id, switch_point_id)
+        .empty()) {
+    fp << "/>"
+       << "\n";
+  } else {
+    fp << ">"
+       << "\n";
+    for (ClockInternalDriverId int_driver_id :
+         clk_ntwk.spine_switch_point_internal_drivers(spine_id,
+                                                      switch_point_id)) {
+      openfpga::write_tab_to_file(fp, 4);
+      fp << "<" << XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME;
+      write_xml_attribute(
+        fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_FROM_PIN,
+        clk_ntwk.internal_driver_from_pin(int_driver_id).c_str());
+      write_xml_attribute(
+        fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TO_PIN,
+        clk_ntwk.internal_driver_to_pin(int_driver_id)
+          .to_verilog_string()
+          .c_str());
+      fp << "/>"
+         << "\n";
+    }
+    fp << "</" << XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME << ">\n";
+  }
+
+  return 0;
+}
+
+static int write_xml_clock_spine_intermediate_drivers(
+  std::fstream& fp, const ClockNetwork& clk_ntwk, const ClockSpineId& spine_id,
+  const vtr::Point<int>& coord) {
+  std::vector<ClockInternalDriverId> int_drivers =
+    clk_ntwk.spine_intermediate_drivers(spine_id, coord);
+  if (int_drivers.empty()) {
+    return 0;
+  }
+  openfpga::write_tab_to_file(fp, 3);
+  fp << "<" << XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME << "";
+
+  write_xml_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X,
+                      coord.x());
+  write_xml_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y,
+                      coord.y());
+
+  for (ClockInternalDriverId int_driver_id : int_drivers) {
+    openfpga::write_tab_to_file(fp, 4);
+    fp << "<" << XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_TAP_NODE_NAME;
+    write_xml_attribute(
+      fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_FROM_PIN,
+      clk_ntwk.internal_driver_from_pin(int_driver_id).c_str());
+    write_xml_attribute(fp,
+                        XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_TO_PIN,
+                        clk_ntwk.internal_driver_to_pin(int_driver_id)
+                          .to_verilog_string()
+                          .c_str());
+    fp << "/>"
+       << "\n";
+  }
+  fp << "</" << XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_NODE_NAME << ">\n";
 
   return 0;
 }
@@ -89,6 +200,10 @@ static int write_xml_clock_spine(std::fstream& fp, const ClockNetwork& clk_ntwk,
 
   fp << ">"
      << "\n";
+
+  for (const vtr::Point<int>& coord : clk_ntwk.spine_coordinates(spine_id)) {
+    write_xml_clock_spine_intermediate_drivers(fp, clk_ntwk, spine_id, coord);
+  }
 
   for (const ClockSwitchPointId& switch_point_id :
        clk_ntwk.spine_switch_points(spine_id)) {
@@ -126,8 +241,9 @@ static int write_xml_clock_tree(std::fstream& fp, const ClockNetwork& clk_ntwk,
 
   write_xml_attribute(fp, XML_CLOCK_TREE_ATTRIBUTE_NAME,
                       clk_ntwk.tree_name(tree_id).c_str());
-  write_xml_attribute(fp, XML_CLOCK_TREE_ATTRIBUTE_WIDTH,
-                      clk_ntwk.tree_width(tree_id));
+  write_xml_attribute(
+    fp, XML_CLOCK_TREE_ATTRIBUTE_GLOBAL_PORT,
+    clk_ntwk.tree_global_port(tree_id).to_verilog_string().c_str());
   fp << ">"
      << "\n";
 
@@ -168,8 +284,10 @@ int write_xml_clock_network(const char* fname, const ClockNetwork& clk_ntwk) {
   fp << "<" << XML_CLOCK_NETWORK_ROOT_NAME;
   write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SEGMENT,
                       clk_ntwk.default_segment_name().c_str());
-  write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SWITCH,
-                      clk_ntwk.default_switch_name().c_str());
+  write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_TAP_SWITCH,
+                      clk_ntwk.default_tap_switch_name().c_str());
+  write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_DRIVER_SWITCH,
+                      clk_ntwk.default_driver_switch_name().c_str());
   fp << ">"
      << "\n";
 

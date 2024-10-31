@@ -414,6 +414,35 @@ std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
 }
 
 /*********************************************************************
+ * Get the physical side for a routing track in a Connection Block module
+ * Upper_location: specify if an upper/lower prefix to be added.
+ *                 The location indicates where the bus port should be
+ *                 placed on the perimeter of the connection block
+ *                 - For X-directional CB:
+ *                   - upper is the left side
+ *                   - lower is the right side
+ *                 - For Y-directional CB:
+ *                   - upper is the bottom side
+ *                   - lower is the top side
+ *********************************************************************/
+e_side get_cb_module_track_port_side(const t_rr_type& chan_type,
+                                     const bool& upper_location) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::map<bool, e_side>> port_side_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  /* IMPORTANT: This part must be consistent with the mapping in the
+   * generate_cb_module_track_port_name() !!! */
+  port_side_map[CHANX][true] = LEFT;
+  port_side_map[CHANX][false] = RIGHT;
+  port_side_map[CHANY][true] = BOTTOM;
+  port_side_map[CHANY][false] = TOP;
+  return port_side_map[chan_type][upper_location];
+}
+
+/*********************************************************************
  * Generate the port name for a routing track in a Connection Block module
  * This function is created to ease the PnR for each unique routing module
  * So it is mainly used when creating non-top-level modules!
@@ -1062,7 +1091,7 @@ std::string generate_grid_block_prefix(const std::string& prefix,
                                        const e_side& io_side) {
   std::string block_prefix(prefix);
 
-  if (NUM_SIDES != io_side) {
+  if (NUM_2D_SIDES != io_side) {
     SideManager side_manager(io_side);
     block_prefix += std::string(side_manager.to_string());
     block_prefix += std::string("_");
@@ -1081,7 +1110,7 @@ std::string generate_grid_block_netlist_name(const std::string& block_name,
   /* Add the name of physical block */
   std::string module_name(block_name);
 
-  if ((true == is_block_io) && (NUM_SIDES != io_side)) {
+  if ((true == is_block_io) && (NUM_2D_SIDES != io_side)) {
     SideManager side_manager(io_side);
     module_name += std::string("_");
     module_name += std::string(side_manager.to_string());
@@ -1356,7 +1385,7 @@ std::string generate_physical_block_instance_name(t_pb_type* pb_type,
  * This function try to infer if a grid locates at the border of a
  * FPGA fabric, i.e., TOP/RIGHT/BOTTOM/LEFT sides
  * 1. if this grid is on the border, it will return the side it locates,
- * 2. if this grid is in the center, it will return an valid value NUM_SIDES
+ * 2. if this grid is in the center, it will return an valid value NUM_2D_SIDES
  *
  * In this function, we assume that the corner grids are actually empty!
  *
@@ -1383,7 +1412,7 @@ std::string generate_physical_block_instance_name(t_pb_type* pb_type,
  *******************************************************************/
 e_side find_grid_border_side(const vtr::Point<size_t>& device_size,
                              const vtr::Point<size_t>& grid_coordinate) {
-  e_side grid_side = NUM_SIDES;
+  e_side grid_side = NUM_2D_SIDES;
 
   if (device_size.y() - 1 == grid_coordinate.y()) {
     return TOP;
