@@ -87,7 +87,8 @@ static void build_switch_block_mux_bitstream(
         break;
       }
     }
-  } else if (false == circuit_lib.mux_add_const_input(mux_model) && prefer_unused_mux_input) {
+  } else if (false == circuit_lib.mux_add_const_input(mux_model) &&
+             prefer_unused_mux_input) {
     /* If
      * 1. output net is INVALID (unmapped)
      * 2. and we don't have a constant input,
@@ -102,7 +103,7 @@ static void build_switch_block_mux_bitstream(
     /* Warn if all inputs were mapped */
     if (path_id == DEFAULT_PATH_ID) {
       VTR_LOGV_WARN(
-        verbose, 
+        verbose,
         "At RRNodeId = %d: output is unmapped but all inputs are mapped?",
         cur_rr_node);
     }
@@ -342,7 +343,7 @@ static void build_connection_block_mux_bitstream(
       RREdgeId edge = driver_rr_edges[iedge];
       RRNodeId driver_node = rr_graph.edge_src_node(edge);
       if (routing_annotation.rr_node_net(driver_node) ==
-          ClusterNetId::INVALID()){
+          ClusterNetId::INVALID()) {
         path_id = iedge;
         break;
       }
