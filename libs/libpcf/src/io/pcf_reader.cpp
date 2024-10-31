@@ -28,7 +28,7 @@ constexpr const char COMMENT = '#';
  * Return 2 if fail when opening files
  *******************************************************************/
 int read_pcf(const char* fname, PcfData& pcf_data,
-             bool reduce_error_to_warning = false) {
+             bool reduce_error_to_warning) {
   vtr::ScopedStartFinishTimer timer("Read " + std::string(fname));
 
   /* Create a file handler */
