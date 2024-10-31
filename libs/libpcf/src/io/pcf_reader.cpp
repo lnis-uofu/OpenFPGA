@@ -27,7 +27,8 @@ constexpr const char COMMENT = '#';
  * Return 1 if there are serious errors when parsing data
  * Return 2 if fail when opening files
  *******************************************************************/
-int read_pcf(const char* fname, PcfData& pcf_data) {
+int read_pcf(const char* fname, PcfData& pcf_data,
+             bool reduce_error_to_warning = false) {
   vtr::ScopedStartFinishTimer timer("Read " + std::string(fname));
 
   /* Create a file handler */
@@ -57,17 +58,16 @@ int read_pcf(const char* fname, PcfData& pcf_data) {
           pcf_data.set_io_pin(io_id, pin_name);
         } else if (word[0] == COMMENT) {  // if it's a comment
           break;  // or ignore the full line comment and move on
-        } else if (word.find("set_clk") == 0 || word.find("set_reset") == 0) {
-          /* set_clk and set_rest are known commands for Arkangel, disable the
-           * error message for these two commands when call read_pcf function
-           */
-          break;
         } else {
-          /* Reach unknown command for OpenFpga, error out */
-          VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
-          num_err++;
-          break;  // and move onto next line. without this, it will accept
-                  // more following values on this line
+          if (reduce_error_to_warning) {
+            break;
+          } else {
+            /* Reach unknown command for OpenFpga, error out */
+            VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
+            num_err++;
+            break;  // and move onto next line. without this, it will accept
+                    // more following values on this line
+          }
         }
       }
     }
