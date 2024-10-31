@@ -73,7 +73,9 @@ int pcf2place_wrapper_template(const Command& cmd,
 
   /* Parse the input files */
   openfpga::PcfData pcf_data;
-  openfpga::read_pcf(pcf_fname.c_str(), pcf_data,cmd_context.option_enable(cmd, opt_reduce_error_to_warning));
+  openfpga::read_pcf(
+    pcf_fname.c_str(), pcf_data,
+    cmd_context.option_enable(cmd, opt_reduce_error_to_warning));
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
 
