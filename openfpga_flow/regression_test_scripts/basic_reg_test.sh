@@ -308,6 +308,7 @@ run-task basic_tests/bus_group/auto_gen_bus_group $@
 echo -e "Testing fix pins features";
 run-task basic_tests/io_constraints/fix_pins $@
 run-task basic_tests/io_constraints/example_pcf $@
+run-task basic_tests/io_constraints/pcf_reduce_error $@
 run-task basic_tests/io_constraints/empty_pcf $@
 run-task basic_tests/io_constraints/pcf_ql_style $@
 
