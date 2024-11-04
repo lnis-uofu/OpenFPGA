@@ -35,6 +35,8 @@ int pcf2place_wrapper_template(const Command& cmd,
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_pin_table_dir_convention =
     cmd.option("pin_table_direction_convention");
+  CommandOptionId opt_reduce_error_to_warning =
+    cmd.option("reduce_error_to_warning");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   std::string pcf_fname = cmd_context.option_value(cmd, opt_pcf);
@@ -71,7 +73,9 @@ int pcf2place_wrapper_template(const Command& cmd,
 
   /* Parse the input files */
   openfpga::PcfData pcf_data;
-  openfpga::read_pcf(pcf_fname.c_str(), pcf_data);
+  openfpga::read_pcf(
+    pcf_fname.c_str(), pcf_data,
+    cmd_context.option_enable(cmd, opt_reduce_error_to_warning));
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
 

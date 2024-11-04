@@ -599,6 +599,11 @@ ShellCommandId add_pcf2place_command_template(
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");
 
+  /* Add an option '--reduce_error_to_warning' */
+  shell_cmd.add_option(
+    "reduce_error_to_warning", false,
+    "reduce error to warning while reading commands in pcf file");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 

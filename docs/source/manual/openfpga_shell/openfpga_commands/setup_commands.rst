@@ -460,6 +460,12 @@ pcf2place
   .. option:: --no_time_stamp
 
     Do not print time stamp in output files
+  
+  .. option:: --reduce_error_to_warning
+
+    Reduce error to warning while reading commands in pcf file
+  
+  .. warning:: Exercise extreme caution when adding this option – be sure you completely understand why the issue is being flagged, and why it is OK to treat as a warning instead of an error.
 
   .. option:: --verbose
 
