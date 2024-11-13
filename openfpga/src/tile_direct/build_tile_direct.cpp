@@ -794,7 +794,8 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
   TileDirect tile_direct;
 
   /* Walk through each direct definition in the VPR arch */
-  for (size_t idirect = 0; idirect < device_ctx.arch->directs.size(); ++idirect) {
+  for (size_t idirect = 0; idirect < device_ctx.arch->directs.size();
+       ++idirect) {
     ArchDirectId arch_direct_id =
       arch_direct.direct(std::string(device_ctx.arch->directs[idirect].name));
     if (ArchDirectId::INVALID() == arch_direct_id) {
