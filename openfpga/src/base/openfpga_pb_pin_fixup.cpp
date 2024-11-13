@@ -185,7 +185,7 @@ static int update_cluster_pin_with_post_routing_results(
         VTR_LOG_ERROR(
           "For tile '%s', found pin '%s' on %lu sides. Expect only 1. "
           "Following info is for debugging:\n",
-          physical_tile->name,
+          physical_tile->name.c_str(),
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
             ->to_string()
             .c_str(),
@@ -204,7 +204,7 @@ static int update_cluster_pin_with_post_routing_results(
         VTR_LOG_ERROR(
           "For tile '%s', found pin '%s' on the boundary side '%s', which is "
           "not physically possible.\n",
-          physical_tile->name,
+          physical_tile->name.c_str(),
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
             ->to_string()
             .c_str(),
@@ -215,7 +215,7 @@ static int update_cluster_pin_with_post_routing_results(
         VTR_LOG_ERROR(
           "For tile '%s', found pin '%s' on %lu sides. Expect only 1. "
           "Following info is for debugging:\n",
-          physical_tile->name,
+          physical_tile->name.c_str(),
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
             ->to_string()
             .c_str(),
@@ -233,7 +233,7 @@ static int update_cluster_pin_with_post_routing_results(
         VTR_LOG_ERROR(
           "For boundary tile '%s', expect pin '%s' only on the side '%s' but "
           "found on the following sides:\n",
-          physical_tile->name,
+          physical_tile->name.c_str(),
           get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
             ->to_string()
             .c_str(),
