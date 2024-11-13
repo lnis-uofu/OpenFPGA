@@ -542,7 +542,7 @@ def strip_child_logger_info(line):
 
 def run_single_script(s, eachJob, job_list):
     with s:
-        thread_name = threading.currentThread().getName()
+        thread_name = threading.current_thread().name
         eachJob["starttime"] = time.time()
         try:
             logfile = "%s_out.log" % thread_name
