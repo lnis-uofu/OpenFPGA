@@ -83,7 +83,7 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(
         VTR_LOG_ERROR(
           "When annotating global net '%s', invalid rr node pin type for '%s' "
           "pin '%d'\n",
-          cluster_nlist.net_name(net_id).c_str(), phy_tile->name, node_pin_num);
+          cluster_nlist.net_name(net_id).c_str(), phy_tile->name.c_str(), node_pin_num);
         exit(1);
       }
       std::vector<RRNodeId> curr_rr_nodes =
@@ -91,7 +91,7 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(
           layer, blk_loc.loc.x, blk_loc.loc.y, rr_pin_type, node_pin_num);
       for (RRNodeId curr_rr_node : curr_rr_nodes) {
         VTR_LOGV(verbose, "Annotate global net '%s' on '%s' pin '%d'\n",
-                 cluster_nlist.net_name(net_id).c_str(), phy_tile->name,
+                 cluster_nlist.net_name(net_id).c_str(), phy_tile->name.c_str(),
                  node_pin_num);
         rr_node_nets[curr_rr_node] = net_id;
         counter++;
