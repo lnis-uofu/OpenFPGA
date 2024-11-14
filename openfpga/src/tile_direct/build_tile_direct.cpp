@@ -355,7 +355,7 @@ static void report_direct_from_port_and_to_port_mismatch(
     "From_port '%s[%lu:%lu] of direct '%s' does not match to_port "
     "'%s[%lu:%lu]'!\n",
     from_tile_port.get_name().c_str(), from_tile_port.get_lsb(),
-    from_tile_port.get_msb(), vpr_direct.name, to_tile_port.get_name().c_str(),
+    from_tile_port.get_msb(), vpr_direct.name.c_str(), to_tile_port.get_name().c_str(),
     to_tile_port.get_lsb(), to_tile_port.get_msb());
 }
 

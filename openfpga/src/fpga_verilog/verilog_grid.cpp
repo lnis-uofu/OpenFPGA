@@ -315,10 +315,10 @@ static void print_verilog_physical_tile_netlist(
     SideManager side_manager(border_side);
     VTR_LOG(
       "Writing Verilog Netlist '%s' for physical tile '%s' at %s side ...",
-      verilog_fpath.c_str(), phy_block_type->name, side_manager.c_str());
+      verilog_fpath.c_str(), phy_block_type->name.c_str(), side_manager.c_str());
   } else {
     VTR_LOG("Writing Verilog Netlist '%s' for physical_tile '%s'...",
-            verilog_fpath.c_str(), phy_block_type->name);
+            verilog_fpath.c_str(), phy_block_type->name.c_str());
   }
 
   /* Create the file stream */

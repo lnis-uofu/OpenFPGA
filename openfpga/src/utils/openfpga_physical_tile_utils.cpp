@@ -72,7 +72,7 @@ float find_physical_tile_pin_Fc(t_physical_tile_type_ptr type, const int& pin) {
   }
   /* Every pin should have a Fc, give a wrong value */
   VTR_LOGF_ERROR(__FILE__, __LINE__, "Fail to find the Fc for %s.pin[%lu]\n",
-                 type->name, pin);
+                 type->name.c_str(), pin);
   exit(1);
 }
 

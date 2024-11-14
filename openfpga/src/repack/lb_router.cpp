@@ -441,7 +441,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
       VTR_LOG(
         "Net %lu '%s' is impossible to route within proposed %s cluster\n",
         inet, atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(),
-        lb_type_->name);
+        lb_type_->name.c_str());
       VTR_LOG("\tNet source pin:\n");
       for (size_t isrc = 0; isrc < lb_net_sources_[NetId(inet)].size();
            ++isrc) {

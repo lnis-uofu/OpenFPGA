@@ -290,10 +290,10 @@ static void print_spice_physical_tile_netlist(
   if (true == is_io_type(phy_block_type)) {
     SideManager side_manager(border_side);
     VTR_LOG("Writing SPICE Netlist '%s' for physical tile '%s' at %s side ...",
-            spice_fname.c_str(), phy_block_type->name, side_manager.c_str());
+            spice_fname.c_str(), phy_block_type->name.c_str(), side_manager.c_str());
   } else {
     VTR_LOG("Writing SPICE Netlist '%s' for physical_tile '%s'...",
-            spice_fname.c_str(), phy_block_type->name);
+            spice_fname.c_str(), phy_block_type->name.c_str());
   }
 
   /* Create the file stream */
