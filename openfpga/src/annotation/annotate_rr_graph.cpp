@@ -686,8 +686,9 @@ static void annotate_direct_circuit_models(
   VprDeviceAnnotation& vpr_device_annotation, const bool& verbose_output) {
   size_t count = 0;
 
-  for (int idirect = 0; idirect < vpr_device_ctx.arch->num_directs; ++idirect) {
-    std::string direct_name = vpr_device_ctx.arch->Directs[idirect].name;
+  for (size_t idirect = 0; idirect < vpr_device_ctx.arch->directs.size();
+       ++idirect) {
+    std::string direct_name = vpr_device_ctx.arch->directs[idirect].name;
     /* The name-to-circuit mapping is stored in either cb_switch-to-circuit or
      * sb_switch-to-circuit, Try to find one and update the device annotation
      */

@@ -1017,17 +1017,17 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
         try:
             output.write(" ".join(command) + "\n")
             process = subprocess.run(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=False
             )
-            output.write(process.stdout)
-            output.write(process.stderr)
+            output.write(process.stdout.decode("cp1252"))
+            output.write(process.stderr.decode("cp1252"))
             output.write(str(process.returncode))
             if "openfpgashell" in logfile:
-                filter_openfpga_output(process.stdout)
+                filter_openfpga_output(process.stdout.decode("cp1252"))
             if process.returncode:
                 logger.error("%s run failed with returncode %d" % (taskname, process.returncode))
                 logger.error("command %s" % " ".join(command))
-                filter_failed_process_output(process.stderr)
+                filter_failed_process_output(process.stderr.decode("cp1252"))
                 if exit_if_fail:
                     clean_up_and_exit("Failed to run %s task" % taskname)
         except Exception:
@@ -1036,7 +1036,7 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
             if exit_if_fail:
                 clean_up_and_exit("Failed to run %s task" % taskname)
     logger.info("%s is written in file %s" % (taskname, logfile))
-    return process.stdout
+    return process.stdout.decode("cp1252")
 
 
 def filter_openfpga_output(vpr_output):

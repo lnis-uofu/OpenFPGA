@@ -181,7 +181,7 @@ static int check_tile_annotation_conflicts_with_physical_tile(
                 required_tile_port.get_name().c_str(),
                 required_tile_port.get_lsb(), required_tile_port.get_msb(),
                 tile_annotation.global_port_name(tile_global_port).c_str(),
-                physical_tile.name, tile_port.name);
+                physical_tile.name.c_str(), tile_port.name);
               num_err++;
             }
 
@@ -196,7 +196,7 @@ static int check_tile_annotation_conflicts_with_physical_tile(
                 required_tile_port.get_name().c_str(),
                 required_tile_port.get_lsb(), required_tile_port.get_msb(),
                 tile_annotation.global_port_name(tile_global_port).c_str(),
-                physical_tile.name, tile_port.name);
+                physical_tile.name.c_str(), tile_port.name);
               num_err++;
             }
 
@@ -211,7 +211,7 @@ static int check_tile_annotation_conflicts_with_physical_tile(
                 required_tile_port.get_name().c_str(),
                 required_tile_port.get_lsb(), required_tile_port.get_msb(),
                 tile_annotation.global_port_name(tile_global_port).c_str(),
-                physical_tile.name, tile_port.name, pin_Fc);
+                physical_tile.name.c_str(), tile_port.name, pin_Fc);
             }
 
             found_matched_physical_tile_port++;

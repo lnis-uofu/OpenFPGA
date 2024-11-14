@@ -355,8 +355,9 @@ static void report_direct_from_port_and_to_port_mismatch(
     "From_port '%s[%lu:%lu] of direct '%s' does not match to_port "
     "'%s[%lu:%lu]'!\n",
     from_tile_port.get_name().c_str(), from_tile_port.get_lsb(),
-    from_tile_port.get_msb(), vpr_direct.name, to_tile_port.get_name().c_str(),
-    to_tile_port.get_lsb(), to_tile_port.get_msb());
+    from_tile_port.get_msb(), vpr_direct.name.c_str(),
+    to_tile_port.get_name().c_str(), to_tile_port.get_lsb(),
+    to_tile_port.get_msb());
 }
 
 /***************************************************************************************
@@ -794,28 +795,29 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
   TileDirect tile_direct;
 
   /* Walk through each direct definition in the VPR arch */
-  for (int idirect = 0; idirect < device_ctx.arch->num_directs; ++idirect) {
+  for (size_t idirect = 0; idirect < device_ctx.arch->directs.size();
+       ++idirect) {
     ArchDirectId arch_direct_id =
-      arch_direct.direct(std::string(device_ctx.arch->Directs[idirect].name));
+      arch_direct.direct(std::string(device_ctx.arch->directs[idirect].name));
     if (ArchDirectId::INVALID() == arch_direct_id) {
       VTR_LOG_ERROR(
         "Unable to find an annotation in openfpga architecture XML for "
         "<direct> '%s'!\n",
-        device_ctx.arch->Directs[idirect].name);
+        device_ctx.arch->directs[idirect].name.c_str());
       exit(1);
     }
     /* Build from original VPR arch definition */
     if (e_direct_type::INNER_COLUMN_OR_ROW ==
         arch_direct.type(arch_direct_id)) {
       build_inner_column_row_tile_direct(tile_direct,
-                                         device_ctx.arch->Directs[idirect],
+                                         device_ctx.arch->directs[idirect],
                                          device_ctx, arch_direct_id, verbose);
       /* Skip those direct connections which belong part of a connection block
        */
     }
     /* Build from OpenFPGA arch definition */
     build_inter_column_row_tile_direct(
-      tile_direct, device_ctx.arch->Directs[idirect], device_ctx, arch_direct,
+      tile_direct, device_ctx.arch->directs[idirect], device_ctx, arch_direct,
       arch_direct_id, verbose);
   }
 

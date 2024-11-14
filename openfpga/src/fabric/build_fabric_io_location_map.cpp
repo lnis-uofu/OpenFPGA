@@ -76,7 +76,7 @@ static IoLocationMap build_fabric_fine_grained_io_location_map(
     if (size_t(phy_tile_type->capacity) !=
         module_manager.io_children(child).size()) {
       VTR_LOG("%s[%ld][%ld] capacity: %d while io_child number is %d",
-              phy_tile_type->name, coord.x(), coord.y(),
+              phy_tile_type->name.c_str(), coord.x(), coord.y(),
               phy_tile_type->capacity,
               module_manager.io_children(child).size());
     }
@@ -211,7 +211,7 @@ static IoLocationMap build_fabric_tiled_io_location_map(
       if (size_t(phy_tile_type->capacity) !=
           module_manager.io_children(tile_child).size()) {
         VTR_LOG("%s[%ld][%ld] capacity: %d while io_child number is %d",
-                phy_tile_type->name, coord.x(), coord.y(),
+                phy_tile_type->name.c_str(), coord.x(), coord.y(),
                 phy_tile_type->capacity,
                 module_manager.io_children(tile_child).size());
       }
