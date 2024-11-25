@@ -157,6 +157,8 @@ class BitstreamSetting {
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
+  bool valid_bitstream_default_mode_setting_id(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
   bool valid_bitstream_interconnect_setting_id(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;

@@ -18,6 +18,12 @@ BitstreamSetting::pb_type_settings() const {
                          pb_type_setting_ids_.end());
 }
 
+BitstreamSetting::bitstream_default_mode_setting_range
+BitstreamSetting::default_mode_settings() const {
+  return vtr::make_range(default_mode_setting_ids_.begin(),
+                         default_mode_setting_ids_.end());
+}
+
 BitstreamSetting::bitstream_interconnect_setting_range
 BitstreamSetting::interconnect_settings() const {
   return vtr::make_range(interconnect_setting_ids_.begin(),
@@ -78,6 +84,30 @@ size_t BitstreamSetting::bitstream_offset(
   const BitstreamPbTypeSettingId& pb_type_setting_id) const {
   VTR_ASSERT(true == valid_bitstream_pb_type_setting_id(pb_type_setting_id));
   return bitstream_offsets_[pb_type_setting_id];
+}
+
+std::string BitstreamSetting::default_mode_pb_type_name(
+  const BitstreamDefaultModeSettingId& default_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_default_mode_setting_id(default_mode_setting_id));
+  return default_mode_pb_type_names_[default_mode_setting_id];
+}
+
+std::vector<std::string> BitstreamSetting::default_mode_parent_pb_type_names(
+  const BitstreamDefaultModeSettingId& default_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_default_mode_setting_id(default_mode_setting_id));
+  return default_mode_parent_pb_type_names_[default_mode_setting_id];
+}
+
+std::vector<std::string> BitstreamSetting::default_mode_parent_mode_names(
+  const BitstreamDefaultModeSettingId& default_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_default_mode_setting_id(default_mode_setting_id));
+  return default_mode_parent_mode_names_[default_mode_setting_id];
+}
+
+std::string BitstreamSetting::default_mode_bits(
+  const BitstreamDefaultModeSettingId& default_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_default_mode_setting_id(default_mode_setting_id));
+  return pb_type_default_mode_bits_[default_mode_setting_id];
 }
 
 std::string BitstreamSetting::interconnect_name(
@@ -159,6 +189,22 @@ void BitstreamSetting::set_bitstream_offset(
   bitstream_offsets_[pb_type_setting_id] = offset;
 }
 
+BitstreamDefaultModeSettingId BitstreamSetting::add_bitstream_default_mode_setting(
+  const std::string& pb_type_name,
+  const std::vector<std::string>& parent_pb_type_names,
+  const std::vector<std::string>& parent_mode_names,
+  const std::string& mode_bits) {
+  BitstreamDefaultModeSettingId default_mode_setting_id =
+    BitstreamDefaultModeSettingId(default_mode_setting_ids_.size());
+  default_mode_setting_ids_.push_back(default_mode_setting_id);
+  default_mode_pb_type_names_.push_back(pb_type_name);
+  default_mode_parent_pb_type_names_.push_back(parent_pb_type_names);
+  default_mode_parent_mode_names_.push_back(parent_mode_names);
+  pb_type_default_mode_bits_.push_back(mode_bits);
+
+  return default_mode_setting_id;
+}
+
 BitstreamInterconnectSettingId
 BitstreamSetting::add_bitstream_interconnect_setting(
   const std::string& interconnect_name,
@@ -218,6 +264,12 @@ bool BitstreamSetting::valid_bitstream_pb_type_setting_id(
   const BitstreamPbTypeSettingId& pb_type_setting_id) const {
   return (size_t(pb_type_setting_id) < pb_type_setting_ids_.size()) &&
          (pb_type_setting_id == pb_type_setting_ids_[pb_type_setting_id]);
+}
+
+bool BitstreamSetting::valid_bitstream_default_mode_setting_id(
+  const BitstreamDefaultModeSettingId& default_mode_setting_id) const {
+  return (size_t(default_mode_setting_id) < default_mode_setting_ids_.size()) &&
+         (default_mode_setting_id == default_mode_setting_ids_[default_mode_setting_id]);
 }
 
 bool BitstreamSetting::valid_bitstream_interconnect_setting_id(
