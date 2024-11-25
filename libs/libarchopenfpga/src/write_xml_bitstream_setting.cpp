@@ -119,6 +119,33 @@ static void write_xml_bitstream_pb_type_setting(
 }
 
 /********************************************************************
+ * A writer to output a bitstream pb_type setting to XML format
+ *******************************************************************/
+static void write_xml_bitstream_pb_type_setting(
+  std::fstream& fp, const char* fname,
+  const openfpga::BitstreamSetting& bitstream_setting,
+  const BitstreamDefaultModeSettingId& bitstream_default_mode_setting_id) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t"
+     << "<default_mode_bits";
+
+  /* Generate the full hierarchy name of the pb_type */
+  write_xml_attribute(fp, "name",
+                      generate_bitstream_setting_pb_type_hierarchy_name(
+                        bitstream_setting, bitstream_default_mode_setting_id)
+                        .c_str());
+
+  write_xml_attribute(
+    fp, "mode_bits",
+    bitstream_setting.default_mode_bits(bitstream_default_mode_setting_id)
+      .c_str());
+  fp << "/>"
+     << "\n";
+}
+
+/********************************************************************
  * A writer to output a bitstream interconnect setting to XML format
  *******************************************************************/
 static void write_xml_bitstream_interconnect_setting(
@@ -164,6 +191,13 @@ void write_xml_bitstream_setting(
        bitstream_setting.pb_type_settings()) {
     write_xml_bitstream_pb_type_setting(fp, fname, bitstream_setting,
                                         bitstream_pb_type_setting_id);
+  }
+
+  /* Write default_mode -related settings */
+  for (const auto& bitstream_default_mode_setting_id :
+       bitstream_setting.default_mode_settings()) {
+    write_xml_bitstream_default_mode_setting(fp, fname, bitstream_setting,
+                                        bitstream_default_mode_setting_id);
   }
 
   /* Write interconnect -related settings */

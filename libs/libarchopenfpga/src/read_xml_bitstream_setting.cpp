@@ -57,6 +57,26 @@ static void read_xml_bitstream_pb_type_setting(
 }
 
 /********************************************************************
+ * Parse XML description for a pb_type annotation under a <default_mode_bits> XML node
+ *******************************************************************/
+static void read_xml_bitstream_default_mode_setting(
+  pugi::xml_node& xml_pb_type, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& name_attr =
+    get_attribute(xml_pb_type, "name", loc_data).as_string();
+  /* Parse the attributes for operating pb_type */
+  openfpga::PbParser operating_pb_parser(name_attr);
+
+  const std::string& mode_bits_attr =
+    get_attribute(xml_pb_type, "mode_bits", loc_data).as_string();
+
+  /* Add to bitstream setting */
+  bitstream_setting.add_bitstream_default_mode_setting(
+    operating_pb_parser.leaf(), operating_pb_parser.parents(),
+    operating_pb_parser.modes(), mode_bits_attr);
+}
+
+/********************************************************************
  * Parse XML description for a pb_type annotation under a <interconect> XML node
  *******************************************************************/
 static void read_xml_bitstream_interconnect_setting(
@@ -137,18 +157,24 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
    * each child should be named after <pb_type>
    */
   for (pugi::xml_node xml_child : Node.children()) {
-    /* Error out if the XML child has an invalid name! */
+    /* Error out if the XML child has an invalid name! 
+     * TODO: Use std::map or something similar to apply checks!
+     */
     if ((xml_child.name() != std::string("pb_type")) &&
+        (xml_child.name() != std::string("default_mode_bits")) &&
         (xml_child.name() != std::string("interconnect")) &&
         (xml_child.name() != std::string("non_fabric")) &&
         (xml_child.name() != std::string("overwrite_bitstream"))) {
       bad_tag(xml_child, loc_data, Node,
-              {"pb_type | interconnect | non_fabric | overwrite_bitstream"});
+              {"pb_type | interconnect | default_mode_bits | non_fabric | overwrite_bitstream"});
     }
 
     if (xml_child.name() == std::string("pb_type")) {
       read_xml_bitstream_pb_type_setting(xml_child, loc_data,
                                          bitstream_setting);
+    } else if (xml_child.name() == std::string("default_mode_bits")) {
+      read_xml_bitstream_default_mode_setting(xml_child, loc_data,
+                                              bitstream_setting);
     } else if (xml_child.name() == std::string("interconnect")) {
       read_xml_bitstream_interconnect_setting(xml_child, loc_data,
                                               bitstream_setting);

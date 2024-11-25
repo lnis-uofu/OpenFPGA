@@ -109,9 +109,7 @@ class BitstreamSetting {
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
   std::vector<std::string> default_mode_parent_mode_names(
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
-  vtr::Rect<size_t> default_mode_coord(
-    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
-  vtr::Point<size_t> default_mode_subtile(
+  std::string default_mode_bits(
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
 
   std::string interconnect_name(
@@ -142,8 +140,7 @@ class BitstreamSetting {
     const std::string& pb_type_name,
     const std::vector<std::string>& parent_pb_type_names,
     const std::vector<std::string>& parent_mode_names,
-    const std::string& mode_bits, const vtr::Rect<size_t>& coord, const vtr::Point<size_t>& subtile_range);
-
+    const std::string& mode_bits);
 
   BitstreamInterconnectSettingId add_bitstream_interconnect_setting(
     const std::string& interconnect_name,
@@ -194,8 +191,6 @@ class BitstreamSetting {
   vtr::vector<BitstreamDefaultModeSettingId, std::vector<std::string>>
     default_mode_parent_mode_names_;
   vtr::vector<BitstreamDefaultModeSettingId, std::string> pb_type_default_mode_bits_;
-  vtr::vector<BitstreamDefaultModeSettingId, vtr::Rect<size_t>> pb_type_coords_;
-  vtr::vector<BitstreamDefaultModeSettingId, vtr::Point<size_t>> pb_type_subtile_ranges_;
 
   /* Interconnect-related settings:
    * - Name of interconnect under a given pb_type
