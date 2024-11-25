@@ -182,7 +182,7 @@ static int annotate_bitstream_default_mode_setting(
           "Mismatches in length of default mode bits for a pb_type '%s' which is defined in bitstream setting ('%s') "
           "from OpenFPGA architecture description ('%s')\n",
           target_pb_type_names[0].c_str(), bitstream_setting.default_mode_bits_to_string(bitstream_default_mode_setting_id).c_str(),
-          vpr_device_annotation.pb_type_mode_bits_to_string(target_pb_type));
+          vpr_device_annotation.pb_type_mode_bits_to_string(target_pb_type).c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
       vpr_device_annotation.add_pb_type_mode_bits(

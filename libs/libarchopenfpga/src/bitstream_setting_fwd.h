@@ -14,6 +14,7 @@
 #include "vtr_strong_id.h"
 
 struct bitstream_pb_type_setting_id_tag;
+struct bitstream_default_mode_setting_id_tag;
 struct bitstream_interconnect_setting_id_tag;
 struct overwrite_bitstream_id_tag;
 
