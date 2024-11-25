@@ -109,7 +109,9 @@ class BitstreamSetting {
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
   std::vector<std::string> default_mode_parent_mode_names(
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
-  std::string default_mode_bits(
+  std::vector<size_t> default_mode_bits(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+  std::string default_mode_bits_to_string(
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
 
   std::string interconnect_name(
@@ -140,7 +142,7 @@ class BitstreamSetting {
     const std::string& pb_type_name,
     const std::vector<std::string>& parent_pb_type_names,
     const std::vector<std::string>& parent_mode_names,
-    const std::string& mode_bits);
+    const std::vector<size_t>& mode_bits);
 
   BitstreamInterconnectSettingId add_bitstream_interconnect_setting(
     const std::string& interconnect_name,
@@ -192,7 +194,7 @@ class BitstreamSetting {
     default_mode_parent_pb_type_names_;
   vtr::vector<BitstreamDefaultModeSettingId, std::vector<std::string>>
     default_mode_parent_mode_names_;
-  vtr::vector<BitstreamDefaultModeSettingId, std::string> pb_type_default_mode_bits_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::vector<size_t>> pb_type_default_mode_bits_;
 
   /* Interconnect-related settings:
    * - Name of interconnect under a given pb_type

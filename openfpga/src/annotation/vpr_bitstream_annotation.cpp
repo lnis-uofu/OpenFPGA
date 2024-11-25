@@ -40,6 +40,17 @@ std::string VprBitstreamAnnotation::pb_type_bitstream_content(
   return std::string();
 }
 
+std::string VprBitstreamAnnotation::pb_type_default_mode_bits(
+  t_pb_type* pb_type) const {
+  auto result = default_mode_bits_.find(pb_type);
+  if (result != default_mode_bits_.end()) {
+    return result->second;
+  }
+
+  /* Not found, return an invalid type */
+  return std::string();
+}
+
 size_t VprBitstreamAnnotation::pb_type_bitstream_offset(
   t_pb_type* pb_type) const {
   auto result = bitstream_offsets_.find(pb_type);
@@ -127,6 +138,11 @@ void VprBitstreamAnnotation::set_pb_type_mode_select_bitstream_content(
 void VprBitstreamAnnotation::set_pb_type_mode_select_bitstream_offset(
   t_pb_type* pb_type, const size_t& offset) {
   mode_select_bitstream_offsets_[pb_type] = offset;
+}
+
+void VprBitstreamAnnotation::set_pb_type_default_mode_bits(
+  t_pb_type* pb_type, const std::string& default_mode_bits) {
+  default_mode_bits_[pb_type] = default_mode_bits;
 }
 
 void VprBitstreamAnnotation::set_interconnect_default_path_id(

@@ -18,6 +18,7 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "read_xml_bitstream_setting.h"
+#include "read_xml_openfpga_arch_utils.h"
 #include "read_xml_util.h"
 
 /********************************************************************
@@ -69,11 +70,12 @@ static void read_xml_bitstream_default_mode_setting(
 
   const std::string& mode_bits_attr =
     get_attribute(xml_pb_type, "mode_bits", loc_data).as_string();
+  std::vector<size_t> mode_bits = parse_mode_bits(xml_pb_type, loc_data, mode_bits_attr);
 
   /* Add to bitstream setting */
   bitstream_setting.add_bitstream_default_mode_setting(
     operating_pb_parser.leaf(), operating_pb_parser.parents(),
-    operating_pb_parser.modes(), mode_bits_attr);
+    operating_pb_parser.modes(), mode_bits);
 }
 
 /********************************************************************
