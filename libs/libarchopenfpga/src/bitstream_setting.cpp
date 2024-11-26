@@ -126,6 +126,20 @@ std::string BitstreamSetting::default_mode_bits_to_string(
   return mode_bits_str;
 }
 
+std::string BitstreamSetting::clock_routing_network_name(
+  const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
+  VTR_ASSERT(true ==
+             valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));
+  return clock_routing_network_names_[clock_routing_setting_id];
+}
+
+BasicPort BitstreamSetting::clock_routing_pin(
+  const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
+  VTR_ASSERT(true ==
+             valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));
+  return clock_routing_pins_[clock_routing_setting_id];
+}
+
 std::string BitstreamSetting::interconnect_name(
   const BitstreamInterconnectSettingId& interconnect_setting_id) const {
   VTR_ASSERT(true ==
@@ -222,6 +236,19 @@ BitstreamSetting::add_bitstream_default_mode_setting(
   return default_mode_setting_id;
 }
 
+BitstreamClockRoutingSettingId
+BitstreamSetting::add_bitstream_clock_routing_setting(
+  const std::string& ntwk_name,
+  const BasicPort& pin) {
+  BitstreamClockRoutingSettingId clock_routing_setting_id =
+    BitstreamClockRoutingSettingId(clock_routing_setting_ids_.size());
+  clock_routing_setting_ids_.push_back(clock_routing_setting_id);
+  clock_routing_network_names_.push_back(ntwk_name);
+  clock_routing_pins_.push_back(pin);
+
+  return clock_routing_setting_id;
+}
+
 BitstreamInterconnectSettingId
 BitstreamSetting::add_bitstream_interconnect_setting(
   const std::string& interconnect_name,
@@ -288,6 +315,13 @@ bool BitstreamSetting::valid_bitstream_default_mode_setting_id(
   return (size_t(default_mode_setting_id) < default_mode_setting_ids_.size()) &&
          (default_mode_setting_id ==
           default_mode_setting_ids_[default_mode_setting_id]);
+}
+
+bool BitstreamSetting::valid_bitstream_clock_routing_setting_id(
+  const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
+  return (size_t(clock_routing_setting_id) < clock_routing_setting_ids_.size()) &&
+         (clock_routing_setting_id ==
+          clock_routing_setting_ids_[clock_routing_setting_id]);
 }
 
 bool BitstreamSetting::valid_bitstream_interconnect_setting_id(
