@@ -12,6 +12,7 @@ This can define a hard-coded bitstream for a reconfigurable resource in FPGA fab
 
   <openfpga_bitstream_setting>
     <pb_type name="<string>" source="eblif" content=".param LUT" is_mode_select_bistream="true" bitstream_offset="1"/>
+    <default_mode_bits name="<string>" mode_bits="<string>"/>
     <interconnect name="<string>" default_path="<string>"/>
     <non_fabric name="<string>" file="<string>">
       <pb name="<string>" type="<string>" content="<string>"/>
@@ -53,6 +54,32 @@ The following syntax are applicable to the XML definition tagged by ``pb_type`` 
 .. option:: bitstream_offset="<int>"
 
   Specify the offset to be applied when overloading the bitstream to a target. For example, a LUT may have a 16-bit bitstream. When ``offset=1``, bitstream overloading will skip the first bit and start from the second bit of the 16-bit bitstream.
+
+Default Mode Bits-related Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following syntax are applicable to the XML definition tagged by ``default_mode_bits`` in bitstream setting files.
+
+.. option:: name="<string>"
+
+  The ``pb_type`` name to be constrained, which should be the full path of a ``pb_type`` consistent with VPR's architecture description. For example, 
+
+  .. note:: This must be a valid primitive pb_type (one has zero leaf nodes)!
+
+  .. code-block:: xml
+
+    pb_type="clb.fle[arithmetic].soft_adder.adder_lut4"
+
+.. option:: mode_bits="<string>"
+
+  The default mode bits when the ``pb_type`` is not mapped. Note that the size of mode bits must comply with the definition in the OpenFPGA architecture description (See details in :ref:`annotate_vpr_arch_pb_type_annotation`). For example, 
+
+  .. note:: Bitstream setting has a higher priority than the ``mode_bits`` definition in the OpenFPGA architecture description!
+
+  .. code-block:: xml
+
+    mode_bits="0100"
+
 
 Interconnection-related Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
