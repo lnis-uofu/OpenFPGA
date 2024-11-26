@@ -185,6 +185,33 @@ static void write_xml_bitstream_default_mode_setting(
 }
 
 /********************************************************************
+ * A writer to output a bitstream clock_routing setting to XML format
+ *******************************************************************/
+static void write_xml_bitstream_clock_routing_setting(
+  std::fstream& fp, const char* fname,
+  const openfpga::BitstreamSetting& bitstream_setting,
+  const BitstreamClockRoutingSettingId& bitstream_clock_routing_setting_id) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t"
+     << "<" << XML_CLOCK_ROUTING_NODE_NAME;
+
+  /* Generate the full hierarchy name of the pb_type */
+  write_xml_attribute(fp, XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK,
+                      bitstream_setting.clock_routing_network(bitstream_clock_routing_setting_id)
+                        .c_str());
+
+  write_xml_attribute(
+    fp, XML_CLOCK_ROUTING_ATTRIBUTE_PIN,
+    bitstream_setting
+      .clock_routing_pin(bitstream_clock_routing_setting_id).to_verilog_string()
+      .c_str());
+  fp << "/>"
+     << "\n";
+}
+
+/********************************************************************
  * A writer to output a bitstream interconnect setting to XML format
  *******************************************************************/
 static void write_xml_bitstream_interconnect_setting(
@@ -237,6 +264,13 @@ void write_xml_bitstream_setting(
        bitstream_setting.default_mode_settings()) {
     write_xml_bitstream_default_mode_setting(fp, fname, bitstream_setting,
                                              bitstream_default_mode_setting_id);
+  }
+
+  /* Write clock_routing -related settings */
+  for (const auto& bitstream_clock_routing_setting_id :
+       bitstream_setting.clock_routing_settings()) {
+    write_xml_bitstream_clock_routing_setting(fp, fname, bitstream_setting,
+                                             bitstream_clock_routing_setting_id);
   }
 
   /* Write interconnect -related settings */

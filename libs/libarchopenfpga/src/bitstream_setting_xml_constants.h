@@ -17,6 +17,11 @@ constexpr const char* XML_DEFAULT_MODE_BITS_NODE_NAME = "default_mode_bits";
 constexpr const char* XML_DEFAULT_MODE_BITS_ATTRIBUTE_NAME = "name";
 constexpr const char* XML_DEFAULT_MODE_BITS_ATTRIBUTE_MODE_BITS = "mode_bits";
 
+/* Clock routing XML syntax */
+constexpr const char* XML_CLOCK_ROUTING_NODE_NAME = "default_mode_bits";
+constexpr const char* XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK = "network";
+constexpr const char* XML_CLOCK_ROUTING_ATTRIBUTE_PIN = "pin";
+
 /* Interconnect XML syntax */
 constexpr const char* XML_INTERCONNECT_NODE_NAME = "interconnect";
 constexpr const char* XML_INTERCONNECT_ATTRIBUTE_NAME = "name";

@@ -82,6 +82,34 @@ static void read_xml_bitstream_default_mode_setting(
 }
 
 /********************************************************************
+ * Parse XML description for a pb_type annotation under a <default_mode_bits>
+ *XML node
+ *******************************************************************/
+static void read_xml_bitstream_clock_routing_setting(
+  pugi::xml_node& xml_clk_routing, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& ntwk_attr =
+    get_attribute(xml_clk_routing, XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK, loc_data).as_string();
+
+  const std::string& pin_attr =
+    get_attribute(xml_clk_routing, XML_CLOCK_ROUTING_ATTRIBUTE_PIN, loc_data).as_string();
+  /* Parse the port and apply sanity checks */
+  openfpga::PortParser port_parser(pin_attr);
+  BasicPort pin = port_parser.port();
+  if (!pin.is_valid()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clk_routing),
+                   "Invalid pin '%s' which should be valid port. For example, clk[1:1]\n", pin_attr.c_str());
+  }
+  if (1 != pin.get_width()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clk_routing),
+                   "Invalid pin '%s' with a width of '%lu'. Only allow pin definition with width of 1. For example, clk[2:2]\n", pin_attr.c_str(), pin.get_width());
+  }  
+
+  /* Add to bitstream setting */
+  bitstream_setting.add_bitstream_clock_routing_setting(ntwk_attr, pin);
+}
+
+/********************************************************************
  * Parse XML description for a pb_type annotation under a <interconect> XML node
  *******************************************************************/
 static void read_xml_bitstream_interconnect_setting(
@@ -178,6 +206,9 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
                                          bitstream_setting);
     } else if (xml_child.name() == std::string(XML_DEFAULT_MODE_BITS_NODE_NAME)) {
       read_xml_bitstream_default_mode_setting(xml_child, loc_data,
+                                              bitstream_setting);
+    } else if (xml_child.name() == std::string(XML_CLOCK_ROUTING_NODE_NAME)) {
+      read_xml_bitstream_clock_routing_setting(xml_child, loc_data,
                                               bitstream_setting);
     } else if (xml_child.name() == std::string(XML_INTERCONNECT_NODE_NAME)) {
       read_xml_bitstream_interconnect_setting(xml_child, loc_data,

@@ -126,7 +126,7 @@ std::string BitstreamSetting::default_mode_bits_to_string(
   return mode_bits_str;
 }
 
-std::string BitstreamSetting::clock_routing_network_name(
+std::string BitstreamSetting::clock_routing_network(
   const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
   VTR_ASSERT(true ==
              valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));

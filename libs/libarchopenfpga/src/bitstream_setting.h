@@ -122,7 +122,7 @@ class BitstreamSetting {
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
 
   /* Clock routing settings */
-  std::string clock_routing_network_name(
+  std::string clock_routing_network(
     const BitstreamClockRoutingSettingId& clock_routing_setting_id) const;
   BasicPort clock_routing_pin(
     const BitstreamClockRoutingSettingId& clock_routing_setting_id) const;
