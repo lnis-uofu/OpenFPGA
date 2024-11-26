@@ -142,14 +142,15 @@ static int annotate_bitstream_default_mode_setting(
     std::vector<std::string> target_pb_type_names;
     std::vector<std::string> target_pb_mode_names;
 
-    target_pb_type_names =
-      bitstream_setting.default_mode_parent_pb_type_names(bitstream_default_mode_setting_id);
-    target_pb_type_names.push_back(
-      bitstream_setting.default_mode_pb_type_name(bitstream_default_mode_setting_id));
-    target_pb_mode_names =
-      bitstream_setting.default_mode_parent_mode_names(bitstream_default_mode_setting_id);
+    target_pb_type_names = bitstream_setting.default_mode_parent_pb_type_names(
+      bitstream_default_mode_setting_id);
+    target_pb_type_names.push_back(bitstream_setting.default_mode_pb_type_name(
+      bitstream_default_mode_setting_id));
+    target_pb_mode_names = bitstream_setting.default_mode_parent_mode_names(
+      bitstream_default_mode_setting_id);
 
-    std::vector<size_t> mode_bits = bitstream_setting.default_mode_bits(bitstream_default_mode_setting_id);
+    std::vector<size_t> mode_bits =
+      bitstream_setting.default_mode_bits(bitstream_default_mode_setting_id);
 
     /* Pb type information are located at the logic_block_types in the device
      * context of VPR We iterate over the vectors and find the pb_type matches
@@ -177,16 +178,22 @@ static int annotate_bitstream_default_mode_setting(
       }
 
       /* Found one, pre-check and build annotation */
-      if (vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() != mode_bits.size()) {
+      if (vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() !=
+          mode_bits.size()) {
         VTR_LOG_ERROR(
-          "Mismatches in length of default mode bits for a pb_type '%s' which is defined in bitstream setting ('%s') "
+          "Mismatches in length of default mode bits for a pb_type '%s' which "
+          "is defined in bitstream setting ('%s') "
           "from OpenFPGA architecture description ('%s')\n",
-          target_pb_type_names[0].c_str(), bitstream_setting.default_mode_bits_to_string(bitstream_default_mode_setting_id).c_str(),
-          vpr_device_annotation.pb_type_mode_bits_to_string(target_pb_type).c_str());
+          target_pb_type_names[0].c_str(),
+          bitstream_setting
+            .default_mode_bits_to_string(bitstream_default_mode_setting_id)
+            .c_str(),
+          vpr_device_annotation.pb_type_mode_bits_to_string(target_pb_type)
+            .c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
-      vpr_device_annotation.add_pb_type_mode_bits(
-        target_pb_type, mode_bits, false); 
+      vpr_device_annotation.add_pb_type_mode_bits(target_pb_type, mode_bits,
+                                                  false);
       link_success = true;
     }
 
@@ -345,8 +352,8 @@ int annotate_bitstream_setting(
     return status;
   }
 
-  status = annotate_bitstream_default_mode_setting(bitstream_setting, vpr_device_ctx,
-                                              vpr_device_annotation);
+  status = annotate_bitstream_default_mode_setting(
+    bitstream_setting, vpr_device_ctx, vpr_device_annotation);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }

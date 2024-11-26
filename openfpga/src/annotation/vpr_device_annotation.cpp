@@ -575,7 +575,7 @@ void VprDeviceAnnotation::add_pb_type_mode_bits(
     pb_type_mode_bits_.find(pb_type);
   if (it != pb_type_mode_bits_.end()) {
     VTR_LOGV_WARN(verbose, "Override the mode bits mapping for pb_type '%s'!\n",
-                 pb_type->name);
+                  pb_type->name);
   }
 
   pb_type_mode_bits_[pb_type] = mode_bits;

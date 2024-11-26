@@ -55,31 +55,34 @@ static std::string generate_bitstream_setting_pb_type_hierarchy_name(
   const BitstreamDefaultModeSettingId& bitstream_pb_type_setting_id) {
   /* Iterate over the parent_pb_type and modes names, they should well match */
   VTR_ASSERT_SAFE(
-    bitstream_setting.default_mode_parent_pb_type_names(bitstream_pb_type_setting_id)
-      .size() ==
-    bitstream_setting.default_mode_parent_mode_names(bitstream_pb_type_setting_id).size());
+    bitstream_setting
+      .default_mode_parent_pb_type_names(bitstream_pb_type_setting_id)
+      .size() == bitstream_setting
+                   .default_mode_parent_mode_names(bitstream_pb_type_setting_id)
+                   .size());
 
   std::string hie_name;
 
   for (size_t i = 0;
-       i < bitstream_setting.default_mode_parent_pb_type_names(bitstream_pb_type_setting_id)
+       i < bitstream_setting
+             .default_mode_parent_pb_type_names(bitstream_pb_type_setting_id)
              .size();
        ++i) {
-    hie_name +=
-      bitstream_setting.default_mode_parent_pb_type_names(bitstream_pb_type_setting_id)[i];
+    hie_name += bitstream_setting.default_mode_parent_pb_type_names(
+      bitstream_pb_type_setting_id)[i];
     hie_name += std::string("[");
-    hie_name +=
-      bitstream_setting.default_mode_parent_mode_names(bitstream_pb_type_setting_id)[i];
+    hie_name += bitstream_setting.default_mode_parent_mode_names(
+      bitstream_pb_type_setting_id)[i];
     hie_name += std::string("]");
     hie_name += std::string(".");
   }
 
   /* Add the leaf pb_type */
-  hie_name += bitstream_setting.default_mode_pb_type_name(bitstream_pb_type_setting_id);
+  hie_name +=
+    bitstream_setting.default_mode_pb_type_name(bitstream_pb_type_setting_id);
 
   return hie_name;
 }
-
 
 /********************************************************************
  * Generate the full hierarchy name for an interconnect in bitstream setting
@@ -173,7 +176,8 @@ static void write_xml_bitstream_default_mode_setting(
 
   write_xml_attribute(
     fp, "mode_bits",
-    bitstream_setting.default_mode_bits_to_string(bitstream_default_mode_setting_id)
+    bitstream_setting
+      .default_mode_bits_to_string(bitstream_default_mode_setting_id)
       .c_str());
   fp << "/>"
      << "\n";
@@ -231,7 +235,7 @@ void write_xml_bitstream_setting(
   for (const auto& bitstream_default_mode_setting_id :
        bitstream_setting.default_mode_settings()) {
     write_xml_bitstream_default_mode_setting(fp, fname, bitstream_setting,
-                                        bitstream_default_mode_setting_id);
+                                             bitstream_default_mode_setting_id);
   }
 
   /* Write interconnect -related settings */

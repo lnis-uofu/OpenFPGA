@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "bitstream_setting_fwd.h"
-#include "vtr_vector.h"
 #include "vtr_geometry.h"
+#include "vtr_vector.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -189,12 +189,14 @@ class BitstreamSetting {
   /* Pb type - default mode bits overwrite */
   vtr::vector<BitstreamDefaultModeSettingId, BitstreamDefaultModeSettingId>
     default_mode_setting_ids_;
-  vtr::vector<BitstreamDefaultModeSettingId, std::string> default_mode_pb_type_names_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::string>
+    default_mode_pb_type_names_;
   vtr::vector<BitstreamDefaultModeSettingId, std::vector<std::string>>
     default_mode_parent_pb_type_names_;
   vtr::vector<BitstreamDefaultModeSettingId, std::vector<std::string>>
     default_mode_parent_mode_names_;
-  vtr::vector<BitstreamDefaultModeSettingId, std::vector<size_t>> pb_type_default_mode_bits_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::vector<size_t>>
+    pb_type_default_mode_bits_;
 
   /* Interconnect-related settings:
    * - Name of interconnect under a given pb_type
