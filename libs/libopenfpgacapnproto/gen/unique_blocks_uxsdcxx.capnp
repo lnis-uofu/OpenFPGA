@@ -6,7 +6,7 @@
 # Input file: /home/xifan/github/OpenFPGA/libs/libopenfpgacapnproto/gen/unique_blocks.xsd
 # md5sum of input file: 1db9d740309076fa51f61413bae1e072
 
-@0xdda3f3f93e497b0c;
+@0xe572df7b6c5621b7;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 

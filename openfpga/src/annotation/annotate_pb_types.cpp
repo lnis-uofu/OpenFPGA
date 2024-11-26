@@ -990,8 +990,8 @@ static bool link_primitive_pb_type_to_mode_bits(
   }
 
   /* Update the annotation */
-  vpr_device_annotation.add_pb_type_mode_bits(primitive_pb_type,
-                                              pb_type_annotation.mode_bits());
+  vpr_device_annotation.add_pb_type_mode_bits(
+    primitive_pb_type, pb_type_annotation.mode_bits(), true);
 
   return true;
 }

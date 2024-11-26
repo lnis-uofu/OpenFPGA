@@ -140,6 +140,15 @@ std::vector<size_t> VprDeviceAnnotation::pb_type_mode_bits(
   return pb_type_mode_bits_.at(pb_type);
 }
 
+std::string VprDeviceAnnotation::pb_type_mode_bits_to_string(
+  t_pb_type* pb_type) const {
+  std::string mode_bits_str;
+  for (const size_t& bit : pb_type_mode_bits(pb_type)) {
+    mode_bits_str += std::to_string(bit);
+  }
+  return mode_bits_str;
+}
+
 PbGraphNodeId VprDeviceAnnotation::pb_graph_node_unique_index(
   t_pb_graph_node* pb_graph_node) const {
   /* Ensure that the pb_type is in the list */
@@ -559,13 +568,14 @@ void VprDeviceAnnotation::add_pb_circuit_port(
 }
 
 void VprDeviceAnnotation::add_pb_type_mode_bits(
-  t_pb_type* pb_type, const std::vector<size_t>& mode_bits) {
+  t_pb_type* pb_type, const std::vector<size_t>& mode_bits,
+  const bool& verbose) {
   /* Warn any override attempt */
   std::map<t_pb_type*, std::vector<size_t>>::const_iterator it =
     pb_type_mode_bits_.find(pb_type);
   if (it != pb_type_mode_bits_.end()) {
-    VTR_LOG_WARN("Override the mode bits mapping for pb_type '%s'!\n",
-                 pb_type->name);
+    VTR_LOGV_WARN(verbose, "Override the mode bits mapping for pb_type '%s'!\n",
+                  pb_type->name);
   }
 
   pb_type_mode_bits_[pb_type] = mode_bits;

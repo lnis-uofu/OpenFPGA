@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "bitstream_setting_fwd.h"
+#include "vtr_geometry.h"
 #include "vtr_vector.h"
 
 /* namespace openfpga begins */
@@ -58,6 +59,9 @@ class BitstreamSetting {
   typedef vtr::vector<BitstreamPbTypeSettingId,
                       BitstreamPbTypeSettingId>::const_iterator
     bitstream_pb_type_setting_iterator;
+  typedef vtr::vector<BitstreamDefaultModeSettingId,
+                      BitstreamDefaultModeSettingId>::const_iterator
+    bitstream_default_mode_setting_iterator;
   typedef vtr::vector<BitstreamInterconnectSettingId,
                       BitstreamInterconnectSettingId>::const_iterator
     bitstream_interconnect_setting_iterator;
@@ -67,6 +71,8 @@ class BitstreamSetting {
   /* Create range */
   typedef vtr::Range<bitstream_pb_type_setting_iterator>
     bitstream_pb_type_setting_range;
+  typedef vtr::Range<bitstream_default_mode_setting_iterator>
+    bitstream_default_mode_setting_range;
   typedef vtr::Range<bitstream_interconnect_setting_iterator>
     bitstream_interconnect_setting_range;
   typedef vtr::Range<overwrite_bitstream_iterator> overwrite_bitstream_range;
@@ -76,6 +82,7 @@ class BitstreamSetting {
 
  public: /* Accessors: aggregates */
   bitstream_pb_type_setting_range pb_type_settings() const;
+  bitstream_default_mode_setting_range default_mode_settings() const;
   bitstream_interconnect_setting_range interconnect_settings() const;
   overwrite_bitstream_range overwrite_bitstreams() const;
 
@@ -94,6 +101,19 @@ class BitstreamSetting {
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
   size_t bitstream_offset(
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
+
+  /* Default Mode Bit settings */
+  std::string default_mode_pb_type_name(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+  std::vector<std::string> default_mode_parent_pb_type_names(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+  std::vector<std::string> default_mode_parent_mode_names(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+  std::vector<size_t> default_mode_bits(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+  std::string default_mode_bits_to_string(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+
   std::string interconnect_name(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   std::vector<std::string> parent_pb_type_names(
@@ -118,6 +138,12 @@ class BitstreamSetting {
   void set_bitstream_offset(const BitstreamPbTypeSettingId& pb_type_setting_id,
                             const size_t& offset);
 
+  BitstreamDefaultModeSettingId add_bitstream_default_mode_setting(
+    const std::string& pb_type_name,
+    const std::vector<std::string>& parent_pb_type_names,
+    const std::vector<std::string>& parent_mode_names,
+    const std::vector<size_t>& mode_bits);
+
   BitstreamInterconnectSettingId add_bitstream_interconnect_setting(
     const std::string& interconnect_name,
     const std::vector<std::string>& parent_pb_type_names,
@@ -133,6 +159,8 @@ class BitstreamSetting {
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
+  bool valid_bitstream_default_mode_setting_id(
+    const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
   bool valid_bitstream_interconnect_setting_id(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
@@ -157,6 +185,18 @@ class BitstreamSetting {
   /* The offset that the bitstream is applied to the original bitstream of a
    * pb_type */
   vtr::vector<BitstreamPbTypeSettingId, size_t> bitstream_offsets_;
+
+  /* Pb type - default mode bits overwrite */
+  vtr::vector<BitstreamDefaultModeSettingId, BitstreamDefaultModeSettingId>
+    default_mode_setting_ids_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::string>
+    default_mode_pb_type_names_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::vector<std::string>>
+    default_mode_parent_pb_type_names_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::vector<std::string>>
+    default_mode_parent_mode_names_;
+  vtr::vector<BitstreamDefaultModeSettingId, std::vector<size_t>>
+    pb_type_default_mode_bits_;
 
   /* Interconnect-related settings:
    * - Name of interconnect under a given pb_type

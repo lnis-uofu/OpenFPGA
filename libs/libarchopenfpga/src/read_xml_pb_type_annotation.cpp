@@ -18,6 +18,7 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "read_xml_openfpga_arch_utils.h"
 #include "read_xml_pb_type_annotation.h"
 #include "read_xml_util.h"
 
@@ -150,31 +151,6 @@ static void read_xml_pb_port_annotation(
         name_attr, port_parser.port(), std::stoi(rotate_offsets[iport]));
     }
   }
-}
-
-/********************************************************************
- * Parse mode_bits: convert from string to array of digits
- * We only allow the bit to either '0' or '1'
- *******************************************************************/
-static std::vector<size_t> parse_mode_bits(pugi::xml_node& xml_mode_bits,
-                                           const pugiutil::loc_data& loc_data,
-                                           const std::string& mode_bit_str) {
-  std::vector<size_t> mode_bits;
-
-  for (const char& bit_char : mode_bit_str) {
-    if ('0' == bit_char) {
-      mode_bits.push_back(0);
-    } else if ('1' == bit_char) {
-      mode_bits.push_back(1);
-    } else {
-      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
-                     "Unexpected '%c' character found in the mode bit '%s'! "
-                     "Only allow either '0' or '1'\n",
-                     bit_char, mode_bit_str.c_str());
-    }
-  }
-
-  return mode_bits;
 }
 
 /********************************************************************

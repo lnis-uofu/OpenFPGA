@@ -1,0 +1,3 @@
+<openfpga_bitstream_setting>
+  <default_mode_bits name="io[physical].iopad" mode_bits="0"/>
+</openfpga_bitstream_setting>
