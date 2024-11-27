@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "bitstream_setting_fwd.h"
+#include "openfpga_port.h"
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
-#include "openfpga_port.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -167,8 +167,7 @@ class BitstreamSetting {
 
   /* Clock routing settings */
   BitstreamClockRoutingSettingId add_bitstream_clock_routing_setting(
-    const std::string& ntwk_name,
-    const BasicPort& pin);
+    const std::string& ntwk_name, const BasicPort& pin);
 
   /* Interconnect settings */
   BitstreamInterconnectSettingId add_bitstream_interconnect_setting(
@@ -234,8 +233,7 @@ class BitstreamSetting {
     clock_routing_setting_ids_;
   vtr::vector<BitstreamClockRoutingSettingId, std::string>
     clock_routing_network_names_;
-  vtr::vector<BitstreamClockRoutingSettingId, BasicPort>
-    clock_routing_pins_;
+  vtr::vector<BitstreamClockRoutingSettingId, BasicPort> clock_routing_pins_;
 
   /* Interconnect-related settings:
    * - Name of interconnect under a given pb_type

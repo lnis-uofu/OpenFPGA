@@ -30,7 +30,6 @@ BitstreamSetting::clock_routing_settings() const {
                          clock_routing_setting_ids_.end());
 }
 
-
 BitstreamSetting::bitstream_interconnect_setting_range
 BitstreamSetting::interconnect_settings() const {
   return vtr::make_range(interconnect_setting_ids_.begin(),
@@ -135,15 +134,15 @@ std::string BitstreamSetting::default_mode_bits_to_string(
 
 std::string BitstreamSetting::clock_routing_network(
   const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
-  VTR_ASSERT(true ==
-             valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));
+  VTR_ASSERT(
+    true == valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));
   return clock_routing_network_names_[clock_routing_setting_id];
 }
 
 BasicPort BitstreamSetting::clock_routing_pin(
   const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
-  VTR_ASSERT(true ==
-             valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));
+  VTR_ASSERT(
+    true == valid_bitstream_clock_routing_setting_id(clock_routing_setting_id));
   return clock_routing_pins_[clock_routing_setting_id];
 }
 
@@ -245,8 +244,7 @@ BitstreamSetting::add_bitstream_default_mode_setting(
 
 BitstreamClockRoutingSettingId
 BitstreamSetting::add_bitstream_clock_routing_setting(
-  const std::string& ntwk_name,
-  const BasicPort& pin) {
+  const std::string& ntwk_name, const BasicPort& pin) {
   BitstreamClockRoutingSettingId clock_routing_setting_id =
     BitstreamClockRoutingSettingId(clock_routing_setting_ids_.size());
   clock_routing_setting_ids_.push_back(clock_routing_setting_id);
@@ -326,7 +324,8 @@ bool BitstreamSetting::valid_bitstream_default_mode_setting_id(
 
 bool BitstreamSetting::valid_bitstream_clock_routing_setting_id(
   const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
-  return (size_t(clock_routing_setting_id) < clock_routing_setting_ids_.size()) &&
+  return (size_t(clock_routing_setting_id) <
+          clock_routing_setting_ids_.size()) &&
          (clock_routing_setting_id ==
           clock_routing_setting_ids_[clock_routing_setting_id]);
 }

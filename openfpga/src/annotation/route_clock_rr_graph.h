@@ -7,10 +7,10 @@
 #include "clock_network.h"
 #include "pin_constraints.h"
 #include "rr_clock_spatial_lookup.h"
+#include "vpr_bitstream_annotation.h"
 #include "vpr_clustering_annotation.h"
 #include "vpr_context.h"
 #include "vpr_routing_annotation.h"
-#include "vpr_bitstream_annotation.h"
 
 /********************************************************************
  * Function declaration

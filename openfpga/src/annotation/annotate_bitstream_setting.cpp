@@ -212,26 +212,33 @@ static int annotate_bitstream_default_mode_setting(
 }
 
 /********************************************************************
- * Annotate bitstream setting based on programmable clock network 
- *  - Find the clock tree which is defined in the bitstream setting. Apply sanity check if it does not work
- *  - Mark id of the pin of clock tree to be routed and check if the one defined in bitstream setting is valid 
+ * Annotate bitstream setting based on programmable clock network
+ *  - Find the clock tree which is defined in the bitstream setting. Apply
+ *sanity check if it does not work
+ *  - Mark id of the pin of clock tree to be routed and check if the one defined
+ *in bitstream setting is valid
  *******************************************************************/
 static int annotate_bitstream_clock_routing_setting(
-  const BitstreamSetting& bitstream_setting,
-  const ClockNetwork& clk_ntwk,
+  const BitstreamSetting& bitstream_setting, const ClockNetwork& clk_ntwk,
   VprBitstreamAnnotation& vpr_bitstream_annotation) {
   /* For an empty clock network, throw warning that nothing will be done */
   if (clk_ntwk.empty() && !bitstream_setting.clock_routing_settings().empty()) {
-    VTR_LOG_WARN("Clock network is empty. No bitstream settings related to clock routing will be applied!\n");
+    VTR_LOG_WARN(
+      "Clock network is empty. No bitstream settings related to clock routing "
+      "will be applied!\n");
     return CMD_EXEC_SUCCESS;
   }
   for (const auto& bitstream_clock_routing_setting_id :
        bitstream_setting.clock_routing_settings()) {
     /* Validate if the given clock network name is valid */
-    std::string ntwk_name = bitstream_setting.clock_routing_network(bitstream_clock_routing_setting_id);
+    std::string ntwk_name = bitstream_setting.clock_routing_network(
+      bitstream_clock_routing_setting_id);
     ClockTreeId tree_id = clk_ntwk.find_tree(ntwk_name);
     if (!clk_ntwk.valid_tree_id(tree_id)) {
-      VTR_LOG_ERROR("Invalid clock network name '%s' from bitstream setting, which is not defined in the clock network description!\n", ntwk_name.c_str());
+      VTR_LOG_ERROR(
+        "Invalid clock network name '%s' from bitstream setting, which is not "
+        "defined in the clock network description!\n",
+        ntwk_name.c_str());
       /* Show valid clock network names */
       VTR_LOG("Valid clock network names are as follows\n");
       for (auto curr_tree_id : clk_ntwk.trees()) {
@@ -241,21 +248,36 @@ static int annotate_bitstream_clock_routing_setting(
     }
     /* Valid the port */
     BasicPort tree_port = clk_ntwk.tree_global_port(tree_id);
-    BasicPort wanted_pin = bitstream_setting.clock_routing_pin(bitstream_clock_routing_setting_id);
+    BasicPort wanted_pin =
+      bitstream_setting.clock_routing_pin(bitstream_clock_routing_setting_id);
     if (wanted_pin.get_width() != 1) {
-      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', whose port width must be 1!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str());
+      VTR_LOG_ERROR(
+        "Invalid clock pin definition '%s' from bitstream setting for clock "
+        "network name '%s', whose port width must be 1!\n",
+        wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     if (!tree_port.mergeable(wanted_pin)) {
-      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', which does not match the name of pin '%s' in the clock network description!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(), tree_port.to_verilog_string().c_str());
+      VTR_LOG_ERROR(
+        "Invalid clock pin definition '%s' from bitstream setting for clock "
+        "network name '%s', which does not match the name of pin '%s' in the "
+        "clock network description!\n",
+        wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(),
+        tree_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     if (!tree_port.contained(wanted_pin)) {
-      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', which is out of the pin '%s' in the clock network description!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(), tree_port.to_verilog_string().c_str());
+      VTR_LOG_ERROR(
+        "Invalid clock pin definition '%s' from bitstream setting for clock "
+        "network name '%s', which is out of the pin '%s' in the clock network "
+        "description!\n",
+        wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(),
+        tree_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     /* All sanity check passed. Record the bitstream requirements */
-    ClockTreePinId tree_pin_id = clk_ntwk.pins(tree_id)[tree_port.find_ipin(wanted_pin)];
+    ClockTreePinId tree_pin_id =
+      clk_ntwk.pins(tree_id)[tree_port.find_ipin(wanted_pin)];
     vpr_bitstream_annotation.set_clock_tap_routing_pin(tree_id, tree_pin_id);
   }
   return CMD_EXEC_SUCCESS;
@@ -391,8 +413,7 @@ static int annotate_bitstream_interconnect_setting(
  *******************************************************************/
 int annotate_bitstream_setting(
   const BitstreamSetting& bitstream_setting,
-  const DeviceContext& vpr_device_ctx,
-  const ClockNetwork& clk_ntwk,
+  const DeviceContext& vpr_device_ctx, const ClockNetwork& clk_ntwk,
   VprDeviceAnnotation& vpr_device_annotation,
   VprBitstreamAnnotation& vpr_bitstream_annotation) {
   int status = CMD_EXEC_SUCCESS;

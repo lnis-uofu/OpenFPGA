@@ -118,7 +118,6 @@ ClockTreePinId VprBitstreamAnnotation::clock_tap_routing_pin(
   return ClockTreePinId::INVALID();
 }
 
-
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -166,8 +165,10 @@ void VprBitstreamAnnotation::set_clock_tap_routing_pin(
   const ClockTreeId& tree_id, const ClockTreePinId& tree_pin_id) {
   auto result = clock_tap_routing_pins_.find(tree_id);
   if (result != clock_tap_routing_pins_.end()) {
-    VTR_LOG_WARN("Overwrite the clock tree pin '%lu' for clock tree '%d' tap routing (Was pin '%lu')\n",
-    size_t(tree_pin_id), size_t(tree_id), size_t(result->second));
+    VTR_LOG_WARN(
+      "Overwrite the clock tree pin '%lu' for clock tree '%d' tap routing (Was "
+      "pin '%lu')\n",
+      size_t(tree_pin_id), size_t(tree_id), size_t(result->second));
   }
   clock_tap_routing_pins_[tree_id] = tree_pin_id;
 }

@@ -11,9 +11,9 @@
 #include "vtr_log.h"
 
 /* Headers from readarchopenfpga library */
+#include "bitstream_setting_xml_constants.h"
 #include "write_xml_bitstream_setting.h"
 #include "write_xml_utils.h"
-#include "bitstream_setting_xml_constants.h"
 
 /********************************************************************
  * Generate the full hierarchy name for a pb_type in bitstream setting
@@ -198,14 +198,15 @@ static void write_xml_bitstream_clock_routing_setting(
      << "<" << XML_CLOCK_ROUTING_NODE_NAME;
 
   /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK,
-                      bitstream_setting.clock_routing_network(bitstream_clock_routing_setting_id)
-                        .c_str());
+  write_xml_attribute(
+    fp, XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK,
+    bitstream_setting.clock_routing_network(bitstream_clock_routing_setting_id)
+      .c_str());
 
   write_xml_attribute(
     fp, XML_CLOCK_ROUTING_ATTRIBUTE_PIN,
-    bitstream_setting
-      .clock_routing_pin(bitstream_clock_routing_setting_id).to_verilog_string()
+    bitstream_setting.clock_routing_pin(bitstream_clock_routing_setting_id)
+      .to_verilog_string()
       .c_str());
   fp << "/>"
      << "\n";
@@ -269,8 +270,8 @@ void write_xml_bitstream_setting(
   /* Write clock_routing -related settings */
   for (const auto& bitstream_clock_routing_setting_id :
        bitstream_setting.clock_routing_settings()) {
-    write_xml_bitstream_clock_routing_setting(fp, fname, bitstream_setting,
-                                             bitstream_clock_routing_setting_id);
+    write_xml_bitstream_clock_routing_setting(
+      fp, fname, bitstream_setting, bitstream_clock_routing_setting_id);
   }
 
   /* Write interconnect -related settings */
