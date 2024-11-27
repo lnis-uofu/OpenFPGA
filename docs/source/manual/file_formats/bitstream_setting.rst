@@ -110,6 +110,8 @@ Clock Routing-related Settings
 
 The following syntax are applicable to the XML definition tagged by ``clock_routing`` in bitstream setting files.
 This is to force the routing for clock tap multiplexers (green line in :numref:`fig_prog_clock_network_example_2x2`) even when they are not used/mapped. If no specified, only the used clock tap multiplexers will be configured to propagate clock signals.
+
+.. note:: This requires the benchmark has at least 1 global signal. Otherwise, the clock routing will be skipped, and there is no impact from this setting.
  
 .. option:: network="<string>"
 
