@@ -14,6 +14,7 @@ This can define a hard-coded bitstream for a reconfigurable resource in FPGA fab
     <pb_type name="<string>" source="eblif" content=".param LUT" is_mode_select_bistream="true" bitstream_offset="1"/>
     <default_mode_bits name="<string>" mode_bits="<string>"/>
     <interconnect name="<string>" default_path="<string>"/>
+    <clock_routing network="<string>" pin="<string>"/>
     <non_fabric name="<string>" file="<string>">
       <pb name="<string>" type="<string>" content="<string>"/>
     </non_fabric>
@@ -103,6 +104,33 @@ The following syntax are applicable to the XML definition tagged by ``interconne
     <mux name="mux1" input="iopad.inpad ff.Q" output="io.inpad"/>
 
   The default path can be either ``iopad.inpad`` or ``ff.Q`` which corresponds to the first input and the second input respectively.
+
+Clock Routing-related Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following syntax are applicable to the XML definition tagged by ``clock_routing`` in bitstream setting files.
+This is to force the routing for clock tap multiplexers (green line in :numref:`fig_prog_clock_network_example_2x2`) even when they are not used/mapped. If no specified, only the used clock tap multiplexers will be configured to propagate clock signals.
+ 
+.. option:: network="<string>"
+
+  The ``network`` name to be constrained, which should be a valid name defined in the clock network file (See details in :ref:`file_formats_clock_network`). For example, 
+
+.. code-block:: xml
+
+  <clock_routing network="clk_tree_2lvl" pin="clk[0:0]"/>
+  <clock_routing network="rst_tree_2lvl" pin="rst[1:1]"/>
+
+The network and pin correspond to the clock network name and a valid pin of ``global_port`` in the clock network description.
+
+.. code-block:: xml
+
+  <clock_network name="clk_tree_2lvl" global_port="clk[0:7]"/>
+  <clock_network name="rst_tree_2lvl" global_port="rst[0:7]"/>  
+
+.. option:: pin="<string>"
+
+  The pin should be a valid pin of the ``global_port`` that is defined in the clock network description under the selected clock network.
+
 
 non_fabric-related Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
