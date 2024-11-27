@@ -8,6 +8,7 @@
 #include <string>
 
 /* Header from vpr library */
+#include "clock_network.h"
 #include "vpr_context.h"
 
 /* Begin namespace openfpga */
@@ -43,6 +44,7 @@ class VprBitstreamAnnotation {
   std::string pb_type_mode_select_bitstream_content(t_pb_type* pb_type) const;
   size_t pb_type_mode_select_bitstream_offset(t_pb_type* pb_type) const;
   size_t interconnect_default_path_id(t_interconnect* interconnect) const;
+  ClockTreePinId clock_tap_routing_pin(const ClockTreeId& tree_id) const;
 
  public: /* Public mutators */
   void set_pb_type_bitstream_source(
@@ -62,6 +64,8 @@ class VprBitstreamAnnotation {
                                                 const size_t& offset);
   void set_interconnect_default_path_id(t_interconnect* interconnect,
                                         const size_t& default_path_id);
+  void set_clock_tap_routing_pin(const ClockTreeId& tree_id,
+                                 const ClockTreePinId& tree_pin_id);
 
  private: /* Internal data */
   /* For regular bitstreams */
@@ -87,6 +91,11 @@ class VprBitstreamAnnotation {
    * the index of inputs in the context of the interconnect input string
    */
   std::map<t_interconnect*, size_t> interconnect_default_path_ids_;
+
+  /* Mark the clock tree pin for which all the tap points of clock tree should
+   * be routed through Note that for each clock tree, only one pin is allowed
+   */
+  std::map<ClockTreeId, ClockTreePinId> clock_tap_routing_pins_;
 };
 
 } /* End namespace openfpga*/

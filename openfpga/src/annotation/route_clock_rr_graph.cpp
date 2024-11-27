@@ -223,7 +223,8 @@ static int route_spine_taps(
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
-  const ClockSpineId& ispine, const ClockTreePinId& ipin, const bool& verbose) {
+  const ClockSpineId& ispine, const ClockTreePinId& ipin,
+  const bool& force_tap_routing, const bool& verbose) {
   size_t spine_tap_cnt = 0;
   /* Route the spine-to-IPIN connections (only for the last level) */
   if (clk_ntwk.is_last_level(ispine)) {
@@ -246,6 +247,23 @@ static int route_spine_taps(
         if (rr_graph.node_type(des_node) == IPIN) {
           VTR_LOGV(verbose, "Trying to route to IPIN '%s'\n",
                    rr_graph.node_coordinate_to_string(des_node).c_str());
+          /* If all the tap is force to route, do it as the highest priority */
+          if (force_tap_routing) {
+            VTR_ASSERT(rr_graph.valid_node(src_node));
+            VTR_ASSERT(rr_graph.valid_node(des_node));
+            VTR_LOGV(verbose, "Forcec to routed clock tap of spine '%s'\n",
+                     clk_ntwk.spine_name(ispine).c_str());
+            vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
+                                                         src_node);
+            /* If a net is mapped to the pin, still mark it */
+            if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+              vpr_routing_annotation.set_rr_node_net(src_node,
+                                                     tree2clk_pin_map.at(ipin));
+              vpr_routing_annotation.set_rr_node_net(des_node,
+                                                     tree2clk_pin_map.at(ipin));
+            }
+            continue;
+          }
           /* Check if the IPIN is mapped, if not, do not connect */
           /* if the IPIN is mapped, only connect when net mapping is
            * expected */
@@ -404,14 +422,16 @@ static int rec_expand_and_route_clock_spine(
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
   const ClockSpineId& curr_spine, const ClockTreePinId& curr_pin,
-  const bool& disable_unused_spines, const bool& verbose) {
+  const bool& disable_unused_spines, const bool& force_tap_routing,
+  const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   bool curr_spine_usage = false;
   bool curr_tap_usage = false;
   /* For last level, we just connect tap points */
   status = route_spine_taps(vpr_routing_annotation, curr_tap_usage, rr_graph,
                             clk_rr_lookup, rr_node_gnets, tree2clk_pin_map,
-                            clk_ntwk, clk_tree, curr_spine, curr_pin, verbose);
+                            clk_ntwk, clk_tree, curr_spine, curr_pin,
+                            force_tap_routing, verbose);
   if (CMD_EXEC_SUCCESS != status) {
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -452,7 +472,7 @@ static int rec_expand_and_route_clock_spine(
       status = rec_expand_and_route_clock_spine(
         vpr_routing_annotation, curr_branch_usage, rr_graph, clk_rr_lookup,
         rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, des_spine,
-        curr_pin, disable_unused_spines, verbose);
+        curr_pin, disable_unused_spines, force_tap_routing, verbose);
       if (CMD_EXEC_SUCCESS != status) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -571,6 +591,7 @@ static int rec_expand_and_route_clock_spine(
  *******************************************************************/
 static int route_clock_tree_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
+  const VprBitstreamAnnotation& vpr_bitstream_annotation,
   const RRClockSpatialLookup& clk_rr_lookup,
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
@@ -585,6 +606,12 @@ static int route_clock_tree_rr_graph(
                clk_ntwk.tree_name(clk_tree).c_str(), size_t(ipin));
       continue;
     }
+    /* Mark if tap point should be all routed regardless of usage (net mapping)
+     */
+    bool force_tap_routing = false;
+    if (ipin == vpr_bitstream_annotation.clock_tap_routing_pin(clk_tree)) {
+      force_tap_routing = true;
+    }
     /* Start with the top-level spines. Recursively walk through coordinates and
      * expand on switch points */
     bool tree_usage = false;
@@ -592,7 +619,7 @@ static int route_clock_tree_rr_graph(
       int status = rec_expand_and_route_clock_spine(
         vpr_routing_annotation, tree_usage, rr_graph, clk_rr_lookup,
         rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, top_spine, ipin,
-        disable_unused_spines, verbose);
+        disable_unused_spines, force_tap_routing, verbose);
       if (CMD_EXEC_SUCCESS != status) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -616,6 +643,7 @@ int route_clock_rr_graph(
   const VprClusteringAnnotation& vpr_clustering_annotation,
   const DeviceContext& vpr_device_ctx, const ClusteredNetlist& cluster_nlist,
   const PlacementContext& vpr_place_ctx,
+  const VprBitstreamAnnotation& vpr_bitstream_annotation,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
   const PinConstraints& pin_constraints, const bool& disable_unused_trees,
   const bool& disable_unused_spines, const bool& verbose) {
@@ -671,9 +699,9 @@ int route_clock_rr_graph(
     VTR_LOGV(verbose, "Routing clock tree '%s'...\n",
              clk_ntwk.tree_name(itree).c_str());
     status = route_clock_tree_rr_graph(
-      vpr_routing_annotation, vpr_device_ctx.rr_graph, clk_rr_lookup,
-      rr_node_gnets, tree2clk_pin_map, clk_ntwk, itree, disable_unused_trees,
-      disable_unused_spines, verbose);
+      vpr_routing_annotation, vpr_device_ctx.rr_graph, vpr_bitstream_annotation,
+      clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, itree,
+      disable_unused_trees, disable_unused_spines, verbose);
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
     }

@@ -1,0 +1,3 @@
+<openfpga_bitstream_setting>
+  <clock_routing network="clk_tree_2lvl" pin="clk[0:0]"/>
+</openfpga_bitstream_setting>

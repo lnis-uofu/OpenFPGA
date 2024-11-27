@@ -15,6 +15,7 @@
 
 struct bitstream_pb_type_setting_id_tag;
 struct bitstream_default_mode_setting_id_tag;
+struct bitstream_clock_routing_setting_id_tag;
 struct bitstream_interconnect_setting_id_tag;
 struct overwrite_bitstream_id_tag;
 
@@ -22,6 +23,8 @@ typedef vtr::StrongId<bitstream_pb_type_setting_id_tag>
   BitstreamPbTypeSettingId;
 typedef vtr::StrongId<bitstream_default_mode_setting_id_tag>
   BitstreamDefaultModeSettingId;
+typedef vtr::StrongId<bitstream_clock_routing_setting_id_tag>
+  BitstreamClockRoutingSettingId;
 typedef vtr::StrongId<bitstream_interconnect_setting_id_tag>
   BitstreamInterconnectSettingId;
 typedef vtr::StrongId<overwrite_bitstream_id_tag> OverwriteBitstreamId;

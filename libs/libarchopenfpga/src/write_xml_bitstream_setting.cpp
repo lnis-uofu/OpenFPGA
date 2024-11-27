@@ -11,6 +11,7 @@
 #include "vtr_log.h"
 
 /* Headers from readarchopenfpga library */
+#include "bitstream_setting_xml_constants.h"
 #include "write_xml_bitstream_setting.h"
 #include "write_xml_utils.h"
 
@@ -128,27 +129,27 @@ static void write_xml_bitstream_pb_type_setting(
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t"
-     << "<pb_type";
+     << "<" << XML_PB_TYPE_NODE_NAME;
 
   /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, "name",
+  write_xml_attribute(fp, XML_PB_TYPE_ATTRIBUTE_NAME,
                       generate_bitstream_setting_pb_type_hierarchy_name(
                         bitstream_setting, bitstream_pb_type_setting_id)
                         .c_str());
 
   write_xml_attribute(
-    fp, "source",
+    fp, XML_PB_TYPE_ATTRIBUTE_SOURCE,
     bitstream_setting.pb_type_bitstream_source(bitstream_pb_type_setting_id)
       .c_str());
   write_xml_attribute(
-    fp, "content",
+    fp, XML_PB_TYPE_ATTRIBUTE_CONTENT,
     bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id)
       .c_str());
   write_xml_attribute(
-    fp, "is_mode_select_bitstream",
+    fp, XML_PB_TYPE_ATTRIBUTE_IS_MODE_SELECT_BITSTREAM,
     bitstream_setting.is_mode_select_bitstream(bitstream_pb_type_setting_id));
   write_xml_attribute(
-    fp, "bitstream_offset",
+    fp, XML_PB_TYPE_ATTRIBUTE_BITSTREAM_OFFSET,
     bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
 
   fp << "/>"
@@ -166,18 +167,46 @@ static void write_xml_bitstream_default_mode_setting(
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t"
-     << "<default_mode_bits";
+     << "<" << XML_DEFAULT_MODE_BITS_NODE_NAME;
 
   /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, "name",
+  write_xml_attribute(fp, XML_DEFAULT_MODE_BITS_ATTRIBUTE_NAME,
                       generate_bitstream_setting_pb_type_hierarchy_name(
                         bitstream_setting, bitstream_default_mode_setting_id)
                         .c_str());
 
   write_xml_attribute(
-    fp, "mode_bits",
+    fp, XML_DEFAULT_MODE_BITS_ATTRIBUTE_MODE_BITS,
     bitstream_setting
       .default_mode_bits_to_string(bitstream_default_mode_setting_id)
+      .c_str());
+  fp << "/>"
+     << "\n";
+}
+
+/********************************************************************
+ * A writer to output a bitstream clock_routing setting to XML format
+ *******************************************************************/
+static void write_xml_bitstream_clock_routing_setting(
+  std::fstream& fp, const char* fname,
+  const openfpga::BitstreamSetting& bitstream_setting,
+  const BitstreamClockRoutingSettingId& bitstream_clock_routing_setting_id) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t"
+     << "<" << XML_CLOCK_ROUTING_NODE_NAME;
+
+  /* Generate the full hierarchy name of the pb_type */
+  write_xml_attribute(
+    fp, XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK,
+    bitstream_setting.clock_routing_network(bitstream_clock_routing_setting_id)
+      .c_str());
+
+  write_xml_attribute(
+    fp, XML_CLOCK_ROUTING_ATTRIBUTE_PIN,
+    bitstream_setting.clock_routing_pin(bitstream_clock_routing_setting_id)
+      .to_verilog_string()
       .c_str());
   fp << "/>"
      << "\n";
@@ -194,16 +223,16 @@ static void write_xml_bitstream_interconnect_setting(
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t"
-     << "<pb_type";
+     << "<" << XML_INTERCONNECT_NODE_NAME;
 
   /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, "name",
+  write_xml_attribute(fp, XML_INTERCONNECT_ATTRIBUTE_NAME,
                       generate_bitstream_setting_interconnect_hierarchy_name(
                         bitstream_setting, bitstream_interc_setting_id)
                         .c_str());
 
   write_xml_attribute(
-    fp, "default_path",
+    fp, XML_INTERCONNECT_ATTRIBUTE_DEFAULT_PATH,
     bitstream_setting.default_path(bitstream_interc_setting_id).c_str());
 
   fp << "/>"
@@ -221,7 +250,7 @@ void write_xml_bitstream_setting(
 
   /* Write the root node <openfpga_bitstream_setting>
    */
-  fp << "<openfpga_bitstream_setting>"
+  fp << "<" << XML_BITSTREAM_SETTING_ROOT_NAME << ">"
      << "\n";
 
   /* Write pb_type -related settings */
@@ -238,6 +267,13 @@ void write_xml_bitstream_setting(
                                              bitstream_default_mode_setting_id);
   }
 
+  /* Write clock_routing -related settings */
+  for (const auto& bitstream_clock_routing_setting_id :
+       bitstream_setting.clock_routing_settings()) {
+    write_xml_bitstream_clock_routing_setting(
+      fp, fname, bitstream_setting, bitstream_clock_routing_setting_id);
+  }
+
   /* Write interconnect -related settings */
   for (const auto& bitstream_interc_setting_id :
        bitstream_setting.interconnect_settings()) {
@@ -246,6 +282,6 @@ void write_xml_bitstream_setting(
   }
 
   /* Write the root node <openfpga_bitstream_setting> */
-  fp << "</openfpga_bitstream_setting>"
+  fp << "</" << XML_BITSTREAM_SETTING_ROOT_NAME << ">"
      << "\n";
 }
