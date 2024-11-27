@@ -210,6 +210,11 @@ jobs:
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF"
             dependency_version: "ubuntu22p04"
+          - name: "Build with capnproto update (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            cmake_flags: "-DOPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN=ON"
+            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
