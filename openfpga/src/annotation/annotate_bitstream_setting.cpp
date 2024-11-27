@@ -247,11 +247,11 @@ static int annotate_bitstream_clock_routing_setting(
       return CMD_EXEC_FATAL_ERROR;
     }
     if (!tree_port.mergeable(wanted_pin)) {
-      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', which does not match the name of pin '%s' in the clock network description!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(), tree_port.to_verilog_string.c_str());
+      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', which does not match the name of pin '%s' in the clock network description!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(), tree_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    if (!tree_port.contained(wanted_pin) {
-      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', which is out of the pin '%s' in the clock network description!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(), tree_port.to_verilog_string.c_str());
+    if (!tree_port.contained(wanted_pin)) {
+      VTR_LOG_ERROR("Invalid clock pin definition '%s' from bitstream setting for clock network name '%s', which is out of the pin '%s' in the clock network description!\n", wanted_pin.to_verilog_string().c_str(), ntwk_name.c_str(), tree_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     /* All sanity check passed. Record the bitstream requirements */
@@ -392,6 +392,7 @@ static int annotate_bitstream_interconnect_setting(
 int annotate_bitstream_setting(
   const BitstreamSetting& bitstream_setting,
   const DeviceContext& vpr_device_ctx,
+  const ClockNetwork& clk_ntwk,
   VprDeviceAnnotation& vpr_device_annotation,
   VprBitstreamAnnotation& vpr_bitstream_annotation) {
   int status = CMD_EXEC_SUCCESS;
@@ -402,7 +403,7 @@ int annotate_bitstream_setting(
     return status;
   }
 
-  status = annotate_bitstream_clock_routing_setting(bitstream_setting, vpr_device_ctx,
+  status = annotate_bitstream_clock_routing_setting(bitstream_setting, clk_ntwk,
                                                     vpr_bitstream_annotation);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;

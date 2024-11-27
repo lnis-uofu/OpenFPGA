@@ -11,6 +11,7 @@
 #include "bitstream_setting_fwd.h"
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
+#include "openfpga_port.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -177,7 +178,6 @@ class BitstreamSetting {
     const std::string& default_path);
 
   /* Non-fabric bitstream setting */
-  std::vector<NonFabricBitstreamSetting> non_fabric() const;
   void add_non_fabric(const std::string& name, const std::string& file);
   void add_non_fabric_pb(const std::string& pb, const std::string& content);
 

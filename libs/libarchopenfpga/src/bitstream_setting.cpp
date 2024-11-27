@@ -24,6 +24,13 @@ BitstreamSetting::default_mode_settings() const {
                          default_mode_setting_ids_.end());
 }
 
+BitstreamSetting::bitstream_clock_routing_setting_range
+BitstreamSetting::clock_routing_settings() const {
+  return vtr::make_range(clock_routing_setting_ids_.begin(),
+                         clock_routing_setting_ids_.end());
+}
+
+
 BitstreamSetting::bitstream_interconnect_setting_range
 BitstreamSetting::interconnect_settings() const {
   return vtr::make_range(interconnect_setting_ids_.begin(),

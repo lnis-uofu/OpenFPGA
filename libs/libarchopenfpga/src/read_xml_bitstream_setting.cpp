@@ -14,6 +14,7 @@
 
 /* Headers from openfpga util library */
 #include "openfpga_pb_parser.h"
+#include "openfpga_port_parser.h"
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
@@ -95,7 +96,7 @@ static void read_xml_bitstream_clock_routing_setting(
     get_attribute(xml_clk_routing, XML_CLOCK_ROUTING_ATTRIBUTE_PIN, loc_data).as_string();
   /* Parse the port and apply sanity checks */
   openfpga::PortParser port_parser(pin_attr);
-  BasicPort pin = port_parser.port();
+  openfpga::BasicPort pin = port_parser.port();
   if (!pin.is_valid()) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clk_routing),
                    "Invalid pin '%s' which should be valid port. For example, clk[1:1]\n", pin_attr.c_str());
@@ -198,7 +199,11 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
       }
     }
     if (!valid_node) {
-      bad_tag(xml_child, loc_data, Node, XML_VALID_NODE_NAMES);
+      std::vector<std::string> vec_valid_node_names;
+      for (auto valid_node_name : XML_VALID_NODE_NAMES) {
+        vec_valid_node_names.push_back(std::string(valid_node_name));
+      }
+      bad_tag(xml_child, loc_data, Node, vec_valid_node_names);
     }
 
     if (xml_child.name() == std::string(XML_PB_TYPE_NODE_NAME)) {
