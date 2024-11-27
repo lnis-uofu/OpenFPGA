@@ -32,11 +32,11 @@ add_library(libopenfpgacapnproto STATIC
             ${IC_SRCS}
             )
 
-
-add_dependencies(libopenfpgacapnproto
-    generate_unique_block_capnp
-    )
-
+if (OPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN)
+  add_dependencies(libopenfpgacapnproto
+      generate_unique_block_capnp
+      )
+endif()
 
 target_include_directories(libopenfpgacapnproto PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
