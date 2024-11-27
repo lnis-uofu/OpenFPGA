@@ -39,6 +39,8 @@ echo -e "Testing overloading mode bits for DSP blocks when generating bitstream"
 run-task fpga_bitstream/overload_dsp_mode_bit $@
 echo -e "Testing overloading default mode bits";
 run-task fpga_bitstream/overload_default_mode_bit $@
+echo -e "Testing forcing to route clock tap multiplexers";
+run-task fpga_bitstream/force_clock_tap_routing $@
 
 echo -e "Testing outputting I/O mapping result to file";
 run-task fpga_bitstream/write_io_mapping $@
