@@ -397,6 +397,14 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
   /* Build OPIN node lists for connection blocks */
   rr_gsb.build_cb_opin_nodes(vpr_device_ctx.rr_graph);
 
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    SideManager side_manager(side);
+    VTR_LOG_DEBUG("RRGSB at (%lu, %lu) has %lu chan nodes, %lu ipin nodes, and %lu opin nodes.\n",
+            rr_gsb.get_x(), rr_gsb.get_y(),
+            rr_gsb.chan_node_size(side_manager.get_side()),
+            rr_gsb.ipin_node_size(side_manager.get_side()),
+            rr_gsb.opin_node_size(side_manager.get_side()));
+  }
   return rr_gsb;
 }
 
