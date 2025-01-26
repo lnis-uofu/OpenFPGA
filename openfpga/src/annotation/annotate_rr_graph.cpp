@@ -402,10 +402,10 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     VTR_LOG_DEBUG(
       "RRGSB at (%lu, %lu) has %lu chan nodes, %lu ipin nodes, and %lu opin "
       "nodes.\n",
-            rr_gsb.get_x(), rr_gsb.get_y(),
-            rr_gsb.chan_node_size(side_manager.get_side()),
-            rr_gsb.ipin_node_size(side_manager.get_side()),
-            rr_gsb.opin_node_size(side_manager.get_side()));
+      rr_gsb.get_x(), rr_gsb.get_y(),
+      rr_gsb.chan_node_size(side_manager.get_side()),
+      rr_gsb.ipin_node_size(side_manager.get_side()),
+      rr_gsb.opin_node_size(side_manager.get_side()));
   }
   return rr_gsb;
 }
