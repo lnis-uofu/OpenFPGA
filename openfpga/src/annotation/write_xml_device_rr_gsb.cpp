@@ -62,10 +62,15 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
                 * But we are pretty sure it is either IN_PORT or OUT_PORT
                 * So we just try and find what is valid
                 */
-                driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
-                if (-1 != driver_node_index) { break; }
+          driver_node_index =
+            rr_gsb.get_chan_node_index(chan_side, driver_node);
+          if (-1 != driver_node_index) {
+            break;
+          }
             }
-            if (-1 != driver_node_index) { break;}
+        if (-1 != driver_node_index) {
+          break;
+        }
         }
 
       /* We must have a valide node index */
