@@ -399,7 +399,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     SideManager side_manager(side);
-    VTR_LOG_DEBUG("RRGSB at (%lu, %lu) has %lu chan nodes, %lu ipin nodes, and %lu opin nodes.\n",
+    VTR_LOG_DEBUG(
+      "RRGSB at (%lu, %lu) has %lu chan nodes, %lu ipin nodes, and %lu opin "
+      "nodes.\n",
             rr_gsb.get_x(), rr_gsb.get_y(),
             rr_gsb.chan_node_size(side_manager.get_side()),
             rr_gsb.ipin_node_size(side_manager.get_side()),
