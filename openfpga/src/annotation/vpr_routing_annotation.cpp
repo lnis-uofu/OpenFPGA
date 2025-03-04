@@ -59,6 +59,14 @@ void VprRoutingAnnotation::set_rr_node_prev_node(const RRGraphView& rr_graph,
                                                  const RRNodeId& prev_node) {
   /* Ensure that the node_id is in the list */
   VTR_ASSERT(size_t(rr_node) < rr_node_nets_.size());
+  /* XT: It seems the net information of SINK node is polluted/out-of-date in VPR after routing.
+   * It is quite weird that some SINKs are not the ending point of a routing path
+   * It could happen in some highly customized architecture
+   * A stop sign is enforced here to avoid any exceptions
+   */
+  if (rr_graph.node_type(prev_node) == SINK) {
+    return;
+  }
   /* Warn any override attempt */
   if ((RRNodeId::INVALID() != rr_node_prev_nodes_[rr_node]) &&
       (prev_node != rr_node_prev_nodes_[rr_node])) {
