@@ -64,7 +64,8 @@ void VprRoutingAnnotation::set_rr_node_prev_node(const RRGraphView& rr_graph,
    * point of a routing path It could happen in some highly customized
    * architecture A stop sign is enforced here to avoid any exceptions
    */
-  if (rr_graph.node_type(prev_node) == SINK) {
+  if ((RRNodeId::INVALID() != rr_node_prev_nodes_[rr_node]) &&
+      (rr_graph.node_type(prev_node) == SINK)) {
     return;
   }
   /* Warn any override attempt */
