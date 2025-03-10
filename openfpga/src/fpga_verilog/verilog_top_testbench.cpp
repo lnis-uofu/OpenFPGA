@@ -1172,7 +1172,7 @@ static void print_verilog_top_testbench_benchmark_instance(
     std::string(), std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX), clock_port_names,
     false, atom_ctx, netlist_annotation, pin_constraints, bus_group,
-    explicit_port_mapping);
+    explicit_port_mapping, little_endian);
 
   print_verilog_comment(
     fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -1490,7 +1490,8 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
 static void print_verilog_full_testbench_vanilla_bitstream(
   std::fstream& fp, const std::string& bitstream_file,
   const ModuleManager& module_manager, const ModuleId& top_module,
-  const FabricBitstream& fabric_bitstream) {
+  const FabricBitstream& fabric_bitstream,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1532,10 +1533,10 @@ static void print_verilog_full_testbench_vanilla_bitstream(
   fp << "\tbegin" << std::endl;
   print_verilog_comment(fp, "----- Configuration chain default input -----");
   fp << "\t\t";
-  fp << generate_verilog_port_constant_values(bl_port, initial_bl_values);
+  fp << generate_verilog_port_constant_values(bl_port, initial_bl_values, little_endian);
   fp << ";" << std::endl;
   fp << "\t\t";
-  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
+  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values, little_endian);
   fp << ";" << std::endl;
 
   print_verilog_comment(
@@ -1546,17 +1547,17 @@ static void print_verilog_full_testbench_vanilla_bitstream(
   fp << std::endl;
 
   fp << "\t\t@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ") begin"
+     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port, true, little_endian) << ") begin"
      << std::endl;
 
   /* Enable all the WLs */
   std::vector<size_t> enabled_wl_values(wl_port.get_width(), 1);
   fp << "\t\t\t";
-  fp << generate_verilog_port_constant_values(wl_port, enabled_wl_values);
+  fp << generate_verilog_port_constant_values(wl_port, enabled_wl_values, little_endian);
   fp << ";" << std::endl;
 
   fp << "\t\t\t";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_port, true, little_endian);
   fp << " <= ";
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0]";
   fp << ";" << std::endl;
@@ -1565,24 +1566,27 @@ static void print_verilog_full_testbench_vanilla_bitstream(
 
   /* Disable all the WLs */
   fp << "\t\t@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");"
+     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port, true, little_endian) << ");"
      << std::endl;
 
   fp << "\t\t\t";
-  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
+  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values, little_endian);
   fp << ";" << std::endl;
 
   /* Raise the flag of configuration done when bitstream loading is complete */
   fp << "\t\t@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");"
+     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port, true, little_endian) << ");"
      << std::endl;
 
   BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
   fp << "\t\t\t";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port, true, little_endian);
   fp << " <= ";
   std::vector<size_t> config_done_enable_values(config_done_port.get_width(),
                                                 1);
+  if (little_endian) {
+    std::reverse(config_done_enable_values.begin(), config_done_enable_values.end());
+  }
   fp << generate_verilog_constant_values(config_done_enable_values);
   fp << ";" << std::endl;
 
@@ -1608,7 +1612,8 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   const ModuleManager& module_manager, const ModuleId& top_module,
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
-  const ConfigProtocol& config_protocol) {
+  const ConfigProtocol& config_protocol,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1686,7 +1691,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
     fp, "----- Registers used for fast configuration logic -----");
   fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << "):0] "
      << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << ";" << std::endl;
-  fp << generate_verilog_port(VERILOG_PORT_REG, bit_skip_reg) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, bit_skip_reg, true, little_endian) << ";"
      << std::endl;
 
   print_verilog_comment(
@@ -1700,7 +1705,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   print_verilog_comment(fp, "----- Configuration chain default input -----");
   fp << "\t";
   fp << generate_verilog_port_constant_values(config_chain_head_port,
-                                              initial_values, true);
+                                              initial_values, little_endian, true);
   fp << ";";
   fp << std::endl;
 
@@ -1730,7 +1735,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
                                       fast_configuration ? 1 : 0);
   fp << "\t";
   fp << generate_verilog_port_constant_values(bit_skip_reg, bit_skip_values,
-                                              true);
+                                              little_endian, true);
   fp << ";";
   fp << std::endl;
 
@@ -1746,8 +1751,11 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
 
     fp << "\t\t";
     fp << "if (";
-    fp << generate_verilog_constant_values(
-      std::vector<size_t>(fabric_bitstream.num_regions(), bit_value_to_skip));
+    std::vector<size_t> skip_bits(fabric_bitstream.num_regions(), bit_value_to_skip);
+    if (little_endian) {
+      std::reverse(skip_bits.begin(), skip_bits.end());
+    }
+    fp << generate_verilog_constant_values(skip_bits);
     fp << " == ";
     fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
        << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << "]";
@@ -1757,10 +1765,13 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
 
     fp << "\t\t\t";
     fp << "if (";
-    fp << generate_verilog_constant_values(
-      std::vector<size_t>(bit_skip_reg.get_width(), 1));
+    std::vector<size_t> bit_skip_reg(bit_skip_reg.get_width(), 1);
+    if (little_endian) {
+      std::reverse(bit_skip_reg.begin(), bit_skip_reg.end());
+    }
+    fp << generate_verilog_constant_values(bit_skip_reg);
     fp << " == ";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, bit_skip_reg) << ")";
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, bit_skip_reg, true, little_endian) << ")";
     fp << " begin";
     fp << std::endl;
 
@@ -1780,7 +1791,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
 
     fp << "\t\t\t";
     fp << generate_verilog_port_constant_values(
-      bit_skip_reg, std::vector<size_t>(bit_skip_reg.get_width(), 0), true);
+      bit_skip_reg, std::vector<size_t>(bit_skip_reg.get_width(), 0), true, true);
     fp << ";" << std::endl;
 
     fp << "\t\t";
@@ -1812,8 +1823,11 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
         if (!first_pin) {
           fp << " && ";
         }
-        fp << generate_verilog_constant_values(
-          std::vector<size_t>(1, bit_value_to_skip));
+        std::vector<size_t> bit_skip(1, bit_value_to_skip);
+        if (little_endian) {
+          std::reverse(bit_skip.begin(), bit_skip.end());
+        }
+        fp << generate_verilog_constant_values(bit_skip);
         fp << " == ";
         fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
            << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << "][" << ccff_head_idx
@@ -1828,10 +1842,13 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       curr_bit_skip_reg.set_width(iclk, iclk);
       fp << "\t\t\t";
       fp << "if (";
-      fp << generate_verilog_constant_values(
-        std::vector<size_t>(curr_bit_skip_reg.get_width(), 1));
+      std::vector<size_t> curr_bit_skip(curr_bit_skip_reg.get_width(), 1);
+      if (little_endian) {
+        std::reverse(curr_bit_skip.begin(), curr_bit_skip.end());
+      }
+      fp << generate_verilog_constant_values(curr_bit_skip);
       fp << " == ";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_bit_skip_reg) << ")";
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_bit_skip_reg, true, little_endian) << ")";
       fp << " begin";
       fp << std::endl;
 
@@ -1852,7 +1869,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       fp << "\t\t\t";
       fp << generate_verilog_port_constant_values(
         curr_bit_skip_reg,
-        std::vector<size_t>(curr_bit_skip_reg.get_width(), 0), true);
+        std::vector<size_t>(curr_bit_skip_reg.get_width(), 0), true, true);
       fp << ";" << std::endl;
 
       fp << "\t\t";
@@ -1877,7 +1894,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   if (num_prog_clocks == 1) {
     fp << "always";
     fp << " @(negedge "
-       << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ")";
+       << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port, true, little_endian) << ")";
     fp << " begin";
     fp << std::endl;
 
@@ -1894,7 +1911,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
     std::vector<size_t> config_done_final_values(config_done_port.get_width(),
                                                  1);
     fp << generate_verilog_port_constant_values(config_done_port,
-                                                config_done_final_values, true);
+                                                config_done_final_values, little_endian, true);
     fp << ";" << std::endl;
 
     fp << "\t";
@@ -1908,7 +1925,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
     fp << std::endl;
 
     fp << "\t\t";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, config_chain_head_port);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, config_chain_head_port, true, little_endian);
     fp << " <= ";
     fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
        << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
@@ -1933,7 +1950,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
                                      iclk, iclk);
       fp << "always";
       fp << " @(negedge "
-         << generate_verilog_port(VERILOG_PORT_CONKT, curr_prog_clock_port)
+         << generate_verilog_port(VERILOG_PORT_CONKT, curr_prog_clock_port, true, little_endian)
          << ")";
       fp << " begin";
       fp << std::endl;
@@ -1952,7 +1969,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       std::vector<size_t> config_done_final_values(config_done_port.get_width(),
                                                    1);
       fp << generate_verilog_port_constant_values(
-        config_done_port, config_done_final_values, true);
+        config_done_port, config_done_final_values, little_endian, true);
       fp << ";" << std::endl;
 
       fp << "\t";
@@ -1963,8 +1980,11 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
           std::string(TOP_TB_CONFIG_DONE_PORT_NAME), iclk - 1, iclk - 1);
         std::vector<size_t> prev_config_done_final_values(
           prev_config_done_port.get_width(), 1);
-        fp << generate_verilog_port(VERILOG_PORT_CONKT, prev_config_done_port);
+        fp << generate_verilog_port(VERILOG_PORT_CONKT, prev_config_done_port, true, little_endian);
         fp << " == ";
+        if (little_endian) {
+          std::reverse(prev_config_done_final_values.begin(), prev_config_done_final_values.end());
+        }
         fp << generate_verilog_constant_values(prev_config_done_final_values);
         fp << " && ";
       }
@@ -1977,7 +1997,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       fp << std::endl;
 
       fp << "\t\t";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, config_chain_head_port);
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, config_chain_head_port, true, little_endian);
       fp << " <= ";
       fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
          << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << "]";
@@ -2010,7 +2030,8 @@ static void print_verilog_full_testbench_memory_bank_bitstream(
   std::fstream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
-  const FabricBitstream& fabric_bitstream) {
+  const FabricBitstream& fabric_bitstream,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -2078,20 +2099,20 @@ static void print_verilog_full_testbench_memory_bank_bitstream(
   print_verilog_comment(fp, "----- Bit-Line Address port default input -----");
   fp << "\t";
   fp << generate_verilog_port_constant_values(bl_addr_port,
-                                              initial_bl_addr_values);
+                                              initial_bl_addr_values, little_endian);
   fp << ";";
   fp << std::endl;
 
   print_verilog_comment(fp, "----- Word-Line Address port default input -----");
   fp << "\t";
   fp << generate_verilog_port_constant_values(wl_addr_port,
-                                              initial_wl_addr_values);
+                                              initial_wl_addr_values, little_endian);
   fp << ";";
   fp << std::endl;
 
   print_verilog_comment(fp, "----- Data-input port default input -----");
   fp << "\t";
-  fp << generate_verilog_port_constant_values(din_port, initial_din_values);
+  fp << generate_verilog_port_constant_values(din_port, initial_din_values, little_endian);
   fp << ";";
   fp << std::endl;
 
@@ -2110,7 +2131,7 @@ static void print_verilog_full_testbench_memory_bank_bitstream(
                             1);
   fp << "always";
   fp << " @(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ")";
+     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port, true, little_endian) << ")";
   fp << " begin";
   fp << std::endl;
 
@@ -2126,7 +2147,7 @@ static void print_verilog_full_testbench_memory_bank_bitstream(
   fp << "\t\t";
   std::vector<size_t> config_done_final_values(config_done_port.get_width(), 1);
   fp << generate_verilog_port_constant_values(config_done_port,
-                                              config_done_final_values, true);
+                                              config_done_final_values, little_endian, true);
   fp << ";" << std::endl;
 
   fp << "\t";
@@ -2135,11 +2156,11 @@ static void print_verilog_full_testbench_memory_bank_bitstream(
 
   fp << "\t\t";
   fp << "{";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_port, true, little_endian);
   fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_addr_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_addr_port, true, little_endian);
   fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port, true, little_endian);
   fp << "}";
   fp << " <= ";
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
@@ -2171,7 +2192,8 @@ static void print_verilog_full_testbench_frame_decoder_bitstream(
   std::fstream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
-  const FabricBitstream& fabric_bitstream) {
+  const FabricBitstream& fabric_bitstream,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -2230,13 +2252,13 @@ static void print_verilog_full_testbench_frame_decoder_bitstream(
 
   print_verilog_comment(fp, "----- Address port default input -----");
   fp << "\t";
-  fp << generate_verilog_port_constant_values(addr_port, initial_addr_values);
+  fp << generate_verilog_port_constant_values(addr_port, initial_addr_values, little_endian);
   fp << ";";
   fp << std::endl;
 
   print_verilog_comment(fp, "----- Data-input port default input -----");
   fp << "\t";
-  fp << generate_verilog_port_constant_values(din_port, initial_din_values);
+  fp << generate_verilog_port_constant_values(din_port, initial_din_values, little_endian);
   fp << ";";
   fp << std::endl;
 
@@ -2255,7 +2277,7 @@ static void print_verilog_full_testbench_frame_decoder_bitstream(
                             1);
   fp << "always";
   fp << " @(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ")";
+     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port, true, little_endian) << ")";
   fp << " begin";
   fp << std::endl;
 
@@ -2271,7 +2293,7 @@ static void print_verilog_full_testbench_frame_decoder_bitstream(
   fp << "\t\t";
   std::vector<size_t> config_done_final_values(config_done_port.get_width(), 1);
   fp << generate_verilog_port_constant_values(config_done_port,
-                                              config_done_final_values, true);
+                                              config_done_final_values, little_endian, true);
   fp << ";" << std::endl;
 
   fp << "\t";
@@ -2280,9 +2302,9 @@ static void print_verilog_full_testbench_frame_decoder_bitstream(
 
   fp << "\t\t";
   fp << "{";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port, true, little_endian);
   fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port, true, little_endian);
   fp << "}";
   fp << " <= ";
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
@@ -2318,35 +2340,36 @@ static void print_verilog_full_testbench_bitstream(
   const bool& bit_value_to_skip, const ModuleManager& module_manager,
   const ModuleId& top_module, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
-  const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
+  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const bool& little_endian) {
   /* Branch on the type of configuration protocol */
   switch (config_protocol.type()) {
     case CONFIG_MEM_STANDALONE:
       print_verilog_full_testbench_vanilla_bitstream(
-        fp, bitstream_file, module_manager, top_module, fabric_bitstream);
+        fp, bitstream_file, module_manager, top_module, fabric_bitstream, little_endian);
 
       break;
     case CONFIG_MEM_SCAN_CHAIN:
       print_verilog_full_testbench_configuration_chain_bitstream(
         fp, bitstream_file, fast_configuration, bit_value_to_skip,
         module_manager, top_module, bitstream_manager, fabric_bitstream,
-        config_protocol);
+        config_protocol, little_endian);
       break;
     case CONFIG_MEM_MEMORY_BANK:
       print_verilog_full_testbench_memory_bank_bitstream(
         fp, bitstream_file, fast_configuration, bit_value_to_skip,
-        module_manager, top_module, fabric_bitstream);
+        module_manager, top_module, fabric_bitstream, little_endian);
       break;
     case CONFIG_MEM_QL_MEMORY_BANK:
       print_verilog_full_testbench_ql_memory_bank_bitstream(
         fp, bitstream_file, config_protocol, fast_configuration,
         bit_value_to_skip, module_manager, top_module, fabric_bitstream,
-        blwl_sr_banks);
+        blwl_sr_banks, little_endian);
       break;
     case CONFIG_MEM_FRAME_BASED:
       print_verilog_full_testbench_frame_decoder_bitstream(
         fp, bitstream_file, fast_configuration, bit_value_to_skip,
-        module_manager, top_module, fabric_bitstream);
+        module_manager, top_module, fabric_bitstream, little_endian);
 
       break;
     default:
@@ -2366,7 +2389,8 @@ static void print_verilog_top_testbench_reset_stimuli(
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const std::string& port_name_postfix,
-  const std::vector<std::string>& clock_port_names) {
+  const std::vector<std::string>& clock_port_names,
+  const bool& little_endian) {
   valid_file_stream(fp);
 
   print_verilog_comment(fp, "----- Begin reset signal generation -----");
@@ -2408,7 +2432,7 @@ static void print_verilog_top_testbench_reset_stimuli(
      * default value */
     BasicPort reset_port(block_name + port_name_postfix, 1);
     print_verilog_wire_connection(
-      fp, reset_port, BasicPort(TOP_TB_RESET_PORT_NAME, 1), 1 == initial_value);
+      fp, reset_port, BasicPort(TOP_TB_RESET_PORT_NAME, 1), 1 == initial_value, little_endian);
   }
 }
 
@@ -2420,7 +2444,8 @@ static void print_verilog_top_testbench_reset_stimuli(
  *******************************************************************/
 static void print_verilog_top_testbench_check(
   std::fstream& fp, const std::string& config_done_port_name,
-  const std::string& error_counter_name) {
+  const std::string& error_counter_name,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -2432,7 +2457,7 @@ static void print_verilog_top_testbench_check(
 
   write_tab_to_file(fp, 1);
   fp << "always@(posedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port) << ") begin"
+     << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port, true, little_endian) << ") begin"
      << std::endl;
 
   write_tab_to_file(fp, 2);
@@ -2644,7 +2669,7 @@ int print_verilog_full_testbench(
   print_verilog_full_testbench_bitstream(
     fp, bitstream_file, config_protocol, apply_fast_configuration,
     bit_value_to_skip, module_manager, core_module, bitstream_manager,
-    fabric_bitstream, blwl_sr_banks);
+    fabric_bitstream, blwl_sr_banks, little_endian);
 
   /* Add signal initialization:
    * Bypass writing codes to files due to the autogenerated codes are very
@@ -2653,14 +2678,15 @@ int print_verilog_full_testbench(
   if (true == options.include_signal_init()) {
     print_verilog_testbench_signal_initialization(
       fp, std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME), circuit_lib,
-      module_manager, top_module, true);
+      module_manager, top_module, true, little_endian);
   }
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_top_testbench_reset_stimuli(
     fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
     global_ports, pin_constraints,
-    std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX), clock_port_names);
+    std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX), clock_port_names,
+    little_endian);
   print_verilog_testbench_random_stimuli(
     fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
     global_ports, pin_constraints, clock_port_names,
@@ -2668,7 +2694,8 @@ int print_verilog_full_testbench(
     std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
     std::vector<BasicPort>(
       1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)),
-    options.no_self_checking());
+    options.no_self_checking(),
+    little_endian);
 
   if (!options.no_self_checking()) {
     /* Add output autocheck */
@@ -2679,12 +2706,14 @@ int print_verilog_full_testbench(
       std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
       std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
       std::string(TOP_TESTBENCH_ERROR_COUNTER), atom_ctx, netlist_annotation,
-      clock_port_names, std::string(TOP_TB_OP_CLOCK_PORT_NAME));
+      clock_port_names, std::string(TOP_TB_OP_CLOCK_PORT_NAME),
+      little_endian);
 
     /* Add autocheck for configuration phase */
     print_verilog_top_testbench_check(
       fp, std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
-      std::string(TOP_TESTBENCH_ERROR_COUNTER));
+      std::string(TOP_TESTBENCH_ERROR_COUNTER),
+      little_endian);
   }
 
   /* Find simulation time */
@@ -2705,7 +2734,8 @@ int print_verilog_full_testbench(
     std::string(circuit_name + std::string("_formal.vcd")),
     std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
     std::string(TOP_TESTBENCH_ERROR_COUNTER), std::ceil(simulation_time),
-    options.no_self_checking());
+    options.no_self_checking(),
+    little_endian);
 
   /* Testbench ends*/
   print_verilog_module_end(

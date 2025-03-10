@@ -546,7 +546,8 @@ void print_verilog_timeout_and_vcd(
   const std::string& vcd_fname,
   const std::string& simulation_start_counter_name,
   const std::string& error_counter_name, const float& simulation_time,
-  const bool& no_self_checking) {
+  const bool& no_self_checking,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -569,7 +570,7 @@ void print_verilog_timeout_and_vcd(
   fp << "initial begin" << std::endl;
 
   if (!no_self_checking) {
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port)
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true, little_endian)
        << " <= 1'b1;" << std::endl;
   }
 
@@ -633,7 +634,8 @@ void print_verilog_testbench_check(
   const std::string& config_done_name, const std::string& error_counter_name,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
-  const std::string& default_clock_name) {
+  const std::string& default_clock_name,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -650,7 +652,7 @@ void print_verilog_testbench_check(
 
   BasicPort sim_start_port(simulation_start_counter_name, 1);
 
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, sim_start_port) << ";"
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, sim_start_port, true, little_endian) << ";"
      << std::endl;
   fp << std::endl;
 
@@ -662,13 +664,13 @@ void print_verilog_testbench_check(
   VTR_ASSERT(1 <= clock_ports.size());
 
   fp << "\talways@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0]) << ") begin"
+     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0], true, little_endian) << ") begin"
      << std::endl;
   fp << "\t\tif (1'b1 == "
-     << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin"
+     << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true, little_endian) << ") begin"
      << std::endl;
   fp << "\t\t";
-  print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
+  print_verilog_register_connection(fp, sim_start_port, sim_start_port, little_endian, true);
   fp << "\t\tend else " << std::endl;
   /* If there is a config done signal specified, consider it as a trigger on
    * checking */
@@ -826,7 +828,8 @@ void print_verilog_testbench_random_stimuli(
   const std::vector<std::string>& clock_port_names,
   const std::string& input_port_postfix,
   const std::string& check_flag_port_postfix,
-  const std::vector<BasicPort>& clock_ports, const bool& no_self_checking) {
+  const std::vector<BasicPort>& clock_ports, const bool& no_self_checking,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -896,7 +899,7 @@ void print_verilog_testbench_random_stimuli(
       /* Each logical block assumes a single-width port */
       BasicPort output_port(std::string(block_name + check_flag_port_postfix),
                             1);
-      fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port)
+      fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian)
          << " <= 1'b0;" << std::endl;
     }
   }
@@ -915,7 +918,7 @@ void print_verilog_testbench_random_stimuli(
    */
   VTR_ASSERT(1 <= clock_ports.size());
   fp << "\talways@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0]) << ") begin"
+     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0], true, little_endian) << ") begin"
      << std::endl;
 
   for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
@@ -1208,7 +1211,8 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& circuit_input_ports,
   const ModuleManager& module_manager, const ModuleId& parent_module,
-  const ModuleId& primitive_module, const bool& deposit_random_values) {
+  const ModuleId& primitive_module, const bool& deposit_random_values,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1239,7 +1243,7 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
         rec_print_verilog_testbench_primitive_module_signal_initialization(
           fp, child_hie_path, circuit_lib, circuit_model, circuit_input_ports,
           module_manager, child_module, primitive_module,
-          deposit_random_values);
+          deposit_random_values, little_endian);
       } else {
         /* If the child module is the primitive module,
          * we output the signal initialization codes for the input ports
@@ -1259,7 +1263,7 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
           fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info,
-                                      false);
+                                      false, little_endian);
 
           if (!deposit_random_values) {
             fp << ", " << circuit_lib.port_size(input_port) << "'b"
@@ -1289,7 +1293,8 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
 void print_verilog_testbench_signal_initialization(
   std::fstream& fp, const std::string& top_instance_name,
   const CircuitLibrary& circuit_lib, const ModuleManager& module_manager,
-  const ModuleId& top_module, const bool& deposit_random_values) {
+  const ModuleId& top_module, const bool& deposit_random_values,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1346,7 +1351,7 @@ void print_verilog_testbench_signal_initialization(
     rec_print_verilog_testbench_primitive_module_signal_initialization(
       fp, top_instance_name, circuit_lib, signal_init_circuit_model,
       signal_init_circuit_ports.at(signal_init_circuit_model), module_manager,
-      top_module, primitive_module, deposit_random_values);
+      top_module, primitive_module, deposit_random_values, little_endian);
   }
 }
 

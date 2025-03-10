@@ -69,7 +69,8 @@ void print_verilog_full_testbench_ql_memory_bank_bitstream(
   const ConfigProtocol& config_protocol, const bool& fast_configuration,
   const bool& bit_value_to_skip, const ModuleManager& module_manager,
   const ModuleId& top_module, const FabricBitstream& fabric_bitstream,
-  const MemoryBankShiftRegisterBanks& blwl_sr_banks);
+  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const bool& little_endian);
 
 } /* end namespace openfpga */
 
