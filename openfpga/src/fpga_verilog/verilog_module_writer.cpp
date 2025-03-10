@@ -318,7 +318,8 @@ static void print_verilog_module_output_short_connection(
     }
 
     /* We need to print a wire connection here */
-    print_verilog_wire_connection(fp, sink_port, src_port, false, little_endian);
+    print_verilog_wire_connection(fp, sink_port, src_port, false,
+                                  little_endian);
   }
 }
 
@@ -378,7 +379,8 @@ static void print_verilog_module_local_short_connection(
         sink_pin, sink_pin);
 
       /* We need to print a wire connection here */
-      print_verilog_wire_connection(fp, sink_port, src_port, false, little_endian);
+      print_verilog_wire_connection(fp, sink_port, src_port, false,
+                                    little_endian);
     }
   }
 }
@@ -401,8 +403,7 @@ static void print_verilog_module_local_short_connection(
  *******************************************************************/
 static void print_verilog_module_local_short_connections(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id,
-  const bool& little_endian) {
+  const ModuleId& module_id, const bool& little_endian) {
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
     /* We only care the nets that indicate short connections */
@@ -436,8 +437,7 @@ static void print_verilog_module_local_short_connections(
  *******************************************************************/
 static void print_verilog_module_output_short_connections(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id,
-  const bool& little_endian) {
+  const ModuleId& module_id, const bool& little_endian) {
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
     /* We only care the nets that indicate short connections */
@@ -586,7 +586,8 @@ void write_verilog_module_to_file(std::fstream& fp,
 
   /* Print module declaration */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   options.default_net_type(), options.little_endian());
+                                   options.default_net_type(),
+                                   options.little_endian());
 
   /* Print an empty line as splitter */
   fp << std::endl;
@@ -603,8 +604,9 @@ void write_verilog_module_to_file(std::fstream& fp,
           (1 == local_wire.get_width()) && (0 == local_wire.get_lsb())) {
         continue;
       }
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire, true, options.little_endian()) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire, true,
+                                  options.little_endian())
+         << ";" << std::endl;
     }
   }
 
@@ -648,13 +650,15 @@ void write_verilog_module_to_file(std::fstream& fp,
   /* Print local connection (from module inputs to output! */
   print_verilog_comment(
     fp, std::string("----- BEGIN Local short connections -----"));
-  print_verilog_module_local_short_connections(fp, module_manager, module_id, options.little_endian());
+  print_verilog_module_local_short_connections(fp, module_manager, module_id,
+                                               options.little_endian());
   print_verilog_comment(fp,
                         std::string("----- END Local short connections -----"));
 
   print_verilog_comment(
     fp, std::string("----- BEGIN Local output short connections -----"));
-  print_verilog_module_output_short_connections(fp, module_manager, module_id, options.little_endian());
+  print_verilog_module_output_short_connections(fp, module_manager, module_id,
+                                                options.little_endian());
 
   print_verilog_comment(
     fp, std::string("----- END Local output short connections -----"));
@@ -666,10 +670,9 @@ void write_verilog_module_to_file(std::fstream& fp,
     for (size_t instance :
          module_manager.child_module_instances(module_id, child_module)) {
       /* Print an instance */
-      write_verilog_instance_to_file(fp, module_manager, module_id,
-                                     child_module, instance,
-                                     options.explicit_port_mapping(),
-                                     options.little_endian());
+      write_verilog_instance_to_file(
+        fp, module_manager, module_id, child_module, instance,
+        options.explicit_port_mapping(), options.little_endian());
       /* Print an empty line as splitter */
       fp << std::endl;
     }

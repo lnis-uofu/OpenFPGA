@@ -92,8 +92,8 @@ int print_verilog_testbench_io_connection(
    * signals! */
   status = print_verilog_preconfig_top_module_connect_global_ports(
     fp, module_manager, core_module, pin_constraints, atom_ctx,
-    netlist_annotation, global_ports, benchmark_clock_port_names,
-    std::string(), little_endian);
+    netlist_annotation, global_ports, benchmark_clock_port_names, std::string(),
+    little_endian);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

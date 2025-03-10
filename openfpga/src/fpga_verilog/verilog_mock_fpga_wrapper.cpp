@@ -52,8 +52,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   const std::string& io_input_port_name_postfix,
   const std::string& io_output_port_name_postfix,
   const std::vector<std::string>& clock_port_names,
-  const size_t& unused_io_value,
-  const bool& little_endian) {
+  const size_t& unused_io_value, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -207,10 +206,11 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
         io_name_map.fpga_top_port(module_mapped_io_port);
       if (renamed_module_mapped_io_port.is_valid()) {
         print_verilog_wire_connection(fp, benchmark_io_port,
-                                      renamed_module_mapped_io_port, false, little_endian);
+                                      renamed_module_mapped_io_port, false,
+                                      little_endian);
       } else {
-        print_verilog_wire_connection(fp, benchmark_io_port,
-                                      module_mapped_io_port, false, little_endian);
+        print_verilog_wire_connection(
+          fp, benchmark_io_port, module_mapped_io_port, false, little_endian);
       }
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
@@ -363,7 +363,8 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
                                         module_clock_pin, false, little_endian);
         } else {
           print_verilog_wire_connection(fp, benchmark_clock_pin,
-                                        actual_module_clock_pin, false, little_endian);
+                                        actual_module_clock_pin, false,
+                                        little_endian);
         }
       }
       /* Finish, go to the next */
@@ -403,8 +404,8 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
           print_verilog_wire_connection(fp, benchmark_pin, module_global_pin,
                                         false, little_endian);
         } else {
-          print_verilog_wire_connection(fp, benchmark_pin,
-                                        actual_module_global_pin, false, little_endian);
+          print_verilog_wire_connection(
+            fp, benchmark_pin, actual_module_global_pin, false, little_endian);
         }
       }
     }
@@ -515,8 +516,7 @@ int print_verilog_mock_fpga_wrapper(
   bool little_endian = options.little_endian();
   /* Print module declaration */
   print_verilog_module_declaration(fp, module_manager, top_module,
-                                   options.default_net_type(),
-                                   little_endian);
+                                   options.default_net_type(), little_endian);
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names =
@@ -529,7 +529,8 @@ int print_verilog_mock_fpga_wrapper(
     std::string(APPINST_PORT_POSTFIX), false, little_endian);
 
   print_verilog_testbench_shared_benchmark_output_ports(
-    fp, atom_ctx, netlist_annotation, std::string(APPINST_PORT_POSTFIX), little_endian);
+    fp, atom_ctx, netlist_annotation, std::string(APPINST_PORT_POSTFIX),
+    little_endian);
 
   /* Instanciate application HDL module */
   print_verilog_testbench_benchmark_instance(

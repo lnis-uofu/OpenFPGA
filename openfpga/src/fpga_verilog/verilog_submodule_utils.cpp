@@ -80,9 +80,11 @@ void print_verilog_submodule_timing(std::fstream& fp,
 
     fp << "\t\t";
     fp << "("
-       << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false, little_endian);
+       << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false,
+                                little_endian);
     fp << " => ";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false, little_endian)
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false,
+                                little_endian)
        << ")";
     fp << " = ";
     fp << "(" << std::setprecision(FLOAT_PRECISION)
@@ -223,9 +225,9 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
       continue;
     }
     /* Print a Verilog template for the circuit model */
-    print_one_verilog_template_module(module_manager, fp,
-                                      circuit_lib.model_name(model),
-                                      options.default_net_type(), options.little_endian());
+    print_one_verilog_template_module(
+      module_manager, fp, circuit_lib.model_name(model),
+      options.default_net_type(), options.little_endian());
   }
 
   /* close file stream */

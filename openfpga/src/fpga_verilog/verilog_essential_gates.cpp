@@ -306,8 +306,7 @@ static void print_verilog_and_or_gate_body(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& input_ports,
-  const std::vector<CircuitPortId>& output_ports,
-  const bool& little_endian) {
+  const std::vector<CircuitPortId>& output_ports, const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -339,7 +338,8 @@ static void print_verilog_and_or_gate_body(
       BasicPort output_port_info(circuit_lib.port_lib_name(output_port),
                                  output_pin, output_pin);
       fp << "\tassign "
-         << generate_verilog_port(VERILOG_PORT_CONKT, output_port_info, true, little_endian);
+         << generate_verilog_port(VERILOG_PORT_CONKT, output_port_info, true,
+                                  little_endian);
       fp << " = ";
 
       size_t port_cnt = 0;
@@ -352,7 +352,8 @@ static void print_verilog_and_or_gate_body(
 
           BasicPort input_port_info(circuit_lib.port_lib_name(input_port),
                                     input_pin, input_pin);
-          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, true, true);
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, true,
+                                      true);
 
           /* Increment the counter for port */
           port_cnt++;
@@ -370,8 +371,7 @@ static void print_verilog_mux2_gate_body(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& input_ports,
-  const std::vector<CircuitPortId>& output_ports,
-  const bool& little_endian) {
+  const std::vector<CircuitPortId>& output_ports, const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -428,13 +428,17 @@ static void print_verilog_mux2_gate_body(
   BasicPort in0_port_info(circuit_lib.port_lib_name(input_ports[0]), 0, 0);
   BasicPort in1_port_info(circuit_lib.port_lib_name(input_ports[1]), 0, 0);
 
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, out_port_info, true, little_endian);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, out_port_info, true,
+                              little_endian);
   fp << " = ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, sel_port_info, true, little_endian);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, sel_port_info, true,
+                              little_endian);
   fp << " ? ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, in0_port_info, true, little_endian);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, in0_port_info, true,
+                              little_endian);
   fp << " : ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, in1_port_info, true, little_endian);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, in1_port_info, true,
+                              little_endian);
   fp << ";" << std::endl;
 }
 
@@ -536,8 +540,8 @@ static void print_verilog_constant_generator_module(
        module_manager.module_ports(const_val_module)) {
     BasicPort module_port =
       module_manager.module_port(const_val_module, module_port_id);
-    print_verilog_wire_constant_values(fp, module_port,
-                                       std::vector<size_t>(1, const_value), little_endian);
+    print_verilog_wire_constant_values(
+      fp, module_port, std::vector<size_t>(1, const_value), little_endian);
   }
 
   /* Put an end to the Verilog module */
@@ -575,10 +579,12 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
   /* Print constant generators */
   /* VDD */
   print_verilog_constant_generator_module(
-    module_manager, fp, 0, module_name_map, options.default_net_type(), options.little_endian());
+    module_manager, fp, 0, module_name_map, options.default_net_type(),
+    options.little_endian());
   /* GND */
   print_verilog_constant_generator_module(
-    module_manager, fp, 1, module_name_map, options.default_net_type(), options.little_endian());
+    module_manager, fp, 1, module_name_map, options.default_net_type(),
+    options.little_endian());
 
   for (const auto& circuit_model : circuit_lib.models()) {
     /* By pass user-defined modules */
@@ -586,20 +592,21 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
       continue;
     }
     if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
-      print_verilog_invbuf_module(module_manager, fp, circuit_lib,
-                                  circuit_model, module_name_map,
-                                  options.default_net_type(), options.little_endian());
+      print_verilog_invbuf_module(
+        module_manager, fp, circuit_lib, circuit_model, module_name_map,
+        options.default_net_type(), options.little_endian());
       continue;
     }
     if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
-      print_verilog_passgate_module(module_manager, fp, circuit_lib,
-                                    circuit_model, module_name_map,
-                                    options.default_net_type(), options.little_endian());
+      print_verilog_passgate_module(
+        module_manager, fp, circuit_lib, circuit_model, module_name_map,
+        options.default_net_type(), options.little_endian());
       continue;
     }
     if (CIRCUIT_MODEL_GATE == circuit_lib.model_type(circuit_model)) {
       print_verilog_gate_module(module_manager, fp, circuit_lib, circuit_model,
-                                module_name_map, options.default_net_type(), options.little_endian());
+                                module_name_map, options.default_net_type(),
+                                options.little_endian());
       continue;
     }
   }

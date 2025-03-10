@@ -29,7 +29,7 @@ namespace openfpga {
 void print_verilog_preconfig_top_module_internal_wires(
   std::fstream &fp, const ModuleManager &module_manager,
   const ModuleId &top_module, const std::string &port_postfix,
-  const bool& little_endian) {
+  const bool &little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -43,8 +43,9 @@ void print_verilog_preconfig_top_module_internal_wires(
     /* Add a postfix to the internal wires to be different from other reserved
      * ports */
     module_port.set_name(module_port.get_name() + port_postfix);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true, little_endian) << ";"
-       << std::endl;
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true,
+                                little_endian)
+       << ";" << std::endl;
   }
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -61,8 +62,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
   const AtomContext &atom_ctx, const VprNetlistAnnotation &netlist_annotation,
   const FabricGlobalPortInfo &fabric_global_ports,
   const std::vector<std::string> &benchmark_clock_port_names,
-  const std::string &port_postfix,
-  const bool& little_endian) {
+  const std::string &port_postfix, const bool &little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 

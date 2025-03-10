@@ -110,8 +110,8 @@ int print_verilog_template_testbench(const ModuleManager &module_manager,
 
   bool little_endian = options.little_endian();
   /* Print internal wires */
-  print_verilog_preconfig_top_module_internal_wires(fp, module_manager,
-                                                    core_module, std::string(), little_endian);
+  print_verilog_preconfig_top_module_internal_wires(
+    fp, module_manager, core_module, std::string(), little_endian);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(

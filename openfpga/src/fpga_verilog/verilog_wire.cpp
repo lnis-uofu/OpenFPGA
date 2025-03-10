@@ -82,10 +82,12 @@ static void print_verilog_wire_module(
     module_manager.module_port(wire_module, module_output_port_id);
 
   /* Print wire declaration for the inputs and outputs */
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_input_port, true, little_endian) << ";"
-     << std::endl;
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_output_port, true, little_endian) << ";"
-     << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_input_port, true,
+                              little_endian)
+     << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_output_port, true,
+                              little_endian)
+     << ";" << std::endl;
 
   /* Direct shortcut */
   print_verilog_wire_connection(fp, module_output_port, module_input_port,
@@ -136,7 +138,8 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
       continue;
     }
     print_verilog_wire_module(module_manager, circuit_lib, fp, model,
-                              module_name_map, options.default_net_type(), options.little_endian());
+                              module_name_map, options.default_net_type(),
+                              options.little_endian());
   }
   print_verilog_comment(
     fp, std::string("----- END Verilog modules for regular wires -----"));
