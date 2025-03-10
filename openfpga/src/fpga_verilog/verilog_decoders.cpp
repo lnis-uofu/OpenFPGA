@@ -708,7 +708,7 @@ static void print_verilog_arch_decoder_with_data_in_module(
 
     /* Depend on if the inverted data output port is needed or not */
     if (true == decoder_lib.use_data_inv_port(decoder)) {
-      print_verilog_wire_connection(fp, data_inv_port, addr_port, true);
+      print_verilog_wire_connection(fp, data_inv_port, addr_port, true, little_endian);
     }
 
     print_verilog_comment(

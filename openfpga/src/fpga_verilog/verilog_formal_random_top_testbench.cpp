@@ -327,6 +327,7 @@ void print_verilog_random_top_testbench(
   std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(
     clock_port_names, std::string(DEFAULT_CLOCK_NAME));
 
+  bool little_endian = options.little_endian();
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_clock_stimuli(fp, pin_constraints,
                                         simulation_parameters, clock_ports, little_endian);

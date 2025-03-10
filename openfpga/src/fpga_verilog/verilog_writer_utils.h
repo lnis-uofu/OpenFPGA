@@ -75,13 +75,15 @@ void print_verilog_module_instance(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& module_id, const std::string& instance_name,
   const std::map<std::string, BasicPort>& port2port_name_map,
-  const bool& use_explicit_port_map);
+  const bool& use_explicit_port_map,
+  const bool& little_endian);
 
 void print_verilog_module_instance(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& parent_module_id, const ModuleId& child_module_id,
   const std::map<std::string, BasicPort>& port2port_name_map,
-  const bool& use_explicit_port_map);
+  const bool& use_explicit_port_map,
+  const bool& little_endian);
 
 void print_verilog_module_end(
   std::fstream& fp, const std::string& module_name,
@@ -169,24 +171,27 @@ void print_verilog_local_sram_wires(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& sram_model,
                                     const e_config_protocol_type sram_orgz_type,
-                                    const size_t& port_size);
+                                    const size_t& port_size,
+                                    const bool& little_endian);
 
 void print_verilog_local_config_bus(
   std::fstream& fp, const std::string& prefix,
   const e_config_protocol_type& sram_orgz_type, const size_t& instance_id,
-  const size_t& num_conf_bits);
+  const size_t& num_conf_bits,
+                                    const bool& little_endian);
 
 void print_verilog_mux_config_bus(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
   const size_t& mux_size, const size_t& mux_instance_id,
-  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits);
+  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits,
+  const bool& little_endian);
 
 void print_verilog_formal_verification_mux_sram_ports_wiring(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const size_t& mux_size,
   const size_t& mux_instance_id, const size_t& num_conf_bits,
-  const BasicPort& fm_config_bus);
+  const BasicPort& fm_config_bus, const bool& little_endian);
 
 void print_verilog_shifted_clock_stimuli(std::fstream& fp,
                                          const BasicPort& port,
@@ -205,7 +210,7 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const std::vector<float>& pulse_widths,
                                  const std::vector<size_t>& flip_values,
-                                 const std::string& wait_condition);
+                                 const std::string& wait_condition, const bool& little_endian);
 
 void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,

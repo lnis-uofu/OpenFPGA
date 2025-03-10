@@ -98,7 +98,7 @@ static void print_verilog_top_testbench_config_chain_port(
     top_module, generate_configuration_chain_head_name());
   BasicPort config_chain_head_port =
     module_manager.module_port(top_module, cc_head_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_REG, config_chain_head_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, config_chain_head_port, true, little_endian) << ";"
      << std::endl;
 
   /* Print the tail of configuration-chains here */
@@ -107,7 +107,7 @@ static void print_verilog_top_testbench_config_chain_port(
     top_module, generate_configuration_chain_tail_name());
   BasicPort config_chain_tail_port =
     module_manager.module_port(top_module, cc_tail_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, config_chain_tail_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, config_chain_tail_port, true, little_endian) << ";"
      << std::endl;
 }
 
@@ -516,7 +516,7 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
         print_verilog_wire_connection(
           fp, module_global_pin, stimuli_reset_port,
           1 == fabric_global_port_info.global_port_default_value(
-                 fabric_global_port));
+                 fabric_global_port), little_endian);
       } else {
         VTR_ASSERT_SAFE(false == activate);
         print_verilog_wire_constant_values(
@@ -1172,7 +1172,7 @@ static void print_verilog_top_testbench_benchmark_instance(
     std::string(), std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX), clock_port_names,
     false, atom_ctx, netlist_annotation, pin_constraints, bus_group,
-    explicit_port_mapping, little_endian);
+    explicit_port_mapping);
 
   print_verilog_comment(
     fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -1417,7 +1417,7 @@ static void print_verilog_top_testbench_generic_stimulus(
   print_verilog_comment(
     fp, "----- Begin operating set signal generation: always disabled -----");
   print_verilog_pulse_stimuli(fp, set_port, 0, /* Initial value */
-                              op_clock_period / timescale, 0);
+                              op_clock_period / timescale, 0, little_endian);
   print_verilog_comment(
     fp, "----- End operating set signal generation: always disabled -----");
 
@@ -1765,11 +1765,11 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
 
     fp << "\t\t\t";
     fp << "if (";
-    std::vector<size_t> bit_skip_reg(bit_skip_reg.get_width(), 1);
+    std::vector<size_t> bit_skip_reg_vec(bit_skip_reg.get_width(), 1);
     if (little_endian) {
-      std::reverse(bit_skip_reg.begin(), bit_skip_reg.end());
+      std::reverse(bit_skip_reg_vec.begin(), bit_skip_reg_vec.end());
     }
-    fp << generate_verilog_constant_values(bit_skip_reg);
+    fp << generate_verilog_constant_values(bit_skip_reg_vec);
     fp << " == ";
     fp << generate_verilog_port(VERILOG_PORT_CONKT, bit_skip_reg, true, little_endian) << ")";
     fp << " begin";

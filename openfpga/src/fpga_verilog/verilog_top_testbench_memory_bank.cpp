@@ -70,7 +70,7 @@ void print_verilog_top_testbench_ql_memory_bank_port(
     BasicPort bl_addr_port =
       module_manager.module_port(top_module, bl_addr_port_id);
 
-    fp << generate_verilog_port(VERILOG_PORT_REG, bl_addr_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_REG, bl_addr_port, true, little_endian) << ";"
        << std::endl;
   } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
     print_verilog_comment(fp, std::string("---- Bit-Line ports -----"));
@@ -132,7 +132,7 @@ void print_verilog_top_testbench_ql_memory_bank_port(
     BasicPort wl_addr_port =
       module_manager.module_port(top_module, wl_addr_port_id);
 
-    fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port, true, little_endian) << ";"
        << std::endl;
   } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
     print_verilog_comment(fp, std::string("---- Word-Line ports -----"));

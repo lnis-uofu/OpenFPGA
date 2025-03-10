@@ -491,7 +491,7 @@ static void print_verilog_gate_module(
       break;
     case CIRCUIT_MODEL_GATE_MUX2:
       print_verilog_mux2_gate_body(fp, circuit_lib, circuit_model, input_ports,
-                                   output_ports, little_endian, little_endian);
+                                   output_ports, little_endian);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,

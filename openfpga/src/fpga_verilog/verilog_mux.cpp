@@ -58,7 +58,7 @@ static void generate_verilog_cmos_mux_branch_body_behavioral(
      << std::endl;
 
   /* Generate the case-switch table */
-  fp << "\talways @(" << generate_verilog_port(VERILOG_PORT_CONKT, input_port)
+  fp << "\talways @(" << generate_verilog_port(VERILOG_PORT_CONKT, input_port, true, little_endian)
      << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_port, true, little_endian) << ")"
      << std::endl;
   fp << "\tcase (" << generate_verilog_port(VERILOG_PORT_CONKT, mem_port, true, little_endian) << ")"
@@ -117,7 +117,7 @@ static void generate_verilog_cmos_mux_branch_body_behavioral(
   /* Wire registers to output ports */
   fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian)
      << " = ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port, true, little_endian) << ";"
      << std::endl;
 }
 

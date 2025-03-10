@@ -70,7 +70,7 @@ ShellCommandId add_write_fabric_verilog_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
@@ -184,7 +184,7 @@ ShellCommandId add_write_full_testbench_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -277,7 +277,7 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -344,7 +344,7 @@ ShellCommandId add_write_testbench_template_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -407,7 +407,7 @@ ShellCommandId add_write_testbench_io_connection_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -488,7 +488,7 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -573,7 +573,7 @@ ShellCommandId add_write_preconfigured_testbench_command_template(
 
   CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
                        "Use little endian format in Verilog netlists. By default, big endian is considered");
-  shell_cmd.set_option_short_name(output_le, "le");
+  shell_cmd.set_option_short_name(le_opt, "le");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
