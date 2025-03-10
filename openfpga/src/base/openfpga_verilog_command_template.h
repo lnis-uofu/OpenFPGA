@@ -182,6 +182,10 @@ ShellCommandId add_write_full_testbench_command_template(
     "use_relative_path", false,
     "Force to use relative path in netlists when including other netlists");
 
+  CommandOptionId le_opt = shell_cmd.add_option("little_endian", false,
+                       "Use little endian format in Verilog netlists. By default, big endian is considered");
+  shell_cmd.set_option_short_name(output_le, "le");
+
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
 

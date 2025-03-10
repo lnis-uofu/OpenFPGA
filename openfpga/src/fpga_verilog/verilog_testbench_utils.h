@@ -31,7 +31,8 @@ void print_verilog_testbench_fpga_instance(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ModuleId& core_module,
   const std::string& top_instance_name, const std::string& net_postfix,
-  const IoNameMap& io_name_map, const bool& explicit_port_mapping);
+  const IoNameMap& io_name_map, const bool& explicit_port_mapping,
+  const bool& little_endian);
 
 void print_verilog_testbench_benchmark_instance(
   std::fstream& fp, const std::string& module_name,
@@ -54,7 +55,8 @@ void print_verilog_testbench_connect_fpga_ios(
   const std::string& io_input_port_name_postfix,
   const std::string& io_output_port_name_postfix,
   const std::vector<std::string>& clock_port_names,
-  const size_t& unused_io_value);
+  const size_t& unused_io_value,
+  const bool& little_endian);
 
 void print_verilog_timeout_and_vcd(
   std::fstream& fp, const std::string& module_name,
@@ -106,17 +108,20 @@ void print_verilog_testbench_shared_input_ports(
 void print_verilog_testbench_shared_fpga_output_ports(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const std::string& fpga_output_port_postfix);
+  const std::string& fpga_output_port_postfix,
+  const bool& little_endian);
 
 void print_verilog_testbench_shared_benchmark_output_ports(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const std::string& benchmark_output_port_postfix);
+  const std::string& benchmark_output_port_postfix,
+  const bool& little_endian);
 
 void print_verilog_testbench_shared_check_flags(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const std::string& check_flag_port_postfix);
+  const std::string& check_flag_port_postfix,
+  const bool& little_endian);
 
 void print_verilog_testbench_shared_ports(
   std::fstream& fp, const ModuleManager& module_manager,
@@ -128,7 +133,8 @@ void print_verilog_testbench_shared_ports(
   const std::string& shared_input_port_postfix,
   const std::string& benchmark_output_port_postfix,
   const std::string& fpga_output_port_postfix,
-  const std::string& check_flag_port_postfix, const bool& no_self_checking);
+  const std::string& check_flag_port_postfix, const bool& no_self_checking,
+  const bool& little_endian);
 
 void print_verilog_testbench_signal_initialization(
   std::fstream& fp, const std::string& top_instance_name,

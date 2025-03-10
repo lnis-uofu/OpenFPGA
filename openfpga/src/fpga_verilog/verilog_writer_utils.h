@@ -151,6 +151,7 @@ void print_verilog_wire_connection(std::fstream& fp,
 void print_verilog_register_connection(std::fstream& fp,
                                        const BasicPort& output_port,
                                        const BasicPort& input_port,
+                                       const bool& little_endian,
                                        const bool& inverted);
 
 void print_verilog_buffer_instance(std::fstream& fp,
@@ -189,12 +190,14 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
                                          const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
-                                         const size_t& initial_value);
+                                         const size_t& initial_value,
+                                         const bool& little_endian);
 
 void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
-                                 const size_t& flip_value);
+                                 const size_t& flip_value,
+                                 const bool& little_endian);
 
 void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
@@ -205,7 +208,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
 void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
-                                 const std::string& wait_condition);
+                                 const std::string& wait_condition,
+                                 const bool& little_endian);
 
 void print_verilog_netlist_include_header_file(
   const std::vector<std::string>& netlists_to_be_included,

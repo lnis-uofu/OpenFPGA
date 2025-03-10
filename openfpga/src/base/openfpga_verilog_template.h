@@ -109,6 +109,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
+  CommandOptionId opt_little_endian= cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -139,6 +140,9 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   }
+
+  options.set_little_endian(
+    cmd_context.option_enable(cmd, opt_little_endian));
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;

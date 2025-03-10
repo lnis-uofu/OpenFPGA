@@ -32,6 +32,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   use_relative_path_ = false;
   simulator_type_ = e_simulator_type::IVERILOG;
   dump_waveform_ = false;
+  little_endian_ = false;
   verbose_output_ = false;
 
   SIMULATOR_TYPE_STRING_ = {{"iverilog", "vcs"}};
@@ -111,6 +112,7 @@ bool VerilogTestbenchOption::use_relative_path() const {
   return use_relative_path_;
 }
 
+bool VerilogTestbenchOption::little_endian() const { return little_endian_; }
 bool VerilogTestbenchOption::verbose_output() const { return verbose_output_; }
 
 VerilogTestbenchOption::e_simulator_type
@@ -268,6 +270,10 @@ void VerilogTestbenchOption::set_time_stamp(const bool& enabled) {
 
 void VerilogTestbenchOption::set_use_relative_path(const bool& enabled) {
   use_relative_path_ = enabled;
+}
+
+void VerilogTestbenchOption::set_little_endian(const bool& enabled) {
+  little_endian_ = enabled;
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {

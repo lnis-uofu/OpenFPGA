@@ -64,7 +64,7 @@ static size_t find_config_protocol_num_prog_clocks(
  *******************************************************************/
 static void print_verilog_top_testbench_flatten_memory_port(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& top_module) {
+  const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -73,14 +73,14 @@ static void print_verilog_top_testbench_flatten_memory_port(
   ModulePortId bl_port_id = module_manager.find_module_port(
     top_module, std::string(MEMORY_BL_PORT_NAME));
   BasicPort bl_port = module_manager.module_port(top_module, bl_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_REG, bl_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, bl_port, true, little_endian) << ";" << std::endl;
 
   /* Print the port for Word-Line */
   print_verilog_comment(fp, std::string("---- Word Line ports -----"));
   ModulePortId wl_port_id = module_manager.find_module_port(
     top_module, std::string(MEMORY_WL_PORT_NAME));
   BasicPort wl_port = module_manager.module_port(top_module, wl_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_REG, wl_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, wl_port, true, little_endian) << ";" << std::endl;
 }
 
 /********************************************************************
@@ -88,7 +88,7 @@ static void print_verilog_top_testbench_flatten_memory_port(
  *******************************************************************/
 static void print_verilog_top_testbench_config_chain_port(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& top_module) {
+  const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -116,7 +116,7 @@ static void print_verilog_top_testbench_config_chain_port(
  *******************************************************************/
 static void print_verilog_top_testbench_memory_bank_port(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& top_module) {
+  const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -128,7 +128,7 @@ static void print_verilog_top_testbench_memory_bank_port(
   BasicPort bl_addr_port =
     module_manager.module_port(top_module, bl_addr_port_id);
 
-  fp << generate_verilog_port(VERILOG_PORT_REG, bl_addr_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, bl_addr_port, true, little_endian) << ";"
      << std::endl;
 
   /* Print the address port for the Word-Line decoder here */
@@ -139,7 +139,7 @@ static void print_verilog_top_testbench_memory_bank_port(
   BasicPort wl_addr_port =
     module_manager.module_port(top_module, wl_addr_port_id);
 
-  fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port, true, little_endian) << ";"
      << std::endl;
 
   /* Print the data-input port for the frame-based decoder here */
@@ -148,7 +148,7 @@ static void print_verilog_top_testbench_memory_bank_port(
   ModulePortId din_port_id = module_manager.find_module_port(
     top_module, std::string(DECODER_DATA_IN_PORT_NAME));
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, din_port, true, little_endian) << ";" << std::endl;
 
   /* Print the optional readback port for the decoder here */
   print_verilog_comment(
@@ -158,11 +158,11 @@ static void print_verilog_top_testbench_memory_bank_port(
   if (readback_port_id) {
     BasicPort readback_port =
       module_manager.module_port(top_module, readback_port_id);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, readback_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, readback_port, true, little_endian) << ";"
        << std::endl;
     /* Disable readback in full testbenches */
     print_verilog_wire_constant_values(
-      fp, readback_port, std::vector<size_t>(readback_port.get_width(), 0));
+      fp, readback_port, std::vector<size_t>(readback_port.get_width(), 0), little_endian);
   }
 
   /* Generate enable signal waveform here:
@@ -178,17 +178,17 @@ static void print_verilog_top_testbench_memory_bank_port(
 
   BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port, true, little_endian) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port, true, little_endian) << ";"
      << std::endl;
 
   write_tab_to_file(fp, 1);
   fp << "assign ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port, true, little_endian);
   fp << "= ";
-  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port);
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port, true, little_endian);
   fp << " & ";
-  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port, true, little_endian);
   fp << ";" << std::endl;
 }
 
@@ -197,7 +197,8 @@ static void print_verilog_top_testbench_memory_bank_port(
  *******************************************************************/
 static void print_verilog_top_testbench_frame_decoder_port(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& top_module) {
+  const ModuleId& top_module,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -208,7 +209,7 @@ static void print_verilog_top_testbench_frame_decoder_port(
     top_module, std::string(DECODER_ADDRESS_PORT_NAME));
   BasicPort addr_port = module_manager.module_port(top_module, addr_port_id);
 
-  fp << generate_verilog_port(VERILOG_PORT_REG, addr_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, addr_port, true, little_endian) << ";" << std::endl;
 
   /* Print the data-input port for the frame-based decoder here */
   print_verilog_comment(
@@ -216,7 +217,7 @@ static void print_verilog_top_testbench_frame_decoder_port(
   ModulePortId din_port_id = module_manager.find_module_port(
     top_module, std::string(DECODER_DATA_IN_PORT_NAME));
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, din_port, true, little_endian) << ";" << std::endl;
 
   /* Generate enable signal waveform here:
    * which is a 90 degree phase shift than the programming clock
@@ -231,17 +232,17 @@ static void print_verilog_top_testbench_frame_decoder_port(
 
   BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port, true, little_endian) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port, true, little_endian) << ";"
      << std::endl;
 
   write_tab_to_file(fp, 1);
   fp << "assign ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port, true, little_endian);
   fp << "= ";
-  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port);
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port, true, little_endian);
   fp << " & ";
-  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port, true, little_endian);
   fp << ";" << std::endl;
 }
 
@@ -250,27 +251,28 @@ static void print_verilog_top_testbench_frame_decoder_port(
  *******************************************************************/
 static void print_verilog_top_testbench_config_protocol_port(
   std::fstream& fp, const ConfigProtocol& config_protocol,
-  const ModuleManager& module_manager, const ModuleId& top_module) {
+  const ModuleManager& module_manager, const ModuleId& top_module,
+  const bool& little_endian) {
   switch (config_protocol.type()) {
     case CONFIG_MEM_STANDALONE:
       print_verilog_top_testbench_flatten_memory_port(fp, module_manager,
-                                                      top_module);
+                                                      top_module, little_endian);
       break;
     case CONFIG_MEM_SCAN_CHAIN:
       print_verilog_top_testbench_config_chain_port(fp, module_manager,
-                                                    top_module);
+                                                    top_module, little_endian);
       break;
     case CONFIG_MEM_QL_MEMORY_BANK:
       print_verilog_top_testbench_ql_memory_bank_port(
-        fp, module_manager, top_module, config_protocol);
+        fp, module_manager, top_module, config_protocol, little_endian);
       break;
     case CONFIG_MEM_MEMORY_BANK:
       print_verilog_top_testbench_memory_bank_port(fp, module_manager,
-                                                   top_module);
+                                                   top_module, little_endian);
       break;
     case CONFIG_MEM_FRAME_BASED:
       print_verilog_top_testbench_frame_decoder_port(fp, module_manager,
-                                                     top_module);
+                                                     top_module, little_endian);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -286,7 +288,8 @@ static void print_verilog_top_testbench_global_clock_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& fabric_global_port_info,
-  const SimulationSetting& simulation_parameters) {
+  const SimulationSetting& simulation_parameters,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -363,7 +366,7 @@ static void print_verilog_top_testbench_global_clock_ports_stimuli(
       print_verilog_wire_connection(
         fp, global_port_to_connect, stimuli_clock_pin,
         1 == fabric_global_port_info.global_port_default_value(
-               fabric_global_port));
+               fabric_global_port), little_endian);
     }
   }
 }
@@ -374,7 +377,8 @@ static void print_verilog_top_testbench_global_clock_ports_stimuli(
 static void print_verilog_top_testbench_global_config_done_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
-  const FabricGlobalPortInfo& fabric_global_port_info) {
+  const FabricGlobalPortInfo& fabric_global_port_info,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -407,7 +411,8 @@ static void print_verilog_top_testbench_global_config_done_ports_stimuli(
       fp, module_manager.module_port(top_module, module_global_port),
       stimuli_config_done_port,
       1 ==
-        fabric_global_port_info.global_port_default_value(fabric_global_port));
+        fabric_global_port_info.global_port_default_value(fabric_global_port),
+      little_endian);
   }
 }
 
@@ -418,7 +423,8 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& fabric_global_port_info,
-  const bool& active_global_prog_reset) {
+  const bool& active_global_prog_reset,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -497,7 +503,7 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
           print_verilog_wire_connection(
             fp, module_global_pin, benchmark_pin,
             PinConstraints::LOGIC_HIGH ==
-              pin_constraints.net_default_value(constrained_net_name));
+              pin_constraints.net_default_value(constrained_net_name), little_endian);
           continue; /* Finish the net assignment for this reset pin */
         }
       }
@@ -517,7 +523,7 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
           fp, module_global_pin,
           std::vector<size_t>(1,
                               fabric_global_port_info.global_port_default_value(
-                                fabric_global_port)));
+                                fabric_global_port)), little_endian);
       }
     }
   }
@@ -530,7 +536,8 @@ static void print_verilog_top_testbench_global_set_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
-  const bool& active_global_prog_set) {
+  const bool& active_global_prog_set, 
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -588,14 +595,16 @@ static void print_verilog_top_testbench_global_set_ports_stimuli(
         fp, module_manager.module_port(top_module, module_global_port),
         stimuli_set_port,
         1 == fabric_global_port_info.global_port_default_value(
-               fabric_global_port));
+               fabric_global_port),
+        little_endian);
     } else {
       VTR_ASSERT_SAFE(false == activate);
       print_verilog_wire_constant_values(
         fp, module_manager.module_port(top_module, module_global_port),
         std::vector<size_t>(1,
                             fabric_global_port_info.global_port_default_value(
-                              fabric_global_port)));
+                              fabric_global_port)),
+        little_endian);
     }
   }
 }
@@ -606,7 +615,8 @@ static void print_verilog_top_testbench_global_set_ports_stimuli(
 static void print_verilog_top_testbench_regular_global_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
-  const FabricGlobalPortInfo& fabric_global_port_info) {
+  const FabricGlobalPortInfo& fabric_global_port_info,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -658,7 +668,7 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
     std::vector<size_t> default_values(
       module_port.get_width(),
       fabric_global_port_info.global_port_default_value(fabric_global_port));
-    print_verilog_wire_constant_values(fp, module_port, default_values);
+    print_verilog_wire_constant_values(fp, module_port, default_values, little_endian);
   }
 }
 
@@ -671,7 +681,8 @@ static void print_verilog_top_testbench_global_ports_stimuli(
   const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const SimulationSetting& simulation_parameters,
-  const bool& active_global_prog_reset, const bool& active_global_prog_set) {
+  const bool& active_global_prog_reset, const bool& active_global_prog_set,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -682,24 +693,24 @@ static void print_verilog_top_testbench_global_ports_stimuli(
 
   print_verilog_top_testbench_global_clock_ports_stimuli(
     fp, module_manager, top_module, config_protocol, fabric_global_port_info,
-    simulation_parameters);
+    simulation_parameters, little_endian);
 
   print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
-    fp, module_manager, top_module, fabric_global_port_info);
+    fp, module_manager, top_module, fabric_global_port_info, little_endian);
 
   print_verilog_top_testbench_global_config_done_ports_stimuli(
-    fp, module_manager, top_module, fabric_global_port_info);
+    fp, module_manager, top_module, fabric_global_port_info, little_endian);
 
   print_verilog_top_testbench_global_reset_ports_stimuli(
     fp, module_manager, top_module, pin_constraints, fabric_global_port_info,
-    active_global_prog_reset);
+    active_global_prog_reset, little_endian);
 
   print_verilog_top_testbench_global_set_ports_stimuli(
     fp, module_manager, top_module, fabric_global_port_info,
-    active_global_prog_set);
+    active_global_prog_set, little_endian);
 
   print_verilog_top_testbench_regular_global_ports_stimuli(
-    fp, module_manager, top_module, fabric_global_port_info);
+    fp, module_manager, top_module, fabric_global_port_info, little_endian);
 
   print_verilog_comment(
     fp, std::string(
@@ -720,7 +731,8 @@ static void print_verilog_top_testbench_benchmark_clock_ports(
   const ModuleId& top_module, const std::vector<std::string>& clock_port_names,
   const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
-  const BasicPort& default_clock_port) {
+  const BasicPort& default_clock_port,
+  const bool& little_endian) {
   /* Create a clock port if the benchmark have one but not in the default name!
    * We will wire the clock directly to the operating clock directly
    */
@@ -775,10 +787,10 @@ static void print_verilog_top_testbench_benchmark_clock_ports(
       fp, std::string("----- Create a clock for benchmark and wire it to " +
                       clock_source_to_connect.get_name() + " -------"));
     BasicPort clock_port(clock_port_name, 1);
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, clock_port) << ";"
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, clock_port, true, little_endian) << ";"
        << std::endl;
     print_verilog_wire_connection(fp, clock_port, clock_source_to_connect,
-                                  false);
+                                  false, little_endian);
   }
 }
 
@@ -809,6 +821,7 @@ static void print_verilog_top_testbench_ports(
   const SimulationSetting& simulation_parameters,
   const ConfigProtocol& config_protocol, const std::string& circuit_name,
   const VerilogTestbenchOption& options) {
+  bool little_endian = options.little_endian();
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -828,7 +841,7 @@ static void print_verilog_top_testbench_ports(
     fp, std::string("----- Local wires for global ports of FPGA fabric -----"));
   for (const BasicPort& module_port : module_manager.module_ports_by_type(
          top_module, ModuleManager::MODULE_GLOBAL_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true, little_endian) << ";"
        << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -839,7 +852,7 @@ static void print_verilog_top_testbench_ports(
     fp, std::string("----- Local wires for I/Os of FPGA fabric -----"));
   for (const BasicPort& module_port : module_manager.module_ports_by_type(
          top_module, ModuleManager::MODULE_GPIO_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true, little_endian) << ";"
        << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -847,7 +860,7 @@ static void print_verilog_top_testbench_ports(
 
   for (const BasicPort& module_port : module_manager.module_ports_by_type(
          top_module, ModuleManager::MODULE_GPIN_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true, little_endian) << ";"
        << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -855,7 +868,7 @@ static void print_verilog_top_testbench_ports(
 
   for (const BasicPort& module_port : module_manager.module_ports_by_type(
          top_module, ModuleManager::MODULE_GPOUT_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true, little_endian) << ";"
        << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -870,26 +883,26 @@ static void print_verilog_top_testbench_ports(
     find_config_protocol_num_prog_clocks(config_protocol);
   BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
                              num_config_done_signals);
-  fp << generate_verilog_port(VERILOG_PORT_REG, config_done_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, config_done_port, true, little_endian) << ";"
      << std::endl;
 
   /* Configuration all done port: pull up when all the config done ports are
    * pulled up */
   BasicPort config_all_done_port(std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
                                  1);
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, config_all_done_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, config_all_done_port, true, little_endian) << ";"
      << std::endl;
 
   /* Programming clock: same rule applied as the configuration done ports */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME),
                             num_config_done_signals);
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, prog_clock_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, prog_clock_port, true, little_endian) << ";"
      << std::endl;
   BasicPort prog_clock_register_port(
     std::string(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) +
                 std::string(TOP_TB_CLOCK_REG_POSTFIX)),
     1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, prog_clock_register_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, prog_clock_register_port, true, little_endian) << ";"
      << std::endl;
 
   /* Multiple operating clocks based on the simulation settings */
@@ -899,12 +912,12 @@ static void print_verilog_top_testbench_ports(
       std::string(TOP_TB_OP_CLOCK_PORT_PREFIX),
       simulation_parameters.clock_name(sim_clock));
     BasicPort sim_clock_port(sim_clock_port_name, 1);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, sim_clock_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, sim_clock_port, true, little_endian) << ";"
        << std::endl;
     BasicPort sim_clock_register_port(
       std::string(sim_clock_port_name + std::string(TOP_TB_CLOCK_REG_POSTFIX)),
       1);
-    fp << generate_verilog_port(VERILOG_PORT_REG, sim_clock_register_port)
+    fp << generate_verilog_port(VERILOG_PORT_REG, sim_clock_register_port, true, little_endian)
        << ";" << std::endl;
   }
 
@@ -916,37 +929,37 @@ static void print_verilog_top_testbench_ports(
    * generator
    */
   BasicPort op_clock_port(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1);
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, op_clock_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, op_clock_port, true, little_endian) << ";"
      << std::endl;
   BasicPort op_clock_register_port(
     std::string(std::string(TOP_TB_OP_CLOCK_PORT_NAME) +
                 std::string(TOP_TB_CLOCK_REG_POSTFIX)),
     1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, op_clock_register_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, op_clock_register_port, true, little_endian) << ";"
      << std::endl;
 
   /* Programming set and reset */
   BasicPort prog_reset_port(std::string(TOP_TB_PROG_RESET_PORT_NAME), 1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, prog_reset_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, prog_reset_port, true, little_endian) << ";"
      << std::endl;
   BasicPort prog_set_port(std::string(TOP_TB_PROG_SET_PORT_NAME), 1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, prog_set_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_REG, prog_set_port, true, little_endian) << ";"
      << std::endl;
 
   /* Global set and reset */
   BasicPort reset_port(std::string(TOP_TB_RESET_PORT_NAME), 1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, reset_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, reset_port, true, little_endian) << ";" << std::endl;
   BasicPort set_port(std::string(TOP_TB_SET_PORT_NAME), 1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, set_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, set_port, true, little_endian) << ";" << std::endl;
 
   /* Configuration ports depend on the organization of SRAMs */
   print_verilog_top_testbench_config_protocol_port(fp, config_protocol,
-                                                   module_manager, top_module);
+                                                   module_manager, top_module, little_endian);
 
   /* Print clock ports */
   print_verilog_top_testbench_benchmark_clock_ports(
     fp, module_manager, top_module, clock_port_names, pin_constraints,
-    simulation_parameters, op_clock_port);
+    simulation_parameters, op_clock_port, little_endian);
 
   std::vector<std::string> global_port_names;
   print_verilog_testbench_shared_ports(
@@ -956,7 +969,8 @@ static void print_verilog_top_testbench_ports(
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
     std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
     std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-    options.no_self_checking());
+    options.no_self_checking(),
+    little_endian);
 
   /* Instantiate an integer to count the number of error and
    * determine if the simulation succeed or failed
@@ -1182,7 +1196,8 @@ static void print_verilog_top_testbench_generic_stimulus(
   std::fstream& fp, const ConfigProtocol& config_protocol,
   const SimulationSetting& simulation_parameters,
   const size_t& num_config_clock_cycles, const float& prog_clock_period,
-  const float& op_clock_period, const float& timescale) {
+  const float& op_clock_period, const float& timescale,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1221,7 +1236,7 @@ static void print_verilog_top_testbench_generic_stimulus(
     fp, "----- Begin configuration done signal generation -----");
   print_verilog_pulse_stimuli(
     fp, config_done_port, 0, /* Initial value */
-    num_config_clock_cycles * prog_clock_period / timescale, 0);
+    num_config_clock_cycles * prog_clock_period / timescale, 0, little_endian);
   print_verilog_comment(fp,
                         "----- End configuration done signal generation -----");
   fp << std::endl;
@@ -1231,7 +1246,7 @@ static void print_verilog_top_testbench_generic_stimulus(
     fp, "----- Begin raw programming clock signal generation -----");
   print_verilog_clock_stimuli(
     fp, prog_clock_register_port, 0, /* Initial value */
-    0.5 * prog_clock_period / timescale, std::string());
+    0.5 * prog_clock_period / timescale, std::string(), little_endian);
   print_verilog_comment(
     fp, "----- End raw programming clock signal generation -----");
   fp << std::endl;
@@ -1253,19 +1268,19 @@ static void print_verilog_top_testbench_generic_stimulus(
                            config_done_port.pins()[pin],
                            config_done_port.pins()[pin]);
     fp << "\tassign "
-       << generate_verilog_port(VERILOG_PORT_CONKT, curr_clk_pin);
+       << generate_verilog_port(VERILOG_PORT_CONKT, curr_clk_pin, true, little_endian);
     fp << " = "
-       << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_register_port);
+       << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_register_port, true, little_endian);
     if (pin > 0) {
       BasicPort prev_cfg_pin(config_done_port.get_name(),
                              config_done_port.pins()[pin - 1],
                              config_done_port.pins()[pin - 1]);
-      fp << " & (" << generate_verilog_port(VERILOG_PORT_CONKT, prev_cfg_pin)
+      fp << " & (" << generate_verilog_port(VERILOG_PORT_CONKT, prev_cfg_pin, true, little_endian)
          << ")";
     }
-    fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin)
+    fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin, true, little_endian)
        << ")";
-    fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_reset_port)
+    fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_reset_port, true, little_endian)
        << ")";
     fp << ";" << std::endl;
   }
@@ -1275,7 +1290,7 @@ static void print_verilog_top_testbench_generic_stimulus(
   /* Config all done signal is triggered when all the config done signals are
    * pulled up */
   fp << "\tassign "
-     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port)
+     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port, true, little_endian)
      << " = ";
   for (size_t pin : config_done_port.pins()) {
     BasicPort curr_cfg_pin(config_done_port.get_name(),
@@ -1284,7 +1299,7 @@ static void print_verilog_top_testbench_generic_stimulus(
     if (pin > 0) {
       fp << " & ";
     }
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin, true, little_endian);
   }
   fp << ";" << std::endl;
 
@@ -1308,7 +1323,7 @@ static void print_verilog_top_testbench_generic_stimulus(
     print_verilog_clock_stimuli(fp, sim_clock_register_port,
                                 0, /* Initial value */
                                 0.5 * sim_clock_period / timescale,
-                                std::string("~" + reset_port.get_name()));
+                                std::string("~" + reset_port.get_name()), little_endian);
     print_verilog_comment(
       fp, "----- End raw operating clock signal generation -----");
 
@@ -1320,11 +1335,11 @@ static void print_verilog_top_testbench_generic_stimulus(
       fp, std::string("----- Actual operating clock is triggered only when " +
                       config_all_done_port.get_name() + " is enabled -----"));
     fp << "\tassign "
-       << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_port);
+       << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_port, true, little_endian);
     fp << " = "
-       << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_register_port);
+       << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_register_port, true, little_endian);
     fp << " & "
-       << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port);
+       << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port, true, little_endian);
     fp << ";" << std::endl;
 
     fp << std::endl;
@@ -1335,7 +1350,7 @@ static void print_verilog_top_testbench_generic_stimulus(
     fp, "----- Begin raw operating clock signal generation -----");
   print_verilog_clock_stimuli(fp, op_clock_register_port, 0, /* Initial value */
                               0.5 * op_clock_period / timescale,
-                              std::string("~" + reset_port.get_name()));
+                              std::string("~" + reset_port.get_name()), little_endian);
   print_verilog_comment(
     fp, "----- End raw operating clock signal generation -----");
 
@@ -1346,11 +1361,11 @@ static void print_verilog_top_testbench_generic_stimulus(
   print_verilog_comment(
     fp, std::string("----- Actual operating clock is triggered only when " +
                     config_all_done_port.get_name() + " is enabled -----"));
-  fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_port);
+  fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_port, true, little_endian);
   fp << " = "
-     << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_register_port);
+     << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_register_port, true, little_endian);
   fp << " & "
-     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port);
+     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port, true, little_endian);
   fp << ";" << std::endl;
 
   fp << std::endl;
@@ -1361,7 +1376,7 @@ static void print_verilog_top_testbench_generic_stimulus(
   print_verilog_comment(
     fp, "----- Begin programming reset signal generation -----");
   print_verilog_pulse_stimuli(fp, prog_reset_port, 1, /* Initial value */
-                              prog_clock_period / timescale, 0);
+                              prog_clock_period / timescale, 0, little_endian);
   print_verilog_comment(fp,
                         "----- End programming reset signal generation -----");
 
@@ -1371,7 +1386,7 @@ static void print_verilog_top_testbench_generic_stimulus(
   print_verilog_comment(fp,
                         "----- Begin programming set signal generation -----");
   print_verilog_pulse_stimuli(fp, prog_set_port, 1, /* Initial value */
-                              prog_clock_period / timescale, 0);
+                              prog_clock_period / timescale, 0, little_endian);
   print_verilog_comment(fp,
                         "----- End programming set signal generation -----");
 
@@ -1394,7 +1409,7 @@ static void print_verilog_top_testbench_generic_stimulus(
                         "cycle in operation phase -----");
   print_verilog_pulse_stimuli(fp, reset_port, 1, reset_pulse_widths,
                               reset_flip_values,
-                              config_all_done_port.get_name());
+                              config_all_done_port.get_name(), little_endian);
   print_verilog_comment(fp,
                         "----- End operating reset signal generation -----");
 
@@ -1424,7 +1439,8 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const float& prog_clock_period, const float& timescale,
-  const VerilogTestbenchOption::e_simulator_type sim_type) {
+  const VerilogTestbenchOption::e_simulator_type sim_type,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1438,7 +1454,7 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
       return print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
         fp, config_protocol, sim_settings, module_manager, top_module,
         fast_configuration, bit_value_to_skip, fabric_bitstream, blwl_sr_banks,
-        prog_clock_period, timescale, sim_type);
+        prog_clock_period, timescale, sim_type, little_endian);
       break;
     case CONFIG_MEM_MEMORY_BANK:
     case CONFIG_MEM_FRAME_BASED: {
@@ -1455,7 +1471,7 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
         fp, std::string("---- Generate enable signal waveform  -----"));
       print_verilog_shifted_clock_stimuli(
         fp, en_register_port, 0.25 * prog_clock_period / timescale,
-        0.5 * prog_clock_period / timescale, 0);
+        0.5 * prog_clock_period / timescale, 0, little_endian);
       break;
     }
     default:
@@ -2466,6 +2482,7 @@ int print_verilog_full_testbench(
   const VerilogTestbenchOption& options) {
   bool fast_configuration = options.fast_configuration();
   bool explicit_port_mapping = options.explicit_port_mapping();
+  bool little_endian = options.little_endian();
 
   std::string timer_message =
     std::string(
@@ -2558,14 +2575,14 @@ int print_verilog_full_testbench(
   /* Generate stimuli for general control signals */
   print_verilog_top_testbench_generic_stimulus(
     fp, config_protocol, simulation_parameters, num_config_clock_cycles,
-    prog_clock_period, default_op_clock_period, VERILOG_SIM_TIMESCALE);
+    prog_clock_period, default_op_clock_period, VERILOG_SIM_TIMESCALE, little_endian);
 
   /* Generate stimuli for programming interface */
   int status = CMD_EXEC_SUCCESS;
   status = print_verilog_top_testbench_configuration_protocol_stimulus(
     fp, config_protocol, simulation_parameters, module_manager, core_module,
     fast_configuration, bit_value_to_skip, fabric_bitstream, blwl_sr_banks,
-    prog_clock_period, VERILOG_SIM_TIMESCALE, options.simulator_type());
+    prog_clock_period, VERILOG_SIM_TIMESCALE, options.simulator_type(), little_endian);
 
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
@@ -2600,13 +2617,13 @@ int print_verilog_full_testbench(
   print_verilog_top_testbench_global_ports_stimuli(
     fp, module_manager, core_module, pin_constraints, config_protocol,
     global_ports, simulation_parameters, active_global_prog_reset,
-    active_global_prog_set);
+    active_global_prog_set, little_endian);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(
     fp, module_manager, top_module, core_module,
     std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME), std::string(), io_name_map,
-    explicit_port_mapping);
+    explicit_port_mapping, little_endian);
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(
@@ -2614,7 +2631,7 @@ int print_verilog_full_testbench(
     netlist_annotation, BusGroup(), std::string(),
     std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX), clock_port_names,
-    (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
+    (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE, little_endian);
 
   /* Instanciate input benchmark */
   if (!options.no_self_checking()) {

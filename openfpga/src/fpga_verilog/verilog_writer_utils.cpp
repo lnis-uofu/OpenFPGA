@@ -937,6 +937,7 @@ void print_verilog_wire_connection(std::fstream& fp,
 void print_verilog_register_connection(std::fstream& fp,
                                        const BasicPort& output_port,
                                        const BasicPort& input_port,
+                                       const bool& little_endian,
                                        const bool& inverted) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
@@ -945,14 +946,14 @@ void print_verilog_register_connection(std::fstream& fp,
   VTR_ASSERT(input_port.get_width() == output_port.get_width());
 
   fp << "\t";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian);
   fp << " <= ";
 
   if (true == inverted) {
     fp << "~";
   }
 
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port, true, little_endian);
   fp << ";" << std::endl;
 }
 
@@ -1487,7 +1488,8 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(
 void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
-                                 const size_t& flip_value) {
+                                 const size_t& flip_value,
+                                 const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1497,7 +1499,7 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
   fp << "\t";
   std::vector<size_t> initial_values(port.get_width(), initial_value);
   fp << "\t";
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values, little_endian);
   fp << ";" << std::endl;
 
   /* if flip_value is the same as initial value, we do not need to flip the
@@ -1507,7 +1509,7 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
        << "#" << std::setprecision(10) << pulse_width;
     std::vector<size_t> port_flip_values(port.get_width(), flip_value);
     fp << "\t";
-    fp << generate_verilog_port_constant_values(port, port_flip_values);
+    fp << generate_verilog_port_constant_values(port, port_flip_values, little_endian);
     fp << ";" << std::endl;
   }
 
@@ -1531,7 +1533,8 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
                                          const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
-                                         const size_t& initial_value) {
+                                         const size_t& initial_value,
+                                         const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1545,7 +1548,7 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
   std::vector<size_t> initial_values(port.get_width(), initial_value);
 
   write_tab_to_file(fp, 1);
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values, little_endian);
   fp << ";" << std::endl;
 
   write_tab_to_file(fp, 2);
@@ -1554,10 +1557,10 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
 
   write_tab_to_file(fp, 2);
   fp << "forever ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << " = ";
   fp << "#" << std::setprecision(10) << pulse_width;
-  fp << " ~" << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << " ~" << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << ";" << std::endl;
 
   write_tab_to_file(fp, 1);
@@ -1633,7 +1636,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
 void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
-                                 const std::string& wait_condition) {
+                                 const std::string& wait_condition,
+                                 const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1643,7 +1647,7 @@ void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
 
   std::vector<size_t> initial_values(port.get_width(), initial_value);
   fp << "\t\t";
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values, little_endian);
   fp << ";" << std::endl;
 
   fp << "\tend" << std::endl;
@@ -1661,10 +1665,10 @@ void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
      << "#" << std::setprecision(10) << pulse_width;
 
   fp << "\t";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << " = ";
   fp << "~";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << ";" << std::endl;
 
   fp << "\tend" << std::endl;
