@@ -59,6 +59,8 @@ static void print_verilog_top_random_testbench_ports(
   /* Validate the file stream */
   valid_file_stream(fp);
 
+  bool little_endian = options.little_endian();
+
   print_verilog_default_net_type_declaration(fp, options.default_net_type());
 
   /* Print the declaration for the module */
@@ -74,7 +76,7 @@ static void print_verilog_top_random_testbench_ports(
     fp, std::string("----- Default clock port is added here since benchmark "
                     "does not contain one -------"));
   for (const BasicPort& clock_port : clock_ports) {
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";"
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port, true, little_endian) << ";"
        << std::endl;
   }
 
@@ -86,7 +88,7 @@ static void print_verilog_top_random_testbench_ports(
     PinConstraints(), atom_ctx, netlist_annotation, clock_port_names,
     std::string(), std::string(BENCHMARK_PORT_POSTFIX),
     std::string(FPGA_PORT_POSTFIX), std::string(CHECKFLAG_PORT_POSTFIX),
-    options.no_self_checking());
+    options.no_self_checking(), little_endian);
 
   /* Instantiate an integer to count the number of error
    * and determine if the simulation succeed or failed
@@ -173,7 +175,8 @@ static void print_verilog_random_testbench_reset_stimuli(
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
   const std::vector<std::string>& clock_port_names,
-  const BasicPort& clock_port) {
+  const BasicPort& clock_port,
+  const bool& little_endian) {
   valid_file_stream(fp);
 
   print_verilog_comment(fp, "----- Begin reset signal generation -----");
@@ -221,7 +224,7 @@ static void print_verilog_random_testbench_reset_stimuli(
     fp << "\t";
     std::vector<size_t> initial_values(reset_port.get_width(), initial_value);
     fp << "\t";
-    fp << generate_verilog_port_constant_values(reset_port, initial_values);
+    fp << generate_verilog_port_constant_values(reset_port, initial_values, little_endian);
     fp << ";" << std::endl;
 
     /* Flip the reset at the second negative edge of the clock port
@@ -231,12 +234,12 @@ static void print_verilog_random_testbench_reset_stimuli(
      * can be sensed in the 1st rising/falling edge of the clock signal
      */
     fp << "\t@(negedge "
-       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");"
+       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true, little_endian) << ");"
        << std::endl;
     fp << "\t@(negedge "
-       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");"
+       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true, little_endian) << ");"
        << std::endl;
-    print_verilog_register_connection(fp, reset_port, reset_port, true);
+    print_verilog_register_connection(fp, reset_port, reset_port, little_endian, true);
     fp << "\tend" << std::endl;
   }
 
@@ -326,20 +329,22 @@ void print_verilog_random_top_testbench(
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_clock_stimuli(fp, pin_constraints,
-                                        simulation_parameters, clock_ports);
+                                        simulation_parameters, clock_ports, little_endian);
   /* TODO: use the first clock now because we do not have information how the
    * reset is correlated to clock ports. Once we have such information, the
    * limitation should be removed!
    */
   print_verilog_random_testbench_reset_stimuli(
     fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
-    global_ports, pin_constraints, clock_port_names, clock_ports[0]);
+    global_ports, pin_constraints, clock_port_names, clock_ports[0],
+    little_endian);
 
   print_verilog_testbench_random_stimuli(
     fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
     global_ports, pin_constraints, clock_port_names, std::string(),
     std::string(CHECKFLAG_PORT_POSTFIX), clock_ports,
-    options.no_self_checking());
+    options.no_self_checking(),
+    little_endian);
 
   if (!options.no_self_checking()) {
     print_verilog_testbench_check(
@@ -347,7 +352,8 @@ void print_verilog_random_top_testbench(
       std::string(BENCHMARK_PORT_POSTFIX), std::string(FPGA_PORT_POSTFIX),
       std::string(CHECKFLAG_PORT_POSTFIX), std::string(),
       std::string(ERROR_COUNTER), atom_ctx, netlist_annotation,
-      clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+      clock_port_names, std::string(DEFAULT_CLOCK_NAME),
+      little_endian);
   }
 
   float simulation_time = find_operating_phase_simulation_time(
@@ -362,7 +368,8 @@ void print_verilog_random_top_testbench(
                 std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
     std::string(circuit_name + std::string("_formal.vcd")),
     std::string(FORMAL_TB_SIM_START_PORT_NAME), std::string(ERROR_COUNTER),
-    simulation_time, options.no_self_checking());
+    simulation_time, options.no_self_checking(),
+    little_endian);
 
   /* Testbench ends*/
   print_verilog_module_end(fp,

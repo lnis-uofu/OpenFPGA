@@ -756,7 +756,8 @@ void print_verilog_testbench_check(
 void print_verilog_testbench_clock_stimuli(
   std::fstream& fp, const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
-  const std::vector<BasicPort>& clock_ports) {
+  const std::vector<BasicPort>& clock_ports,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -798,13 +799,13 @@ void print_verilog_testbench_clock_stimuli(
 
     fp << "\tinitial begin" << std::endl;
     /* Create clock stimuli */
-    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port)
+    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true, little_endian)
        << " <= 1'b0;" << std::endl;
     fp << "\t\twhile(1) begin" << std::endl;
     fp << "\t\t\t#" << std::setprecision(10) << clk_freq_to_use << std::endl;
-    fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+    fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true, little_endian);
     fp << " <= !";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true, little_endian);
     fp << ";" << std::endl;
     fp << "\t\tend" << std::endl;
 
@@ -982,7 +983,7 @@ void print_verilog_testbench_shared_input_ports(
   const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
   const bool& include_clock_ports, const std::string& shared_input_port_postfix,
-  const bool& use_reg_port) {
+  const bool& use_reg_port, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1017,14 +1018,14 @@ void print_verilog_testbench_shared_input_ports(
                    global_ports, module_manager, module_name_map,
                    pin_constraints.net_pin(block_name))) {
       if (use_reg_port) {
-        fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";"
+        fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port, true, little_endian) << ";"
            << std::endl;
       } else {
-        fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port)
+        fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port, true, little_endian)
            << ";" << std::endl;
       }
     } else {
-      fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port) << ";"
+      fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port, true, little_endian) << ";"
          << std::endl;
     }
   }

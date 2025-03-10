@@ -84,7 +84,8 @@ void print_verilog_testbench_check(
 void print_verilog_testbench_clock_stimuli(
   std::fstream& fp, const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
-  const std::vector<BasicPort>& clock_ports);
+  const std::vector<BasicPort>& clock_ports,
+  const bool& little_endian);
 
 void print_verilog_testbench_random_stimuli(
   std::fstream& fp, const AtomContext& atom_ctx,
@@ -106,7 +107,7 @@ void print_verilog_testbench_shared_input_ports(
   const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
   const bool& include_clock_ports, const std::string& shared_input_port_postfix,
-  const bool& use_reg_port);
+  const bool& use_reg_port, const bool& little_endian);
 
 void print_verilog_testbench_shared_fpga_output_ports(
   std::fstream& fp, const AtomContext& atom_ctx,
