@@ -35,7 +35,8 @@ static void print_verilog_wire_module(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& wire_model,
   const ModuleNameMap& module_name_map,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -62,7 +63,7 @@ static void print_verilog_wire_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, wire_module,
-                                   default_net_type);
+                                   default_net_type, little_endian);
   /* Finish dumping ports */
 
   /* Print the internal logic of Verilog module */
@@ -81,17 +82,17 @@ static void print_verilog_wire_module(
     module_manager.module_port(wire_module, module_output_port_id);
 
   /* Print wire declaration for the inputs and outputs */
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_input_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_input_port, true, little_endian) << ";"
      << std::endl;
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_output_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, module_output_port, true, little_endian) << ";"
      << std::endl;
 
   /* Direct shortcut */
   print_verilog_wire_connection(fp, module_output_port, module_input_port,
-                                false);
+                                false, little_endian);
 
   /* Print timing info */
-  print_verilog_submodule_timing(fp, circuit_lib, wire_model);
+  print_verilog_submodule_timing(fp, circuit_lib, wire_model, little_endian);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, circuit_lib.model_name(wire_model),
@@ -135,7 +136,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
       continue;
     }
     print_verilog_wire_module(module_manager, circuit_lib, fp, model,
-                              module_name_map, options.default_net_type());
+                              module_name_map, options.default_net_type(), options.little_endian());
   }
   print_verilog_comment(
     fp, std::string("----- END Verilog modules for regular wires -----"));
