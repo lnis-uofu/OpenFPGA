@@ -28,7 +28,8 @@ namespace openfpga {
  *******************************************************************/
 void print_verilog_preconfig_top_module_internal_wires(
   std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const std::string &port_postfix) {
+  const ModuleId &top_module, const std::string &port_postfix,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -42,7 +43,7 @@ void print_verilog_preconfig_top_module_internal_wires(
     /* Add a postfix to the internal wires to be different from other reserved
      * ports */
     module_port.set_name(module_port.get_name() + port_postfix);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true, little_endian) << ";"
        << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -60,7 +61,8 @@ int print_verilog_preconfig_top_module_connect_global_ports(
   const AtomContext &atom_ctx, const VprNetlistAnnotation &netlist_annotation,
   const FabricGlobalPortInfo &fabric_global_ports,
   const std::vector<std::string> &benchmark_clock_port_names,
-  const std::string &port_postfix) {
+  const std::string &port_postfix,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -101,7 +103,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
           std::vector<size_t> default_values(
             1, fabric_global_ports.global_port_default_value(global_port_id));
           print_verilog_wire_constant_values(fp, module_clock_pin,
-                                             default_values);
+                                             default_values, little_endian);
           continue;
         }
 
@@ -145,7 +147,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
         }
         BasicPort benchmark_clock_pin(clock_name_to_connect, 1);
         print_verilog_wire_connection(fp, module_clock_pin, benchmark_clock_pin,
-                                      false);
+                                      false, little_endian);
       }
       /* Finish, go to the next */
       continue;
@@ -195,7 +197,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
         }
         BasicPort benchmark_pin(constrained_net_name, 1);
         print_verilog_wire_connection(fp, module_global_pin, benchmark_pin,
-                                      false);
+                                      false, little_endian);
       } else {
         VTR_ASSERT_SAFE(std::string(PIN_CONSTRAINT_OPEN_NET) ==
                         constrained_net_name);
@@ -215,7 +217,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
             1 - fabric_global_ports.global_port_default_value(global_port_id));
         }
         print_verilog_wire_constant_values(fp, module_global_pin,
-                                           default_values);
+                                           default_values, little_endian);
       }
     }
   }

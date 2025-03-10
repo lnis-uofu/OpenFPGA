@@ -136,11 +136,13 @@ void print_verilog_wire_constant_values_bit_blast(
 
 void print_verilog_deposit_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values);
+  const std::vector<size_t>& const_values,
+  const bool& little_endian);
 
 void print_verilog_force_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values);
+  const std::vector<size_t>& const_values,
+  const bool& little_endian);
 
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,

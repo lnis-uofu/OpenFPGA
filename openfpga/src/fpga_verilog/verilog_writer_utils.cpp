@@ -874,15 +874,20 @@ void print_verilog_wire_constant_values_bit_blast(
  *******************************************************************/
 void print_verilog_deposit_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values) {
+  const std::vector<size_t>& const_values,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "\t";
   fp << "$deposit(";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian);
   fp << ", ";
-  fp << generate_verilog_constant_values(const_values);
+  std::vector<size_t> const_val = const_values;
+  if (little_endian) {
+    std::reverse(const_val.begin(), const_val.end());
+  }
+  fp << generate_verilog_constant_values(const_val);
   fp << ");" << std::endl;
 }
 
@@ -892,13 +897,14 @@ void print_verilog_deposit_wire_constant_values(
  *******************************************************************/
 void print_verilog_force_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values) {
+  const std::vector<size_t>& const_values,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "\t";
   fp << "force ";
-  fp << generate_verilog_port_constant_values(output_port, const_values);
+  fp << generate_verilog_port_constant_values(output_port, const_values, little_endian);
   fp << ";" << std::endl;
 }
 
