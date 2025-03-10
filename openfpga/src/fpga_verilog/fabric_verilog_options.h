@@ -46,6 +46,7 @@ class FabricVerilogOption {
    * constants */
   size_t constant_undriven_inputs_value() const;
   std::string full_constant_undriven_input_type_str() const;
+  bool little_endian() const;
   bool verbose_output() const;
 
  public: /* Public mutators */
@@ -64,6 +65,7 @@ class FabricVerilogOption {
   bool set_constant_undriven_inputs(const std::string& type_str);
   /** For invalid types, error out */
   bool set_constant_undriven_inputs(const e_undriven_input_type& type);
+  void set_little_endian(const bool& enabled);
   void set_verbose_output(const bool& enabled);
 
  private: /* Internal Data */
@@ -80,6 +82,7 @@ class FabricVerilogOption {
              size_t(FabricVerilogOption::e_undriven_input_type::NUM_TYPES)>
     CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_;  // String versions of constant
                                            // undriven input types
+  bool little_endian_;
   bool verbose_output_;
 };
 

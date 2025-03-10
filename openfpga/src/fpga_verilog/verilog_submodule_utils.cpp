@@ -41,7 +41,8 @@ constexpr int FLOAT_PRECISION = 6;
  ***********************************************/
 void print_verilog_submodule_timing(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,
-                                    const CircuitModelId& circuit_model) {
+                                    const CircuitModelId& circuit_model,
+                                    const bool& little_endian) {
   /* return if there is no delay info */
   if (0 == circuit_lib.num_delay_info(circuit_model)) {
     return;
@@ -79,9 +80,9 @@ void print_verilog_submodule_timing(std::fstream& fp,
 
     fp << "\t\t";
     fp << "("
-       << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false);
+       << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false, little_endian);
     fp << " => ";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false)
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false, little_endian)
        << ")";
     fp << " = ";
     fp << "(" << std::setprecision(FLOAT_PRECISION)

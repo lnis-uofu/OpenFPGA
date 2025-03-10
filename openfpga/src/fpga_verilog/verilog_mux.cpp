@@ -42,7 +42,8 @@ namespace openfpga {
 static void generate_verilog_cmos_mux_branch_body_behavioral(
   std::fstream& fp, const BasicPort& input_port, const BasicPort& output_port,
   const BasicPort& mem_port, const MuxGraph& mux_graph,
-  const size_t& default_mem_val) {
+  const size_t& default_mem_val,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -53,14 +54,14 @@ static void generate_verilog_cmos_mux_branch_body_behavioral(
   /* Add an internal register for the output */
   BasicPort outreg_port("out_reg", mux_graph.num_outputs());
   /* Print the port */
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, outreg_port) << ";"
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, outreg_port, true, little_endian) << ";"
      << std::endl;
 
   /* Generate the case-switch table */
   fp << "\talways @(" << generate_verilog_port(VERILOG_PORT_CONKT, input_port)
-     << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_port) << ")"
+     << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_port, true, little_endian) << ")"
      << std::endl;
-  fp << "\tcase (" << generate_verilog_port(VERILOG_PORT_CONKT, mem_port) << ")"
+  fp << "\tcase (" << generate_verilog_port(VERILOG_PORT_CONKT, mem_port, true, little_endian) << ")"
      << std::endl;
 
   /* Output the netlist following the connections in mux_graph */
@@ -98,8 +99,8 @@ static void generate_verilog_cmos_mux_branch_body_behavioral(
         case_code[size_t(mux_mem)] = '0';
       }
       fp << case_code << ": "
-         << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port) << " <= ";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_input_port) << ";"
+         << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port, true, little_endian) << " <= ";
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_input_port, true, little_endian) << ";"
          << std::endl;
     }
   }
@@ -107,14 +108,14 @@ static void generate_verilog_cmos_mux_branch_body_behavioral(
   /* Default case: outputs are at high-impedance state 'z' */
   std::string default_case(mux_graph.num_outputs(), 'z');
   fp << "\t\tdefault: "
-     << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port) << " <= ";
+     << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port, true, little_endian) << " <= ";
   fp << mux_graph.num_outputs() << "'b" << default_case << ";" << std::endl;
 
   /* End the case */
   fp << "\tendcase" << std::endl;
 
   /* Wire registers to output ports */
-  fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, output_port)
+  fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian)
      << " = ";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port) << ";"
      << std::endl;
@@ -129,7 +130,8 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model,
   const std::string& module_name, const MuxGraph& mux_graph,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Get the tgate model */
   CircuitModelId tgate_model = circuit_lib.pass_gate_logic_model(mux_model);
 
@@ -171,7 +173,7 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, mux_module,
-                                   default_net_type);
+                                   default_net_type, little_endian);
 
   /* Print the internal logic in behavioral Verilog codes */
   /* Get the default value of SRAM ports */
@@ -183,7 +185,7 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
   /* Mem string must be only 1-bit! */
   VTR_ASSERT(1 == mem_default_val.length());
   generate_verilog_cmos_mux_branch_body_behavioral(
-    fp, input_port, output_port, mem_port, mux_graph, mem_default_val[0]);
+    fp, input_port, output_port, mem_port, mux_graph, mem_default_val[0], little_endian);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name, default_net_type);
@@ -234,7 +236,8 @@ static void generate_verilog_rram_mux_branch_body_structural(
   std::fstream& fp, const ModuleId& module_id,
   const CircuitModelId& circuit_model, const BasicPort& input_port,
   const BasicPort& output_port, const BasicPort& blb_port,
-  const BasicPort& wl_port, const MuxGraph& mux_graph) {
+  const BasicPort& wl_port, const MuxGraph& mux_graph,
+  const bool& little_endian) {
   std::string progTE_module_name("PROG_TE");
   std::string progBE_module_name("PROG_BE");
 
@@ -332,7 +335,7 @@ static void generate_verilog_rram_mux_branch_body_structural(
       /* Output an instance of the module */
       print_verilog_module_instance(
         fp, module_manager, module_id, progTE_module_id, port2port_name_map,
-        circuit_lib.dump_explicit_port_map(circuit_model));
+        circuit_lib.dump_explicit_port_map(circuit_model), little_endian);
       /* IMPORTANT: this update MUST be called after the instance outputting!!!!
        * update the module manager with the relationship between the parent and
        * child modules
@@ -392,7 +395,7 @@ static void generate_verilog_rram_mux_branch_body_structural(
     /* Output an instance of the module */
     print_verilog_module_instance(
       fp, module_manager, module_id, progBE_module_id, port2port_name_map,
-      circuit_lib.dump_explicit_port_map(circuit_model));
+      circuit_lib.dump_explicit_port_map(circuit_model), little_endian);
     /* IMPORTANT: this update MUST be called after the instance outputting!!!!
      * update the module manager with the relationship between the parent and
      * child modules
@@ -435,7 +438,8 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model, const BasicPort& input_port,
   const BasicPort& output_port, const BasicPort& blb_port,
-  const BasicPort& wl_port, const MuxGraph& mux_graph) {
+  const BasicPort& wl_port, const MuxGraph& mux_graph,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -446,15 +450,15 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
   /* Add an internal register for the output */
   BasicPort outreg_port("out_reg", mux_graph.num_inputs());
   /* Print the port */
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, outreg_port) << ";"
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, outreg_port, true, little_endian) << ";"
      << std::endl;
 
   /* Print the internal logics */
   fp << "\t"
      << "always @(";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, blb_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, blb_port, true, little_endian);
   fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_port, true, little_endian);
   fp << ")";
   fp << " begin" << std::endl;
 
@@ -465,7 +469,7 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
      << "if (";
   BasicPort set_enable_port(wl_port.get_name(), wl_port.get_width() - 1,
                             wl_port.get_width() - 1);
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, set_enable_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, set_enable_port, true, little_endian);
   /* We need two config-enable ports: prog_EN and prog_ENb */
   bool find_prog_EN = false;
   bool find_prog_ENb = false;
@@ -481,13 +485,13 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
                            circuit_lib.port_size(port));
     if (0 == circuit_lib.port_default_value(port)) {
       /* Default value = 0 means that this is a prog_EN port */
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, prog_en_port);
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, prog_en_port, true, little_endian);
       find_prog_EN = true;
     } else {
       VTR_ASSERT(1 == circuit_lib.port_default_value(port));
       /* Default value = 1 means that this is a prog_ENb port, add inversion in
        * the if condition */
-      fp << "(~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_en_port)
+      fp << "(~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_en_port, true, little_endian)
          << ")";
       find_prog_ENb = true;
     }
@@ -521,7 +525,7 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
     BasicPort cur_blb_port(blb_port.get_name(),
                            size_t(mux_graph.input_id(mux_input)),
                            size_t(mux_graph.input_id(mux_input)));
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_blb_port);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_blb_port, true, little_endian);
     fp << ") begin" << std::endl;
     fp << "\t\t\t\t"
        << "assign ";
@@ -544,7 +548,7 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
 
   fp << "\t"
      << "assign ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian);
   fp << " = ";
   fp << input_port.get_name() << "[";
   fp << outreg_port.get_name();
@@ -561,7 +565,8 @@ static void generate_verilog_rram_mux_branch_module(
   std::fstream& fp, const CircuitModelId& circuit_model,
   const std::string& module_name, const MuxGraph& mux_graph,
   const e_verilog_default_net_type& default_net_type,
-  const bool& use_structural_verilog) {
+  const bool& use_structural_verilog,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -618,18 +623,18 @@ static void generate_verilog_rram_mux_branch_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   default_net_type);
+                                   default_net_type, little_endian);
 
   /* Print the internal logic in either structural or behavioral Verilog codes
    */
   if (true == use_structural_verilog) {
     generate_verilog_rram_mux_branch_body_structural(
       module_manager, circuit_lib, fp, module_id, circuit_model, input_port,
-      output_port, blb_port, wl_port, mux_graph);
+      output_port, blb_port, wl_port, mux_graph, little_endian);
   } else {
     generate_verilog_rram_mux_branch_body_behavioral(
       fp, circuit_lib, circuit_model, input_port, output_port, blb_port,
-      wl_port, mux_graph);
+      wl_port, mux_graph, little_endian);
   }
 
   /* Put an end to the Verilog module */
@@ -688,14 +693,15 @@ static void generate_verilog_mux_branch_module(
         /* Behavioral verilog requires customized generation */
         print_verilog_cmos_mux_branch_module_behavioral(
           module_manager, circuit_lib, fp, mux_model, module_name, mux_graph,
-          options.default_net_type());
+          options.default_net_type(), options.little_endian());
       }
       break;
     case CIRCUIT_MODEL_DESIGN_RRAM:
       generate_verilog_rram_mux_branch_module(
         module_manager, circuit_lib, fp, mux_model, module_name, mux_graph,
         options.default_net_type(),
-        circuit_lib.dump_structural_verilog(mux_model));
+        circuit_lib.dump_structural_verilog(mux_model),
+        options.little_endian());
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -721,7 +727,8 @@ static void generate_verilog_mux_branch_module(
 static void generate_verilog_cmos_mux_module_input_buffers(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph) {
+  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -778,7 +785,7 @@ static void generate_verilog_cmos_mux_module_input_buffers(
         fp, std::string("---- BEGIN short-wire a multiplexing structure input "
                         "to a constant value -----"));
       print_verilog_wire_constant_values(fp, instance_output_port,
-                                         std::vector<size_t>(1, const_value));
+                                         std::vector<size_t>(1, const_value), little_endian);
       print_verilog_comment(
         fp, std::string("---- END short-wire a multiplexing structure input to "
                         "a constant value -----"));
@@ -794,7 +801,7 @@ static void generate_verilog_cmos_mux_module_input_buffers(
 
       /* Short wire all the datapath inputs to the MUX inputs */
       print_verilog_wire_connection(fp, instance_output_port,
-                                    instance_input_port, false);
+                                    instance_input_port, false, little_endian);
 
       print_verilog_comment(
         fp, std::string("---- END short-wire a multiplexing structure input to "
@@ -816,7 +823,7 @@ static void generate_verilog_cmos_mux_module_input_buffers(
 
     print_verilog_buffer_instance(fp, module_manager, circuit_lib, module_id,
                                   buffer_model, instance_input_port,
-                                  instance_output_port);
+                                  instance_output_port, little_endian);
 
     print_verilog_comment(
       fp,
@@ -835,7 +842,8 @@ static void generate_verilog_cmos_mux_module_input_buffers(
 static void generate_verilog_cmos_mux_module_output_buffers(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph) {
+  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -893,7 +901,7 @@ static void generate_verilog_cmos_mux_module_output_buffers(
 
         /* Short wire all the datapath inputs to the MUX inputs */
         print_verilog_wire_connection(fp, instance_output_port,
-                                      instance_input_port, false);
+                                      instance_input_port, false, little_endian);
 
         print_verilog_comment(
           fp, std::string("---- END short-wire a multiplexing structure output "
@@ -916,7 +924,7 @@ static void generate_verilog_cmos_mux_module_output_buffers(
 
       print_verilog_buffer_instance(fp, module_manager, circuit_lib, module_id,
                                     buffer_model, instance_input_port,
-                                    instance_output_port);
+                                    instance_output_port, little_endian);
 
       print_verilog_comment(
         fp,
@@ -937,7 +945,8 @@ static void generate_verilog_cmos_mux_module_output_buffers(
 static void generate_verilog_rram_mux_module_multiplexing_structure(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph) {
+  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -967,7 +976,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
     /* Print the internal wires located at this level */
     BasicPort internal_wire_port(generate_mux_node_name(level, false),
                                  mux_graph.num_nodes_at_level(level));
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_port)
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_port, true, little_endian)
        << ";" << std::endl;
     /* Identify if an intermediate buffer is needed */
     if (false == inter_buffer_location_map[level]) {
@@ -976,7 +985,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
     BasicPort internal_wire_buffered_port(generate_mux_node_name(level, true),
                                           mux_graph.num_nodes_at_level(level));
     fp << "\t"
-       << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_buffered_port)
+       << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_buffered_port, true, little_endian)
        << std::endl;
   }
   print_verilog_comment(
@@ -1061,7 +1070,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
       /* Print a local wire for the merged ports */
       fp << "\t"
          << generate_verilog_local_wire(instance_input_port,
-                                        branch_node_input_ports)
+                                        branch_node_input_ports, little_endian)
          << std::endl;
     } else {
       /* Safety check */
@@ -1126,7 +1135,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
       /* Print a local wire for the merged ports */
       fp << "\t"
          << generate_verilog_local_wire(instance_blb_port,
-                                        branch_node_blb_ports)
+                                        branch_node_blb_ports, little_endian)
          << std::endl;
     } else {
       /* Safety check */
@@ -1175,7 +1184,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
     if (1 < combine_verilog_ports(branch_node_wl_ports).size()) {
       /* Print a local wire for the merged ports */
       fp << "\t"
-         << generate_verilog_local_wire(instance_wl_port, branch_node_wl_ports)
+         << generate_verilog_local_wire(instance_wl_port, branch_node_wl_ports, little_endian)
          << std::endl;
     } else {
       /* Safety check */
@@ -1194,7 +1203,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
     /* Output an instance of the module */
     print_verilog_module_instance(
       fp, module_manager, module_id, branch_module_id, port2port_name_map,
-      circuit_lib.dump_explicit_port_map(circuit_model));
+      circuit_lib.dump_explicit_port_map(circuit_model), little_endian);
     /* IMPORTANT: this update MUST be called after the instance outputting!!!!
      * update the module manager with the relationship between the parent and
      * child modules
@@ -1230,7 +1239,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
 
     print_verilog_buffer_instance(fp, module_manager, circuit_lib, module_id,
                                   buffer_model, buffer_instance_input_port,
-                                  buffer_instance_output_port);
+                                  buffer_instance_output_port, little_endian);
 
     print_verilog_comment(
       fp, std::string(
@@ -1275,7 +1284,8 @@ static void generate_verilog_rram_mux_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& circuit_model,
   const std::string& module_name, const MuxGraph& mux_graph,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Error out for the conditions where we are not yet supported! */
   if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
     /* RRAM LUT is not supported now... */
@@ -1379,19 +1389,19 @@ static void generate_verilog_rram_mux_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   default_net_type);
+                                   default_net_type, little_endian);
 
   /* TODO: Print the internal logic in Verilog codes */
   generate_verilog_rram_mux_module_multiplexing_structure(
-    module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
+    module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph, little_endian);
 
   /* Print the input and output buffers in Verilog codes */
   /* TODO, we should rename the follow functions to a generic name? Since they
    * are applicable to both MUXes */
   generate_verilog_cmos_mux_module_input_buffers(
-    module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
+    module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph, little_endian);
   generate_verilog_cmos_mux_module_output_buffers(
-    module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
+    module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph, little_endian);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name, default_net_type);
@@ -1437,7 +1447,7 @@ static void generate_verilog_mux_module(
       /* TODO: RRAM-based Multiplexer Verilog module generation */
       generate_verilog_rram_mux_module(module_manager, circuit_lib, fp,
                                        mux_model, module_name, mux_graph,
-                                       options.default_net_type());
+                                       options.default_net_type(), options.little_endian());
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,

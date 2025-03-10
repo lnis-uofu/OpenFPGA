@@ -68,7 +68,8 @@ void print_verilog_module_ports(
 void print_verilog_module_declaration(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& module_id,
-  const e_verilog_default_net_type& default_net_type);
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian);
 
 void print_verilog_module_instance(
   std::fstream& fp, const ModuleManager& module_manager,
@@ -88,8 +89,8 @@ void print_verilog_module_end(
 
 std::string generate_verilog_port(
   const enum e_dump_verilog_port_type& dump_port_type,
-  const BasicPort& port_info, const bool& must_print_port_size = true,
-  const bool& big_endian = true);
+  const BasicPort& port_info, const bool& must_print_port_size,
+  const bool& little_endian);
 
 bool two_verilog_ports_mergeable(const BasicPort& portA,
                                  const BasicPort& portB);
@@ -100,32 +101,38 @@ BasicPort merge_two_verilog_ports(const BasicPort& portA,
 std::vector<BasicPort> combine_verilog_ports(
   const std::vector<BasicPort>& ports);
 
-std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports);
+std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports, const bool& little_endian);
 
 BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
                                     const std::string& bus_port_name);
 
 std::string generate_verilog_local_wire(
-  const BasicPort& output_port, const std::vector<BasicPort>& input_ports);
+  const BasicPort& output_port, const std::vector<BasicPort>& input_ports, const bool& little_endian);
 
 std::string generate_verilog_constant_values(
-  const std::vector<size_t>& const_values, const bool& short_constant = true);
+  const std::vector<size_t>& const_values, 
+  const bool& short_constant = true);
 
 std::string generate_verilog_port_constant_values(
   const BasicPort& output_port, const std::vector<size_t>& const_values,
+  const bool& little_endian,
   const bool& is_register = false);
 
 std::string generate_verilog_ports_constant_values(
   const std::vector<BasicPort>& output_ports,
-  const std::vector<size_t>& const_values, const bool& is_register = false);
+  const std::vector<size_t>& const_values,
+  const bool& little_endian,
+  const bool& is_register = false);
 
 void print_verilog_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values);
+  const std::vector<size_t>& const_values,
+  const bool& little_endian);
 
 void print_verilog_wire_constant_values_bit_blast(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values);
+  const std::vector<size_t>& const_values,
+  const bool& little_endian);
 
 void print_verilog_deposit_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
@@ -138,7 +145,8 @@ void print_verilog_force_wire_constant_values(
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,
                                    const BasicPort& input_port,
-                                   const bool& inverted);
+                                   const bool& inverted,
+                                   const bool& little_endian);
 
 void print_verilog_register_connection(std::fstream& fp,
                                        const BasicPort& output_port,
@@ -151,7 +159,8 @@ void print_verilog_buffer_instance(std::fstream& fp,
                                    const ModuleId& parent_module_id,
                                    const CircuitModelId& buffer_model,
                                    const BasicPort& instance_input_port,
-                                   const BasicPort& instance_output_port);
+                                   const BasicPort& instance_output_port,
+                                   const bool& little_endian);
 
 void print_verilog_local_sram_wires(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,

@@ -36,6 +36,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
+  CommandOptionId opt_little_endian= cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -56,6 +57,8 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
     options.set_default_net_type(
       cmd_context.option_value(cmd, opt_default_net_type));
   }
+  options.set_little_endian(
+    cmd_context.option_enable(cmd, opt_little_endian));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
   /* For perimeter cb, enable the constant-zero undriven inputs, unless it is
