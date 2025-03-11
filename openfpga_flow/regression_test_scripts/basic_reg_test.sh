@@ -30,6 +30,7 @@ run-task basic_tests/preload_unique_blocks/read_bin_write_xml $@
 
 echo -e "Testing testbenches using fpga core wrapper"
 run-task basic_tests/full_testbench/fpga_core_wrapper $@
+run-task basic_tests/full_testbench/fpga_core_wrapper_little_endian $@
 run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules $@
 run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules_use_core_tb $@
 run-task basic_tests/preconfig_testbench/fpga_core_wrapper $@
