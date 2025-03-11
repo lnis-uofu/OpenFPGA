@@ -304,6 +304,7 @@ run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_wildcards
 
 echo -e "Testing bus group features";
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
+run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping_little_endian $@
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_implicit_mapping $@
