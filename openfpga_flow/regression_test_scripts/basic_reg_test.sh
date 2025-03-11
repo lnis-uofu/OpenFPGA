@@ -307,6 +307,7 @@ run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping_little_endian $@
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_explicit_mapping $@
+run-task basic_tests/bus_group/full_testbench_explicit_mapping_little_endian $@
 run-task basic_tests/bus_group/full_testbench_implicit_mapping $@
 run-task basic_tests/bus_group/auto_gen_bus_group $@
 
