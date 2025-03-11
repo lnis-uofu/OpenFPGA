@@ -190,6 +190,7 @@ echo -e "Testing K4N4 support reset generation by internal resources";
 run-task basic_tests/k4_series/k4n4_rst_gen $@
 echo -e "Testing enhanced connection blocks"
 run-task basic_tests/k4_series/k4n4_ecb $@
+run-task basic_tests/k4_series/k4n4_ecb_little_endian $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
