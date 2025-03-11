@@ -739,14 +739,32 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   fp << "end else begin";
   fp << std::endl;
 
-  std::vector<BasicPort> blwl_ports = bl_ports;
-  blwl_ports.insert(blwl_ports.end(), wl_ports.begin(), wl_ports.end());
   fp << "\t\t";
-  fp << generate_verilog_ports(blwl_ports, little_endian);
-  fp << " <= ";
-  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-     << "]";
-  fp << ";" << std::endl;
+  size_t curr_mem_idx = 0;
+  for (auto curr_port : bl_ports) {
+    for (auto curr_pin : curr_port.pins()) {
+      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin); 
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false, little_endian);
+      fp << " <= ";
+      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
+         << "]";
+      fp << "[" << curr_mem_idx << "]";
+      fp << ";" << std::endl;
+      curr_mem_idx++;
+    }
+  }
+  for (auto curr_port : wl_ports) {
+    for (auto curr_pin : curr_port.pins()) {
+      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin); 
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false, little_endian);
+      fp << " <= ";
+      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
+         << "]";
+      fp << "[" << curr_mem_idx << "]";
+      fp << ";" << std::endl;
+      curr_mem_idx++;
+    }
+  }
 
   fp << "\t\t";
   fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
