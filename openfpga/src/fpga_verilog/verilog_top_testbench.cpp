@@ -2075,9 +2075,13 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       fp << std::endl;
 
       fp << "\t\t";
-      /* Use bit-blast here. As the readmemb complies with big endian, when little endian used on rest of the netlists, the bitstream is loaded in a wrong sequence on the ccff heads. The universal approach is bit-blast to avoid bugs  */
+      /* Use bit-blast here. As the readmemb complies with big endian, when
+       * little endian used on rest of the netlists, the bitstream is loaded in
+       * a wrong sequence on the ccff heads. The universal approach is bit-blast
+       * to avoid bugs  */
       for (auto ccff_head_pin : config_chain_head_port.pins()) {
-        BasicPort curr_ccff_head_port(config_chain_head_port.get_name(), ccff_head_pin, ccff_head_pin);
+        BasicPort curr_ccff_head_port(config_chain_head_port.get_name(),
+                                      ccff_head_pin, ccff_head_pin);
         fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_ccff_head_port,
                                     true, little_endian);
         fp << " <= ";
