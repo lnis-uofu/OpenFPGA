@@ -38,6 +38,7 @@ run-task basic_tests/preconfig_testbench/fpga_core_wrapper_naming_rules_use_core
 
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
+run-task basic_tests/full_testbench/configuration_chain_le $@
 run-task basic_tests/full_testbench/configuration_chain_no_time_stamp $@
 run-task basic_tests/full_testbench/configuration_chain_use_reset $@
 run-task basic_tests/full_testbench/configuration_chain_use_resetb $@
