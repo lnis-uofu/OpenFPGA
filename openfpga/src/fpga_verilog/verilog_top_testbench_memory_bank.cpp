@@ -688,14 +688,14 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   print_verilog_comment(fp, "----- Bit-Line Address port default input -----");
   fp << "\t";
   fp << generate_verilog_ports_constant_values(bl_ports, initial_bl_values,
-                                               true, little_endian);
+                                               little_endian, true);
   fp << ";";
   fp << std::endl;
 
   print_verilog_comment(fp, "----- Word-Line Address port default input -----");
   fp << "\t";
   fp << generate_verilog_ports_constant_values(wl_ports, initial_wl_values,
-                                               true, little_endian);
+                                               little_endian, true);
   fp << ";";
   fp << std::endl;
 
