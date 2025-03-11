@@ -123,7 +123,7 @@ static void print_verilog_preconfig_top_module_ports(
     }
 
     fp << generate_verilog_port(port_type2type_map[port_type], module_port,
-                                true, port_big_endian[iport]);
+                                true, !port_big_endian[iport]);
 
     /* Update port counter */
     port_counter++;
