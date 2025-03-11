@@ -1734,7 +1734,11 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   /* Declare local variables for bitstream loading in Verilog */
   print_verilog_comment(
     fp, "----- Virtual memory to store the bitstream from external file -----");
-  fp << "reg [0:`" << TOP_TB_BITSTREAM_WIDTH_VARIABLE << " - 1] ";
+  if (little_endian) {
+    fp << "reg [`" << TOP_TB_BITSTREAM_WIDTH_VARIABLE << " - 1 : 0] ";
+  } else {
+    fp << "reg [0:`" << TOP_TB_BITSTREAM_WIDTH_VARIABLE << " - 1] ";
+  }
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0:`"
      << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " - 1];";
   fp << std::endl;
