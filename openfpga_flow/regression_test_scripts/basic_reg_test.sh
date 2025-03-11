@@ -54,6 +54,7 @@ run-task basic_tests/full_testbench/fast_configuration_chain_use_set $@
 run-task basic_tests/full_testbench/smart_fast_configuration_chain $@
 run-task basic_tests/full_testbench/smart_fast_multi_region_configuration_chain $@
 run-task basic_tests/preconfig_testbench/configuration_chain $@
+run-task basic_tests/preconfig_testbench/configuration_chain_le $@
 run-task basic_tests/preconfig_testbench/configuration_chain_config_done_io $@
 run-task basic_tests/preconfig_testbench/configuration_chain_no_time_stamp $@
 
