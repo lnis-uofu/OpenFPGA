@@ -110,6 +110,7 @@ run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog_default_nettype
 
 echo -e "Testing synthesizable Verilog generation with external standard cells";
 run-task fpga_verilog/verilog_netlist_formats/synthesizable_verilog $@
+run-task fpga_verilog/verilog_netlist_formats/synthesizable_verilog_little_endian $@
 
 echo -e "Testing implicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/implicit_verilog $@
