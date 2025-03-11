@@ -257,6 +257,7 @@ run-task basic_tests/clock_network/homo_1clock_2layer $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_dec $@
 run-task basic_tests/clock_network/homo_1clock_2layer_full_tb $@
 run-task basic_tests/clock_network/homo_2clock_2layer $@
+run-task basic_tests/clock_network/homo_2clock_2layer_little_endian $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused_tree $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer $@
