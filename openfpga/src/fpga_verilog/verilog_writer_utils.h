@@ -62,8 +62,7 @@ void print_verilog_module_definition(std::fstream& fp,
 
 void print_verilog_module_ports(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id,
-  const e_verilog_default_net_type& default_net_type,
+  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
   const bool& little_endian);
 
 void print_verilog_module_declaration(
