@@ -1734,11 +1734,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   /* Declare local variables for bitstream loading in Verilog */
   print_verilog_comment(
     fp, "----- Virtual memory to store the bitstream from external file -----");
-  if (little_endian) {
-    fp << "reg [`" << TOP_TB_BITSTREAM_WIDTH_VARIABLE << " - 1 : 0] ";
-  } else {
-    fp << "reg [0:`" << TOP_TB_BITSTREAM_WIDTH_VARIABLE << " - 1] ";
-  }
+  fp << "reg [0:`" << TOP_TB_BITSTREAM_WIDTH_VARIABLE << " - 1] ";
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0:`"
      << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " - 1];";
   fp << std::endl;
@@ -2079,12 +2075,17 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       fp << std::endl;
 
       fp << "\t\t";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, config_chain_head_port,
-                                  true, little_endian);
-      fp << " <= ";
-      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
-         << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << "]";
-      fp << ";" << std::endl;
+      /* Use bit-blast here. As the readmemb complies with big endian, when little endian used on rest of the netlists, the bitstream is loaded in a wrong sequence on the ccff heads. The universal approach is bit-blast to avoid bugs  */
+      for (auto ccff_head_pin : config_chain_head_port.pins()) {
+        BasicPort curr_ccff_head_port(config_chain_head_port.get_name(), ccff_head_pin, ccff_head_pin);
+        fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_ccff_head_port,
+                                    true, little_endian);
+        fp << " <= ";
+        fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+           << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << "]"
+           << "[" << ccff_head_pin << "]";
+        fp << ";" << std::endl;
+      }
 
       fp << "\t\t";
       fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk;
