@@ -1273,20 +1273,44 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
   fp << std::endl;
 
   fp << "\t\t";
-  fp << "{";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_port, true,
-                              little_endian);
-  fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_addr_port, true,
-                              little_endian);
-  fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port, true,
-                              little_endian);
-  fp << "}";
-  fp << " <= ";
-  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
+
+  /* Bitstream always follows big endian. Use bit-blast to avoid any data mismatch when little endian is used */
+  size_t curr_mem_idx = 0;
+  for (auto pin : bl_addr_port.pins()) {
+    BasicPort curr_bl_addr_port(bl_addr_port.get_name(), pin, pin);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_bl_addr_port, true,
+                                little_endian);
+    fp << " <= ";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
+       << "]";
+    fp << "[" << curr_mem_idx << "]";
+    fp << ";" << std::endl;
+    curr_mem_idx++;
+  }
+
+  for (auto pin : wl_addr_port.pins()) {
+    BasicPort curr_wl_addr_port(wl_addr_port.get_name(), pin, pin);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_wl_addr_port, true,
+                                little_endian);
+    fp << " <= ";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
      << "]";
-  fp << ";" << std::endl;
+    fp << "[" << curr_mem_idx << "]";
+    fp << ";" << std::endl;
+    curr_mem_idx++;
+  }
+
+  for (auto pin : din_port.pins()) {
+    BasicPort curr_din_port(din_port.get_name(), pin, pin);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_din_port, true,
+                                little_endian);
+    fp << " <= ";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
+       << "]";
+    fp << "[" << curr_mem_idx << "]";
+    fp << ";" << std::endl;
+    curr_mem_idx++;
+  }
 
   fp << "\t\t";
   fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
