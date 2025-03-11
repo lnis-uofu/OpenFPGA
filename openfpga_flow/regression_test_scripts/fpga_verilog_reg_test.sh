@@ -119,6 +119,7 @@ run-task fpga_verilog/verilog_netlist_formats/implicit_verilog_default_nettype_w
 
 echo -e "Testing explicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire $@
+run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire_little_endian $@
 
 echo -e "Testing undriven net wiring in Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_none $@
