@@ -1068,15 +1068,31 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
   fp << "\t";
   fp << "end else begin" << std::endl;
 
-  fp << "\t\t";
-  fp << generate_verilog_ports(bl_head_ports, little_endian);
-  fp << " <= ";
-  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[(";
-  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << "-1)*(`"
-     << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + `"
-     << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << ") + "
-     << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
-  fp << "];" << std::endl;
+  size_t curr_bl_mem_idx = 0;
+  size_t total_bl_width = 0;
+  for (auto curr_port : bl_head_ports) {
+    total_bl_width += curr_port.get_width();
+  }
+  for (auto curr_port : bl_head_ports) {
+    for (auto curr_pin : curr_port.pins()) {
+      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
+      fp << "\t\t";
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, true, little_endian);
+      fp << " <= ";
+      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[(";
+      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << "-1)*(`"
+         << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + `"
+         << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << ") + "
+         << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
+      fp << "]";
+      /* This is due to a bug in iverilog. When single-bit is used in readmemb, the bitwise operator is not working when fetching the data.*/
+      if (total_bl_width > 1) {
+        fp << "[" << curr_bl_mem_idx << "]";
+      }
+      fp << ";" << std::endl;
+      curr_bl_mem_idx++;
+    }
+  }
 
   fp << "\t\t";
   fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME << " = ";
@@ -1131,16 +1147,32 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
   fp << "\t";
   fp << "end else begin" << std::endl;
 
-  fp << "\t\t";
-  fp << generate_verilog_ports(wl_head_ports, little_endian);
-  fp << " <= ";
-  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[(";
-  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << "-1)*(`"
-     << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + `"
-     << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << ") + `"
-     << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + "
-     << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
-  fp << "];" << std::endl;
+  size_t curr_wl_mem_idx = 0;
+  size_t total_wl_width = 0;
+  for (auto curr_port : wl_head_ports) {
+    total_wl_width += curr_port.get_width();
+  }
+  for (auto curr_port : wl_head_ports) {
+    for (auto curr_pin : curr_port.pins()) {
+      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
+      fp << "\t\t";
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, true, little_endian);
+      fp << " <= ";
+      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[(";
+      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << "-1)*(`"
+         << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + `"
+         << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << ") + `"
+         << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + "
+         << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
+      fp << "]";
+      /* This is due to a bug in iverilog. When single-bit is used in readmemb, the bitwise operator is not working when fetching the data.*/
+      if (total_wl_width > 1) {
+        fp << "[" << curr_wl_mem_idx << "]";
+      }
+      fp << ";" << std::endl;
+      curr_wl_mem_idx++;
+    }
+  }
 
   fp << "\t\t";
   fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME << " = ";
