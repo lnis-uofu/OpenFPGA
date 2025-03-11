@@ -155,6 +155,7 @@ echo -e "Testing K4N4 with facturable LUTs";
 run-task basic_tests/k4_series/k4n4_frac_lut $@
 echo -e "Testing K4N4 with asynchronous reset";
 run-task basic_tests/k4_series/k4n4_fracff $@
+run-task basic_tests/k4_series/k4n4_fracff_little_endian $@
 echo -e "Testing K4N4 with negative edge clocks";
 run-task basic_tests/k4_series/k4n4_fracff2edge $@
 echo -e "Testing K4N4 with hard adders";
