@@ -552,7 +552,7 @@ static void write_verilog_instance_to_file(std::fstream& fp,
         instance_ports.push_back(instance_port);
       }
       /* Try to merge the ports */
-      if (little_endian) { 
+      if (little_endian) {
         std::reverse(instance_ports.begin(), instance_ports.end());
       }
       std::vector<BasicPort> merged_ports =
