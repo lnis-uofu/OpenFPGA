@@ -102,6 +102,7 @@ run-task basic_tests/full_testbench/ql_memory_bank_flatten_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain $@
+run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain_little_endian $@
 
 echo -e "Testing simulator support";
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_vcs $@
