@@ -96,6 +96,7 @@ run-task basic_tests/full_testbench/ql_memory_bank_use_wlr $@
 run-task basic_tests/full_testbench/multi_region_ql_memory_bank $@
 run-task basic_tests/full_testbench/multi_region_ql_memory_bank_little_endian $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten $@
+run-task basic_tests/full_testbench/ql_memory_bank_flatten_little_endian $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_defined_wl $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register $@
