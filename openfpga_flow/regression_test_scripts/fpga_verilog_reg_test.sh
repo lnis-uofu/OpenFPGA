@@ -106,6 +106,7 @@ run-task fpga_verilog/mux_design/no_const_input $@
 
 echo -e "Testing Verilog generation with behavioral description";
 run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog $@
+run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog_little_endian $@
 run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog_default_nettype_wire $@
 
 echo -e "Testing synthesizable Verilog generation with external standard cells";
