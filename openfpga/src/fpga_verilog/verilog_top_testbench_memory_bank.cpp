@@ -743,11 +743,12 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   size_t curr_mem_idx = 0;
   for (auto curr_port : bl_ports) {
     for (auto curr_pin : curr_port.pins()) {
-      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin); 
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false, little_endian);
+      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false,
+                                  little_endian);
       fp << " <= ";
-      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-         << "]";
+      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+         << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
       fp << "[" << curr_mem_idx << "]";
       fp << ";" << std::endl;
       curr_mem_idx++;
@@ -755,11 +756,12 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   }
   for (auto curr_port : wl_ports) {
     for (auto curr_pin : curr_port.pins()) {
-      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin); 
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false, little_endian);
+      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false,
+                                  little_endian);
       fp << " <= ";
-      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-         << "]";
+      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+         << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
       fp << "[" << curr_mem_idx << "]";
       fp << ";" << std::endl;
       curr_mem_idx++;
@@ -1077,7 +1079,8 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
     for (auto curr_pin : curr_port.pins()) {
       BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
       fp << "\t\t";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, true, little_endian);
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, true,
+                                  little_endian);
       fp << " <= ";
       fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[(";
       fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << "-1)*(`"
@@ -1085,7 +1088,8 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
          << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << ") + "
          << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
       fp << "]";
-      /* This is due to a bug in iverilog. When single-bit is used in readmemb, the bitwise operator is not working when fetching the data.*/
+      /* This is due to a bug in iverilog. When single-bit is used in readmemb,
+       * the bitwise operator is not working when fetching the data.*/
       if (total_bl_width > 1) {
         fp << "[" << curr_bl_mem_idx << "]";
       }
@@ -1156,7 +1160,8 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
     for (auto curr_pin : curr_port.pins()) {
       BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
       fp << "\t\t";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, true, little_endian);
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, true,
+                                  little_endian);
       fp << " <= ";
       fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[(";
       fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << "-1)*(`"
@@ -1165,7 +1170,8 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
          << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " + "
          << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
       fp << "]";
-      /* This is due to a bug in iverilog. When single-bit is used in readmemb, the bitwise operator is not working when fetching the data.*/
+      /* This is due to a bug in iverilog. When single-bit is used in readmemb,
+       * the bitwise operator is not working when fetching the data.*/
       if (total_wl_width > 1) {
         fp << "[" << curr_wl_mem_idx << "]";
       }
@@ -1324,15 +1330,16 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
 
   fp << "\t\t";
 
-  /* Bitstream always follows big endian. Use bit-blast to avoid any data mismatch when little endian is used */
+  /* Bitstream always follows big endian. Use bit-blast to avoid any data
+   * mismatch when little endian is used */
   size_t curr_mem_idx = 0;
   for (auto pin : bl_addr_port.pins()) {
     BasicPort curr_bl_addr_port(bl_addr_port.get_name(), pin, pin);
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_bl_addr_port, true,
                                 little_endian);
     fp << " <= ";
-    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-       << "]";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+       << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
     fp << "[" << curr_mem_idx << "]";
     fp << ";" << std::endl;
     curr_mem_idx++;
@@ -1343,8 +1350,8 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_wl_addr_port, true,
                                 little_endian);
     fp << " <= ";
-    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-     << "]";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+       << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
     fp << "[" << curr_mem_idx << "]";
     fp << ";" << std::endl;
     curr_mem_idx++;
@@ -1355,8 +1362,8 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_din_port, true,
                                 little_endian);
     fp << " <= ";
-    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-       << "]";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+       << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
     fp << "[" << curr_mem_idx << "]";
     fp << ";" << std::endl;
     curr_mem_idx++;
