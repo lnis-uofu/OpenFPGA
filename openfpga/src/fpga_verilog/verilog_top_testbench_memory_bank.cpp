@@ -739,33 +739,46 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   fp << "end else begin";
   fp << std::endl;
 
-  fp << "\t\t";
-  size_t curr_mem_idx = 0;
-  for (auto curr_port : bl_ports) {
-    for (auto curr_pin : curr_port.pins()) {
-      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false,
-                                  little_endian);
-      fp << " <= ";
-      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
-         << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
-      fp << "[" << curr_mem_idx << "]";
-      fp << ";" << std::endl;
-      curr_mem_idx++;
+  /* The following branch has to be made due to iVerilog does not support the splitted register assignment when big endian is used. Not sure where the bug comes from. Just try to make it work here. */
+  if (little_endian) {
+    size_t curr_mem_idx = 0;
+    for (auto curr_port : bl_ports) {
+      for (auto curr_pin : curr_port.pins()) {
+        BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
+        fp << "\t\t";
+        fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false,
+                                    little_endian);
+        fp << " <= ";
+        fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+           << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
+        fp << "[" << curr_mem_idx << "]";
+        fp << ";" << std::endl;
+        curr_mem_idx++;
+      }
     }
-  }
-  for (auto curr_port : wl_ports) {
-    for (auto curr_pin : curr_port.pins()) {
-      BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false,
-                                  little_endian);
-      fp << " <= ";
-      fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
-         << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
-      fp << "[" << curr_mem_idx << "]";
-      fp << ";" << std::endl;
-      curr_mem_idx++;
+    for (auto curr_port : wl_ports) {
+      for (auto curr_pin : curr_port.pins()) {
+        BasicPort curr_1bit_port(curr_port.get_name(), curr_pin, curr_pin);
+        fp << "\t\t";
+        fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_1bit_port, false,
+                                    little_endian);
+        fp << " <= ";
+        fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+           << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
+        fp << "[" << curr_mem_idx << "]";
+        fp << ";" << std::endl;
+        curr_mem_idx++;
+      }
     }
+  } else {
+    std::vector<BasicPort> blwl_ports = bl_ports;
+    blwl_ports.insert(blwl_ports.end(), wl_ports.begin(), wl_ports.end());
+    fp << "\t\t";
+    fp << generate_verilog_ports(blwl_ports, false);
+    fp << " <= ";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
+       << "]";
+    fp << ";" << std::endl;
   }
 
   fp << "\t\t";
@@ -1328,13 +1341,13 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
   fp << "end else begin";
   fp << std::endl;
 
-  fp << "\t\t";
 
   /* Bitstream always follows big endian. Use bit-blast to avoid any data
    * mismatch when little endian is used */
   size_t curr_mem_idx = 0;
   for (auto pin : bl_addr_port.pins()) {
     BasicPort curr_bl_addr_port(bl_addr_port.get_name(), pin, pin);
+    fp << "\t\t";
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_bl_addr_port, true,
                                 little_endian);
     fp << " <= ";
@@ -1347,6 +1360,7 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
 
   for (auto pin : wl_addr_port.pins()) {
     BasicPort curr_wl_addr_port(wl_addr_port.get_name(), pin, pin);
+    fp << "\t\t";
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_wl_addr_port, true,
                                 little_endian);
     fp << " <= ";
@@ -1359,6 +1373,7 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
 
   for (auto pin : din_port.pins()) {
     BasicPort curr_din_port(din_port.get_name(), pin, pin);
+    fp << "\t\t";
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_din_port, true,
                                 little_endian);
     fp << " <= ";
