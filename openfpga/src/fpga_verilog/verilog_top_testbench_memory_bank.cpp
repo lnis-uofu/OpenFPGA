@@ -739,7 +739,9 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   fp << "end else begin";
   fp << std::endl;
 
-  /* The following branch has to be made due to iVerilog does not support the splitted register assignment when big endian is used. Not sure where the bug comes from. Just try to make it work here. */
+  /* The following branch has to be made due to iVerilog does not support the
+   * splitted register assignment when big endian is used. Not sure where the
+   * bug comes from. Just try to make it work here. */
   if (little_endian) {
     size_t curr_mem_idx = 0;
     for (auto curr_port : bl_ports) {
@@ -776,8 +778,8 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
     fp << "\t\t";
     fp << generate_verilog_ports(blwl_ports, false);
     fp << " <= ";
-    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_INDEX_REG_NAME
-       << "]";
+    fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
+       << TOP_TB_BITSTREAM_INDEX_REG_NAME << "]";
     fp << ";" << std::endl;
   }
 
@@ -1340,7 +1342,6 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
   fp << "\t";
   fp << "end else begin";
   fp << std::endl;
-
 
   /* Bitstream always follows big endian. Use bit-blast to avoid any data
    * mismatch when little endian is used */
