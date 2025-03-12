@@ -45,7 +45,7 @@ localedef -i en_US -f UTF-8 en_US.UTF-8
 mkdir -p /tmp/iverilog \
     && cd /tmp/iverilog \
     && git clone https://github.com/steveicarus/iverilog.git \
-    && cd iverilog \    
+    && cd iverilog \
     && sh autoconf.sh \
     && ./configure &&  make && make install
 
