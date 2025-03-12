@@ -21,7 +21,8 @@ namespace openfpga {
 
 void print_verilog_submodule_timing(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,
-                                    const CircuitModelId& circuit_model);
+                                    const CircuitModelId& circuit_model,
+                                    const bool& little_endian);
 
 void add_user_defined_verilog_modules(ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib);

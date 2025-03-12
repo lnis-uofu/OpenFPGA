@@ -42,6 +42,12 @@ write_fabric_verilog
 
     Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
 
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
   .. option:: --no_time_stamp
 
     Do not print time stamp in Verilog netlists
@@ -114,6 +120,12 @@ write_full_testbench
     .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
+
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
   .. option:: --no_time_stamp
 
@@ -188,7 +200,13 @@ __ iverilog_website_
 
     Enable waveform output when runnign HDL simulation on the preconfigured wrapper. When enabled, waveform files can be outputted in two formats: ``fsdb`` and ``vcd`` through preprocessing flags ``DUMP_FSDB`` and ``DUMP_VCD`` respectively. For example, when using VCS,. the flag can be activiated by ``+define+DUMP_FSDB=1``.
 
-  .. option:: --no_time_stamp
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
+ .. option:: --no_time_stamp
 
     Do not print time stamp in Verilog netlists
 
@@ -230,6 +248,14 @@ write_testbench_template
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
 
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
+
+
   .. option:: --no_time_stamp
 
     Do not print time stamp in Verilog netlists
@@ -264,6 +290,14 @@ write_testbench_io_connection
 
     Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
     Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
+
 
   .. option:: --no_time_stamp
 
@@ -307,6 +341,14 @@ write_mock_fpga_wrapper
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
+
 
   .. option:: --no_time_stamp
 
@@ -352,6 +394,14 @@ write_preconfigured_testbench
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
+  .. option:: --little_endian
+
+    Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
+
+    .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
+
 
   .. option:: --no_time_stamp
 

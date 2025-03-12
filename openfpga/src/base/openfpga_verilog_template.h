@@ -36,6 +36,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -56,6 +57,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
     options.set_default_net_type(
       cmd_context.option_value(cmd, opt_default_net_type));
   }
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
   /* For perimeter cb, enable the constant-zero undriven inputs, unless it is
@@ -106,6 +108,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -136,6 +139,8 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   }
+
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
@@ -188,6 +193,7 @@ int write_preconfigured_fabric_wrapper_template(
   CommandOptionId opt_embed_bitstream = cmd.option("embed_bitstream");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_dump_waveform = cmd.option("dump_waveform");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -205,6 +211,7 @@ int write_preconfigured_fabric_wrapper_template(
     cmd_context.option_enable(cmd, opt_include_signal_init));
   options.set_dump_waveform(cmd_context.option_enable(cmd, opt_dump_waveform));
   options.set_print_formal_verification_top_netlist(true);
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
@@ -257,6 +264,7 @@ int write_testbench_template_template(const T& openfpga_ctx, const Command& cmd,
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -268,6 +276,7 @@ int write_testbench_template_template(const T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
 
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(
@@ -300,6 +309,7 @@ int write_testbench_io_connection_template(const T& openfpga_ctx,
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -308,6 +318,7 @@ int write_testbench_io_connection_template(const T& openfpga_ctx,
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
@@ -351,6 +362,7 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -363,6 +375,7 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   options.set_use_relative_path(
     cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_top_module)) {
@@ -415,6 +428,7 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
+  CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -437,6 +451,7 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
     options.set_default_net_type(
       cmd_context.option_value(cmd, opt_default_net_type));
   }
+  options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;

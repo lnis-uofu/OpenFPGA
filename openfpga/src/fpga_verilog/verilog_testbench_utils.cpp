@@ -38,7 +38,8 @@ void print_verilog_testbench_fpga_instance(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ModuleId& core_module,
   const std::string& top_instance_name, const std::string& net_postfix,
-  const IoNameMap& io_name_map, const bool& explicit_port_mapping) {
+  const IoNameMap& io_name_map, const bool& explicit_port_mapping,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -89,8 +90,9 @@ void print_verilog_testbench_fpga_instance(
         if (!module_manager.valid_module_port_id(core_module,
                                                  core_module_port)) {
           /* Print the wire for the dummy port */
-          fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
-             << std::endl;
+          fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port, true,
+                                      little_endian)
+             << ";" << std::endl;
           continue;
         }
       }
@@ -110,7 +112,7 @@ void print_verilog_testbench_fpga_instance(
   /* Use explicit port mapping for a clean instanciation */
   print_verilog_module_instance(fp, module_manager, top_module,
                                 top_instance_name, port2port_name_map,
-                                explicit_port_mapping);
+                                explicit_port_mapping, little_endian);
 
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -320,7 +322,7 @@ void print_verilog_testbench_connect_fpga_ios(
   const std::string& io_input_port_name_postfix,
   const std::string& io_output_port_name_postfix,
   const std::vector<std::string>& clock_port_names,
-  const size_t& unused_io_value) {
+  const size_t& unused_io_value, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -476,7 +478,7 @@ void print_verilog_testbench_connect_fpga_ios(
                         module_mapped_io_port.get_name() + "[" +
                         std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, module_mapped_io_port,
-                                    benchmark_io_port, false);
+                                    benchmark_io_port, false, little_endian);
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       benchmark_io_port.set_name(
@@ -486,8 +488,8 @@ void print_verilog_testbench_connect_fpga_ios(
                         " is mapped to FPGA IOPAD " +
                         module_mapped_io_port.get_name() + "[" +
                         std::to_string(io_index) + "] -----"));
-      print_verilog_wire_connection(fp, benchmark_io_port,
-                                    module_mapped_io_port, false);
+      print_verilog_wire_connection(
+        fp, benchmark_io_port, module_mapped_io_port, false, little_endian);
     }
 
     /* Mark this I/O has been used/wired */
@@ -525,7 +527,7 @@ void print_verilog_testbench_connect_fpga_ios(
       std::vector<size_t> default_values(module_unused_io_port.get_width(),
                                          unused_io_value);
       print_verilog_wire_constant_values(fp, module_unused_io_port,
-                                         default_values);
+                                         default_values, little_endian);
     }
 
     /* Add an empty line as a splitter */
@@ -544,7 +546,7 @@ void print_verilog_timeout_and_vcd(
   const std::string& vcd_fname,
   const std::string& simulation_start_counter_name,
   const std::string& error_counter_name, const float& simulation_time,
-  const bool& no_self_checking) {
+  const bool& no_self_checking, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -567,7 +569,9 @@ void print_verilog_timeout_and_vcd(
   fp << "initial begin" << std::endl;
 
   if (!no_self_checking) {
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port)
+    fp << "\t"
+       << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true,
+                                little_endian)
        << " <= 1'b1;" << std::endl;
   }
 
@@ -631,7 +635,7 @@ void print_verilog_testbench_check(
   const std::string& config_done_name, const std::string& error_counter_name,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
-  const std::string& default_clock_name) {
+  const std::string& default_clock_name, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -648,8 +652,10 @@ void print_verilog_testbench_check(
 
   BasicPort sim_start_port(simulation_start_counter_name, 1);
 
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, sim_start_port) << ";"
-     << std::endl;
+  fp << "\t"
+     << generate_verilog_port(VERILOG_PORT_REG, sim_start_port, true,
+                              little_endian)
+     << ";" << std::endl;
   fp << std::endl;
 
   /* TODO: This is limitation when multiple clock signals exist
@@ -660,13 +666,16 @@ void print_verilog_testbench_check(
   VTR_ASSERT(1 <= clock_ports.size());
 
   fp << "\talways@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0]) << ") begin"
-     << std::endl;
+     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0], true,
+                              little_endian)
+     << ") begin" << std::endl;
   fp << "\t\tif (1'b1 == "
-     << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin"
-     << std::endl;
+     << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true,
+                              little_endian)
+     << ") begin" << std::endl;
   fp << "\t\t";
-  print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
+  print_verilog_register_connection(fp, sim_start_port, sim_start_port,
+                                    little_endian, true);
   fp << "\t\tend else " << std::endl;
   /* If there is a config done signal specified, consider it as a trigger on
    * checking */
@@ -752,7 +761,7 @@ void print_verilog_testbench_check(
 void print_verilog_testbench_clock_stimuli(
   std::fstream& fp, const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
-  const std::vector<BasicPort>& clock_ports) {
+  const std::vector<BasicPort>& clock_ports, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -794,13 +803,18 @@ void print_verilog_testbench_clock_stimuli(
 
     fp << "\tinitial begin" << std::endl;
     /* Create clock stimuli */
-    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port)
+    fp << "\t\t"
+       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true,
+                                little_endian)
        << " <= 1'b0;" << std::endl;
     fp << "\t\twhile(1) begin" << std::endl;
     fp << "\t\t\t#" << std::setprecision(10) << clk_freq_to_use << std::endl;
-    fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+    fp << "\t\t\t"
+       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true,
+                                little_endian);
     fp << " <= !";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port, true,
+                                little_endian);
     fp << ";" << std::endl;
     fp << "\t\tend" << std::endl;
 
@@ -824,7 +838,8 @@ void print_verilog_testbench_random_stimuli(
   const std::vector<std::string>& clock_port_names,
   const std::string& input_port_postfix,
   const std::string& check_flag_port_postfix,
-  const std::vector<BasicPort>& clock_ports, const bool& no_self_checking) {
+  const std::vector<BasicPort>& clock_ports, const bool& no_self_checking,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -894,7 +909,9 @@ void print_verilog_testbench_random_stimuli(
       /* Each logical block assumes a single-width port */
       BasicPort output_port(std::string(block_name + check_flag_port_postfix),
                             1);
-      fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port)
+      fp << "\t\t"
+         << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true,
+                                  little_endian)
          << " <= 1'b0;" << std::endl;
     }
   }
@@ -913,8 +930,9 @@ void print_verilog_testbench_random_stimuli(
    */
   VTR_ASSERT(1 <= clock_ports.size());
   fp << "\talways@(negedge "
-     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0]) << ") begin"
-     << std::endl;
+     << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0], true,
+                              little_endian)
+     << ") begin" << std::endl;
 
   for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
     /* Bypass non-I/O atom blocks ! */
@@ -977,7 +995,7 @@ void print_verilog_testbench_shared_input_ports(
   const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
   const bool& include_clock_ports, const std::string& shared_input_port_postfix,
-  const bool& use_reg_port) {
+  const bool& use_reg_port, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1012,15 +1030,21 @@ void print_verilog_testbench_shared_input_ports(
                    global_ports, module_manager, module_name_map,
                    pin_constraints.net_pin(block_name))) {
       if (use_reg_port) {
-        fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";"
-           << std::endl;
+        fp << "\t"
+           << generate_verilog_port(VERILOG_PORT_REG, input_port, true,
+                                    little_endian)
+           << ";" << std::endl;
       } else {
-        fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port)
+        fp << "\t"
+           << generate_verilog_port(VERILOG_PORT_WIRE, input_port, true,
+                                    little_endian)
            << ";" << std::endl;
       }
     } else {
-      fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port) << ";"
-         << std::endl;
+      fp << "\t"
+         << generate_verilog_port(VERILOG_PORT_WIRE, input_port, true,
+                                  little_endian)
+         << ";" << std::endl;
     }
   }
 
@@ -1036,7 +1060,7 @@ void print_verilog_testbench_shared_input_ports(
 void print_verilog_testbench_shared_fpga_output_ports(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const std::string& fpga_output_port_postfix) {
+  const std::string& fpga_output_port_postfix, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1060,8 +1084,10 @@ void print_verilog_testbench_shared_fpga_output_ports(
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + fpga_output_port_postfix),
                           1);
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";"
-       << std::endl;
+    fp << "\t"
+       << generate_verilog_port(VERILOG_PORT_WIRE, output_port, true,
+                                little_endian)
+       << ";" << std::endl;
   }
 
   /* Add an empty line as splitter */
@@ -1076,7 +1102,7 @@ void print_verilog_testbench_shared_fpga_output_ports(
 void print_verilog_testbench_shared_benchmark_output_ports(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const std::string& benchmark_output_port_postfix) {
+  const std::string& benchmark_output_port_postfix, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1099,8 +1125,10 @@ void print_verilog_testbench_shared_benchmark_output_ports(
     /* Each logical block assumes a single-width port */
     BasicPort output_port(
       std::string(block_name + benchmark_output_port_postfix), 1);
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";"
-       << std::endl;
+    fp << "\t"
+       << generate_verilog_port(VERILOG_PORT_WIRE, output_port, true,
+                                little_endian)
+       << ";" << std::endl;
   }
 
   /* Add an empty line as splitter */
@@ -1119,7 +1147,7 @@ void print_verilog_testbench_shared_benchmark_output_ports(
 void print_verilog_testbench_shared_check_flags(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const std::string& check_flag_port_postfix) {
+  const std::string& check_flag_port_postfix, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1142,8 +1170,10 @@ void print_verilog_testbench_shared_check_flags(
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1);
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, output_port) << ";"
-       << std::endl;
+    fp << "\t"
+       << generate_verilog_port(VERILOG_PORT_REG, output_port, true,
+                                little_endian)
+       << ";" << std::endl;
   }
 
   /* Add an empty line as splitter */
@@ -1169,24 +1199,26 @@ void print_verilog_testbench_shared_ports(
   const std::string& shared_input_port_postfix,
   const std::string& benchmark_output_port_postfix,
   const std::string& fpga_output_port_postfix,
-  const std::string& check_flag_port_postfix, const bool& no_self_checking) {
+  const std::string& check_flag_port_postfix, const bool& no_self_checking,
+  const bool& little_endian) {
   print_verilog_testbench_shared_input_ports(
     fp, module_manager, module_name_map, global_ports, pin_constraints,
     atom_ctx, netlist_annotation, clock_port_names, false,
-    shared_input_port_postfix, true);
+    shared_input_port_postfix, true, little_endian);
 
   print_verilog_testbench_shared_fpga_output_ports(
-    fp, atom_ctx, netlist_annotation, fpga_output_port_postfix);
+    fp, atom_ctx, netlist_annotation, fpga_output_port_postfix, little_endian);
 
   if (no_self_checking) {
     return;
   }
 
   print_verilog_testbench_shared_benchmark_output_ports(
-    fp, atom_ctx, netlist_annotation, benchmark_output_port_postfix);
+    fp, atom_ctx, netlist_annotation, benchmark_output_port_postfix,
+    little_endian);
 
-  print_verilog_testbench_shared_check_flags(fp, atom_ctx, netlist_annotation,
-                                             check_flag_port_postfix);
+  print_verilog_testbench_shared_check_flags(
+    fp, atom_ctx, netlist_annotation, check_flag_port_postfix, little_endian);
 }
 
 /********************************************************************
@@ -1202,7 +1234,8 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& circuit_input_ports,
   const ModuleManager& module_manager, const ModuleId& parent_module,
-  const ModuleId& primitive_module, const bool& deposit_random_values) {
+  const ModuleId& primitive_module, const bool& deposit_random_values,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1232,8 +1265,8 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
       if (child_module != primitive_module) {
         rec_print_verilog_testbench_primitive_module_signal_initialization(
           fp, child_hie_path, circuit_lib, circuit_model, circuit_input_ports,
-          module_manager, child_module, primitive_module,
-          deposit_random_values);
+          module_manager, child_module, primitive_module, deposit_random_values,
+          little_endian);
       } else {
         /* If the child module is the primitive module,
          * we output the signal initialization codes for the input ports
@@ -1253,7 +1286,7 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
           fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info,
-                                      false);
+                                      false, little_endian);
 
           if (!deposit_random_values) {
             fp << ", " << circuit_lib.port_size(input_port) << "'b"
@@ -1283,7 +1316,8 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
 void print_verilog_testbench_signal_initialization(
   std::fstream& fp, const std::string& top_instance_name,
   const CircuitLibrary& circuit_lib, const ModuleManager& module_manager,
-  const ModuleId& top_module, const bool& deposit_random_values) {
+  const ModuleId& top_module, const bool& deposit_random_values,
+  const bool& little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1340,7 +1374,7 @@ void print_verilog_testbench_signal_initialization(
     rec_print_verilog_testbench_primitive_module_signal_initialization(
       fp, top_instance_name, circuit_lib, signal_init_circuit_model,
       signal_init_circuit_ports.at(signal_init_circuit_model), module_manager,
-      top_module, primitive_module, deposit_random_values);
+      top_module, primitive_module, deposit_random_values, little_endian);
   }
 }
 
