@@ -281,6 +281,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          git config --global --add safe.directory '*'
           make all BUILD_TYPE=$BUILD_TYPE 
 
   ubuntu_support:
