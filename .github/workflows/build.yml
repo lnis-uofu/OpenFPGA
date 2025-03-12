@@ -255,8 +255,8 @@ jobs:
       matrix:
         config:
           - name: "Build (GCC on CentOS 9)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc
+            cxx: g++
             dependency_version: "centos9"
             docker_image: "ghcr.io/easybuilders/centosstream-9:2025-03-03-13626131526.124"
     # Define the steps to run the build job
