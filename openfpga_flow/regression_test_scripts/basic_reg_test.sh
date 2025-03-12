@@ -30,6 +30,7 @@ run-task basic_tests/preload_unique_blocks/read_bin_write_xml $@
 
 echo -e "Testing testbenches using fpga core wrapper"
 run-task basic_tests/full_testbench/fpga_core_wrapper $@
+run-task basic_tests/full_testbench/fpga_core_wrapper_little_endian $@
 run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules $@
 run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules_use_core_tb $@
 run-task basic_tests/preconfig_testbench/fpga_core_wrapper $@
@@ -38,6 +39,7 @@ run-task basic_tests/preconfig_testbench/fpga_core_wrapper_naming_rules_use_core
 
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
+run-task basic_tests/full_testbench/configuration_chain_le $@
 run-task basic_tests/full_testbench/configuration_chain_no_time_stamp $@
 run-task basic_tests/full_testbench/configuration_chain_use_reset $@
 run-task basic_tests/full_testbench/configuration_chain_use_resetb $@
@@ -47,12 +49,14 @@ run-task basic_tests/full_testbench/configuration_chain_use_set_reset $@
 run-task basic_tests/full_testbench/configuration_chain_config_enable_scff $@
 run-task basic_tests/full_testbench/multi_region_configuration_chain $@
 run-task basic_tests/full_testbench/multi_region_configuration_chain_2clk $@
+run-task basic_tests/full_testbench/multi_region_configuration_chain_2clk_little_endian $@
 run-task basic_tests/full_testbench/multi_region_configuration_chain_3clk $@
 run-task basic_tests/full_testbench/fast_configuration_chain $@
 run-task basic_tests/full_testbench/fast_configuration_chain_use_set $@
 run-task basic_tests/full_testbench/smart_fast_configuration_chain $@
 run-task basic_tests/full_testbench/smart_fast_multi_region_configuration_chain $@
 run-task basic_tests/preconfig_testbench/configuration_chain $@
+run-task basic_tests/preconfig_testbench/configuration_chain_le $@
 run-task basic_tests/preconfig_testbench/configuration_chain_config_done_io $@
 run-task basic_tests/preconfig_testbench/configuration_chain_no_time_stamp $@
 
@@ -90,12 +94,15 @@ echo -e "Testing physical design friendly memory bank configuration protocol of 
 run-task basic_tests/full_testbench/ql_memory_bank $@
 run-task basic_tests/full_testbench/ql_memory_bank_use_wlr $@
 run-task basic_tests/full_testbench/multi_region_ql_memory_bank $@
+run-task basic_tests/full_testbench/multi_region_ql_memory_bank_little_endian $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten $@
+run-task basic_tests/full_testbench/ql_memory_bank_flatten_little_endian $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_defined_wl $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain $@
+run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain_little_endian $@
 
 echo -e "Testing simulator support";
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_vcs $@
@@ -153,6 +160,7 @@ echo -e "Testing K4N4 with facturable LUTs";
 run-task basic_tests/k4_series/k4n4_frac_lut $@
 echo -e "Testing K4N4 with asynchronous reset";
 run-task basic_tests/k4_series/k4n4_fracff $@
+run-task basic_tests/k4_series/k4n4_fracff_little_endian $@
 echo -e "Testing K4N4 with negative edge clocks";
 run-task basic_tests/k4_series/k4n4_fracff2edge $@
 echo -e "Testing K4N4 with hard adders";
@@ -187,6 +195,7 @@ echo -e "Testing K4N4 support reset generation by internal resources";
 run-task basic_tests/k4_series/k4n4_rst_gen $@
 echo -e "Testing enhanced connection blocks"
 run-task basic_tests/k4_series/k4n4_ecb $@
+run-task basic_tests/k4_series/k4n4_ecb_little_endian $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
@@ -210,6 +219,7 @@ run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile 
 run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_global_tile_clock $@
 run-task basic_tests/tile_organization/fabric_tile_perimeter_cb_pb_pin_fixup $@
 run-task basic_tests/tile_organization/fabric_tile_clkntwk_io_subtile $@
+run-task basic_tests/tile_organization/fabric_tile_clkntwk_io_subtile_little_endian $@
 run-task basic_tests/tile_organization/fabric_tile_clkntwk_registerable_io_subtile $@
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
@@ -252,6 +262,7 @@ run-task basic_tests/clock_network/homo_1clock_2layer $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer_dec $@
 run-task basic_tests/clock_network/homo_1clock_2layer_full_tb $@
 run-task basic_tests/clock_network/homo_2clock_2layer $@
+run-task basic_tests/clock_network/homo_2clock_2layer_little_endian $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused $@
 run-task basic_tests/clock_network/homo_2clock_2layer_disable_unused_tree $@
 run-task basic_tests/clock_network/homo_1clock_1reset_2layer $@
@@ -300,8 +311,10 @@ run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_wildcards
 
 echo -e "Testing bus group features";
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
+run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping_little_endian $@
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_explicit_mapping $@
+run-task basic_tests/bus_group/full_testbench_explicit_mapping_little_endian $@
 run-task basic_tests/bus_group/full_testbench_implicit_mapping $@
 run-task basic_tests/bus_group/auto_gen_bus_group $@
 

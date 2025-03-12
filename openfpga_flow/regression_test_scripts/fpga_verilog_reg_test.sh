@@ -106,10 +106,12 @@ run-task fpga_verilog/mux_design/no_const_input $@
 
 echo -e "Testing Verilog generation with behavioral description";
 run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog $@
+run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog_little_endian $@
 run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog_default_nettype_wire $@
 
 echo -e "Testing synthesizable Verilog generation with external standard cells";
 run-task fpga_verilog/verilog_netlist_formats/synthesizable_verilog $@
+run-task fpga_verilog/verilog_netlist_formats/synthesizable_verilog_little_endian $@
 
 echo -e "Testing implicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/implicit_verilog $@
@@ -117,6 +119,7 @@ run-task fpga_verilog/verilog_netlist_formats/implicit_verilog_default_nettype_w
 
 echo -e "Testing explicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire $@
+run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire_little_endian $@
 
 echo -e "Testing undriven net wiring in Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_none $@

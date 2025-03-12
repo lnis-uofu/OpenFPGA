@@ -87,12 +87,13 @@ int print_verilog_testbench_io_connection(
   std::vector<std::string> benchmark_clock_port_names =
     find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
+  bool little_endian = options.little_endian();
   /* Connect FPGA top module global ports to constant or benchmark global
    * signals! */
   status = print_verilog_preconfig_top_module_connect_global_ports(
     fp, module_manager, core_module, pin_constraints, atom_ctx,
-    netlist_annotation, global_ports, benchmark_clock_port_names,
-    std::string());
+    netlist_annotation, global_ports, benchmark_clock_port_names, std::string(),
+    little_endian);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -101,7 +102,8 @@ int print_verilog_testbench_io_connection(
   print_verilog_testbench_connect_fpga_ios(
     fp, module_manager, core_module, atom_ctx, place_ctx, io_location_map,
     netlist_annotation, bus_group, std::string(), std::string(), std::string(),
-    std::vector<std::string>(), (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
+    std::vector<std::string>(), (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE,
+    little_endian);
 
   /* Close the file stream */
   fp.close();

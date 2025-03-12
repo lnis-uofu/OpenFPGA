@@ -123,7 +123,7 @@ static void print_verilog_preconfig_top_module_ports(
     }
 
     fp << generate_verilog_port(port_type2type_map[port_type], module_port,
-                                true, port_big_endian[iport]);
+                                true, !port_big_endian[iport]);
 
     /* Update port counter */
     port_counter++;
@@ -142,7 +142,8 @@ static void print_verilog_preconfig_top_module_ports(
  *******************************************************************/
 static void print_verilog_preconfig_top_module_force_bitstream(
   std::fstream &fp, const std::string &top_block_name,
-  const BitstreamManager &bitstream_manager, const bool &output_datab_bits) {
+  const BitstreamManager &bitstream_manager, const bool &output_datab_bits,
+  const bool &little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -186,7 +187,7 @@ static void print_verilog_preconfig_top_module_force_bitstream(
       config_data_values.push_back(bitstream_manager.bit_value(config_bit));
     }
     print_verilog_force_wire_constant_values(fp, config_data_port,
-                                             config_data_values);
+                                             config_data_values, little_endian);
 
     if (true == output_datab_bits) {
       /* Find the bit index in the parent block */
@@ -200,8 +201,8 @@ static void print_verilog_preconfig_top_module_force_bitstream(
            bitstream_manager.block_bits(config_block_id)) {
         config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
       }
-      print_verilog_force_wire_constant_values(fp, config_datab_port,
-                                               config_datab_values);
+      print_verilog_force_wire_constant_values(
+        fp, config_datab_port, config_datab_values, little_endian);
     }
   }
 
@@ -218,7 +219,8 @@ static void print_verilog_preconfig_top_module_force_bitstream(
  *******************************************************************/
 static void print_verilog_preconfig_top_module_deposit_bitstream(
   std::fstream &fp, const std::string &top_block_name,
-  const BitstreamManager &bitstream_manager, const bool &output_datab_bits) {
+  const BitstreamManager &bitstream_manager, const bool &output_datab_bits,
+  const bool &little_endian) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -264,8 +266,8 @@ static void print_verilog_preconfig_top_module_deposit_bitstream(
          bitstream_manager.block_bits(config_block_id)) {
       config_data_values.push_back(bitstream_manager.bit_value(config_bit));
     }
-    print_verilog_deposit_wire_constant_values(fp, config_data_port,
-                                               config_data_values);
+    print_verilog_deposit_wire_constant_values(
+      fp, config_data_port, config_data_values, little_endian);
 
     /* Skip datab ports if specified */
     if (false == output_datab_bits) {
@@ -282,8 +284,8 @@ static void print_verilog_preconfig_top_module_deposit_bitstream(
          bitstream_manager.block_bits(config_block_id)) {
       config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
     }
-    print_verilog_deposit_wire_constant_values(fp, config_datab_port,
-                                               config_datab_values);
+    print_verilog_deposit_wire_constant_values(
+      fp, config_datab_port, config_datab_values, little_endian);
   }
 
   fp << "end" << std::endl;
@@ -303,7 +305,8 @@ static void print_verilog_preconfig_top_module_load_bitstream(
   std::fstream &fp, const std::string &top_block_name,
   const CircuitLibrary &circuit_lib, const CircuitModelId &mem_model,
   const BitstreamManager &bitstream_manager,
-  const e_embedded_bitstream_hdl_type &embedded_bitstream_hdl_type) {
+  const e_embedded_bitstream_hdl_type &embedded_bitstream_hdl_type,
+  const bool &little_endian) {
   /* Skip the datab port if there is only 1 output port in memory model
    * Currently, it assumes that the data output port is always defined while
    * datab is optional If we see only 1 port, we assume datab is not defined by
@@ -324,11 +327,11 @@ static void print_verilog_preconfig_top_module_load_bitstream(
   /* Use assign syntax for Icarus simulator */
   if (EMBEDDED_BITSTREAM_HDL_IVERILOG == embedded_bitstream_hdl_type) {
     print_verilog_preconfig_top_module_force_bitstream(
-      fp, top_block_name, bitstream_manager, output_datab_bits);
+      fp, top_block_name, bitstream_manager, output_datab_bits, little_endian);
     /* Use deposit syntax for other simulators */
   } else if (EMBEDDED_BITSTREAM_HDL_MODELSIM == embedded_bitstream_hdl_type) {
     print_verilog_preconfig_top_module_deposit_bitstream(
-      fp, top_block_name, bitstream_manager, output_datab_bits);
+      fp, top_block_name, bitstream_manager, output_datab_bits, little_endian);
   }
 
   print_verilog_comment(
@@ -430,17 +433,18 @@ int print_verilog_preconfig_top_module(
     core_module = top_module;
   }
 
+  bool little_endian = options.little_endian();
   /* Print internal wires */
   print_verilog_preconfig_top_module_internal_wires(
     fp, module_manager, core_module,
-    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
+    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), little_endian);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(
     fp, module_manager, top_module, core_module,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
     std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), io_name_map,
-    options.explicit_port_mapping());
+    options.explicit_port_mapping(), little_endian);
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names =
@@ -451,7 +455,7 @@ int print_verilog_preconfig_top_module(
   status = print_verilog_preconfig_top_module_connect_global_ports(
     fp, module_manager, core_module, pin_constraints, atom_ctx,
     netlist_annotation, global_ports, benchmark_clock_port_names,
-    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
+    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), little_endian);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -462,7 +466,7 @@ int print_verilog_preconfig_top_module(
     netlist_annotation, bus_group,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), std::string(),
     std::string(), std::vector<std::string>(),
-    (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
+    (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE, little_endian);
 
   /* Assign the SRAM model applied to the FPGA fabric */
   CircuitModelId sram_model = config_protocol.memory_model();
@@ -482,7 +486,7 @@ int print_verilog_preconfig_top_module(
    * when needed */
   print_verilog_preconfig_top_module_load_bitstream(
     fp, inst_name, circuit_lib, sram_model, bitstream_manager,
-    options.embedded_bitstream_hdl_type());
+    options.embedded_bitstream_hdl_type(), little_endian);
 
   /* Add signal initialization:
    * Bypass writing codes to files due to the autogenerated codes are very
@@ -491,7 +495,7 @@ int print_verilog_preconfig_top_module(
   if (true == options.include_signal_init()) {
     print_verilog_testbench_signal_initialization(
       fp, std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME), circuit_lib,
-      module_manager, top_module, false);
+      module_manager, top_module, false, little_endian);
   }
 
   /* Add waveform output command, support both fsdb and vcd */

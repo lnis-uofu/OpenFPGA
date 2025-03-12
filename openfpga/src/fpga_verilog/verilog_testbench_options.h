@@ -66,6 +66,7 @@ class VerilogTestbenchOption {
   float time_unit() const;
   bool time_stamp() const;
   bool use_relative_path() const;
+  bool little_endian() const;
   bool verbose_output() const;
   e_simulator_type simulator_type() const;
 
@@ -106,6 +107,7 @@ class VerilogTestbenchOption {
     const std::string& embedded_bitstream_hdl_type);
   void set_time_stamp(const bool& enabled);
   void set_use_relative_path(const bool& enabled);
+  void set_little_endian(const bool& enabled);
   void set_verbose_output(const bool& enabled);
 
   /* @brief Create the simulator type by parsing a given string. Return error
@@ -141,6 +143,7 @@ class VerilogTestbenchOption {
   float time_unit_;
   bool time_stamp_;
   bool use_relative_path_;
+  bool little_endian_;
   bool verbose_output_;
 };
 

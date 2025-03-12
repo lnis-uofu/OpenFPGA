@@ -152,7 +152,8 @@ static void print_verilog_invbuf_module(
   const ModuleManager& module_manager, std::fstream& fp,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const ModuleNameMap& module_name_map,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -182,7 +183,7 @@ static void print_verilog_invbuf_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   default_net_type);
+                                   default_net_type, little_endian);
   /* Finish dumping ports */
 
   /* Assign logics : depending on topology */
@@ -207,7 +208,7 @@ static void print_verilog_invbuf_module(
   }
 
   /* Print timing info */
-  print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
+  print_verilog_submodule_timing(fp, circuit_lib, circuit_model, little_endian);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, circuit_lib.model_name(circuit_model),
@@ -222,7 +223,8 @@ static void print_verilog_passgate_module(
   const ModuleManager& module_manager, std::fstream& fp,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const ModuleNameMap& module_name_map,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -278,7 +280,7 @@ static void print_verilog_passgate_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   default_net_type);
+                                   default_net_type, little_endian);
   /* Finish dumping ports */
 
   /* Dump logics: we propagate input to the output when the gate is '1'
@@ -290,7 +292,7 @@ static void print_verilog_passgate_module(
   fp << " : 1'bz;" << std::endl;
 
   /* Print timing info */
-  print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
+  print_verilog_submodule_timing(fp, circuit_lib, circuit_model, little_endian);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, circuit_lib.model_name(circuit_model),
@@ -304,7 +306,7 @@ static void print_verilog_and_or_gate_body(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& input_ports,
-  const std::vector<CircuitPortId>& output_ports) {
+  const std::vector<CircuitPortId>& output_ports, const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -336,7 +338,8 @@ static void print_verilog_and_or_gate_body(
       BasicPort output_port_info(circuit_lib.port_lib_name(output_port),
                                  output_pin, output_pin);
       fp << "\tassign "
-         << generate_verilog_port(VERILOG_PORT_CONKT, output_port_info);
+         << generate_verilog_port(VERILOG_PORT_CONKT, output_port_info, true,
+                                  little_endian);
       fp << " = ";
 
       size_t port_cnt = 0;
@@ -349,7 +352,8 @@ static void print_verilog_and_or_gate_body(
 
           BasicPort input_port_info(circuit_lib.port_lib_name(input_port),
                                     input_pin, input_pin);
-          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, true,
+                                      true);
 
           /* Increment the counter for port */
           port_cnt++;
@@ -367,7 +371,7 @@ static void print_verilog_mux2_gate_body(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& input_ports,
-  const std::vector<CircuitPortId>& output_ports) {
+  const std::vector<CircuitPortId>& output_ports, const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -424,13 +428,17 @@ static void print_verilog_mux2_gate_body(
   BasicPort in0_port_info(circuit_lib.port_lib_name(input_ports[0]), 0, 0);
   BasicPort in1_port_info(circuit_lib.port_lib_name(input_ports[1]), 0, 0);
 
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, out_port_info);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, out_port_info, true,
+                              little_endian);
   fp << " = ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, sel_port_info);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, sel_port_info, true,
+                              little_endian);
   fp << " ? ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, in0_port_info);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, in0_port_info, true,
+                              little_endian);
   fp << " : ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, in1_port_info);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, in1_port_info, true,
+                              little_endian);
   fp << ";" << std::endl;
 }
 
@@ -446,7 +454,8 @@ static void print_verilog_gate_module(
   const ModuleManager& module_manager, std::fstream& fp,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const ModuleNameMap& module_name_map,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -474,7 +483,7 @@ static void print_verilog_gate_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id,
-                                   default_net_type);
+                                   default_net_type, little_endian);
   /* Finish dumping ports */
 
   /* Dump logics */
@@ -482,11 +491,11 @@ static void print_verilog_gate_module(
     case CIRCUIT_MODEL_GATE_AND:
     case CIRCUIT_MODEL_GATE_OR:
       print_verilog_and_or_gate_body(fp, circuit_lib, circuit_model,
-                                     input_ports, output_ports);
+                                     input_ports, output_ports, little_endian);
       break;
     case CIRCUIT_MODEL_GATE_MUX2:
       print_verilog_mux2_gate_body(fp, circuit_lib, circuit_model, input_ports,
-                                   output_ports);
+                                   output_ports, little_endian);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -496,7 +505,7 @@ static void print_verilog_gate_module(
   }
 
   /* Print timing info */
-  print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
+  print_verilog_submodule_timing(fp, circuit_lib, circuit_model, little_endian);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, circuit_lib.model_name(circuit_model),
@@ -510,7 +519,8 @@ static void print_verilog_gate_module(
 static void print_verilog_constant_generator_module(
   const ModuleManager& module_manager, std::fstream& fp,
   const size_t& const_value, const ModuleNameMap& module_name_map,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Find the module in module manager */
   std::string module_name = generate_const_value_module_name(const_value);
   ModuleId const_val_module =
@@ -522,7 +532,7 @@ static void print_verilog_constant_generator_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, const_val_module,
-                                   default_net_type);
+                                   default_net_type, little_endian);
   /* Finish dumping ports */
 
   /* Find the only output*/
@@ -530,8 +540,8 @@ static void print_verilog_constant_generator_module(
        module_manager.module_ports(const_val_module)) {
     BasicPort module_port =
       module_manager.module_port(const_val_module, module_port_id);
-    print_verilog_wire_constant_values(fp, module_port,
-                                       std::vector<size_t>(1, const_value));
+    print_verilog_wire_constant_values(
+      fp, module_port, std::vector<size_t>(1, const_value), little_endian);
   }
 
   /* Put an end to the Verilog module */
@@ -569,10 +579,12 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
   /* Print constant generators */
   /* VDD */
   print_verilog_constant_generator_module(
-    module_manager, fp, 0, module_name_map, options.default_net_type());
+    module_manager, fp, 0, module_name_map, options.default_net_type(),
+    options.little_endian());
   /* GND */
   print_verilog_constant_generator_module(
-    module_manager, fp, 1, module_name_map, options.default_net_type());
+    module_manager, fp, 1, module_name_map, options.default_net_type(),
+    options.little_endian());
 
   for (const auto& circuit_model : circuit_lib.models()) {
     /* By pass user-defined modules */
@@ -580,20 +592,21 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
       continue;
     }
     if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
-      print_verilog_invbuf_module(module_manager, fp, circuit_lib,
-                                  circuit_model, module_name_map,
-                                  options.default_net_type());
+      print_verilog_invbuf_module(
+        module_manager, fp, circuit_lib, circuit_model, module_name_map,
+        options.default_net_type(), options.little_endian());
       continue;
     }
     if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
-      print_verilog_passgate_module(module_manager, fp, circuit_lib,
-                                    circuit_model, module_name_map,
-                                    options.default_net_type());
+      print_verilog_passgate_module(
+        module_manager, fp, circuit_lib, circuit_model, module_name_map,
+        options.default_net_type(), options.little_endian());
       continue;
     }
     if (CIRCUIT_MODEL_GATE == circuit_lib.model_type(circuit_model)) {
       print_verilog_gate_module(module_manager, fp, circuit_lib, circuit_model,
-                                module_name_map, options.default_net_type());
+                                module_name_map, options.default_net_type(),
+                                options.little_endian());
       continue;
     }
   }

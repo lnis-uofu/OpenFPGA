@@ -24,6 +24,7 @@ FabricVerilogOption::FabricVerilogOption() {
   constant_undriven_inputs_ = FabricVerilogOption::e_undriven_input_type::NONE;
   CONSTANT_UNDRIVEN_INPUT_TYPE_STRING_ = {"none", "bus0", "bus1", "bit0",
                                           "bit1"};
+  little_endian_ = false;
   verbose_output_ = false;
 }
 
@@ -91,6 +92,7 @@ std::string FabricVerilogOption::full_constant_undriven_input_type_str() const {
   return full_type_str;
 }
 
+bool FabricVerilogOption::little_endian() const { return little_endian_; }
 bool FabricVerilogOption::verbose_output() const { return verbose_output_; }
 
 /******************************************************************************
@@ -169,6 +171,10 @@ bool FabricVerilogOption::set_constant_undriven_inputs(
   const FabricVerilogOption::e_undriven_input_type& type) {
   constant_undriven_inputs_ = type;
   return type != FabricVerilogOption::e_undriven_input_type::NUM_TYPES;
+}
+
+void FabricVerilogOption::set_little_endian(const bool& enabled) {
+  little_endian_ = enabled;
 }
 
 void FabricVerilogOption::set_verbose_output(const bool& enabled) {

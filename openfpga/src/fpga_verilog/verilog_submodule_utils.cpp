@@ -41,7 +41,8 @@ constexpr int FLOAT_PRECISION = 6;
  ***********************************************/
 void print_verilog_submodule_timing(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,
-                                    const CircuitModelId& circuit_model) {
+                                    const CircuitModelId& circuit_model,
+                                    const bool& little_endian) {
   /* return if there is no delay info */
   if (0 == circuit_lib.num_delay_info(circuit_model)) {
     return;
@@ -79,9 +80,11 @@ void print_verilog_submodule_timing(std::fstream& fp,
 
     fp << "\t\t";
     fp << "("
-       << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false);
+       << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false,
+                                little_endian);
     fp << " => ";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false)
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false,
+                                little_endian)
        << ")";
     fp << " = ";
     fp << "(" << std::setprecision(FLOAT_PRECISION)
@@ -147,7 +150,8 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
 static void print_one_verilog_template_module(
   const ModuleManager& module_manager, std::fstream& fp,
   const std::string& module_name,
-  const e_verilog_default_net_type& default_net_type) {
+  const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -161,7 +165,7 @@ static void print_one_verilog_template_module(
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, template_module,
-                                   default_net_type);
+                                   default_net_type, little_endian);
   /* Finish dumping ports */
 
   print_verilog_comment(
@@ -221,9 +225,9 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
       continue;
     }
     /* Print a Verilog template for the circuit model */
-    print_one_verilog_template_module(module_manager, fp,
-                                      circuit_lib.model_name(model),
-                                      options.default_net_type());
+    print_one_verilog_template_module(
+      module_manager, fp, circuit_lib.model_name(model),
+      options.default_net_type(), options.little_endian());
   }
 
   /* close file stream */

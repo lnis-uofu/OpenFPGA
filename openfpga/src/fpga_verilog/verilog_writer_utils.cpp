@@ -210,8 +210,8 @@ void print_verilog_module_definition(std::fstream& fp,
  ***********************************************/
 void print_verilog_module_ports(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id,
-  const e_verilog_default_net_type& default_net_type) {
+  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* port type2type mapping */
@@ -244,7 +244,7 @@ void print_verilog_module_ports(
       /* Print port */
       fp << "//----- " << module_manager.module_port_type_str(kv.first)
          << " -----" << std::endl;
-      fp << generate_verilog_port(kv.second, port);
+      fp << generate_verilog_port(kv.second, port, true, little_endian);
       fp << ";" << std::endl;
 
       if (false == preproc_flag.empty()) {
@@ -279,7 +279,8 @@ void print_verilog_module_ports(
         }
 
         /* Print port */
-        fp << generate_verilog_port(VERILOG_PORT_WIRE, port);
+        fp << generate_verilog_port(VERILOG_PORT_WIRE, port, true,
+                                    little_endian);
         fp << ";" << std::endl;
 
         if (false == preproc_flag.empty()) {
@@ -315,7 +316,7 @@ void print_verilog_module_ports(
       }
 
       /* Print port */
-      fp << generate_verilog_port(VERILOG_PORT_REG, port);
+      fp << generate_verilog_port(VERILOG_PORT_REG, port, true, little_endian);
       fp << ";" << std::endl;
 
       if (false == preproc_flag.empty()) {
@@ -336,8 +337,8 @@ void print_verilog_module_ports(
  ***********************************************/
 void print_verilog_module_declaration(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id,
-  const e_verilog_default_net_type& default_net_type) {
+  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  const bool& little_endian) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Apply default net type from user's option */
@@ -347,7 +348,8 @@ void print_verilog_module_declaration(
 
   print_verilog_module_definition(fp, module_manager, module_id);
 
-  print_verilog_module_ports(fp, module_manager, module_id, default_net_type);
+  print_verilog_module_ports(fp, module_manager, module_id, default_net_type,
+                             little_endian);
 }
 
 /********************************************************************
@@ -374,7 +376,7 @@ void print_verilog_module_instance(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& module_id, const std::string& instance_name,
   const std::map<std::string, BasicPort>& port2port_name_map,
-  const bool& use_explicit_port_map) {
+  const bool& use_explicit_port_map, const bool& little_endian) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Check: all the key ports in the port2port_name_map does exist in the child
@@ -431,10 +433,11 @@ void print_verilog_module_instance(
         VTR_ASSERT(module_port.get_width() ==
                    port2port_name_map.at(port.get_name()).get_width());
         fp << generate_verilog_port(kv.second,
-                                    port2port_name_map.at(port.get_name()));
+                                    port2port_name_map.at(port.get_name()),
+                                    true, little_endian);
       } else {
         /* Not found, we give the default port name */
-        fp << generate_verilog_port(kv.second, port);
+        fp << generate_verilog_port(kv.second, port, true, little_endian);
       }
       /* if explicit port map is required, output the pair of branket */
       if (true == use_explicit_port_map) {
@@ -459,7 +462,7 @@ void print_verilog_module_instance(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& parent_module_id, const ModuleId& child_module_id,
   const std::map<std::string, BasicPort>& port2port_name_map,
-  const bool& use_explicit_port_map) {
+  const bool& use_explicit_port_map, const bool& little_endian) {
   /* Create instance name, <name>_<num_instance_in_parent_module> */
   std::string instance_name = module_manager.module_name(child_module_id) +
                               "_" +
@@ -469,7 +472,7 @@ void print_verilog_module_instance(
 
   print_verilog_module_instance(fp, module_manager, child_module_id,
                                 instance_name, port2port_name_map,
-                                use_explicit_port_map);
+                                use_explicit_port_map, little_endian);
 }
 
 /************************************************
@@ -498,14 +501,14 @@ void print_verilog_module_end(
 std::string generate_verilog_port(
   const enum e_dump_verilog_port_type& verilog_port_type,
   const BasicPort& port_info, const bool& must_print_port_size,
-  const bool& big_endian) {
+  const bool& little_endian) {
   std::string verilog_line;
 
   /* Ensure the port type is valid */
   VTR_ASSERT(verilog_port_type < NUM_VERILOG_PORT_TYPES);
 
   std::string size_str;
-  if (big_endian) {
+  if (!little_endian) {
     size_str = "[" + std::to_string(port_info.get_lsb()) + ":" +
                std::to_string(port_info.get_msb()) + "]";
   } else {
@@ -631,7 +634,8 @@ std::vector<BasicPort> combine_verilog_ports(
 /************************************************
  * Generate the string of a list of verilog ports
  ***********************************************/
-std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
+std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports,
+                                   const bool& little_endian) {
   /* Output the string of ports:
    * If there is only one port in the merged_port list
    * we only output the port.
@@ -642,7 +646,8 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
   VTR_ASSERT(0 < merged_ports.size());
   if (1 == merged_ports.size()) {
     /* Use connection type of verilog port */
-    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0], false);
+    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0], false,
+                                 little_endian);
   }
 
   std::string verilog_line = "{";
@@ -651,7 +656,8 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
     if (&port != &merged_ports[0]) {
       verilog_line += ", ";
     }
-    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port, false);
+    verilog_line +=
+      generate_verilog_port(VERILOG_PORT_CONKT, port, false, little_endian);
   }
   verilog_line += "}";
 
@@ -697,7 +703,8 @@ BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
  *     {<port0>, <port1>, ... <last_port>}
  *******************************************************************/
 std::string generate_verilog_local_wire(
-  const BasicPort& output_port, const std::vector<BasicPort>& input_ports) {
+  const BasicPort& output_port, const std::vector<BasicPort>& input_ports,
+  const bool& little_endian) {
   /* Try to combine the ports */
   std::vector<BasicPort> combined_input_ports =
     combine_verilog_ports(input_ports);
@@ -716,9 +723,10 @@ std::string generate_verilog_local_wire(
   VTR_ASSERT(input_ports_width == output_port.get_width());
 
   std::string wire_str;
-  wire_str += generate_verilog_port(VERILOG_PORT_WIRE, output_port);
+  wire_str +=
+    generate_verilog_port(VERILOG_PORT_WIRE, output_port, true, little_endian);
   wire_str += " = ";
-  wire_str += generate_verilog_ports(combined_input_ports);
+  wire_str += generate_verilog_ports(combined_input_ports, little_endian);
   wire_str += ";";
 
   return wire_str;
@@ -772,20 +780,26 @@ std::string generate_verilog_constant_values(
  ********************************************************************/
 std::string generate_verilog_port_constant_values(
   const BasicPort& output_port, const std::vector<size_t>& const_values,
-  const bool& is_register) {
+  const bool& little_endian, const bool& is_register) {
   std::string port_str;
 
   /* Must check: the port width matches */
   VTR_ASSERT(const_values.size() == output_port.get_width());
 
-  port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  port_str =
+    generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian);
   if (is_register) {
     port_str += " <= ";
   } else {
     VTR_ASSERT_SAFE(!is_register);
     port_str += " = ";
   }
-  port_str += generate_verilog_constant_values(const_values);
+  /* If little endian is used, force the flip ?*/
+  std::vector<size_t> const_val = const_values;
+  if (little_endian) {
+    std::reverse(const_val.begin(), const_val.end());
+  }
+  port_str += generate_verilog_constant_values(const_val);
   return port_str;
 }
 
@@ -794,7 +808,8 @@ std::string generate_verilog_port_constant_values(
  ********************************************************************/
 std::string generate_verilog_ports_constant_values(
   const std::vector<BasicPort>& output_ports,
-  const std::vector<size_t>& const_values, const bool& is_register) {
+  const std::vector<size_t>& const_values, const bool& little_endian,
+  const bool& is_register) {
   std::string port_str;
 
   /* Must check: the port width matches */
@@ -804,14 +819,19 @@ std::string generate_verilog_ports_constant_values(
   }
   VTR_ASSERT(const_values.size() == total_width);
 
-  port_str = generate_verilog_ports(output_ports);
+  port_str = generate_verilog_ports(output_ports, little_endian);
   if (is_register) {
     port_str += " <= ";
   } else {
     VTR_ASSERT_SAFE(!is_register);
     port_str += " = ";
   }
-  port_str += generate_verilog_constant_values(const_values);
+  /* If little endian is used, force the flip ?*/
+  std::vector<size_t> const_val = const_values;
+  if (little_endian) {
+    std::reverse(const_val.begin(), const_val.end());
+  }
+  port_str += generate_verilog_constant_values(const_val);
   return port_str;
 }
 
@@ -819,15 +839,17 @@ std::string generate_verilog_ports_constant_values(
  * Generate a wire connection, that assigns constant values to a
  * Verilog port
  *******************************************************************/
-void print_verilog_wire_constant_values(
-  std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values) {
+void print_verilog_wire_constant_values(std::fstream& fp,
+                                        const BasicPort& output_port,
+                                        const std::vector<size_t>& const_values,
+                                        const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "\t";
   fp << "assign ";
-  fp << generate_verilog_port_constant_values(output_port, const_values);
+  fp << generate_verilog_port_constant_values(output_port, const_values,
+                                              little_endian);
   fp << ";" << std::endl;
 }
 
@@ -837,7 +859,7 @@ void print_verilog_wire_constant_values(
  *******************************************************************/
 void print_verilog_wire_constant_values_bit_blast(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values) {
+  const std::vector<size_t>& const_values, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -845,7 +867,8 @@ void print_verilog_wire_constant_values_bit_blast(
     BasicPort curr_pin(output_port.get_name(), ipin, ipin);
     print_verilog_wire_constant_values(
       fp, curr_pin,
-      std::vector<size_t>(curr_pin.get_width(), const_values[ipin]));
+      std::vector<size_t>(curr_pin.get_width(), const_values[ipin]),
+      little_endian);
   }
 }
 
@@ -854,15 +877,20 @@ void print_verilog_wire_constant_values_bit_blast(
  *******************************************************************/
 void print_verilog_deposit_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values) {
+  const std::vector<size_t>& const_values, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "\t";
   fp << "$deposit(";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true,
+                              little_endian);
   fp << ", ";
-  fp << generate_verilog_constant_values(const_values);
+  std::vector<size_t> const_val = const_values;
+  if (little_endian) {
+    std::reverse(const_val.begin(), const_val.end());
+  }
+  fp << generate_verilog_constant_values(const_val);
   fp << ");" << std::endl;
 }
 
@@ -872,13 +900,14 @@ void print_verilog_deposit_wire_constant_values(
  *******************************************************************/
 void print_verilog_force_wire_constant_values(
   std::fstream& fp, const BasicPort& output_port,
-  const std::vector<size_t>& const_values) {
+  const std::vector<size_t>& const_values, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "\t";
   fp << "force ";
-  fp << generate_verilog_port_constant_values(output_port, const_values);
+  fp << generate_verilog_port_constant_values(output_port, const_values,
+                                              little_endian);
   fp << ";" << std::endl;
 }
 
@@ -889,7 +918,8 @@ void print_verilog_force_wire_constant_values(
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,
                                    const BasicPort& input_port,
-                                   const bool& inverted) {
+                                   const bool& inverted,
+                                   const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -898,14 +928,16 @@ void print_verilog_wire_connection(std::fstream& fp,
 
   fp << "\t";
   fp << "assign ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true,
+                              little_endian);
   fp << " = ";
 
   if (true == inverted) {
     fp << "~";
   }
 
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port, true,
+                              little_endian);
   fp << ";" << std::endl;
 }
 
@@ -916,6 +948,7 @@ void print_verilog_wire_connection(std::fstream& fp,
 void print_verilog_register_connection(std::fstream& fp,
                                        const BasicPort& output_port,
                                        const BasicPort& input_port,
+                                       const bool& little_endian,
                                        const bool& inverted) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
@@ -924,14 +957,16 @@ void print_verilog_register_connection(std::fstream& fp,
   VTR_ASSERT(input_port.get_width() == output_port.get_width());
 
   fp << "\t";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port, true,
+                              little_endian);
   fp << " <= ";
 
   if (true == inverted) {
     fp << "~";
   }
 
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port, true,
+                              little_endian);
   fp << ";" << std::endl;
 }
 
@@ -949,13 +984,11 @@ void print_verilog_register_connection(std::fstream& fp,
  *    Buffer must have only 1 input (non-global) port and 1 output (non-global)
  *port
  *******************************************************************/
-void print_verilog_buffer_instance(std::fstream& fp,
-                                   ModuleManager& module_manager,
-                                   const CircuitLibrary& circuit_lib,
-                                   const ModuleId& parent_module_id,
-                                   const CircuitModelId& buffer_model,
-                                   const BasicPort& instance_input_port,
-                                   const BasicPort& instance_output_port) {
+void print_verilog_buffer_instance(
+  std::fstream& fp, ModuleManager& module_manager,
+  const CircuitLibrary& circuit_lib, const ModuleId& parent_module_id,
+  const CircuitModelId& buffer_model, const BasicPort& instance_input_port,
+  const BasicPort& instance_output_port, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -994,8 +1027,8 @@ void print_verilog_buffer_instance(std::fstream& fp,
   /* Output an instance of the module */
   print_verilog_module_instance(
     fp, module_manager, parent_module_id, buffer_module_id,
-    buffer_port2port_name_map,
-    circuit_lib.dump_explicit_port_map(buffer_model));
+    buffer_port2port_name_map, circuit_lib.dump_explicit_port_map(buffer_model),
+    little_endian);
 
   /* IMPORTANT: this update MUST be called after the instance outputting!!!!
    * update the module manager with the relationship between the parent and
@@ -1084,7 +1117,8 @@ void print_verilog_local_sram_wires(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& sram_model,
                                     const e_config_protocol_type sram_orgz_type,
-                                    const size_t& port_size) {
+                                    const size_t& port_size,
+                                    const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1104,7 +1138,8 @@ void print_verilog_local_sram_wires(std::fstream& fp,
       /* [0] => CCFF input */
       BasicPort ccff_config_bus_port(generate_local_config_bus_port_name(),
                                      port_size);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port)
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port, true,
+                                  little_endian)
          << ";" << std::endl;
       /* Connect first CCFF to the head */
       /* Head is always a 1-bit port */
@@ -1112,7 +1147,7 @@ void print_verilog_local_sram_wires(std::fstream& fp,
         generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_INPUT), 1);
       BasicPort ccff_head_local_port(ccff_config_bus_port.get_name(), 1);
       print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port,
-                                    false);
+                                    false, little_endian);
       /* Connect last CCFF to the tail */
       /* Tail is always a 1-bit port */
       BasicPort ccff_tail_port(
@@ -1121,7 +1156,7 @@ void print_verilog_local_sram_wires(std::fstream& fp,
                                      ccff_config_bus_port.get_msb(),
                                      ccff_config_bus_port.get_msb());
       print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port,
-                                    false);
+                                    false, little_endian);
       break;
     }
     case CONFIG_MEM_QL_MEMORY_BANK:
@@ -1141,8 +1176,9 @@ void print_verilog_local_sram_wires(std::fstream& fp,
         port_size));
       /* Print local wire definition */
       for (const auto& sram_port : sram_ports) {
-        fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_port) << ";"
-           << std::endl;
+        fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_port, true,
+                                    little_endian)
+           << ";" << std::endl;
       }
 
       break;
@@ -1210,7 +1246,7 @@ void print_verilog_local_sram_wires(std::fstream& fp,
 void print_verilog_local_config_bus(
   std::fstream& fp, const std::string& prefix,
   const e_config_protocol_type& sram_orgz_type, const size_t& instance_id,
-  const size_t& num_conf_bits) {
+  const size_t& num_conf_bits, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1231,13 +1267,15 @@ void print_verilog_local_config_bus(
       BasicPort config_port(generate_local_sram_port_name(
                               prefix, instance_id, CIRCUIT_MODEL_PORT_INPUT),
                             num_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, config_port) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, config_port, true,
+                                  little_endian)
+         << ";" << std::endl;
       BasicPort inverted_config_port(
         generate_local_sram_port_name(prefix, instance_id,
                                       CIRCUIT_MODEL_PORT_OUTPUT),
         num_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_config_port)
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_config_port, true,
+                                  little_endian)
          << ";" << std::endl;
       break;
     }
@@ -1280,7 +1318,8 @@ static void print_verilog_rram_mux_config_bus(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
   const size_t& mux_size, const size_t& mux_instance_id,
-  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits) {
+  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits,
+  const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1305,25 +1344,29 @@ static void print_verilog_rram_mux_config_bus(
       BasicPort reserved_bl_bus(
         generate_reserved_sram_port_name(CIRCUIT_MODEL_PORT_BL),
         num_reserved_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_bl_bus) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_bl_bus, true,
+                                  little_endian)
+         << ";" << std::endl;
       BasicPort reserved_wl_bus(
         generate_reserved_sram_port_name(CIRCUIT_MODEL_PORT_WL),
         num_reserved_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_wl_bus) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_wl_bus, true,
+                                  little_endian)
+         << ";" << std::endl;
 
       /* Print configuration bus to group BL/WLs */
       BasicPort bl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model,
                                                          mux_size, 0, false),
                        num_conf_bits + num_reserved_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, bl_bus) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, bl_bus, true,
+                                  little_endian)
+         << ";" << std::endl;
       BasicPort wl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model,
                                                          mux_size, 1, false),
                        num_conf_bits + num_reserved_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, wl_bus) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, wl_bus, true,
+                                  little_endian)
+         << ";" << std::endl;
 
       /* Print bus to group SRAM outputs, this is to interface memory cells to
        * routing multiplexers */
@@ -1331,13 +1374,15 @@ static void print_verilog_rram_mux_config_bus(
         generate_mux_sram_port_name(circuit_lib, mux_model, mux_size,
                                     mux_instance_id, CIRCUIT_MODEL_PORT_INPUT),
         num_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_output_bus) << ";"
-         << std::endl;
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_output_bus, true,
+                                  little_endian)
+         << ";" << std::endl;
       BasicPort inverted_sram_output_bus(
         generate_mux_sram_port_name(circuit_lib, mux_model, mux_size,
                                     mux_instance_id, CIRCUIT_MODEL_PORT_OUTPUT),
         num_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus)
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus,
+                                  true, little_endian)
          << ";" << std::endl;
 
       /* Get the SRAM model of the mux_model */
@@ -1350,10 +1395,10 @@ static void print_verilog_rram_mux_config_bus(
       /* Wire the reserved configuration bits to part of bl/wl buses */
       BasicPort bl_bus_reserved_bits(bl_bus.get_name(), num_reserved_conf_bits);
       print_verilog_wire_connection(fp, bl_bus_reserved_bits, reserved_bl_bus,
-                                    false);
+                                    false, little_endian);
       BasicPort wl_bus_reserved_bits(wl_bus.get_name(), num_reserved_conf_bits);
       print_verilog_wire_connection(fp, wl_bus_reserved_bits, reserved_wl_bus,
-                                    false);
+                                    false, little_endian);
 
       /* Connect SRAM BL/WLs to bus */
       BasicPort mux_bl_wire(
@@ -1361,15 +1406,15 @@ static void print_verilog_rram_mux_config_bus(
         num_conf_bits);
       BasicPort bl_bus_regular_bits(bl_bus.get_name(), num_reserved_conf_bits,
                                     num_reserved_conf_bits + num_conf_bits - 1);
-      print_verilog_wire_connection(fp, bl_bus_regular_bits, mux_bl_wire,
-                                    false);
+      print_verilog_wire_connection(fp, bl_bus_regular_bits, mux_bl_wire, false,
+                                    little_endian);
       BasicPort mux_wl_wire(
         generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_WL),
         num_conf_bits);
       BasicPort wl_bus_regular_bits(wl_bus.get_name(), num_reserved_conf_bits,
                                     num_reserved_conf_bits + num_conf_bits - 1);
-      print_verilog_wire_connection(fp, wl_bus_regular_bits, mux_wl_wire,
-                                    false);
+      print_verilog_wire_connection(fp, wl_bus_regular_bits, mux_wl_wire, false,
+                                    little_endian);
 
       break;
     }
@@ -1391,7 +1436,8 @@ void print_verilog_mux_config_bus(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
   const size_t& mux_size, const size_t& mux_instance_id,
-  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits) {
+  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits,
+  const bool& little_endian) {
   /* Depend on the design technology of this MUX:
    * bus connections are different
    * SRAM MUX: bus is connected to the output ports of SRAM
@@ -1405,13 +1451,14 @@ void print_verilog_mux_config_bus(
       std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model,
                                                     mux_size, std::string());
       print_verilog_local_config_bus(fp, prefix, sram_orgz_type,
-                                     mux_instance_id, num_conf_bits);
+                                     mux_instance_id, num_conf_bits,
+                                     little_endian);
       break;
     }
     case CIRCUIT_MODEL_DESIGN_RRAM:
       print_verilog_rram_mux_config_bus(
         fp, circuit_lib, mux_model, sram_orgz_type, mux_size, mux_instance_id,
-        num_reserved_conf_bits, num_conf_bits);
+        num_reserved_conf_bits, num_conf_bits, little_endian);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -1432,7 +1479,7 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(
   std::fstream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const size_t& mux_size,
   const size_t& mux_instance_id, const size_t& num_conf_bits,
-  const BasicPort& fm_config_bus) {
+  const BasicPort& fm_config_bus, const bool& little_endian) {
   BasicPort mux_sram_output(
     generate_mux_sram_port_name(circuit_lib, mux_model, mux_size,
                                 mux_instance_id, CIRCUIT_MODEL_PORT_INPUT),
@@ -1450,7 +1497,7 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(
   formal_verification_port.set_lsb(fm_config_bus.get_lsb());
   formal_verification_port.set_msb(fm_config_bus.get_msb());
   print_verilog_wire_connection(fp, mux_sram_output, formal_verification_port,
-                                false);
+                                false, little_endian);
 }
 
 /********************************************************************
@@ -1465,7 +1512,8 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(
 void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
-                                 const size_t& flip_value) {
+                                 const size_t& flip_value,
+                                 const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1475,7 +1523,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
   fp << "\t";
   std::vector<size_t> initial_values(port.get_width(), initial_value);
   fp << "\t";
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values,
+                                              little_endian);
   fp << ";" << std::endl;
 
   /* if flip_value is the same as initial value, we do not need to flip the
@@ -1485,7 +1534,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
        << "#" << std::setprecision(10) << pulse_width;
     std::vector<size_t> port_flip_values(port.get_width(), flip_value);
     fp << "\t";
-    fp << generate_verilog_port_constant_values(port, port_flip_values);
+    fp << generate_verilog_port_constant_values(port, port_flip_values,
+                                                little_endian);
     fp << ";" << std::endl;
   }
 
@@ -1509,7 +1559,8 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
                                          const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
-                                         const size_t& initial_value) {
+                                         const size_t& initial_value,
+                                         const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1523,7 +1574,8 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
   std::vector<size_t> initial_values(port.get_width(), initial_value);
 
   write_tab_to_file(fp, 1);
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values,
+                                              little_endian);
   fp << ";" << std::endl;
 
   write_tab_to_file(fp, 2);
@@ -1532,10 +1584,11 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
 
   write_tab_to_file(fp, 2);
   fp << "forever ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << " = ";
   fp << "#" << std::setprecision(10) << pulse_width;
-  fp << " ~" << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << " ~"
+     << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << ";" << std::endl;
 
   write_tab_to_file(fp, 1);
@@ -1561,7 +1614,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const std::vector<float>& pulse_widths,
                                  const std::vector<size_t>& flip_values,
-                                 const std::string& wait_condition) {
+                                 const std::string& wait_condition,
+                                 const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1571,7 +1625,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
   fp << "\t";
   std::vector<size_t> initial_values(port.get_width(), initial_value);
   fp << "\t";
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values,
+                                              little_endian);
   fp << ";" << std::endl;
 
   /* Set a wait condition if specified */
@@ -1586,7 +1641,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
        << "#" << std::setprecision(10) << pulse_widths[ipulse];
     std::vector<size_t> port_flip_value(port.get_width(), flip_values[ipulse]);
     fp << "\t";
-    fp << generate_verilog_port_constant_values(port, port_flip_value);
+    fp << generate_verilog_port_constant_values(port, port_flip_value,
+                                                little_endian);
     fp << ";" << std::endl;
   }
 
@@ -1611,7 +1667,8 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
 void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
-                                 const std::string& wait_condition) {
+                                 const std::string& wait_condition,
+                                 const bool& little_endian) {
   /* Validate the file stream */
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -1621,7 +1678,8 @@ void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
 
   std::vector<size_t> initial_values(port.get_width(), initial_value);
   fp << "\t\t";
-  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << generate_verilog_port_constant_values(port, initial_values,
+                                              little_endian);
   fp << ";" << std::endl;
 
   fp << "\tend" << std::endl;
@@ -1639,10 +1697,10 @@ void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
      << "#" << std::setprecision(10) << pulse_width;
 
   fp << "\t";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << " = ";
   fp << "~";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port, true, little_endian);
   fp << ";" << std::endl;
 
   fp << "\tend" << std::endl;
