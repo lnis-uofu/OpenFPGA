@@ -244,6 +244,46 @@ jobs:
         run: |
           make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
+  centos_support:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-22.04
+    container: ${{ matrix.config.docker_image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Build (GCC on CentOS 9)"
+            cc: gcc
+            cxx: g++
+            dependency_version: "centos9"
+            docker_image: "ghcr.io/easybuilders/centosstream-9:2025-03-03-13626131526.124"
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+      
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          ${CXX} --version
+
+      - uses: hendrikmuhs/ccache-action@v1
+
+      - name: Build
+        shell: bash
+        run: |
+          git config --global --add safe.directory '*'
+          make all BUILD_TYPE=$BUILD_TYPE 
+
   ubuntu_support:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
