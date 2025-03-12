@@ -254,11 +254,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build (GCC on CentOS 7.9)"
+          - name: "Build (GCC on CentOS 9)"
             cc: gcc-11
             cxx: g++-11
-            dependency_version: "centos7p9"
-            docker_image: "ghcr.io/easybuilders/centos-7.9-python3-amd64:2025-03-03-13626131526.124"
+            dependency_version: "centos9"
+            docker_image: "ghcr.io/easybuilders/centosstream-9:2025-03-03-13626131526.124"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
