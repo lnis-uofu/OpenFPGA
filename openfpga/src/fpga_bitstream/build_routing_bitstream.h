@@ -36,7 +36,7 @@ void build_routing_bitstream(
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
-  const bool& verbose);
+  const bool& prefer_unused_mux_input, const bool& verbose);
 
 } /* end namespace openfpga */
 

@@ -39,13 +39,16 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
+  CommandOptionId opt_prefer_unused = cmd.option("prefer_unused_mux_input");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(
       cmd_context.option_value(cmd, opt_read_file).c_str());
   } else {
-    openfpga_ctx.mutable_bitstream_manager() = build_device_bitstream(
-      g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
+    openfpga_ctx.mutable_bitstream_manager() =
+      build_device_bitstream(g_vpr_ctx, openfpga_ctx,
+                             cmd_context.option_enable(cmd, opt_prefer_unused),
+                             cmd_context.option_enable(cmd, opt_verbose));
   }
 
   overwrite_bitstream(openfpga_ctx.mutable_bitstream_manager(),
