@@ -1,0 +1,50 @@
+# Run VPR for the 'and' design
+#--write_rr_graph example_rr_graph.xml
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling ideal ${OPENFPGA_VPR_EXTRA_OPTIONS}
+
+# Read OpenFPGA architecture definition
+read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
+
+# Read OpenFPGA simulation settings
+read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+
+# Annotate the OpenFPGA architecture to VPR data base
+# to debug use --verbose options
+link_openfpga_arch --sort_gsb_chan_node_in_edges
+
+# Check and correct any naming conflicts in the BLIF netlist
+check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
+
+# Apply fix-up to Look-Up Table truth tables based on packing results
+lut_truth_table_fixup
+
+# Optionally pb pin fixup
+${OPENFPGA_PB_PIN_FIXUP_COMMAND}
+
+# Build the module graph
+#  - Enabled compression on routing architecture modules
+#  - Enable pin duplication on grid modules
+build_fabric --compress_routing ${OPENFPGA_FABRIC_MODULE_NAME_OPTIONS} ${OPENFPGA_GROUP_TILE_CONFIG_OPTION} --group_config_block #--verbose
+# Add a fpga core between fpga top and the underlying modules
+${OPENFPGA_ADD_FPGA_CORE_MODULE}
+# Output module naming for debugging. Comment it if not required
+write_module_naming_rules --file module_names_before_renaming.xml
+# Rename modules with a given rule
+rename_modules --file ${OPENFPGA_RENAME_MODULE_FILE}
+# Output module naming for debugging. Comment it if not required
+write_module_naming_rules --file module_names_after_renaming.xml
+
+# Write the fabric hierarchy of module graph to a file
+# This is used by hierarchical PnR flows
+write_fabric_hierarchy --file ./fabric_hierarchy.txt
+
+# Output mux modules 
+write_fabric_hierarchy --file module_muxes.yaml --depth 1 --module (grid|cbx|cby|sb)* --filter *mux*_size([0-9]+) --verbose --exclude_empty_modules
+# Output config mem modules 
+write_fabric_hierarchy --file config_mem.yaml --depth 1 --module (grid|cbx|cby|sb)* --filter *config_group_mem_size([0-9]+) --verbose --exclude_empty_modules
+
+# Finish and exit OpenFPGA
+exit
+
+# Note :
+# To run verification at the end of the flow maintain source in ./SRC directory

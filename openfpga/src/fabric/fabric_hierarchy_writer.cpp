@@ -81,9 +81,9 @@ static int rec_output_module_hierarchy_to_text_file(
   if (module_name_map.name_exist(parent_module_name)) {
     parent_module_name = module_name_map.name(parent_module_name);
   }
-  VTR_LOGV(
-    use_list && verbose, "Use list as module '%s' contains only leaf nodes\n",
-    module_name_map.name(module_manager.module_name(parent_module)).c_str());
+  VTR_LOGV(use_list && verbose,
+           "Use list as module '%s' contains only leaf nodes\n",
+           parent_module_name.c_str());
 
   /* Iterate over all the child module */
   for (const ModuleId& child_module :
