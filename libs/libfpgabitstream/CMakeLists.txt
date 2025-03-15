@@ -33,4 +33,7 @@ foreach(testsourcefile ${EXEC_SOURCES})
     target_link_libraries(${testname} libfpgabitstream)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
-install(TARGETS libfpgabitstream DESTINATION bin)
+install(TARGETS libfpgabitstream
+        DESTINATION bin
+        COMPONENT openfpga_package
+)

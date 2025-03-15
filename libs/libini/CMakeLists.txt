@@ -13,4 +13,7 @@ target_link_libraries(libini)
 target_include_directories(libini PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libini PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
 
-install(TARGETS libini DESTINATION bin)
+install(TARGETS libini
+        DESTINATION bin
+        COMPONENT openfpga_package
+)
