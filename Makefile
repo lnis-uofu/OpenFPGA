@@ -32,6 +32,7 @@ MAKEFLAGS := -s
 SOURCE_DIR :=${PWD}
 BUILD_DIR ?= build
 CMAKE_GOALS = all
+INSTALLER_TYPE=STGZ
 
 # Find CMake command from system variable, otherwise use a default one
 ifeq ($(origin CMAKE_COMMAND),undefined)
@@ -82,6 +83,15 @@ list_cmake_targets: | prebuild
 all: checkout
 # A shortcut command to run checkout and compile in serial
 	@+${MAKE} compile
+
+installer:
+# Create the package for users to install on their computer with pre-built binaries
+#
+# Following options are available
+# .. option:: INSTALLER_TYPE
+#
+#   Define the type of installer, can be [STGZ|DEB|IFW] (default: STGZ). for example, ``INSTALLER_TYPE=DEB`` indicates to create a DEB package
+	cpack --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE}
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules

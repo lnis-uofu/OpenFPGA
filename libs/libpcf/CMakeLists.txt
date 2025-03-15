@@ -35,4 +35,7 @@ foreach(testsourcefile ${EXEC_SOURCES})
     target_link_libraries(${testname} libpcf)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
-install(TARGETS libpcf DESTINATION bin)
+install(TARGETS libpcf
+        DESTINATION bin
+        COMPONENT openfpga_package
+)

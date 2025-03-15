@@ -88,4 +88,7 @@ target_link_libraries(libopenfpgautil
                       libarchfpga
                       libvtrutil)
 
-install(TARGETS libopenfpgautil DESTINATION bin)
+install(TARGETS libopenfpgautil
+        DESTINATION bin
+        COMPONENT openfpga_package
+)

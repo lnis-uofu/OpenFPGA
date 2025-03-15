@@ -35,4 +35,7 @@ foreach(testsourcefile ${EXEC_SOURCES})
     target_link_libraries(${testname} libopenfpgashell)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
-install(TARGETS libopenfpgashell DESTINATION bin)
+install(TARGETS libopenfpgashell
+        DESTINATION bin
+        COMPONENT openfpga_package
+)

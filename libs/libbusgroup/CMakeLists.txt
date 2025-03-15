@@ -33,4 +33,7 @@ foreach(testsourcefile ${EXEC_SOURCES})
     target_link_libraries(${testname} libbusgroup)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
-install(TARGETS libbusgroup DESTINATION bin)
+install(TARGETS libbusgroup
+        DESTINATION bin
+        COMPONENT openfpga_package
+)

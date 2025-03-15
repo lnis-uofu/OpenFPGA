@@ -34,4 +34,7 @@ foreach(testsourcefile ${EXEC_SOURCES})
     target_link_libraries(${testname} libfabrickey)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
-install(TARGETS libfabrickey DESTINATION bin)
+install(TARGETS libfabrickey
+        DESTINATION bin
+        COMPONENT openfpga_package
+)
