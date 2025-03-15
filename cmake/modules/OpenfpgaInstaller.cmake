@@ -2,13 +2,13 @@
 include(GNUInstallDirs)
 
 if (OPENFPGA_WITH_YOSYS)
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build/yosys/bin/ 
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ 
           DESTINATION ${CMAKE_INSTALL_BINDIR}
           COMPONENT openfpga_package
           PATTERN "*"
           PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
   )
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build/yosys/share/ 
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/yosys/share/ 
           DESTINATION ${CMAKE_INSTALL_DATADIR}
           COMPONENT openfpga_package
   )
