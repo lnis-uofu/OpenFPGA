@@ -20,9 +20,17 @@ BUILD_TYPE := $(shell echo ${BUILD_TYPE} | tr '[:upper:]' '[lower]')
 # Trim any _pgo or _strict in the build type name (since it would not match any of CMake's standard build types
 CMAKE_BUILD_TYPE := $(shell echo ${BUILD_TYPE} | sed 's/_\?pgo//' | sed 's/_\?strict//')
 
+PACK_INSTALLER ?= ON
+# Convert to lower case for consistency
+PACK_INSTALLER := $(shell echo ${PACK_INSTALLER} | tr '[:upper:]' '[lower]')
+
+INSTALL_DOC ?= ON
+# Convert to lower case for consistency
+INSTALL_DOC := $(shell echo ${INSTALL_DOC} | tr '[:upper:]' '[lower]')
+
 # Allow users to pass parameters to cmake, without defining build types
 # e.g. make CMAKE_FLAGS="-DCMAKE_CXX_COMPILER=g++-9'
-override CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -G 'Unix Makefiles' ${CMAKE_FLAGS}
+override CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_OPENFPGA_WITH_INSTALLER=${PACK_INSTALLER} -DCMAKE_OPENFPGA_INSTALL_DOC=${INSTALL_DOC} -G 'Unix Makefiles' ${CMAKE_FLAGS}
 
 # -s : Suppress makefile output (e.g. entering/leaving directories)
 # --output-sync target : For parallel compilation ensure output for each target is synchronized (make version >= 4.0)

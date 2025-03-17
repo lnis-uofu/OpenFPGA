@@ -65,10 +65,12 @@ cpack_add_component(openfpga_package
   DESCRIPTION "Main engine for OpenFPGA Tool Suites"
 )
 
-cpack_add_component(openfpga_doc_package
-  DISPLAY_NAME "Documentation"
-  DESCRIPTION "Documentation and Tutorials"
-)
+if (OPENFPGA_INSTALL_DOC)
+  cpack_add_component(openfpga_doc_package
+    DISPLAY_NAME "Documentation"
+    DESCRIPTION "Documentation and Tutorials"
+  )
+endif()
 
 if (CPACK_GENERATOR STREQUAL "IFW")
   cpack_ifw_configure_component(Unspecified
@@ -83,9 +85,11 @@ if (CPACK_GENERATOR STREQUAL "IFW")
     LICENSES "License" ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE 
   )
 
-  cpack_ifw_configure_component(openfpga_doc_package
-    REQUIRED
-    SORTING_PRIORITY 0
-    LICENSES "License" ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE 
-  )
+  if (OPENFPGA_INSTALL_WITH_DOC)
+    cpack_ifw_configure_component(openfpga_doc_package
+      REQUIRED
+      SORTING_PRIORITY 0
+      LICENSES "License" ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE 
+    )
+  endif()
 endif() 
