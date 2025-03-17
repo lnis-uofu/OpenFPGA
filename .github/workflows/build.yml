@@ -449,7 +449,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build w/o doc (Ubuntu 22.04)"
+          - name: "Installer w/o doc (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
             dependency_version: "ubuntu22p04"
@@ -481,7 +481,7 @@ jobs:
         shell: bash
         run: |
           make all BUILD_TYPE=$BUILD_TYPE
-          make installer
+          make installer INSTALL_DOC=OFF
 
   docker_distribution:
     name: Build docker image for distribution
