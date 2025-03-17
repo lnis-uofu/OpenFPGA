@@ -41,4 +41,4 @@ install(TARGETS libfabrickey
 install(TARGETS fabric_key_assistant
         DESTINATION bin
         COMPONENT openfpga_package
-
+)
