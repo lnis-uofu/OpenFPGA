@@ -38,3 +38,7 @@ install(TARGETS libfabrickey
         DESTINATION bin
         COMPONENT openfpga_package
 )
+install(TARGETS fabric_key_assistant
+        DESTINATION bin
+        COMPONENT openfpga_package
+
