@@ -41,12 +41,12 @@ if (CPACK_GENERATOR STREQUAL "IFW")
   
   # set the installer icon and logo
   if(WIN32)
-    set(CPACK_IFW_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/logo.ico)
+    set(CPACK_IFW_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/OpenFPGA_logo.ico)
     elseif(APPLE)
-    set(CPACK_IFW_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/logo.icns)
+    set(CPACK_IFW_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/OpenFPGA_logo.icns)
   endif()
-  set(CPACK_IFW_PACKAGE_WINDOWS_LOGO ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/logo.png)
-  set(CPACK_IFW_PACKAGE_LOGO ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/logo.png)
+  set(CPACK_IFW_PACKAGE_WINDOWS_LOGO ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/OpenFPGA_logo.png)
+  set(CPACK_IFW_PACKAGE_LOGO ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/OpenFPGA_logo.png)
 endif() 
 
 # Variables must be defined before including the CPACK module
