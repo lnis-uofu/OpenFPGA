@@ -16,7 +16,7 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 # Try to improve the runtime, use as many cores as possible
 set(CPACK_THREADS "0")
 # we are interested in cross-platform support. IFW is the only generator that allows for it, so set it explicitly
-if (INSTALLER_WITH_GUI) 
+if (OPENFPGA_GUI_INSTALLER) 
   set(CPACK_GENERATOR "IFW")
 else()
   set(CPACK_GENERATOR DEB)
@@ -74,6 +74,7 @@ endif()
 
 if (CPACK_GENERATOR STREQUAL "IFW")
   cpack_ifw_configure_component(Unspecified
+    DISPLAY_NAME "OpenFPGA libraries"
     REQUIRED
     SORTING_PRIORITY 3
     LICENSES "License" ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE 
