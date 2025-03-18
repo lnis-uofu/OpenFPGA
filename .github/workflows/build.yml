@@ -480,8 +480,8 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE
-          make installer INSTALL_DOC=OFF
+          make all BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
 
   docker_distribution:
     name: Build docker image for distribution
