@@ -72,6 +72,13 @@ option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building cod
 option(OPENFPGA_WITH_SWIG "Enable SWIG interface when building codebase. Disable when you do not need high-level interfaces, such as Tcl/Python" ON)
 option(OPENFPGA_ENABLE_STRICT_COMPILE "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)" OFF)
 option(OPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN "Specifies whether to update capn'proto files required by unique block. Recommend only after any modification on  unique block parsers and data structures" OFF)
+## Installer options
+option(OPENFPGA_GUI_INSTALLER "Enable installer with a graphical user interface" ON)
+option(OPENFPGA_WITH_INSTALLER "Enable installer to be built" ON)
+option(OPENFPGA_INSTALL_DOC "Installer will include documentation" ON)
+
+message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
+message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")
 
 # Options pass on to VTR
 set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
@@ -355,3 +362,9 @@ endif()
 # Add extra compilation flags to suppress warnings from some libraries/tools
 # Note that target_compile_options() *appends* to the current compilation options of
 # the specified target
+
+# For installer
+if (OPENFPGA_WITH_INSTALLER)
+  include(OpenfpgaInstaller)
+  include(OpenfpgaPackaging)
+endif()

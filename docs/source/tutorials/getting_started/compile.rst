@@ -19,6 +19,7 @@ In addition to continous integration, our community users have tested OpenFPGA o
 
 - CentOS 7.8
 - CentOS 8
+- CentOS 9
 - Ubuntu 18.04
 - Ubuntu 21.04
 
@@ -51,6 +52,13 @@ To quickly verify the tool is well compiled, users can run the following command
 
   python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
 
+If you would like to create an installer, you may run
+
+.. code-block:: shell
+
+  # Refer to build options for installer customization
+  make installer 
+
 .. _tutorial_compile_build_options:
 
 Build Options
@@ -67,6 +75,18 @@ The following options are available for a custom build
 .. option:: BUILD_TYPE=<string>
 
   Specify the type of build. Can be either ``release`` or ``debug``. By default, release mode is selected (full optimization on runtime)
+
+.. option:: PACK_INSTALLER=[ON|OFF]
+
+  Specify if the installer packages should be included when compiling. When enabled, installer packaging will be enabled in CPack format. Use ``make installer`` to create the final package.
+
+.. option:: INSTALL_DOC=[ON|OFF]
+
+  Specify if the installer packages should include the documentation. By default, it is ON. Ensure that you have build the doc locally before creating the installer 
+
+.. option:: INSTALLER_TYPE=[STGZ|DEB|IFW]
+
+  Specify type of installer. By default, it is ``STGZ``. If you prefer an installer with graphical user interface, please choose ``IFW``.
 
 .. option:: CMAKE_FLAGS=<string>
 
