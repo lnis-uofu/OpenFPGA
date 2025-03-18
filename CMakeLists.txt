@@ -77,6 +77,9 @@ option(OPENFPGA_GUI_INSTALLER "Enable installer with a graphical user interface"
 option(OPENFPGA_WITH_INSTALLER "Enable installer to be built" ON)
 option(OPENFPGA_INSTALL_DOC "Installer will include documentation" ON)
 
+message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
+message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")
+
 # Options pass on to VTR
 set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
 set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
