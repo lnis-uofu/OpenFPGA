@@ -480,7 +480,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
           make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
 
   docker_distribution:

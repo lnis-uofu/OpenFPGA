@@ -15,7 +15,7 @@ if (OPENFPGA_WITH_YOSYS)
 endif()
   
 # Include all the documentation
-if (OPENFPGA_INSTALL_DOC)
+if (OPENFPGA_INSTALL_DOC STREQUAL "ON")
   message("Include documentation in installer")
   install(DIRECTORY docs/build
           DESTINATION ${CMAKE_INSTALL_DOCDIR}
