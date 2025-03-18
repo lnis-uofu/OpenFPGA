@@ -16,6 +16,7 @@ endif()
   
 # Include all the documentation
 if (OPENFPGA_INSTALL_DOC)
+  message("Include documentation in installer")
   install(DIRECTORY docs/build
           DESTINATION ${CMAKE_INSTALL_DOCDIR}
           COMPONENT openfpga_doc_package

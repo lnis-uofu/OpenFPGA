@@ -66,6 +66,7 @@ cpack_add_component(openfpga_package
 )
 
 if (OPENFPGA_INSTALL_DOC)
+  message("Include documentation in installer")
   cpack_add_component(openfpga_doc_package
     DISPLAY_NAME "Documentation"
     DESCRIPTION "Documentation and Tutorials"
@@ -86,7 +87,8 @@ if (CPACK_GENERATOR STREQUAL "IFW")
     LICENSES "License" ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE 
   )
 
-  if (OPENFPGA_INSTALL_WITH_DOC)
+  if (OPENFPGA_INSTALL_DOC)
+    message("Include documentation in GUI installer")
     cpack_ifw_configure_component(openfpga_doc_package
       REQUIRED
       SORTING_PRIORITY 0
