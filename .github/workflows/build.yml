@@ -480,6 +480,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          make checkout
           make prebuild BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
           make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
 
