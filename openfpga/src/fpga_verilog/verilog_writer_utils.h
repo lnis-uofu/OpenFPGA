@@ -46,7 +46,7 @@ void print_verilog_include_netlist(std::fstream& fp,
                                    const std::string& netlist_name);
 
 std::string generate_verilog_define_flag(const std::string& flag_name,
-                               const int& flag_value);
+                                         const int& flag_value);
 void print_verilog_define_flag(std::fstream& fp, const std::string& flag_name,
                                const int& flag_value);
 

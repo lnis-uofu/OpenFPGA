@@ -30,10 +30,12 @@ namespace openfpga {
  ***********************************************/
 std::string generate_verilog_default_net_type_declaration(
   const e_verilog_default_net_type& default_net_type) {
-  return std::string("`default_nettype ") + std::string(VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type])
+  return std::string("`default_nettype ") +
+         std::string(VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type])
 }
 
-/* Using fstream is not flexible enough. Sometime downstream tool prefer ofstream. So, an API to generate string is developed here. */
+/* Using fstream is not flexible enough. Sometime downstream tool prefer
+ * ofstream. So, an API to generate string is developed here. */
 void print_verilog_default_net_type_declaration(
   std::fstream& fp, const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
@@ -88,11 +90,12 @@ void print_verilog_include_netlist(std::fstream& fp,
  * Print Verilog codes to define a preprocessing flag
  *******************************************************************/
 std::string generate_verilog_define_flag(const std::string& flag_name,
-                               const int& flag_value) {
+                                         const int& flag_value) {
   return std::string("`define ") + flag_name + std::string(" ") + flag_value;
 }
 
-/* Using fstream is not flexible enough. Sometime downstream tool prefer ofstream. So, an API to generate string is developed here. */
+/* Using fstream is not flexible enough. Sometime downstream tool prefer
+ * ofstream. So, an API to generate string is developed here. */
 void print_verilog_define_flag(std::fstream& fp, const std::string& flag_name,
                                const int& flag_value) {
   VTR_ASSERT(true == valid_file_stream(fp));
