@@ -32,6 +32,8 @@ namespace openfpga {
  * in order to keep a clean header/source file as well maintain a easy way to
  * identify the functions
  */
+std::string generate_verilog_default_net_type_declaration(
+  const e_verilog_default_net_type& default_net_type);
 
 void print_verilog_default_net_type_declaration(
   std::fstream& fp, const e_verilog_default_net_type& default_net_type);
@@ -43,6 +45,8 @@ void print_verilog_file_header(std::fstream& fp, const std::string& usage,
 void print_verilog_include_netlist(std::fstream& fp,
                                    const std::string& netlist_name);
 
+std::string generate_verilog_define_flag(const std::string& flag_name,
+                               const int& flag_value);
 void print_verilog_define_flag(std::fstream& fp, const std::string& flag_name,
                                const int& flag_value);
 
