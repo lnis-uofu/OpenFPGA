@@ -31,7 +31,7 @@ namespace openfpga {
 std::string generate_verilog_default_net_type_declaration(
   const e_verilog_default_net_type& default_net_type) {
   return std::string("`default_nettype ") +
-         std::string(VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type])
+         std::string(VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type]);
 }
 
 /* Using fstream is not flexible enough. Sometime downstream tool prefer
@@ -91,7 +91,7 @@ void print_verilog_include_netlist(std::fstream& fp,
  *******************************************************************/
 std::string generate_verilog_define_flag(const std::string& flag_name,
                                          const int& flag_value) {
-  return std::string("`define ") + flag_name + std::string(" ") + flag_value;
+  return std::string("`define ") + flag_name + std::string(" ") + std::to_string(flag_value);
 }
 
 /* Using fstream is not flexible enough. Sometime downstream tool prefer
