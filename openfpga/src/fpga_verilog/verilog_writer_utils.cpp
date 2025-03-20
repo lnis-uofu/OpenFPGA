@@ -91,7 +91,8 @@ void print_verilog_include_netlist(std::fstream& fp,
  *******************************************************************/
 std::string generate_verilog_define_flag(const std::string& flag_name,
                                          const int& flag_value) {
-  return std::string("`define ") + flag_name + std::string(" ") + std::to_string(flag_value);
+  return std::string("`define ") + flag_name + std::string(" ") +
+         std::to_string(flag_value);
 }
 
 /* Using fstream is not flexible enough. Sometime downstream tool prefer
