@@ -51,6 +51,10 @@ build_architecture_bitstream
 
     Output the fabric-independent bitstream to an XML file. See details at :ref:`file_formats_architecture_bitstream`.
 
+  .. option:: --prefer_unused_mux_input
+
+    Try to connect unmapped mux outputs to unmapped inputs. Only effective if there is no constant input to muxes (see :ref:`mux_const_input_option`). This option aims to reduce power consumption by preventing unnecessary switching of unmapped mux outputs.
+
   .. option:: --no_time_stamp
 
     Do not print time stamp in bitstream files

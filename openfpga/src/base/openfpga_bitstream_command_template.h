@@ -74,6 +74,11 @@ ShellCommandId add_build_arch_bitstream_command_template(
     "read_file", false, "file path to read the bitstream database");
   shell_cmd.set_option_require_value(opt_read_file, openfpga::OPT_STRING);
 
+  /* Add an option '--prefer_unused_mux_input' */
+  shell_cmd.add_option(
+    "prefer_unused_mux_input", false,
+    "Try to connect unmapped mux outputs to unmapped inputs");
+
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");
