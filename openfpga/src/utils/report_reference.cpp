@@ -23,33 +23,6 @@
 namespace openfpga {
 
 /********************************************************************
- * Top-level function
- *******************************************************************/
-int report_reference(const char* fname, const std::string& module_name,
-                     const ModuleManager& module_manager,
-                     const ModuleNameMap& module_name_map,
-                     const bool& include_time_stamp, const bool& verbose) {
-  vtr::ScopedStartFinishTimer timer("Report reference");
-
-  /* Find the actual name */
-  std::string internal_module_name = module_name;
-  if (module_name_map.tag_exist(module_name)) {
-    internal_module_name = module_name_map.tag(module_name);
-  }
-
-  ModuleId parent_module = module_manager.find_module(internal_module_name);
-  if (false == module_manager.valid_module_id(parent_module)) {
-    VTR_LOG_ERROR("Module %s doesn't exist\n", module_name.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  show_reference_count(parent_module, module_manager, module_name_map);
-
-  return write_reference_to_file(fname, parent_module, module_manager, module_name_map,
-                                 include_time_stamp, verbose);
-}
-
-/********************************************************************
  * show reference count of each child module under given parent module
  *******************************************************************/
 static 
@@ -136,5 +109,33 @@ int write_reference_to_file(const char* fname, const ModuleId& parent_module,
   fp.close();
   return CMD_EXEC_SUCCESS;
 }
+
+/********************************************************************
+ * Top-level function
+ *******************************************************************/
+int report_reference(const char* fname, const std::string& module_name,
+                     const ModuleManager& module_manager,
+                     const ModuleNameMap& module_name_map,
+                     const bool& include_time_stamp, const bool& verbose) {
+  vtr::ScopedStartFinishTimer timer("Report reference");
+
+  /* Find the actual name */
+  std::string internal_module_name = module_name;
+  if (module_name_map.tag_exist(module_name)) {
+    internal_module_name = module_name_map.tag(module_name);
+  }
+
+  ModuleId parent_module = module_manager.find_module(internal_module_name);
+  if (false == module_manager.valid_module_id(parent_module)) {
+    VTR_LOG_ERROR("Module %s doesn't exist\n", module_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  show_reference_count(parent_module, module_manager, module_name_map);
+
+  return write_reference_to_file(fname, parent_module, module_manager, module_name_map,
+                                 include_time_stamp, verbose);
+}
+
 
 } /* end namespace openfpga */
