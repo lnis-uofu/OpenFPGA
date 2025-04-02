@@ -558,8 +558,11 @@ int rec_find_physical_memory_children(
     } else {
       std::string module_name;
       if (parent_name.empty()) {
-        /* The parent name is empty, which means the current module is the root module */
-        module_name = getLastPart(module_manager.module_name(curr_module), '_') + "_" + std::to_string(ichild);
+        /* 
+         * The parent name is empty, which means the current module is the root module.
+         * For the root module, we take the module name without the need to call getLastPart
+        */
+        module_name = module_manager.module_name(curr_module) + "_" + std::to_string(ichild);
       } else {
         /* 
         The parent name is not empty, which means the current module is not the root module 
