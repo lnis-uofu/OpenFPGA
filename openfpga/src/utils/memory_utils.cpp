@@ -2,6 +2,7 @@
  * This file includes functions that are used for
  * generating ports for memory modules
  *********************************************************************/
+#include <sstream>
 #include "memory_utils.h"
 
 #include "command_exit_codes.h"
@@ -44,6 +45,20 @@ namespace openfpga {
  *         sram_out             sram_outb
  *
  **********************************************************************/
+/**
+ * @brief Split a string by a delimiter and return the last part
+ * 
+ * @param s The input string
+ * @param delim The delimiter
+ * @return The last part of the string
+ */
+static std::string getLastPart(const std::string& s, char delim) {
+  std::vector<std::string> p;
+  std::stringstream ss(s);
+  std::string part;
+  while (std::getline(ss, part, delim)) p.push_back(part);
+  return p.empty() ? "" : p.back();
+}
 static std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(
   const BasicPort& config_bus,
   const std::vector<BasicPort>& mem_output_bus_ports,
@@ -503,7 +518,7 @@ int rec_find_physical_memory_children(
   const ModuleManager& module_manager, const ModuleId& curr_module,
   std::vector<ModuleId>& physical_memory_children,
   std::vector<std::string>& physical_memory_instance_names,
-  const bool& verbose) {
+  const bool& verbose, std::string parent_name) {
   if (module_manager
         .configurable_children(curr_module,
                                ModuleManager::e_config_child_type::LOGICAL)
@@ -526,25 +541,40 @@ int rec_find_physical_memory_children(
       physical_memory_children.push_back(
         module_manager.logical2physical_configurable_children(
           curr_module)[ichild]);
+      /* The leaf block name consists of the parent name + the instance name */
+      std::string module_name = parent_name + "_" + module_manager
+          .logical2physical_configurable_child_instance_names(curr_module)[ichild];
       physical_memory_instance_names.push_back(
-        module_manager.logical2physical_configurable_child_instance_names(
-          curr_module)[ichild]);
+        module_name);
       VTR_LOGV(
         verbose,
         "Collecting physical memory module '%s' with an instance name "
         "'%s'...\n",
-        module_manager
-          .module_name(module_manager.logical2physical_configurable_children(
-            curr_module)[ichild])
-          .c_str(),
+        module_name.c_str(),
         module_manager
           .logical2physical_configurable_child_instance_names(
             curr_module)[ichild]
           .c_str());
     } else {
+      std::string module_name;
+      if (parent_name.empty()) {
+        /* The parent name is empty, which means the current module is the root module */
+        module_name = getLastPart(module_manager.module_name(curr_module), '_') + "_" + std::to_string(ichild);
+      } else {
+        /* 
+        The parent name is not empty, which means the current module is not the root module 
+        The module name returned by module_manager contains the hierarchy name of the current module.
+        Since we are recording the hierarchy name in the parent name, we need to extract only the name of 
+        the current module.
+        We cannot use the module name returned by module_manager directly because it doesn't
+        contain the instance number of parent blocks.
+        */
+        module_name = parent_name + "_" + getLastPart(module_manager.module_name(curr_module), '_') + "_" + std::to_string(ichild);
+      }
       rec_find_physical_memory_children(
         module_manager, logical_child, physical_memory_children,
-        physical_memory_instance_names, verbose);
+        physical_memory_instance_names, verbose,
+        module_name);
     }
   }
   return CMD_EXEC_SUCCESS;
