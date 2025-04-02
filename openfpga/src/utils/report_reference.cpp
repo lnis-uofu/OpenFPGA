@@ -27,26 +27,35 @@ namespace openfpga {
  *******************************************************************/
 int report_reference(const char* fname, const std::string& module_name,
                      const ModuleManager& module_manager,
+                     const ModuleNameMap& module_name_map,
                      const bool& include_time_stamp, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Report reference");
 
-  ModuleId parent_module = module_manager.find_module(module_name);
+  /* Find the actual name */
+  std::string internal_module_name = module_name;
+  if (module_name_map.tag_exist(module_name)) {
+    internal_module_name = module_name_map.tag(module_name);
+  }
+
+  ModuleId parent_module = module_manager.find_module(internal_module_name);
   if (false == module_manager.valid_module_id(parent_module)) {
     VTR_LOG_ERROR("Module %s doesn't exist\n", module_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  show_reference_count(parent_module, module_manager);
+  show_reference_count(parent_module, module_manager, module_name_map);
 
-  return write_reference_to_file(fname, parent_module, module_manager,
+  return write_reference_to_file(fname, parent_module, module_manager, module_name_map,
                                  include_time_stamp, verbose);
 }
 
 /********************************************************************
  * show reference count of each child module under given parent module
  *******************************************************************/
+static 
 void show_reference_count(const ModuleId& parent_module,
-                          const ModuleManager& module_manager) {
+                          const ModuleManager& module_manager,
+                          const ModuleNameMap& module_name_map) {
   VTR_LOG(
     "----------------------------------------------------------------------\n");
   VTR_LOG(
@@ -58,6 +67,9 @@ void show_reference_count(const ModuleId& parent_module,
     std::string child_module_name = module_manager.module_name(child_module);
     std::vector<size_t> child_inst_vec =
       module_manager.child_module_instances(parent_module, child_module);
+    if (module_name_map.name_exist(child_module_name)) {
+      child_module_name = module_name_map.name(child_module_name);
+    }
     VTR_LOG("%-s   %d\n", child_module_name.c_str(), child_inst_vec.size());
     ref_cnt += child_inst_vec.size();
   }
@@ -72,8 +84,10 @@ void show_reference_count(const ModuleId& parent_module,
 /********************************************************************
  * write reference info to a given file in YAML format
  *******************************************************************/
+static 
 int write_reference_to_file(const char* fname, const ModuleId& parent_module,
                             const ModuleManager& module_manager,
+                            const ModuleNameMap& module_name_map,
                             const bool& include_time_stamp,
                             const bool& verbose) {
   std::fstream fp;
@@ -92,6 +106,9 @@ int write_reference_to_file(const char* fname, const ModuleId& parent_module,
   fp << "references:" << std::endl;
   for (ModuleId child_module : module_manager.child_modules(parent_module)) {
     std::string child_module_name = module_manager.module_name(child_module);
+    if (module_name_map.name_exist(child_module_name)) {
+      child_module_name = module_name_map.name(child_module_name);
+    }
     std::vector<size_t> child_inst_vec =
       module_manager.child_module_instances(parent_module, child_module);
     fp << "- module: " << child_module_name.c_str() << std::endl
