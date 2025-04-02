@@ -345,7 +345,8 @@ run-task basic_tests/no_time_stamp/no_cout_in_gsb $@
 run-task basic_tests/no_time_stamp/dump_waveform $@
 
 echo -e "Testing report reference to file";
-run-task basic_tests/report_reference $@
+run-task basic_tests/report_reference/default_module_names $@
+run-task basic_tests/report_reference/renamed_modules $@
 
 # Run git-diff to ensure no changes on the golden netlists
 # Switch to root path in case users are running the tests in another location

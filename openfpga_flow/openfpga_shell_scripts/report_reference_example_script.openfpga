@@ -1,6 +1,6 @@
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --absorb_buffer_luts off
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --absorb_buffer_luts off --device ${OPENFPGA_VPR_DEVICE} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
@@ -24,6 +24,12 @@ lut_truth_table_fixup
 #    Note that this is turned on when bitstream generation 
 #    is the ONLY purpose of the flow!!!
 build_fabric --compress_routing --frame_view #--verbose
+# Add a fpga core between fpga top and the underlying modules
+${OPENFPGA_ADD_FPGA_CORE_MODULE}
+# Output module naming for debugging. Comment it if not required
+write_module_naming_rules --file module_names_before_renaming.xml
+# Rename modules with a given rule
+#${OPENFPGA_RENAME_MODULE}
 
 # Report reference to a file
 report_reference ${OPENFPGA_REPORT_REFERENCE_MODULE_OPTIONS}
