@@ -111,7 +111,9 @@ std::vector<ConfigBitId> BitstreamManager::block_bits(
 
 /* Find the child block in a bitstream manager with a given name */
 ConfigBlockId BitstreamManager::find_child_block(
-  const ConfigBlockId& block_id, const std::string& child_block_name) const {
+  const ConfigBlockId& block_id, 
+  const std::string& child_block_name,
+  const bool& verbose) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
@@ -200,18 +202,45 @@ ConfigBlockId BitstreamManager::find_child_block(
 
   std::string child_block_name_stripped = extract_last_token(child_block_name);
 
+  // First search for the exact match and then search for the token match
   for (const ConfigBlockId& child : block_children(block_id)) {
-    if (0 == child_block_name.compare(block_name(child))) {
+    if (match_token(block_name(child), child_block_name)) {
       candidates.push_back(child);
     }
   }
 
+  // If no exact match is found, search for the token match
+  if (candidates.size() == 0) {
+    for (const ConfigBlockId& child : block_children(block_id)) {
+      if (match_token(block_name(child), child_block_name_stripped)) {
+        candidates.push_back(child);
+      }
+    }
+  }
+
   /* We should have 0 or 1 candidate! */
-  VTR_ASSERT(0 == candidates.size() || 1 == candidates.size());
+  if (candidates.size() > 1) {
+    VTR_LOGV(verbose, "Found multiple candidates for child block '%s(%s)' in block '%s':\n",
+            child_block_name.c_str(),
+            child_block_name_stripped.c_str(),
+            block_name(block_id).c_str());
+    for (const ConfigBlockId& child : candidates) {
+      VTR_LOGV(verbose, "  %s\n", block_name(child).c_str());
+    }
+  }
+  
   if (0 == candidates.size()) {
+    VTR_LOGV(verbose, "No candidate found for child block '%s(%s)' in block '%s':\n",
+            child_block_name.c_str(),
+            child_block_name_stripped.c_str(),
+            block_name(block_id).c_str());
+    for (const ConfigBlockId& child : block_children(block_id)) {
+      VTR_LOGV(verbose, "  %s\n", block_name(child).c_str());
+    }
     /* Not found, return an invalid value */
     return ConfigBlockId::INVALID();
   }
+  VTR_ASSERT(0 == candidates.size() || 1 == candidates.size());
   return candidates[0];
 }
 
