@@ -128,7 +128,7 @@ ConfigBlockId BitstreamManager::find_child_block(
    * 
    * Example:
    *   "grid_io_bottom_0_io_0_mem_iopad_a2f_o_0" → "mem_iopad_a2f_o_0"
-   *   "_module_123_" → "module_123"
+   *   "_module_123_" → "module_123_"
    *   "__no_number_here__" → "no_number_here__"
    */
   auto extract_last_token = [](const std::string& name) -> std::string {
@@ -170,6 +170,19 @@ ConfigBlockId BitstreamManager::find_child_block(
     return (s == std::string::npos) ? "" : name.substr(s);
   };
 
+  /**
+   * Checks whether the given keyword appears as a complete token within the input string.
+   * 
+   * - Leading and trailing underscores are stripped from both the input and the keyword.
+   * - A "token" is defined as a substring that is either:
+   *     - at the beginning or end of the input, or
+   *     - surrounded by underscores.
+   * - The match must exactly equal the keyword with no extra characters attached.
+   *
+   * Example:
+   *   input = "_foo_bar_baz_", keyword = "bar" → returns true
+   *   input = "foobar_baz",    keyword = "foo" → returns false (not a whole token)
+   */
   auto match_token = [](const std::string& input, const std::string& keyword) {
     // Strip leading and trailing underscores
     size_t start = input.find_first_not_of('_');
