@@ -85,6 +85,7 @@ run-task fpga_verilog/mux_design/tree_structure $@
 echo -e "Testing Verilog generation with routing multiplexers implemented by standard cell MUX2";
 run-task fpga_verilog/mux_design/stdcell_mux2 $@
 run-task fpga_verilog/mux_design/stdcell_mux2_last_stage $@
+run-task fpga_verilog/mux_design/stdcell_mux2_last_stage_size2 $@
 
 echo -e "Testing Verilog generation with routing multiplexers implemented by local encoders";
 run-task fpga_verilog/mux_design/local_encoder $@
