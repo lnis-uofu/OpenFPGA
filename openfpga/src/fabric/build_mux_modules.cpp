@@ -680,7 +680,7 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
       if (true == mux_graph.is_node_input(input_nodes[node_id]) && true == mux_graph.is_node_output(node)) {
         MuxInputId input_id = mux_graph.input_id(input_nodes[node_id]);
         module_manager.add_module_net_sink(
-          mux_module, mux_module_input_nets[input_id], std_cell_module_id,
+          mux_module, mux_module_input_nets[input_id],
           curr_stage_std_cell_module_id, std_cell_instance_id,
           last_stage_std_cell_module_inputs[node_id],
           last_stage_std_cell_module_input_ports[node_id].get_lsb());
