@@ -689,7 +689,7 @@ static void build_cmos_mux_module_mux2_multiplexing_structure(
         module_manager.add_module_net_sink(
           mux_module,
           module_nets_by_level[input_node_level][input_node_index_at_level],
-          last_stage_std_cell_module_id, std_cell_instance_id,
+          curr_stage_std_cell_module_id, std_cell_instance_id,
           last_stage_std_cell_module_inputs[node_id],
           last_stage_std_cell_module_input_ports[node_id].get_lsb());
       } else {
