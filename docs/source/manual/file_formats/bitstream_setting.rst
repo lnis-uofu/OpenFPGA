@@ -77,9 +77,17 @@ The following syntax are applicable to the XML definition tagged by ``default_mo
 
   .. note:: Bitstream setting has a higher priority than the ``mode_bits`` definition in the OpenFPGA architecture description!
 
+  In binary format: 
+
   .. code-block:: xml
 
     mode_bits="0100"
+
+  In hexadecimal format: 
+
+  .. code-block:: xml
+
+    mode_bits="4h'4"
 
 
 Interconnection-related Settings
