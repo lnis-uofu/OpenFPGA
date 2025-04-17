@@ -14,8 +14,8 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
-#include "read_xml_openfpga_arch_utils.h"
 #include "openfpga_bits_parser.h"
+#include "read_xml_openfpga_arch_utils.h"
 
 /********************************************************************
  * Parse mode_bits: convert from string to array of digits
@@ -28,8 +28,7 @@ std::vector<size_t> parse_mode_bits(pugi::xml_node& xml_mode_bits,
   openfpga::BitsParser bits_parser(mode_bit_str);
   if (!bits_parser.valid()) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
-                   "Invalid format of mode bit '%s'!\n",
-                   mode_bit_str.c_str());
+                   "Invalid format of mode bit '%s'!\n", mode_bit_str.c_str());
   }
   return bits_parser.result();
 }

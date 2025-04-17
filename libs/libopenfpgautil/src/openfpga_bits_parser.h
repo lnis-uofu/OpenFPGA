@@ -25,12 +25,12 @@ namespace openfpga {
  *     Header in big endian with splitter : 8B'1100_0111
  *     Header in little endian with splitter:  8b'11100011
  *     Header in little endian:  8b'1110_0011
- *   where 
+ *   where
  *    - 8 represents the number of bits
  *    - B represent the big endian
  *    - b represents the little endian
  * - Hexadecimal format: 8H'A7 or 8h'E3
- *   where 
+ *   where
  *    - 8 represents the number of bits
  *    - H represent the big endian
  *    - h represents the little endian
@@ -49,8 +49,10 @@ class BitsParser {
 
  private: /* Private Mutators */
   void parse();
-  void parse_bin_format(const std::string& bits_str, const bool& little_endian, const int& expected_len);
-  void parse_hex_format(const std::string& bits_str, const bool& little_endian, const int& expected_len);
+  void parse_bin_format(const std::string& bits_str, const bool& little_endian,
+                        const int& expected_len);
+  void parse_hex_format(const std::string& bits_str, const bool& little_endian,
+                        const int& expected_len);
 
  private:            /* Internal data */
   std::string data_; /* Lines to be splited */
