@@ -221,7 +221,7 @@
       <interconnect name="crossbar" circuit_model_name="mux_2level"/>
     </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
-    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="2H'0"/>
+    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="1H'0"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="MULTI_MODE_DFFNRQ" mode_bits="2H'0"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1H'1" physical_pb_type_index_factor="0.5">
