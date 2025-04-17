@@ -14,6 +14,7 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "openfpga_bits_parser.h"
 #include "read_xml_openfpga_arch_utils.h"
 
 /********************************************************************
@@ -23,20 +24,11 @@
 std::vector<size_t> parse_mode_bits(pugi::xml_node& xml_mode_bits,
                                     const pugiutil::loc_data& loc_data,
                                     const std::string& mode_bit_str) {
-  std::vector<size_t> mode_bits;
-
-  for (const char& bit_char : mode_bit_str) {
-    if ('0' == bit_char) {
-      mode_bits.push_back(0);
-    } else if ('1' == bit_char) {
-      mode_bits.push_back(1);
-    } else {
-      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
-                     "Unexpected '%c' character found in the mode bit '%s'! "
-                     "Only allow either '0' or '1'\n",
-                     bit_char, mode_bit_str.c_str());
-    }
+  /* Return if the input is empty */
+  openfpga::BitsParser bits_parser(mode_bit_str);
+  if (!bits_parser.valid()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
+                   "Invalid format of mode bit '%s'!\n", mode_bit_str.c_str());
   }
-
-  return mode_bits;
+  return bits_parser.result();
 }

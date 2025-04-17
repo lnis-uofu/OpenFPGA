@@ -12,7 +12,7 @@ How to Compile
 Supported Operating Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OpenFPGA is continously tested with Ubuntu 22.04 and partially on Ubuntu 20.04 
+OpenFPGA is continously tested with Ubuntu 22.04
 It might work with earlier versions and other distributions.
 
 In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
@@ -22,6 +22,7 @@ In addition to continous integration, our community users have tested OpenFPGA o
 - CentOS 9
 - Ubuntu 18.04
 - Ubuntu 21.04
+- Ubuntu 20.04 
 
 Build Steps
 ~~~~~~~~~~~

@@ -347,6 +347,10 @@ run-task basic_tests/no_time_stamp/dump_waveform $@
 echo -e "Testing report reference to file";
 run-task basic_tests/report_reference $@
 
+echo -e "Testing mode bit format";
+run-task basic_tests/mode_bit_format/bin_format_big_endian $@
+run-task basic_tests/mode_bit_format/hex_format_big_endian $@
+
 # Run git-diff to ensure no changes on the golden netlists
 # Switch to root path in case users are running the tests in another location
 cd ${OPENFPGA_PATH}
