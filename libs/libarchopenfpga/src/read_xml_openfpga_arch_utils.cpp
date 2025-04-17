@@ -17,7 +17,6 @@
 #include "read_xml_openfpga_arch_utils.h"
 #include "openfpga_bits_parser.h"
 
-
 /********************************************************************
  * Parse mode_bits: convert from string to array of digits
  * We only allow the bit to either '0' or '1'

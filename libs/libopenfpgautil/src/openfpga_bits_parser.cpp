@@ -40,6 +40,8 @@ std::string BitsParser::data() const { return data_; }
 
 bool BitsParser::valid() const { return valid_; }
 
+std::vector<size_t> BitsParser::result() const { return result_; }
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
