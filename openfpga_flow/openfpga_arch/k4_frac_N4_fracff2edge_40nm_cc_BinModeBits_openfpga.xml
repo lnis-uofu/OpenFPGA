@@ -240,7 +240,7 @@
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dffnr].dffnr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'01">
       <port name="CN" physical_mode_port="C"/>
     </pb_type>
-    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'10">
+    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2b'01">
       <port name="RN" physical_mode_port="R"/>
     </pb_type>
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dffnrn].dffnrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'11">
@@ -252,18 +252,18 @@
       <port name="in" physical_mode_port="in[0:3]"/>
       <port name="out" physical_mode_port="lut4_out"/>
     </pb_type>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'0_0" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
       <port name="clk" physical_mode_port="C"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff[dffn].dffn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'01" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[dffn].dffn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'0_1" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
       <port name="CN" physical_mode_port="C"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
     <pb_type name="clb.fle[n1_lut4].ble4.ff[dffnr].dffnr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'01" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
       <port name="CN" physical_mode_port="C"/>
     </pb_type>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'10" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2b'01" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
       <port name="RN" physical_mode_port="R"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.ff[dffnrn].dffnrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="2B'11" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
