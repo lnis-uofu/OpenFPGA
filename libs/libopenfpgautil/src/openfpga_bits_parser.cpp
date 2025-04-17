@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <cctype>
 
-#include "arch_error.h"
 #include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -22,12 +22,12 @@ namespace openfpga {
  * Constructors
  ***********************************************************************/
 BitsParser::BitsParser(const std::string& data) {
-  delim = ''';
-  splitter = '_';
-  bin_format_be_code = 'B';
-  bin_format_le_code = 'b';
-  hex_format_be_code = 'H';
-  hex_format_le_code = 'h';
+  delim_ = '\'';
+  splitter_ = '_';
+  bin_format_be_code_ = 'B';
+  bin_format_le_code_ = 'b';
+  hex_format_be_code_ = 'H';
+  hex_format_le_code_ = 'h';
   set_data(data);
   valid_ = false;
 }
@@ -76,9 +76,9 @@ void BitsParser::parse_bin_format(const std::string& bits_str, const bool& littl
   if (expected_len == -1) {
     return;
   }
-  if (expected_len != result_.size()) {
+  if (expected_len != (int)(result_.size())) {
     VTR_LOG_ERROR("Actual length '%lu' of bits '%s' does not match its definition '%d'\n",
-                  results_size(), bits_str.c_str(), expected_len);
+                  result_.size(), bits_str.c_str(), expected_len);
     valid_ = false;
   } 
 }
@@ -119,17 +119,17 @@ void BitsParser::parse_hex_format(const std::string& bits_str, const bool& littl
     bin_str += bin_segment;
   }
   /* Remove the redundant bits due to length definition */
-  if (expected_len > bin_str.size()) {
+  if (expected_len > (int)(bin_str.size())) {
     VTR_LOG_ERROR("Invalid length '%lu' of bits '%s' which is larger than its data size '%lu'!\n", expected_len, bits_str.c_str(), data_.c_str(), bin_str.size());
     valid_ = false; 
     return;
   }
-  if (expected_len <= bin_str.size() - 4) {
+  if (expected_len <= (int)(bin_str.size() - 4)) {
     VTR_LOG_ERROR("Invalid length '%lu' of bits '%s' which is much smaller than its data size '%lu'! This may cause data loss! Please double check\n", expected_len, bits_str.c_str(), data_.c_str(), bin_str.size());
     valid_ = false; 
     return;
   }
-  if (expected_len < bin_str.size()) {
+  if (expected_len < (int)(bin_str.size())) {
     bin_str.erase(0, bin_str.size() - expected_len); 
   }
   parse_bin_format(bin_str, little_endian, expected_len);
@@ -157,32 +157,25 @@ void BitsParser::parse() {
       VTR_LOG_ERROR("Invalid format definition '%s' of '%s'. Expect a number before the format type!\n", tokens[0].c_str(), data_.c_str());
       return;
     }
-    if (!std::all_of(bit_len_def.begin(). bit_len_def.end(), std::isdigit)) {
+    if (!std::all_of(bit_len_def.begin(), bit_len_def.end(), ::isdigit)) {
       valid_ = false;
       VTR_LOG_ERROR("Invalid format definition '%s' of '%s'. Expect a valid decimal number before the format type!\n", tokens[0].c_str(), data_.c_str());
       return;
     }
     int expected_bit_len = std::stoi(bit_len_def);
     /* Parse on expected format */
-    switch (tokens[0].back()) {
-      case bin_format_be_code:
-        parse_bin_format(tokens[1], false, expected_bit_len);
-        break;
-      case bin_format_le_code:
-        parse_bin_format(tokens[1], true, expected_bit_len);
-        break;
-      case hex_format_be_code:
-        parse_hex_format(tokens[1], false, expected_bit_len);
-        break;
-      case hex_format_le_code:
-        parse_hex_format(tokens[1], true, expected_bit_len);
-        break;
-      default: {
-        VTR_LOG_ERROR("Invalid format definition '%c' of '%s'. Expect to be [ %c | %c | %c | %c ]!\n", 
-                      tokens[0].back(), data_.c_str(), bin_format_be_code_, bin_format_le_code_, hex_format_be_code_, hex_format_le_code_);
-        valid_ = false;
-        break;
-      }
+    if (tokens[0].back() == bin_format_be_code_) {
+      parse_bin_format(tokens[1], false, expected_bit_len);
+    } else if (tokens[0].back() == bin_format_le_code_) {
+      parse_bin_format(tokens[1], true, expected_bit_len);
+    } else if (tokens[0].back() ==  hex_format_be_code_) {
+      parse_hex_format(tokens[1], false, expected_bit_len);
+    } else if (tokens[0].back() ==  hex_format_le_code_) {
+      parse_hex_format(tokens[1], true, expected_bit_len);
+    } else {
+      VTR_LOG_ERROR("Invalid format definition '%c' of '%s'. Expect to be [ %c | %c | %c | %c ]!\n", 
+                    tokens[0].back(), data_.c_str(), bin_format_be_code_, bin_format_le_code_, hex_format_be_code_, hex_format_le_code_);
+      valid_ = false;
     }
   }
 }
