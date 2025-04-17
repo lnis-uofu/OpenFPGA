@@ -118,6 +118,20 @@ void BitsParser::parse_hex_format(const std::string& bits_str, const bool& littl
     }
     bin_str += bin_segment;
   }
+  /* Remove the redundant bits due to length definition */
+  if (expected_len > bin_str.size()) {
+    VTR_LOG_ERROR("Invalid length '%lu' of bits '%s' which is larger than its data size '%lu'!\n", expected_len, bits_str.c_str(), data_.c_str(), bin_str.size());
+    valid_ = false; 
+    return;
+  }
+  if (expected_len <= bin_str.size() - 4) {
+    VTR_LOG_ERROR("Invalid length '%lu' of bits '%s' which is much smaller than its data size '%lu'! This may cause data loss! Please double check\n", expected_len, bits_str.c_str(), data_.c_str(), bin_str.size());
+    valid_ = false; 
+    return;
+  }
+  if (expected_len < bin_str.size()) {
+    bin_str.erase(0, bin_str.size() - expected_len); 
+  }
   parse_bin_format(bin_str, little_endian, expected_len);
 }
 
