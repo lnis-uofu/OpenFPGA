@@ -29,7 +29,6 @@ BitsParser::BitsParser(const std::string& data) {
   hex_format_be_code_ = 'H';
   hex_format_le_code_ = 'h';
   set_data(data);
-  valid_ = false;
 }
 
 /************************************************************************
@@ -140,10 +139,17 @@ void BitsParser::parse_hex_format(const std::string& bits_str, const bool& littl
 /* Parse the data */
 void BitsParser::parse() {
   valid_ = true;
+  if (data_.empty()) {
+    result_.clear();
+    return; /* Nothing to do */
+  }
   /* Create a tokenizer */
   StringToken tokenizer(data_);
   std::vector<std::string> tokens = tokenizer.split(delim_); 
-  if (tokens.size() == 1) {
+  if (tokens.size() == 0) {
+    /* Binary format */
+    parse_bin_format(data_, false, -1);
+  } else if (tokens.size() == 1) {
     /* Binary format */
     parse_bin_format(tokens[0], false, -1);
   } else if (tokens.size() > 2) {

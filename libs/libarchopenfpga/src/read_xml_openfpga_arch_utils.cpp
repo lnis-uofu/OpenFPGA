@@ -24,6 +24,7 @@
 std::vector<size_t> parse_mode_bits(pugi::xml_node& xml_mode_bits,
                                     const pugiutil::loc_data& loc_data,
                                     const std::string& mode_bit_str) {
+  /* Return if the input is empty */
   openfpga::BitsParser bits_parser(mode_bit_str);
   if (!bits_parser.valid()) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
