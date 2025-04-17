@@ -248,7 +248,7 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
   - ``circuit_model_name="<string>"`` Specify a circuit model to implement a ``pb_type`` in VPR architecture. The ``circuit_model_name`` is mandatory for every primitive``pb_type`` in a physical_mode ``pb_type``.
 
-  - ``mode_bits="<int>"`` Specify the configuration bits for the ``circuit_model`` when operating at an operating mode. The length of ``mode_bits`` should match the ``port`` size defined in ``circuit_model``. The ``mode_bits`` should be derived from circuit designs while users are responsible for its correctness. FPGA-Bitstreamm will add the ``mode_bits`` during bitstream generation.
+  - ``mode_bits="<string>"`` Specify the configuration bits for the ``circuit_model`` when operating at an operating mode. The length of ``mode_bits`` should match the ``port`` size defined in ``circuit_model``. The ``mode_bits`` should be derived from circuit designs while users are responsible for its correctness. FPGA-Bitstreamm will add the ``mode_bits`` during bitstream generation. **Note that mode bits are default in big-endian format**. User can provide in binary format (e.g., ``00011111``) or HEX format (e.g., ``8h'1F``) 
 
   - ``physical_pb_type_index_factor="<float>"`` aims to align the indices for ``pb_type`` between operating and physical modes, especially when an operating mode contains multiple ``pb_type`` (``num_pb``>1) that are linked to the same physical ``pb_type``. When ``physical_pb_type_name`` is larger than 1, the  index of ``pb_type`` will be multipled by the given factor. 
 
