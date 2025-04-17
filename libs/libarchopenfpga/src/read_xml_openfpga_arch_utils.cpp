@@ -26,10 +26,10 @@ std::vector<size_t> parse_mode_bits(pugi::xml_node& xml_mode_bits,
                                     const pugiutil::loc_data& loc_data,
                                     const std::string& mode_bit_str) {
   openfpga::BitsParser bits_parser(mode_bit_str);
-  if (!bit_parser.valid())
+  if (!bits_parser.valid())
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
                    "Invalid format of mode bit '%s'!\n",
                    mode_bit_str.c_str());
   }
-  return bit_parser.result();
+  return bits_parser.result();
 }
