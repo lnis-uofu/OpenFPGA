@@ -56,6 +56,9 @@ The following syntax are applicable to the XML definition tagged by ``pb_type`` 
 
   Specify the offset to be applied when overloading the bitstream to a target. For example, a LUT may have a 16-bit bitstream. When ``offset=1``, bitstream overloading will skip the first bit and start from the second bit of the 16-bit bitstream.
 
+
+.. _file_formats_bitstream_setting_mode_bit:
+
 Default Mode Bits-related Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -77,17 +80,38 @@ The following syntax are applicable to the XML definition tagged by ``default_mo
 
   .. note:: Bitstream setting has a higher priority than the ``mode_bits`` definition in the OpenFPGA architecture description!
 
-  In binary format: 
+  .. note:: Mode bits are default in big-endian format!
+
+  In binary format with a few available options: 
 
   .. code-block:: xml
 
-    mode_bits="0100"
+    <!-- The following are equivalent in functionality -->
+    <!-- BIN in big endian defined implicitedly -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="010011"/>
+    <!-- BIN in big endian -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6B'010011"/>
+    <!-- BIN in big endian with splitter -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6B'01_0011"/>
+    <!-- BIN in little endian -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6b'110010"/>
+    <!-- BIN in little endian with splitter -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6b'11_0010"/>
 
-  In hexadecimal format: 
+  In hexadecimal format with a few available options: 
 
   .. code-block:: xml
 
-    mode_bits="4h'4"
+    <!-- The following are equivalent in functionality -->
+    <!-- HEX in big endian -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6H'13/>
+    <!-- HEX in big endian with splitter -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6H'1_3/>
+    <!-- HEX in little endian -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6h'32/>
+    <!-- HEX in little endian with splitter -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6h'3_2/>
+ 
 
 
 Interconnection-related Settings
