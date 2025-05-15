@@ -82,10 +82,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-9 (Ubuntu 22.04)"
-            cc: gcc-9
-            cxx: g++-9
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: GCC-10 (Ubuntu 22.04)"
             cc: gcc-10
             cxx: g++-10
