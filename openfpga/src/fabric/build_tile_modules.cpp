@@ -23,6 +23,8 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "physical_types_util.h"
+#include "vpr_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

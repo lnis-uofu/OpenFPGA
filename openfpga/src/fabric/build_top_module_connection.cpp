@@ -25,6 +25,7 @@
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
 #include "vpr_utils.h"
+#include "physical_types_util.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

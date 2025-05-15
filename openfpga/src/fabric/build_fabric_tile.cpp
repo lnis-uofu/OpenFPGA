@@ -15,6 +15,7 @@
 
 /* Headers from vpr library */
 #include "build_fabric_tile.h"
+#include "vpr_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 

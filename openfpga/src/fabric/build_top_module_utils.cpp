@@ -12,6 +12,7 @@
 /* Module builder headers */
 #include "build_top_module_utils.h"
 #include "openfpga_rr_graph_utils.h"
+#include "physical_types_util.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

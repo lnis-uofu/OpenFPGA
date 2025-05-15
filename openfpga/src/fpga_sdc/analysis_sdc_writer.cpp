@@ -231,7 +231,7 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(
     option.sdc_dir() +
-    generate_analysis_sdc_file_name(vpr_ctx.atom().nlist.netlist_name(),
+    generate_analysis_sdc_file_name(vpr_ctx.atom().netlist().netlist_name(),
                                     std::string(SDC_ANALYSIS_FILE_NAME)));
 
   std::string timer_message =

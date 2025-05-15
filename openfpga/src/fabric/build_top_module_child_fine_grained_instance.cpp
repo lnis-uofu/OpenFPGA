@@ -28,6 +28,7 @@
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "rr_gsb_utils.h"
+#include "physical_types_util.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
