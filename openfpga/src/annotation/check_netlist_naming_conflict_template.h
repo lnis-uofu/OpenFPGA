@@ -8,8 +8,8 @@
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
-#include "vtr_time.h"
 #include "globals.h"
+#include "vtr_time.h"
 
 /********************************************************************
  * Function declaration
@@ -39,8 +39,8 @@ int check_netlist_naming_conflict_template(T& openfpga_context,
   /* Do the main job first: detect any naming in the BLIF netlist that violates
    * the syntax */
   if (false == cmd_context.option_enable(cmd, opt_fix)) {
-    size_t num_conflicts =
-      detect_netlist_naming_conflict(g_vpr_ctx.atom().netlist(), sensitive_chars);
+    size_t num_conflicts = detect_netlist_naming_conflict(
+      g_vpr_ctx.atom().netlist(), sensitive_chars);
     VTR_LOGV_ERROR(
       (0 < num_conflicts && (false == cmd_context.option_enable(cmd, opt_fix))),
       "Found %ld naming conflicts in the netlist. Please correct so as to use "

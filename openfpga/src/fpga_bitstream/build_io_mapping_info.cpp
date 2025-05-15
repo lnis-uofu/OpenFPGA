@@ -92,7 +92,8 @@ IoMap build_fpga_io_mapping_info(
       size_t temp_io_index = io_location_map.io_index(
         place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
         place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)]
+          .loc.sub_tile,
         module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */
@@ -150,7 +151,8 @@ IoMap build_fpga_io_mapping_info(
         std::string(block_name + io_input_port_name_postfix));
       benchmark_io_port.set_width(1);
     } else {
-      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk));
+      VTR_ASSERT(AtomBlockType::OUTPAD ==
+                 atom_ctx.netlist().block_type(atom_blk));
       /* VPR may have added a prefix to the output ports, remove them here */
       std::string output_block_name = block_name;
       for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
@@ -169,7 +171,8 @@ IoMap build_fpga_io_mapping_info(
 
     io_map.create_io_mapping(
       module_mapped_io_port, benchmark_io_port,
-      atom_block_type_to_io_map_direction[atom_ctx.netlist().block_type(atom_blk)]);
+      atom_block_type_to_io_map_direction[atom_ctx.netlist().block_type(
+        atom_blk)]);
   }
 
   return io_map;

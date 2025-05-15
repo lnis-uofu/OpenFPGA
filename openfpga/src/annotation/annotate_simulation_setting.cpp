@@ -79,8 +79,9 @@ static float average_weighted_atom_net_signal_density(
                            atom_ctx.netlist().net_sinks(atom_net).end())) {
       net_weight = 1;
     } else {
-      VTR_ASSERT(0 < std::distance(atom_ctx.netlist().net_sinks(atom_net).begin(),
-                                   atom_ctx.netlist().net_sinks(atom_net).end()));
+      VTR_ASSERT(0 <
+                 std::distance(atom_ctx.netlist().net_sinks(atom_net).begin(),
+                               atom_ctx.netlist().net_sinks(atom_net).end()));
       net_weight = std::distance(atom_ctx.netlist().net_sinks(atom_net).begin(),
                                  atom_ctx.netlist().net_sinks(atom_net).end());
     }

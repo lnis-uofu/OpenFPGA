@@ -504,8 +504,8 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
         AtomPinId atom_pin = lb_net_atom_sink_pins_[ilb_net][iterm];
         VTR_ASSERT(atom_pin);
 
-        const t_pb_graph_pin* pb_graph_pin =
-          find_pb_graph_pin(atom_ctx.netlist(), atom_ctx.lookup().atom_pb_bimap(), atom_pin);
+        const t_pb_graph_pin* pb_graph_pin = find_pb_graph_pin(
+          atom_ctx.netlist(), atom_ctx.lookup().atom_pb_bimap(), atom_pin);
         VTR_ASSERT(pb_graph_pin);
 
         if (pb_graph_pin->port->equivalent == PortEquivalence::NONE)

@@ -131,7 +131,8 @@ void print_verilog_simulation_info(
       for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
         /* Bypass non-I/O atom blocks ! */
         if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
-            (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
+            (AtomBlockType::OUTPAD !=
+             atom_ctx.netlist().block_type(atom_blk))) {
           continue;
         }
 

@@ -371,7 +371,8 @@ void rec_update_physical_pb_from_operating_pb(
       /* The token is typically organized as <.param|.attr> <identifier string>
        */
       if (std::string(".param") == tokens[0]) {
-        for (const auto& param_search : atom_ctx.netlist().block_params(atom_blk)) {
+        for (const auto& param_search :
+             atom_ctx.netlist().block_params(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (param_search.first != tokens[1]) {
             continue;
@@ -382,7 +383,8 @@ void rec_update_physical_pb_from_operating_pb(
             bitstream_annotation.pb_type_bitstream_offset(pb_type));
         }
       } else if (std::string(".attr") == tokens[0]) {
-        for (const auto& attr_search : atom_ctx.netlist().block_attrs(atom_blk)) {
+        for (const auto& attr_search :
+             atom_ctx.netlist().block_attrs(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (attr_search.first == tokens[1]) {
             continue;
@@ -409,7 +411,8 @@ void rec_update_physical_pb_from_operating_pb(
       /* The token is typically organized as <.param|.attr> <identifier string>
        */
       if (std::string(".param") == tokens[0]) {
-        for (const auto& param_search : atom_ctx.netlist().block_params(atom_blk)) {
+        for (const auto& param_search :
+             atom_ctx.netlist().block_params(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (param_search.first != tokens[1]) {
             continue;
@@ -421,7 +424,8 @@ void rec_update_physical_pb_from_operating_pb(
             bitstream_annotation.pb_type_mode_select_bitstream_offset(pb_type));
         }
       } else if (std::string(".attr") == tokens[0]) {
-        for (const auto& attr_search : atom_ctx.netlist().block_attrs(atom_blk)) {
+        for (const auto& attr_search :
+             atom_ctx.netlist().block_attrs(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (attr_search.first == tokens[1]) {
             continue;

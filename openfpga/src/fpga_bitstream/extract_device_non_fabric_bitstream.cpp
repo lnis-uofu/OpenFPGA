@@ -40,7 +40,8 @@ static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
       AtomBlockId atom_blk = atom_ctx.netlist().find_block(op_pb->name);
       VTR_ASSERT(atom_blk);
       if (setting.type == "param") {
-        for (const auto& param_search : atom_ctx.netlist().block_params(atom_blk)) {
+        for (const auto& param_search :
+             atom_ctx.netlist().block_params(atom_blk)) {
           std::string param = param_search.first;
           std::string content = param_search.second;
           if (setting.content == param) {
@@ -50,7 +51,8 @@ static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
         }
       } else {
         VTR_ASSERT(setting.type == "attr");
-        for (const auto& attr_search : atom_ctx.netlist().block_attrs(atom_blk)) {
+        for (const auto& attr_search :
+             atom_ctx.netlist().block_attrs(atom_blk)) {
           std::string attr = attr_search.first;
           std::string content = attr_search.second;
           if (setting.content == attr) {

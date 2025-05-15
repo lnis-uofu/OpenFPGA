@@ -16,9 +16,9 @@
 /* Headers from vpr library */
 #include "build_top_module_directs.h"
 #include "module_manager_utils.h"
-#include "physical_types_util.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
+#include "physical_types_util.h"
 #include "vpr_utils.h"
 
 /* begin namespace openfpga */

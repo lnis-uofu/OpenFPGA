@@ -8,10 +8,10 @@
 #include "pugixml_util.hpp"
 
 /* Headers from vtr util library */
+#include "globals.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "globals.h"
 
 /* Headers from libarchfpga */
 #include "arch_error.h"

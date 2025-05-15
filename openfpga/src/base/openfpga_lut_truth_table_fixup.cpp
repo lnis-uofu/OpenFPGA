@@ -49,8 +49,8 @@ static void fix_up_lut_atom_block_truth_table(
 
     /* Port exists (some LUTs may have no input and hence no port in the atom
      * netlist) */
-    AtomPortId atom_port =
-      atom_ctx.netlist().find_atom_port(atom_blk, pb_type->ports[iport].model_port);
+    AtomPortId atom_port = atom_ctx.netlist().find_atom_port(
+      atom_blk, pb_type->ports[iport].model_port);
     if (!atom_port) {
       continue;
     }

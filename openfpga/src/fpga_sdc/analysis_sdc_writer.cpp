@@ -95,7 +95,8 @@ static void print_analysis_sdc_io_delays(
 
     /* Find clock ports in benchmark */
     std::vector<std::string> benchmark_clock_port_names =
-      find_atom_netlist_clock_port_names(atom_ctx.netlist(), netlist_annotation);
+      find_atom_netlist_clock_port_names(atom_ctx.netlist(),
+                                         netlist_annotation);
 
     /* Print comments */
     fp << "##################################################" << std::endl;
@@ -122,7 +123,8 @@ static void print_analysis_sdc_io_delays(
       size_t io_index = io_location_map.io_index(
         place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
         place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)]
+          .loc.sub_tile,
         module_io_port.get_name());
 
       if (size_t(-1) == io_index) {

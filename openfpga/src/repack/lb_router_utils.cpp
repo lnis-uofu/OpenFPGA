@@ -34,10 +34,12 @@ LbRouter::NetId add_lb_router_net_to_route(
   for (const LbRRNodeId& sink_node : sink_nodes) {
     t_pb_graph_pin* sink_pb_pin = lb_rr_graph.node_pb_graph_pin(sink_node);
     bool atom_pin_inside_pb = false;
-    for (const AtomPinId& atom_pin : atom_ctx.netlist().net_sinks(atom_net_id)) {
+    for (const AtomPinId& atom_pin :
+         atom_ctx.netlist().net_sinks(atom_net_id)) {
       VTR_ASSERT(AtomPinId::INVALID() != atom_pin);
-      if (sink_pb_pin ==
-          find_pb_graph_pin(atom_ctx.netlist(), atom_ctx.lookup().atom_pb_bimap(), atom_pin)) {
+      if (sink_pb_pin == find_pb_graph_pin(atom_ctx.netlist(),
+                                           atom_ctx.lookup().atom_pb_bimap(),
+                                           atom_pin)) {
         terminal_pins.push_back(atom_pin);
         atom_pin_inside_pb = true;
         break;
@@ -52,7 +54,8 @@ LbRouter::NetId add_lb_router_net_to_route(
       terminal_pins.push_back(atom_pin_outside_pb);
     }
   }
-  VTR_ASSERT(AtomPinId::INVALID() != atom_ctx.netlist().net_driver(atom_net_id));
+  VTR_ASSERT(AtomPinId::INVALID() !=
+             atom_ctx.netlist().net_driver(atom_net_id));
   if (sink_nodes.size() != terminal_pins.size()) {
     VTR_LOGF_ERROR(
       __FILE__, __LINE__,
@@ -62,8 +65,8 @@ LbRouter::NetId add_lb_router_net_to_route(
   }
   VTR_ASSERT(sink_nodes.size() == terminal_pins.size());
 
-  lb_router.add_net_atom_pins(lb_net, atom_ctx.netlist().net_driver(atom_net_id),
-                              terminal_pins);
+  lb_router.add_net_atom_pins(
+    lb_net, atom_ctx.netlist().net_driver(atom_net_id), terminal_pins);
 
   return lb_net;
 }

@@ -695,15 +695,16 @@ static void add_lb_router_nets(
      */
     if ((!design_constraints.unconstrained_net(constrained_net_name)) &&
         (!design_constraints.unmapped_net(constrained_net_name))) {
-      constrained_atom_net_id = atom_ctx.netlist().find_net(constrained_net_name);
+      constrained_atom_net_id =
+        atom_ctx.netlist().find_net(constrained_net_name);
       if (false == atom_ctx.netlist().valid_net_id(constrained_atom_net_id)) {
         VTR_LOG_WARN(
           "Invalid net '%s' to be constrained! Will drop the constraint in "
           "repacking\n",
           constrained_net_name.c_str());
       } else {
-        VTR_ASSERT_SAFE(false ==
-                        atom_ctx.netlist().valid_net_id(constrained_atom_net_id));
+        VTR_ASSERT_SAFE(
+          false == atom_ctx.netlist().valid_net_id(constrained_atom_net_id));
         VTR_LOGV(verbose,
                  "Accept net '%s' to be constrained on pin '%s[%d]' during "
                  "repacking\n",

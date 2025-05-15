@@ -9,8 +9,8 @@
 
 /* Headers from vpr library */
 #include "build_grid_module_utils.h"
-#include "physical_types_util.h"
 #include "openfpga_naming.h"
+#include "physical_types_util.h"
 #include "vpr_utils.h"
 
 /* begin namespace openfpga */

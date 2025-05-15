@@ -387,7 +387,8 @@ void print_verilog_testbench_connect_fpga_ios(
       size_t temp_io_index = io_location_map.io_index(
         place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
         place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)]
+          .loc.sub_tile,
         module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */
@@ -480,7 +481,8 @@ void print_verilog_testbench_connect_fpga_ios(
       print_verilog_wire_connection(fp, module_mapped_io_port,
                                     benchmark_io_port, false, little_endian);
     } else {
-      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk));
+      VTR_ASSERT(AtomBlockType::OUTPAD ==
+                 atom_ctx.netlist().block_type(atom_blk));
       benchmark_io_port.set_name(
         std::string(block_name + io_output_port_name_postfix));
       print_verilog_comment(
