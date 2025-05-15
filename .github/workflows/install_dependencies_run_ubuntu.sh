@@ -11,5 +11,5 @@ if [ "$(lsb_release -rs)" = "20.04" ]; then
         python3.8 \
         python3.8-venv
 # Install Ubuntu 22.04 packages
-elif [ "$(lsb_release -rs)" = "22.04" ]; then
+#elif [ "$(lsb_release -rs)" = "22.04" ]; then
 fi
