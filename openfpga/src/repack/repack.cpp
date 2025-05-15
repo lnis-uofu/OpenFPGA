@@ -564,7 +564,7 @@ static void add_lb_router_nets(
       get_pb_graph_node_pin_from_block_pin(block_id, j);
     VTR_ASSERT(pb_pin->parent_node == pb->pb_graph_node);
 
-    AtomNetId atom_net_id = atom_ctx.lookup.atom_net(cluster_net_id);
+    AtomNetId atom_net_id = atom_ctx.lookup().atom_net(cluster_net_id);
     VTR_ASSERT(AtomNetId::INVALID() != atom_net_id);
 
     pb_pin_mapped_nets[pb_pin] = atom_net_id;
@@ -607,7 +607,7 @@ static void add_lb_router_nets(
          options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name),
                                            curr_pin)) ||
         (options.net_is_specified_to_be_ignored(
-          atom_ctx.nlist.net_name(pb_pin_mapped_nets[source_pb_pin]),
+          atom_ctx.netlist().net_name(pb_pin_mapped_nets[source_pb_pin]),
           std::string(lb_type->pb_type->name), curr_pin))) {
       /* Find the net mapped to this pin in clustering results*/
       AtomNetId atom_net_id = pb_pin_mapped_nets[source_pb_pin];
@@ -674,7 +674,7 @@ static void add_lb_router_nets(
         (options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name),
                                            curr_pin))) {
       VTR_LOGV(verbose, "Skip net '%s' as it is global and set to be ignored\n",
-               atom_ctx.nlist.net_name(atom_net_id).c_str());
+               atom_ctx.netlist().net_name(atom_net_id).c_str());
       continue;
     }
 
@@ -695,15 +695,15 @@ static void add_lb_router_nets(
      */
     if ((!design_constraints.unconstrained_net(constrained_net_name)) &&
         (!design_constraints.unmapped_net(constrained_net_name))) {
-      constrained_atom_net_id = atom_ctx.nlist.find_net(constrained_net_name);
-      if (false == atom_ctx.nlist.valid_net_id(constrained_atom_net_id)) {
+      constrained_atom_net_id = atom_ctx.netlist().find_net(constrained_net_name);
+      if (false == atom_ctx.netlist().valid_net_id(constrained_atom_net_id)) {
         VTR_LOG_WARN(
           "Invalid net '%s' to be constrained! Will drop the constraint in "
           "repacking\n",
           constrained_net_name.c_str());
       } else {
         VTR_ASSERT_SAFE(false ==
-                        atom_ctx.nlist.valid_net_id(constrained_atom_net_id));
+                        atom_ctx.netlist().valid_net_id(constrained_atom_net_id));
         VTR_LOGV(verbose,
                  "Accept net '%s' to be constrained on pin '%s[%d]' during "
                  "repacking\n",
@@ -714,19 +714,19 @@ static void add_lb_router_nets(
       constrained_atom_net_id = atom_net_id;
       /* Skip for the net which has been constrained on other pins */
       if (atom_net_id &&
-          design_constraints.net_pin(atom_ctx.nlist.net_name(atom_net_id))
+          design_constraints.net_pin(atom_ctx.netlist().net_name(atom_net_id))
             .is_valid()) {
         VTR_LOGV(verbose,
                  "Skip net '%s' on pin '%s[%d]' during repacking since it has "
                  "been constrained to another pin\n",
-                 atom_ctx.nlist.net_name(atom_net_id).c_str(),
+                 atom_ctx.netlist().net_name(atom_net_id).c_str(),
                  source_pb_pin->port->name, source_pb_pin->pin_number);
         continue;
       }
       VTR_LOGV(verbose,
                "Follow the same mapping results for net '%s' on pin '%s[%d]' "
                "during repacking (constrained net name is %s)\n",
-               atom_ctx.nlist.net_name(atom_net_id).c_str(),
+               atom_ctx.netlist().net_name(atom_net_id).c_str(),
                source_pb_pin->port->name, source_pb_pin->pin_number,
                constrained_net_name.c_str());
     }
@@ -764,7 +764,7 @@ static void add_lb_router_nets(
 
     /* Output verbose messages for debugging only */
     VTR_LOGV(verbose, "Pb route for Net %s:\n",
-             atom_ctx.nlist.net_name(atom_net_id_to_route).c_str());
+             atom_ctx.netlist().net_name(atom_net_id_to_route).c_str());
 
     /* As the pin remapping is allowed during routing, we should
      * - Find the routing traces from packing results which is mapped to the net
@@ -812,7 +812,7 @@ static void add_lb_router_nets(
         "Found %d routing traces for net \'%s\' in clustered block \'%s\'. "
         "Expect only 1.\n",
         pb_route_indices.size(),
-        atom_ctx.nlist.net_name(atom_net_id_to_route).c_str(),
+        atom_ctx.netlist().net_name(atom_net_id_to_route).c_str(),
         clustering_ctx.clb_nlist.block_name(block_id).c_str());
       VTR_ASSERT(1 == pb_route_indices.size());
     }
@@ -915,7 +915,7 @@ static void add_lb_router_nets(
     /* Printf for debugging only, may be enabled if verbose is enabled
      */
     VTR_LOGV(verbose, "Pb route for Net %s:\n",
-             atom_ctx.nlist.net_name(atom_net_id).c_str());
+             atom_ctx.netlist().net_name(atom_net_id).c_str());
     VTR_LOGV(verbose, "Source node:\n\t%s -> %s\n",
              source_pb_pin->to_string().c_str(),
              physical_source_pb_pin->to_string().c_str());
@@ -989,7 +989,7 @@ static void repack_cluster(const AtomContext& atom_ctx,
 
   /* Run the router */
   bool route_success =
-    lb_router.try_route(lb_rr_graph, atom_ctx.nlist, verbose);
+    lb_router.try_route(lb_rr_graph, atom_ctx.netlist(), verbose);
 
   if (false == route_success) {
     VTR_LOGV(verbose, "Reroute failed\n");
@@ -1007,7 +1007,7 @@ static void repack_cluster(const AtomContext& atom_ctx,
     device_annotation, bitstream_annotation, verbose);
   /* Save routing results */
   save_lb_router_results_to_physical_pb(phy_pb, lb_router, lb_rr_graph,
-                                        atom_ctx.nlist, verbose);
+                                        atom_ctx.netlist(), verbose);
   VTR_LOGV(verbose, "Saved results in physical pb\n");
 
   /* Add the pb to clustering context */

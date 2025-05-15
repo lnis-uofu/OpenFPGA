@@ -141,16 +141,16 @@ void print_verilog_testbench_benchmark_instance(
   std::vector<std::string> port_names;
   std::vector<AtomBlockType> port_types;
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-I/O atom blocks ! */
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
@@ -158,7 +158,7 @@ void print_verilog_testbench_benchmark_instance(
     /* Note that VPR added a prefix "out_" or "out:" to the name of output
      * blocks We can remove this when specified through input argument
      */
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       block_name = remove_atom_block_name_prefix(block_name);
     }
 
@@ -175,7 +175,7 @@ void print_verilog_testbench_benchmark_instance(
           std::find(port_names.begin(), port_names.end(),
                     bus_group.bus_port(bus_id).get_name())) {
         port_names.push_back(bus_group.bus_port(bus_id).get_name());
-        port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+        port_types.push_back(atom_ctx.netlist().block_type(atom_blk));
       }
       continue;
     }
@@ -183,7 +183,7 @@ void print_verilog_testbench_benchmark_instance(
     /* Input port follows the logical block name while output port requires a
      * special postfix */
     port_names.push_back(block_name);
-    port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+    port_types.push_back(atom_ctx.netlist().block_type(atom_blk));
   }
 
   /* Print out the instance with port mapping */
@@ -366,10 +366,10 @@ void print_verilog_testbench_connect_fpga_ios(
   print_verilog_comment(
     fp, std::string("----- Link BLIF Benchmark I/Os to FPGA I/Os -----"));
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-I/O atom blocks ! */
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
@@ -385,9 +385,9 @@ void print_verilog_testbench_connect_fpga_ios(
 
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
       size_t temp_io_index = io_location_map.io_index(
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.sub_tile,
         module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */
@@ -404,7 +404,7 @@ void print_verilog_testbench_connect_fpga_ios(
       }
 
       /* If this is an INPAD, we can use an GPIN port (if available) */
-      if (atom_block_type_to_module_port_type[atom_ctx.nlist.block_type(
+      if (atom_block_type_to_module_port_type[atom_ctx.netlist().block_type(
             atom_blk)] ==
           module_manager.port_type(top_module, module_io_port_id)) {
         mapped_module_io_info =
@@ -431,14 +431,14 @@ void print_verilog_testbench_connect_fpga_ios(
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
     /* Note that VPR added a prefix to the name of output blocks
      * We can remove this when specified through input argument
      */
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       block_name = remove_atom_block_name_prefix(block_name);
     }
 
@@ -462,7 +462,7 @@ void print_verilog_testbench_connect_fpga_ios(
       benchmark_io_port.set_width(1);
     }
 
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD == atom_ctx.netlist().block_type(atom_blk)) {
       /* If the port is a clock, do not add a postfix */
       if (clock_port_names.end() != std::find(clock_port_names.begin(),
                                               clock_port_names.end(),
@@ -480,7 +480,7 @@ void print_verilog_testbench_connect_fpga_ios(
       print_verilog_wire_connection(fp, module_mapped_io_port,
                                     benchmark_io_port, false, little_endian);
     } else {
-      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk));
       benchmark_io_port.set_name(
         std::string(block_name + io_output_port_name_postfix));
       print_verilog_comment(
@@ -684,21 +684,21 @@ void print_verilog_testbench_check(
   }
   fp << "begin" << std::endl;
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-I/O atom blocks ! */
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
 
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       block_name = remove_atom_block_name_prefix(block_name);
       fp << "\t\t\tif(!(" << block_name << fpga_port_postfix;
       fp << " === " << block_name << benchmark_port_postfix;
@@ -718,15 +718,15 @@ void print_verilog_testbench_check(
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Only care about output atom blocks ! */
-    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk)) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
@@ -847,20 +847,20 @@ void print_verilog_testbench_random_stimuli(
 
   fp << "\tinitial begin" << std::endl;
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-I/O atom blocks ! */
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       block_name = remove_atom_block_name_prefix(block_name);
     }
 
@@ -881,7 +881,7 @@ void print_verilog_testbench_random_stimuli(
     }
 
     /* TODO: find the clock inputs will be initialized later */
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD == atom_ctx.netlist().block_type(atom_blk)) {
       fp << "\t\t" << block_name + input_port_postfix << " <= 1'b0;"
          << std::endl;
     }
@@ -892,15 +892,15 @@ void print_verilog_testbench_random_stimuli(
     /* Add an empty line as splitter */
     fp << std::endl;
 
-    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
       /* Bypass non-I/O atom blocks ! */
-      if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
+      if (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk)) {
         continue;
       }
 
       /* The block may be renamed as it contains special characters which
        * violate Verilog syntax */
-      std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+      std::string block_name = atom_ctx.netlist().block_name(atom_blk);
       if (true == netlist_annotation.is_block_renamed(atom_blk)) {
         block_name = netlist_annotation.block_name(atom_blk);
       }
@@ -934,20 +934,20 @@ void print_verilog_testbench_random_stimuli(
                               little_endian)
      << ") begin" << std::endl;
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-I/O atom blocks ! */
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       block_name = remove_atom_block_name_prefix(block_name);
     }
 
@@ -968,7 +968,7 @@ void print_verilog_testbench_random_stimuli(
     }
 
     /* TODO: find the clock inputs will be initialized later */
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD == atom_ctx.netlist().block_type(atom_blk)) {
       fp << "\t\t" << block_name + input_port_postfix << " <= $random;"
          << std::endl;
     }
@@ -1001,15 +1001,15 @@ void print_verilog_testbench_shared_input_ports(
 
   /* Instantiate register for inputs stimulis */
   print_verilog_comment(fp, std::string("----- Shared inputs -------"));
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* We care only those logic blocks which are input I/Os */
-    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
@@ -1067,15 +1067,15 @@ void print_verilog_testbench_shared_fpga_output_ports(
   /* Instantiate wires for FPGA fabric outputs */
   print_verilog_comment(fp, std::string("----- FPGA fabric outputs -------"));
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* We care only those logic blocks which are output I/Os */
-    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk)) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
@@ -1108,15 +1108,15 @@ void print_verilog_testbench_shared_benchmark_output_ports(
 
   /* Instantiate wire for benchmark output */
   print_verilog_comment(fp, std::string("----- Benchmark outputs -------"));
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* We care only those logic blocks which are output I/Os */
-    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk)) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
@@ -1154,15 +1154,15 @@ void print_verilog_testbench_shared_check_flags(
   /* Instantiate register for output comparison */
   print_verilog_comment(
     fp, std::string("----- Output vectors checking flags -------"));
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* We care only those logic blocks which are output I/Os */
-    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk)) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }

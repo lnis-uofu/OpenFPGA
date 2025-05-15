@@ -85,7 +85,7 @@ int print_verilog_testbench_io_connection(
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names =
-    find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+    find_atom_netlist_clock_port_names(atom_ctx.netlist(), netlist_annotation);
 
   bool little_endian = options.little_endian();
   /* Connect FPGA top module global ports to constant or benchmark global

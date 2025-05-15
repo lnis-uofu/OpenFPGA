@@ -10,6 +10,7 @@
 #include "vtr_time.h"
 
 /* Headers from vpr library */
+#include "physical_types_util.h"
 #include "vpr_utils.h"
 
 /* Headers from openfpgashell library */

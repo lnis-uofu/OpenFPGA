@@ -44,13 +44,13 @@ static void fix_up_lut_atom_block_truth_table(
       continue;
     }
     /* Reach here, we have to apply a fix-up */
-    AtomBlockId atom_blk = atom_ctx.nlist.find_block(pb->name);
+    AtomBlockId atom_blk = atom_ctx.netlist().find_block(pb->name);
     VTR_ASSERT(atom_blk);
 
     /* Port exists (some LUTs may have no input and hence no port in the atom
      * netlist) */
     AtomPortId atom_port =
-      atom_ctx.nlist.find_atom_port(atom_blk, pb_type->ports[iport].model_port);
+      atom_ctx.netlist().find_atom_port(atom_blk, pb_type->ports[iport].model_port);
     if (!atom_port) {
       continue;
     }
@@ -70,11 +70,11 @@ static void fix_up_lut_atom_block_truth_table(
 
         VTR_ASSERT(atom_net);
 
-        for (AtomPinId atom_pin : atom_ctx.nlist.port_pins(atom_port)) {
-          AtomNetId atom_pin_net = atom_ctx.nlist.pin_net(atom_pin);
+        for (AtomPinId atom_pin : atom_ctx.netlist().port_pins(atom_port)) {
+          AtomNetId atom_pin_net = atom_ctx.netlist().pin_net(atom_pin);
 
           if (atom_pin_net == atom_net) {
-            rotated_pin_map[ipin] = atom_ctx.nlist.pin_port_bit(atom_pin);
+            rotated_pin_map[ipin] = atom_ctx.netlist().pin_port_bit(atom_pin);
             break;
           }
         }
@@ -87,7 +87,7 @@ static void fix_up_lut_atom_block_truth_table(
      * given mapping
      */
     const AtomNetlist::TruthTable& orig_tt =
-      atom_ctx.nlist.block_truth_table(atom_blk);
+      atom_ctx.netlist().block_truth_table(atom_blk);
     const AtomNetlist::TruthTable& adapt_tt =
       lut_truth_table_adaption(orig_tt, rotated_pin_map);
     vpr_clustering_annotation.adapt_truth_table(pb, adapt_tt);

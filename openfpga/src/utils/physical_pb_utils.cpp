@@ -207,7 +207,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
       }
 
       AtomPortId atom_port =
-        atom_ctx.nlist.find_atom_port(atom_blk, model_port);
+        atom_ctx.netlist().find_atom_port(atom_blk, model_port);
       if (!atom_port) {
         VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
@@ -218,7 +218,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->input_pins[iport][ipin]),
-        pb_route, device_annotation, atom_ctx.nlist, verbose);
+        pb_route, device_annotation, atom_ctx.netlist(), verbose);
     }
   }
 
@@ -246,7 +246,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
       }
 
       AtomPortId atom_port =
-        atom_ctx.nlist.find_atom_port(atom_blk, model_port);
+        atom_ctx.netlist().find_atom_port(atom_blk, model_port);
       if (!atom_port) {
         VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
@@ -257,7 +257,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->output_pins[iport][ipin]),
-        pb_route, device_annotation, atom_ctx.nlist, verbose);
+        pb_route, device_annotation, atom_ctx.netlist(), verbose);
     }
   }
 
@@ -275,7 +275,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
       }
 
       AtomPortId atom_port =
-        atom_ctx.nlist.find_atom_port(atom_blk, model_port);
+        atom_ctx.netlist().find_atom_port(atom_blk, model_port);
       if (!atom_port) {
         VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
@@ -286,7 +286,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->clock_pins[iport][ipin]),
-        pb_route, device_annotation, atom_ctx.nlist, verbose);
+        pb_route, device_annotation, atom_ctx.netlist(), verbose);
     }
   }
 }
@@ -349,13 +349,13 @@ void rec_update_physical_pb_from_operating_pb(
                          device_annotation.pb_type_mode_bits(pb_type));
 
     /* Find mapped atom block and add to this physical pb */
-    AtomBlockId atom_blk = atom_ctx.nlist.find_block(op_pb->name);
+    AtomBlockId atom_blk = atom_ctx.netlist().find_block(op_pb->name);
     VTR_ASSERT(atom_blk);
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
     VTR_LOGV(verbose, "Update physical pb '%s' using atom block '%s'\n",
              physical_pb_graph_node->hierarchical_type_name().c_str(),
-             atom_ctx.nlist.block_name(atom_blk).c_str());
+             atom_ctx.netlist().block_name(atom_blk).c_str());
 
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
@@ -371,7 +371,7 @@ void rec_update_physical_pb_from_operating_pb(
       /* The token is typically organized as <.param|.attr> <identifier string>
        */
       if (std::string(".param") == tokens[0]) {
-        for (const auto& param_search : atom_ctx.nlist.block_params(atom_blk)) {
+        for (const auto& param_search : atom_ctx.netlist().block_params(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (param_search.first != tokens[1]) {
             continue;
@@ -382,7 +382,7 @@ void rec_update_physical_pb_from_operating_pb(
             bitstream_annotation.pb_type_bitstream_offset(pb_type));
         }
       } else if (std::string(".attr") == tokens[0]) {
-        for (const auto& attr_search : atom_ctx.nlist.block_attrs(atom_blk)) {
+        for (const auto& attr_search : atom_ctx.netlist().block_attrs(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (attr_search.first == tokens[1]) {
             continue;
@@ -409,7 +409,7 @@ void rec_update_physical_pb_from_operating_pb(
       /* The token is typically organized as <.param|.attr> <identifier string>
        */
       if (std::string(".param") == tokens[0]) {
-        for (const auto& param_search : atom_ctx.nlist.block_params(atom_blk)) {
+        for (const auto& param_search : atom_ctx.netlist().block_params(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (param_search.first != tokens[1]) {
             continue;
@@ -421,7 +421,7 @@ void rec_update_physical_pb_from_operating_pb(
             bitstream_annotation.pb_type_mode_select_bitstream_offset(pb_type));
         }
       } else if (std::string(".attr") == tokens[0]) {
-        for (const auto& attr_search : atom_ctx.nlist.block_attrs(atom_blk)) {
+        for (const auto& attr_search : atom_ctx.netlist().block_attrs(atom_blk)) {
           /* Bypass unmatched parameter identifier */
           if (attr_search.first == tokens[1]) {
             continue;
@@ -620,7 +620,7 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
 
       if (pb_atom_blocks.end() !=
           std::find(pb_atom_blocks.begin(), pb_atom_blocks.end(),
-                    atom_ctx.nlist.net_driver_block(output_net))) {
+                    atom_ctx.netlist().net_driver_block(output_net))) {
         continue;
       }
 
