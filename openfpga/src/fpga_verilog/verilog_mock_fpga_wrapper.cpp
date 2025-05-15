@@ -96,10 +96,10 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   print_verilog_comment(
     fp, std::string("----- Link FPGA I/Os to Benchmark I/Os -----"));
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-I/O atom blocks ! */
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
@@ -115,9 +115,9 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
 
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
       size_t temp_io_index = io_location_map.io_index(
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.sub_tile,
         module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */
@@ -134,7 +134,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
       }
 
       /* If this is an INPAD, we can use an GPIN port (if available) */
-      if (atom_block_type_to_module_port_type[atom_ctx.nlist.block_type(
+      if (atom_block_type_to_module_port_type[atom_ctx.netlist().block_type(
             atom_blk)] ==
           module_manager.port_type(top_module, module_io_port_id)) {
         mapped_module_io_info =
@@ -161,14 +161,14 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
     /* Note that VPR added a prefix to the name of output blocks
      * We can remove this when specified through input argument
      */
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       block_name = remove_atom_block_name_prefix(block_name);
     }
 
@@ -181,7 +181,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
 
     benchmark_io_port.set_width(1);
 
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD == atom_ctx.netlist().block_type(atom_blk)) {
       /* If the port is a clock, skip it */
       if (clock_port_names.end() != std::find(clock_port_names.begin(),
                                               clock_port_names.end(),
@@ -213,7 +213,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
           fp, benchmark_io_port, module_mapped_io_port, false, little_endian);
       }
     } else {
-      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk));
       benchmark_io_port.set_name(
         std::string(block_name + io_output_port_name_postfix));
       print_verilog_comment(
@@ -520,7 +520,7 @@ int print_verilog_mock_fpga_wrapper(
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names =
-    find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+    find_atom_netlist_clock_port_names(atom_ctx.netlist(), netlist_annotation);
 
   /* Print local wires */
   print_verilog_testbench_shared_input_ports(

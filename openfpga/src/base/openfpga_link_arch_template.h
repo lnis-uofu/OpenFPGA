@@ -153,7 +153,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   std::unordered_map<AtomNetId, t_net_power> net_activity;
   if (true == cmd_context.option_enable(cmd, opt_activity_file)) {
     net_activity =
-      read_activity(g_vpr_ctx.atom().nlist,
+      read_activity(g_vpr_ctx.atom().netlist(),
                     cmd_context.option_value(cmd, opt_activity_file).c_str());
   }
 

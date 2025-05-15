@@ -182,15 +182,15 @@ static void print_verilog_random_testbench_reset_stimuli(
 
   print_verilog_comment(fp, "----- Begin reset signal generation -----");
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
     /* Bypass non-input atom blocks ! */
-    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) {
       continue;
     }
 
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
@@ -309,7 +309,7 @@ void print_verilog_random_top_testbench(
 
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names =
-    find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+    find_atom_netlist_clock_port_names(atom_ctx.netlist(), netlist_annotation);
 
   /* Start of testbench */
   print_verilog_top_random_testbench_ports(

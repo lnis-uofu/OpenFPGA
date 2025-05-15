@@ -12,6 +12,7 @@
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_reserved_words.h"
 #include "pb_type_utils.h"
+#include "physical_types_util.h"
 #include "sdc_hierarchy_writer.h"
 #include "sdc_writer_naming.h"
 

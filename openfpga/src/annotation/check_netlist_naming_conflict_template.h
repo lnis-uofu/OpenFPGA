@@ -9,6 +9,7 @@
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "vtr_time.h"
+#include "globals.h"
 
 /********************************************************************
  * Function declaration
@@ -39,7 +40,7 @@ int check_netlist_naming_conflict_template(T& openfpga_context,
    * the syntax */
   if (false == cmd_context.option_enable(cmd, opt_fix)) {
     size_t num_conflicts =
-      detect_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars);
+      detect_netlist_naming_conflict(g_vpr_ctx.atom().netlist(), sensitive_chars);
     VTR_LOGV_ERROR(
       (0 < num_conflicts && (false == cmd_context.option_enable(cmd, opt_fix))),
       "Found %ld naming conflicts in the netlist. Please correct so as to use "
@@ -61,13 +62,13 @@ int check_netlist_naming_conflict_template(T& openfpga_context,
   /* If the auto correction is enabled, we apply a fix */
   if (true == cmd_context.option_enable(cmd, opt_fix)) {
     fix_netlist_naming_conflict(
-      g_vpr_ctx.atom().nlist, sensitive_chars, fix_chars,
+      g_vpr_ctx.atom().netlist(), sensitive_chars, fix_chars,
       openfpga_context.mutable_vpr_netlist_annotation());
 
     CommandOptionId opt_report = cmd.option("report");
     if (true == cmd_context.option_enable(cmd, opt_report)) {
       print_netlist_naming_fix_report(
-        cmd_context.option_value(cmd, opt_report), g_vpr_ctx.atom().nlist,
+        cmd_context.option_value(cmd, opt_report), g_vpr_ctx.atom().netlist(),
         openfpga_context.vpr_netlist_annotation());
       VTR_LOG("Naming fix-up report is generated to file '%s'\n",
               cmd_context.option_value(cmd, opt_report).c_str());

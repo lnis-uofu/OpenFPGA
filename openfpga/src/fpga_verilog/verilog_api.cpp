@@ -189,7 +189,7 @@ int fpga_verilog_full_testbench(
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
-  std::string netlist_name = atom_ctx.nlist.netlist_name();
+  std::string netlist_name = atom_ctx.netlist().netlist_name();
 
   int status = CMD_EXEC_SUCCESS;
 
@@ -237,7 +237,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
-  std::string netlist_name = atom_ctx.nlist.netlist_name();
+  std::string netlist_name = atom_ctx.netlist().netlist_name();
 
   int status = CMD_EXEC_SUCCESS;
 
@@ -307,7 +307,7 @@ int fpga_verilog_testbench_io_connection(
     format_dir_path(find_path_dir_name(options.output_directory()));
   std::string testbench_file_path = options.output_directory();
 
-  std::string netlist_name = atom_ctx.nlist.netlist_name();
+  std::string netlist_name = atom_ctx.netlist().netlist_name();
 
   int status = CMD_EXEC_SUCCESS;
 
@@ -341,7 +341,7 @@ int fpga_verilog_mock_fpga_wrapper(
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
-  std::string netlist_name = atom_ctx.nlist.netlist_name();
+  std::string netlist_name = atom_ctx.netlist().netlist_name();
 
   int status = CMD_EXEC_SUCCESS;
 
@@ -399,7 +399,7 @@ int fpga_verilog_preconfigured_testbench(
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
-  std::string netlist_name = atom_ctx.nlist.netlist_name();
+  std::string netlist_name = atom_ctx.netlist().netlist_name();
 
   int status = CMD_EXEC_SUCCESS;
 
@@ -440,7 +440,7 @@ int fpga_verilog_simulation_task_info(
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
-  std::string netlist_name = atom_ctx.nlist.netlist_name();
+  std::string netlist_name = atom_ctx.netlist().netlist_name();
 
   int status = CMD_EXEC_SUCCESS;
 

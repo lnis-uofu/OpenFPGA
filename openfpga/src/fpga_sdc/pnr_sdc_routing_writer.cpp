@@ -75,7 +75,7 @@ static void print_pnr_sdc_constrain_sb_mux_timing(
   for (const RREdgeId& edge :
        rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
-    const RRSwitchId& driver_switch = rr_graph.edge_switch(edge);
+    const RRSwitchId& driver_switch = RRSwitchId(rr_graph.edge_switch(edge));
     switch_delays[module_input_ports[edge_counter]] =
       find_pnr_sdc_switch_tmax(rr_graph.rr_switch_inf(driver_switch));
     edge_counter++;
@@ -327,7 +327,7 @@ static void print_pnr_sdc_constrain_cb_mux_timing(
   for (const RREdgeId& edge :
        rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
-    const RRSwitchId& driver_switch = rr_graph.edge_switch(edge);
+    const RRSwitchId& driver_switch = RRSwitchId(rr_graph.edge_switch(edge));
     switch_delays[module_input_ports[edge_counter]] =
       find_pnr_sdc_switch_tmax(rr_graph.rr_switch_inf(driver_switch));
     edge_counter++;

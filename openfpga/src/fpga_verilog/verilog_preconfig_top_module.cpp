@@ -54,14 +54,14 @@ static void print_verilog_preconfig_top_module_ports(
   std::vector<bool> port_big_endian;
 
   /* Print all the I/Os of the circuit implementation to be tested*/
-  for (const AtomBlockId &atom_blk : atom_ctx.nlist.blocks()) {
+  for (const AtomBlockId &atom_blk : atom_ctx.netlist().blocks()) {
     /* We only care I/O logical blocks !*/
-    if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-        (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+    if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+        (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
       continue;
     }
 
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    std::string block_name = atom_ctx.netlist().block_name(atom_blk);
     /* The block may be renamed as it contains special characters which violate
      * Verilog syntax */
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
@@ -77,7 +77,7 @@ static void print_verilog_preconfig_top_module_ports(
       std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
     output_port_prefix_to_remove.push_back(
       std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
-    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::OUTPAD == atom_ctx.netlist().block_type(atom_blk)) {
       for (const std::string &prefix_to_remove : output_port_prefix_to_remove) {
         if (!prefix_to_remove.empty()) {
           if (0 == block_name.find(prefix_to_remove)) {
@@ -100,7 +100,7 @@ static void print_verilog_preconfig_top_module_ports(
       if (port_list.end() == std::find(port_list.begin(), port_list.end(),
                                        bus_group.bus_port(bus_id))) {
         port_list.push_back(bus_group.bus_port(bus_id));
-        port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+        port_types.push_back(atom_ctx.netlist().block_type(atom_blk));
         port_big_endian.push_back(bus_group.is_big_endian(bus_id));
       }
       continue;
@@ -109,7 +109,7 @@ static void print_verilog_preconfig_top_module_ports(
     /* Both input and output ports have only size of 1 */
     BasicPort module_port(std::string(block_name), 1);
     port_list.push_back(module_port);
-    port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+    port_types.push_back(atom_ctx.netlist().block_type(atom_blk));
     port_big_endian.push_back(true);
   }
 
@@ -448,7 +448,7 @@ int print_verilog_preconfig_top_module(
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names =
-    find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+    find_atom_netlist_clock_port_names(atom_ctx.netlist(), netlist_annotation);
 
   /* Connect FPGA top module global ports to constant or benchmark global
    * signals! */
