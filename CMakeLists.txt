@@ -338,17 +338,17 @@ if (OPENFPGA_WITH_YOSYS)
         )
         # yosys compilation ends
 
-        # yosys-plugins compilation starts
-        if (OPENFPGA_WITH_YOSYS_PLUGIN)
-            add_custom_target(
-                yosys-plugins ALL
-                COMMAND $(MAKE) install_ql-qlf YOSYS_PATH=${CMAKE_CURRENT_BINARY_DIR}/yosys EXTRA_FLAGS="-DPASS_NAME=synth_ql"
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
-                DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
-                COMMENT "Compile Yosys-plugins with given Makefile"
-            )
-            add_dependencies(yosys-plugins yosys)
-        endif()
+        ## yosys-plugins compilation starts
+        #if (OPENFPGA_WITH_YOSYS_PLUGIN)
+        #    add_custom_target(
+        #        yosys-plugins ALL
+        #        COMMAND $(MAKE) install_ql-qlf YOSYS_PATH=${CMAKE_CURRENT_BINARY_DIR}/yosys EXTRA_FLAGS="-DPASS_NAME=synth_ql"
+        #        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
+        #        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
+        #        COMMENT "Compile Yosys-plugins with given Makefile"
+        #    )
+        #    add_dependencies(yosys-plugins yosys)
+        #endif()
     endif()
 endif()
 

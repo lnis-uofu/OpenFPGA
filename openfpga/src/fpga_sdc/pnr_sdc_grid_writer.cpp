@@ -27,6 +27,7 @@
 #include "openfpga_side_manager.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
+#include "physical_types_util.h"
 #include "pnr_sdc_grid_writer.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"

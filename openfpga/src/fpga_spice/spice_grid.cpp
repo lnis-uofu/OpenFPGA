@@ -13,6 +13,7 @@
 
 /* Headers from readarch library */
 #include "physical_types.h"
+#include "physical_types_util.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"

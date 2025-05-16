@@ -152,7 +152,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
                                         const bool& verbose) {
   std::string timer_message =
     std::string("\nBuild fabric-independent bitstream for implementation '") +
-    vpr_ctx.atom().nlist.netlist_name() + std::string("'\n");
+    vpr_ctx.atom().netlist().netlist_name() + std::string("'\n");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Bitstream manager to be built */

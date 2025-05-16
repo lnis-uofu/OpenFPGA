@@ -128,18 +128,19 @@ void print_verilog_simulation_info(
     for (const BasicPort& module_io_port : module_manager.module_ports_by_type(
            top_module, ModuleManager::MODULE_GPIO_PORT)) {
       std::string io_direction(module_io_port.get_width(), '1');
-      for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+      for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
         /* Bypass non-I/O atom blocks ! */
-        if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-            (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+        if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+            (AtomBlockType::OUTPAD !=
+             atom_ctx.netlist().block_type(atom_blk))) {
           continue;
         }
 
         /* Find the index of the mapped GPIO in top-level FPGA fabric */
         size_t io_index = io_location_map.io_index(
-          place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-          place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-          place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)]
+          place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
+          place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
+          place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)]
             .loc.sub_tile,
           module_io_port.get_name());
 
@@ -147,11 +148,11 @@ void print_verilog_simulation_info(
           continue;
         }
 
-        if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+        if (AtomBlockType::INPAD == atom_ctx.netlist().block_type(atom_blk)) {
           io_direction[io_index] = '1';
         } else {
           VTR_ASSERT(AtomBlockType::OUTPAD ==
-                     atom_ctx.nlist.block_type(atom_blk));
+                     atom_ctx.netlist().block_type(atom_blk));
           io_direction[io_index] = '0';
         }
 

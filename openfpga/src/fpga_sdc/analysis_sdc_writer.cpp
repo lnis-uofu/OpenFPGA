@@ -95,17 +95,18 @@ static void print_analysis_sdc_io_delays(
 
     /* Find clock ports in benchmark */
     std::vector<std::string> benchmark_clock_port_names =
-      find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+      find_atom_netlist_clock_port_names(atom_ctx.netlist(),
+                                         netlist_annotation);
 
     /* Print comments */
     fp << "##################################################" << std::endl;
     fp << "# Create input and output delays for used I/Os    " << std::endl;
     fp << "##################################################" << std::endl;
 
-    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
       /* Bypass non-I/O atom blocks ! */
-      if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
-          (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
+      if ((AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) &&
+          (AtomBlockType::OUTPAD != atom_ctx.netlist().block_type(atom_blk))) {
         continue;
       }
 
@@ -114,15 +115,16 @@ static void print_analysis_sdc_io_delays(
       if (benchmark_clock_port_names.end() !=
           std::find(benchmark_clock_port_names.begin(),
                     benchmark_clock_port_names.end(),
-                    atom_ctx.nlist.block_name(atom_blk))) {
+                    atom_ctx.netlist().block_name(atom_blk))) {
         continue;
       }
 
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
       size_t io_index = io_location_map.io_index(
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-        place_ctx.block_locs()[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.x,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)].loc.y,
+        place_ctx.block_locs()[atom_ctx.lookup().atom_clb(atom_blk)]
+          .loc.sub_tile,
         module_io_port.get_name());
 
       if (size_t(-1) == io_index) {
@@ -139,13 +141,13 @@ static void print_analysis_sdc_io_delays(
        * operating clock For output I/O, we set an output delay constraint
        * correlated to the operating clock
        */
-      if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      if (AtomBlockType::INPAD == atom_ctx.netlist().block_type(atom_blk)) {
         print_sdc_set_port_input_delay(fp, module_mapped_io_port,
                                        operating_clock_ports[0],
                                        critical_path_delay / time_unit);
       } else {
         VTR_ASSERT(AtomBlockType::OUTPAD ==
-                   atom_ctx.nlist.block_type(atom_blk));
+                   atom_ctx.netlist().block_type(atom_blk));
         print_sdc_set_port_output_delay(fp, module_mapped_io_port,
                                         operating_clock_ports[0],
                                         critical_path_delay / time_unit);
@@ -231,7 +233,7 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(
     option.sdc_dir() +
-    generate_analysis_sdc_file_name(vpr_ctx.atom().nlist.netlist_name(),
+    generate_analysis_sdc_file_name(vpr_ctx.atom().netlist().netlist_name(),
                                     std::string(SDC_ANALYSIS_FILE_NAME)));
 
   std::string timer_message =

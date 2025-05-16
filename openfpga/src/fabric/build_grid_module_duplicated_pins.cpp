@@ -19,6 +19,7 @@
 #include "openfpga_interconnect_types.h"
 #include "openfpga_naming.h"
 #include "openfpga_physical_tile_utils.h"
+#include "physical_types_util.h"
 #include "vpr_utils.h"
 
 /* begin namespace openfpga */

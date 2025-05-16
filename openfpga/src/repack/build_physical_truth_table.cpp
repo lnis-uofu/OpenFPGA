@@ -61,16 +61,16 @@ static std::vector<int> generate_lut_rotated_input_pin_map(
 
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
-      AtomPortId atom_port = atom_ctx.nlist.find_atom_port(
+      AtomPortId atom_port = atom_ctx.netlist().find_atom_port(
         atom_blk, lut_pb_type_in_port->model_port);
       if (!atom_port) {
         continue;
       }
 
-      for (AtomPinId atom_pin : atom_ctx.nlist.port_pins(atom_port)) {
-        AtomNetId atom_pin_net = atom_ctx.nlist.pin_net(atom_pin);
+      for (AtomPinId atom_pin : atom_ctx.netlist().port_pins(atom_port)) {
+        AtomNetId atom_pin_net = atom_ctx.netlist().pin_net(atom_pin);
         if (atom_pin_net == input_nets[ipin]) {
-          rotated_pin_map[ipin] = atom_ctx.nlist.pin_port_bit(atom_pin);
+          rotated_pin_map[ipin] = atom_ctx.netlist().pin_port_bit(atom_pin);
           break;
         }
       }
@@ -143,12 +143,12 @@ static void build_physical_pb_lut_truth_tables(
             } else {
               VTR_ASSERT(AtomNetId::INVALID() != input_net);
               VTR_LOGV(verbose, "\t%s\n",
-                       atom_ctx.nlist.net_name(input_net).c_str());
+                       atom_ctx.netlist().net_name(input_net).c_str());
             }
           }
           VTR_LOGV(verbose, "Output nets:\n");
           VTR_LOGV(verbose, "\t%s\n",
-                   atom_ctx.nlist.net_name(output_net).c_str());
+                   atom_ctx.netlist().net_name(output_net).c_str());
         }
         VTR_ASSERT(true == is_wired_lut(input_nets, output_net));
         adapt_tt = build_wired_lut_truth_table(
@@ -158,10 +158,10 @@ static void build_physical_pb_lut_truth_tables(
       } else {
         /* Find the truth table from atom block which drives the atom net */
         const AtomBlockId& atom_blk =
-          atom_ctx.nlist.net_driver_block(output_net);
-        VTR_ASSERT(true == atom_ctx.nlist.valid_block_id(atom_blk));
+          atom_ctx.netlist().net_driver_block(output_net);
+        VTR_ASSERT(true == atom_ctx.netlist().valid_block_id(atom_blk));
         const AtomNetlist::TruthTable& orig_tt =
-          atom_ctx.nlist.block_truth_table(atom_blk);
+          atom_ctx.netlist().block_truth_table(atom_blk);
 
         std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(
           input_nets, atom_ctx, atom_blk, device_annotation, circuit_lib,
@@ -200,14 +200,14 @@ static void build_physical_pb_lut_truth_tables(
           VTR_LOGV(verbose, "unconn  ");
         } else {
           VTR_ASSERT(AtomNetId::INVALID() != net);
-          VTR_LOGV(verbose, "%s  ", atom_ctx.nlist.net_name(net).c_str());
+          VTR_LOGV(verbose, "%s  ", atom_ctx.netlist().net_name(net).c_str());
         }
       }
       VTR_LOGV(verbose, "\n");
 
       VTR_ASSERT(AtomNetId::INVALID() != output_net);
       VTR_LOGV(verbose, "Output net: %s\n",
-               atom_ctx.nlist.net_name(output_net).c_str());
+               atom_ctx.netlist().net_name(output_net).c_str());
 
       VTR_LOGV(verbose, "Truth table before adaption to fracturable LUT'\n");
       for (const std::string& tt_line : truth_table_to_string(adapt_tt)) {

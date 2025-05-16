@@ -504,8 +504,8 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
         AtomPinId atom_pin = lb_net_atom_sink_pins_[ilb_net][iterm];
         VTR_ASSERT(atom_pin);
 
-        const t_pb_graph_pin* pb_graph_pin =
-          find_pb_graph_pin(atom_ctx.nlist, atom_ctx.lookup, atom_pin);
+        const t_pb_graph_pin* pb_graph_pin = find_pb_graph_pin(
+          atom_ctx.netlist(), atom_ctx.lookup().atom_pb_bimap(), atom_pin);
         VTR_ASSERT(pb_graph_pin);
 
         if (pb_graph_pin->port->equivalent == PortEquivalence::NONE)
@@ -521,7 +521,7 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
           "Remapping intra lb net %d (atom net %zu '%s') from common sink "
           "pb_route %d to fixed pin pb_route %d\n",
           size_t(ilb_net), size_t(lb_net_atom_net_ids_[ilb_net]),
-          atom_ctx.nlist.net_name(lb_net_atom_net_ids_[ilb_net]).c_str(),
+          atom_ctx.netlist().net_name(lb_net_atom_net_ids_[ilb_net]).c_str(),
           kv.first, size_t(pin_index));
 
         VTR_ASSERT(

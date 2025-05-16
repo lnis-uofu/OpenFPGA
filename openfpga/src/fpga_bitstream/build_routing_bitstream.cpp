@@ -63,8 +63,8 @@ static void build_switch_block_mux_bitstream(
   VTR_LOGV(verbose, "Prev node '%lu' for src_node '%lu'\n",
            size_t(routing_annotation.rr_node_prev_node(cur_rr_node)),
            size_t(cur_rr_node));
-  AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
-  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
+  AtomNetId output_atom_net = atom_ctx.lookup().atom_net(output_net);
+  if (true == atom_ctx.netlist().valid_net_id(output_atom_net)) {
     /* We must have a valid previous node that is supposed to drive the source
      * node! */
     VTR_ASSERT(routing_annotation.rr_node_prev_node(cur_rr_node));
@@ -129,9 +129,9 @@ static void build_switch_block_mux_bitstream(
     if (true == need_splitter) {
       input_net_ids += std::string(" ");
     }
-    AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
-    if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
-      input_net_ids += atom_ctx.nlist.net_name(input_atom_net);
+    AtomNetId input_atom_net = atom_ctx.lookup().atom_net(input_net);
+    if (true == atom_ctx.netlist().valid_net_id(input_atom_net)) {
+      input_net_ids += atom_ctx.netlist().net_name(input_atom_net);
     } else {
       input_net_ids += std::string("unmapped");
     }
@@ -141,8 +141,8 @@ static void build_switch_block_mux_bitstream(
 
   /* Add output nets */
   std::string output_net_ids;
-  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
-    output_net_ids += atom_ctx.nlist.net_name(output_atom_net);
+  if (true == atom_ctx.netlist().valid_net_id(output_atom_net)) {
+    output_net_ids += atom_ctx.netlist().net_name(output_atom_net);
   } else {
     output_net_ids += std::string("unmapped");
   }
@@ -346,9 +346,9 @@ static void build_connection_block_mux_bitstream(
     if (true == need_splitter) {
       input_net_ids += std::string(" ");
     }
-    AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
-    if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
-      input_net_ids += atom_ctx.nlist.net_name(input_atom_net);
+    AtomNetId input_atom_net = atom_ctx.lookup().atom_net(input_net);
+    if (true == atom_ctx.netlist().valid_net_id(input_atom_net)) {
+      input_net_ids += atom_ctx.netlist().net_name(input_atom_net);
     } else {
       input_net_ids += std::string("unmapped");
     }
@@ -358,9 +358,9 @@ static void build_connection_block_mux_bitstream(
 
   /* Add output nets */
   std::string output_net_ids;
-  AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
-  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
-    output_net_ids += atom_ctx.nlist.net_name(output_atom_net);
+  AtomNetId output_atom_net = atom_ctx.lookup().atom_net(output_net);
+  if (true == atom_ctx.netlist().valid_net_id(output_atom_net)) {
+    output_net_ids += atom_ctx.netlist().net_name(output_atom_net);
   } else {
     output_net_ids += std::string("unmapped");
   }

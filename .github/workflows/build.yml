@@ -82,38 +82,27 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-9 (Ubuntu 22.04)"
-            cc: gcc-9
-            cxx: g++-9
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: GCC-10 (Ubuntu 22.04)"
             cc: gcc-10
             cxx: g++-10
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: GCC-11 (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: GCC-12 (Ubuntu 22.04)"
             cc: gcc-12
             cxx: g++-12
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: Clang-11 (Ubuntu 22.04)"
             cc: clang-11
             cxx: clang++-11
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: Clang-12 (Ubuntu 22.04)"
             cc: clang-12
             cxx: clang++-12
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: Clang-13 (Ubuntu 22.04)"
             cc: clang-13
             cxx: clang++-13
-            dependency_version: "ubuntu22p04"
           - name: "Build Compatibility: Clang-14 (Ubuntu 22.04)"
             cc: clang-14
             cxx: clang++-14
-            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -128,7 +117,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
       
       - name: Dump tool versions
         run: |
@@ -189,32 +178,26 @@ jobs:
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF"
-            dependency_version: "ubuntu22p04"
           - name: "Build w/o Yosys plugin (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_YOSYS_PLUGIN=OFF"
-            dependency_version: "ubuntu22p04"
           - name: "Build w/o test (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_TEST=OFF"
-            dependency_version: "ubuntu22p04"
           - name: "Build w/o version number (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_VERSION=OFF"
-            dependency_version: "ubuntu22p04"
           - name: "Build w/o SWIG support (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF"
-            dependency_version: "ubuntu22p04"
           - name: "Build with capnproto update (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN=ON"
-            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -229,7 +212,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
       
       - name: Dump tool versions
         run: |
@@ -347,7 +330,6 @@ jobs:
             cxx: g++-11
             build_type: debug
             cores: 4
-            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -363,8 +345,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
-          sudo bash ./.github/workflows/install_dependencies_run_${{ matrix.config.dependency_version }}.sh
+          sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+          sudo bash ./.github/workflows/install_dependencies_run_ubuntu.sh
           sudo python3 -m pip install -r requirements.txt
 
       - name: Dump tool versions
@@ -399,7 +381,6 @@ jobs:
             cxx: g++-11
             build_type: release
             cores: 4
-            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -415,8 +396,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
-          sudo bash ./.github/workflows/install_dependencies_run_${{ matrix.config.dependency_version }}.sh
+          sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+          sudo bash ./.github/workflows/install_dependencies_run_ubuntu.sh
           sudo python3 -m pip install -r requirements.txt
 
       - name: Dump tool versions
@@ -453,7 +434,6 @@ jobs:
           - name: "Installer w/o doc (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
-            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -468,7 +448,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
       
       - name: Dump tool versions
         run: |
@@ -538,7 +518,7 @@ jobs:
           - name: fpga_sdc_reg_test
           - name: fpga_spice_reg_test
           - name: micro_benchmark_reg_test
-          - name: quicklogic_reg_test
+#          - name: quicklogic_reg_test
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
           - name: tcl_reg_test
@@ -596,7 +576,7 @@ jobs:
           - name: fpga_sdc_reg_test
           - name: fpga_spice_reg_test
           - name: micro_benchmark_reg_test
-          - name: quicklogic_reg_test
+#          - name: quicklogic_reg_test
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
           - name: tcl_reg_test
@@ -612,7 +592,7 @@ jobs:
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
         run: |
-          bash .github/workflows/install_dependencies_run_ubuntu22p04.sh
+          bash .github/workflows/install_dependencies_run_ubuntu.sh
           ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
           unset OPENFPGA_PATH

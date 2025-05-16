@@ -24,6 +24,7 @@
 #include "openfpga_reserved_words.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
+#include "physical_types_util.h"
 #include "vpr_utils.h"
 
 /* begin namespace openfpga */
@@ -342,8 +343,8 @@ static void build_physical_block_pin_interc_bitstream(
         if (true == need_splitter) {
           input_net_ids += std::string(" ");
         }
-        if (true == atom_ctx.nlist.valid_net_id(input_net)) {
-          input_net_ids += atom_ctx.nlist.net_name(input_net);
+        if (true == atom_ctx.netlist().valid_net_id(input_net)) {
+          input_net_ids += atom_ctx.netlist().net_name(input_net);
         } else {
           input_net_ids += std::string("unmapped");
         }
@@ -353,8 +354,8 @@ static void build_physical_block_pin_interc_bitstream(
 
       /* Add output nets */
       std::string output_net_ids;
-      if (true == atom_ctx.nlist.valid_net_id(output_net)) {
-        output_net_ids += atom_ctx.nlist.net_name(output_net);
+      if (true == atom_ctx.netlist().valid_net_id(output_net)) {
+        output_net_ids += atom_ctx.netlist().net_name(output_net);
       } else {
         output_net_ids += std::string("unmapped");
       }

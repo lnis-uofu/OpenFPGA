@@ -37,10 +37,11 @@ static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
   bool found_pb = false;
   if (true == is_primitive_pb_type(pb_type)) {
     if (target_pb_type == pb_type) {
-      AtomBlockId atom_blk = atom_ctx.nlist.find_block(op_pb->name);
+      AtomBlockId atom_blk = atom_ctx.netlist().find_block(op_pb->name);
       VTR_ASSERT(atom_blk);
       if (setting.type == "param") {
-        for (const auto& param_search : atom_ctx.nlist.block_params(atom_blk)) {
+        for (const auto& param_search :
+             atom_ctx.netlist().block_params(atom_blk)) {
           std::string param = param_search.first;
           std::string content = param_search.second;
           if (setting.content == param) {
@@ -50,7 +51,8 @@ static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
         }
       } else {
         VTR_ASSERT(setting.type == "attr");
-        for (const auto& attr_search : atom_ctx.nlist.block_attrs(atom_blk)) {
+        for (const auto& attr_search :
+             atom_ctx.netlist().block_attrs(atom_blk)) {
           std::string attr = attr_search.first;
           std::string content = attr_search.second;
           if (setting.content == attr) {
@@ -219,7 +221,7 @@ void extract_device_non_fabric_bitstream(const VprContext& vpr_ctx,
                                          const bool& verbose) {
   std::string timer_message =
     std::string("\nBuild non-fabric bitstream for implementation '") +
-    vpr_ctx.atom().nlist.netlist_name() + std::string("'\n");
+    vpr_ctx.atom().netlist().netlist_name() + std::string("'\n");
   vtr::ScopedStartFinishTimer timer(timer_message);
   const openfpga::BitstreamSetting& bitstream_setting =
     openfpga_ctx.bitstream_setting();

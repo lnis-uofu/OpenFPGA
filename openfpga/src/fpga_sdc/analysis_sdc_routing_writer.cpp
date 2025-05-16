@@ -150,7 +150,7 @@ static void print_analysis_sdc_disable_cb_unused_resources(
         get_rr_graph_single_node_side(rr_graph, ipin_node), inode,
         std::string(""));
       mux_instance_to_net_map[mux_instance_name] =
-        atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(ipin_node));
+        atom_ctx.lookup().atom_net(routing_annotation.rr_node_net(ipin_node));
 
       if (false == is_rr_node_to_be_disable_for_analysis(routing_annotation,
                                                          ipin_node)) {
@@ -226,7 +226,7 @@ static void print_analysis_sdc_disable_cb_unused_resources(
                module_manager.valid_module_port_id(cb_module, module_port));
 
     AtomNetId mapped_atom_net =
-      atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node));
+      atom_ctx.lookup().atom_net(routing_annotation.rr_node_net(chan_node));
 
     disable_analysis_module_input_pin_net_sinks(
       fp, module_manager, cb_module, cb_instance_name, module_port, itrack / 2,
@@ -375,7 +375,7 @@ static void print_analysis_sdc_disable_sb_unused_resources(
           SWITCH_BLOCK_MUX_INSTANCE_PREFIX, side_manager.get_side(), itrack,
           std::string(""));
         mux_instance_to_net_map[mux_instance_name] =
-          atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node));
+          atom_ctx.lookup().atom_net(routing_annotation.rr_node_net(chan_node));
       }
 
       /* Check if this node is used by benchmark  */
@@ -502,7 +502,7 @@ static void print_analysis_sdc_disable_sb_unused_resources(
                  module_manager.valid_module_port_id(sb_module, module_port));
 
       AtomNetId mapped_atom_net =
-        atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(opin_node));
+        atom_ctx.lookup().atom_net(routing_annotation.rr_node_net(opin_node));
 
       disable_analysis_module_input_port_net_sinks(
         fp, module_manager, sb_module, sb_instance_name, module_port,
@@ -550,7 +550,7 @@ static void print_analysis_sdc_disable_sb_unused_resources(
                  module_manager.valid_module_port_id(sb_module, module_port));
 
       AtomNetId mapped_atom_net =
-        atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node));
+        atom_ctx.lookup().atom_net(routing_annotation.rr_node_net(chan_node));
 
       disable_analysis_module_input_pin_net_sinks(
         fp, module_manager, sb_module, sb_instance_name, module_port,

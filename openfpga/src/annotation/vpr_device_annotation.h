@@ -17,6 +17,7 @@
 #include "circuit_library.h"
 #include "lb_rr_graph.h"
 #include "openfpga_port.h"
+#include "rr_graph_fwd.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {

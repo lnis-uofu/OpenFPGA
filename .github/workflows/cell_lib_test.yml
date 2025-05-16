@@ -27,11 +27,11 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
-          sudo bash .github/workflows/install_dependencies_run_ubuntu22p04.sh
+          sudo bash .github/workflows/install_dependencies_run_ubuntu.sh
 
       - name: Dump tool versions
         run: |

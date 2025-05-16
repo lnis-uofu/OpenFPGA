@@ -7,6 +7,7 @@
 #include "pugixml_util.hpp"
 #include "serdes_utils.h"
 /* Headers from vtr util library */
+#include "globals.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"

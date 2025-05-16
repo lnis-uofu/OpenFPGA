@@ -9,7 +9,6 @@ apt-get install -y \
     bison \
     ccache \
     cmake \
-    exuberant-ctags \
     curl \
     doxygen \
     flex \
@@ -37,7 +36,6 @@ apt-get install -y \
     python3-setuptools \
     python3-lxml \
     python3-pip \
-    qtbase5-dev \
     tcllib \
     tcl8.6-dev \
     texinfo \
@@ -53,9 +51,31 @@ apt-get install -y \
     gcc-10 \
     g++-11 \
     gcc-11 \
-    clang-11 \
-    clang-12 \
-    clang-13 \
-    clang-14 \
-    clang-format-14 \
     libxml2-utils
+
+# Install Ubuntu 20.04 packages
+if [ "$(lsb_release -rs)" = "20.04" ]; then
+    apt-get install -y \
+        ctags \
+        qt5-default \
+        g++-7 \
+        gcc-7 \
+        g++-8 \
+        gcc-8 \
+        clang-6.0 \
+        clang-7 \
+        clang-8 \
+        clang-10 \
+        clang-format-10 \
+        libssl-dev
+# Install Ubuntu 22.04 packages
+elif [ "$(lsb_release -rs)" = "22.04" ]; then
+    apt-get install -y \
+        exuberant-ctags \
+        qtbase5-dev \
+        clang-11 \
+        clang-12 \
+        clang-13 \
+        clang-14 \
+        clang-format-14
+fi

@@ -25,6 +25,7 @@
 #include "openfpga_reserved_words.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
+#include "physical_types_util.h"
 #include "vpr_utils.h"
 
 /* begin namespace openfpga */

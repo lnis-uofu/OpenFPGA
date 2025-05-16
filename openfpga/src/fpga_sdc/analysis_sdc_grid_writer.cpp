@@ -16,6 +16,7 @@
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "pb_type_utils.h"
+#include "physical_types_util.h"
 #include "sdc_writer_utils.h"
 #include "vpr_utils.h"
 

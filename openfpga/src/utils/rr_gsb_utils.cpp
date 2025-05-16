@@ -146,9 +146,9 @@ static bool is_sb_node_mirror(const RRGraphView& rr_graph,
     }
     /* switch type should be the same  */
     if (device_annotation.rr_switch_circuit_model(
-          rr_graph.edge_switch(src_edge)) !=
+          RRSwitchId(rr_graph.edge_switch(src_edge))) !=
         device_annotation.rr_switch_circuit_model(
-          rr_graph.edge_switch(src_cand_edge))) {
+          RRSwitchId(rr_graph.edge_switch(src_cand_edge)))) {
       return false;
     }
     int src_node_id, des_node_id;
@@ -311,9 +311,9 @@ static bool is_cb_node_mirror(const RRGraphView& rr_graph,
     }
     /* switch type should be the same  */
     if (device_annotation.rr_switch_circuit_model(
-          rr_graph.edge_switch(src_edge)) !=
+          RRSwitchId(rr_graph.edge_switch(src_edge))) !=
         device_annotation.rr_switch_circuit_model(
-          rr_graph.edge_switch(src_cand_edge))) {
+          RRSwitchId(rr_graph.edge_switch(src_cand_edge)))) {
       return false;
     }
 

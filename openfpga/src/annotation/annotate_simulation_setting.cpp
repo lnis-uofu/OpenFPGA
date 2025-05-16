@@ -33,7 +33,7 @@ static float average_atom_net_signal_density(
   size_t net_cnt = 0;
 
   /* get the average density of all the nets */
-  for (const AtomNetId& atom_net : atom_ctx.nlist.nets()) {
+  for (const AtomNetId& atom_net : atom_ctx.netlist().nets()) {
     /* Skip the nets without any activity annotation */
     if (0 == net_activity.count(atom_net)) {
       continue;
@@ -62,7 +62,7 @@ static float average_weighted_atom_net_signal_density(
   size_t weighted_net_cnt = 0;
 
   /* get the average density of all the nets */
-  for (const AtomNetId& atom_net : atom_ctx.nlist.nets()) {
+  for (const AtomNetId& atom_net : atom_ctx.netlist().nets()) {
     /* Skip the nets without any activity annotation */
     if (0 == net_activity.count(atom_net)) {
       continue;
@@ -75,14 +75,15 @@ static float average_weighted_atom_net_signal_density(
 
     /* Consider the weight of fan-out */
     size_t net_weight;
-    if (0 == std::distance(atom_ctx.nlist.net_sinks(atom_net).begin(),
-                           atom_ctx.nlist.net_sinks(atom_net).end())) {
+    if (0 == std::distance(atom_ctx.netlist().net_sinks(atom_net).begin(),
+                           atom_ctx.netlist().net_sinks(atom_net).end())) {
       net_weight = 1;
     } else {
-      VTR_ASSERT(0 < std::distance(atom_ctx.nlist.net_sinks(atom_net).begin(),
-                                   atom_ctx.nlist.net_sinks(atom_net).end()));
-      net_weight = std::distance(atom_ctx.nlist.net_sinks(atom_net).begin(),
-                                 atom_ctx.nlist.net_sinks(atom_net).end());
+      VTR_ASSERT(0 <
+                 std::distance(atom_ctx.netlist().net_sinks(atom_net).begin(),
+                               atom_ctx.netlist().net_sinks(atom_net).end()));
+      net_weight = std::distance(atom_ctx.netlist().net_sinks(atom_net).begin(),
+                                 atom_ctx.netlist().net_sinks(atom_net).end());
     }
     weighted_avg_density += net_activity.at(atom_net).density * net_weight;
     weighted_net_cnt += net_weight;
@@ -102,7 +103,7 @@ static size_t median_atom_net_signal_density(
 
   net_densities.reserve(net_activity.size());
 
-  for (const AtomNetId& atom_net : atom_ctx.nlist.nets()) {
+  for (const AtomNetId& atom_net : atom_ctx.netlist().nets()) {
     /* Skip the nets without any activity annotation */
     if (0 == net_activity.count(atom_net)) {
       continue;
@@ -216,7 +217,7 @@ int annotate_simulation_setting(
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(
-      atom_ctx.nlist, atom_ctx.lookup, net_delay, false);
+      atom_ctx.netlist(), atom_ctx.lookup(), net_delay, false);
     auto timing_info = make_setup_hold_timing_info(analysis_delay_calc,
                                                    e_timing_update_type::FULL);
     timing_info->update();

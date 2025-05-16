@@ -23,6 +23,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_rr_graph_utils.h"
 #include "pb_type_utils.h"
+#include "physical_types_util.h"
 #include "rr_gsb_utils.h"
 #include "vpr_utils.h"
 
