@@ -34,7 +34,8 @@ void build_grid_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose);
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const bool& prefer_unused_mux_input, const bool& verbose);
 
 } /* end namespace openfpga */
 
