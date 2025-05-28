@@ -802,8 +802,8 @@ std::string generate_verilog_port_constant_values(
   /* Must check: the port width matches */
   VTR_ASSERT(const_values.size() == output_port.get_width());
 
-  port_str =
-    generate_verilog_port(VERILOG_PORT_CONKT, output_port, true, little_endian);
+  port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port, false,
+                                   little_endian);
   if (is_register) {
     port_str += " <= ";
   } else {
@@ -881,6 +881,7 @@ void print_verilog_wire_constant_values_bit_blast(
 
   for (size_t ipin : output_port.pins()) {
     BasicPort curr_pin(output_port.get_name(), ipin, ipin);
+    curr_pin.set_origin_port_width(output_port.get_width());
     print_verilog_wire_constant_values(
       fp, curr_pin,
       std::vector<size_t>(curr_pin.get_width(), const_values[ipin]),
