@@ -802,8 +802,8 @@ std::string generate_verilog_port_constant_values(
   /* Must check: the port width matches */
   VTR_ASSERT(const_values.size() == output_port.get_width());
 
-  port_str =
-    generate_verilog_port(VERILOG_PORT_CONKT, output_port, false, little_endian);
+  port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port, false,
+                                   little_endian);
   if (is_register) {
     port_str += " <= ";
   } else {
