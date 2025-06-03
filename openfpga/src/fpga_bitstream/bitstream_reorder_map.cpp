@@ -5,6 +5,7 @@
 #include "bitstream_reorder_map.h"
 
 /* Headers from standard C++ library */
+#include <iostream>
 #include <cmath>
 
 /* Headers from pugi XML library */
@@ -70,6 +71,10 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     }
 }
 
+int BitstreamReorderMap::get_config_bit_num(const std::string& tile_name, const BitstreamReorderBitId& bit_id) const {
+    return tile_bit_maps.at(tile_name).bit_map.at(bit_id);
+}
+
 int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const {
     const auto& region = regions[region_id];
 
@@ -86,7 +91,7 @@ int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& regio
     }
 
     VTR_ASSERT(found_tile);
-    int tile_cbit_num = tile_bit_maps.at(tile_name).bit_map.at(bit_id);
+    int tile_cbit_num = get_config_bit_num(tile_name, bit_id);
     int tile_num_bls = tile_bit_maps.at(tile_name).num_bls;
     int tile_bl_num = tile_cbit_num % tile_num_bls;
     int region_bl_num = num_seen_bls + tile_bl_num;
@@ -94,8 +99,16 @@ int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& regio
     return region_bl_num;
 }
 
-int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_id) const {
-    
+int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const {
+    const auto& region = regions[region_id];
+
+    bool found_tile = false;
+    std::string tile_name = region.tile_types[block_id];
+    int tile_cbit_num = get_config_bit_num(tile_name, bit_id);
+    int tile_num_bls = tile_bit_maps.at(tile_name).num_bls;
+    int region_wl_num = std::floor(static_cast<float>(tile_cbit_num) / tile_num_bls);
+
+    return region_wl_num;
 }
 
 } /* end namespace openfpga */
