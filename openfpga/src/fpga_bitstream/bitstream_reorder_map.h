@@ -13,16 +13,16 @@
 namespace openfpga {
 
 struct bitstream_reorder_region_id_tag;
-struct bitstream_reorder_block_id_tag;
+struct bitstream_reorder_region_block_id_tag;
 struct bitstream_reorder_bit_id_tag;
 
 typedef vtr::StrongId<bitstream_reorder_region_id_tag> BitstreamReorderRegionId;
-typedef vtr::StrongId<bitstream_reorder_block_id_tag> BitstreamReorderBlockId;
+typedef vtr::StrongId<bitstream_reorder_region_block_id_tag> BitstreamReorderRegionBlockId;
 typedef vtr::StrongId<bitstream_reorder_bit_id_tag> BitstreamReorderBitId;
 
 struct bistream_reorder_region {
-    vtr::vector<BitstreamReorderBlockId, std::string> tile_types;
-    vtr::vector<BitstreamReorderBlockId, std::string> tile_aliases;
+    vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
+    vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_aliases;
 };
 
 struct tile_bit_map {
@@ -33,16 +33,43 @@ struct tile_bit_map {
 };
 
 class BitstreamReorderMap {
- public:
-  BitstreamReorderMap();
-  BitstreamReorderMap(const std::string& reorder_map_file);
-  ~BitstreamReorderMap();
+public:
+    BitstreamReorderMap();
+    BitstreamReorderMap(const std::string& reorder_map_file);
+    ~BitstreamReorderMap();
 
-  void init_from_file(const std::string& reorder_map_file);
+    /**
+     * @brief Initialize the bitstream reorder map from a file
+     * @param reorder_map_file The path to the bitstream reorder map file
+     */
+    void init_from_file(const std::string& reorder_map_file);
 
- private:
-  vtr::vector<BitstreamReorderRegionId, bistream_reorder_region> regions;
-  std::unordered_map<std::string, tile_bit_map> tile_bit_maps;
+    /**
+     * @brief Get the config bit number in the tile 
+     * @param tile_name The name of the tile
+     * @param bit_id The bit id
+     */
+    int get_config_bit_num(const std::string& tile_name, const BitstreamReorderBitId& bit_id) const;
+
+    /**
+     * @brief Get the bitline number in the region
+     * @param region_id The id of the region
+     * @param block_id The id of the tile
+     * @param bit_id The bit id
+     */
+    int get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const;
+
+    /**
+     * @brief Get the wordline number in the region
+     * @param region_id The id of the region
+     * @param block_id The id of the tile
+     * @param bit_id The bit id
+     */
+    int get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const;
+
+private:
+    vtr::vector<BitstreamReorderRegionId, bistream_reorder_region> regions;
+    std::unordered_map<std::string, tile_bit_map> tile_bit_maps;
 };
 
 }  // namespace openfpga
