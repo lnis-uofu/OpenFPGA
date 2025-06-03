@@ -4,6 +4,9 @@
 
 #include "bitstream_reorder_map.h"
 
+/* Headers from standard C++ library */
+#include <cmath>
+
 /* Headers from pugi XML library */
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"
@@ -65,6 +68,34 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_int();
         tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_int();
     }
+}
+
+int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const {
+    const auto& region = regions[region_id];
+
+    bool found_tile = false;
+    std::string tile_name;
+    int num_seen_bls = 0;
+    for (const auto& region_tile_id : region.tile_types.keys()) {
+        tile_name = region.tile_types[region_tile_id];
+        if (tile_name == region.tile_types[block_id]) {
+            found_tile = true;
+            break;
+        }
+        num_seen_bls += tile_bit_maps.at(tile_name).num_bls;
+    }
+
+    VTR_ASSERT(found_tile);
+    int tile_cbit_num = tile_bit_maps.at(tile_name).bit_map.at(bit_id);
+    int tile_num_bls = tile_bit_maps.at(tile_name).num_bls;
+    int tile_bl_num = tile_cbit_num % tile_num_bls;
+    int region_bl_num = num_seen_bls + tile_bl_num;
+
+    return region_bl_num;
+}
+
+int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_id) const {
+    
 }
 
 } /* end namespace openfpga */
