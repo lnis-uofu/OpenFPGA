@@ -95,6 +95,18 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     }
 }
 
+size_t BitstreamReorderMap::num_config_bits() const {
+    size_t num_config_bits = 0;
+    
+    for (const auto& region: regions) {
+        for (const auto& tile_type: region.tile_types) {
+            num_config_bits += tile_bit_maps.at(tile_type).num_cbits;
+        }
+    }
+
+    return num_config_bits;
+}
+
 std::vector<BitstreamReorderRegionId> BitstreamReorderMap::get_regions() const {
     return std::vector<BitstreamReorderRegionId>(regions.keys().begin(), regions.keys().end());
 }

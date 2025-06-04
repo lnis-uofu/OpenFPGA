@@ -56,6 +56,11 @@ public:
     void init_from_file(const std::string& reorder_map_file);
 
     /**
+     * @brief Get the number of configuration bits
+     */
+    size_t num_config_bits() const;
+
+    /**
      * @brief Get the regions in the bitstream reorder map
      */
     std::vector<BitstreamReorderRegionId> get_regions() const;
