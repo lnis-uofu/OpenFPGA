@@ -111,6 +111,41 @@ std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegio
     return regions[region_id].tile_types[block_id];
 }
 
+bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const BitstreamReorderBitId& bit_id) const {
+    size_t bit_index = static_cast<size_t>(bit_id);
+
+    int num_seen_bits = 0;
+    bool found_tile = false;
+    BitstreamReorderRegionId found_region_id;
+    BitstreamReorderRegionBlockId found_block_id;
+    BitstreamReorderTileBitId found_tile_bit_id;
+
+    for (const auto& region_id: regions.keys()) {
+        for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
+            const std::string& block_name = regions.at(region_id).tile_types.at(block_region_id);
+            int num_cbits = tile_bit_maps.at(block_name).num_cbits;
+
+            if (bit_index >= num_seen_bits && bit_index < num_seen_bits + num_cbits) {
+                found_tile = true;
+                found_region_id = region_id;
+                found_block_id = block_region_id;
+                found_tile_bit_id = BitstreamReorderTileBitId(static_cast<size_t>(bit_index - num_seen_bits));
+                break;
+            }
+
+            num_seen_bits += num_cbits;
+        }
+
+        if (found_tile) {
+            break;
+        }
+    }
+
+    VTR_ASSERT(found_tile);
+
+    return {found_region_id, found_block_id, found_tile_bit_id};
+}
+
 ConfigBitId BitstreamReorderMap::get_config_bit_num(const std::string& tile_name, const BitstreamReorderTileBitId& bit_id) const {
     return tile_bit_maps.at(tile_name).bit_map.at(bit_id);
 }
@@ -181,38 +216,15 @@ int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& regio
 }
 
 int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
-    size_t bit_index = static_cast<size_t>(bit_id);
+    bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
 
-    int num_seen_bits = 0;
-    bool found_tile = false;
-    BitstreamReorderRegionId found_region_id;
-    BitstreamReorderRegionBlockId found_block_id;
-    BitstreamReorderTileBitId found_tile_bit_id;
+    return get_bl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
+}
 
-    for (const auto& region_id: regions.keys()) {
-        for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
-            const std::string& block_name = regions.at(region_id).tile_types.at(block_region_id);
-            int num_cbits = tile_bit_maps.at(block_name).num_cbits;
+int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_id) const {
+    bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
 
-            if (bit_index >= num_seen_bits && bit_index < num_seen_bits + num_cbits) {
-                found_tile = true;
-                found_region_id = region_id;
-                found_block_id = block_region_id;
-                found_tile_bit_id = BitstreamReorderTileBitId(static_cast<size_t>(bit_index - num_seen_bits));
-                break;
-            }
-
-            num_seen_bits += num_cbits;
-        }
-
-        if (found_tile) {
-            break;
-        }
-    }
-
-    VTR_ASSERT(found_tile);
-
-    return get_bl_from_index(found_region_id, found_block_id, found_tile_bit_id);
+    return get_wl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
 }
 
 } /* end namespace openfpga */

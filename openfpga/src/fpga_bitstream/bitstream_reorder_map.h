@@ -24,6 +24,12 @@ typedef vtr::StrongId<bitstream_reorder_region_block_id_tag> BitstreamReorderReg
 typedef vtr::StrongId<bitstream_reorder_tile_bit_id_tag> BitstreamReorderTileBitId;
 typedef vtr::StrongId<bitstream_reorder_bit_id_tag> BitstreamReorderBitId;
 
+struct bitstream_reorder_tile_bit_info {
+    BitstreamReorderRegionId region_id;
+    BitstreamReorderRegionBlockId block_id;
+    BitstreamReorderTileBitId tile_bit_id;
+};
+
 struct bistream_reorder_region {
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
     vtr::vector<BitstreamReorderRegionBlockId, int> tile_bit_offsets;
@@ -73,6 +79,12 @@ public:
      * @param block_id The id of the tile
      */
     std::string get_block_tile_name(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id) const;
+
+    /**
+     * @brief Get the tile info from the bit index
+     * @param bit_id The bit id
+     */
+    bitstream_reorder_tile_bit_info get_tile_bit_info(const BitstreamReorderBitId& bit_id) const;
 
     /**
      * @brief Get the config bit number in the tile 
