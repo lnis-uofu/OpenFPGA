@@ -143,13 +143,33 @@ int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& regio
 int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const {
     const auto& region = regions[region_id];
 
-    bool found_tile = false;
-    std::string tile_name = region.tile_types[block_id];
-    int tile_cbit_num = static_cast<int>(size_t(bit_id));
-    int tile_num_bls = tile_bit_maps.at(tile_name).num_bls;
-    int region_wl_num = std::floor(static_cast<float>(tile_cbit_num) / tile_num_bls);
+    /*
+    * To find the wordline (WL) corresponding to a given bit_id within a specific region and block:
+    * 1. Calculate the local WL index within the current tile.
+    * 2. Calculate the number of WLs in the tiles before the target tile (in the same column as the target tile)
+    * 3. Add the offset to the local WL to obtain the final WL index.
+    */
+    int num_seen_wls = 0;
+    std::string tile_alias_name = get_block_alias(region_id, block_id);
+    auto [target_tile_x, target_tile_y] = extract_tile_indices(tile_alias_name);
 
-    return region_wl_num;
+    // Calculate the number of WLs in the tiles before the target tile
+    for (const auto& region_tile_id : region.tile_types.keys()) {
+        tile_alias_name = get_block_alias(region_id, region_tile_id);
+        auto [curr_tile_x, curr_tile_y] = extract_tile_indices(tile_alias_name);
+
+        if (curr_tile_x == target_tile_x && curr_tile_y < target_tile_y) {
+            num_seen_wls += tile_bit_maps.at(region.tile_types[region_tile_id]).num_wls;
+        }
+    }
+
+    // Calculate the local WL index within the current tile 
+    int tile_cbit_num = static_cast<int>(size_t(bit_id));
+    int tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
+    int tile_wl_num = std::floor(static_cast<float>(tile_cbit_num) / tile_num_bls);
+
+    /* Return the final WL index */
+    return num_seen_wls + tile_wl_num;
 }
 
 } /* end namespace openfpga */
