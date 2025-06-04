@@ -107,6 +107,33 @@ size_t BitstreamReorderMap::num_config_bits() const {
     return num_config_bits;
 }
 
+size_t BitstreamReorderMap::get_bl_address_size() const {
+    size_t bl_address_size = 0;
+
+    for (const auto& region: regions) {
+        size_t region_bl_address_size = 0;
+        for (const auto& tile_type: region.tile_types) {
+            auto [tile_x, tile_y] = extract_tile_indices(tile_type);
+            if (tile_y == 0) {
+                region_bl_address_size += tile_bit_maps.at(tile_type).num_bls;
+            }
+        }
+        bl_address_size = std::max(bl_address_size, region_bl_address_size);
+    }
+
+    return bl_address_size;
+}
+
+size_t BitstreamReorderMap::get_wl_address_size() const {
+    size_t wl_address_size = 0;
+
+    for (const auto& region: regions) {
+        wl_address_size += region.num_wls;
+    }
+
+    return wl_address_size;
+}
+
 std::vector<BitstreamReorderRegionId> BitstreamReorderMap::get_regions() const {
     return std::vector<BitstreamReorderRegionId>(regions.keys().begin(), regions.keys().end());
 }

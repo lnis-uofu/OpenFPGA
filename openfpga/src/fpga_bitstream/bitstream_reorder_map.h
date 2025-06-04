@@ -34,6 +34,7 @@ struct bistream_reorder_region {
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
     vtr::vector<BitstreamReorderRegionBlockId, int> tile_bit_offsets;
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_aliases;
+    size_t num_wls;
 };
 
 struct tile_bit_map {
@@ -59,6 +60,16 @@ public:
      * @brief Get the number of configuration bits
      */
     size_t num_config_bits() const;
+
+    /**
+     * @brief Get the size of the bitline address
+     */
+    size_t get_bl_address_size() const;
+
+    /**
+     * @brief Get the size of the wordline address
+     */
+    size_t get_wl_address_size() const;
 
     /**
      * @brief Get the regions in the bitstream reorder map
