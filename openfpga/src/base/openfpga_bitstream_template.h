@@ -7,6 +7,7 @@
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
+#include "bitstream_reorder_map.h"
 #include "build_io_mapping_info.h"
 #include "command.h"
 #include "command_context.h"
@@ -173,6 +174,42 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   }
 
   return status;
+}
+
+/********************************************************************
+ * A wrapper function to call the reorder_bitstream() in FPGA bitstream
+ *******************************************************************/
+template <class T>
+int reorder_bitstream_template(const T& openfpga_ctx, const Command& cmd,
+                               const CommandContext& cmd_context) {
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_reorder_map = cmd.option("reorder_map");
+  CommandOptionId opt_data_width = cmd.option("data_width");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Reorder bitstream if required */
+  int status = CMD_EXEC_SUCCESS;
+
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path =
+    find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Read the bitstream reorder map */
+  BitstreamReorderMap bitstream_reorder_map(cmd_context.option_value(cmd, opt_reorder_map));
+
+  /* Build fabric bitstream here */
+  openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream_with_reorder(
+    openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
+    openfpga_ctx.module_name_map(), openfpga_ctx.arch().circuit_lib,
+    openfpga_ctx.arch().config_protocol, bitstream_reorder_map,
+    cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 }
 
 /********************************************************************
