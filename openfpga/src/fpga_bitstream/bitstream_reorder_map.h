@@ -16,10 +16,12 @@ namespace openfpga {
 
 struct bitstream_reorder_region_id_tag;
 struct bitstream_reorder_region_block_id_tag;
+struct bitstream_reorder_tile_bit_id_tag;
 struct bitstream_reorder_bit_id_tag;
 
 typedef vtr::StrongId<bitstream_reorder_region_id_tag> BitstreamReorderRegionId;
 typedef vtr::StrongId<bitstream_reorder_region_block_id_tag> BitstreamReorderRegionBlockId;
+typedef vtr::StrongId<bitstream_reorder_tile_bit_id_tag> BitstreamReorderTileBitId;
 typedef vtr::StrongId<bitstream_reorder_bit_id_tag> BitstreamReorderBitId;
 
 struct bistream_reorder_region {
@@ -29,7 +31,7 @@ struct bistream_reorder_region {
 };
 
 struct tile_bit_map {
-    vtr::vector<BitstreamReorderBitId, ConfigBitId> bit_map;
+    vtr::vector<BitstreamReorderTileBitId, ConfigBitId> bit_map;
     int num_cbits;
     int num_bls;
     int num_wls;
@@ -77,7 +79,7 @@ public:
      * @param tile_name The name of the tile
      * @param bit_id The bit id
      */
-    ConfigBitId get_config_bit_num(const std::string& tile_name, const BitstreamReorderBitId& bit_id) const;
+    ConfigBitId get_config_bit_num(const std::string& tile_name, const BitstreamReorderTileBitId& bit_id) const;
 
     /**
      * @brief Get the bitline number in the region
@@ -85,7 +87,7 @@ public:
      * @param block_id The id of the tile
      * @param bit_id The bit id
      */
-    int get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const;
+    int get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
 
     /**
      * @brief Get the wordline number in the region
@@ -93,7 +95,7 @@ public:
      * @param block_id The id of the tile
      * @param bit_id The bit id
      */
-    int get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const;
+    int get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
 
 private:
     vtr::vector<BitstreamReorderRegionId, bistream_reorder_region> regions;

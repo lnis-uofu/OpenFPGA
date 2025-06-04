@@ -111,11 +111,11 @@ std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegio
     return regions[region_id].tile_types[block_id];
 }
 
-ConfigBitId BitstreamReorderMap::get_config_bit_num(const std::string& tile_name, const BitstreamReorderBitId& bit_id) const {
+ConfigBitId BitstreamReorderMap::get_config_bit_num(const std::string& tile_name, const BitstreamReorderTileBitId& bit_id) const {
     return tile_bit_maps.at(tile_name).bit_map.at(bit_id);
 }
 
-int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const {
+int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
     const auto& region = regions[region_id];
 
     /*
@@ -148,7 +148,7 @@ int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& regio
     return num_seen_bls + tile_bl_num;
 }
 
-int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderBitId& bit_id) const {
+int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
     const auto& region = regions[region_id];
 
     /*
