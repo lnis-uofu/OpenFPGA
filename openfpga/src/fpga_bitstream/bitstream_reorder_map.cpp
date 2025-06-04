@@ -85,6 +85,14 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_int();
         tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_int();
     }
+
+    int tile_bit_offset = 0;
+    for (auto& region: regions) {
+        for (const auto& tile_type: region.tile_types) {
+            region.tile_bit_offsets.emplace_back(tile_bit_offset);
+            tile_bit_offset += tile_bit_maps.at(tile_type).num_cbits;
+        }
+    }
 }
 
 std::vector<BitstreamReorderRegionId> BitstreamReorderMap::get_regions() const {

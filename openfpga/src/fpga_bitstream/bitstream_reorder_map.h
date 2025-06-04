@@ -24,6 +24,7 @@ typedef vtr::StrongId<bitstream_reorder_bit_id_tag> BitstreamReorderBitId;
 
 struct bistream_reorder_region {
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
+    vtr::vector<BitstreamReorderRegionBlockId, int> tile_bit_offsets;
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_aliases;
 };
 
