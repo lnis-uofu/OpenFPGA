@@ -215,6 +215,13 @@ int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& regio
     return num_seen_wls + tile_wl_num;
 }
 
+ConfigBitId BitstreamReorderMap::get_config_bit_num(const BitstreamReorderBitId& bit_id) const {
+    bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
+    const std::string& tile_name = get_block_tile_name(tile_info.region_id, tile_info.block_id);
+
+    return get_config_bit_num(tile_name, tile_info.tile_bit_id);
+}
+
 int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
     bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
 
