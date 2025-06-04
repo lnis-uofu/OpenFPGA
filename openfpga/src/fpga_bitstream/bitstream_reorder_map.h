@@ -82,6 +82,20 @@ public:
     ConfigBitId get_config_bit_num(const std::string& tile_name, const BitstreamReorderTileBitId& bit_id) const;
 
     /**
+     * @brief Get the bitline number from the bit index
+     * @param bit_id The bit id
+     */
+    int get_bl_from_index(const BitstreamReorderBitId& bit_id) const;
+
+    /**
+     * @brief Get the wordline number from the bit index
+     * @param bit_id The bit id
+     */
+    int get_wl_from_index(const BitstreamReorderBitId& bit_id) const;
+
+private:
+
+    /**
      * @brief Get the bitline number in the region
      * @param region_id The id of the region
      * @param block_id The id of the tile
@@ -97,7 +111,6 @@ public:
      */
     int get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
 
-private:
     vtr::vector<BitstreamReorderRegionId, bistream_reorder_region> regions;
     std::unordered_map<std::string, tile_bit_map> tile_bit_maps;
 };

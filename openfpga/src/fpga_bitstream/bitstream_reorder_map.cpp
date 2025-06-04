@@ -180,4 +180,39 @@ int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& regio
     return num_seen_wls + tile_wl_num;
 }
 
+int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
+    size_t bit_index = static_cast<size_t>(bit_id);
+
+    int num_seen_bits = 0;
+    bool found_tile = false;
+    BitstreamReorderRegionId found_region_id;
+    BitstreamReorderRegionBlockId found_block_id;
+    BitstreamReorderTileBitId found_tile_bit_id;
+
+    for (const auto& region_id: regions.keys()) {
+        for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
+            const std::string& block_name = regions.at(region_id).tile_types.at(block_region_id);
+            int num_cbits = tile_bit_maps.at(block_name).num_cbits;
+
+            if (bit_index >= num_seen_bits && bit_index < num_seen_bits + num_cbits) {
+                found_tile = true;
+                found_region_id = region_id;
+                found_block_id = block_region_id;
+                found_tile_bit_id = BitstreamReorderTileBitId(static_cast<size_t>(bit_index - num_seen_bits));
+                break;
+            }
+
+            num_seen_bits += num_cbits;
+        }
+
+        if (found_tile) {
+            break;
+        }
+    }
+
+    VTR_ASSERT(found_tile);
+
+    return get_bl_from_index(found_region_id, found_block_id, found_tile_bit_id);
+}
+
 } /* end namespace openfpga */
