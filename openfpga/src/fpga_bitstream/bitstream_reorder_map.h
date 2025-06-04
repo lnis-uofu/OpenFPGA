@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "bitstream_manager_fwd.h"
+
 #include "vtr_strong_id.h"
 #include "vtr_vector.h"
 
@@ -26,7 +28,7 @@ struct bistream_reorder_region {
 };
 
 struct tile_bit_map {
-    vtr::vector<BitstreamReorderBitId, int> bit_map;
+    vtr::vector<BitstreamReorderBitId, ConfigBitId> bit_map;
     int num_cbits;
     int num_bls;
     int num_wls;
@@ -45,11 +47,36 @@ public:
     void init_from_file(const std::string& reorder_map_file);
 
     /**
+     * @brief Get the regions in the bitstream reorder map
+     */
+    std::vector<BitstreamReorderRegionId> get_regions() const;
+
+    /**
+     * @brief Get the blocks in a region
+     * @param region_id The id of the region
+     */
+    std::vector<BitstreamReorderRegionBlockId> get_region_blocks(const BitstreamReorderRegionId& region_id) const;
+
+    /**
+     * @brief Get the alias name of a block
+     * @param region_id The id of the region
+     * @param block_id The id of the tile
+     */
+    std::string get_block_alias(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id) const;
+
+    /**
+     * @brief Get the tile name of a block
+     * @param region_id The id of the region
+     * @param block_id The id of the tile
+     */
+    std::string get_block_tile_name(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id) const;
+
+    /**
      * @brief Get the config bit number in the tile 
      * @param tile_name The name of the tile
      * @param bit_id The bit id
      */
-    int get_config_bit_num(const std::string& tile_name, const BitstreamReorderBitId& bit_id) const;
+    ConfigBitId get_config_bit_num(const std::string& tile_name, const BitstreamReorderBitId& bit_id) const;
 
     /**
      * @brief Get the bitline number in the region
