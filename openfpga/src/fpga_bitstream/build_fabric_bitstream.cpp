@@ -292,8 +292,8 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
     const size_t wl_addr_size = bitstream_reorder_map.get_wl_address_size();
 
     for (size_t ibit = 0; ibit < bitstream_reorder_map.num_config_bits(); ++ibit) {
-      ConfigBitId config_bit = ConfigBitId(ibit);
       BitstreamReorderBitId bitstream_reorder_bit = BitstreamReorderBitId(ibit);
+      ConfigBitId config_bit = bitstream_reorder_map.get_config_bit_num(bitstream_reorder_bit);
       FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
 
       /* Find BL address */
@@ -911,16 +911,16 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
   fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
   /* Build bitstreams by region */
-  for (const ConfigRegionId& config_region :
-        module_manager.regions(top_module)) {
-    /* Build the bitstream for all the blocks in this region */
-    FabricBitRegionId fabric_bitstream_region =
-      fabric_bitstream.add_region();
+  // TODO: Rordering bitstream currently working only
+  // if we have one config region
+  VTR_ASSERT(module_manager.regions(top_module).size() == 1);
 
-    build_fabric_dependent_memory_bank_bitstream_with_reorder(
-      bitstream_manager, bitstream_reorder_map, fabric_bitstream,
-      fabric_bitstream_region);
-  }
+  FabricBitRegionId fabric_bitstream_region =
+    fabric_bitstream.add_region();
+
+  build_fabric_dependent_memory_bank_bitstream_with_reorder(
+    bitstream_manager, bitstream_reorder_map, fabric_bitstream,
+    fabric_bitstream_region);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
             fabric_bitstream.num_bits());
