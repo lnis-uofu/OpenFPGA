@@ -12,6 +12,7 @@
 #include "fabric_bitstream.h"
 #include "module_manager.h"
 #include "module_name_map.h"
+#include "bitstream_reorder_map.h"
 
 /********************************************************************
  * Function declaration

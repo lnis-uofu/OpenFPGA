@@ -7,7 +7,6 @@
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
-#include "bitstream_reorder_map.h"
 #include "build_io_mapping_info.h"
 #include "command.h"
 #include "command_context.h"
