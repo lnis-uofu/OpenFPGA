@@ -252,17 +252,10 @@ ShellCommandId add_write_fabric_bitstream_command_template(
  * - Add command dependency
  *******************************************************************/
 template <class T>
-ShellCommandId add_write_reordered_bitstream_command_template(
+ShellCommandId add_build_reordered_fabric_bitstream_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
-  Command shell_cmd("write_reordered_bitstream");
-
-  /* Add an option '--file' in short '-f'*/
-  CommandOptionId opt_file = shell_cmd.add_option(
-    "file", true,
-    "file path to output the fabric bitstream to plain text file");
-  shell_cmd.set_option_short_name(opt_file, "f");
-  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+  Command shell_cmd("build_reordered_fabric_bitstream");
 
   /* Add an option '--reorder_map' in short '-r'*/
   CommandOptionId opt_reorder_map = shell_cmd.add_option(
@@ -270,13 +263,6 @@ ShellCommandId add_write_reordered_bitstream_command_template(
     "Path to the reordering map file");
   shell_cmd.set_option_short_name(opt_reorder_map, "r");
   shell_cmd.set_option_require_value(opt_reorder_map, openfpga::OPT_STRING);
-
-  /* Add an option '--data_width' in short '-w'*/
-  CommandOptionId opt_data_width = shell_cmd.add_option(
-    "data_width", true,
-    "Data width of bitstream words");
-  shell_cmd.set_option_short_name(opt_data_width, "w");
-  shell_cmd.set_option_require_value(opt_data_width, openfpga::OPT_INT);
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
@@ -286,7 +272,7 @@ ShellCommandId add_write_reordered_bitstream_command_template(
     shell_cmd, "Reorder the bitstream according to the reordering map", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
-                                     reorder_bitstream_template<T>);
+                                     build_reorder_fabric_bitstream_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);

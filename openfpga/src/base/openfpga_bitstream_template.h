@@ -179,11 +179,9 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
  * A wrapper function to call the reorder_bitstream() in FPGA bitstream
  *******************************************************************/
 template <class T>
-int reorder_bitstream_template(const T& openfpga_ctx, const Command& cmd,
-                               const CommandContext& cmd_context) {
-  CommandOptionId opt_file = cmd.option("file");
-  CommandOptionId opt_reorder_map = cmd.option("reorder_map");
-  CommandOptionId opt_data_width = cmd.option("data_width");
+int build_reorder_fabric_bitstream_template(const T& openfpga_ctx, 
+                                            const Command& cmd,
+                                            const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Reorder bitstream if required */
