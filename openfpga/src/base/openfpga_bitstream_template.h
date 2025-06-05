@@ -182,16 +182,14 @@ template <class T>
 int build_reorder_fabric_bitstream_template(const T& openfpga_ctx, 
                                             const Command& cmd,
                                             const CommandContext& cmd_context) {
-  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_reorder_map = cmd.option("reorder_map");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Reorder bitstream if required */
   int status = CMD_EXEC_SUCCESS;
 
-  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
-
   std::string src_dir_path =
-    find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+    find_path_dir_name(cmd_context.option_value(cmd, opt_reorder_map));
 
   /* Create directories */
   create_directory(src_dir_path);
