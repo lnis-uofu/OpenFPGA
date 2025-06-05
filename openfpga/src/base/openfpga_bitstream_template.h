@@ -182,6 +182,7 @@ template <class T>
 int build_reorder_fabric_bitstream_template(const T& openfpga_ctx, 
                                             const Command& cmd,
                                             const CommandContext& cmd_context) {
+  CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Reorder bitstream if required */
