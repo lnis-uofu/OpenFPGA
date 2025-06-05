@@ -19,9 +19,16 @@ struct bitstream_reorder_region_block_id_tag;
 struct bitstream_reorder_tile_bit_id_tag;
 struct bitstream_reorder_bit_id_tag;
 
+// Region ID for regions defined in the reorder map file
 typedef vtr::StrongId<bitstream_reorder_region_id_tag> BitstreamReorderRegionId;
+
+// Block ID for tiles defined under a region tag in the reorder map
 typedef vtr::StrongId<bitstream_reorder_region_block_id_tag> BitstreamReorderRegionBlockId;
+
+// Reordered Config bit ID at the tile level (defined under tile_bitmap)
 typedef vtr::StrongId<bitstream_reorder_tile_bit_id_tag> BitstreamReorderTileBitId;
+
+// Reordered Config bit ID globally (unique across all tiles)
 typedef vtr::StrongId<bitstream_reorder_bit_id_tag> BitstreamReorderBitId;
 
 struct bitstream_reorder_tile_bit_info {
@@ -34,7 +41,9 @@ struct bistream_reorder_region {
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
     vtr::vector<BitstreamReorderRegionBlockId, int> tile_bit_offsets;
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_aliases;
+    size_t num_cbits;
     size_t num_wls;
+    size_t num_bls;
 };
 
 struct tile_bit_map {
