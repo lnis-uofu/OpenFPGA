@@ -9,6 +9,7 @@
 #include <cmath>
 #include <string>
 #include <regex>
+#include <algorithm>
 #include <utility>
 
 /* Headers from pugi XML library */
@@ -50,24 +51,9 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
 
     pugi::xml_node xml_root = pugiutil::get_first_child(doc, "bitstream_reorder_map", loc_data);
 
-    int region_id = 0;
-    for (pugi::xml_node xml_region : xml_root.children("region")) {
-        VTR_ASSERT(xml_region.attribute("id").as_int() == region_id);
-
-        regions.emplace_back();
-        bistream_reorder_region& region = regions.back();
-
-        int tile_id = 0;
-        for (pugi::xml_node xml_tile : xml_region.children("tile")) {
-            VTR_ASSERT(xml_tile.attribute("id").as_int() == tile_id);
-
-            region.tile_types.emplace_back(xml_tile.attribute("name").as_string());
-            region.tile_aliases.emplace_back(xml_tile.attribute("alias").as_string());
-
-            tile_id++;
-        }
-    }
-
+    /*
+    * Store the information under tile_bitmap tags
+    */
     for (pugi::xml_node xml_tile_bitmap : xml_root.children("tile_bitmap")) {
         std::string tile_name = xml_tile_bitmap.attribute("name").as_string();
         VTR_ASSERT(tile_bit_maps.find(tile_name) == tile_bit_maps.end());
@@ -86,6 +72,49 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
                 BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
             tile_bit_map.bit_map[bitstream_reorder_tile_bit_id] = config_bit_id;
         }
+    }
+
+    /*
+    * Store the information under region tags
+    */
+    int region_id = 0;
+    for (pugi::xml_node xml_region : xml_root.children("region")) {
+        VTR_ASSERT(xml_region.attribute("id").as_int() == region_id);
+
+        regions.emplace_back();
+        bistream_reorder_region& region = regions.back();
+            
+        region.num_wls = xml_region.attribute("wl").as_int();
+
+        int tile_id = 0;
+        size_t num_cbits = 0;
+        std::unordered_map<int, int> row_num_bls;
+        for (pugi::xml_node xml_tile : xml_region.children("tile")) {
+            VTR_ASSERT(xml_tile.attribute("id").as_int() == tile_id);
+            std::string tile_name = xml_tile.attribute("name").as_string();
+
+            region.tile_types.emplace_back(tile_name);
+            region.tile_aliases.emplace_back(xml_tile.attribute("alias").as_string());
+            num_cbits += tile_bit_maps[tile_name].num_cbits;
+
+            std::string tile_name = xml_tile.attribute("name").as_string();
+            auto [tile_x, tile_y] = extract_tile_indices(tile_name);
+            int tile_num_wls = tile_bit_maps[tile_name].num_wls;
+            int tile_num_bls = tile_bit_maps[tile_name].num_bls;
+            if (row_num_bls.find(tile_y) == row_num_bls.end()) {
+                row_num_bls.insert({tile_y, 0});
+            }
+            row_num_bls[tile_y] += tile_num_bls;
+
+            tile_id++;
+        }
+        
+        region.num_cbits = num_cbits;
+        region.num_bls = std::max_element(row_num_bls.begin(), row_num_bls.end(),
+                                          [](const auto& a, const auto& b) {
+                                            return a.second < b.second;
+                                          })->second;
+
     }
 
     int tile_bit_offset = 0;
