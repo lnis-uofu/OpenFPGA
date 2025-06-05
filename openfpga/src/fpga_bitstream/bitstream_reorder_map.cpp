@@ -74,16 +74,18 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
 
         tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
 
-        int bit_id = 0;
-        for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
-            VTR_ASSERT(xml_bit.attribute("id").as_int() == bit_id);
-            tile_bit_map.bit_map.emplace_back(xml_bit.text().as_int());
-            bit_id++;
-        }
-
         tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_int();
         tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_int();
         tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_int();
+
+        tile_bit_map.bit_map.resize(tile_bit_map.num_cbits);
+        for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
+            ConfigBitId config_bit_id = 
+                ConfigBitId(static_cast<size_t>(xml_bit.attribute("index").as_int()-1));
+            BitstreamReorderTileBitId bitstream_reorder_tile_bit_id = 
+                BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
+            tile_bit_map.bit_map[bitstream_reorder_tile_bit_id] = config_bit_id;
+        }
     }
 
     int tile_bit_offset = 0;
@@ -153,7 +155,7 @@ std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegio
 bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const BitstreamReorderBitId& bit_id) const {
     size_t bit_index = static_cast<size_t>(bit_id);
 
-    int num_seen_bits = 0;
+    size_t num_seen_bits = 0;
     bool found_tile = false;
     BitstreamReorderRegionId found_region_id;
     BitstreamReorderRegionBlockId found_block_id;
@@ -168,7 +170,7 @@ bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const Bit
                 found_tile = true;
                 found_region_id = region_id;
                 found_block_id = block_region_id;
-                found_tile_bit_id = BitstreamReorderTileBitId(static_cast<size_t>(bit_index - num_seen_bits));
+                found_tile_bit_id = BitstreamReorderTileBitId(bit_index - num_seen_bits);
                 break;
             }
 
