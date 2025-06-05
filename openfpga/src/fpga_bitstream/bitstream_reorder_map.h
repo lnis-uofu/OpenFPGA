@@ -48,9 +48,9 @@ struct bistream_reorder_region {
 
 struct tile_bit_map {
     vtr::vector<BitstreamReorderTileBitId, ConfigBitId> bit_map;
-    int num_cbits;
-    int num_bls;
-    int num_wls;
+    size_t num_cbits;
+    size_t num_bls;
+    size_t num_wls;
 };
 
 class BitstreamReorderMap {
@@ -121,13 +121,13 @@ public:
      * @brief Get the bitline number from the bit index
      * @param bit_id The bit id
      */
-    int get_bl_from_index(const BitstreamReorderBitId& bit_id) const;
+    size_t get_bl_from_index(const BitstreamReorderBitId& bit_id) const;
 
     /**
      * @brief Get the wordline number from the bit index
      * @param bit_id The bit id
      */
-    int get_wl_from_index(const BitstreamReorderBitId& bit_id) const;
+    size_t get_wl_from_index(const BitstreamReorderBitId& bit_id) const;
 
 private:
 
@@ -137,7 +137,7 @@ private:
      * @param block_id The id of the tile
      * @param bit_id The bit id
      */
-    int get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
+    size_t get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
 
     /**
      * @brief Get the wordline number in the region
@@ -145,7 +145,7 @@ private:
      * @param block_id The id of the tile
      * @param bit_id The bit id
      */
-    int get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
+    size_t get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
 
     /**
      * @brief Get the config bit number in the tile 

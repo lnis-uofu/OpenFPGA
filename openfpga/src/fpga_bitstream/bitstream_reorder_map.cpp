@@ -60,9 +60,9 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
 
         tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
 
-        tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_int();
-        tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_int();
-        tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_int();
+        tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_uint();
+        tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_uint();
+        tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_uint();
 
         tile_bit_map.bit_map.resize(tile_bit_map.num_cbits);
         for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
@@ -97,10 +97,12 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
             region.tile_aliases.emplace_back(xml_tile.attribute("alias").as_string());
             num_cbits += tile_bit_maps[tile_name].num_cbits;
 
-            std::string tile_name = xml_tile.attribute("name").as_string();
             auto [tile_x, tile_y] = extract_tile_indices(tile_name);
-            int tile_num_wls = tile_bit_maps[tile_name].num_wls;
-            int tile_num_bls = tile_bit_maps[tile_name].num_bls;
+            size_t tile_num_wls = tile_bit_maps[tile_name].num_wls;
+            // TODO: The current code doesn't work correctly if
+            // a region has blocks with different heights
+            VTR_ASSERT(tile_num_wls == region.num_wls);
+            size_t tile_num_bls = tile_bit_maps[tile_name].num_bls;
             if (row_num_bls.find(tile_y) == row_num_bls.end()) {
                 row_num_bls.insert({tile_y, 0});
             }
@@ -220,7 +222,7 @@ ConfigBitId BitstreamReorderMap::get_config_bit_num(const std::string& tile_name
     return tile_bit_maps.at(tile_name).bit_map.at(bit_id);
 }
 
-int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
+size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
     const auto& region = regions[region_id];
 
     /*
@@ -230,7 +232,7 @@ int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& regio
     * 3. Calculate the local BL index within the current tile.
     * 4. Add the offset to the local BL to obtain the final BL index.
     */
-    int num_seen_bls = 0;
+    size_t num_seen_bls = 0;
     std::string tile_alias_name = get_block_alias(region_id, block_id);
     auto [target_tile_x, target_tile_y] = extract_tile_indices(tile_alias_name);
 
@@ -245,15 +247,15 @@ int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& regio
     }
 
     // Calculate the local BL index within the current tile
-    int tile_cbit_num = static_cast<int>(size_t(bit_id));
-    int tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
-    int tile_bl_num = tile_cbit_num % tile_num_bls;
+    size_t tile_cbit_num = size_t(bit_id);
+    size_t tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
+    size_t tile_bl_num = tile_cbit_num % tile_num_bls;
 
     /* Return the final BL index */
     return num_seen_bls + tile_bl_num;
 }
 
-int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
+size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
     const auto& region = regions[region_id];
 
     /*
@@ -262,7 +264,7 @@ int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& regio
     * 2. Calculate the number of WLs in the tiles before the target tile (in the same column as the target tile)
     * 3. Add the offset to the local WL to obtain the final WL index.
     */
-    int num_seen_wls = 0;
+    size_t num_seen_wls = 0;
     std::string tile_alias_name = get_block_alias(region_id, block_id);
     auto [target_tile_x, target_tile_y] = extract_tile_indices(tile_alias_name);
 
@@ -277,9 +279,9 @@ int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& regio
     }
 
     // Calculate the local WL index within the current tile 
-    int tile_cbit_num = static_cast<int>(size_t(bit_id));
-    int tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
-    int tile_wl_num = std::floor(static_cast<float>(tile_cbit_num) / tile_num_bls);
+    size_t tile_cbit_num = size_t(bit_id);
+    size_t tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
+    size_t tile_wl_num = tile_cbit_num / tile_num_bls;
 
     /* Return the final WL index */
     return num_seen_wls + tile_wl_num;
@@ -292,13 +294,13 @@ ConfigBitId BitstreamReorderMap::get_config_bit_num(const BitstreamReorderBitId&
     return get_config_bit_num(tile_name, tile_info.tile_bit_id);
 }
 
-int BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
+size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
     bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
 
     return get_bl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
 }
 
-int BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_id) const {
+size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_id) const {
     bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
 
     return get_wl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
