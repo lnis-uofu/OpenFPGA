@@ -110,7 +110,9 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
             size_t tile_num_wls = tile_bit_maps[tile_name].num_wls;
             size_t tile_num_bls = tile_bit_maps[tile_name].num_bls;
             num_wls += tile_num_wls;
-            num_bls += tile_num_bls;
+            if (tile_y - first_tile_y == 0) {
+                num_bls += tile_num_bls;
+            }
 
             tile_id++;
         }
@@ -146,16 +148,7 @@ size_t BitstreamReorderMap::get_bl_address_size() const {
     size_t bl_address_size = 0;
 
     for (const auto& region: regions) {
-        size_t region_bl_address_size = 0;
-        for (const auto& tile_id: region.tile_types.keys()) {
-            std::string tile_type = region.tile_types.at(tile_id);
-            std::string tile_alias = region.tile_aliases.at(tile_id);
-            auto [tile_x, tile_y] = extract_tile_indices(tile_alias);
-            if (tile_y == 0) {
-                region_bl_address_size += tile_bit_maps.at(tile_type).num_bls;
-            }
-        }
-        bl_address_size = std::max(bl_address_size, region_bl_address_size);
+        bl_address_size = std::max(bl_address_size, region.num_bls);
     }
 
     return bl_address_size;
