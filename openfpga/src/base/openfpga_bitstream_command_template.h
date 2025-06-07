@@ -8,10 +8,46 @@
  *******************************************************************/
 #include "openfpga_bitstream_template.h"
 #include "openfpga_repack_template.h"
+#include "openfpga_gen_repack_constraints_template.h"
 #include "shell.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/********************************************************************
+ * - Add a command to Shell environment: gen_repack_constraints
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_gen_repack_constraints_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("gen_repack_constraints");
+
+  /* Add an option '--pcf' */
+  CommandOptionId opt_pcf =
+    shell_cmd.add_option("pcf", false, "Path to the pcf file");
+  shell_cmd.set_option_require_value(opt_pcf,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--file' */
+  CommandOptionId opt_file =
+    shell_cmd.add_option("file", false, "Path to the output file");
+  shell_cmd.set_option_require_value(opt_file,
+                                     openfpga::OPT_STRING);
+
+  /* Add command 'gen_repack_constraints' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Generate a repack design constraints file from a PCF file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, gen_repack_constraints_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
 
 /********************************************************************
  * - Add a command to Shell environment: repack
@@ -297,6 +333,10 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell,
   /* Add a new class of commands */
   ShellCommandClassId openfpga_bitstream_cmd_class =
     shell.add_command_class("FPGA-Bitstream");
+
+  /********************************
+   * Command 'gen_repack_constraints' */
+  add_gen_repack_constraints_command_template(shell, openfpga_bitstream_cmd_class, std::vector<ShellCommandId>(), hidden);
 
   /********************************
    * Command 'repack'
