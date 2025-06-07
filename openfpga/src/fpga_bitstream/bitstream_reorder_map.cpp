@@ -49,7 +49,7 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
 
     loc_data = pugiutil::load_xml(doc, reorder_map_file);
 
-    pugi::xml_node xml_root = pugiutil::get_first_child(doc, "bitstream_reorder_map", loc_data);
+    pugi::xml_node xml_root = pugiutil::get_first_child(doc, "bitstream_remap", loc_data);
 
     /*
     * Store the information under tile_bitmap tags
@@ -84,39 +84,41 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         regions.emplace_back();
         bistream_reorder_region& region = regions.back();
             
-        region.num_wls = xml_region.attribute("wl").as_int();
-
         int tile_id = 0;
         size_t num_cbits = 0;
-        std::unordered_map<int, int> row_num_bls;
+        size_t num_wls = 0;
+        size_t num_bls = 0;
+        int first_tile_x = -1;
+        int first_tile_y = -1;
         for (pugi::xml_node xml_tile : xml_region.children("tile")) {
             VTR_ASSERT(xml_tile.attribute("id").as_int() == tile_id);
             std::string tile_name = xml_tile.attribute("name").as_string();
+            std::string tile_alias = xml_tile.attribute("alias").as_string();
+            auto [tile_x, tile_y] = extract_tile_indices(tile_alias);
+
+            if (tile_id == 0) {
+                first_tile_x = tile_x;
+                first_tile_y = tile_y;
+            }
 
             region.tile_types.emplace_back(tile_name);
-            region.tile_aliases.emplace_back(xml_tile.attribute("alias").as_string());
+            region.tile_aliases.emplace_back(tile_alias);
+            region.tile_locations.emplace_back(tile_x - first_tile_x, tile_y - first_tile_y);
             num_cbits += tile_bit_maps[tile_name].num_cbits;
 
-            auto [tile_x, tile_y] = extract_tile_indices(tile_name);
+            
             size_t tile_num_wls = tile_bit_maps[tile_name].num_wls;
-            // TODO: The current code doesn't work correctly if
-            // a region has blocks with different heights
-            VTR_ASSERT(tile_num_wls == region.num_wls);
             size_t tile_num_bls = tile_bit_maps[tile_name].num_bls;
-            if (row_num_bls.find(tile_y) == row_num_bls.end()) {
-                row_num_bls.insert({tile_y, 0});
-            }
-            row_num_bls[tile_y] += tile_num_bls;
+            num_wls += tile_num_wls;
+            num_bls += tile_num_bls;
 
             tile_id++;
         }
         
         region.num_cbits = num_cbits;
-        region.num_bls = std::max_element(row_num_bls.begin(), row_num_bls.end(),
-                                          [](const auto& a, const auto& b) {
-                                            return a.second < b.second;
-                                          })->second;
-
+        region.num_wls = num_wls;
+        region.num_bls = num_bls;
+        region_id++;
     }
 
     int tile_bit_offset = 0;
@@ -145,8 +147,10 @@ size_t BitstreamReorderMap::get_bl_address_size() const {
 
     for (const auto& region: regions) {
         size_t region_bl_address_size = 0;
-        for (const auto& tile_type: region.tile_types) {
-            auto [tile_x, tile_y] = extract_tile_indices(tile_type);
+        for (const auto& tile_id: region.tile_types.keys()) {
+            std::string tile_type = region.tile_types.at(tile_id);
+            std::string tile_alias = region.tile_aliases.at(tile_id);
+            auto [tile_x, tile_y] = extract_tile_indices(tile_alias);
             if (tile_y == 0) {
                 region_bl_address_size += tile_bit_maps.at(tile_type).num_bls;
             }
