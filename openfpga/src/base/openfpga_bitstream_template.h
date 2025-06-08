@@ -179,20 +179,10 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
  * A wrapper function to call the reorder_bitstream() in FPGA bitstream
  *******************************************************************/
 template <class T>
-int build_reorder_fabric_bitstream_template(const T& openfpga_ctx, 
-                                            const Command& cmd,
+int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
                                             const CommandContext& cmd_context) {
   CommandOptionId opt_reorder_map = cmd.option("reorder_map");
   CommandOptionId opt_verbose = cmd.option("verbose");
-
-  /* Reorder bitstream if required */
-  int status = CMD_EXEC_SUCCESS;
-
-  std::string src_dir_path =
-    find_path_dir_name(cmd_context.option_value(cmd, opt_reorder_map));
-
-  /* Create directories */
-  create_directory(src_dir_path);
 
   /* Read the bitstream reorder map */
   BitstreamReorderMap bitstream_reorder_map(cmd_context.option_value(cmd, opt_reorder_map));
