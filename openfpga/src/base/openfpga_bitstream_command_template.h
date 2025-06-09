@@ -379,6 +379,17 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell,
       cmd_dependency_build_fabric_bitstream, hidden);
 
   /********************************
+   * Command 'build_reordered_fabric_bitstream'
+   */
+  /* The 'build_reordered_fabric_bitstream' command should NOT be executed before
+   * 'build_architecture_bitstream' */
+  std::vector<ShellCommandId> cmd_dependency_build_reordered_fabric_bitstream;
+  cmd_dependency_build_reordered_fabric_bitstream.push_back(shell_cmd_build_arch_bitstream_id);
+  add_build_reordered_fabric_bitstream_command_template(
+    shell, openfpga_bitstream_cmd_class,
+    cmd_dependency_build_reordered_fabric_bitstream, hidden);
+
+  /********************************
    * Command 'write_fabric_bitstream'
    */
   /* The 'write_fabric_bitstream' command should NOT be executed before
