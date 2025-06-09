@@ -78,16 +78,15 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     /*
     * Store the information under region tags
     */
-    int region_id = 0;
+    int xml_region_id = 0;
     for (pugi::xml_node xml_region : xml_root.children("region")) {
-        VTR_ASSERT(xml_region.attribute("id").as_int() == region_id);
+        VTR_ASSERT(xml_region.attribute("id").as_int() == xml_region_id);
 
         regions.emplace_back();
         bistream_reorder_region& region = regions.back();
             
         int tile_id = 0;
         size_t num_cbits = 0;
-        size_t num_wls = 0;
         size_t num_bls = 0;
         int first_tile_x = -1;
         int first_tile_y = -1;
@@ -108,9 +107,7 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
             num_cbits += tile_bit_maps[tile_name].num_cbits;
 
             
-            size_t tile_num_wls = tile_bit_maps[tile_name].num_wls;
             size_t tile_num_bls = tile_bit_maps[tile_name].num_bls;
-            num_wls += tile_num_wls;
             if (tile_y - first_tile_y == 0) {
                 num_bls += tile_num_bls;
             }
@@ -119,9 +116,9 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         }
         
         region.num_cbits = num_cbits;
-        region.num_wls = num_wls;
+        region.num_wls = xml_region.attribute("wl").as_uint();
         region.num_bls = num_bls;
-        region_id++;
+        xml_region_id++;
     }
 
     auto get_region_x_from_bl_index = [&](BitstreamReorderRegionId region_id, size_t bl_index) -> int {
@@ -138,6 +135,7 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
 
             num_seen_bls += tile_bit_maps.at(tile_name).num_bls;
         }
+        return -1;
     };
 
     auto get_block_id_from_wl_bl = [&](size_t bl, size_t wl) -> BitstreamReorderRegionBlockId {
@@ -153,25 +151,25 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
 
         VTR_ASSERT(found_region_id);
 
-        for (size_t bl_index = 0; bl_index < regions[found_region_id].num_bls; bl_index++) {
-            int block_region_x = get_region_x_from_bl_index(found_region_id, bl_index);
-            size_t region_num_seen_wls = globla_num_seen_wls;
-            for (BitstreamReorderRegionBlockId block_id: regions[found_region_id].tile_types.keys()) {
-                if (regions[found_region_id].tile_locations.at(block_id).x == block_region_x) {
-                    const auto& tile_bit_map = tile_bit_maps.at(regions[found_region_id].tile_types.at(block_id));
-                    if (wl >= (region_num_seen_wls) && wl < (region_num_seen_wls + tile_bit_map.num_wls)) {
-                        return block_id;
-                    }
-
-                    region_num_seen_wls += tile_bit_map.num_wls;
+        int block_region_x = get_region_x_from_bl_index(found_region_id, bl);
+        VTR_ASSERT(block_region_x != -1);
+        size_t region_num_seen_wls = globla_num_seen_wls;
+        for (BitstreamReorderRegionBlockId block_id: regions[found_region_id].tile_types.keys()) {
+            if (regions[found_region_id].tile_locations.at(block_id).x == block_region_x) {
+                const auto& tile_bit_map = tile_bit_maps.at(regions[found_region_id].tile_types.at(block_id));
+                if (wl >= (region_num_seen_wls) && wl < (region_num_seen_wls + tile_bit_map.num_wls)) {
+                    return block_id;
                 }
+
+                region_num_seen_wls += tile_bit_map.num_wls;
             }
         }
-
+        return BitstreamReorderRegionBlockId::INVALID();
     };
     
-    size_t num_seen_intersections = 0;
+    size_t num_seen_intersections = 0;    
     for (auto& region: regions) {
+        region.tile_intersection_index_map.resize(region.tile_types.size());
         for (size_t bl_index = 0; bl_index < region.num_bls; bl_index++) {
             for (size_t wl_index = 0; wl_index < region.num_wls; /*wl_index is increased in the loop*/) {
                 BitstreamReorderRegionBlockId curr_block_id = get_block_id_from_wl_bl(bl_index, wl_index);
@@ -238,7 +236,6 @@ std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegio
 bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const BitstreamReorderBitId& bit_id) const {
     size_t bit_index = static_cast<size_t>(bit_id);
 
-    size_t num_seen_bits = 0;
     bool found_tile = false;
     BitstreamReorderRegionId found_region_id;
     BitstreamReorderRegionBlockId found_block_id;
