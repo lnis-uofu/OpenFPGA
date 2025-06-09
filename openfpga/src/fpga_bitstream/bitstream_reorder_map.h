@@ -37,10 +37,18 @@ struct bitstream_reorder_tile_bit_info {
     BitstreamReorderTileBitId tile_bit_id;
 };
 
+struct tile_location {
+    tile_location() : x(-1), y(-1) {}
+    tile_location(int x_, int y_) : x(x_), y(y_) {}
+    int x;
+    int y;
+};
+
 struct bistream_reorder_region {
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
-    vtr::vector<BitstreamReorderRegionBlockId, int> tile_bit_offsets;
+    vtr::vector<BitstreamReorderRegionBlockId, tile_location> tile_locations;
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_aliases;
+    vtr::vector<BitstreamReorderRegionBlockId, std::vector<std::pair<size_t, size_t>>> tile_intersection_index_map;
     size_t num_cbits;
     size_t num_wls;
     size_t num_bls;
