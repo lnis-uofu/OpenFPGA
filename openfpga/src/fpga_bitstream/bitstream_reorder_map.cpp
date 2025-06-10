@@ -113,10 +113,10 @@ static void init_regions(const pugi::xml_node& xml_root,
 // This function take the region id and the BL index as inputs and return the
 // column index (x coordinate) corresponding to the BL index. Note that each column
 // may have multiple BLs, and this is why this function is required.
-int get_region_x_from_bl_index(const vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions,
-                               const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
-                               const BitstreamReorderRegionId& region_id, 
-                               const size_t bl_index) {
+static int get_region_x_from_bl_index(const vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions,
+                                      const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
+                                      const BitstreamReorderRegionId& region_id, 
+                                      const size_t bl_index) {
     size_t num_seen_bls = 0;
     for (BitstreamReorderRegionBlockId block_id: regions[region_id].tile_types.keys()) {
         const std::string& tile_name = regions[region_id].tile_types.at(block_id);
@@ -133,6 +133,47 @@ int get_region_x_from_bl_index(const vtr::vector<BitstreamReorderRegionId, bistr
         num_seen_bls += tile_bit_maps.at(tile_name).num_bls;
     }
     return -1;
+}
+
+// This function take the WL and BL index as inputs and return the block id
+// where bl and wl intersection falls. Note that the BL and WL index are global
+// across all regions.
+static BitstreamReorderRegionBlockId get_block_id_from_wl_bl(const vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions,
+                                                            const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
+                                                            const size_t bl,
+                                                            const size_t wl) {
+    // Stores the wl offset for the region where the intersection falls
+    size_t globla_num_seen_wls = 0;
+    BitstreamReorderRegionId found_region_id;
+    // Iterate over all region to find the region where the intersection falls
+    for (BitstreamReorderRegionId region_id: regions.keys()) {
+        if (wl >= globla_num_seen_wls && wl < globla_num_seen_wls + regions[region_id].num_wls) {
+            found_region_id = region_id;
+            break;
+        }
+        globla_num_seen_wls += regions[region_id].num_wls;
+    }
+
+    VTR_ASSERT(found_region_id);
+
+    // Find the column index (x coordinate) of the BL in the region
+    int block_region_x = get_region_x_from_bl_index(regions, 
+                                                    tile_bit_maps, 
+                                                    found_region_id, 
+                                                    bl);
+    VTR_ASSERT(block_region_x != -1);
+    for (BitstreamReorderRegionBlockId block_id: regions[found_region_id].tile_types.keys()) {
+        // Iterate over the tiles in the column to find the exact tile where the intersection falls
+        if (regions[found_region_id].tile_locations.at(block_id).x == block_region_x) {
+            const auto& tile_bit_map = tile_bit_maps.at(regions[found_region_id].tile_types.at(block_id));
+            if (wl >= (globla_num_seen_wls) && wl < (globla_num_seen_wls + tile_bit_map.num_wls)) {
+                return block_id;
+            }
+
+            globla_num_seen_wls += tile_bit_map.num_wls;
+        }
+    }
+    return BitstreamReorderRegionBlockId::INVALID();
 }
 
 static std::pair<int, int> extract_tile_indices(const std::string& name) {
@@ -174,45 +215,6 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     * Store the information under region tags
     */
     init_regions(xml_root, tile_bit_maps, regions);
-    
-
-    // This function take the WL and BL index as inputs and return the block id
-    // where bl and wl intersection falls. Note that the BL and WL index are global
-    // across all regions.
-    auto get_block_id_from_wl_bl = [&](const size_t bl, const size_t wl) -> BitstreamReorderRegionBlockId {
-        // Stores the wl offset for the region where the intersection falls
-        size_t globla_num_seen_wls = 0;
-        BitstreamReorderRegionId found_region_id;
-        // Iterate over all region to find the region where the intersection falls
-        for (BitstreamReorderRegionId region_id: regions.keys()) {
-            if (wl >= globla_num_seen_wls && wl < globla_num_seen_wls + regions[region_id].num_wls) {
-                found_region_id = region_id;
-                break;
-            }
-            globla_num_seen_wls += regions[region_id].num_wls;
-        }
-
-        VTR_ASSERT(found_region_id);
-
-        // Find the column index (x coordinate) of the BL in the region
-        int block_region_x = get_region_x_from_bl_index(regions, 
-                                                        tile_bit_maps, 
-                                                        found_region_id, 
-                                                        bl);
-        VTR_ASSERT(block_region_x != -1);
-        for (BitstreamReorderRegionBlockId block_id: regions[found_region_id].tile_types.keys()) {
-            // Iterate over the tiles in the column to find the exact tile where the intersection falls
-            if (regions[found_region_id].tile_locations.at(block_id).x == block_region_x) {
-                const auto& tile_bit_map = tile_bit_maps.at(regions[found_region_id].tile_types.at(block_id));
-                if (wl >= (globla_num_seen_wls) && wl < (globla_num_seen_wls + tile_bit_map.num_wls)) {
-                    return block_id;
-                }
-
-                globla_num_seen_wls += tile_bit_map.num_wls;
-            }
-        }
-        return BitstreamReorderRegionBlockId::INVALID();
-    };
     
     // Keep track of the number of intersections seen so far
     size_t num_seen_intersections = 0;
