@@ -291,14 +291,19 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
   const size_t& num_regions,
   const size_t& bl_addr_size, const size_t& wl_addr_size) {
 
-    size_t total_num_config_bits = bitstream_reorder_map.num_config_bits();
-    
-    size_t start_bit_id = (total_num_config_bits / num_regions) * region_id;
-    size_t end_bit_id = std::min(start_bit_id + (total_num_config_bits / num_regions), total_num_config_bits);
+    auto region_bl_wl_intersection_range = bitstream_reorder_map.region_bl_wl_intersection_range(BitstreamReorderRegionId(region_id));
 
+    size_t start_bit_id = region_bl_wl_intersection_range.first;
+    size_t end_bit_id = region_bl_wl_intersection_range.second;
+
+    size_t num_valid_intersections = 0;
     for (size_t ibit = start_bit_id ; ibit < end_bit_id; ++ibit) {
       BitstreamReorderBitId bitstream_reorder_bit = BitstreamReorderBitId(ibit);
       ConfigBitId config_bit = bitstream_reorder_map.get_config_bit_num(bitstream_reorder_bit);
+      if (config_bit == ConfigBitId::INVALID()) {
+        continue;
+      }
+      num_valid_intersections++;
       FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
 
       /* Find BL address */
@@ -324,6 +329,8 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
       /* Add the bit to the region */
       fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
     }
+
+    VTR_ASSERT(num_valid_intersections == bitstream_reorder_map.num_config_bits(BitstreamReorderRegionId(region_id)));
 }
 
 /********************************************************************
