@@ -89,10 +89,10 @@ static void init_regions(const pugi::xml_node& xml_root,
             // Block location stored in alias is the blocks absolute location in grid (across multiple regions)
             // We convert it to relative location in the current region
             region.tile_locations.emplace_back(compressed_tile_x, compressed_tile_y);
-            num_cbits += tile_bit_maps[tile_name].num_cbits;
+            num_cbits += tile_bit_maps.at(tile_name).num_cbits;
 
             
-            size_t tile_num_bls = tile_bit_maps[tile_name].num_bls;
+            size_t tile_num_bls = tile_bit_maps.at(tile_name).num_bls;
             // To get the number BLs, we iterate over all tiles in the first row
             // of the region and sum up the number of BLs in each tile
             if (compressed_tile_y == 0) {
@@ -108,6 +108,31 @@ static void init_regions(const pugi::xml_node& xml_root,
         region.num_bls = num_bls;
         xml_region_id++;
     }
+}
+
+// This function take the region id and the BL index as inputs and return the
+// column index (x coordinate) corresponding to the BL index. Note that each column
+// may have multiple BLs, and this is why this function is required.
+int get_region_x_from_bl_index(const vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions,
+                               const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
+                               const BitstreamReorderRegionId& region_id, 
+                               const size_t bl_index) {
+    size_t num_seen_bls = 0;
+    for (BitstreamReorderRegionBlockId block_id: regions[region_id].tile_types.keys()) {
+        const std::string& tile_name = regions[region_id].tile_types.at(block_id);
+        // We only consider the first row of the region, since the BL lines are shared
+        // across columns
+        if (regions[region_id].tile_locations.at(block_id).y != 0) {
+            continue;
+        }
+
+        if (bl_index >= num_seen_bls && bl_index < num_seen_bls + tile_bit_maps.at(tile_name).num_bls) {
+            return regions[region_id].tile_locations.at(block_id).x;
+        }
+
+        num_seen_bls += tile_bit_maps.at(tile_name).num_bls;
+    }
+    return -1;
 }
 
 static std::pair<int, int> extract_tile_indices(const std::string& name) {
@@ -149,28 +174,7 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     * Store the information under region tags
     */
     init_regions(xml_root, tile_bit_maps, regions);
-
-    // This function take the region id and the BL index as inputs and return the
-    // column index (x coordinate) corresponding to the BL index. Note that each column
-    // may have multiple BLs, and this is why this function is required.
-    auto get_region_x_from_bl_index = [&](BitstreamReorderRegionId region_id, size_t bl_index) -> int {
-        size_t num_seen_bls = 0;
-        for (BitstreamReorderRegionBlockId block_id: regions[region_id].tile_types.keys()) {
-            const std::string& tile_name = regions[region_id].tile_types.at(block_id);
-            // We only consider the first row of the region, since the BL lines are shared
-            // across columns
-            if (regions[region_id].tile_locations.at(block_id).y != 0) {
-                continue;
-            }
-
-            if (bl_index >= num_seen_bls && bl_index < num_seen_bls + tile_bit_maps.at(tile_name).num_bls) {
-                return regions[region_id].tile_locations.at(block_id).x;
-            }
-
-            num_seen_bls += tile_bit_maps.at(tile_name).num_bls;
-        }
-        return -1;
-    };
+    
 
     // This function take the WL and BL index as inputs and return the block id
     // where bl and wl intersection falls. Note that the BL and WL index are global
@@ -191,7 +195,10 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         VTR_ASSERT(found_region_id);
 
         // Find the column index (x coordinate) of the BL in the region
-        int block_region_x = get_region_x_from_bl_index(found_region_id, bl);
+        int block_region_x = get_region_x_from_bl_index(regions, 
+                                                        tile_bit_maps, 
+                                                        found_region_id, 
+                                                        bl);
         VTR_ASSERT(block_region_x != -1);
         for (BitstreamReorderRegionBlockId block_id: regions[found_region_id].tile_types.keys()) {
             // Iterate over the tiles in the column to find the exact tile where the intersection falls
