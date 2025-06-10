@@ -201,17 +201,18 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     // Iterate over all region, and for each region, iterate over BLs first,
     // and for each BL, Iterate over tiles falling on the BL and store the indices
     // in the tile.
+    size_t wl_index_offset = 0;
     for (auto& region: regions) {
         region.tile_intersection_index_map.resize(region.tile_types.size());
         for (size_t bl_index = 0; bl_index < region.num_bls; bl_index++) {
-            for (size_t wl_index = 0; wl_index < region.num_wls; /*wl_index is increased in the loop*/) {
+            for (size_t wl_index = wl_index_offset; wl_index < wl_index_offset + region.num_wls; /*wl_index is increased in the loop*/) {
                 // Find the block id where the BL and WL intersection falls
                 BitstreamReorderRegionBlockId curr_block_id = get_block_id_from_wl_bl(bl_index, wl_index);
                 VTR_ASSERT(curr_block_id);
                 
                 const auto& tile_bit_map = tile_bit_maps.at(region.tile_types[curr_block_id]);
                 // All intersestions from num_seen_intersections to num_seen_intersections+tile_bit_map.num_wls-1 belongs to this tile 
-                region.tile_intersection_index_map.at(curr_block_id).emplace_back(num_seen_intersections, num_seen_intersections+tile_bit_map.num_wls-1);
+                region.tile_intersection_index_map.at(curr_block_id).emplace_back(num_seen_intersections, num_seen_intersections+tile_bit_map.num_wls);
 
                 // Increment the offset
                 num_seen_intersections += tile_bit_map.num_wls;
@@ -219,6 +220,14 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
                 wl_index += tile_bit_map.num_wls;
             }
         }
+
+        for (const auto& region_tile_id: region.tile_types.keys()) {
+            const auto& tile_type = region.tile_types.at(region_tile_id);
+            const auto& tile_bit_map = tile_bit_maps.at(tile_type);
+            VTR_ASSERT(region.tile_intersection_index_map.at(region_tile_id).size() == tile_bit_map.num_bls);
+        }
+
+        wl_index_offset += region.num_wls;
     }
 }
 
@@ -286,16 +295,18 @@ bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const Bit
         for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
             for (size_t pair_index = 0; pair_index < regions.at(region_id).tile_intersection_index_map.at(block_region_id).size(); pair_index++) {
                 const auto& intersection_index = regions.at(region_id).tile_intersection_index_map.at(block_region_id).at(pair_index);
-                if (bit_index >= intersection_index.first && bit_index <= intersection_index.second) {
+                if (bit_index >= intersection_index.first && bit_index < intersection_index.second) {
+                    const auto& tile_bit_map = tile_bit_maps.at(regions.at(region_id).tile_types.at(block_region_id));
                     found_tile = true;
                     found_region_id = region_id;
                     found_block_id = block_region_id;
                     size_t found_tile_bit_index_offset = 0;
                     for (size_t prev_pair_index = 0; prev_pair_index < pair_index; prev_pair_index++) {
                         const auto& prev_intersection_index = regions.at(region_id).tile_intersection_index_map.at(block_region_id).at(prev_pair_index);
-                        found_tile_bit_index_offset += prev_intersection_index.second - prev_intersection_index.first + 1;
+                        found_tile_bit_index_offset += prev_intersection_index.second - prev_intersection_index.first;
                     }
                     found_tile_bit_id = BitstreamReorderTileBitId(found_tile_bit_index_offset + bit_index - intersection_index.first);
+                    VTR_ASSERT(size_t(found_tile_bit_id) < tile_bit_map.num_wls * tile_bit_map.num_bls);
                     break;
                 }
             }
@@ -330,15 +341,13 @@ size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& re
     * 4. Add the offset to the local BL to obtain the final BL index.
     */
     size_t num_seen_bls = 0;
-    std::string tile_alias_name = get_block_alias(region_id, block_id);
-    auto [target_tile_x, target_tile_y] = extract_tile_indices(tile_alias_name);
+    auto target_tile_location = region.tile_locations.at(block_id);
 
     // Calculate the number of BLs in the tiles before the target tile
     for (const auto& region_tile_id : region.tile_types.keys()) {
-        tile_alias_name = get_block_alias(region_id, region_tile_id);
-        auto [curr_tile_x, curr_tile_y] = extract_tile_indices(tile_alias_name);
+        auto curr_tile_location = region.tile_locations.at(region_tile_id);
 
-        if (curr_tile_x < target_tile_x && curr_tile_y == target_tile_y) {
+        if (curr_tile_location.x < target_tile_location.x && curr_tile_location.y == target_tile_location.y) {
             num_seen_bls += tile_bit_maps.at(region.tile_types[region_tile_id]).num_bls;
         }
     }
@@ -362,15 +371,13 @@ size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& re
     * 3. Add the offset to the local WL to obtain the final WL index.
     */
     size_t num_seen_wls = 0;
-    std::string tile_alias_name = get_block_alias(region_id, block_id);
-    auto [target_tile_x, target_tile_y] = extract_tile_indices(tile_alias_name);
+    auto target_tile_location = region.tile_locations.at(block_id);
 
     // Calculate the number of WLs in the tiles before the target tile
     for (const auto& region_tile_id : region.tile_types.keys()) {
-        tile_alias_name = get_block_alias(region_id, region_tile_id);
-        auto [curr_tile_x, curr_tile_y] = extract_tile_indices(tile_alias_name);
+        auto curr_tile_location = region.tile_locations.at(region_tile_id);
 
-        if (curr_tile_x == target_tile_x && curr_tile_y < target_tile_y) {
+        if (curr_tile_location.x == target_tile_location.x && curr_tile_location.y < target_tile_location.y) {
             num_seen_wls += tile_bit_maps.at(region.tile_types[region_tile_id]).num_wls;
         }
     }
