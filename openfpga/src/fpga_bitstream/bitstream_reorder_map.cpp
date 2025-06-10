@@ -62,15 +62,20 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
 
         tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_uint();
+        VTR_ASSERT(tile_bit_map.num_cbits > 0);
         tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_uint();
+        VTR_ASSERT(tile_bit_map.num_bls > 0);
         tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_uint();
+        VTR_ASSERT(tile_bit_map.num_wls > 0);
 
-        tile_bit_map.bit_map.resize(tile_bit_map.num_cbits);
+        tile_bit_map.bit_map.resize(tile_bit_map.num_wls * tile_bit_map.num_bls, ConfigBitId::INVALID());
         for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
             ConfigBitId config_bit_id = 
-                ConfigBitId(static_cast<size_t>(xml_bit.attribute("index").as_int()-1));
+                ConfigBitId(static_cast<size_t>(xml_bit.attribute("index").as_int()));
             BitstreamReorderTileBitId bitstream_reorder_tile_bit_id = 
                 BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
+            VTR_ASSERT(static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits);
+            VTR_ASSERT(static_cast<size_t>(bitstream_reorder_tile_bit_id) < tile_bit_map.num_wls * tile_bit_map.num_bls);
             tile_bit_map.bit_map[bitstream_reorder_tile_bit_id] = config_bit_id;
         }
     }
