@@ -98,24 +98,6 @@ public:
     size_t get_wl_address_size() const;
 
     /**
-     * @brief Get the regions in the bitstream reorder map
-     */
-    std::vector<BitstreamReorderRegionId> get_regions() const;
-
-    /**
-     * @brief Get the blocks in a region
-     * @param region_id The id of the region
-     */
-    std::vector<BitstreamReorderRegionBlockId> get_region_blocks(const BitstreamReorderRegionId& region_id) const;
-
-    /**
-     * @brief Get the alias name of a block
-     * @param region_id The id of the region
-     * @param block_id The id of the tile
-     */
-    std::string get_block_alias(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id) const;
-
-    /**
      * @brief Get the tile name of a block
      * @param region_id The id of the region
      * @param block_id The id of the tile

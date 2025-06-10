@@ -286,6 +286,8 @@ size_t BitstreamReorderMap::num_config_bits(const BitstreamReorderRegionId& regi
 size_t BitstreamReorderMap::get_bl_address_size() const {
     size_t bl_address_size = 0;
 
+    // To get the global BL address size, we need to find the maximum number of BLs
+    // across all regions since regions are streched across device width.
     for (const auto& region: regions) {
         bl_address_size = std::max(bl_address_size, region.num_bls);
     }
@@ -296,23 +298,13 @@ size_t BitstreamReorderMap::get_bl_address_size() const {
 size_t BitstreamReorderMap::get_wl_address_size() const {
     size_t wl_address_size = 0;
 
+    // To get the global WL address size, we need to sum up the number of WLs
+    // across all regions.
     for (const auto& region: regions) {
         wl_address_size += region.num_wls;
     }
 
     return wl_address_size;
-}
-
-std::vector<BitstreamReorderRegionId> BitstreamReorderMap::get_regions() const {
-    return std::vector<BitstreamReorderRegionId>(regions.keys().begin(), regions.keys().end());
-}
-
-std::vector<BitstreamReorderRegionBlockId> BitstreamReorderMap::get_region_blocks(const BitstreamReorderRegionId& region_id) const {
-    return std::vector<BitstreamReorderRegionBlockId>(regions[region_id].tile_types.keys().begin(), regions[region_id].tile_types.keys().end());
-}
-
-std::string BitstreamReorderMap::get_block_alias(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id) const {
-    return regions[region_id].tile_aliases[block_id];
 }
 
 std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id) const {
