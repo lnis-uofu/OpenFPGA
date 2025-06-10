@@ -51,44 +51,9 @@ static void init_tile_bit_maps(const pugi::xml_node& xml_root, std::unordered_ma
     }
 }
 
-static std::pair<int, int> extract_tile_indices(const std::string& name) {
-    std::regex pattern(R"(tile_(\d+)__(\d+)_?)");
-    std::smatch match;
-
-    if (std::regex_match(name, match, pattern)) {
-        int first = std::stoi(match[1]);
-        int second = std::stoi(match[2]);
-        return {first, second};
-    } else {
-        throw std::invalid_argument("Invalid format: " + name);
-    }
-}
-
-BitstreamReorderMap::BitstreamReorderMap() {}
-
-BitstreamReorderMap::BitstreamReorderMap(const std::string& reorder_map_file) {
-  init_from_file(reorder_map_file);
-}
-
-BitstreamReorderMap::~BitstreamReorderMap() {}
-
-void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
-    /* Parse the file */
-    pugi::xml_document doc;
-    pugiutil::loc_data loc_data;
-
-    loc_data = pugiutil::load_xml(doc, reorder_map_file);
-
-    pugi::xml_node xml_root = pugiutil::get_first_child(doc, "bitstream_remap", loc_data);
-
-    /*
-    * Store the information under tile_bitmap tags
-    */
-    init_tile_bit_maps(xml_root, tile_bit_maps);
-
-    /*
-    * Store the information under region tags
-    */
+static void init_regions(const pugi::xml_node& xml_root, 
+                         const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps, 
+                         vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions) {
     int xml_region_id = 0;
     for (pugi::xml_node xml_region : xml_root.children("region")) {
         VTR_ASSERT(xml_region.attribute("id").as_int() == xml_region_id);
@@ -143,6 +108,47 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         region.num_bls = num_bls;
         xml_region_id++;
     }
+}
+
+static std::pair<int, int> extract_tile_indices(const std::string& name) {
+    std::regex pattern(R"(tile_(\d+)__(\d+)_?)");
+    std::smatch match;
+
+    if (std::regex_match(name, match, pattern)) {
+        int first = std::stoi(match[1]);
+        int second = std::stoi(match[2]);
+        return {first, second};
+    } else {
+        throw std::invalid_argument("Invalid format: " + name);
+    }
+}
+
+BitstreamReorderMap::BitstreamReorderMap() {}
+
+BitstreamReorderMap::BitstreamReorderMap(const std::string& reorder_map_file) {
+  init_from_file(reorder_map_file);
+}
+
+BitstreamReorderMap::~BitstreamReorderMap() {}
+
+void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
+    /* Parse the file */
+    pugi::xml_document doc;
+    pugiutil::loc_data loc_data;
+
+    loc_data = pugiutil::load_xml(doc, reorder_map_file);
+
+    pugi::xml_node xml_root = pugiutil::get_first_child(doc, "bitstream_remap", loc_data);
+
+    /*
+    * Store the information under tile_bitmap tags
+    */
+    init_tile_bit_maps(xml_root, tile_bit_maps);
+
+    /*
+    * Store the information under region tags
+    */
+    init_regions(xml_root, tile_bit_maps, regions);
 
     // This function take the region id and the BL index as inputs and return the
     // column index (x coordinate) corresponding to the BL index. Note that each column
