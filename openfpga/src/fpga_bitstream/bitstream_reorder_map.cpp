@@ -214,16 +214,20 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     }
 }
 
-size_t BitstreamReorderMap::num_config_bits() const {
-    size_t num_config_bits = 0;
-    
-    for (const auto& region: regions) {
-        for (const auto& tile_type: region.tile_types) {
-            num_config_bits += tile_bit_maps.at(tile_type).num_cbits;
+std::pair<size_t, size_t> BitstreamReorderMap::region_bl_wl_intersection_range(const BitstreamReorderRegionId& region_id) const {
+    size_t starting_id = 0;
+
+    for (const auto& prev_region_id: regions.keys()) {
+        if (prev_region_id < region_id) {
+            starting_id += regions[prev_region_id].num_bls * regions[prev_region_id].num_wls;
         }
     }
 
-    return num_config_bits;
+    return {starting_id, starting_id + regions[region_id].num_bls * regions[region_id].num_wls};
+}
+
+size_t BitstreamReorderMap::num_config_bits(const BitstreamReorderRegionId& region_id) const {
+    return regions[region_id].num_cbits;
 }
 
 size_t BitstreamReorderMap::get_bl_address_size() const {

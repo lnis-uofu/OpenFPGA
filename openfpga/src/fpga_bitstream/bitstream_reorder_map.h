@@ -74,9 +74,18 @@ public:
     void init_from_file(const std::string& reorder_map_file);
 
     /**
-     * @brief Get the number of configuration bits
+     * @brief Get the index range of bl/wl intersection in the given region
+     * @param region_id The id of the region
+     *
+     * @return A pair of size_t, the first is the starting index (inclusive), the second is the ending index (exclusive)
      */
-    size_t num_config_bits() const;
+    std::pair<size_t, size_t> region_bl_wl_intersection_range(const BitstreamReorderRegionId& region_id) const;
+
+    /**
+     * @brief Get the number of configuration bits in a region
+     * @param region_id The id of the region
+     */
+    size_t num_config_bits(const BitstreamReorderRegionId& region_id) const;
 
     /**
      * @brief Get the size of the bitline address
