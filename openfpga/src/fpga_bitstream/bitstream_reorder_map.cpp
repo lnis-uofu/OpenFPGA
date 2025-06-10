@@ -93,8 +93,9 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
         int tile_id = 0;
         size_t num_cbits = 0;
         size_t num_bls = 0;
-        int first_tile_x = -1;
-        int first_tile_y = -1;
+        int prev_tile_x = -1;
+        int compressed_tile_x = 0;
+        int compressed_tile_y = 0;
         for (pugi::xml_node xml_tile : xml_region.children("tile")) {
             VTR_ASSERT(xml_tile.attribute("id").as_int() == tile_id);
             std::string tile_name = xml_tile.attribute("name").as_string();
@@ -102,25 +103,32 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
             auto [tile_x, tile_y] = extract_tile_indices(tile_alias);
 
             if (tile_id == 0) {
-                first_tile_x = tile_x;
-                first_tile_y = tile_y;
+                prev_tile_x = tile_x;
+            } else {
+                if (prev_tile_x != tile_x) {
+                    compressed_tile_x += 1;
+                    compressed_tile_y = 0;
+                } else {
+                    compressed_tile_y += 1;
+                }
             }
 
             region.tile_types.emplace_back(tile_name);
             region.tile_aliases.emplace_back(tile_alias);
             // Block location stored in alias is the blocks absolute location in grid (across multiple regions)
             // We convert it to relative location in the current region
-            region.tile_locations.emplace_back(tile_x - first_tile_x, tile_y - first_tile_y);
+            region.tile_locations.emplace_back(compressed_tile_x, compressed_tile_y);
             num_cbits += tile_bit_maps[tile_name].num_cbits;
 
             
             size_t tile_num_bls = tile_bit_maps[tile_name].num_bls;
             // To get the number BLs, we iterate over all tiles in the first row
             // of the region and sum up the number of BLs in each tile
-            if (tile_y - first_tile_y == 0) {
+            if (compressed_tile_y == 0) {
                 num_bls += tile_num_bls;
             }
 
+            prev_tile_x = tile_x;
             tile_id++;
         }
         
