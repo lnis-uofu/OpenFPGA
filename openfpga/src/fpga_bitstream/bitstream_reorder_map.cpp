@@ -22,6 +22,35 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+static void init_tile_bit_maps(const pugi::xml_node& xml_root, std::unordered_map<std::string, tile_bit_map>& tile_bit_maps) {
+    for (pugi::xml_node xml_tile_bitmap : xml_root.children("tile_bitmap")) {
+        std::string tile_name = xml_tile_bitmap.attribute("name").as_string();
+        VTR_ASSERT(tile_bit_maps.find(tile_name) == tile_bit_maps.end());
+
+        tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
+
+        tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_uint();
+        VTR_ASSERT(tile_bit_map.num_cbits > 0);
+        tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_uint();
+        VTR_ASSERT(tile_bit_map.num_bls > 0);
+        tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_uint();
+        VTR_ASSERT(tile_bit_map.num_wls > 0);
+
+        tile_bit_map.bit_map.resize(tile_bit_map.num_wls * tile_bit_map.num_bls, ConfigBitId::INVALID());
+        for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
+            ConfigBitId config_bit_id = 
+                ConfigBitId(static_cast<size_t>(xml_bit.attribute("index").as_int()));
+            BitstreamReorderTileBitId bitstream_reorder_tile_bit_id = 
+                BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
+            // Config bit id should not exceed the number of C bits in the tile
+            VTR_ASSERT(static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits);
+            // The reordered bit id should not exceed the number of bits (intersections of WL and BL) in the tile
+            VTR_ASSERT(static_cast<size_t>(bitstream_reorder_tile_bit_id) < tile_bit_map.num_wls * tile_bit_map.num_bls);
+            tile_bit_map.bit_map[bitstream_reorder_tile_bit_id] = config_bit_id;
+        }
+    }
+}
+
 static std::pair<int, int> extract_tile_indices(const std::string& name) {
     std::regex pattern(R"(tile_(\d+)__(\d+)_?)");
     std::smatch match;
@@ -55,30 +84,7 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
     /*
     * Store the information under tile_bitmap tags
     */
-    for (pugi::xml_node xml_tile_bitmap : xml_root.children("tile_bitmap")) {
-        std::string tile_name = xml_tile_bitmap.attribute("name").as_string();
-        VTR_ASSERT(tile_bit_maps.find(tile_name) == tile_bit_maps.end());
-
-        tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
-
-        tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_uint();
-        VTR_ASSERT(tile_bit_map.num_cbits > 0);
-        tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_uint();
-        VTR_ASSERT(tile_bit_map.num_bls > 0);
-        tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_uint();
-        VTR_ASSERT(tile_bit_map.num_wls > 0);
-
-        tile_bit_map.bit_map.resize(tile_bit_map.num_wls * tile_bit_map.num_bls, ConfigBitId::INVALID());
-        for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
-            ConfigBitId config_bit_id = 
-                ConfigBitId(static_cast<size_t>(xml_bit.attribute("index").as_int()));
-            BitstreamReorderTileBitId bitstream_reorder_tile_bit_id = 
-                BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
-            VTR_ASSERT(static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits);
-            VTR_ASSERT(static_cast<size_t>(bitstream_reorder_tile_bit_id) < tile_bit_map.num_wls * tile_bit_map.num_bls);
-            tile_bit_map.bit_map[bitstream_reorder_tile_bit_id] = config_bit_id;
-        }
-    }
+    init_tile_bit_maps(xml_root, tile_bit_maps);
 
     /*
     * Store the information under region tags
