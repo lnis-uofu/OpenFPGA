@@ -247,6 +247,40 @@ ShellCommandId add_write_fabric_bitstream_command_template(
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: write_reordered_bitstream
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_build_reordered_fabric_bitstream_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("build_reordered_fabric_bitstream");
+
+  /* Add an option '--reorder_map' in short '-r'*/
+  CommandOptionId opt_reorder_map = shell_cmd.add_option(
+    "reorder_map", true,
+    "Path to the reordering map file");
+  shell_cmd.set_option_short_name(opt_reorder_map, "r");
+  shell_cmd.set_option_require_value(opt_reorder_map, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command 'reorder_bitstream' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Reorder the bitstream according to the reordering map", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     build_reorder_fabric_bitstream_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: write_io_mapping
  * - Add associated options
  * - Add command dependency
@@ -343,6 +377,17 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell,
     add_build_fabric_bitstream_command_template(
       shell, openfpga_bitstream_cmd_class,
       cmd_dependency_build_fabric_bitstream, hidden);
+
+  /********************************
+   * Command 'build_reordered_fabric_bitstream'
+   */
+  /* The 'build_reordered_fabric_bitstream' command should NOT be executed before
+   * 'build_architecture_bitstream' */
+  std::vector<ShellCommandId> cmd_dependency_build_reordered_fabric_bitstream;
+  cmd_dependency_build_reordered_fabric_bitstream.push_back(shell_cmd_build_arch_bitstream_id);
+  add_build_reordered_fabric_bitstream_command_template(
+    shell, openfpga_bitstream_cmd_class,
+    cmd_dependency_build_reordered_fabric_bitstream, hidden);
 
   /********************************
    * Command 'write_fabric_bitstream'
