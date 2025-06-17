@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <fstream>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -22,6 +23,32 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+
+static void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager, 
+                                                const BitstreamReorderMap& bitstream_reorder_map) {
+
+  std::string fname = "reordered_bitstream.txt";
+  std::fstream fp;
+  fp.open(fname, std::fstream::out | std::fstream::trunc);
+
+  size_t num_wls = bitstream_reorder_map.get_wl_address_size();
+  size_t num_bls = bitstream_reorder_map.get_bl_address_size();
+
+  for (size_t wl_index = 0; wl_index < num_wls; wl_index++) {
+    for (size_t bl_index = 0; bl_index < num_bls; bl_index++) {
+      BitstreamReorderBitId reordered_bit_id = bitstream_reorder_map.get_reordered_id_from_wl_bl(wl_index, bl_index);
+      VTR_ASSERT(reordered_bit_id.is_valid());
+      ConfigBitId config_bit_id = bitstream_reorder_map.get_config_bit_num(reordered_bit_id);
+      if (config_bit_id == ConfigBitId::INVALID()) {
+        fp << '0';
+      } else {
+        fp << bitstream_manager.bit_value(config_bit_id);
+      }
+    }
+    fp << std::endl;
+  }
+}
 
 /********************************************************************
  * This function aims to build a bitstream for configuration chain-like protocol
@@ -953,8 +980,10 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
       fabric_bitstream_region, seen_config_bits,
       region_id, module_manager.regions(top_module).size(),
       num_bits(num_bls), num_bits(num_wls));
-    fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
+    // fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
   }
+
+  write_fabric_bitstream_to_text_file(bitstream_manager, bitstream_reorder_map);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
             fabric_bitstream.num_bits());
