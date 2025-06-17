@@ -486,4 +486,56 @@ size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_i
     return get_wl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
 }
 
+BitstreamReorderBitId BitstreamReorderMap::get_reordered_id_from_wl_bl(const size_t& wl_index, const size_t& bl_index) const {
+    BitstreamReorderRegionId target_region_id = BitstreamReorderRegionId::INVALID();
+
+    size_t num_seen_intersections = 0;
+    size_t num_seen_wls = 0;
+    for (const auto& region_id: regions.keys()) {
+        if (wl_index >= num_seen_wls && wl_index < num_seen_wls + regions[region_id].num_wls) {
+            target_region_id = region_id;
+            break;
+        }
+        num_seen_wls += regions[region_id].num_wls;
+        num_seen_intersections += regions[region_id].num_wls * regions[region_id].num_bls;
+    }
+    VTR_ASSERT(target_region_id.is_valid());
+
+    auto target_block_id = get_block_id_from_wl_bl(regions, tile_bit_maps, bl_index, wl_index);
+    VTR_ASSERT(target_block_id.is_valid());
+
+    int target_x = get_region_x_from_bl_index(regions, tile_bit_maps, target_region_id, bl_index);
+
+    size_t num_seen_bls = 0;
+    for (const auto& block_id: regions[target_region_id].tile_types.keys()) {
+        if (regions[target_region_id].tile_locations.at(block_id).x == target_x) {
+            break;
+        }
+        const std::string& tile_type = regions[target_region_id].tile_types.at(block_id);
+        num_seen_intersections += tile_bit_maps.at(tile_type).num_wls * tile_bit_maps.at(tile_type).num_bls;
+        num_seen_bls += tile_bit_maps.at(tile_type).num_bls;
+    }
+
+    for (const auto& block_id: regions[target_region_id].tile_types.keys()) {
+        if (regions[target_region_id].tile_locations.at(block_id).x == target_x) {
+            if (block_id == target_block_id) {
+                break;
+            }
+            num_seen_wls += tile_bit_maps.at(regions[target_region_id].tile_types.at(block_id)).num_wls;
+        }
+    }
+
+    const std::string& target_tile_type = regions.at(target_region_id).tile_types.at(target_block_id);
+    size_t region_bl_index = bl_index - num_seen_bls;
+    size_t region_wl_index = wl_index - num_seen_wls;
+    VTR_ASSERT(region_wl_index >= 0);
+    VTR_ASSERT(region_wl_index < tile_bit_maps.at(target_tile_type).num_wls);
+    VTR_ASSERT(region_bl_index >= 0);
+    VTR_ASSERT(region_bl_index < tile_bit_maps.at(target_tile_type).num_bls);
+
+    size_t intersection_num_offset = regions.at(target_region_id).tile_intersection_index_map.at(target_block_id).at(region_bl_index).first;
+
+    return BitstreamReorderBitId(intersection_num_offset + region_wl_index);
+}
+
 } /* end namespace openfpga */

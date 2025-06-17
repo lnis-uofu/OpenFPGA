@@ -128,6 +128,13 @@ public:
      */
     size_t get_wl_from_index(const BitstreamReorderBitId& bit_id) const;
 
+    /**
+     * @brief Get the reordered bit id from the wordline and bitline index
+     * @param wl_index The wordline index
+     * @param bl_index The bitline index
+     */
+    BitstreamReorderBitId get_reordered_id_from_wl_bl(const size_t& wl_index, const size_t& bl_index) const;
+
 private:
 
     /**
