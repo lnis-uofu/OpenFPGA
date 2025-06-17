@@ -434,9 +434,44 @@ size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& re
 
 ConfigBitId BitstreamReorderMap::get_config_bit_num(const BitstreamReorderBitId& bit_id) const {
     bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
-    const std::string& tile_name = get_block_tile_name(tile_info.region_id, tile_info.block_id);
+    const std::string& target_tile_name = get_block_tile_name(tile_info.region_id, tile_info.block_id);
 
-    return get_config_bit_num(tile_name, tile_info.tile_bit_id);
+    const size_t& target_region_index = size_t(tile_info.region_id);
+    const size_t& target_block_index = size_t(tile_info.block_id);
+    const size_t& target_bit_index = size_t(tile_info.tile_bit_id);
+
+    if (tile_bit_maps.at(target_tile_name).bit_map.at(tile_info.tile_bit_id) == ConfigBitId::INVALID()) {
+        return ConfigBitId::INVALID();
+    }
+
+    size_t num_seen_cbits = 0;
+    for (const auto& region_id: regions.keys()) {
+        const auto& region_index = size_t(region_id);
+        if (region_index >= target_region_index) {
+            break;
+        }
+        num_seen_cbits += regions[region_id].num_cbits;
+    }
+
+    for (const auto& block_id: regions[tile_info.region_id].tile_types.keys()) {
+        const auto& block_index = size_t(block_id);
+        if (block_index >= target_block_index) {
+            break;
+        }
+        num_seen_cbits += tile_bit_maps.at(regions[tile_info.region_id].tile_types[block_id]).num_cbits;
+    }
+
+    for (BitstreamReorderTileBitId tile_reorder_bit_id: tile_bit_maps.at(target_tile_name).bit_map.keys()) {
+        ConfigBitId config_bit_id = tile_bit_maps.at(target_tile_name).bit_map.at(tile_reorder_bit_id);
+        if (config_bit_id == ConfigBitId::INVALID()) {
+            continue;
+        }
+        if (size_t(tile_reorder_bit_id) < target_bit_index) {
+            num_seen_cbits += 1;
+        }
+    }
+
+    return ConfigBitId(num_seen_cbits);
 }
 
 size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
