@@ -287,9 +287,11 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
   const BitstreamReorderMap& bitstream_reorder_map,
   FabricBitstream& fabric_bitstream,
   const FabricBitRegionId& fabric_bitstream_region,
+  std::unordered_set<ConfigBitId>& seen_config_bits,
   const int& region_id,
   const size_t& num_regions,
-  const size_t& bl_addr_size, const size_t& wl_addr_size) {
+  const size_t& bl_addr_size, 
+  const size_t& wl_addr_size) {
 
     auto region_bl_wl_intersection_range = bitstream_reorder_map.region_bl_wl_intersection_range(BitstreamReorderRegionId(region_id));
 
@@ -303,6 +305,8 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
       if (config_bit == ConfigBitId::INVALID()) {
         continue;
       }
+      VTR_ASSERT(seen_config_bits.find(config_bit) == seen_config_bits.end());
+      seen_config_bits.insert(config_bit);
       num_valid_intersections++;
       FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
 
@@ -939,14 +943,17 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
   // if we have one config region
   // VTR_ASSERT(module_manager.regions(top_module).size() == 1);
 
+  std::unordered_set<ConfigBitId> seen_config_bits;
   for (int region_id = 0; region_id < static_cast<int>(module_manager.regions(top_module).size()); region_id++) {
     FabricBitRegionId fabric_bitstream_region =
       fabric_bitstream.add_region();
 
     build_fabric_dependent_memory_bank_bitstream_with_reorder(
       bitstream_manager, bitstream_reorder_map, fabric_bitstream,
-      fabric_bitstream_region, region_id, module_manager.regions(top_module).size(),
+      fabric_bitstream_region, seen_config_bits,
+      region_id, module_manager.regions(top_module).size(),
       num_bits(num_bls), num_bits(num_wls));
+    fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
   }
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
