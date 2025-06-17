@@ -203,6 +203,8 @@ static void init_tile_intersection_index_map(const std::unordered_map<std::strin
     // Keep track of the number of intersections seen so far
     size_t num_seen_intersections = 0;
 
+    std::unordered_set<std::pair<size_t, size_t>, pair_hash> seen_intersection_ranges;
+
     // Iterate over all region, and for each region, iterate over BLs first,
     // and for each BL, Iterate over tiles falling on the BL and store the indices
     // in the tile.
@@ -219,8 +221,11 @@ static void init_tile_intersection_index_map(const std::unordered_map<std::strin
                 VTR_ASSERT(curr_block_id);
                 
                 const auto& tile_bit_map = tile_bit_maps.at(region.tile_types[curr_block_id]);
-                // All intersestions from num_seen_intersections to num_seen_intersections+tile_bit_map.num_wls-1 belongs to this tile 
-                region.tile_intersection_index_map.at(curr_block_id).emplace_back(num_seen_intersections, num_seen_intersections+tile_bit_map.num_wls);
+                // All intersestions from num_seen_intersections to num_seen_intersections+tile_bit_map.num_wls-1 belongs to this tile
+                auto intersection_range = std::make_pair(num_seen_intersections, num_seen_intersections+tile_bit_map.num_wls);
+                VTR_ASSERT(seen_intersection_ranges.find(intersection_range) == seen_intersection_ranges.end());
+                region.tile_intersection_index_map.at(curr_block_id).emplace_back(intersection_range);
+                seen_intersection_ranges.insert(intersection_range);
 
                 // Increment the offset
                 num_seen_intersections += tile_bit_map.num_wls;
