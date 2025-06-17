@@ -22,6 +22,14 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+// Define a hash function for pair<size_t, size_t>
+struct pair_hash {
+    std::size_t operator()(const std::pair<size_t, size_t>& p) const {
+        // Combine the two hash values
+        return std::hash<size_t>{}(p.first) ^ (std::hash<size_t>{}(p.second) << 1);
+    }
+};
+
 static std::pair<int, int> extract_tile_indices(const std::string& name) {
     std::regex pattern(R"(tile_(\d+)__(\d+)_?)");
     std::smatch match;
