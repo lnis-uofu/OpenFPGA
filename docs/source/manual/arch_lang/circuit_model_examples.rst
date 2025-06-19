@@ -525,6 +525,8 @@ Template
 
   - ``structure="tree|multi_level|one_level"`` Specify the multiplexer structure for a multiplexer. The structure option is only valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the one_level structure
 
+.. _mux_const_input_option:
+
   - ``num_level="<int>"`` Specify the number of levels when ``multi_level`` structure is selected.
     
   - ``add_const_input="true|false"`` Specify if an extra input should be added to the multiplexer circuits. For example, an 4-input multiplexer will be turned to a 5-input multiplexer. The extra input will be wired to a constant value, which can be specified through the XML syntax ``const_input_val``.
