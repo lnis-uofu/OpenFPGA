@@ -226,6 +226,10 @@ ShellCommandId add_write_fabric_bitstream_command_template(
     "wl_decremental_order", false,
     "Generate bitstream in WL decremental addressing order if supported");
 
+  shell_cmd.add_option(
+    "reorder", false,
+    "Use reorder fabric bitstream instead of default one");
+
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");

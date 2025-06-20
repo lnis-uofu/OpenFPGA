@@ -108,6 +108,7 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_path_only = cmd.option("path_only");
   CommandOptionId opt_value_only = cmd.option("value_only");
   CommandOptionId opt_trim_path = cmd.option("trim_path");
+  CommandOptionId opt_reorder = cmd.option("reorder");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
@@ -156,17 +157,19 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  const openfpga::FabricBitstream& fabric_bitstream = cmd_context.option_enable(cmd, opt_reorder) ? openfpga_ctx.reorder_fabric_bitstream() : openfpga_ctx.fabric_bitstream();
+
   if (bitfile_writer_opt.output_file_type() ==
       BitstreamWriterOption::e_bitfile_type::XML) {
     status = write_fabric_bitstream_to_xml_file(
-      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+      openfpga_ctx.bitstream_manager(), fabric_bitstream,
       openfpga_ctx.arch().config_protocol, bitfile_writer_opt);
   } else {
     VTR_ASSERT_SAFE(bitfile_writer_opt.output_file_type() ==
                     BitstreamWriterOption::e_bitfile_type::TEXT);
     /* By default, output in plain text format */
     status = write_fabric_bitstream_to_text_file(
-      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+      openfpga_ctx.bitstream_manager(), fabric_bitstream,
       openfpga_ctx.blwl_shift_register_banks(),
       openfpga_ctx.arch().config_protocol,
       openfpga_ctx.fabric_global_port_info(), bitfile_writer_opt);
@@ -188,8 +191,10 @@ int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
   BitstreamReorderMap bitstream_reorder_map(cmd_context.option_value(cmd, opt_reorder_map));
 
   /* Build fabric bitstream here */
-  openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream_with_reorder(
-    openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
+  openfpga_ctx.mutable_reorder_fabric_bitstream() = build_fabric_dependent_bitstream_with_reorder(
+    openfpga_ctx.bitstream_manager(),
+    openfpga_ctx.fabric_bitstream(),
+    openfpga_ctx.module_graph(),
     openfpga_ctx.module_name_map(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.arch().config_protocol, bitstream_reorder_map,
     cmd_context.option_enable(cmd, opt_verbose));
