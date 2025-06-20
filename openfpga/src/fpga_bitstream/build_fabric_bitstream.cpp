@@ -25,7 +25,8 @@
 namespace openfpga {
 
 
-static void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager, 
+static void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
+                                                const FabricBitstream& original_fabric_bitstream,
                                                 const BitstreamReorderMap& bitstream_reorder_map) {
 
   std::string fname = "reordered_bitstream.txt";
@@ -43,7 +44,7 @@ static void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstrea
       if (config_bit_id == ConfigBitId::INVALID()) {
         fp << '0';
       } else {
-        fp << bitstream_manager.bit_value(config_bit_id);
+        fp << bitstream_manager.bit_value(original_fabric_bitstream.config_bit(FabricBitId(static_cast<size_t>(config_bit_id))));
       }
     }
     fp << std::endl;
@@ -906,6 +907,7 @@ FabricBitstream build_fabric_dependent_bitstream(
 
 FabricBitstream build_fabric_dependent_bitstream_with_reorder(
   const BitstreamManager& bitstream_manager,
+  const FabricBitstream& original_fabric_bitstream,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const BitstreamReorderMap& bitstream_reorder_map,
@@ -980,10 +982,10 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
       fabric_bitstream_region, seen_config_bits,
       region_id, module_manager.regions(top_module).size(),
       num_bits(num_bls), num_bits(num_wls));
-    // fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
+    fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
   }
 
-  write_fabric_bitstream_to_text_file(bitstream_manager, bitstream_reorder_map);
+  write_fabric_bitstream_to_text_file(bitstream_manager, original_fabric_bitstream, bitstream_reorder_map);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
             fabric_bitstream.num_bits());
