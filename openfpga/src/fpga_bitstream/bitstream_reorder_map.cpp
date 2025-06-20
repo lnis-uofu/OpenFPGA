@@ -461,17 +461,8 @@ ConfigBitId BitstreamReorderMap::get_config_bit_num(const BitstreamReorderBitId&
         num_seen_cbits += tile_bit_maps.at(regions[tile_info.region_id].tile_types[block_id]).num_cbits;
     }
 
-    for (BitstreamReorderTileBitId tile_reorder_bit_id: tile_bit_maps.at(target_tile_name).bit_map.keys()) {
-        ConfigBitId config_bit_id = tile_bit_maps.at(target_tile_name).bit_map.at(tile_reorder_bit_id);
-        if (config_bit_id == ConfigBitId::INVALID()) {
-            continue;
-        }
-        if (size_t(tile_reorder_bit_id) < target_bit_index) {
-            num_seen_cbits += 1;
-        }
-    }
-
-    return ConfigBitId(num_seen_cbits);
+    size_t cbit_offset = static_cast<size_t>(tile_bit_maps.at(target_tile_name).bit_map.at(tile_info.tile_bit_id));
+    return ConfigBitId(num_seen_cbits+cbit_offset);
 }
 
 size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
