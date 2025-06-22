@@ -372,7 +372,6 @@ ConfigBitId BitstreamReorderMap::get_config_bit_num(const BitstreamReorderBitId&
 
     const size_t& target_region_index = size_t(tile_info.region_id);
     const size_t& target_block_index = size_t(tile_info.block_id);
-    const size_t& target_bit_index = size_t(tile_info.tile_bit_id);
 
     if (tile_bit_maps.at(target_tile_name).bit_map.at(tile_info.tile_bit_id) == ConfigBitId::INVALID()) {
         return ConfigBitId::INVALID();
