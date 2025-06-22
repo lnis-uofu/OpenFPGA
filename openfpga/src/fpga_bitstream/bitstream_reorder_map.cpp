@@ -322,15 +322,15 @@ size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& re
     for (const auto& region_tile_id : region.tile_types.keys()) {
         auto curr_tile_location = region.tile_locations.at(region_tile_id);
 
-        if (curr_tile_location.x < target_tile_location.x && curr_tile_location.y == target_tile_location.y) {
+        if (curr_tile_location.x < target_tile_location.x && curr_tile_location.y == 0) {
             num_seen_bls += tile_bit_maps.at(region.tile_types[region_tile_id]).num_bls;
         }
     }
 
     // Calculate the local BL index within the current tile
-    size_t tile_cbit_num = size_t(bit_id);
+    size_t tile_bit_index = size_t(bit_id);
     size_t tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
-    size_t tile_bl_num = tile_cbit_num % tile_num_bls;
+    size_t tile_bl_num = tile_bit_index % tile_num_bls;
 
     /* Return the final BL index */
     return num_seen_bls + tile_bl_num;
@@ -358,9 +358,9 @@ size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& re
     }
 
     // Calculate the local WL index within the current tile 
-    size_t tile_cbit_num = size_t(bit_id);
+    size_t tile_bit_index = size_t(bit_id);
     size_t tile_num_bls = tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
-    size_t tile_wl_num = tile_cbit_num / tile_num_bls;
+    size_t tile_wl_num = tile_bit_index / tile_num_bls;
 
     /* Return the final WL index */
     return num_seen_wls + tile_wl_num;
