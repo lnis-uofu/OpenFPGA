@@ -270,38 +270,27 @@ std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegio
 }
 
 bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const BitstreamReorderBitId& bit_id) const {
-    size_t bit_index = static_cast<size_t>(bit_id);
+    size_t target_bit_index = static_cast<size_t>(bit_id);
 
     bool found_tile = false;
     BitstreamReorderRegionId found_region_id;
     BitstreamReorderRegionBlockId found_block_id;
     BitstreamReorderTileBitId found_tile_bit_id;
 
+    size_t num_seen_intersections = 0;
     for (const auto& region_id: regions.keys()) {
         for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
-            for (size_t pair_index = 0; pair_index < regions.at(region_id).tile_intersection_index_map.at(block_region_id).size(); pair_index++) {
-                const auto& intersection_index = regions.at(region_id).tile_intersection_index_map.at(block_region_id).at(pair_index);
-                if (bit_index >= intersection_index.first && bit_index < intersection_index.second) {
-                    const auto& tile_bit_map = tile_bit_maps.at(regions.at(region_id).tile_types.at(block_region_id));
-                    found_tile = true;
-                    found_region_id = region_id;
-                    found_block_id = block_region_id;
-                    size_t found_tile_bit_index_offset = 0;
-                    for (size_t prev_pair_index = 0; prev_pair_index < pair_index; prev_pair_index++) {
-                        const auto& prev_intersection_index = regions.at(region_id).tile_intersection_index_map.at(block_region_id).at(prev_pair_index);
-                        found_tile_bit_index_offset += prev_intersection_index.second - prev_intersection_index.first;
-                    }
-                    found_tile_bit_id = BitstreamReorderTileBitId(found_tile_bit_index_offset + bit_index - intersection_index.first);
-                    VTR_ASSERT(size_t(found_tile_bit_id) < tile_bit_map.num_wls * tile_bit_map.num_bls);
-                    break;
-                }
-            }
-
-            if (found_tile) {
+            const auto& tile_bit_map = tile_bit_maps.at(regions.at(region_id).tile_types.at(block_region_id));
+            size_t block_num_intersections = tile_bit_map.num_wls * tile_bit_map.num_bls;
+            if (target_bit_index >= num_seen_intersections && target_bit_index < num_seen_intersections + block_num_intersections) {
+                found_tile = true;
+                found_region_id = region_id;
+                found_block_id = block_region_id;
+                found_tile_bit_id = BitstreamReorderTileBitId(target_bit_index - num_seen_intersections);
                 break;
             }
+            num_seen_intersections += block_num_intersections;
         }
-
         if (found_tile) {
             break;
         }
