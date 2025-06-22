@@ -449,17 +449,30 @@ BitstreamReorderBitId BitstreamReorderMap::get_reordered_id_from_wl_bl(const siz
         }
     }
 
+    size_t intersection_num_offset = 0;
+    for (const auto& region_id: regions.keys()) {
+        for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
+            if (region_id == target_region_id && block_region_id == target_block_id) {
+                break;
+            }
+            const auto& tile_bit_map = tile_bit_maps.at(regions.at(region_id).tile_types.at(block_region_id));
+            size_t block_num_intersections = tile_bit_map.num_wls * tile_bit_map.num_bls;
+            intersection_num_offset += block_num_intersections;
+        }
+        if (region_id == target_region_id) {
+            break;
+        }
+    }
+
     const std::string& target_tile_type = regions.at(target_region_id).tile_types.at(target_block_id);
+    VTR_ASSERT(bl_index >= num_seen_bls);
+    VTR_ASSERT(wl_index >= num_seen_wls);
     size_t region_bl_index = bl_index - num_seen_bls;
     size_t region_wl_index = wl_index - num_seen_wls;
-    VTR_ASSERT(region_wl_index >= 0);
     VTR_ASSERT(region_wl_index < tile_bit_maps.at(target_tile_type).num_wls);
-    VTR_ASSERT(region_bl_index >= 0);
     VTR_ASSERT(region_bl_index < tile_bit_maps.at(target_tile_type).num_bls);
 
-    size_t intersection_num_offset = regions.at(target_region_id).tile_intersection_index_map.at(target_block_id).at(region_bl_index).first;
-
-    return BitstreamReorderBitId(intersection_num_offset + region_wl_index);
+    return BitstreamReorderBitId(intersection_num_offset + region_wl_index*tile_bit_maps.at(target_tile_type).num_bls + region_bl_index);
 }
 
 } /* end namespace openfpga */
