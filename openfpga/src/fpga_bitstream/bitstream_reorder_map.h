@@ -48,7 +48,6 @@ struct bistream_reorder_region {
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_types;
     vtr::vector<BitstreamReorderRegionBlockId, tile_location> tile_locations;
     vtr::vector<BitstreamReorderRegionBlockId, std::string> tile_aliases;
-    vtr::vector<BitstreamReorderRegionBlockId, std::vector<std::pair<size_t, size_t>>> tile_intersection_index_map;
     size_t num_cbits;
     size_t num_wls;
     size_t num_bls;
