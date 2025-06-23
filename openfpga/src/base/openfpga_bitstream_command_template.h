@@ -271,6 +271,13 @@ ShellCommandId add_build_reordered_fabric_bitstream_command_template(
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true,
+    "file path to output the fabric bitstream to plain text file");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
   /* Add command 'reorder_bitstream' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Reorder the bitstream according to the reordering map", hidden);

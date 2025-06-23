@@ -185,7 +185,17 @@ template <class T>
 int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
                                             const CommandContext& cmd_context) {
   CommandOptionId opt_reorder_map = cmd.option("reorder_map");
+  CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path =
+    find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
 
   /* Read the bitstream reorder map */
   BitstreamReorderMap bitstream_reorder_map(cmd_context.option_value(cmd, opt_reorder_map));
@@ -197,6 +207,7 @@ int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.module_graph(),
     openfpga_ctx.module_name_map(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.arch().config_protocol, bitstream_reorder_map,
+    cmd_context.option_value(cmd, opt_file),
     cmd_context.option_enable(cmd, opt_verbose));
 
   /* TODO: should identify the error code from internal function execution */

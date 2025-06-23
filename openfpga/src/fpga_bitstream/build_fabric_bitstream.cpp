@@ -20,6 +20,7 @@
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "bitstream_reorder_map.h"
+#include "openfpga_digest.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -27,11 +28,20 @@ namespace openfpga {
 
 static void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
                                                 const FabricBitstream& original_fabric_bitstream,
-                                                const BitstreamReorderMap& bitstream_reorder_map) {
+                                                const BitstreamReorderMap& bitstream_reorder_map,
+                                                const std::string& output_file_name) {
 
-  std::string fname = "reordered_bitstream.txt";
+  if (true == output_file_name.empty()) {
+    VTR_LOG_ERROR(
+      "Received empty file name to output bitstream!\n\tPlease specify a valid "
+      "file name.\n");
+  }
+
+  /* Create the file stream */
   std::fstream fp;
-  fp.open(fname, std::fstream::out | std::fstream::trunc);
+  fp.open(output_file_name, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(output_file_name.c_str(), fp);
 
   size_t num_wls = bitstream_reorder_map.get_wl_address_size();
   size_t num_bls = bitstream_reorder_map.get_bl_address_size();
@@ -911,6 +921,7 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const BitstreamReorderMap& bitstream_reorder_map,
+  const std::string& output_file_name,
   const bool& verbose) {
   FabricBitstream fabric_bitstream;
 
@@ -985,7 +996,10 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
     fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
   }
 
-  write_fabric_bitstream_to_text_file(bitstream_manager, original_fabric_bitstream, bitstream_reorder_map);
+  write_fabric_bitstream_to_text_file(bitstream_manager,
+                                      original_fabric_bitstream,
+                                      bitstream_reorder_map,
+                                      output_file_name);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
             fabric_bitstream.num_bits());
