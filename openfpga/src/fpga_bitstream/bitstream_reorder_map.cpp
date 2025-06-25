@@ -271,38 +271,39 @@ std::string BitstreamReorderMap::get_block_tile_name(const BitstreamReorderRegio
 
 bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(const BitstreamReorderBitId& bit_id) const {
     size_t target_bit_index = static_cast<size_t>(bit_id);
-
-    bool found_tile = false;
-    BitstreamReorderRegionId found_region_id;
-    BitstreamReorderRegionBlockId found_block_id;
-    BitstreamReorderTileBitId found_tile_bit_id;
-
     size_t num_seen_intersections = 0;
+    size_t num_seen_cbits = 0;
+
+    std::string target_tile_name;
+    BitstreamReorderRegionId target_region_id = BitstreamReorderRegionId::INVALID();
+    BitstreamReorderRegionBlockId target_block_id = BitstreamReorderRegionBlockId::INVALID();
+
     for (const auto& region_id: regions.keys()) {
-        for (const auto& block_region_id: regions.at(region_id).tile_types.keys()) {
-            const auto& tile_bit_map = tile_bit_maps.at(regions.at(region_id).tile_types.at(block_region_id));
+        for (const auto& block_id: regions[region_id].tile_types.keys()) {
+            std::string tile_name = regions[region_id].tile_types[block_id];
+            const auto& tile_bit_map = tile_bit_maps.at(tile_name);
             size_t block_num_intersections = tile_bit_map.num_wls * tile_bit_map.num_bls;
+            size_t block_num_cbits = tile_bit_map.num_cbits;
             if (target_bit_index >= num_seen_intersections && target_bit_index < num_seen_intersections + block_num_intersections) {
-                found_tile = true;
-                found_region_id = region_id;
-                found_block_id = block_region_id;
-                found_tile_bit_id = BitstreamReorderTileBitId(target_bit_index - num_seen_intersections);
+                target_tile_name = tile_name;
+                target_region_id = region_id;
+                target_block_id = block_id;
                 break;
             }
             num_seen_intersections += block_num_intersections;
+            num_seen_cbits += block_num_cbits;
         }
-        if (found_tile) {
+        if (target_region_id.is_valid()) {
             break;
         }
     }
 
-    VTR_ASSERT(found_tile);
-
-    return {found_region_id, found_block_id, found_tile_bit_id};
-}
-
-ConfigBitId BitstreamReorderMap::get_config_bit_num(const std::string& tile_name, const BitstreamReorderTileBitId& bit_id) const {
-    return tile_bit_maps.at(tile_name).bit_map.at(bit_id);
+    VTR_ASSERT(target_tile_name.empty() == false);
+    VTR_ASSERT(target_region_id.is_valid());
+    VTR_ASSERT(target_block_id.is_valid());
+    VTR_ASSERT(target_bit_index >= num_seen_intersections);
+    BitstreamReorderTileBitId tile_bit_id = BitstreamReorderTileBitId(target_bit_index - num_seen_intersections);
+    return {target_region_id, target_block_id, tile_bit_id, num_seen_intersections, num_seen_cbits};
 }
 
 size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
@@ -373,57 +374,24 @@ size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& re
     return num_seen_wls + tile_wl_num;
 }
 
-ConfigBitId BitstreamReorderMap::get_config_bit_num(const BitstreamReorderBitId& bit_id) const {
-    size_t target_bit_index = static_cast<size_t>(bit_id);
-    size_t num_seen_intersections = 0;
-    size_t num_seen_cbits = 0;
+reorder_bit_id_info BitstreamReorderMap::get_reorder_bit_id_info(const BitstreamReorderBitId& bit_id) const {
+    reorder_bit_id_info reorder_bit_id_info;
 
-    std::string target_tile_name;
-    BitstreamReorderRegionId target_region_id = BitstreamReorderRegionId::INVALID();
-    BitstreamReorderRegionBlockId target_block_id = BitstreamReorderRegionBlockId::INVALID();
+    bitstream_reorder_tile_bit_info tile_bit_info = get_tile_bit_info(bit_id);
+    std::string target_tile_name = regions[tile_bit_info.region_id].tile_types[tile_bit_info.block_id];
 
-    for (const auto& region_id: regions.keys()) {
-        for (const auto& block_id: regions[region_id].tile_types.keys()) {
-            std::string tile_name = regions[region_id].tile_types[block_id];
-            const auto& tile_bit_map = tile_bit_maps.at(tile_name);
-            size_t block_num_intersections = tile_bit_map.num_wls * tile_bit_map.num_bls;
-            size_t block_num_cbits = tile_bit_map.num_cbits;
-            if (target_bit_index >= num_seen_intersections && target_bit_index < num_seen_intersections + block_num_intersections) {
-                target_tile_name = tile_name;
-                target_region_id = region_id;
-                target_block_id = block_id;
-                break;
-            }
-            num_seen_intersections += block_num_intersections;
-            num_seen_cbits += block_num_cbits;
-        }
-        if (target_region_id.is_valid()) {
-            break;
-        }
-    }
-    VTR_ASSERT(target_tile_name.empty() == false);
-    VTR_ASSERT(target_region_id.is_valid());
-    VTR_ASSERT(target_block_id.is_valid());
-    VTR_ASSERT(target_bit_index >= num_seen_intersections);
-    BitstreamReorderTileBitId tile_bit_id = BitstreamReorderTileBitId(target_bit_index - num_seen_intersections);
     const auto& target_tile_bit_map = tile_bit_maps.at(target_tile_name);
-    auto target_cbit_offset = target_tile_bit_map.bit_map.at(tile_bit_id);
+    auto target_cbit_offset = target_tile_bit_map.bit_map.at(tile_bit_info.tile_bit_id);
     if (!target_cbit_offset.is_valid()) {
-        return ConfigBitId::INVALID();
+        return reorder_bit_id_info;
     }
-    return ConfigBitId(num_seen_cbits + static_cast<size_t>(target_cbit_offset));
-}
+    size_t target_bl_index = get_bl_from_index(tile_bit_info.region_id, tile_bit_info.block_id, tile_bit_info.tile_bit_id);
+    size_t target_wl_index = get_wl_from_index(tile_bit_info.region_id, tile_bit_info.block_id, tile_bit_info.tile_bit_id);
 
-size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderBitId& bit_id) const {
-    bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
-
-    return get_bl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
-}
-
-size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderBitId& bit_id) const {
-    bitstream_reorder_tile_bit_info tile_info = get_tile_bit_info(bit_id);
-
-    return get_wl_from_index(tile_info.region_id, tile_info.block_id, tile_info.tile_bit_id);
+    reorder_bit_id_info.config_bit_id = ConfigBitId(tile_bit_info.cbit_num_offset + static_cast<size_t>(target_cbit_offset));
+    reorder_bit_id_info.bl_index = target_bl_index;
+    reorder_bit_id_info.wl_index = target_wl_index;
+    return reorder_bit_id_info;
 }
 
 BitstreamReorderBitId BitstreamReorderMap::get_reordered_id_from_wl_bl(const size_t& wl_index, const size_t& bl_index) const {
