@@ -50,7 +50,8 @@ static void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstrea
     for (size_t bl_index = 0; bl_index < num_bls; bl_index++) {
       BitstreamReorderBitId reordered_bit_id = bitstream_reorder_map.get_reordered_id_from_wl_bl(wl_index, bl_index);
       VTR_ASSERT(reordered_bit_id.is_valid());
-      ConfigBitId config_bit_id = bitstream_reorder_map.get_config_bit_num(reordered_bit_id);
+      reorder_bit_id_info bit_info = bitstream_reorder_map.get_reorder_bit_id_info(reordered_bit_id);
+      ConfigBitId config_bit_id = bit_info.config_bit_id;
       if (config_bit_id == ConfigBitId::INVALID()) {
         fp << '0';
       } else {
@@ -339,7 +340,8 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
     size_t num_valid_intersections = 0;
     for (size_t ibit = start_bit_id ; ibit < end_bit_id; ++ibit) {
       BitstreamReorderBitId bitstream_reorder_bit = BitstreamReorderBitId(ibit);
-      ConfigBitId config_bit = bitstream_reorder_map.get_config_bit_num(bitstream_reorder_bit);
+      reorder_bit_id_info bit_info = bitstream_reorder_map.get_reorder_bit_id_info(bitstream_reorder_bit);
+      ConfigBitId config_bit = bit_info.config_bit_id;
       if (config_bit == ConfigBitId::INVALID()) {
         continue;
       }
@@ -349,12 +351,12 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
       FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
 
       /* Find BL address */
-      int bl_index = bitstream_reorder_map.get_bl_from_index(bitstream_reorder_bit);
+      int bl_index = bit_info.bl_index;
       std::vector<char> bl_addr_bits_vec =
         itobin_charvec(bl_index, bl_addr_size);
 
       /* Find WL address */
-      int wl_index = bitstream_reorder_map.get_wl_from_index(bitstream_reorder_bit);
+      int wl_index = bit_info.wl_index;
       std::vector<char> wl_addr_bits_vec =
         itobin_charvec(wl_index, wl_addr_size);
 
