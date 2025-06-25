@@ -31,10 +31,18 @@ typedef vtr::StrongId<bitstream_reorder_tile_bit_id_tag> BitstreamReorderTileBit
 // Reordered Config bit ID globally (unique across all tiles)
 typedef vtr::StrongId<bitstream_reorder_bit_id_tag> BitstreamReorderBitId;
 
+struct reorder_bit_id_info {
+    ConfigBitId config_bit_id = ConfigBitId::INVALID();
+    size_t bl_index = size_t(-1);
+    size_t wl_index = size_t(-1);
+};
+
 struct bitstream_reorder_tile_bit_info {
-    BitstreamReorderRegionId region_id;
-    BitstreamReorderRegionBlockId block_id;
-    BitstreamReorderTileBitId tile_bit_id;
+    BitstreamReorderRegionId region_id = BitstreamReorderRegionId::INVALID();
+    BitstreamReorderRegionBlockId block_id = BitstreamReorderRegionBlockId::INVALID();
+    BitstreamReorderTileBitId tile_bit_id = BitstreamReorderTileBitId::INVALID();
+    size_t intersection_num_offset = size_t(-1);
+    size_t cbit_num_offset = size_t(-1);
 };
 
 struct tile_location {
@@ -113,19 +121,7 @@ public:
      * @brief Get the config bit number from the bit index
      * @param bit_id The bit id
      */
-    ConfigBitId get_config_bit_num(const BitstreamReorderBitId& bit_id) const;
-
-    /**
-     * @brief Get the bitline number from the bit index
-     * @param bit_id The bit id
-     */
-    size_t get_bl_from_index(const BitstreamReorderBitId& bit_id) const;
-
-    /**
-     * @brief Get the wordline number from the bit index
-     * @param bit_id The bit id
-     */
-    size_t get_wl_from_index(const BitstreamReorderBitId& bit_id) const;
+    reorder_bit_id_info get_reorder_bit_id_info(const BitstreamReorderBitId& bit_id) const;
 
     /**
      * @brief Get the reordered bit id from the wordline and bitline index
@@ -151,13 +147,6 @@ private:
      * @param bit_id The bit id
      */
     size_t get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const;
-
-    /**
-     * @brief Get the config bit number in the tile 
-     * @param tile_name The name of the tile
-     * @param bit_id The bit id
-     */
-    ConfigBitId get_config_bit_num(const std::string& tile_name, const BitstreamReorderTileBitId& bit_id) const;
 
     vtr::vector<BitstreamReorderRegionId, bistream_reorder_region> regions;
     std::unordered_map<std::string, tile_bit_map> tile_bit_maps;
