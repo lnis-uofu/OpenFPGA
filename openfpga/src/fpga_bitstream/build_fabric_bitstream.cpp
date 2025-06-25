@@ -328,7 +328,6 @@ static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
   const FabricBitRegionId& fabric_bitstream_region,
   std::unordered_set<ConfigBitId>& seen_config_bits,
   const int& region_id,
-  const size_t& num_regions,
   const size_t& bl_addr_size, 
   const size_t& wl_addr_size) {
 
@@ -921,7 +920,6 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& original_fabric_bitstream,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const BitstreamReorderMap& bitstream_reorder_map,
   const std::string& output_file_name,
   const bool& verbose) {
@@ -993,7 +991,7 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
     build_fabric_dependent_memory_bank_bitstream_with_reorder(
       bitstream_manager, bitstream_reorder_map, fabric_bitstream,
       fabric_bitstream_region, seen_config_bits,
-      region_id, module_manager.regions(top_module).size(),
+      region_id,
       num_bits(num_bls), num_bits(num_wls));
     fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
   }

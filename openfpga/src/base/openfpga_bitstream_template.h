@@ -205,8 +205,8 @@ int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.bitstream_manager(),
     openfpga_ctx.fabric_bitstream(),
     openfpga_ctx.module_graph(),
-    openfpga_ctx.module_name_map(), openfpga_ctx.arch().circuit_lib,
-    openfpga_ctx.arch().config_protocol, bitstream_reorder_map,
+    openfpga_ctx.module_name_map(),
+    bitstream_reorder_map,
     cmd_context.option_value(cmd, opt_file),
     cmd_context.option_enable(cmd, opt_verbose));
 
