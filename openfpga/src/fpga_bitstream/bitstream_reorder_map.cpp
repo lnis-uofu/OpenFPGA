@@ -337,7 +337,7 @@ size_t BitstreamReorderMap::get_bl_from_index(const BitstreamReorderRegionId& re
 }
 
 size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& region_id, const BitstreamReorderRegionBlockId& block_id, const BitstreamReorderTileBitId& bit_id) const {
-    const auto& region = regions[region_id];
+    const auto& target_region = regions[region_id];
 
     /*
     * To find the wordline (WL) corresponding to a given bit_id within a specific region and block:
@@ -346,14 +346,21 @@ size_t BitstreamReorderMap::get_wl_from_index(const BitstreamReorderRegionId& re
     * 3. Add the offset to the local WL to obtain the final WL index.
     */
     size_t num_seen_wls = 0;
-    auto target_tile_location = region.tile_locations.at(block_id);
+    auto target_tile_location = target_region.tile_locations.at(block_id);
+
+    for (const auto& region_tile_id : regions.keys()) {
+        if (region_id == region_tile_id) {
+            break;
+        }
+        num_seen_wls += regions[region_tile_id].num_wls;
+    }
 
     // Calculate the number of WLs in the tiles before the target tile
-    for (const auto& region_tile_id : region.tile_types.keys()) {
-        auto curr_tile_location = region.tile_locations.at(region_tile_id);
+    for (const auto& region_block_id : target_region.tile_types.keys()) {
+        auto curr_tile_location = target_region.tile_locations.at(region_block_id);
 
         if (curr_tile_location.x == target_tile_location.x && curr_tile_location.y < target_tile_location.y) {
-            num_seen_wls += tile_bit_maps.at(region.tile_types[region_tile_id]).num_wls;
+            num_seen_wls += tile_bit_maps.at(target_region.tile_types.at(region_block_id)).num_wls;
         }
     }
 
