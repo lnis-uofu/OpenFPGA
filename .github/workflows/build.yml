@@ -82,9 +82,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-10 (Ubuntu 22.04)"
-            cc: gcc-10
-            cxx: g++-10
           - name: "Build Compatibility: GCC-11 (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
