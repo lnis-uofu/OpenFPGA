@@ -341,7 +341,7 @@ if (OPENFPGA_WITH_YOSYS)
         add_custom_target(
             yosys-plugins-slang ALL
             COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys EXTRA_FLAGS="-DPASS_NAME=read_slang"
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
             COMMENT "Compile Yosys-plugins-Slang with given Makefile"
         )
