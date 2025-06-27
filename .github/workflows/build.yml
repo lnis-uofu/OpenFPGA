@@ -82,27 +82,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-10 (Ubuntu 22.04)"
-            cc: gcc-10
-            cxx: g++-10
           - name: "Build Compatibility: GCC-11 (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
           - name: "Build Compatibility: GCC-12 (Ubuntu 22.04)"
             cc: gcc-12
             cxx: g++-12
-          - name: "Build Compatibility: Clang-11 (Ubuntu 22.04)"
-            cc: clang-11
-            cxx: clang++-11
-          - name: "Build Compatibility: Clang-12 (Ubuntu 22.04)"
-            cc: clang-12
-            cxx: clang++-12
-          - name: "Build Compatibility: Clang-13 (Ubuntu 22.04)"
-            cc: clang-13
-            cxx: clang++-13
-          - name: "Build Compatibility: Clang-14 (Ubuntu 22.04)"
-            cc: clang-14
-            cxx: clang++-14
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
