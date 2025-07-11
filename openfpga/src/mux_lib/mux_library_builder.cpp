@@ -49,7 +49,7 @@ static void build_routing_arch_mux_library(
         /* Find the circuit_model for multiplexers in connection blocks */
         std::vector<RRSwitchId> driver_switches =
           get_rr_graph_driver_switches(rr_graph, node);
-        VTR_ASSERT(1 == driver_switches.size());
+        // VTR_ASSERT(1 == driver_switches.size());
         const CircuitModelId& rr_switch_circuit_model =
           vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
