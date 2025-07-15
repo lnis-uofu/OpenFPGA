@@ -35,7 +35,7 @@ In general, please follow the steps to compile
   cd OpenFPGA
   make all
 
-.. note:: OpenFPGA requires gcc/g++ version > 9 and clang version > 10.
+.. note:: OpenFPGA requires gcc/g++ version >= 11 and clang version >= 17.
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
