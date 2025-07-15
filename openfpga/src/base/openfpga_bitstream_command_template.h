@@ -251,7 +251,7 @@ ShellCommandId add_write_fabric_bitstream_command_template(
 }
 
 /********************************************************************
- * - Add a command to Shell environment: write_reordered_bitstream
+ * - Add a command to Shell environment: build_reordered_fabric_bitstream
  * - Add associated options
  * - Add command dependency
  *******************************************************************/

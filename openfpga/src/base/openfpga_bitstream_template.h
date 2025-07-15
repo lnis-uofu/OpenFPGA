@@ -108,6 +108,9 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_path_only = cmd.option("path_only");
   CommandOptionId opt_value_only = cmd.option("value_only");
   CommandOptionId opt_trim_path = cmd.option("trim_path");
+  /* This option is used to specify whether to write the reordered fabric bitstream
+   * This is currently used for QL MSC bitstream generation
+   */
   CommandOptionId opt_reorder = cmd.option("reorder");
 
   /* Write fabric bitstream if required */

@@ -243,6 +243,10 @@ class OpenfpgaContext : public Context {
   /* Bitstream database */
   openfpga::BitstreamManager bitstream_manager_;
   openfpga::FabricBitstream fabric_bitstream_;
+  /* This data structure is used to store the rordered fabric bitstream.
+   * The order is determined by the bitstream reorder map given by the user.
+   * It is currently mainly used for QL MSC bitstream generation.
+   */
   openfpga::FabricBitstream reorder_fabric_bitstream_;
 
   /* Netlist database
