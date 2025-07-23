@@ -20,7 +20,8 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-PortParser::PortParser(const std::string& data, const int support_format) {
+PortParser::PortParser(const std::string& data, const int support_format)
+ : bracket_('\0', '\0') {
   set_default_bracket();
   set_default_delim();
   set_support_format(support_format);
