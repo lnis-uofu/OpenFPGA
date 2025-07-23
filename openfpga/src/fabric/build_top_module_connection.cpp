@@ -442,7 +442,7 @@ static void add_top_module_nets_connect_grids_and_cb(
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
-  const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRGSB& rr_gsb, const e_rr_type& cb_type,
   const vtr::Matrix<size_t>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* We could have two different coordinators, one is the instance, the other is
@@ -693,7 +693,7 @@ static void add_top_module_nets_connect_sb_and_cb(
   ModuleManager& module_manager, const ModuleId& top_module,
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
-  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* We could have two different coordinators, one is the instance, the other is
    * the module */
@@ -738,7 +738,7 @@ static void add_top_module_nets_connect_sb_and_cb(
     /* We find the original connection block and then spot its unique mirror!
      * Do NOT use module_sb here!!!
      */
-    t_rr_type cb_type =
+    e_rr_type cb_type =
       find_top_module_cb_type_by_sb_side(side_manager.get_side());
     vtr::Point<size_t> instance_gsb_cb_coordinate =
       find_top_module_gsb_coordinate_by_sb_side(rr_gsb,
@@ -904,7 +904,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
   const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& sb_instance_ids,
-  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin) {
   vtr::ScopedStartFinishTimer timer("Add module nets between grids and GSBs");
 
@@ -931,13 +931,13 @@ void add_top_module_nets_connect_grids_and_gsbs(
 
       add_top_module_nets_connect_grids_and_cb(
         module_manager, top_module, vpr_device_annotation, grids, layer,
-        grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, CHANX,
-        cb_instance_ids.at(CHANX), compact_routing_hierarchy);
+        grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANX,
+        cb_instance_ids.at(e_rr_type::CHANX), compact_routing_hierarchy);
 
       add_top_module_nets_connect_grids_and_cb(
         module_manager, top_module, vpr_device_annotation, grids, layer,
-        grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, CHANY,
-        cb_instance_ids.at(CHANY), compact_routing_hierarchy);
+        grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANY,
+        cb_instance_ids.at(e_rr_type::CHANY), compact_routing_hierarchy);
 
       add_top_module_nets_connect_sb_and_cb(
         module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
@@ -1241,7 +1241,7 @@ static int build_top_module_global_net_from_clock_arch_tree(
   ModuleManager& module_manager, const ModuleId& top_module,
   const ModulePortId& top_module_port, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb,
-  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const ClockNetwork& clk_ntwk, const std::string& clk_tree_name,
   const RRClockSpatialLookup& rr_clock_lookup) {
   int status = CMD_EXEC_SUCCESS;
@@ -1281,7 +1281,7 @@ static int build_top_module_global_net_from_clock_arch_tree(
     for (ClockSpineId spine : clk_ntwk.tree_top_spines(clk_tree)) {
       vtr::Point<int> entry_point = clk_ntwk.spine_start_point(spine);
       Direction entry_dir = clk_ntwk.spine_direction(spine);
-      t_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
+      e_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
       /* Find the routing resource node of the entry point */
       RRNodeId entry_rr_node = rr_clock_lookup.find_node(
         entry_point.x(), entry_point.y(), clk_tree, clk_ntwk.spine_level(spine),
@@ -1325,7 +1325,7 @@ int add_top_module_global_ports_from_grid_modules(
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const size_t& layer, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb,
-  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup, const bool& perimeter_cb) {
   int status = CMD_EXEC_SUCCESS;
