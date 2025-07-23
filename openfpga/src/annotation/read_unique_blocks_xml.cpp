@@ -10,6 +10,7 @@
 #include "vtr_time.h"
 
 /* Headers from libarchfpga */
+#include "globals.h"
 #include "arch_error.h"
 #include "command_exit_codes.h"
 #include "device_rr_gsb_utils.h"
@@ -18,7 +19,6 @@
 #include "read_unique_blocks_xml.h"
 #include "read_xml_util.h"
 #include "rr_gsb.h"
-#include "unique_blocks_uxsdcxx.capnp.h"
 #include "write_xml_utils.h"
 
 /********************************************************************
@@ -60,19 +60,19 @@ void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
     verbose_output,
     "Read %lu unique X-direction connection blocks from a total of %d "
     "(compression rate=%.2f%)\n",
-    device_rr_gsb.get_num_cb_unique_module(CHANX),
-    find_device_rr_gsb_num_cb_modules(device_rr_gsb, CHANX),
-    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, CHANX) /
-              (float)device_rr_gsb.get_num_cb_unique_module(CHANX) -
+    device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX),
+    find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANX),
+    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANX) /
+              (float)device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX) -
             1.));
   VTR_LOGV(
     verbose_output,
     "Read %lu unique Y-direction connection blocks from a total of %d "
     "(compression rate=%.2f%)\n",
-    device_rr_gsb.get_num_cb_unique_module(CHANY),
-    find_device_rr_gsb_num_cb_modules(device_rr_gsb, CHANY),
-    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, CHANY) /
-              (float)device_rr_gsb.get_num_cb_unique_module(CHANY) -
+    device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY),
+    find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANY),
+    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANY) /
+              (float)device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY) -
             1.));
 
   VTR_LOGV(verbose_output,

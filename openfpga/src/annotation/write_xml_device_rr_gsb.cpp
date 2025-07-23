@@ -10,7 +10,7 @@
 #include "build_routing_module_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
-#include "openfpga_rr_graph_utils.h"
+#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "write_xml_device_rr_gsb.h"
 
@@ -46,7 +46,7 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
     for (const RREdgeId& edge : driver_rr_edges) {
       RRNodeId driver_node = rr_graph.edge_src_node(edge);
       /* Skip OPINs: they should be in direct connections */
-      if (OPIN == rr_graph.node_type(driver_node)) {
+      if (e_rr_type::OPIN == rr_graph.node_type(driver_node)) {
         continue;
       }
 
@@ -113,7 +113,7 @@ static void write_rr_gsb_chan_connection_to_xml(
       driver_rr_edges.clear();
     }
 
-    t_rr_type cur_node_type = rr_graph.node_type(cur_rr_node);
+    e_rr_type cur_node_type = rr_graph.node_type(cur_rr_node);
 
     fp << "\t<" << rr_node_typename[cur_node_type] << " side=\""
        << gsb_side_manager.to_string() << "\" index=\"" << inode;
@@ -156,10 +156,10 @@ static void write_rr_gsb_chan_connection_to_xml(
         VTR_ASSERT(-1 != driver_node_index);
         SideManager driver_side(driver_node_side);
 
-        if (OPIN == rr_graph.node_type(driver_rr_node)) {
+        if (e_rr_type::OPIN == rr_graph.node_type(driver_rr_node)) {
           SideManager grid_side(
             get_rr_graph_single_node_side(rr_graph, driver_rr_node));
-          fp << "\t\t<driver_node type=\"" << rr_node_typename[OPIN]
+          fp << "\t\t<driver_node type=\"" << rr_node_typename[e_rr_type::OPIN]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
              << driver_node_index;
           if (include_rr_info) {
@@ -260,7 +260,7 @@ static void write_rr_switch_block_to_xml(
 static void write_rr_connection_block_to_xml(const std::string fname_prefix,
                                              const RRGraphView& rr_graph,
                                              const RRGSB& rr_gsb,
-                                             const t_rr_type& cb_type,
+                                             const e_rr_type& cb_type,
                                              const RRGSBWriterOption& options) {
   /* Prepare file name */
   std::string fname(fname_prefix);
@@ -326,9 +326,9 @@ void write_device_rr_gsb_to_xml(
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 
   size_t sb_counter = 0;
-  std::map<t_rr_type, size_t> cb_counters = {{CHANX, 0}, {CHANY, 0}};
-  std::map<t_rr_type, std::string> cb_names = {{CHANX, "X-direction"},
-                                               {CHANY, "Y-direction"}};
+  std::map<e_rr_type, size_t> cb_counters = {{e_rr_type::CHANX, 0}, {e_rr_type::CHANY, 0}};
+  std::map<e_rr_type, std::string> cb_names = {{e_rr_type::CHANX, "X-direction"},
+                                               {e_rr_type::CHANY, "Y-direction"}};
 
   std::vector<std::string> include_gsb_names = options.include_gsb_names();
 
@@ -347,7 +347,7 @@ void write_device_rr_gsb_to_xml(
       }
       sb_counter++;
     }
-    for (t_rr_type cb_type : {CHANX, CHANY}) {
+    for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
       for (size_t igsb = 0;
            igsb < device_rr_gsb.get_num_cb_unique_module(cb_type); ++igsb) {
         const RRGSB& rr_gsb = device_rr_gsb.get_cb_unique_module(cb_type, igsb);
@@ -371,7 +371,7 @@ void write_device_rr_gsb_to_xml(
                                        options);
           sb_counter++;
         }
-        for (t_rr_type cb_type : {CHANX, CHANY}) {
+        for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
           if (options.include_cb_content(cb_type)) {
             write_rr_connection_block_to_xml(xml_dir_name, rr_graph, rr_gsb,
                                              cb_type, options);
@@ -384,7 +384,7 @@ void write_device_rr_gsb_to_xml(
 
   VTR_LOG("Output %lu Switch blocks to XML files under directory '%s'\n",
           sb_counter, xml_dir_name.c_str());
-  for (t_rr_type cb_type : {CHANX, CHANY}) {
+  for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
     VTR_LOG(
       "Output %lu %s Connection blocks to XML files under directory '%s'\n",
       cb_counters[cb_type], cb_names[cb_type].c_str(), xml_dir_name.c_str());

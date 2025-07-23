@@ -763,7 +763,7 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_directions_.emplace_back(Direction::NUM_DIRECTIONS);
   spine_track_types_.emplace_back(e_rr_type::NUM_RR_TYPES);
   spine_switch_points_.emplace_back();
-  spine_switch_coords_.emplace_back(-1, -1);
+  spine_switch_coords_.emplace_back(std::vector<vtr::Point<int>>());
   spine_switch_internal_drivers_.emplace_back();
   spine_intermediate_drivers_.emplace_back();
   spine_parents_.emplace_back();

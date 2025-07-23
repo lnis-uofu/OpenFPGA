@@ -41,12 +41,12 @@ std::vector<vtr::Point<size_t>> FabricTile::pb_coordinates(
 }
 
 std::vector<vtr::Point<size_t>> FabricTile::cb_coordinates(
-  const FabricTileId& tile_id, const t_rr_type& cb_type) const {
+  const FabricTileId& tile_id, const e_rr_type& cb_type) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       return cbx_coords_[tile_id];
-    case CHANY:
+    case e_rr_type::CHANY:
       return cby_coords_[tile_id];
     default:
       VTR_LOG("Invalid type of connection block!\n");
@@ -114,9 +114,9 @@ FabricTileId FabricTile::find_tile_by_pb_coordinate(
 }
 
 FabricTileId FabricTile::find_tile_by_cb_coordinate(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
+  const e_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
   switch (cb_type) {
-    case CHANX: {
+    case e_rr_type::CHANX: {
       if (cbx_coord2id_lookup_.empty()) {
         return FabricTileId::INVALID();
       }
@@ -138,7 +138,7 @@ FabricTileId FabricTile::find_tile_by_cb_coordinate(
       }
       return cbx_coord2id_lookup_[coord.x()][coord.y()];
     }
-    case CHANY: {
+    case e_rr_type::CHANY: {
       if (cby_coord2id_lookup_.empty()) {
         return FabricTileId::INVALID();
       }
@@ -246,14 +246,14 @@ size_t FabricTile::find_sb_index_in_tile(
 }
 
 bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
-                            const t_rr_type& cb_type,
+                            const e_rr_type& cb_type,
                             const vtr::Point<size_t>& coord) const {
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       return !cbx_coords_[tile_id].empty() &&
              find_cb_index_in_tile(tile_id, cb_type, coord) !=
                cbx_coords_[tile_id].size();
-    case CHANY:
+    case e_rr_type::CHANY:
       return !cby_coords_[tile_id].empty() &&
              find_cb_index_in_tile(tile_id, cb_type, coord) !=
                cby_coords_[tile_id].size();
@@ -264,11 +264,11 @@ bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
 }
 
 size_t FabricTile::find_cb_index_in_tile(
-  const FabricTileId& tile_id, const t_rr_type& cb_type,
+  const FabricTileId& tile_id, const e_rr_type& cb_type,
   const vtr::Point<size_t>& coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       for (size_t idx = 0; idx < cbx_coords_[tile_id].size(); ++idx) {
         vtr::Point<size_t> curr_coord = cbx_coords_[tile_id][idx];
         if (curr_coord == coord) {
@@ -276,7 +276,7 @@ size_t FabricTile::find_cb_index_in_tile(
         }
       }
       return cbx_coords_[tile_id].size();
-    case CHANY:
+    case e_rr_type::CHANY:
       for (size_t idx = 0; idx < cby_coords_[tile_id].size(); ++idx) {
         vtr::Point<size_t> curr_coord = cby_coords_[tile_id][idx];
         if (curr_coord == coord) {
@@ -291,7 +291,7 @@ size_t FabricTile::find_cb_index_in_tile(
 }
 
 vtr::Point<size_t> FabricTile::find_cb_coordinate_in_unique_tile(
-  const FabricTileId& tile_id, const t_rr_type& cb_type,
+  const FabricTileId& tile_id, const e_rr_type& cb_type,
   const vtr::Point<size_t>& cb_coord) const {
   size_t cb_idx_in_curr_tile =
     find_cb_index_in_tile(tile_id, cb_type, cb_coord);
@@ -576,15 +576,15 @@ int FabricTile::set_pb_max_coordinate(const FabricTileId& tile_id,
 }
 
 int FabricTile::add_cb_coordinate(const FabricTileId& tile_id,
-                                  const t_rr_type& cb_type,
+                                  const e_rr_type& cb_type,
                                   const vtr::Point<size_t>& coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       cbx_coords_[tile_id].push_back(coord);
       /* Register in fast look-up */
       return register_cbx_in_lookup(tile_id, coord);
-    case CHANY:
+    case e_rr_type::CHANY:
       cby_coords_[tile_id].push_back(coord);
       /* Register in fast look-up */
       return register_cby_in_lookup(tile_id, coord);
@@ -648,17 +648,17 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
   }
   /* Each CBx should have the same unique modules in the device rr_gsb */
   for (size_t iblk = 0; iblk < cbx_coords_[tile_a].size(); ++iblk) {
-    if (device_rr_gsb.get_cb_unique_module_index(CHANX,
+    if (device_rr_gsb.get_cb_unique_module_index(e_rr_type::CHANX,
                                                  cbx_coords_[tile_a][iblk]) !=
-        device_rr_gsb.get_cb_unique_module_index(CHANX,
+        device_rr_gsb.get_cb_unique_module_index(e_rr_type::CHANX,
                                                  cbx_coords_[tile_b][iblk])) {
       return false;
     }
   }
   for (size_t iblk = 0; iblk < cby_coords_[tile_a].size(); ++iblk) {
-    if (device_rr_gsb.get_cb_unique_module_index(CHANY,
+    if (device_rr_gsb.get_cb_unique_module_index(e_rr_type::CHANY,
                                                  cby_coords_[tile_a][iblk]) !=
-        device_rr_gsb.get_cb_unique_module_index(CHANY,
+        device_rr_gsb.get_cb_unique_module_index(e_rr_type::CHANY,
                                                  cby_coords_[tile_b][iblk])) {
       return false;
     }

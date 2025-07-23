@@ -29,7 +29,7 @@
 #include "openfpga_naming.h"
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_reserved_words.h"
-#include "openfpga_rr_graph_utils.h"
+#include "tileable_rr_graph_utils.h"
 #include "rr_gsb_utils.h"
 
 /* begin namespace openfpga */

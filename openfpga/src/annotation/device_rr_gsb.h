@@ -71,12 +71,12 @@ class DeviceRRGSB {
     const; /* Get a rr switch block which a unique mirror */
   const RRGSB& get_sb_unique_module(const vtr::Point<size_t>& coordinate)
     const; /* Get a rr switch block which a unique mirror */
-  const RRGSB& get_cb_unique_module(const t_rr_type& cb_type,
+  const RRGSB& get_cb_unique_module(const e_rr_type& cb_type,
                                     const size_t& index)
     const; /* Get a rr switch block which a unique mirror */
-  const RRGSB& get_cb_unique_module(const t_rr_type& cb_type,
+  const RRGSB& get_cb_unique_module(const e_rr_type& cb_type,
                                     const vtr::Point<size_t>& coordinate) const;
-  size_t get_num_cb_unique_module(const t_rr_type& cb_type)
+  size_t get_num_cb_unique_module(const e_rr_type& cb_type)
     const; /* get the number of unique mirrors of CBs */
   bool is_gsb_exist(const RRGraphView& rr_graph,
                     const vtr::Point<size_t> coord) const;
@@ -85,7 +85,7 @@ class DeviceRRGSB {
   size_t get_sb_unique_module_index(const vtr::Point<size_t>& coordinate) const;
   /* Get the index of the unique Connection block module with a given GSB
    * coordinate. Note: Do NOT use sb coordinate!!! */
-  size_t get_cb_unique_module_index(const t_rr_type& cb_type,
+  size_t get_cb_unique_module_index(const e_rr_type& cb_type,
                                     const vtr::Point<size_t>& coordinate) const;
 
  public: /* Mutators */
@@ -138,9 +138,9 @@ when read_unique_blocks command invoked */
 
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
-  void clear_cb_unique_module(const t_rr_type& cb_type); /* clean the content */
+  void clear_cb_unique_module(const e_rr_type& cb_type); /* clean the content */
   void clear_cb_unique_module_id(
-    const t_rr_type& cb_type);       /* clean the content */
+    const e_rr_type& cb_type);       /* clean the content */
   void clear_sb_unique_module();     /* clean the content */
   void clear_sb_unique_module_id();  /* clean the content */
   void clear_gsb_unique_module();    /* clean the content */
@@ -154,16 +154,16 @@ when read_unique_blocks command invoked */
     const; /* Validate if the index in the range of unique_mirror vector*/
   bool validate_sb_unique_module_index(const size_t& index)
     const; /* Validate if the index in the range of unique_mirror vector*/
-  bool validate_cb_unique_module_index(const t_rr_type& cb_type,
+  bool validate_cb_unique_module_index(const e_rr_type& cb_type,
                                        const size_t& index)
     const; /* Validate if the index in the range of unique_mirror vector*/
-  bool validate_cb_type(const t_rr_type& cb_type) const;
+  bool validate_cb_type(const e_rr_type& cb_type) const;
 
  private: /* Internal builders */
   void add_gsb_unique_module(const vtr::Point<size_t>& coordinate);
-  void add_cb_unique_module(const t_rr_type& cb_type,
+  void add_cb_unique_module(const e_rr_type& cb_type,
                             const vtr::Point<size_t>& coordinate);
-  void set_cb_unique_module_id(const t_rr_type& cb_type,
+  void set_cb_unique_module_id(const e_rr_type& cb_type,
                                const vtr::Point<size_t>& coordinate, size_t id);
   void build_sb_unique_module(
     const RRGraphView& rr_graph); /* Add a switch block to the array, which will
@@ -171,7 +171,7 @@ when read_unique_blocks command invoked */
                                      of unique mirrors and rotatable mirrors */
   void build_cb_unique_module(
     const RRGraphView& rr_graph,
-    const t_rr_type&
+    const e_rr_type&
       cb_type); /* Add a switch block to the array, which will automatically
                    identify and update the lists of unique side module */
 

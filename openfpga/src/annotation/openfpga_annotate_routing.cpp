@@ -10,6 +10,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "globals.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -73,13 +74,13 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_global_net(
         break;
       }
       VTR_ASSERT(node_pin_num < phy_tile->num_pins);
-      t_rr_type rr_pin_type = IPIN;
+      e_rr_type rr_pin_type = e_rr_type::IPIN;
       if (phy_tile->class_inf[phy_tile->pin_class[node_pin_num]].type ==
-          RECEIVER) {
-        rr_pin_type = IPIN;
+          e_pin_type::RECEIVER) {
+        rr_pin_type = e_rr_type::IPIN;
       } else if (phy_tile->class_inf[phy_tile->pin_class[node_pin_num]].type ==
-                 DRIVER) {
-        rr_pin_type = OPIN;
+                 e_pin_type::DRIVER) {
+        rr_pin_type = e_rr_type::OPIN;
       } else {
         VTR_LOG_ERROR(
           "When annotating global net '%s', invalid rr node pin type for '%s' "
@@ -116,7 +117,7 @@ void annotate_vpr_rr_node_nets(const DeviceContext& device_ctx,
                                VprRoutingAnnotation& vpr_routing_annotation,
                                const bool& verbose) {
   vtr::vector<RRNodeId, ClusterNetId> node2net =
-    annotate_rr_node_nets(clustering_ctx, device_ctx, verbose);
+    annotate_rr_node_nets(clustering_ctx, device_ctx, g_vpr_ctx.atom(), verbose);
   for (size_t node_id = 0; node_id < device_ctx.rr_graph.num_nodes();
        ++node_id) {
     vpr_routing_annotation.set_rr_node_net(RRNodeId(node_id),

@@ -56,8 +56,8 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   ::capnp::MallocMessageBuilder builder;
   auto unique_blocks = builder.initRoot<ucap::UniqueBlocks>();
   int num_unique_blocks = device_rr_gsb.get_num_sb_unique_module() +
-                          device_rr_gsb.get_num_cb_unique_module(CHANX) +
-                          device_rr_gsb.get_num_cb_unique_module(CHANY);
+                          device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX) +
+                          device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
   auto block_list = unique_blocks.initBlocks(num_unique_blocks);
 
   /*write switch blocks into bin file */
@@ -75,7 +75,7 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   }
 
   /*write cbx blocks into bin file */
-  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(CHANX);
+  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
        ++id) {
     const auto unique_block_coord =
       device_rr_gsb.get_cbx_unique_block_coord(id);
@@ -92,14 +92,14 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   }
 
   /*write cby blocks into bin file */
-  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(CHANY);
+  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
        ++id) {
     const auto unique_block_coord =
       device_rr_gsb.get_cby_unique_block_coord(id);
     const std::vector<vtr::Point<size_t>> instance_map =
       device_rr_gsb.get_cby_unique_block_instance_coord(unique_block_coord);
     int block_id = id + device_rr_gsb.get_num_sb_unique_module() +
-                   device_rr_gsb.get_num_cb_unique_module(CHANX);
+                   device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
     auto unique_block = block_list[block_id];
     int status_code = write_bin_atom_block(instance_map, unique_block_coord,
                                            ucap::Type::CBY, unique_block);

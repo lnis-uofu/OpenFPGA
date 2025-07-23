@@ -137,10 +137,6 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
         /* Skip annotation if we have already done! */
         continue;
       }
-      VTR_LOGV(verbose_output,
-               "Infer physical type '%s' of interconnect '%s' (was '%s')\n",
-               INTERCONNECT_TYPE_STRING[interc_physical_type], interc->name,
-               INTERCONNECT_TYPE_STRING[interc->type]);
       vpr_device_annotation.add_interconnect_physical_type(
         interc, interc_physical_type);
     }
@@ -228,10 +224,6 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
         /* Skip annotation if we have already done! */
         continue;
       }
-      VTR_LOGV(verbose_output,
-               "Infer physical type '%s' of interconnect '%s' (was '%s')\n",
-               INTERCONNECT_TYPE_STRING[interc_physical_type], interc->name,
-               INTERCONNECT_TYPE_STRING[interc->type]);
       vpr_device_annotation.add_interconnect_physical_type(
         interc, interc_physical_type);
     }
