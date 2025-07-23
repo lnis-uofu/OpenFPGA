@@ -3,12 +3,12 @@
  ******************************************************************************/
 #include "lb_router.h"
 
-#include "vpr_utils.h"
 #include "lb_rr_graph_utils.h"
 #include "pb_type_graph.h"
 #include "pb_type_utils.h"
 #include "physical_types.h"
 #include "vpr_error.h"
+#include "vpr_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 

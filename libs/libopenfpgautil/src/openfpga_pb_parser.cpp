@@ -18,8 +18,7 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-PbParser::PbParser(const std::string& data)
- : bracket_('\0', '\0') {
+PbParser::PbParser(const std::string& data) : bracket_('\0', '\0') {
   set_default_bracket();
   set_default_delim();
   set_data(data);

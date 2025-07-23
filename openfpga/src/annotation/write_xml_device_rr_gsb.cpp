@@ -10,8 +10,8 @@
 #include "build_routing_module_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
+#include "tileable_rr_graph_utils.h"
 #include "write_xml_device_rr_gsb.h"
 
 /* begin namespace openfpga */
@@ -326,9 +326,10 @@ void write_device_rr_gsb_to_xml(
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 
   size_t sb_counter = 0;
-  std::map<e_rr_type, size_t> cb_counters = {{e_rr_type::CHANX, 0}, {e_rr_type::CHANY, 0}};
-  std::map<e_rr_type, std::string> cb_names = {{e_rr_type::CHANX, "X-direction"},
-                                               {e_rr_type::CHANY, "Y-direction"}};
+  std::map<e_rr_type, size_t> cb_counters = {{e_rr_type::CHANX, 0},
+                                             {e_rr_type::CHANY, 0}};
+  std::map<e_rr_type, std::string> cb_names = {
+    {e_rr_type::CHANX, "X-direction"}, {e_rr_type::CHANY, "Y-direction"}};
 
   std::vector<std::string> include_gsb_names = options.include_gsb_names();
 

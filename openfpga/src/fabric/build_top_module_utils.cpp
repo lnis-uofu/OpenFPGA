@@ -11,8 +11,8 @@
 
 /* Module builder headers */
 #include "build_top_module_utils.h"
-#include "tileable_rr_graph_utils.h"
 #include "physical_types_util.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -33,9 +33,9 @@ std::string generate_grid_block_module_name_in_top_module(
   t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), 0));
 
-  return generate_grid_block_module_name(
-    prefix, std::string(phy_tile_type->name), phy_tile_type->is_io(),
-    border_side);
+  return generate_grid_block_module_name(prefix,
+                                         std::string(phy_tile_type->name),
+                                         phy_tile_type->is_io(), border_side);
 }
 
 /********************************************************************

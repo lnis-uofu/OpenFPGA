@@ -18,9 +18,9 @@
 #include "mux_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "rr_gsb_utils.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -228,9 +228,9 @@ static void build_switch_block_bitstream(
     for (size_t itrack = 0;
          itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
       VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(rr_gsb.get_chan_node(
-                             side_manager.get_side(), itrack))) ||
+                                        side_manager.get_side(), itrack))) ||
                  (e_rr_type::CHANY == rr_graph.node_type(rr_gsb.get_chan_node(
-                             side_manager.get_side(), itrack))));
+                                        side_manager.get_side(), itrack))));
       /* Only output port indicates a routing multiplexer */
       if (OUT_PORT !=
           rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {

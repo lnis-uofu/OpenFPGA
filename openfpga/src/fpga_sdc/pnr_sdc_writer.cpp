@@ -446,10 +446,12 @@ int print_pnr_sdc(
       (true == sdc_options.output_hierarchy()) &&
       (true == compact_routing_hierarchy)) {
     print_pnr_sdc_routing_cb_hierarchy(sdc_options.sdc_dir(), module_manager,
-                                       top_module, e_rr_type::CHANX, device_rr_gsb);
+                                       top_module, e_rr_type::CHANX,
+                                       device_rr_gsb);
 
     print_pnr_sdc_routing_cb_hierarchy(sdc_options.sdc_dir(), module_manager,
-                                       top_module, e_rr_type::CHANY, device_rr_gsb);
+                                       top_module, e_rr_type::CHANY,
+                                       device_rr_gsb);
   }
 
   /* Output Timing constraints for Programmable blocks */

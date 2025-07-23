@@ -5,12 +5,12 @@
 #include "openfpga_annotate_routing.h"
 
 #include "annotate_routing.h"
+#include "globals.h"
 #include "physical_types_util.h"
 #include "route_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "globals.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -116,8 +116,8 @@ void annotate_vpr_rr_node_nets(const DeviceContext& device_ctx,
                                const ClusteringContext& clustering_ctx,
                                VprRoutingAnnotation& vpr_routing_annotation,
                                const bool& verbose) {
-  vtr::vector<RRNodeId, ClusterNetId> node2net =
-    annotate_rr_node_nets(clustering_ctx, device_ctx, g_vpr_ctx.atom(), verbose);
+  vtr::vector<RRNodeId, ClusterNetId> node2net = annotate_rr_node_nets(
+    clustering_ctx, device_ctx, g_vpr_ctx.atom(), verbose);
   for (size_t node_id = 0; node_id < device_ctx.rr_graph.num_nodes();
        ++node_id) {
     vpr_routing_annotation.set_rr_node_net(RRNodeId(node_id),

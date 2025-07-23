@@ -10,10 +10,10 @@
 #include "vtr_time.h"
 
 /* Headers from libarchfpga */
-#include "globals.h"
 #include "arch_error.h"
 #include "command_exit_codes.h"
 #include "device_rr_gsb_utils.h"
+#include "globals.h"
 #include "mmap_file.h"
 #include "openfpga_digest.h"
 #include "read_unique_blocks_xml.h"
@@ -62,7 +62,8 @@ void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
     "(compression rate=%.2f%)\n",
     device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX),
     find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANX),
-    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANX) /
+    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb,
+                                                     e_rr_type::CHANX) /
               (float)device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX) -
             1.));
   VTR_LOGV(
@@ -71,7 +72,8 @@ void report_unique_module_status_read(const DeviceRRGSB& device_rr_gsb,
     "(compression rate=%.2f%)\n",
     device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY),
     find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANY),
-    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANY) /
+    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb,
+                                                     e_rr_type::CHANY) /
               (float)device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY) -
             1.));
 

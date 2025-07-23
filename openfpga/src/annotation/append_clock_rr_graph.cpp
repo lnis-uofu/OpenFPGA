@@ -67,7 +67,8 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
         continue;
       }
       /* Estimate the routing tracks required by clock routing only */
-      num_nodes += estimate_clock_rr_graph_num_chan_nodes(clk_ntwk, e_rr_type::CHANX);
+      num_nodes +=
+        estimate_clock_rr_graph_num_chan_nodes(clk_ntwk, e_rr_type::CHANX);
     }
   }
 
@@ -89,7 +90,8 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
         continue;
       }
       /* Estimate the routing tracks required by clock routing only */
-      num_nodes += estimate_clock_rr_graph_num_chan_nodes(clk_ntwk, e_rr_type::CHANY);
+      num_nodes +=
+        estimate_clock_rr_graph_num_chan_nodes(clk_ntwk, e_rr_type::CHANY);
     }
   }
 
@@ -431,7 +433,8 @@ static void try_find_and_add_clock_track2ipin_node(
     VTR_LOGV(verbose, "Found a valid pin (index=%d) in physical tile\n",
              grid_pin_idx);
     RRNodeId des_node = rr_graph_view.node_lookup().find_node(
-      layer, grid_coord.x(), grid_coord.y(), e_rr_type::IPIN, grid_pin_idx, pin_side);
+      layer, grid_coord.x(), grid_coord.y(), e_rr_type::IPIN, grid_pin_idx,
+      pin_side);
     if (rr_graph_view.valid_node(des_node)) {
       VTR_LOGV(verbose, "Found a valid pin in rr graph\n");
       des_nodes.push_back(des_node);
@@ -605,7 +608,8 @@ static void try_find_and_add_clock_opin2track_node(
       continue;
     }
     RRNodeId opin_node = rr_graph_view.node_lookup().find_node(
-      layer, grid_coord.x(), grid_coord.y(), e_rr_type::OPIN, grid_pin_idx, pin_side);
+      layer, grid_coord.x(), grid_coord.y(), e_rr_type::OPIN, grid_pin_idx,
+      pin_side);
     if (rr_graph_view.valid_node(opin_node)) {
       VTR_LOGV(verbose, "Connected OPIN '%s' to clock network\n",
                tap_pin_name.c_str());
@@ -651,18 +655,16 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
    * - Grid[x][y] on right and top sides
    * - Grid[x+1][y] on left and top sides
    */
-  std::array<vtr::Point<int>, 4> grid_coords {
+  std::array<vtr::Point<int>, 4> grid_coords{
     vtr::Point<int>(sb_coord.x(), sb_coord.y() + 1),
     vtr::Point<int>(sb_coord.x() + 1, sb_coord.y() + 1),
     vtr::Point<int>(sb_coord.x(), sb_coord.y()),
-    vtr::Point<int>(sb_coord.x() + 1, sb_coord.y())
-  };
-  std::array<std::array<e_side, 2>, 4> grid_sides {{
-    {{e_side::RIGHT, e_side::BOTTOM}},
-    {{e_side::LEFT, e_side::BOTTOM}},
-    {{e_side::RIGHT, e_side::TOP}},
-    {{e_side::LEFT, e_side::TOP}}
-  }};
+    vtr::Point<int>(sb_coord.x() + 1, sb_coord.y())};
+  std::array<std::array<e_side, 2>, 4> grid_sides{
+    {{{e_side::RIGHT, e_side::BOTTOM}},
+     {{e_side::LEFT, e_side::BOTTOM}},
+     {{e_side::RIGHT, e_side::TOP}},
+     {{e_side::LEFT, e_side::TOP}}}};
   for (size_t igrid = 0; igrid < 4; igrid++) {
     vtr::Point<int> grid_coord = grid_coords[igrid];
     for (e_side grid_side : grid_sides[igrid]) {
@@ -843,9 +845,9 @@ static void add_rr_graph_clock_edges(
           (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
-      add_rr_graph_block_clock_edges(rr_graph_builder, num_edges_to_create,
-                                     clk_rr_lookup, rr_graph_view, grids, layer,
-                                     clk_ntwk, chanx_coord, e_rr_type::CHANX, verbose);
+      add_rr_graph_block_clock_edges(
+        rr_graph_builder, num_edges_to_create, clk_rr_lookup, rr_graph_view,
+        grids, layer, clk_ntwk, chanx_coord, e_rr_type::CHANX, verbose);
     }
   }
 
@@ -866,9 +868,9 @@ static void add_rr_graph_clock_edges(
           (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
-      add_rr_graph_block_clock_edges(rr_graph_builder, num_edges_to_create,
-                                     clk_rr_lookup, rr_graph_view, grids, layer,
-                                     clk_ntwk, chany_coord, e_rr_type::CHANY, verbose);
+      add_rr_graph_block_clock_edges(
+        rr_graph_builder, num_edges_to_create, clk_rr_lookup, rr_graph_view,
+        grids, layer, clk_ntwk, chany_coord, e_rr_type::CHANY, verbose);
     }
   }
   /* Add edges between OPIN (internal driver) and clock routing tracks */

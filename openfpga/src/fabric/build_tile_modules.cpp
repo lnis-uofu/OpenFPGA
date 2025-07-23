@@ -17,10 +17,10 @@
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "physical_types_util.h"
 #include "rr_gsb_utils.h"
+#include "tileable_rr_graph_utils.h"
 #include "vpr_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -1311,8 +1311,8 @@ static int build_tile_port_and_nets_from_pb(
                 size_t num_fanout_in_tile =
                   module_manager.module_net_sinks(tile_module, curr_net).size();
                 RRNodeId rr_node = rr_graph.node_lookup().find_node(
-                  layer, pb_coord.x() + iwidth, pb_coord.y() + iheight, e_rr_type::OPIN,
-                  ipin, side);
+                  layer, pb_coord.x() + iwidth, pb_coord.y() + iheight,
+                  e_rr_type::OPIN, ipin, side);
                 size_t num_fanout_required =
                   rr_graph.node_out_edges(rr_node).size();
                 if (num_fanout_in_tile == num_fanout_required) {

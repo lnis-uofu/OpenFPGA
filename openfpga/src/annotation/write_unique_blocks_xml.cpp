@@ -75,7 +75,8 @@ void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
     "(compression rate=%.2f%)\n",
     device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX),
     find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANX),
-    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANX) /
+    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb,
+                                                     e_rr_type::CHANX) /
               (float)device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX) -
             1.));
 
@@ -85,7 +86,8 @@ void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
     "(compression rate=%.2f%)\n",
     device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY),
     find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANY),
-    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb, e_rr_type::CHANY) /
+    100. * ((float)find_device_rr_gsb_num_cb_modules(device_rr_gsb,
+                                                     e_rr_type::CHANY) /
               (float)device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY) -
             1.));
 
@@ -145,8 +147,8 @@ int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
     }
   }
 
-  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
-       ++id) {
+  for (size_t id = 0;
+       id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++id) {
     const auto unique_block_coord =
       device_rr_gsb.get_cbx_unique_block_coord(id);
     const std::vector<vtr::Point<size_t>> instance_map =
@@ -159,8 +161,8 @@ int write_xml_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
     }
   }
 
-  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
-       ++id) {
+  for (size_t id = 0;
+       id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++id) {
     const auto unique_block_coord =
       device_rr_gsb.get_cby_unique_block_coord(id);
     const std::vector<vtr::Point<size_t>> instance_map =

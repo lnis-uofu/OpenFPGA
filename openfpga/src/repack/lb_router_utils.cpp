@@ -4,6 +4,7 @@
 
 /* Headers from vtrutil library */
 #include "lb_router_utils.h"
+
 #include "vpr_utils.h"
 #include "vtr_assert.h"
 

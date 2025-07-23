@@ -22,12 +22,12 @@
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_port.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_scale.h"
 #include "openfpga_side_manager.h"
 #include "pnr_sdc_routing_writer.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -567,9 +567,10 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
   std::string root_path = module_manager.module_name(top_module);
 
   /* Print SDC for unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
     /* Find all the cb instance under this module
      * Create a regular expression to include these instance names
@@ -589,9 +590,10 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
   }
 
   /* Print SDC for unique Y-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
     /* Find all the cb instance under this module
      * Create a regular expression to include these instance names

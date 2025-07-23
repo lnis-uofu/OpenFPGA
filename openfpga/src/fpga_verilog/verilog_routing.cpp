@@ -352,9 +352,10 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
   }
 
   /* Build unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
     print_verilog_routing_connection_box_unique_module(
       netlist_manager, module_manager, module_name_map, subckt_dir,
@@ -362,9 +363,10 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
   }
 
   /* Build unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
     print_verilog_routing_connection_box_unique_module(
       netlist_manager, module_manager, module_name_map, subckt_dir,

@@ -845,8 +845,8 @@ static void build_physical_block_bitstream(
 
   /* Early exit if this parent module has no configurable child modules */
   std::string grid_module_name = generate_grid_block_module_name(
-    grid_module_name_prefix, std::string(grid_type->name),
-    grid_type->is_io(), border_side);
+    grid_module_name_prefix, std::string(grid_type->name), grid_type->is_io(),
+    border_side);
   grid_module_name = module_name_map.name(grid_module_name);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
@@ -865,8 +865,8 @@ static void build_physical_block_bitstream(
       fabric_tile.find_pb_coordinate_in_unique_tile(curr_tile, grid_coord);
   }
   std::string grid_block_name = generate_grid_block_instance_name(
-    grid_module_name_prefix, std::string(grid_type->name),
-    grid_type->is_io(), border_side, grid_coord_in_unique_tile);
+    grid_module_name_prefix, std::string(grid_type->name), grid_type->is_io(),
+    border_side, grid_coord_in_unique_tile);
 
   ConfigBlockId grid_configurable_block =
     bitstream_manager.add_block(grid_block_name);

@@ -156,10 +156,11 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
         if (curr_rr_gsb.is_cb_exist(cb_type)) {
           fabric_tile.add_cb_coordinate(curr_tile_id, cb_type,
                                         curr_rr_gsb.get_sb_coordinate());
-          VTR_LOGV(
-            verbose, "Added %s connection block [%lu][%lu] to tile[%lu][%lu]\n",
-            cb_type == e_rr_type::CHANX ? "x-" : "y-", curr_rr_gsb.get_cb_x(cb_type),
-            curr_rr_gsb.get_cb_y(cb_type), ix, iy);
+          VTR_LOGV(verbose,
+                   "Added %s connection block [%lu][%lu] to tile[%lu][%lu]\n",
+                   cb_type == e_rr_type::CHANX ? "x-" : "y-",
+                   curr_rr_gsb.get_cb_x(cb_type), curr_rr_gsb.get_cb_y(cb_type),
+                   ix, iy);
         }
       }
       if (curr_rr_gsb.is_sb_exist(rr_graph)) {
@@ -250,9 +251,10 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
         if (curr_rr_gsb.is_cb_exist(e_rr_type::CHANY)) {
           fabric_tile.add_cb_coordinate(curr_tile_id, e_rr_type::CHANY,
                                         curr_rr_gsb.get_sb_coordinate());
-          VTR_LOGV(
-            verbose, "Added y- connection block [%lu][%lu] to tile[%lu][%lu]\n",
-            curr_rr_gsb.get_cb_x(e_rr_type::CHANY), curr_rr_gsb.get_cb_y(e_rr_type::CHANY), ix, iy);
+          VTR_LOGV(verbose,
+                   "Added y- connection block [%lu][%lu] to tile[%lu][%lu]\n",
+                   curr_rr_gsb.get_cb_x(e_rr_type::CHANY),
+                   curr_rr_gsb.get_cb_y(e_rr_type::CHANY), ix, iy);
         }
       }
       /* For the cbx and sb in the neighbour gsb */

@@ -297,7 +297,8 @@ std::string generate_connection_block_netlist_name(
 std::string generate_routing_channel_module_name(const e_rr_type& chan_type,
                                                  const size_t& block_id) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::string> module_prefix_map;
@@ -315,7 +316,8 @@ std::string generate_routing_channel_module_name(const e_rr_type& chan_type,
 std::string generate_routing_channel_module_name(
   const e_rr_type& chan_type, const vtr::Point<size_t>& coordinate) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::string> module_prefix_map;
@@ -339,7 +341,8 @@ std::string generate_routing_track_port_name(
   const e_rr_type& chan_type, const vtr::Point<size_t>& coordinate,
   const size_t& track_id, const PORTS& port_direction) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::string> module_prefix_map;
@@ -383,7 +386,8 @@ std::string generate_sb_module_track_port_name(const e_rr_type& chan_type,
                                                const e_side& module_side,
                                                const PORTS& port_direction) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::string> module_prefix_map;
@@ -428,7 +432,8 @@ std::string generate_sb_module_track_port_name(const e_rr_type& chan_type,
 e_side get_cb_module_track_port_side(const e_rr_type& chan_type,
                                      const bool& upper_location) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::map<bool, e_side>> port_side_map;
@@ -465,7 +470,8 @@ std::string generate_cb_module_track_port_name(const e_rr_type& chan_type,
                                                const PORTS& port_direction,
                                                const bool& upper_location) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::map<bool, std::string>> module_prefix_map;
@@ -501,7 +507,8 @@ std::string generate_routing_track_middle_output_port_name(
   const e_rr_type& chan_type, const vtr::Point<size_t>& coordinate,
   const size_t& track_id) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((e_rr_type::CHANX == chan_type) || (e_rr_type::CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
   std::map<e_rr_type, std::string> module_prefix_map;

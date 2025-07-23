@@ -16,9 +16,9 @@
 #include "openfpga_naming.h"
 #include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "sdc_writer_utils.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -279,11 +279,13 @@ void print_analysis_sdc_disable_unused_cbs(
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy) {
   print_analysis_sdc_disable_unused_cb_ports(
     fp, atom_ctx, module_manager, device_annotation, grids, rr_graph,
-    routing_annotation, device_rr_gsb, e_rr_type::CHANX, compact_routing_hierarchy);
+    routing_annotation, device_rr_gsb, e_rr_type::CHANX,
+    compact_routing_hierarchy);
 
   print_analysis_sdc_disable_unused_cb_ports(
     fp, atom_ctx, module_manager, device_annotation, grids, rr_graph,
-    routing_annotation, device_rr_gsb, e_rr_type::CHANY, compact_routing_hierarchy);
+    routing_annotation, device_rr_gsb, e_rr_type::CHANY,
+    compact_routing_hierarchy);
 }
 
 /********************************************************************

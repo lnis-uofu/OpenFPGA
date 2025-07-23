@@ -12,9 +12,9 @@
 
 /* Headers from vpr library */
 #include "annotate_rr_graph.h"
-#include "tileable_rr_graph_utils.h"
 #include "physical_types.h"
 #include "rr_graph_view_util.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -133,7 +133,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Routing channels*/
         /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
         /* Create a rr_chan object and check if it is unique in the graph */
-        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANY, layer, coordinate);
+        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANY, layer,
+                                    coordinate);
         chan_dir_to_port_dir_mapping[0] =
           OUT_PORT; /* INC_DIRECTION => OUT_PORT */
         chan_dir_to_port_dir_mapping[1] =
@@ -150,9 +151,10 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
           gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[0]);
         /* Include Grid[x+1][y+1] Left side output pins */
-        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
-          gsb_coord.x() + 1, gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[1]);
+        temp_opin_rr_nodes[1] =
+          find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
+                                   layer, gsb_coord.x() + 1, gsb_coord.y() + 1,
+                                   e_rr_type::OPIN, opin_grid_side[1]);
 
         break;
       case RIGHT: /* RIGHT = 1 */
@@ -164,7 +166,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
         /* Collect rr_nodes for Tracks for top: chany[x][y+1] */
         /* Create a rr_chan object and check if it is unique in the graph */
-        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANX, layer, coordinate);
+        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANX, layer,
+                                    coordinate);
         chan_dir_to_port_dir_mapping[0] =
           OUT_PORT; /* INC_DIRECTION => OUT_PORT */
         chan_dir_to_port_dir_mapping[1] =
@@ -178,9 +181,10 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         opin_grid_side[1] = TOP;
 
         /* include Grid[x+1][y+1] Bottom side output pins */
-        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
-          gsb_coord.x() + 1, gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[0]);
+        temp_opin_rr_nodes[0] =
+          find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
+                                   layer, gsb_coord.x() + 1, gsb_coord.y() + 1,
+                                   e_rr_type::OPIN, opin_grid_side[0]);
         /* include Grid[x+1][y] Top side output pins */
         temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
           vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
@@ -195,7 +199,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
         /* Collect rr_nodes for Tracks for bottom: chany[x][y] */
         /* Create a rr_chan object and check if it is unique in the graph */
-        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANY, layer, coordinate);
+        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANY, layer,
+                                    coordinate);
         chan_dir_to_port_dir_mapping[0] =
           IN_PORT; /* INC_DIRECTION => IN_PORT */
         chan_dir_to_port_dir_mapping[1] =
@@ -225,7 +230,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
         /* Collect rr_nodes for Tracks for left: chanx[x][y] */
         /* Create a rr_chan object and check if it is unique in the graph */
-        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANX, layer, coordinate);
+        rr_chan = build_one_rr_chan(vpr_device_ctx, e_rr_type::CHANX, layer,
+                                    coordinate);
         chan_dir_to_port_dir_mapping[0] =
           IN_PORT; /* INC_DIRECTION => IN_PORT */
         chan_dir_to_port_dir_mapping[1] =
@@ -367,8 +373,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     }
     /* Collect IPIN rr_nodes*/
     temp_ipin_rr_nodes = find_rr_graph_grid_nodes(
-      vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, ix, iy, e_rr_type::IPIN,
-      ipin_rr_node_grid_side, include_clock);
+      vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, ix, iy,
+      e_rr_type::IPIN, ipin_rr_node_grid_side, include_clock);
     /* Fill the ipin nodes of RRGSB */
     for (const RRNodeId& inode : temp_ipin_rr_nodes) {
       /* Skip those has no configurable outgoing, they should NOT appear in the

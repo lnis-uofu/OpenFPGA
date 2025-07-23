@@ -183,13 +183,13 @@ static void organize_top_module_tile_memory_modules(
     /* Try to find and add CBX and CBY */
     organize_top_module_tile_cb_modules(
       module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
-      cb_instance_ids.at(e_rr_type::CHANX), device_rr_gsb, rr_gsb, e_rr_type::CHANX,
-      compact_routing_hierarchy);
+      cb_instance_ids.at(e_rr_type::CHANX), device_rr_gsb, rr_gsb,
+      e_rr_type::CHANX, compact_routing_hierarchy);
 
     organize_top_module_tile_cb_modules(
       module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
-      cb_instance_ids.at(e_rr_type::CHANY), device_rr_gsb, rr_gsb, e_rr_type::CHANY,
-      compact_routing_hierarchy);
+      cb_instance_ids.at(e_rr_type::CHANY), device_rr_gsb, rr_gsb,
+      e_rr_type::CHANY, compact_routing_hierarchy);
   }
 
   /* Find the module name for this type of grid */
@@ -209,8 +209,8 @@ static void organize_top_module_tile_memory_modules(
 
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(
-    grid_module_name_prefix, std::string(grid_type->name),
-    grid_type->is_io(), tile_border_side);
+    grid_module_name_prefix, std::string(grid_type->name), grid_type->is_io(),
+    tile_border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 

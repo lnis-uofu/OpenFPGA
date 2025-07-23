@@ -21,9 +21,9 @@
 #include "module_manager_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "rr_gsb_utils.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -1206,13 +1206,13 @@ void build_flatten_routing_modules(
 
   build_flatten_connection_block_modules(
     module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
-    circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX, group_config_block,
-    verbose);
+    circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX,
+    group_config_block, verbose);
 
   build_flatten_connection_block_modules(
     module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
-    circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY, group_config_block,
-    verbose);
+    circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY,
+    group_config_block, verbose);
 }
 
 /********************************************************************
@@ -1245,25 +1245,29 @@ void build_unique_routing_modules(
   }
 
   /* Build unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block, verbose);
+      device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block,
+      verbose);
   }
 
   /* Build unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block, verbose);
+      device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block,
+      verbose);
   }
 }
 

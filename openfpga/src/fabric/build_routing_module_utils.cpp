@@ -9,8 +9,8 @@
 #include "build_routing_module_utils.h"
 
 #include "openfpga_naming.h"
-#include "tileable_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
+#include "tileable_rr_graph_utils.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "vtr_log.h"

@@ -54,24 +54,26 @@ void compress_routing_hierarchy_template(T& openfpga_ctx,
     "Detected %lu unique X-direction connection blocks from a total of %d "
     "(compression rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(e_rr_type::CHANX),
-    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), e_rr_type::CHANX),
-    100. *
-      ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
-                                                e_rr_type::CHANX) /
-         (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(e_rr_type::CHANX) -
-       1.));
+    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
+                                      e_rr_type::CHANX),
+    100. * ((float)find_device_rr_gsb_num_cb_modules(
+              openfpga_ctx.device_rr_gsb(), e_rr_type::CHANX) /
+              (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(
+                e_rr_type::CHANX) -
+            1.));
 
   VTR_LOGV(
     verbose_output,
     "Detected %lu unique Y-direction connection blocks from a total of %d "
     "(compression rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(e_rr_type::CHANY),
-    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), e_rr_type::CHANY),
-    100. *
-      ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
-                                                e_rr_type::CHANY) /
-         (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(e_rr_type::CHANY) -
-       1.));
+    find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(),
+                                      e_rr_type::CHANY),
+    100. * ((float)find_device_rr_gsb_num_cb_modules(
+              openfpga_ctx.device_rr_gsb(), e_rr_type::CHANY) /
+              (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(
+                e_rr_type::CHANY) -
+            1.));
 
   VTR_LOGV(
     verbose_output,

@@ -43,8 +43,8 @@ static size_t add_top_module_grid_instance(
   /* Find the module name for this type of grid */
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(
-    grid_module_name_prefix, std::string(grid_type->name),
-    grid_type->is_io(), border_side);
+    grid_module_name_prefix, std::string(grid_type->name), grid_type->is_io(),
+    border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
   /* Record the instance id */
@@ -55,8 +55,8 @@ static size_t add_top_module_grid_instance(
    * Note: it is your risk to gurantee the name is unique!
    */
   std::string instance_name = generate_grid_block_instance_name(
-    grid_module_name_prefix, std::string(grid_type->name),
-    grid_type->is_io(), border_side, grid_coord);
+    grid_module_name_prefix, std::string(grid_type->name), grid_type->is_io(),
+    border_side, grid_coord);
   module_manager.set_child_instance_name(top_module, grid_module, grid_instance,
                                          instance_name);
 
@@ -270,7 +270,8 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
         VTR_LOGV(
           verbose,
           "Skip %s connnection block at (%lu, %lu) as it does not exist\n",
-          cb_type == e_rr_type::CHANX ? "X-" : "Y-", cb_coordinate.x(), cb_coordinate.y());
+          cb_type == e_rr_type::CHANX ? "X-" : "Y-", cb_coordinate.x(),
+          cb_coordinate.y());
         continue;
       }
       /* If we use compact routing hierarchy, we should instanciate the unique
@@ -303,8 +304,8 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
         cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)],
         cb_instance_name);
       VTR_LOGV(verbose, "Added %s connnection block '%s' (module '%s')\n",
-               cb_type == e_rr_type::CHANX ? "X-" : "Y-", cb_instance_name.c_str(),
-               cb_module_name.c_str());
+               cb_type == e_rr_type::CHANX ? "X-" : "Y-",
+               cb_instance_name.c_str(), cb_module_name.c_str());
     }
   }
 
@@ -427,8 +428,8 @@ static void add_top_module_io_children(
     /* Find the module name for this type of grid */
     std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
     std::string grid_module_name = generate_grid_block_module_name(
-      grid_module_name_prefix, std::string(grid_type->name),
-      grid_type->is_io(), NUM_2D_SIDES);
+      grid_module_name_prefix, std::string(grid_type->name), grid_type->is_io(),
+      NUM_2D_SIDES);
     ModuleId grid_module = module_manager.find_module(grid_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
     /* Add a I/O children to top_module*/
@@ -470,11 +471,11 @@ int build_top_module_fine_grained_child_instances(
     compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
   cb_instance_ids[e_rr_type::CHANX] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, e_rr_type::CHANX, compact_routing_hierarchy,
-    verbose);
+    module_manager, top_module, device_rr_gsb, e_rr_type::CHANX,
+    compact_routing_hierarchy, verbose);
   cb_instance_ids[e_rr_type::CHANY] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, e_rr_type::CHANY, compact_routing_hierarchy,
-    verbose);
+    module_manager, top_module, device_rr_gsb, e_rr_type::CHANY,
+    compact_routing_hierarchy, verbose);
 
   /* Update I/O children list */
   add_top_module_io_children(module_manager, top_module, grids, layer,

@@ -55,9 +55,10 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
                             bool verbose_output) {
   ::capnp::MallocMessageBuilder builder;
   auto unique_blocks = builder.initRoot<ucap::UniqueBlocks>();
-  int num_unique_blocks = device_rr_gsb.get_num_sb_unique_module() +
-                          device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX) +
-                          device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
+  int num_unique_blocks =
+    device_rr_gsb.get_num_sb_unique_module() +
+    device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX) +
+    device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
   auto block_list = unique_blocks.initBlocks(num_unique_blocks);
 
   /*write switch blocks into bin file */
@@ -75,8 +76,8 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   }
 
   /*write cbx blocks into bin file */
-  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
-       ++id) {
+  for (size_t id = 0;
+       id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++id) {
     const auto unique_block_coord =
       device_rr_gsb.get_cbx_unique_block_coord(id);
     const std::vector<vtr::Point<size_t>> instance_map =
@@ -92,8 +93,8 @@ int write_bin_unique_blocks(const DeviceRRGSB& device_rr_gsb, const char* fname,
   }
 
   /*write cby blocks into bin file */
-  for (size_t id = 0; id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
-       ++id) {
+  for (size_t id = 0;
+       id < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++id) {
     const auto unique_block_coord =
       device_rr_gsb.get_cby_unique_block_coord(id);
     const std::vector<vtr::Point<size_t>> instance_map =
