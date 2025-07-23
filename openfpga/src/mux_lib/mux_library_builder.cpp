@@ -37,9 +37,9 @@ static void build_routing_arch_mux_library(
   /* Count the sizes of muliplexers in routing architecture */
   for (const RRNodeId& node : rr_graph.nodes()) {
     switch (rr_graph.node_type(node)) {
-      case IPIN:
-      case CHANX:
-      case CHANY: {
+      case e_rr_type::IPIN:
+      case e_rr_type::CHANX:
+      case e_rr_type::CHANY: {
         /* Have to consider the fan_in only, it is a connection block
          * (multiplexer)*/
         if ((0 == rr_graph.node_in_edges(node).size()) ||

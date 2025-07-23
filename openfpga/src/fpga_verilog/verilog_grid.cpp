@@ -305,14 +305,14 @@ static void print_verilog_physical_tile_netlist(
   /* Give a name to the Verilog netlist */
   std::string verilog_fname(generate_grid_block_netlist_name(
     std::string(GRID_MODULE_NAME_PREFIX) + std::string(phy_block_type->name),
-    is_io_type(phy_block_type), border_side,
+    phy_block_type->is_io(), border_side,
     std::string(VERILOG_NETLIST_FILE_POSTFIX)));
 
   /* Create the file name for Verilog */
   std::string verilog_fpath(subckt_dir + verilog_fname);
 
   /* Echo status */
-  if (true == is_io_type(phy_block_type)) {
+  if (phy_block_type->is_io()) {
     SideManager side_manager(border_side);
     VTR_LOG(
       "Writing Verilog Netlist '%s' for physical tile '%s' at %s side ...",
@@ -339,7 +339,7 @@ static void print_verilog_physical_tile_netlist(
    * manager */
   std::string grid_module_name = generate_grid_block_module_name(
     std::string(GRID_VERILOG_FILE_NAME_PREFIX),
-    std::string(phy_block_type->name), is_io_type(phy_block_type), border_side);
+    std::string(phy_block_type->name), phy_block_type->is_io(), border_side);
   grid_module_name = module_name_map.name(grid_module_name);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
@@ -423,9 +423,9 @@ void print_verilog_grids(
   for (const t_physical_tile_type& physical_tile :
        device_ctx.physical_tile_types) {
     /* Bypass empty type or nullptr */
-    if (true == is_empty_type(&physical_tile)) {
+    if (physical_tile.is_empty()) {
       continue;
-    } else if (true == is_io_type(&physical_tile)) {
+    } else if (physical_tile.is_io()) {
       /* Special for I/O block:
        * We will search the grids and see where the I/O blocks are located:
        * - If a I/O block locates on border sides of FPGA fabric:

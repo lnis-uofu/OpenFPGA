@@ -9,6 +9,7 @@
 #include "vtr_time.h"
 
 /* Headers from vtrutil library */
+#include "globals.h"
 #include "atom_netlist_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 #include "openfpga_reserved_words.h"
@@ -27,7 +28,7 @@ std::vector<std::string> find_atom_netlist_clock_port_names(
   std::vector<std::string> clock_names;
 
   std::set<AtomPinId> clock_pins =
-    find_netlist_logical_clock_drivers(atom_nlist);
+    find_netlist_logical_clock_drivers(atom_nlist, g_vpr_ctx.device().arch->models);
   for (const AtomPinId& clock_pin : clock_pins) {
     const AtomBlockId& atom_blk =
       atom_nlist.port_block(atom_nlist.pin_port(clock_pin));

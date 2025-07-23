@@ -149,7 +149,7 @@ static bool update_submodule_memory_modules_from_fabric_key(
     /* Now we can add the child to configurable children of the top module */
     module_manager.add_configurable_child(module_id, inst_info.first,
                                           inst_info.second, config_child_type,
-                                          vtr::Point<int>());
+                                          vtr::Point<int>(-1, -1));
   }
   return CMD_EXEC_SUCCESS;
 }
