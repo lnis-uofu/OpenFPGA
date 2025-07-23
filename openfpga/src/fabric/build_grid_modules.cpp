@@ -53,7 +53,7 @@ static void add_grid_module_pb_type_ports(
   /* For I/O grids, we care only one side
    * Otherwise, we will iterate all the 4 sides
    */
-  if (true == is_io_type(grid_type_descriptor)) {
+  if (grid_type_descriptor->is_io()) {
     grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
                                                 border_side, perimeter_cb);
   } else {
@@ -62,8 +62,8 @@ static void add_grid_module_pb_type_ports(
 
   /* Create a map between pin class type and grid pin direction */
   std::map<e_pin_type, ModuleManager::e_module_port_type> pin_type2type_map;
-  pin_type2type_map[RECEIVER] = ModuleManager::MODULE_INPUT_PORT;
-  pin_type2type_map[DRIVER] = ModuleManager::MODULE_OUTPUT_PORT;
+  pin_type2type_map[e_pin_type::RECEIVER] = ModuleManager::MODULE_INPUT_PORT;
+  pin_type2type_map[e_pin_type::DRIVER] = ModuleManager::MODULE_OUTPUT_PORT;
 
   /* Iterate over sides, height and pins */
   for (const e_side& side : grid_pin_sides) {
@@ -1177,7 +1177,7 @@ static int build_physical_tile_module(
    */
   std::string grid_module_name = generate_grid_block_module_name(
     std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_block_type->name),
-    is_io_type(phy_block_type), border_side);
+    phy_block_type->is_io(), border_side);
   VTR_LOGV(verbose, "Building physical tile '%s'...", grid_module_name.c_str());
 
   ModuleId grid_module = module_manager.add_module(grid_module_name);
@@ -1424,7 +1424,7 @@ int build_grid_modules(
     /* Bypass empty type or nullptr */
     if (true == is_empty_type(&physical_tile)) {
       continue;
-    } else if (true == is_io_type(&physical_tile)) {
+    } else if (physical_tile.is_io()) {
       /* Special for I/O block:
        * We will search the grids and see where the I/O blocks are located:
        * - If a I/O block locates on border sides of FPGA fabric:
