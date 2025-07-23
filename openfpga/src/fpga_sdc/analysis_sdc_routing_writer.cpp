@@ -35,7 +35,7 @@ static void print_analysis_sdc_disable_cb_unused_resources(
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const VprRoutingAnnotation& routing_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type, const bool& compact_routing_hierarchy) {
+  const e_rr_type& cb_type, const bool& compact_routing_hierarchy) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -243,7 +243,7 @@ static void print_analysis_sdc_disable_unused_cb_ports(
   const ModuleManager& module_manager,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const VprRoutingAnnotation& routing_annotation,
-  const DeviceRRGSB& device_rr_gsb, const t_rr_type& cb_type,
+  const DeviceRRGSB& device_rr_gsb, const e_rr_type& cb_type,
   const bool& compact_routing_hierarchy) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
@@ -279,11 +279,11 @@ void print_analysis_sdc_disable_unused_cbs(
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy) {
   print_analysis_sdc_disable_unused_cb_ports(
     fp, atom_ctx, module_manager, device_annotation, grids, rr_graph,
-    routing_annotation, device_rr_gsb, CHANX, compact_routing_hierarchy);
+    routing_annotation, device_rr_gsb, e_rr_type::CHANX, compact_routing_hierarchy);
 
   print_analysis_sdc_disable_unused_cb_ports(
     fp, atom_ctx, module_manager, device_annotation, grids, rr_graph,
-    routing_annotation, device_rr_gsb, CHANY, compact_routing_hierarchy);
+    routing_annotation, device_rr_gsb, e_rr_type::CHANY, compact_routing_hierarchy);
 }
 
 /********************************************************************

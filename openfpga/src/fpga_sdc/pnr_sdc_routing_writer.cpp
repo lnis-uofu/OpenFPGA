@@ -54,8 +54,8 @@ static void print_pnr_sdc_constrain_sb_mux_timing(
   /* Validate file stream */
   valid_file_stream(fp);
 
-  VTR_ASSERT((CHANX == rr_graph.node_type(output_rr_node)) ||
-             (CHANY == rr_graph.node_type(output_rr_node)));
+  VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(output_rr_node)) ||
+             (e_rr_type::CHANY == rr_graph.node_type(output_rr_node)));
 
   /* Find the module port corresponding to the output rr_node */
   ModulePinInfo module_output_port = find_switch_block_module_chan_port(
@@ -279,12 +279,12 @@ static void print_pnr_sdc_constrain_cb_mux_timing(
   const std::string& module_path, const ModuleManager& module_manager,
   const ModuleId& cb_module, const VprDeviceAnnotation& device_annotation,
   const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type, const RRNodeId& output_rr_node,
+  const e_rr_type& cb_type, const RRNodeId& output_rr_node,
   const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
   valid_file_stream(fp);
 
-  VTR_ASSERT(IPIN == rr_graph.node_type(output_rr_node));
+  VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(output_rr_node));
 
   /* We have OPINs since we may have direct connections:
    * These connections should be handled by other functions in the
@@ -373,7 +373,7 @@ static void print_pnr_sdc_constrain_cb_timing(
   const PnrSdcOption& options, const std::string& module_path,
   const ModuleManager& module_manager,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type) {
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type) {
   std::string sdc_dir = options.sdc_dir();
   float time_unit = options.time_unit();
   bool include_time_stamp = options.time_stamp();
@@ -493,7 +493,7 @@ static void print_pnr_sdc_flatten_routing_constrain_cb_timing(
   const PnrSdcOption& options, const ModuleManager& module_manager,
   const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
   const DeviceGrid& grids, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const t_rr_type& cb_type) {
+  const DeviceRRGSB& device_rr_gsb, const e_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
@@ -544,11 +544,11 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(
     options, module_manager, top_module, device_annotation, grids, rr_graph,
-    device_rr_gsb, CHANX);
+    device_rr_gsb, e_rr_type::CHANX);
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(
     options, module_manager, top_module, device_annotation, grids, rr_graph,
-    device_rr_gsb, CHANY);
+    device_rr_gsb, e_rr_type::CHANY);
 }
 
 /********************************************************************
@@ -567,17 +567,17 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
   std::string root_path = module_manager.module_name(top_module);
 
   /* Print SDC for unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX);
+  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
        ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
+    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
     /* Find all the cb instance under this module
      * Create a regular expression to include these instance names
      */
-    vtr::Point<size_t> gsb_coordinate(unique_mirror.get_cb_x(CHANX),
-                                      unique_mirror.get_cb_y(CHANX));
+    vtr::Point<size_t> gsb_coordinate(unique_mirror.get_cb_x(e_rr_type::CHANX),
+                                      unique_mirror.get_cb_y(e_rr_type::CHANX));
     std::string cb_module_name =
-      generate_connection_block_module_name(CHANX, gsb_coordinate);
+      generate_connection_block_module_name(e_rr_type::CHANX, gsb_coordinate);
     ModuleId cb_module = module_manager.find_module(cb_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
@@ -585,21 +585,21 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
 
     print_pnr_sdc_constrain_cb_timing(options, module_path, module_manager,
                                       device_annotation, grids, rr_graph,
-                                      unique_mirror, CHANX);
+                                      unique_mirror, e_rr_type::CHANX);
   }
 
   /* Print SDC for unique Y-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY);
+  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
        ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
+    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
     /* Find all the cb instance under this module
      * Create a regular expression to include these instance names
      */
-    vtr::Point<size_t> gsb_coordinate(unique_mirror.get_cb_x(CHANY),
-                                      unique_mirror.get_cb_y(CHANY));
+    vtr::Point<size_t> gsb_coordinate(unique_mirror.get_cb_x(e_rr_type::CHANY),
+                                      unique_mirror.get_cb_y(e_rr_type::CHANY));
     std::string cb_module_name =
-      generate_connection_block_module_name(CHANY, gsb_coordinate);
+      generate_connection_block_module_name(e_rr_type::CHANY, gsb_coordinate);
     ModuleId cb_module = module_manager.find_module(cb_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
@@ -607,7 +607,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
 
     print_pnr_sdc_constrain_cb_timing(options, module_path, module_manager,
                                       device_annotation, grids, rr_graph,
-                                      unique_mirror, CHANY);
+                                      unique_mirror, e_rr_type::CHANY);
   }
 }
 

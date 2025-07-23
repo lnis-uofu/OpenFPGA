@@ -112,13 +112,13 @@ void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
 void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
                                         const ModuleManager& module_manager,
                                         const ModuleId& top_module,
-                                        const t_rr_type& cb_type,
+                                        const e_rr_type& cb_type,
                                         const DeviceRRGSB& device_rr_gsb) {
   std::string fname(sdc_dir);
-  if (CHANX == cb_type) {
+  if (e_rr_type::CHANX == cb_type) {
     fname += std::string(SDC_CBX_HIERARCHY_FILE_NAME);
   } else {
-    VTR_ASSERT(CHANY == cb_type);
+    VTR_ASSERT(e_rr_type::CHANY == cb_type);
     fname += std::string(SDC_CBY_HIERARCHY_FILE_NAME);
   }
 
@@ -305,7 +305,7 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
   for (const t_physical_tile_type& physical_tile :
        device_ctx.physical_tile_types) {
     /* Bypass empty type or nullptr */
-    if (true == is_empty_type(&physical_tile)) {
+    if (physical_tile.is_empty()) {
       continue;
     }
 
@@ -317,7 +317,7 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
         continue;
       }
 
-      if (true == is_io_type(&physical_tile)) {
+      if (physical_tile.is_io()) {
         /* Special for I/O block:
          * We will search the grids and see where the I/O blocks are located:
          * - If a I/O block locates on border sides of FPGA fabric:
