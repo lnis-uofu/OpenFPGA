@@ -965,7 +965,7 @@ static int build_top_module_global_net_for_given_grid_module(
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(
     grid_module_name_prefix, std::string(physical_tile->name),
-    is_io_type(physical_tile), border_side);
+    physical_tile->is_io(), border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
   size_t grid_instance =

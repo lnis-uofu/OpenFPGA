@@ -356,7 +356,7 @@ static void add_top_module_io_children(
       std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
       std::string grid_module_name = generate_grid_block_module_name(
         grid_module_name_prefix, std::string(grid_type->name),
-        is_io_type(grid_type), io_side);
+        grid_type->is_io(), io_side);
       ModuleId grid_module = module_manager.find_module(grid_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
       /* Add a I/O children to top_module*/
@@ -428,7 +428,7 @@ static void add_top_module_io_children(
     std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
     std::string grid_module_name = generate_grid_block_module_name(
       grid_module_name_prefix, std::string(grid_type->name),
-      is_io_type(grid_type), NUM_2D_SIDES);
+      grid_type->is_io(), NUM_2D_SIDES);
     ModuleId grid_module = module_manager.find_module(grid_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
     /* Add a I/O children to top_module*/
@@ -458,7 +458,7 @@ int build_top_module_fine_grained_child_instances(
   const bool& group_config_block, const bool& perimeter_cb,
   const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
-  std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
+  std::map<e_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
   /* Add all the grids across the fabric */
@@ -469,11 +469,11 @@ int build_top_module_fine_grained_child_instances(
     module_manager, top_module, rr_graph, device_rr_gsb,
     compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
-  cb_instance_ids[CHANX] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, CHANX, compact_routing_hierarchy,
+  cb_instance_ids[e_rr_type::CHANX] = add_top_module_connection_block_instances(
+    module_manager, top_module, device_rr_gsb, e_rr_type::CHANX, compact_routing_hierarchy,
     verbose);
-  cb_instance_ids[CHANY] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, CHANY, compact_routing_hierarchy,
+  cb_instance_ids[e_rr_type::CHANY] = add_top_module_connection_block_instances(
+    module_manager, top_module, device_rr_gsb, e_rr_type::CHANY, compact_routing_hierarchy,
     verbose);
 
   /* Update I/O children list */

@@ -529,7 +529,7 @@ static int build_top_module_tile_nets_between_cb_and_pb(
   const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
-  const FabricTileId& curr_fabric_tile_id, const t_rr_type& cb_type,
+  const FabricTileId& curr_fabric_tile_id, const e_rr_type& cb_type,
   const size_t& cb_idx_in_curr_fabric_tile,
   const bool& compact_routing_hierarchy, const bool& name_module_using_index,
   const bool& verbose) {
@@ -786,7 +786,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
     /* We find the original connection block and then spot its unique mirror!
      * Do NOT use module_sb here!!!
      */
-    t_rr_type cb_type =
+    e_rr_type cb_type =
       find_top_module_cb_type_by_sb_side(side_manager.get_side());
     vtr::Point<size_t> instance_gsb_cb_coordinate =
       find_top_module_gsb_coordinate_by_sb_side(rr_gsb,
@@ -1011,7 +1011,7 @@ static int add_top_module_nets_around_one_tile(
   }
   /* Get the submodule of connection blocks one by one, build connections
    * between cb and pb */
-  for (t_rr_type cb_type : {CHANX, CHANY}) {
+  for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
     for (size_t icb = 0;
          icb < fabric_tile.cb_coordinates(curr_fabric_tile_id, cb_type).size();
          ++icb) {
@@ -1158,13 +1158,13 @@ static void organize_top_module_tile_based_memory_modules(
 static ModulePinInfo find_tile_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& tile_module,
   const vtr::Point<size_t>& cb_coord_in_tile, const size_t& cb_idx_in_tile,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type,
   const RRNodeId& chan_rr_node, const bool& name_module_using_index) {
   ModulePinInfo input_port_info;
   /* Generate the input port object */
   switch (rr_graph.node_type(chan_rr_node)) {
-    case CHANX:
-    case CHANY: {
+    case e_rr_type::CHANX:
+    case e_rr_type::CHANY: {
       /* Create port description for the routing track middle output */
       int chan_node_track_id =
         rr_gsb.get_cb_chan_node_index(cb_type, chan_rr_node);
@@ -1245,7 +1245,7 @@ static int build_top_module_global_net_from_tile_clock_arch_tree(
     for (ClockSpineId spine : clk_ntwk.tree_top_spines(clk_tree)) {
       vtr::Point<int> entry_point = clk_ntwk.spine_start_point(spine);
       Direction entry_dir = clk_ntwk.spine_direction(spine);
-      t_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
+      e_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
       /* Find the routing resource node of the entry point */
       RRNodeId entry_rr_node = rr_clock_lookup.find_node(
         entry_point.x(), entry_point.y(), clk_tree, clk_ntwk.spine_level(spine),

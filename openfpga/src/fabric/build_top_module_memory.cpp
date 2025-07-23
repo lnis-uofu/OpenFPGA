@@ -41,7 +41,7 @@ static void organize_top_module_tile_cb_modules(
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const vtr::Matrix<size_t>& cb_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type, const bool& compact_routing_hierarchy) {
+  const e_rr_type& cb_type, const bool& compact_routing_hierarchy) {
   /* If the CB does not exist, we can skip addition */
   if (false == rr_gsb.is_cb_exist(cb_type)) {
     return;
@@ -77,7 +77,7 @@ static void organize_top_module_tile_cb_modules(
     /* CBX coordinate conversion calculation: (1,0) -> (2,1) */
     vtr::Point<int> config_coord(rr_gsb.get_cb_x(cb_type) * 2,
                                  rr_gsb.get_cb_y(cb_type) * 2 + 1);
-    if (cb_type == CHANY) {
+    if (cb_type == e_rr_type::CHANY) {
       /* CBY has a different coordinate conversion calculation: (0,1) -> (1,2)
        */
       config_coord.set(rr_gsb.get_cb_x(cb_type) * 2 + 1,
@@ -137,7 +137,7 @@ static void organize_top_module_tile_memory_modules(
   const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const vtr::Matrix<size_t>& sb_instance_ids,
-  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy, const size_t& layer,
   const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
@@ -183,12 +183,12 @@ static void organize_top_module_tile_memory_modules(
     /* Try to find and add CBX and CBY */
     organize_top_module_tile_cb_modules(
       module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
-      cb_instance_ids.at(CHANX), device_rr_gsb, rr_gsb, CHANX,
+      cb_instance_ids.at(e_rr_type::CHANX), device_rr_gsb, rr_gsb, e_rr_type::CHANX,
       compact_routing_hierarchy);
 
     organize_top_module_tile_cb_modules(
       module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
-      cb_instance_ids.at(CHANY), device_rr_gsb, rr_gsb, CHANY,
+      cb_instance_ids.at(e_rr_type::CHANY), device_rr_gsb, rr_gsb, e_rr_type::CHANY,
       compact_routing_hierarchy);
   }
 
@@ -210,7 +210,7 @@ static void organize_top_module_tile_memory_modules(
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(
     grid_module_name_prefix, std::string(grid_type->name),
-    is_io_type(grid_type), tile_border_side);
+    grid_type->is_io(), tile_border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
@@ -443,7 +443,7 @@ void organize_top_module_memory_modules(
   const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const vtr::Matrix<size_t>& sb_instance_ids,
-  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Ensure clean vectors to return */
   VTR_ASSERT(true ==
