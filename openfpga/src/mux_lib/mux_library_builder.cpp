@@ -49,15 +49,16 @@ static void build_routing_arch_mux_library(
         /* Find the circuit_model for multiplexers in connection blocks */
         std::vector<RRSwitchId> driver_switches =
           get_rr_graph_driver_switches(rr_graph, node);
-        VTR_ASSERT(1 == driver_switches.size());
-        const CircuitModelId& rr_switch_circuit_model =
-          vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
         /* Skip flat router-generated internal switches (not relevant) */
         auto switch_name = rr_graph.rr_switch_inf(driver_switches[0]).name;
         if (switch_name.rfind(VPR_INTERNAL_SWITCH_NAME, 0) == 0) {
           continue;
         }
+
+        VTR_ASSERT(1 == driver_switches.size());
+        const CircuitModelId& rr_switch_circuit_model =
+          vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
         /* we should select a circuit model for the routing resource switch */
         if (CircuitModelId::INVALID() == rr_switch_circuit_model) {
