@@ -29,6 +29,18 @@ ShellCommandId add_repack_command_template(
     "design_constraints", false, "file path to the design constraints");
   shell_cmd.set_option_require_value(opt_design_constraints,
                                      openfpga::OPT_STRING);
+  
+  /* Add an option '--pcf' */
+  CommandOptionId opt_pcf = shell_cmd.add_option(
+    "pcf", false, "file path to the PCF file. Clock pin constraints on this file take precedence over the XML file.");
+  shell_cmd.set_option_require_value(opt_pcf,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--write_design_constraints' */
+  CommandOptionId opt_write_design_constraints = shell_cmd.add_option(
+    "write_design_constraints", false, "File path to the output design constraints XML file. Contains the design constraints produced from the XML and PCF inputs");
+  shell_cmd.set_option_require_value(opt_write_design_constraints,
+                                     openfpga::OPT_STRING);
 
   /* Add an option '--ignore_global_nets_on_pins' */
   CommandOptionId opt_ignore_global_nets =
