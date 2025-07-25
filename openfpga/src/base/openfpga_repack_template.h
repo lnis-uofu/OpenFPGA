@@ -70,7 +70,7 @@ static inline RepackDesignConstraints gen_repack_constraints(const RepackDesignC
         /* Check intrablock routing to see what atom net id is connected to this pin */
         if(pb->pb_route.count(node_index)){
           AtomNetId net_id = pb->pb_route[node_index].atom_net_id;
-          std::string net_name = atom_ctx.nlist.net_name(net_id);
+          std::string net_name = atom_ctx.netlist().net_name(net_id);
           pb_and_port_to_clock_nets[pb_type->name][port_parser.port()].insert(net_name);
         }
       }
