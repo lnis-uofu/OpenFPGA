@@ -388,7 +388,7 @@
               <direct name="direct_lut4carry1" input="frac_lut6.lut4_out[1]" output="adder_phy[0].b"/>
               <direct name="direct_lut4carry2" input="frac_lut6.lut4_out[2]" output="adder_phy[1].a"/>
               <direct name="direct_lut4carry3" input="frac_lut6.lut4_out[3]" output="adder_phy[1].b"/>
-              <mux name="mux1" input="adder_phy[0].sumout frac_lut6.lut5_out[0]" output="frac_logic.out[0]">
+              <mux name="mux1" input="adder_phy[0].sumout frac_lut6.lut5_out[0] frac_logic.regin" output="frac_logic.out[0]">
               </mux>
               <mux name="mux2" input="adder_phy[1].sumout frac_lut6.lut5_out[1] frac_lut6.lut6_out[0] frac_logic.regchain[0]" output="frac_logic.out[1]">
               </mux>
@@ -406,6 +406,7 @@
           <interconnect>
             <complete name="direct_clk" input="fle.clk" output="ff_phy[1:0].clk"/>
             <direct name="direct_in" input="fle.in[5:0]" output="frac_logic.in[5:0]"/>
+            <direct name="direct_regin" input="fle.regin" output="frac_logic.regin"/>
             <direct name="direct_regchain" input="ff_phy[0].Q" output="frac_logic.regchain"/>
             <direct name="direct_regout" input="ff_phy[1].Q" output="fle.regout"/>
             <direct name="direct_cin" input="fle.cin" output="frac_logic.cin"/>
