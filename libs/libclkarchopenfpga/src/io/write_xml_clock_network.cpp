@@ -129,7 +129,7 @@ static int write_xml_clock_spine_intermediate_drivers(
 
   int_driver_node.append_attribute(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_X) = 
                       std::to_string(coord.x()).c_str();
-  int_driver_node.append_attribute(fp, XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y) =
+  int_driver_node.append_attribute(XML_CLOCK_SPINE_INTERMEDIATE_DRIVER_ATTRIBUTE_Y) =
                       std::to_string(coord.y()).c_str();
 
   for (ClockInternalDriverId int_driver_id : int_drivers) {
@@ -151,15 +151,15 @@ static int write_xml_clock_spine(pugi::xml_node& root_node, const ClockNetwork& 
   spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_NAME) =
                       clk_ntwk.spine_name(spine_id).c_str();
   vtr::Point<int> start_coord = clk_ntwk.spine_start_point(spine_id);
-  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_START_X) = std::to_string(start_coord.x());
-  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_START_Y) = std::to_string(start_coord.y());
+  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_START_X) = std::to_string(start_coord.x()).c_str();
+  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_START_Y) = std::to_string(start_coord.y()).c_str();
   vtr::Point<int> end_coord = clk_ntwk.spine_end_point(spine_id);
-  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_END_X) = std::to_string(end_coord.x());
-  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_END_Y) = std::to_string(end_coord.y());
+  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_END_X) = std::to_string(end_coord.x()).c_str();
+  spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_END_Y) = std::to_string(end_coord.y()).c_str();
   if (clk_ntwk.is_vague_coordinate(spine_id)) {
     spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_TYPE) =
                         rr_node_typename[clk_ntwk.spine_track_type(spine_id)];
-    spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_DIRECTION)
+    spine_node.append_attribute(XML_CLOCK_SPINE_ATTRIBUTE_DIRECTION) =
       DIRECTION_STRING[size_t(clk_ntwk.spine_direction(spine_id))];
   }
 
@@ -238,7 +238,7 @@ int write_xml_clock_network(const char* fname, const ClockNetwork& clk_ntwk) {
     }
   }
 
-  out_xml.save_file(fname)
+  out_xml.save_file(fname);
 
   return err_code;
 }
