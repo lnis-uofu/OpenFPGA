@@ -5,7 +5,6 @@
 #include "openfpga_annotate_routing.h"
 
 #include "annotate_routing.h"
-#include "globals.h"
 #include "physical_types_util.h"
 #include "route_utils.h"
 #include "vtr_assert.h"
