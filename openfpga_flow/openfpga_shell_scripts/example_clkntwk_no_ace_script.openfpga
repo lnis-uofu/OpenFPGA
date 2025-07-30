@@ -13,6 +13,7 @@ read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 
 # Read OpenFPGA clock architecture
 read_openfpga_clock_arch -f ${OPENFPGA_CLOCK_ARCH_FILE}
+write_openfpga_clock_arch -f openfpga_clock_network_echo.xml
 
 # Append clock network to vpr's routing resource graph
 append_clock_rr_graph
