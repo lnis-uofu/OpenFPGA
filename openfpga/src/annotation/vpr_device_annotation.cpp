@@ -112,7 +112,7 @@ e_interconnect VprDeviceAnnotation::interconnect_physical_type(
     interconnect_physical_types_.find(pb_interconnect);
   if (it == interconnect_physical_types_.end()) {
     /* Return an invalid interconnect type */
-    return NUM_INTERC_TYPES;
+    return e_interconnect::NUM_INTERC_TYPES;
   }
   return interconnect_physical_types_.at(pb_interconnect);
 }

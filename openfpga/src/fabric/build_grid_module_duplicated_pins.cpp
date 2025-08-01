@@ -66,7 +66,7 @@ void add_grid_module_duplicated_pb_type_ports(
   /* For I/O grids, we care only one side
    * Otherwise, we will iterate all the 4 sides
    */
-  if (true == is_io_type(grid_type_descriptor)) {
+  if (grid_type_descriptor->is_io()) {
     grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
                                                 border_side, perimeter_cb);
   } else {
@@ -184,7 +184,7 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
   /* For I/O grids, we care only one side
    * Otherwise, we will iterate all the 4 sides
    */
-  if (true == is_io_type(grid_type_descriptor)) {
+  if (grid_type_descriptor->is_io()) {
     grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
                                                 border_side, perimeter_cb);
   } else {

@@ -78,7 +78,7 @@ namespace openfpga {
 static void print_spice_routing_connection_box_unique_module(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
   const std::string& subckt_dir, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type) {
+  const e_rr_type& cb_type) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type),
                                     rr_gsb.get_cb_y(cb_type));
@@ -227,7 +227,7 @@ static void print_spice_routing_switch_box_unique_module(
 static void print_spice_flatten_connection_block_modules(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
   const DeviceRRGSB& device_rr_gsb, const std::string& subckt_dir,
-  const t_rr_type& cb_type) {
+  const e_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
@@ -279,11 +279,13 @@ void print_spice_flatten_routing_modules(NetlistManager& netlist_manager,
     }
   }
 
-  print_spice_flatten_connection_block_modules(
-    netlist_manager, module_manager, device_rr_gsb, subckt_dir, CHANX);
+  print_spice_flatten_connection_block_modules(netlist_manager, module_manager,
+                                               device_rr_gsb, subckt_dir,
+                                               e_rr_type::CHANX);
 
-  print_spice_flatten_connection_block_modules(
-    netlist_manager, module_manager, device_rr_gsb, subckt_dir, CHANY);
+  print_spice_flatten_connection_block_modules(netlist_manager, module_manager,
+                                               device_rr_gsb, subckt_dir,
+                                               e_rr_type::CHANY);
 
   /*
   VTR_LOG("Writing header file for routing submodules '%s'...",
@@ -322,21 +324,25 @@ void print_spice_unique_routing_modules(NetlistManager& netlist_manager,
   }
 
   /* Build unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
     print_spice_routing_connection_box_unique_module(
-      netlist_manager, module_manager, subckt_dir, unique_mirror, CHANX);
+      netlist_manager, module_manager, subckt_dir, unique_mirror,
+      e_rr_type::CHANX);
   }
 
   /* Build unique X-direction connection block modules */
-  for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY);
-       ++icb) {
-    const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
+  for (size_t icb = 0;
+       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
     print_spice_routing_connection_box_unique_module(
-      netlist_manager, module_manager, subckt_dir, unique_mirror, CHANY);
+      netlist_manager, module_manager, subckt_dir, unique_mirror,
+      e_rr_type::CHANY);
   }
 
   /*

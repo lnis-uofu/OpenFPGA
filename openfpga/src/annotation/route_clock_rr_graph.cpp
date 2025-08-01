@@ -137,11 +137,11 @@ static int route_clock_spine_switch_point(
    * No adjustment is required for des node as it always comes from the starting
    * point of the des spine
    */
-  if (clk_ntwk.spine_track_type(ispine) == CHANX &&
+  if (clk_ntwk.spine_track_type(ispine) == e_rr_type::CHANX &&
       src_spine_direction == Direction::DEC) {
     src_coord.set_x(des_coord.x() + 1);
   }
-  if (clk_ntwk.spine_track_type(ispine) == CHANY &&
+  if (clk_ntwk.spine_track_type(ispine) == e_rr_type::CHANY &&
       src_spine_direction == Direction::DEC) {
     src_coord.set_y(des_coord.y() + 1);
   }
@@ -163,7 +163,7 @@ static int route_clock_spine_switch_point(
       tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
     for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
       RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
-      if (OPIN != rr_graph.node_type(opin_node)) {
+      if (e_rr_type::OPIN != rr_graph.node_type(opin_node)) {
         continue;
       }
       if (rr_node_gnets[opin_node] != tree2clk_pin_map.at(ipin)) {
@@ -244,7 +244,7 @@ static int route_spine_taps(
         src_spine_direction, verbose);
       for (RREdgeId edge : rr_graph.edge_range(src_node)) {
         RRNodeId des_node = rr_graph.edge_sink_node(edge);
-        if (rr_graph.node_type(des_node) == IPIN) {
+        if (rr_graph.node_type(des_node) == e_rr_type::IPIN) {
           VTR_LOGV(verbose, "Trying to route to IPIN '%s'\n",
                    rr_graph.node_coordinate_to_string(des_node).c_str());
           /* If all the tap is force to route, do it as the highest priority */
@@ -343,7 +343,7 @@ static int route_spine_intermediate_drivers(
       des_coord.x(), des_coord.y(), clk_ntwk.spine_name(curr_spine).c_str());
     for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
       RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
-      if (OPIN != rr_graph.node_type(opin_node)) {
+      if (e_rr_type::OPIN != rr_graph.node_type(opin_node)) {
         continue;
       }
       if (rr_node_gnets[opin_node] != tree2clk_pin_map.at(curr_pin)) {

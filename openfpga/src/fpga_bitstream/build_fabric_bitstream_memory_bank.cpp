@@ -444,7 +444,7 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(
       compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range,
                                                              num_wls_per_tile);
 
-    vtr::Point<int> temp_coord;
+    vtr::Point<int> temp_coord(-1, -1);
     std::map<vtr::Point<int>, size_t> cur_mem_index;
     size_t temp_num_bls_cur_tile = 0;
     size_t temp_num_wls_cur_tile = 0;

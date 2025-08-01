@@ -18,9 +18,9 @@
 #include "mux_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "openfpga_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "rr_gsb_utils.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -40,8 +40,8 @@ static void build_switch_block_mux_bitstream(
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const bool& verbose) {
   /* Check current rr_node is CHANX or CHANY*/
-  VTR_ASSERT((CHANX == rr_graph.node_type(cur_rr_node)) ||
-             (CHANY == rr_graph.node_type(cur_rr_node)));
+  VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(cur_rr_node)) ||
+             (e_rr_type::CHANY == rr_graph.node_type(cur_rr_node)));
 
   /* Find the input size of the implementation of a routing multiplexer */
   size_t datapath_mux_size = drive_rr_nodes.size();
@@ -227,10 +227,10 @@ static void build_switch_block_bitstream(
     SideManager side_manager(side);
     for (size_t itrack = 0;
          itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
-      VTR_ASSERT((CHANX == rr_graph.node_type(rr_gsb.get_chan_node(
-                             side_manager.get_side(), itrack))) ||
-                 (CHANY == rr_graph.node_type(rr_gsb.get_chan_node(
-                             side_manager.get_side(), itrack))));
+      VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(rr_gsb.get_chan_node(
+                                        side_manager.get_side(), itrack))) ||
+                 (e_rr_type::CHANY == rr_graph.node_type(rr_gsb.get_chan_node(
+                                        side_manager.get_side(), itrack))));
       /* Only output port indicates a routing multiplexer */
       if (OUT_PORT !=
           rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
@@ -436,7 +436,7 @@ static void build_connection_block_bitstream(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const t_rr_type& cb_type, const bool& verbose) {
+  const RRGSB& rr_gsb, const e_rr_type& cb_type, const bool& verbose) {
   /* Find routing multiplexers on the sides of a Connection block where IPIN
    * nodes locate */
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
@@ -468,7 +468,7 @@ static void build_connection_block_bitstreams(
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
-  const t_rr_type& cb_type, const bool& verbose) {
+  const e_rr_type& cb_type, const bool& verbose) {
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
   for (size_t ix = 0; ix < cb_range.x(); ++ix) {
@@ -487,14 +487,14 @@ static void build_connection_block_bitstreams(
         VTR_LOGV(verbose,
                  "\n\tSkipped %s Connection Block [%lu][%lu] as it contains "
                  "only routing tracks\n",
-                 cb_type == CHANX ? "X-direction" : "Y-direction",
+                 cb_type == e_rr_type::CHANX ? "X-direction" : "Y-direction",
                  rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
         continue;
       }
 
       VTR_LOGV(verbose,
                "\n\tGenerating bitstream for %s Connection Block [%lu][%lu]\n",
-               cb_type == CHANX ? "X-direction" : "Y-direction",
+               cb_type == e_rr_type::CHANX ? "X-direction" : "Y-direction",
                rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
 
       /* Find the cb module so that we can precisely reserve child blocks */
@@ -742,7 +742,7 @@ void build_routing_bitstream(
     bitstream_manager, top_configurable_block, module_manager, module_name_map,
     fabric_tile, circuit_lib, mux_lib, atom_ctx, device_annotation,
     routing_annotation, rr_graph, device_rr_gsb, compact_routing_hierarchy,
-    CHANX, verbose);
+    e_rr_type::CHANX, verbose);
   VTR_LOG("Done\n");
 
   VTR_LOG("Generating bitstream for Y-direction Connection blocks ...");
@@ -751,7 +751,7 @@ void build_routing_bitstream(
     bitstream_manager, top_configurable_block, module_manager, module_name_map,
     fabric_tile, circuit_lib, mux_lib, atom_ctx, device_annotation,
     routing_annotation, rr_graph, device_rr_gsb, compact_routing_hierarchy,
-    CHANY, verbose);
+    e_rr_type::CHANY, verbose);
   VTR_LOG("Done\n");
 }
 

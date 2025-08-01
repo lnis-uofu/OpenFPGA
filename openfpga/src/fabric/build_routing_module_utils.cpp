@@ -9,8 +9,8 @@
 #include "build_routing_module_utils.h"
 
 #include "openfpga_naming.h"
-#include "openfpga_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
+#include "tileable_rr_graph_utils.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "vtr_log.h"
@@ -186,7 +186,7 @@ ModulePinInfo find_switch_block_module_input_port(
   /* Generate the input port object */
   switch (rr_graph.node_type(input_rr_node)) {
     /* case SOURCE: */
-    case OPIN: {
+    case e_rr_type::OPIN: {
       /* Find the coordinator (grid_x and grid_y) for the input port */
       vtr::Point<size_t> input_port_coord(rr_graph.node_xlow(input_rr_node),
                                           rr_graph.node_ylow(input_rr_node));
@@ -206,8 +206,8 @@ ModulePinInfo find_switch_block_module_input_port(
                                                              input_port.first));
       break;
     }
-    case CHANX:
-    case CHANY: {
+    case e_rr_type::CHANX:
+    case e_rr_type::CHANY: {
       input_port = find_switch_block_module_chan_port(
         module_manager, sb_module, rr_graph, rr_gsb, input_side, input_rr_node,
         IN_PORT);
@@ -257,13 +257,13 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(
  ********************************************************************/
 ModulePinInfo find_connection_block_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& cb_module,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type,
   const RRNodeId& chan_rr_node) {
   ModulePinInfo input_port_info;
   /* Generate the input port object */
   switch (rr_graph.node_type(chan_rr_node)) {
-    case CHANX:
-    case CHANY: {
+    case e_rr_type::CHANX:
+    case e_rr_type::CHANY: {
       /* Create port description for the routing track middle output */
       int chan_node_track_id =
         rr_gsb.get_cb_chan_node_index(cb_type, chan_rr_node);
@@ -296,7 +296,7 @@ ModulePortId find_connection_block_module_ipin_port(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
   const RRNodeId& src_rr_node) {
   /* Ensure the src_rr_node is an input pin of a CLB */
-  VTR_ASSERT(IPIN == rr_graph.node_type(src_rr_node));
+  VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(src_rr_node));
   /* Create port description for input pin of a CLB */
   vtr::Point<size_t> port_coord(rr_graph.node_xlow(src_rr_node),
                                 rr_graph.node_ylow(src_rr_node));
@@ -329,7 +329,7 @@ ModulePortId find_connection_block_module_opin_port(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
   const RRNodeId& src_rr_node) {
   /* Ensure the src_rr_node is an input pin of a CLB */
-  VTR_ASSERT(OPIN == rr_graph.node_type(src_rr_node));
+  VTR_ASSERT(e_rr_type::OPIN == rr_graph.node_type(src_rr_node));
   /* Search all the sides of a SB, see this drive_rr_node is an INPUT of this SB
    */
   enum e_side cb_opin_side = NUM_2D_SIDES;
@@ -357,12 +357,12 @@ ModulePortId find_connection_block_module_opin_port(
 std::vector<ModulePinInfo> find_connection_block_module_input_ports(
   const ModuleManager& module_manager, const ModuleId& cb_module,
   const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type,
   const std::vector<RRNodeId>& input_rr_nodes) {
   std::vector<ModulePinInfo> input_ports;
 
   for (auto input_rr_node : input_rr_nodes) {
-    if (OPIN == rr_graph.node_type(input_rr_node)) {
+    if (e_rr_type::OPIN == rr_graph.node_type(input_rr_node)) {
       input_ports.push_back(ModulePinInfo(
         find_connection_block_module_opin_port(module_manager, cb_module, grids,
                                                vpr_device_annotation, rr_graph,

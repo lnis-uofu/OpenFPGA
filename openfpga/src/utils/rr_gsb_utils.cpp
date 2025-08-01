@@ -18,7 +18,7 @@ namespace openfpga {
  * routing tracks only (zero configuration bits and routing multiplexers)
  *******************************************************************/
 bool connection_block_contain_only_routing_tracks(const RRGSB& rr_gsb,
-                                                  const t_rr_type& cb_type) {
+                                                  const e_rr_type& cb_type) {
   bool routing_track_only = true;
 
   /* Find routing multiplexers on the sides of a Connection block where IPIN
@@ -289,7 +289,7 @@ bool is_sb_mirror(const RRGraphView& rr_graph,
 static bool is_cb_node_mirror(const RRGraphView& rr_graph,
                               const VprDeviceAnnotation& device_annotation,
                               const RRGSB& base, const RRGSB& cand,
-                              const t_rr_type& cb_type, const e_side& node_side,
+                              const e_rr_type& cb_type, const e_side& node_side,
                               const size_t& node_id) {
   /* Ensure rr_nodes are either the output of short-connection or multiplexer */
   std::vector<RREdgeId> node_in_edges =
@@ -321,13 +321,13 @@ static bool is_cb_node_mirror(const RRGraphView& rr_graph,
     enum e_side src_node_side, des_node_side;
     enum e_side chan_side = base.get_cb_chan_side(cb_type);
     switch (rr_graph.node_type(src_node)) {
-      case CHANX:
-      case CHANY:
+      case e_rr_type::CHANX:
+      case e_rr_type::CHANY:
         /* if the drive rr_nodes are routing tracks, find index  */
         src_node_id = base.get_chan_node_index(chan_side, src_node);
         des_node_id = cand.get_chan_node_index(chan_side, src_cand_node);
         break;
-      case OPIN:
+      case e_rr_type::OPIN:
         base.get_node_side_and_index(rr_graph, src_node, OUT_PORT,
                                      src_node_side, src_node_id);
         cand.get_node_side_and_index(rr_graph, src_cand_node, OUT_PORT,
@@ -352,7 +352,7 @@ static bool is_cb_node_mirror(const RRGraphView& rr_graph,
 bool is_cb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base, const RRGSB& cand,
-                  const t_rr_type& cb_type) {
+                  const e_rr_type& cb_type) {
   /* Check if channel width is the same */
   if (base.get_cb_chan_width(cb_type) != cand.get_cb_chan_width(cb_type)) {
     return false;

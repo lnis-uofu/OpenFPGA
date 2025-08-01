@@ -38,11 +38,11 @@ bool RRGSBWriterOption::unique_module_only() const {
 
 bool RRGSBWriterOption::include_rr_info() const { return !exclude_content_[0]; }
 
-bool RRGSBWriterOption::include_cb_content(const t_rr_type& cb_type) const {
-  if (cb_type == CHANX) {
+bool RRGSBWriterOption::include_cb_content(const e_rr_type& cb_type) const {
+  if (cb_type == e_rr_type::CHANX) {
     return !exclude_content_[1];
   }
-  VTR_ASSERT(cb_type == CHANY);
+  VTR_ASSERT(cb_type == e_rr_type::CHANY);
   return !exclude_content_[2];
 }
 

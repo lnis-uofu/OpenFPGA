@@ -527,8 +527,8 @@ endmodule
 //----- Default net type -----
 `default_nettype none
 
-// ----- Verilog module for mux_2level_tapbuf_size13_mem -----
-module mux_2level_tapbuf_size13_mem(pReset,
+// ----- Verilog module for mux_2level_tapbuf_size12_mem -----
+module mux_2level_tapbuf_size12_mem(pReset,
                                     prog_clk,
                                     ccff_head,
                                     ccff_tail,
@@ -619,7 +619,7 @@ output [0:7] mem_outb;
 		.QN(mem_outb[7]));
 
 endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size13_mem -----
+// ----- END Verilog module for mux_2level_tapbuf_size12_mem -----
 
 //----- Default net type -----
 `default_nettype wire
