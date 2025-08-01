@@ -664,15 +664,25 @@
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>
             <interconnect>
-              <direct name="direct1" input="shift_reg.regin" output="ff[0].D"/>
-              <direct name="direct2" input="ff[0].Q" output="ff[1].D"/>
-              <direct name="direct3" input="ff[1].Q" output="shift_reg.regout"/>
+              <direct name="direct1" input="shift_reg.regin" output="ff[0].D">
+                <pack_pattern name="shift_register_chain" in_port="shift_reg.regin" out_port="ff[0].D"/>
+              </direct>
+              <direct name="direct2" input="ff[0].Q" output="ff[1].D">
+                <pack_pattern name="shift_register_chain" in_port="ff[0].Q" out_port="ff[1].D"/>
+              </direct>
+              <direct name="direct3" input="ff[1].Q" output="shift_reg.regout">
+                <pack_pattern name="shift_register_chain" in_port="ff[1].Q" out_port="shift_reg.regout"/>
+              </direct>
               <complete name="complete1" input="shift_reg.clk" output="ff.clk"/>
             </interconnect>
           </pb_type>
           <interconnect>
-            <direct name="direct1" input="fle.regin" output="shift_reg.regin"/>
-            <direct name="direct2" input="shift_reg.regout" output="fle.regout"/>
+            <direct name="direct1" input="fle.regin" output="shift_reg.regin">
+              <pack_pattern name="shift_register_chain" in_port="fle.regin" out_port="shift_reg.regin"/>
+            </direct>
+            <direct name="direct2" input="shift_reg.regout" output="fle.regout">
+              <pack_pattern name="shift_register_chain" in_port="shift_reg.regout" out_port="fle.regout"/>
+            </direct>
             <direct name="direct3" input="fle.clk" output="shift_reg.clk"/>
           </interconnect>
         </mode>
@@ -717,13 +727,13 @@
         <direct name="shift_register_in" input="clb.regin" output="fle[0:0].regin">
           <!-- Put all inter-block carry chain delay on this one edge -->
           <delay_constant max="0.16e-9" in_port="clb.regin" out_port="fle[0:0].regin"/>
-          <pack_pattern name="chain" in_port="clb.regin" out_port="fle[0:0].regin"/>
+          <pack_pattern name="shift_register_chain" in_port="clb.regin" out_port="fle[0:0].regin"/>
         </direct>
         <direct name="shift_register_out" input="fle[9:9].regout" output="clb.regout">
-          <pack_pattern name="chain" in_port="fle[9:9].regout" out_port="clb.regout"/>
+          <pack_pattern name="shift_register_chain" in_port="fle[9:9].regout" out_port="clb.regout"/>
         </direct>
         <direct name="shift_register_link" input="fle[8:0].regout" output="fle[9:1].regin">
-          <pack_pattern name="chain" in_port="fle[8:0].regout" out_port="fle[9:1].regin"/>
+          <pack_pattern name="shift_register_chain" in_port="fle[8:0].regout" out_port="fle[9:1].regin"/>
         </direct>
         <!-- Scan chain links -->
         <direct name="scan_chain_in" input="clb.scin" output="fle[0:0].scin">

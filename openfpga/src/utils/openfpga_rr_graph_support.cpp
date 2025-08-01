@@ -13,8 +13,8 @@ namespace openfpga {
 bool is_vpr_rr_graph_supported(const RRGraphView& rr_graph) {
   /* Check if the rr_graph is uni-directional*/
   for (const RRNodeId& node : rr_graph.nodes()) {
-    if (CHANX != rr_graph.node_type(node) &&
-        CHANY != rr_graph.node_type(node)) {
+    if (e_rr_type::CHANX != rr_graph.node_type(node) &&
+        e_rr_type::CHANY != rr_graph.node_type(node)) {
       continue;
     }
     if (Direction::BIDIR == rr_graph.node_direction(node)) {

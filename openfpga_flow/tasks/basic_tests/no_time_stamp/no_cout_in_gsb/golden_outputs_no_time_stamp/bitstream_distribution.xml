@@ -4,11 +4,11 @@
 
 <bitstream_distribution>
 	<regions>
-		<region id="0" number_of_bits="2372">
+		<region id="0" number_of_bits="2358">
 		</region>
 	</regions>
 	<blocks>
-		<block name="fpga_top" number_of_bits="2372">
+		<block name="fpga_top" number_of_bits="2358">
 			<block name="grid_clb_1__1_" number_of_bits="296">
 			</block>
 			<block name="grid_clb_1__2_" number_of_bits="296">
@@ -35,7 +35,7 @@
 			</block>
 			<block name="sb_0__0_" number_of_bits="36">
 			</block>
-			<block name="sb_0__1_" number_of_bits="68">
+			<block name="sb_0__1_" number_of_bits="66">
 			</block>
 			<block name="sb_0__2_" number_of_bits="32">
 			</block>
@@ -43,11 +43,11 @@
 			</block>
 			<block name="sb_1__1_" number_of_bits="96">
 			</block>
-			<block name="sb_1__2_" number_of_bits="66">
+			<block name="sb_1__2_" number_of_bits="64">
 			</block>
 			<block name="sb_2__0_" number_of_bits="40">
 			</block>
-			<block name="sb_2__1_" number_of_bits="78">
+			<block name="sb_2__1_" number_of_bits="68">
 			</block>
 			<block name="sb_2__2_" number_of_bits="36">
 			</block>

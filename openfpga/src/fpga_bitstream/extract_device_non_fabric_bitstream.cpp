@@ -124,7 +124,7 @@ static void extract_device_non_fabric_pb_bitstream(
       t_physical_tile_type_ptr grid_type =
         grids.get_physical_type(phy_tile_loc);
       // Bypass EMPTY grid
-      if (true == is_empty_type(grid_type)) {
+      if (true == grid_type->is_empty()) {
         continue;
       }
 

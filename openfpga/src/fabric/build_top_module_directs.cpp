@@ -56,7 +56,7 @@ static void add_module_nets_tile_direct_connection(
   std::string src_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string src_module_name = generate_grid_block_module_name(
     src_module_name_prefix, std::string(src_grid_type->name),
-    is_io_type(src_grid_type), src_grid_border_side);
+    src_grid_type->is_io(), src_grid_border_side);
   ModuleId src_grid_module = module_manager.find_module(src_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(src_grid_module));
   /* Record the instance id */
@@ -75,7 +75,7 @@ static void add_module_nets_tile_direct_connection(
   std::string sink_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string sink_module_name = generate_grid_block_module_name(
     sink_module_name_prefix, std::string(sink_grid_type->name),
-    is_io_type(sink_grid_type), sink_grid_border_side);
+    sink_grid_type->is_io(), sink_grid_border_side);
   ModuleId sink_grid_module = module_manager.find_module(sink_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(sink_grid_module));
   /* Record the instance id */

@@ -23,7 +23,7 @@ void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
 void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
                                         const ModuleManager& module_manager,
                                         const ModuleId& top_module,
-                                        const t_rr_type& cb_type,
+                                        const e_rr_type& cb_type,
                                         const DeviceRRGSB& device_rr_gsb);
 
 void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,

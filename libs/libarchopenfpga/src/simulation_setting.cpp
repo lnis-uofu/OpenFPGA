@@ -50,7 +50,10 @@ SimulationSetting::programming_shift_register_clocks() const {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-SimulationSetting::SimulationSetting() { return; }
+SimulationSetting::SimulationSetting()
+  : default_clock_frequencies_(0.0f, 0.0f) {
+  return;
+}
 
 /************************************************************************
  * Public Accessors

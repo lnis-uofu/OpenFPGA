@@ -130,7 +130,7 @@ static void read_xml_region_key(pugi::xml_node& xml_component_key,
   fabric_key.add_key_to_region(fabric_region, FabricKeyId(id));
 
   /* Parse coordinates */
-  vtr::Point<int> coord;
+  vtr::Point<int> coord(-1, -1);
   coord.set_x(get_attribute(xml_component_key,
                             XML_FABRIC_KEY_KEY_ATTRIBUTE_COLUMN_NAME, loc_data,
                             pugiutil::ReqOpt::OPTIONAL)

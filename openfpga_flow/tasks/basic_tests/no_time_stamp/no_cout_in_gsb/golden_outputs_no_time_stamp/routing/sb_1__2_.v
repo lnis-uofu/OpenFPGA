@@ -111,23 +111,32 @@ wire [0:1] mux_2level_tapbuf_size2_0_sram;
 wire [0:1] mux_2level_tapbuf_size2_0_sram_inv;
 wire [0:1] mux_2level_tapbuf_size2_1_sram;
 wire [0:1] mux_2level_tapbuf_size2_1_sram_inv;
+wire [0:1] mux_2level_tapbuf_size2_2_sram;
+wire [0:1] mux_2level_tapbuf_size2_2_sram_inv;
+wire [0:1] mux_2level_tapbuf_size2_3_sram;
+wire [0:1] mux_2level_tapbuf_size2_3_sram_inv;
+wire [0:1] mux_2level_tapbuf_size2_4_sram;
+wire [0:1] mux_2level_tapbuf_size2_4_sram_inv;
+wire [0:1] mux_2level_tapbuf_size2_5_sram;
+wire [0:1] mux_2level_tapbuf_size2_5_sram_inv;
 wire [0:0] mux_2level_tapbuf_size2_mem_0_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size2_mem_1_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size2_mem_2_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size2_mem_3_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size2_mem_4_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size2_mem_5_ccff_tail;
 wire [0:1] mux_2level_tapbuf_size3_0_sram;
 wire [0:1] mux_2level_tapbuf_size3_0_sram_inv;
 wire [0:1] mux_2level_tapbuf_size3_1_sram;
 wire [0:1] mux_2level_tapbuf_size3_1_sram_inv;
 wire [0:1] mux_2level_tapbuf_size3_2_sram;
 wire [0:1] mux_2level_tapbuf_size3_2_sram_inv;
+wire [0:1] mux_2level_tapbuf_size3_3_sram;
+wire [0:1] mux_2level_tapbuf_size3_3_sram_inv;
 wire [0:0] mux_2level_tapbuf_size3_mem_0_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size3_mem_1_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size3_mem_2_ccff_tail;
-wire [0:5] mux_2level_tapbuf_size4_0_sram;
-wire [0:5] mux_2level_tapbuf_size4_0_sram_inv;
-wire [0:5] mux_2level_tapbuf_size4_1_sram;
-wire [0:5] mux_2level_tapbuf_size4_1_sram_inv;
-wire [0:0] mux_2level_tapbuf_size4_mem_0_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size4_mem_1_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size3_mem_3_ccff_tail;
 wire [0:5] mux_2level_tapbuf_size7_0_sram;
 wire [0:5] mux_2level_tapbuf_size7_0_sram_inv;
 wire [0:5] mux_2level_tapbuf_size7_1_sram;
@@ -159,10 +168,6 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 // ----- Net source id 0 -----
 // ----- Net sink id 1 -----
 	assign chanx_left_out[3] = chanx_right_in[2];
-// ----- Local connection due to Wire 3 -----
-// ----- Net source id 0 -----
-// ----- Net sink id 0 -----
-	assign chany_bottom_out[8] = chanx_right_in[3];
 // ----- Local connection due to Wire 4 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 2 -----
@@ -175,10 +180,6 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 // ----- Net source id 0 -----
 // ----- Net sink id 1 -----
 	assign chanx_left_out[7] = chanx_right_in[6];
-// ----- Local connection due to Wire 7 -----
-// ----- Net source id 0 -----
-// ----- Net sink id 0 -----
-	assign chany_bottom_out[7] = chanx_right_in[7];
 // ----- Local connection due to Wire 8 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 2 -----
@@ -195,10 +196,6 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 // ----- Net source id 0 -----
 // ----- Net sink id 0 -----
 	assign chanx_right_out[3] = chanx_left_in[2];
-// ----- Local connection due to Wire 35 -----
-// ----- Net source id 0 -----
-// ----- Net sink id 0 -----
-	assign chany_bottom_out[9] = chanx_left_in[3];
 // ----- Local connection due to Wire 36 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 1 -----
@@ -262,7 +259,7 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 	mux_2level_tapbuf_size9_mem mem_left_track_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size3_mem_2_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size2_mem_5_ccff_tail),
 		.ccff_tail(mux_2level_tapbuf_size9_mem_2_ccff_tail),
 		.mem_out(mux_2level_tapbuf_size9_2_sram[0:7]),
 		.mem_outb(mux_2level_tapbuf_size9_2_sram_inv[0:7]));
@@ -303,61 +300,39 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 		.mem_out(mux_2level_tapbuf_size7_1_sram[0:5]),
 		.mem_outb(mux_2level_tapbuf_size7_1_sram_inv[0:5]));
 
-	mux_2level_tapbuf_size4 mux_bottom_track_1 (
-		.in({chanx_right_in[0], bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_0_, chanx_left_in[0], chanx_left_in[7]}),
-		.sram(mux_2level_tapbuf_size4_0_sram[0:5]),
-		.sram_inv(mux_2level_tapbuf_size4_0_sram_inv[0:5]),
-		.out(chany_bottom_out[0]));
-
-	mux_2level_tapbuf_size4 mux_bottom_track_3 (
-		.in({chanx_right_in[1], bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_1_, chanx_left_in[1], chanx_left_in[9]}),
-		.sram(mux_2level_tapbuf_size4_1_sram[0:5]),
-		.sram_inv(mux_2level_tapbuf_size4_1_sram_inv[0:5]),
-		.out(chany_bottom_out[1]));
-
-	mux_2level_tapbuf_size4_mem mem_bottom_track_1 (
-		.pReset(pReset),
-		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size7_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size4_mem_0_ccff_tail),
-		.mem_out(mux_2level_tapbuf_size4_0_sram[0:5]),
-		.mem_outb(mux_2level_tapbuf_size4_0_sram_inv[0:5]));
-
-	mux_2level_tapbuf_size4_mem mem_bottom_track_3 (
-		.pReset(pReset),
-		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size4_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size4_mem_1_ccff_tail),
-		.mem_out(mux_2level_tapbuf_size4_1_sram[0:5]),
-		.mem_outb(mux_2level_tapbuf_size4_1_sram_inv[0:5]));
-
-	mux_2level_tapbuf_size3 mux_bottom_track_5 (
-		.in({chanx_right_in[2], bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_2_, chanx_left_in[2]}),
+	mux_2level_tapbuf_size3 mux_bottom_track_1 (
+		.in({bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_0_, chanx_left_in[1], chanx_left_in[7]}),
 		.sram(mux_2level_tapbuf_size3_0_sram[0:1]),
 		.sram_inv(mux_2level_tapbuf_size3_0_sram_inv[0:1]),
+		.out(chany_bottom_out[0]));
+
+	mux_2level_tapbuf_size3 mux_bottom_track_3 (
+		.in({bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_1_, chanx_left_in[2], chanx_left_in[9]}),
+		.sram(mux_2level_tapbuf_size3_1_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size3_1_sram_inv[0:1]),
+		.out(chany_bottom_out[1]));
+
+	mux_2level_tapbuf_size3 mux_bottom_track_5 (
+		.in({chanx_right_in[8], bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_2_, chanx_left_in[4]}),
+		.sram(mux_2level_tapbuf_size3_2_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size3_2_sram_inv[0:1]),
 		.out(chany_bottom_out[2]));
 
 	mux_2level_tapbuf_size3 mux_bottom_track_7 (
-		.in({chanx_right_in[4], bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_3_, chanx_left_in[4]}),
-		.sram(mux_2level_tapbuf_size3_1_sram[0:1]),
-		.sram_inv(mux_2level_tapbuf_size3_1_sram_inv[0:1]),
+		.in({chanx_right_in[6], bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_3_, chanx_left_in[5]}),
+		.sram(mux_2level_tapbuf_size3_3_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size3_3_sram_inv[0:1]),
 		.out(chany_bottom_out[3]));
 
-	mux_2level_tapbuf_size3 mux_bottom_track_13 (
-		.in({chanx_right_in[8:9], chanx_left_in[8]}),
-		.sram(mux_2level_tapbuf_size3_2_sram[0:1]),
-		.sram_inv(mux_2level_tapbuf_size3_2_sram_inv[0:1]),
-		.out(chany_bottom_out[6]));
-
-	mux_2level_tapbuf_size3_mem mem_bottom_track_5 (
+	mux_2level_tapbuf_size3_mem mem_bottom_track_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size4_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size7_mem_0_ccff_tail),
 		.ccff_tail(mux_2level_tapbuf_size3_mem_0_ccff_tail),
 		.mem_out(mux_2level_tapbuf_size3_0_sram[0:1]),
 		.mem_outb(mux_2level_tapbuf_size3_0_sram_inv[0:1]));
 
-	mux_2level_tapbuf_size3_mem mem_bottom_track_7 (
+	mux_2level_tapbuf_size3_mem mem_bottom_track_3 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
 		.ccff_head(mux_2level_tapbuf_size3_mem_0_ccff_tail),
@@ -365,30 +340,62 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 		.mem_out(mux_2level_tapbuf_size3_1_sram[0:1]),
 		.mem_outb(mux_2level_tapbuf_size3_1_sram_inv[0:1]));
 
-	mux_2level_tapbuf_size3_mem mem_bottom_track_13 (
+	mux_2level_tapbuf_size3_mem mem_bottom_track_5 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size2_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size3_mem_1_ccff_tail),
 		.ccff_tail(mux_2level_tapbuf_size3_mem_2_ccff_tail),
 		.mem_out(mux_2level_tapbuf_size3_2_sram[0:1]),
 		.mem_outb(mux_2level_tapbuf_size3_2_sram_inv[0:1]));
 
+	mux_2level_tapbuf_size3_mem mem_bottom_track_7 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
+		.ccff_head(mux_2level_tapbuf_size3_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size3_mem_3_ccff_tail),
+		.mem_out(mux_2level_tapbuf_size3_3_sram[0:1]),
+		.mem_outb(mux_2level_tapbuf_size3_3_sram_inv[0:1]));
+
 	mux_2level_tapbuf_size2 mux_bottom_track_9 (
-		.in({chanx_right_in[5], chanx_left_in[5]}),
+		.in({chanx_right_in[5], chanx_left_in[6]}),
 		.sram(mux_2level_tapbuf_size2_0_sram[0:1]),
 		.sram_inv(mux_2level_tapbuf_size2_0_sram_inv[0:1]),
 		.out(chany_bottom_out[4]));
 
 	mux_2level_tapbuf_size2 mux_bottom_track_11 (
-		.in({chanx_right_in[6], chanx_left_in[6]}),
+		.in({chanx_right_in[4], chanx_left_in[8]}),
 		.sram(mux_2level_tapbuf_size2_1_sram[0:1]),
 		.sram_inv(mux_2level_tapbuf_size2_1_sram_inv[0:1]),
 		.out(chany_bottom_out[5]));
 
+	mux_2level_tapbuf_size2 mux_bottom_track_13 (
+		.in({chanx_right_in[2], chanx_right_in[9]}),
+		.sram(mux_2level_tapbuf_size2_2_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size2_2_sram_inv[0:1]),
+		.out(chany_bottom_out[6]));
+
+	mux_2level_tapbuf_size2 mux_bottom_track_15 (
+		.in({chanx_right_in[1], chanx_right_in[7]}),
+		.sram(mux_2level_tapbuf_size2_3_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size2_3_sram_inv[0:1]),
+		.out(chany_bottom_out[7]));
+
+	mux_2level_tapbuf_size2 mux_bottom_track_17 (
+		.in({chanx_right_in[0], chanx_right_in[3]}),
+		.sram(mux_2level_tapbuf_size2_4_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size2_4_sram_inv[0:1]),
+		.out(chany_bottom_out[8]));
+
+	mux_2level_tapbuf_size2 mux_bottom_track_19 (
+		.in({chanx_left_in[0], chanx_left_in[3]}),
+		.sram(mux_2level_tapbuf_size2_5_sram[0:1]),
+		.sram_inv(mux_2level_tapbuf_size2_5_sram_inv[0:1]),
+		.out(chany_bottom_out[9]));
+
 	mux_2level_tapbuf_size2_mem mem_bottom_track_9 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size3_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size3_mem_3_ccff_tail),
 		.ccff_tail(mux_2level_tapbuf_size2_mem_0_ccff_tail),
 		.mem_out(mux_2level_tapbuf_size2_0_sram[0:1]),
 		.mem_outb(mux_2level_tapbuf_size2_0_sram_inv[0:1]));
@@ -400,6 +407,38 @@ wire [0:0] mux_2level_tapbuf_size9_mem_3_ccff_tail;
 		.ccff_tail(mux_2level_tapbuf_size2_mem_1_ccff_tail),
 		.mem_out(mux_2level_tapbuf_size2_1_sram[0:1]),
 		.mem_outb(mux_2level_tapbuf_size2_1_sram_inv[0:1]));
+
+	mux_2level_tapbuf_size2_mem mem_bottom_track_13 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
+		.ccff_head(mux_2level_tapbuf_size2_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size2_mem_2_ccff_tail),
+		.mem_out(mux_2level_tapbuf_size2_2_sram[0:1]),
+		.mem_outb(mux_2level_tapbuf_size2_2_sram_inv[0:1]));
+
+	mux_2level_tapbuf_size2_mem mem_bottom_track_15 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
+		.ccff_head(mux_2level_tapbuf_size2_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size2_mem_3_ccff_tail),
+		.mem_out(mux_2level_tapbuf_size2_3_sram[0:1]),
+		.mem_outb(mux_2level_tapbuf_size2_3_sram_inv[0:1]));
+
+	mux_2level_tapbuf_size2_mem mem_bottom_track_17 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
+		.ccff_head(mux_2level_tapbuf_size2_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size2_mem_4_ccff_tail),
+		.mem_out(mux_2level_tapbuf_size2_4_sram[0:1]),
+		.mem_outb(mux_2level_tapbuf_size2_4_sram_inv[0:1]));
+
+	mux_2level_tapbuf_size2_mem mem_bottom_track_19 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
+		.ccff_head(mux_2level_tapbuf_size2_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size2_mem_5_ccff_tail),
+		.mem_out(mux_2level_tapbuf_size2_5_sram[0:1]),
+		.mem_outb(mux_2level_tapbuf_size2_5_sram_inv[0:1]));
 
 endmodule
 // ----- END Verilog module for sb_1__2_ -----

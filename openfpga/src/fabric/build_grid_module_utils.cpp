@@ -28,7 +28,7 @@ std::vector<e_side> find_grid_module_pin_sides(
   t_physical_tile_type_ptr grid_type_descriptor, const e_side& border_side,
   const bool& perimeter_cb) {
   /* We must have an regular (non-I/O) type here */
-  VTR_ASSERT(true == is_io_type(grid_type_descriptor));
+  VTR_ASSERT(grid_type_descriptor->is_io());
   SideManager side_manager(border_side);
 
   if (NUM_2D_SIDES == border_side) {
@@ -68,7 +68,7 @@ void add_grid_module_net_connect_pb_graph_pin(
   /* For I/O grids, we care only one side
    * Otherwise, we will iterate all the 4 sides
    */
-  if (true == is_io_type(grid_type_descriptor)) {
+  if (grid_type_descriptor->is_io()) {
     grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor,
                                                 border_side, perimeter_cb);
   } else {
