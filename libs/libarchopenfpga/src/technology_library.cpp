@@ -309,7 +309,7 @@ TechnologyModelId TechnologyLibrary::add_model(const std::string& name) {
     std::array<TechnologyVariationId, 2>{TechnologyVariationId::INVALID(),
                                          TechnologyVariationId::INVALID()});
 
-  rram_resistances_.emplace_back();
+  rram_resistances_.emplace_back(0.0f, 0.0f);
   rram_variation_names_.emplace_back();
   rram_variation_ids_.push_back(TechnologyVariationId::INVALID());
 

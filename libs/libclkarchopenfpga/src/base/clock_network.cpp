@@ -51,7 +51,7 @@ std::vector<ClockLevelId> ClockNetwork::levels(
 
 std::vector<ClockTreePinId> ClockNetwork::pins(
   const ClockTreeId& tree_id, const ClockLevelId& level,
-  const t_rr_type& track_type, const Direction& direction) const {
+  const e_rr_type& track_type, const Direction& direction) const {
   std::vector<ClockTreePinId> ret;
   /* Avoid to repeatedly count the tracks which can be shared by spines
    * For two or more spines that locate in different coordinates, they can share
@@ -89,20 +89,20 @@ std::vector<ClockTreePinId> ClockNetwork::pins(
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
-t_rr_type ClockNetwork::spine_track_type(const ClockSpineId& spine_id) const {
+e_rr_type ClockNetwork::spine_track_type(const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_start_end_points(spine_id));
   if ((spine_start_point(spine_id).x() == spine_end_point(spine_id).x()) &&
       (spine_start_point(spine_id).y() == spine_end_point(spine_id).y())) {
     return spine_track_types_[spine_id];
   } else if (spine_start_point(spine_id).y() == spine_end_point(spine_id).y()) {
-    return CHANX;
+    return e_rr_type::CHANX;
   }
-  return CHANY;
+  return e_rr_type::CHANY;
 }
 
 Direction ClockNetwork::spine_direction(const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_start_end_points(spine_id));
-  if (spine_track_type(spine_id) == CHANX) {
+  if (spine_track_type(spine_id) == e_rr_type::CHANX) {
     if (spine_start_point(spine_id).x() == spine_end_point(spine_id).x()) {
       return spine_directions_[spine_id];
     } else if (spine_start_point(spine_id).x() <
@@ -110,7 +110,7 @@ Direction ClockNetwork::spine_direction(const ClockSpineId& spine_id) const {
       return Direction::INC;
     }
   } else {
-    VTR_ASSERT(spine_track_type(spine_id) == CHANY);
+    VTR_ASSERT(spine_track_type(spine_id) == e_rr_type::CHANY);
     if (spine_start_point(spine_id).y() == spine_end_point(spine_id).y()) {
       return spine_directions_[spine_id];
     } else if (spine_start_point(spine_id).y() <
@@ -123,7 +123,7 @@ Direction ClockNetwork::spine_direction(const ClockSpineId& spine_id) const {
 
 size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
                                 const ClockLevelId& level,
-                                const t_rr_type& track_type) const {
+                                const e_rr_type& track_type) const {
   size_t num_tracks = 0;
   /* Avoid to repeatedly count the tracks which can be shared by spines
    * For two or more spines that locate in different coordinates, they can share
@@ -149,7 +149,7 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
 
 size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
                                 const ClockLevelId& level,
-                                const t_rr_type& track_type,
+                                const e_rr_type& track_type,
                                 const Direction& direction) const {
   size_t num_tracks = 0;
   /* Avoid to repeatedly count the tracks which can be shared by spines
@@ -290,11 +290,11 @@ vtr::Point<int> ClockNetwork::spine_intermediate_driver_routing_track_coord(
   /* des node depends on the type of routing track and direction. But it
    * should be a starting point at the current SB[x][y] */
   if (des_spine_direction == Direction::INC &&
-      spine_track_type(spine_id) == CHANX) {
+      spine_track_type(spine_id) == e_rr_type::CHANX) {
     des_coord.set_x(coord.x() + 1);
   }
   if (des_spine_direction == Direction::INC &&
-      spine_track_type(spine_id) == CHANY) {
+      spine_track_type(spine_id) == e_rr_type::CHANY) {
     des_coord.set_y(coord.y() + 1);
   }
   return des_coord;
@@ -308,11 +308,11 @@ ClockNetwork::spine_intermediate_drivers_by_routing_track(
   /* des node depends on the type of routing track and direction. But it
    * should be a starting point at the current SB[x][y] */
   if (des_spine_direction == Direction::INC &&
-      spine_track_type(spine_id) == CHANX) {
+      spine_track_type(spine_id) == e_rr_type::CHANX) {
     des_coord.set_x(track_coord.x() - 1);
   }
   if (des_spine_direction == Direction::INC &&
-      spine_track_type(spine_id) == CHANY) {
+      spine_track_type(spine_id) == e_rr_type::CHANY) {
     des_coord.set_y(track_coord.y() - 1);
   }
   return spine_intermediate_drivers(spine_id, des_coord);
@@ -333,24 +333,24 @@ std::vector<vtr::Point<int>> ClockNetwork::spine_coordinates(
   vtr::Point<int> end_coord = spine_end_point(spine_id);
   std::vector<vtr::Point<int>> coords;
   if (Direction::INC == spine_direction(spine_id)) {
-    if (CHANX == spine_track_type(spine_id)) {
+    if (e_rr_type::CHANX == spine_track_type(spine_id)) {
       for (int ix = start_coord.x(); ix <= end_coord.x(); ix++) {
         coords.push_back(vtr::Point<int>(ix, start_coord.y()));
       }
     } else {
-      VTR_ASSERT(CHANY == spine_track_type(spine_id));
+      VTR_ASSERT(e_rr_type::CHANY == spine_track_type(spine_id));
       for (int iy = start_coord.y(); iy <= end_coord.y(); iy++) {
         coords.push_back(vtr::Point<int>(start_coord.x(), iy));
       }
     }
   } else {
     VTR_ASSERT(Direction::DEC == spine_direction(spine_id));
-    if (CHANX == spine_track_type(spine_id)) {
+    if (e_rr_type::CHANX == spine_track_type(spine_id)) {
       for (int ix = start_coord.x(); ix >= end_coord.x(); ix--) {
         coords.push_back(vtr::Point<int>(ix, start_coord.y()));
       }
     } else {
-      VTR_ASSERT(CHANY == spine_track_type(spine_id));
+      VTR_ASSERT(e_rr_type::CHANY == spine_track_type(spine_id));
       for (int iy = start_coord.y(); iy >= end_coord.y(); iy--) {
         coords.push_back(vtr::Point<int>(start_coord.x(), iy));
       }
@@ -758,12 +758,12 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_ids_.push_back(spine_id);
   spine_names_.push_back(name);
   spine_levels_.emplace_back(0);
-  spine_start_points_.emplace_back();
-  spine_end_points_.emplace_back();
+  spine_start_points_.emplace_back(-1, -1);
+  spine_end_points_.emplace_back(-1, -1);
   spine_directions_.emplace_back(Direction::NUM_DIRECTIONS);
-  spine_track_types_.emplace_back(NUM_RR_TYPES);
+  spine_track_types_.emplace_back(e_rr_type::NUM_RR_TYPES);
   spine_switch_points_.emplace_back();
-  spine_switch_coords_.emplace_back();
+  spine_switch_coords_.emplace_back(std::vector<vtr::Point<int>>());
   spine_switch_internal_drivers_.emplace_back();
   spine_intermediate_drivers_.emplace_back();
   spine_parents_.emplace_back();
@@ -811,7 +811,7 @@ void ClockNetwork::set_spine_direction(const ClockSpineId& spine_id,
 }
 
 void ClockNetwork::set_spine_track_type(const ClockSpineId& spine_id,
-                                        const t_rr_type& type) {
+                                        const e_rr_type& type) {
   VTR_ASSERT(valid_spine_id(spine_id));
   spine_track_types_[spine_id] = type;
 }

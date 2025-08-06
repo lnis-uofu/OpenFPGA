@@ -17,10 +17,10 @@
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "openfpga_rr_graph_utils.h"
 #include "openfpga_side_manager.h"
 #include "physical_types_util.h"
 #include "rr_gsb_utils.h"
+#include "tileable_rr_graph_utils.h"
 #include "vpr_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -302,9 +302,9 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
   const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
-  const FabricTileId& fabric_tile_id, const t_rr_type& cb_type,
+  const FabricTileId& fabric_tile_id, const e_rr_type& cb_type,
   const std::vector<size_t>& pb_instances,
-  const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
+  const std::map<e_rr_type, std::vector<size_t>>& cb_instances,
   const size_t& icb, const bool& compact_routing_hierarchy,
   const bool& name_module_using_index, const bool& frame_view,
   const bool& verbose) {
@@ -672,7 +672,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id,
-  const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
+  const std::map<e_rr_type, std::vector<size_t>>& cb_instances,
   const std::vector<size_t>& sb_instances, const size_t& isb,
   const bool& compact_routing_hierarchy, const bool& name_module_using_index,
   const bool& frame_view, const bool& verbose) {
@@ -718,7 +718,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
     /* We find the original connection block and then spot its unique mirror!
      * Do NOT use module_sb here!!!
      */
-    t_rr_type cb_type =
+    e_rr_type cb_type =
       find_top_module_cb_type_by_sb_side(side_manager.get_side());
     vtr::Point<size_t> instance_gsb_cb_coordinate =
       find_top_module_gsb_coordinate_by_sb_side(rr_gsb,
@@ -1042,8 +1042,8 @@ static int build_tile_module_ports_from_cb(
   ModuleManager& module_manager, const ModuleId& tile_module,
   const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
   const FabricTile& fabric_tile, const FabricTileId& curr_fabric_tile_id,
-  const t_rr_type& cb_type,
-  const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
+  const e_rr_type& cb_type,
+  const std::map<e_rr_type, std::vector<size_t>>& cb_instances,
   const size_t& icb, const bool& compact_routing_hierarchy,
   const bool& name_module_using_index, const bool& frame_view,
   const bool& verbose) {
@@ -1189,7 +1189,7 @@ static int build_tile_port_and_nets_from_pb(
     vtr::Point<size_t>(grids.width(), grids.height()), pb_coord);
   std::string pb_module_name = generate_grid_block_module_name(
     std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_tile->name),
-    is_io_type(phy_tile), grid_side);
+    phy_tile->is_io(), grid_side);
   ModuleId pb_module = module_manager.find_module(pb_module_name);
   if (!pb_module) {
     VTR_LOG_ERROR("Failed to find pb module '%s' required by tile[%lu][%lu]!\n",
@@ -1202,7 +1202,7 @@ static int build_tile_port_and_nets_from_pb(
   /* For I/O grids, we care only one side
    * Otherwise, we will iterate all the 4 sides
    */
-  if (true == is_io_type(phy_tile)) {
+  if (phy_tile->is_io()) {
     grid_pin_sides =
       find_grid_module_pin_sides(phy_tile, grid_side, perimeter_cb);
   } else {
@@ -1311,8 +1311,8 @@ static int build_tile_port_and_nets_from_pb(
                 size_t num_fanout_in_tile =
                   module_manager.module_net_sinks(tile_module, curr_net).size();
                 RRNodeId rr_node = rr_graph.node_lookup().find_node(
-                  layer, pb_coord.x() + iwidth, pb_coord.y() + iheight, OPIN,
-                  ipin, side);
+                  layer, pb_coord.x() + iwidth, pb_coord.y() + iheight,
+                  e_rr_type::OPIN, ipin, side);
                 size_t num_fanout_required =
                   rr_graph.node_out_edges(rr_node).size();
                 if (num_fanout_in_tile == num_fanout_required) {
@@ -1379,7 +1379,7 @@ static int build_tile_module_ports_and_nets(
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph_view,
   const TileAnnotation& tile_annotation, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id, const std::vector<size_t>& pb_instances,
-  const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
+  const std::map<e_rr_type, std::vector<size_t>>& cb_instances,
   const std::vector<size_t>& sb_instances, const bool& name_module_using_index,
   const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
@@ -1402,7 +1402,7 @@ static int build_tile_module_ports_and_nets(
   }
   /* Get the submodule of connection blocks one by one, build connections
    * between cb and pb */
-  for (t_rr_type cb_type : {CHANX, CHANY}) {
+  for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
     for (size_t icb = 0;
          icb < fabric_tile.cb_coordinates(fabric_tile_id, cb_type).size();
          ++icb) {
@@ -1451,7 +1451,7 @@ static int build_tile_module_ports_and_nets(
   }
   /* Get the submodule of connection blocks one by one, build connections
    * between cb and pb */
-  for (t_rr_type cb_type : {CHANX, CHANY}) {
+  for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
     for (size_t icb = 0;
          icb < fabric_tile.cb_coordinates(fabric_tile_id, cb_type).size();
          ++icb) {
@@ -1515,7 +1515,7 @@ static int build_tile_module(
         vtr::Point<size_t>(grids.width(), grids.height()), grid_coord);
       std::string pb_module_name = generate_grid_block_module_name(
         std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_tile->name),
-        is_io_type(phy_tile), grid_side);
+        phy_tile->is_io(), grid_side);
       ModuleId pb_module = module_manager.find_module(pb_module_name);
       if (!pb_module) {
         VTR_LOG_ERROR(
@@ -1527,7 +1527,7 @@ static int build_tile_module(
       module_manager.add_child_module(tile_module, pb_module, false);
       std::string pb_instance_name = generate_grid_block_instance_name(
         std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_tile->name),
-        is_io_type(phy_tile), grid_side, grid_coord);
+        phy_tile->is_io(), grid_side, grid_coord);
       module_manager.set_child_instance_name(tile_module, pb_module,
                                              pb_instance, pb_instance_name);
       if (0 < find_module_num_config_bits(module_manager, pb_module,
@@ -1551,9 +1551,9 @@ static int build_tile_module(
   }
 
   /* Add instance of connection blocks */
-  std::map<t_rr_type, std::vector<size_t>>
+  std::map<e_rr_type, std::vector<size_t>>
     cb_instances; /* Keep tracking the instance id of each cb */
-  for (t_rr_type cb_type : {CHANX, CHANY}) {
+  for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
     for (vtr::Point<size_t> cb_coord :
          fabric_tile.cb_coordinates(fabric_tile_id, cb_type)) {
       /* get the unique module coord */

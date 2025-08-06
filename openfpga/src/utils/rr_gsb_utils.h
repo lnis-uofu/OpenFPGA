@@ -19,7 +19,7 @@
 namespace openfpga {
 
 bool connection_block_contain_only_routing_tracks(const RRGSB& rr_gsb,
-                                                  const t_rr_type& cb_type);
+                                                  const e_rr_type& cb_type);
 
 std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_side& chan_side,
@@ -32,7 +32,7 @@ bool is_sb_mirror(const RRGraphView& rr_graph,
 bool is_cb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base, const RRGSB& cand,
-                  const t_rr_type& cb_type);
+                  const e_rr_type& cb_type);
 
 } /* end namespace openfpga */
 

@@ -16,7 +16,7 @@ namespace openfpga {
  * modules in the device rr_gsb array
  *******************************************************************/
 size_t find_device_rr_gsb_num_cb_modules(const DeviceRRGSB& device_rr_gsb,
-                                         const t_rr_type& cb_type) {
+                                         const e_rr_type& cb_type) {
   size_t counter = 0;
   for (size_t x = 0; x < device_rr_gsb.get_gsb_range().x(); ++x) {
     for (size_t y = 0; y < device_rr_gsb.get_gsb_range().y(); ++y) {

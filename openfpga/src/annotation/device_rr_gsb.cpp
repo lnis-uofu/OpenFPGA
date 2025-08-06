@@ -53,12 +53,12 @@ const RRGSB& DeviceRRGSB::get_gsb_by_cb_coordinate(
 }
 
 /* get the number of unique mirrors of switch blocks */
-size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
+size_t DeviceRRGSB::get_num_cb_unique_module(const e_rr_type& cb_type) const {
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       return cbx_unique_module_.size();
-    case CHANY:
+    case e_rr_type::CHANY:
       return cby_unique_module_.size();
     default:
       VTR_LOG_ERROR("Invalid type of connection block!\n");
@@ -77,11 +77,11 @@ bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
   }
 
   /* If the GSB is empty, it does not exist */
-  if (true == get_gsb(coord).is_cb_exist(CHANX)) {
+  if (true == get_gsb(coord).is_cb_exist(e_rr_type::CHANX)) {
     return true;
   }
 
-  if (true == get_gsb(coord).is_cb_exist(CHANY)) {
+  if (true == get_gsb(coord).is_cb_exist(e_rr_type::CHANY)) {
     return true;
   }
 
@@ -205,15 +205,15 @@ const RRGSB& DeviceRRGSB::get_sb_unique_module(const size_t& index) const {
 }
 
 /* Get a rr switch block which a unique mirror */
-const RRGSB& DeviceRRGSB::get_cb_unique_module(const t_rr_type& cb_type,
+const RRGSB& DeviceRRGSB::get_cb_unique_module(const e_rr_type& cb_type,
                                                const size_t& index) const {
   VTR_ASSERT(validate_cb_unique_module_index(cb_type, index));
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       return rr_gsb_[cbx_unique_module_[index].x()]
                     [cbx_unique_module_[index].y()];
-    case CHANY:
+    case e_rr_type::CHANY:
       return rr_gsb_[cby_unique_module_[index].x()]
                     [cby_unique_module_[index].y()];
     default:
@@ -224,7 +224,7 @@ const RRGSB& DeviceRRGSB::get_cb_unique_module(const t_rr_type& cb_type,
 
 /* Give a coordinate of a rr switch block, and return its unique mirror */
 const RRGSB& DeviceRRGSB::get_cb_unique_module(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  const e_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
   return get_cb_unique_module(cb_type,
                               get_cb_unique_module_index(cb_type, coordinate));
 }
@@ -322,7 +322,7 @@ RRGSB& DeviceRRGSB::get_mutable_gsb(const size_t& x, const size_t& y) {
 /* Add a switch block to the array, which will automatically identify and
  * update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
-                                         const t_rr_type& cb_type) {
+                                         const e_rr_type& cb_type) {
   /* Make sure a clean start */
   clear_cb_unique_module(cb_type);
 
@@ -452,8 +452,8 @@ void DeviceRRGSB::build_gsb_unique_module() {
 void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_sb_unique_module(rr_graph);
 
-  build_cb_unique_module(rr_graph, CHANX);
-  build_cb_unique_module(rr_graph, CHANY);
+  build_cb_unique_module(rr_graph, e_rr_type::CHANX);
+  build_cb_unique_module(rr_graph, e_rr_type::CHANY);
 
   build_gsb_unique_module(); /*is_compressed_ flip inside
                                 build_gsb_unique_module*/
@@ -463,14 +463,14 @@ void DeviceRRGSB::add_gsb_unique_module(const vtr::Point<size_t>& coordinate) {
   gsb_unique_module_.push_back(coordinate);
 }
 
-void DeviceRRGSB::add_cb_unique_module(const t_rr_type& cb_type,
+void DeviceRRGSB::add_cb_unique_module(const e_rr_type& cb_type,
                                        const vtr::Point<size_t>& coordinate) {
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       cbx_unique_module_.push_back(coordinate);
       return;
-    case CHANY:
+    case e_rr_type::CHANY:
       cby_unique_module_.push_back(coordinate);
       return;
     default:
@@ -479,17 +479,17 @@ void DeviceRRGSB::add_cb_unique_module(const t_rr_type& cb_type,
   }
 }
 
-void DeviceRRGSB::set_cb_unique_module_id(const t_rr_type& cb_type,
+void DeviceRRGSB::set_cb_unique_module_id(const e_rr_type& cb_type,
                                           const vtr::Point<size_t>& coordinate,
                                           size_t id) {
   VTR_ASSERT(validate_cb_type(cb_type));
   size_t x = coordinate.x();
   size_t y = coordinate.y();
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       cbx_unique_module_id_[x][y] = id;
       return;
-    case CHANY:
+    case e_rr_type::CHANY:
       cby_unique_module_id_[x][y] = id;
       return;
     default:
@@ -509,11 +509,11 @@ void DeviceRRGSB::clear() {
   clear_gsb_unique_module_id();
 
   /* clean unique module lists */
-  clear_cb_unique_module(CHANX);
-  clear_cb_unique_module_id(CHANX);
+  clear_cb_unique_module(e_rr_type::CHANX);
+  clear_cb_unique_module_id(e_rr_type::CHANX);
 
-  clear_cb_unique_module(CHANY);
-  clear_cb_unique_module_id(CHANY);
+  clear_cb_unique_module(e_rr_type::CHANY);
+  clear_cb_unique_module_id(e_rr_type::CHANY);
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
@@ -522,11 +522,11 @@ void DeviceRRGSB::clear() {
 
 void DeviceRRGSB::clear_unique_modules() {
   /* clean unique module lists */
-  clear_cb_unique_module(CHANX);
-  clear_cb_unique_module_id(CHANX);
+  clear_cb_unique_module(e_rr_type::CHANX);
+  clear_cb_unique_module_id(e_rr_type::CHANX);
 
-  clear_cb_unique_module(CHANY);
-  clear_cb_unique_module_id(CHANY);
+  clear_cb_unique_module(e_rr_type::CHANY);
+  clear_cb_unique_module_id(e_rr_type::CHANY);
 
   clear_sb_unique_module();
   clear_sb_unique_module_id();
@@ -555,15 +555,15 @@ void DeviceRRGSB::clear_sb_unique_module_id() {
   }
 }
 
-void DeviceRRGSB::clear_cb_unique_module_id(const t_rr_type& cb_type) {
+void DeviceRRGSB::clear_cb_unique_module_id(const e_rr_type& cb_type) {
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       for (size_t x = 0; x < rr_gsb_.size(); ++x) {
         cbx_unique_module_id_[x].clear();
       }
       return;
-    case CHANY:
+    case e_rr_type::CHANY:
       for (size_t x = 0; x < rr_gsb_.size(); ++x) {
         cby_unique_module_id_[x].clear();
       }
@@ -586,13 +586,13 @@ void DeviceRRGSB::clear_sb_unique_module() {
   sb_unique_module_.clear();
 }
 
-void DeviceRRGSB::clear_cb_unique_module(const t_rr_type& cb_type) {
+void DeviceRRGSB::clear_cb_unique_module(const e_rr_type& cb_type) {
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       cbx_unique_module_.clear();
       return;
-    case CHANY:
+    case e_rr_type::CHANY:
       cby_unique_module_.clear();
       return;
     default:
@@ -623,13 +623,13 @@ bool DeviceRRGSB::validate_sb_unique_module_index(const size_t& index) const {
   return (index < sb_unique_module_.size());
 }
 
-bool DeviceRRGSB::validate_cb_unique_module_index(const t_rr_type& cb_type,
+bool DeviceRRGSB::validate_cb_unique_module_index(const e_rr_type& cb_type,
                                                   const size_t& index) const {
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       return (index < cbx_unique_module_.size());
-    case CHANY:
+    case e_rr_type::CHANY:
       return (index < cby_unique_module_.size());
     default:
       VTR_LOG_ERROR("Invalid type of connection block!\n");
@@ -639,8 +639,8 @@ bool DeviceRRGSB::validate_cb_unique_module_index(const t_rr_type& cb_type,
   return false;
 }
 
-bool DeviceRRGSB::validate_cb_type(const t_rr_type& cb_type) const {
-  return ((CHANX == cb_type) || (CHANY == cb_type));
+bool DeviceRRGSB::validate_cb_type(const e_rr_type& cb_type) const {
+  return ((e_rr_type::CHANX == cb_type) || (e_rr_type::CHANY == cb_type));
 }
 
 size_t DeviceRRGSB::get_sb_unique_module_index(
@@ -652,17 +652,17 @@ size_t DeviceRRGSB::get_sb_unique_module_index(
 }
 
 size_t DeviceRRGSB::get_cb_unique_module_index(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  const e_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
   VTR_ASSERT(validate_cb_type(cb_type));
   VTR_ASSERT(validate_coordinate(coordinate));
   size_t cb_unique_module_id;
 
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       cb_unique_module_id =
         cbx_unique_module_id_[coordinate.x()][coordinate.y()];
       break;
-    case CHANY:
+    case e_rr_type::CHANY:
       cb_unique_module_id =
         cby_unique_module_id_[coordinate.x()][coordinate.y()];
       break;
@@ -687,10 +687,10 @@ void DeviceRRGSB::preload_unique_cbx_module(
   size_t limit_y = cbx_unique_module_id_[0].size();
   VTR_ASSERT(block_coordinate.x() < limit_x);
   VTR_ASSERT(block_coordinate.y() < limit_y);
-  add_cb_unique_module(CHANX, block_coordinate);
+  add_cb_unique_module(e_rr_type::CHANX, block_coordinate);
   /* preload the unique block */
-  set_cb_unique_module_id(CHANX, block_coordinate,
-                          get_num_cb_unique_module(CHANX) - 1);
+  set_cb_unique_module_id(e_rr_type::CHANX, block_coordinate,
+                          get_num_cb_unique_module(e_rr_type::CHANX) - 1);
 
   /* preload the instances of the unique block. Instance will have the same id
    * as the unique block */
@@ -698,7 +698,7 @@ void DeviceRRGSB::preload_unique_cbx_module(
     VTR_ASSERT(instance_location.x() < limit_x);
     VTR_ASSERT(instance_location.y() < limit_y);
     set_cb_unique_module_id(
-      CHANX, instance_location,
+      e_rr_type::CHANX, instance_location,
       cbx_unique_module_id_[block_coordinate.x()][block_coordinate.y()]);
   }
 }
@@ -714,10 +714,10 @@ void DeviceRRGSB::preload_unique_cby_module(
 
   VTR_ASSERT(block_coordinate.x() < limit_x);
   VTR_ASSERT(block_coordinate.y() < limit_y);
-  add_cb_unique_module(CHANY, block_coordinate);
+  add_cb_unique_module(e_rr_type::CHANY, block_coordinate);
   /* preload the unique block */
-  set_cb_unique_module_id(CHANY, block_coordinate,
-                          get_num_cb_unique_module(CHANY) - 1);
+  set_cb_unique_module_id(e_rr_type::CHANY, block_coordinate,
+                          get_num_cb_unique_module(e_rr_type::CHANY) - 1);
 
   /* preload the instances of the unique block. Instance will have the same id
    * as the unique block */
@@ -725,7 +725,7 @@ void DeviceRRGSB::preload_unique_cby_module(
     VTR_ASSERT(instance_location.x() < limit_x);
     VTR_ASSERT(instance_location.y() < limit_y);
     set_cb_unique_module_id(
-      CHANY, instance_location,
+      e_rr_type::CHANY, instance_location,
       cby_unique_module_id_[block_coordinate.x()][block_coordinate.y()]);
   }
 }

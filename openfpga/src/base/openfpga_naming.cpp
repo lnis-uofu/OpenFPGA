@@ -273,14 +273,14 @@ std::string generate_routing_block_netlist_name(
  * Generate the netlist name for a connection block with a given coordinate
  *********************************************************************/
 std::string generate_connection_block_netlist_name(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate,
+  const e_rr_type& cb_type, const vtr::Point<size_t>& coordinate,
   const std::string& postfix) {
   std::string prefix("cb");
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       prefix += std::string("x_");
       break;
-    case CHANY:
+    case e_rr_type::CHANY:
       prefix += std::string("y_");
       break;
     default:
@@ -294,16 +294,17 @@ std::string generate_connection_block_netlist_name(
 /*********************************************************************
  * Generate the module name for a unique routing channel
  *********************************************************************/
-std::string generate_routing_channel_module_name(const t_rr_type& chan_type,
+std::string generate_routing_channel_module_name(const e_rr_type& chan_type,
                                                  const size_t& block_id) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::string> module_prefix_map;
+  std::map<e_rr_type, std::string> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX] = std::string("chanx");
-  module_prefix_map[CHANY] = std::string("chany");
+  module_prefix_map[e_rr_type::CHANX] = std::string("chanx");
+  module_prefix_map[e_rr_type::CHANY] = std::string("chany");
 
   return std::string(module_prefix_map[chan_type] + std::string("_") +
                      std::to_string(block_id) + std::string("_"));
@@ -313,15 +314,16 @@ std::string generate_routing_channel_module_name(const t_rr_type& chan_type,
  * Generate the module name for a routing channel with a given coordinate
  *********************************************************************/
 std::string generate_routing_channel_module_name(
-  const t_rr_type& chan_type, const vtr::Point<size_t>& coordinate) {
+  const e_rr_type& chan_type, const vtr::Point<size_t>& coordinate) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::string> module_prefix_map;
+  std::map<e_rr_type, std::string> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX] = std::string("chanx");
-  module_prefix_map[CHANY] = std::string("chany");
+  module_prefix_map[e_rr_type::CHANX] = std::string("chanx");
+  module_prefix_map[e_rr_type::CHANY] = std::string("chany");
 
   return std::string(module_prefix_map[chan_type] +
                      std::to_string(coordinate.x()) + std::string("_") +
@@ -336,16 +338,17 @@ std::string generate_routing_channel_module_name(
  *tracks
  *********************************************************************/
 std::string generate_routing_track_port_name(
-  const t_rr_type& chan_type, const vtr::Point<size_t>& coordinate,
+  const e_rr_type& chan_type, const vtr::Point<size_t>& coordinate,
   const size_t& track_id, const PORTS& port_direction) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::string> module_prefix_map;
+  std::map<e_rr_type, std::string> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX] = std::string("chanx");
-  module_prefix_map[CHANY] = std::string("chany");
+  module_prefix_map[e_rr_type::CHANX] = std::string("chanx");
+  module_prefix_map[e_rr_type::CHANY] = std::string("chany");
 
   std::string port_name = module_prefix_map[chan_type];
   port_name +=
@@ -379,17 +382,18 @@ std::string generate_routing_track_port_name(
  *modules so that each module can be instanciated across the fabric Even though,
  *port direction must be provided!
  *********************************************************************/
-std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
+std::string generate_sb_module_track_port_name(const e_rr_type& chan_type,
                                                const e_side& module_side,
                                                const PORTS& port_direction) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::string> module_prefix_map;
+  std::map<e_rr_type, std::string> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX] = std::string("chanx");
-  module_prefix_map[CHANY] = std::string("chany");
+  module_prefix_map[e_rr_type::CHANX] = std::string("chanx");
+  module_prefix_map[e_rr_type::CHANY] = std::string("chany");
 
   std::string port_name = module_prefix_map[chan_type];
   port_name += std::string("_");
@@ -425,20 +429,21 @@ std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
  *                   - upper is the bottom side
  *                   - lower is the top side
  *********************************************************************/
-e_side get_cb_module_track_port_side(const t_rr_type& chan_type,
+e_side get_cb_module_track_port_side(const e_rr_type& chan_type,
                                      const bool& upper_location) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::map<bool, e_side>> port_side_map;
+  std::map<e_rr_type, std::map<bool, e_side>> port_side_map;
   /* TODO: use a constexpr string to replace the fixed name? */
   /* IMPORTANT: This part must be consistent with the mapping in the
    * generate_cb_module_track_port_name() !!! */
-  port_side_map[CHANX][true] = LEFT;
-  port_side_map[CHANX][false] = RIGHT;
-  port_side_map[CHANY][true] = BOTTOM;
-  port_side_map[CHANY][false] = TOP;
+  port_side_map[e_rr_type::CHANX][true] = LEFT;
+  port_side_map[e_rr_type::CHANX][false] = RIGHT;
+  port_side_map[e_rr_type::CHANY][true] = BOTTOM;
+  port_side_map[e_rr_type::CHANY][false] = TOP;
   return port_side_map[chan_type][upper_location];
 }
 
@@ -461,19 +466,20 @@ e_side get_cb_module_track_port_side(const t_rr_type& chan_type,
  *                   - upper is the bottom side
  *                   - lower is the top side
  *********************************************************************/
-std::string generate_cb_module_track_port_name(const t_rr_type& chan_type,
+std::string generate_cb_module_track_port_name(const e_rr_type& chan_type,
                                                const PORTS& port_direction,
                                                const bool& upper_location) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::map<bool, std::string>> module_prefix_map;
+  std::map<e_rr_type, std::map<bool, std::string>> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX][true] = std::string("chanx_left");
-  module_prefix_map[CHANX][false] = std::string("chanx_right");
-  module_prefix_map[CHANY][true] = std::string("chany_bottom");
-  module_prefix_map[CHANY][false] = std::string("chany_top");
+  module_prefix_map[e_rr_type::CHANX][true] = std::string("chanx_left");
+  module_prefix_map[e_rr_type::CHANX][false] = std::string("chanx_right");
+  module_prefix_map[e_rr_type::CHANY][true] = std::string("chany_bottom");
+  module_prefix_map[e_rr_type::CHANY][false] = std::string("chany_top");
 
   std::string port_name = module_prefix_map[chan_type][upper_location];
   port_name += std::string("_");
@@ -498,16 +504,17 @@ std::string generate_cb_module_track_port_name(const t_rr_type& chan_type,
  * with a given coordinate
  *********************************************************************/
 std::string generate_routing_track_middle_output_port_name(
-  const t_rr_type& chan_type, const vtr::Point<size_t>& coordinate,
+  const e_rr_type& chan_type, const vtr::Point<size_t>& coordinate,
   const size_t& track_id) {
   /* Channel must be either CHANX or CHANY */
-  VTR_ASSERT((CHANX == chan_type) || (CHANY == chan_type));
+  VTR_ASSERT((e_rr_type::CHANX == chan_type) ||
+             (e_rr_type::CHANY == chan_type));
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::string> module_prefix_map;
+  std::map<e_rr_type, std::string> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX] = std::string("chanx");
-  module_prefix_map[CHANY] = std::string("chany");
+  module_prefix_map[e_rr_type::CHANX] = std::string("chanx");
+  module_prefix_map[e_rr_type::CHANY] = std::string("chany");
 
   std::string port_name = module_prefix_map[chan_type];
   port_name +=
@@ -584,13 +591,13 @@ std::string generate_physical_memory_module_name(const std::string& prefix,
  * Generate the module name for a connection block with a given coordinate
  *********************************************************************/
 std::string generate_connection_block_module_name(
-  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) {
+  const e_rr_type& cb_type, const vtr::Point<size_t>& coordinate) {
   std::string prefix("cb");
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       prefix += std::string("x_");
       break;
-    case CHANY:
+    case e_rr_type::CHANY:
       prefix += std::string("y_");
       break;
     default:
@@ -607,13 +614,13 @@ std::string generate_connection_block_module_name(
  * Generate the module name for a connection block with a given index
  *********************************************************************/
 std::string generate_connection_block_module_name_using_index(
-  const t_rr_type& cb_type, const size_t& index) {
+  const e_rr_type& cb_type, const size_t& index) {
   std::string prefix("cb");
   switch (cb_type) {
-    case CHANX:
+    case e_rr_type::CHANX:
       prefix += std::string("x_");
       break;
-    case CHANY:
+    case e_rr_type::CHANY:
       prefix += std::string("y_");
       break;
     default:

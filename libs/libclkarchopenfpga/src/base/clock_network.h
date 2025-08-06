@@ -67,7 +67,7 @@ class ClockNetwork {
    * direction */
   std::vector<ClockTreePinId> pins(const ClockTreeId& tree_id,
                                    const ClockLevelId& level,
-                                   const t_rr_type& track_type,
+                                   const e_rr_type& track_type,
                                    const Direction& direction) const;
   std::vector<ClockTreePinId> pins(const ClockTreeId& tree_id) const;
 
@@ -75,9 +75,9 @@ class ClockNetwork {
   /* Return the number of routing tracks required by a selected clock tree at a
    * given level and direction */
   size_t num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level,
-                    const t_rr_type& track_type) const;
+                    const e_rr_type& track_type) const;
   size_t num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level,
-                    const t_rr_type& track_type,
+                    const e_rr_type& track_type,
                     const Direction& direction) const;
   /* Return the id of default routing segment, use this to find detailed segment
    * information from RRGraph */
@@ -129,7 +129,7 @@ class ClockNetwork {
    * - CHANX represents a horizental routing track
    * - CHANY represents a vertical routing track
    */
-  t_rr_type spine_track_type(const ClockSpineId& spine_id) const;
+  e_rr_type spine_track_type(const ClockSpineId& spine_id) const;
   /* Identify the direction of a spine, depending on its starting and ending
    * points INC represents
    *  - a CHANX track goes from left to right, or
@@ -240,7 +240,7 @@ class ClockNetwork {
                            const vtr::Point<int>& coord);
   void set_spine_direction(const ClockSpineId& spine_id, const Direction& dir);
   void set_spine_track_type(const ClockSpineId& spine_id,
-                            const t_rr_type& type);
+                            const e_rr_type& type);
   ClockSwitchPointId add_spine_switch_point(const ClockSpineId& spine_id,
                                             const ClockSpineId& drive_spine_id,
                                             const vtr::Point<int>& coord);
@@ -334,7 +334,7 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_start_points_;
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_end_points_;
   vtr::vector<ClockSpineId, Direction> spine_directions_;
-  vtr::vector<ClockSpineId, t_rr_type> spine_track_types_;
+  vtr::vector<ClockSpineId, e_rr_type> spine_track_types_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_switch_points_;
   vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
   vtr::vector<ClockSpineId, std::vector<std::vector<ClockInternalDriverId>>>
