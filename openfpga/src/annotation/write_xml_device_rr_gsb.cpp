@@ -119,8 +119,37 @@ static void write_rr_gsb_chan_connection_to_xml(
     }
     /* Output drivers */
     const RRNodeId& cur_rr_node = rr_gsb.get_chan_node(gsb_side, inode);
-    std::vector<RREdgeId> driver_rr_edges =
+    std::vector<RREdgeId> in_edges =
       rr_gsb.get_chan_node_in_edges(rr_graph, gsb_side, inode);
+
+    std::vector<RREdgeId> driver_rr_edges;
+  
+    for (const RREdgeId& edge : in_edges) {
+      /* Bypass non-configurable edges */
+      if (false == rr_graph.edge_is_configurable(edge)) {
+        continue;
+      }
+
+      auto src_rr_node = rr_graph.edge_src_node(edge);
+      // bypass the chanx and chany nodes 
+      if (rr_graph.node_type(src_rr_node) == OPIN){
+        driver_rr_edges.push_back(edge);
+      }    
+    }
+
+    for (const RREdgeId& edge : in_edges) {
+      /* Bypass non-configurable edges */
+      if (false == rr_graph.edge_is_configurable(edge)) {
+        continue;
+      }
+
+      auto src_rr_node = rr_graph.edge_src_node(edge);
+      // bypass the chanx and chany nodes 
+      if (rr_graph.node_type(src_rr_node) == CHANX || rr_graph.node_type(src_rr_node) == CHANY){
+        driver_rr_edges.push_back(edge);
+      } 
+    }
+    
 
     /* Output node information: location, index, side */
     const RRSegmentId& src_segment_id =
