@@ -44,32 +44,13 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_side& chan_side,
   const size_t& track_id) {
   std::vector<RRNodeId> driver_nodes;
-  auto in_edges = rr_gsb.get_chan_node_in_edges(rr_graph, chan_side, track_id);
-  
-  for (const RREdgeId& edge : in_edges) {
+  for (const RREdgeId& edge :
+       rr_gsb.get_chan_node_in_edges(rr_graph, chan_side, track_id)) {
     /* Bypass non-configurable edges */
     if (false == rr_graph.edge_is_configurable(edge)) {
       continue;
     }
-
-    auto src_rr_node = rr_graph.edge_src_node(edge);
-    // bypass the chanx and chany nodes 
-    if (rr_graph.node_type(src_rr_node) == OPIN){
-      driver_nodes.push_back(src_rr_node);
-    }    
-  }
-
-  for (const RREdgeId& edge : in_edges) {
-    /* Bypass non-configurable edges */
-    if (false == rr_graph.edge_is_configurable(edge)) {
-      continue;
-    }
-
-    auto src_rr_node = rr_graph.edge_src_node(edge);
-    // bypass the chanx and chany nodes 
-    if (rr_graph.node_type(src_rr_node) == CHANX || rr_graph.node_type(src_rr_node) == CHANY){
-      driver_nodes.push_back(src_rr_node);
-    } 
+    driver_nodes.push_back(rr_graph.edge_src_node(edge));
   }
 
   return driver_nodes;
