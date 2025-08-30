@@ -21,7 +21,7 @@ Prepare Task Configuration File
 OpenFPGA provides push-button scripts for users to run design flows (see details in :ref:`run_fpga_task`). Users can customize their flow-run by crafting a task configuration file.
 
 Here, we consider an existing test case ``generate_fabric``.
-In the `task configuration file <https://github.com/lnis-uofu/OpenFPGA/blob/master/openfpga_flow/tasks/basic_tests/generate_fabric/config/task.conf>`_, you can specify the XML-based architecture files in ``LINE 21`` and ``LINE 25``  that describe the architecture of the FPGA fabric. In this example, we are using a low-cost FPGA architecture similar to the lattice ICE40 series
+In the `task configuration file <https://github.com/lnis-uofu/OpenFPGA/blob/master/openfpga_flow/tasks/basic_tests/generate_fabric/config/task.conf>`_, you can specify the XML-based architecture files in ``LINE 21`` and ``LINE 29``  that describe the architecture of the FPGA fabric. In this example, we are using a low-cost FPGA architecture similar to the lattice ICE40 series
 
 Also, in ``LINE 20``, you can specify the openfpga shell script to be executed. Here, we are using an example script which is golden reference to generate Verilog netlists
 
