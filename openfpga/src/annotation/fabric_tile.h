@@ -30,7 +30,7 @@ class FabricTile {
   std::vector<vtr::Point<size_t>> pb_coordinates(
     const FabricTileId& tile_id) const;
   std::vector<vtr::Point<size_t>> cb_coordinates(
-    const FabricTileId& tile_id, const t_rr_type& cb_type) const;
+    const FabricTileId& tile_id, const e_rr_type& cb_type) const;
   std::vector<vtr::Point<size_t>> sb_coordinates(
     const FabricTileId& tile_id) const;
   /** @brief With a given coordinate, find the id of the unique tile (which is
@@ -48,7 +48,7 @@ class FabricTile {
   /** @brief Find the id of a tile, with a given coordinate of the connection
    * block under the tile */
   FabricTileId find_tile_by_cb_coordinate(
-    const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const;
+    const e_rr_type& cb_type, const vtr::Point<size_t>& coord) const;
   /** @brief Find the id of a tile, with a given coordinate of the switch block
    * under the tile */
   FabricTileId find_tile_by_sb_coordinate(
@@ -71,7 +71,7 @@ class FabricTile {
   /** @brief Find the index of a connection block in the internal list by a
    * given coordinate. */
   size_t find_cb_index_in_tile(const FabricTileId& tile_id,
-                               const t_rr_type& cb_type,
+                               const e_rr_type& cb_type,
                                const vtr::Point<size_t>& coord) const;
   /** @brief Find the coodinate of a connection block in its unique tile. For
    * example, a cbx[1][0] is the 2nd element of the connection block list in
@@ -79,7 +79,7 @@ class FabricTile {
    * the 2nd element of the connection block list in tile[2][2] and return its
    * coordinate. Error out on any exception. */
   vtr::Point<size_t> find_cb_coordinate_in_unique_tile(
-    const FabricTileId& tile_id, const t_rr_type& cb_type,
+    const FabricTileId& tile_id, const e_rr_type& cb_type,
     const vtr::Point<size_t>& cb_coord) const;
   /** @brief Find the coodinate of a programmable block in its unique tile. For
    * example, a pb[1][0] is the 2nd element of the programmable block list in
@@ -105,7 +105,7 @@ class FabricTile {
   bool sb_in_tile(const FabricTileId& tile_id,
                   const vtr::Point<size_t>& coord) const;
   /** @brief Check if a connection block (with a coordinate) exists in a tile */
-  bool cb_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type,
+  bool cb_in_tile(const FabricTileId& tile_id, const e_rr_type& cb_type,
                   const vtr::Point<size_t>& coord) const;
   /** @brief Identify if the fabric tile is empty: no tiles are defined */
   bool empty() const;
@@ -121,7 +121,7 @@ class FabricTile {
    * blocks, whose height or width can be > 1 */
   int set_pb_max_coordinate(const FabricTileId& tile_id, const size_t& pb_index,
                             const vtr::Point<size_t>& max_coord);
-  int add_cb_coordinate(const FabricTileId& tile_id, const t_rr_type& cb_type,
+  int add_cb_coordinate(const FabricTileId& tile_id, const e_rr_type& cb_type,
                         const vtr::Point<size_t>& coord);
   int add_sb_coordinate(const FabricTileId& tile_id,
                         const vtr::Point<size_t>& coord);

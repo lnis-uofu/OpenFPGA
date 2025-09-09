@@ -4,7 +4,7 @@ Pin Constraints File (.xml)
 ---------------------------
 
 The *Pin Constraints File* (PCF) aims to create pin binding between an implementation and an FPGA fabric.
-It is a common file format used by FPGA vendors, for example, `QuickLogic<https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_.
+It is a common file format used by FPGA vendors, for example, `QuickLogic <https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_.
 
 An example of design constraints is shown as follows.
 

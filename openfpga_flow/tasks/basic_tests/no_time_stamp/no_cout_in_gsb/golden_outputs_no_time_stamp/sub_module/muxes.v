@@ -616,13 +616,13 @@ endmodule
 //----- Default net type -----
 `default_nettype none
 
-// ----- Verilog module for mux_2level_tapbuf_size13 -----
-module mux_2level_tapbuf_size13(in,
+// ----- Verilog module for mux_2level_tapbuf_size12 -----
+module mux_2level_tapbuf_size12(in,
                                 sram,
                                 sram_inv,
                                 out);
 //----- INPUT PORTS -----
-input [0:12] in;
+input [0:11] in;
 //----- INPUT PORTS -----
 input [0:7] sram;
 //----- INPUT PORTS -----
@@ -641,7 +641,6 @@ output [0:0] out;
 wire [0:0] INVTX1_0_out;
 wire [0:0] INVTX1_10_out;
 wire [0:0] INVTX1_11_out;
-wire [0:0] INVTX1_12_out;
 wire [0:0] INVTX1_1_out;
 wire [0:0] INVTX1_2_out;
 wire [0:0] INVTX1_3_out;
@@ -652,7 +651,6 @@ wire [0:0] INVTX1_7_out;
 wire [0:0] INVTX1_8_out;
 wire [0:0] INVTX1_9_out;
 wire [0:0] const1_0_const1;
-wire [0:0] mux_2level_tapbuf_basis_input2_mem2_0_out;
 wire [0:0] mux_2level_tapbuf_basis_input4_mem4_0_out;
 wire [0:0] mux_2level_tapbuf_basis_input4_mem4_1_out;
 wire [0:0] mux_2level_tapbuf_basis_input4_mem4_2_out;
@@ -711,10 +709,6 @@ wire [0:0] mux_2level_tapbuf_basis_input4_mem4_3_out;
 		.in(in[11]),
 		.out(INVTX1_11_out));
 
-	INVTX1 INVTX1_12_ (
-		.in(in[12]),
-		.out(INVTX1_12_out));
-
 	const1 const1_0_ (
 		.const1(const1_0_const1));
 
@@ -741,19 +735,13 @@ wire [0:0] mux_2level_tapbuf_basis_input4_mem4_3_out;
 		.out(mux_2level_tapbuf_basis_input4_mem4_2_out));
 
 	mux_2level_tapbuf_basis_input4_mem4 mux_l2_in_0_ (
-		.in({mux_2level_tapbuf_basis_input4_mem4_0_out, mux_2level_tapbuf_basis_input4_mem4_1_out, mux_2level_tapbuf_basis_input4_mem4_2_out, mux_2level_tapbuf_basis_input2_mem2_0_out}),
+		.in({mux_2level_tapbuf_basis_input4_mem4_0_out, mux_2level_tapbuf_basis_input4_mem4_1_out, mux_2level_tapbuf_basis_input4_mem4_2_out, const1_0_const1}),
 		.mem(sram[4:7]),
 		.mem_inv(sram_inv[4:7]),
 		.out(mux_2level_tapbuf_basis_input4_mem4_3_out));
 
-	mux_2level_tapbuf_basis_input2_mem2 mux_l1_in_3_ (
-		.in({INVTX1_12_out, const1_0_const1}),
-		.mem(sram[0:1]),
-		.mem_inv(sram_inv[0:1]),
-		.out(mux_2level_tapbuf_basis_input2_mem2_0_out));
-
 endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size13 -----
+// ----- END Verilog module for mux_2level_tapbuf_size12 -----
 
 //----- Default net type -----
 `default_nettype wire

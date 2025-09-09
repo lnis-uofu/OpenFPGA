@@ -160,12 +160,12 @@ static int update_cluster_pin_with_post_routing_results(
     auto pin_class = physical_tile->pin_class[physical_pin];
     auto class_inf = physical_tile->class_inf[pin_class];
 
-    t_rr_type rr_node_type;
-    if (class_inf.type == DRIVER) {
-      rr_node_type = OPIN;
+    e_rr_type rr_node_type;
+    if (class_inf.type == e_pin_type::DRIVER) {
+      rr_node_type = e_rr_type::OPIN;
     } else {
-      VTR_ASSERT(class_inf.type == RECEIVER);
-      rr_node_type = IPIN;
+      VTR_ASSERT(class_inf.type == e_pin_type::RECEIVER);
+      rr_node_type = e_rr_type::IPIN;
     }
     std::vector<e_side> pin_sides = find_physical_tile_pin_side(
       physical_tile, physical_pin, border_side, device_ctx.arch->perimeter_cb);

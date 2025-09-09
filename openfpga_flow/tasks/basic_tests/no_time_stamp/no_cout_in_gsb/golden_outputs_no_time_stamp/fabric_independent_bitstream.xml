@@ -5110,25 +5110,6 @@
 				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
-		<bitstream_block name="mem_right_track_0" hierarchy_level="2">
-			<hierarchy>
-				<instance level="0" name="fpga_top"/>
-				<instance level="1" name="sb_0__1_"/>
-				<instance level="2" name="mem_right_track_0"/>
-			</hierarchy>
-			<input_nets>
-				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
-			</input_nets>
-			<output_nets>
-				<path id="0" net_name="unmapped"/>
-			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
-			</bitstream>
-		</bitstream_block>
 		<bitstream_block name="mem_right_track_2" hierarchy_level="2">
 			<hierarchy>
 				<instance level="0" name="fpga_top"/>
@@ -5139,7 +5120,6 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5147,10 +5127,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_right_track_4" hierarchy_level="2">
@@ -5247,6 +5223,43 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_right_track_14" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_0__1_"/>
+				<instance level="2" name="mem_right_track_14"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
+				<path id="2" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_right_track_16" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_0__1_"/>
+				<instance level="2" name="mem_right_track_16"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5672,7 +5685,6 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5680,10 +5692,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_top_track_4" hierarchy_level="2">
@@ -5695,7 +5703,6 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5714,7 +5721,6 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5760,11 +5766,11 @@
 				<bit memory_port="mem_out[1]" value="0"/>
 			</bitstream>
 		</bitstream_block>
-		<bitstream_block name="mem_top_track_12" hierarchy_level="2">
+		<bitstream_block name="mem_top_track_16" hierarchy_level="2">
 			<hierarchy>
 				<instance level="0" name="fpga_top"/>
 				<instance level="1" name="sb_1__0_"/>
-				<instance level="2" name="mem_top_track_12"/>
+				<instance level="2" name="mem_top_track_16"/>
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5787,6 +5793,8 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
+				<path id="2" net_name="unmapped"/>
+				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -5794,6 +5802,10 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
+				<bit memory_port="mem_out[2]" value="0"/>
+				<bit memory_port="mem_out[3]" value="0"/>
+				<bit memory_port="mem_out[4]" value="0"/>
+				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_right_track_0" hierarchy_level="2">
@@ -6007,14 +6019,13 @@
 				<path id="9" net_name="unmapped"/>
 				<path id="10" net_name="unmapped"/>
 				<path id="11" net_name="unmapped"/>
-				<path id="12" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
 			</output_nets>
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="1"/>
+				<bit memory_port="mem_out[1]" value="0"/>
 				<bit memory_port="mem_out[2]" value="0"/>
 				<bit memory_port="mem_out[3]" value="0"/>
 				<bit memory_port="mem_out[4]" value="0"/>
@@ -6070,6 +6081,7 @@
 				<path id="6" net_name="unmapped"/>
 				<path id="7" net_name="unmapped"/>
 				<path id="8" net_name="unmapped"/>
+				<path id="9" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6096,22 +6108,20 @@
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
-				<path id="4" net_name="unmapped"/>
-				<path id="5" net_name="c"/>
+				<path id="4" net_name="c"/>
+				<path id="5" net_name="unmapped"/>
 				<path id="6" net_name="unmapped"/>
 				<path id="7" net_name="unmapped"/>
 				<path id="8" net_name="unmapped"/>
 				<path id="9" net_name="unmapped"/>
 				<path id="10" net_name="unmapped"/>
-				<path id="11" net_name="unmapped"/>
-				<path id="12" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="c"/>
 			</output_nets>
-			<bitstream path_id="5">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="1"/>
+			<bitstream path_id="4">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="0"/>
 				<bit memory_port="mem_out[2]" value="0"/>
 				<bit memory_port="mem_out[3]" value="0"/>
 				<bit memory_port="mem_out[4]" value="0"/>
@@ -6136,6 +6146,8 @@
 				<path id="6" net_name="unmapped"/>
 				<path id="7" net_name="unmapped"/>
 				<path id="8" net_name="unmapped"/>
+				<path id="9" net_name="unmapped"/>
+				<path id="10" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6200,15 +6212,13 @@
 				<path id="8" net_name="unmapped"/>
 				<path id="9" net_name="unmapped"/>
 				<path id="10" net_name="unmapped"/>
-				<path id="11" net_name="unmapped"/>
-				<path id="12" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
 			</output_nets>
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="1"/>
+				<bit memory_port="mem_out[1]" value="0"/>
 				<bit memory_port="mem_out[2]" value="0"/>
 				<bit memory_port="mem_out[3]" value="0"/>
 				<bit memory_port="mem_out[4]" value="0"/>
@@ -6233,6 +6243,7 @@
 				<path id="6" net_name="unmapped"/>
 				<path id="7" net_name="unmapped"/>
 				<path id="8" net_name="unmapped"/>
+				<path id="9" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6264,6 +6275,7 @@
 				<path id="6" net_name="unmapped"/>
 				<path id="7" net_name="unmapped"/>
 				<path id="8" net_name="unmapped"/>
+				<path id="9" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6298,14 +6310,13 @@
 				<path id="9" net_name="unmapped"/>
 				<path id="10" net_name="unmapped"/>
 				<path id="11" net_name="unmapped"/>
-				<path id="12" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
 			</output_nets>
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="1"/>
+				<bit memory_port="mem_out[1]" value="0"/>
 				<bit memory_port="mem_out[2]" value="0"/>
 				<bit memory_port="mem_out[3]" value="0"/>
 				<bit memory_port="mem_out[4]" value="0"/>
@@ -6330,6 +6341,7 @@
 				<path id="6" net_name="unmapped"/>
 				<path id="7" net_name="unmapped"/>
 				<path id="8" net_name="unmapped"/>
+				<path id="9" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6477,7 +6489,6 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6485,10 +6496,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_bottom_track_3" hierarchy_level="2">
@@ -6498,10 +6505,9 @@
 				<instance level="2" name="mem_bottom_track_3"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="c"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -6509,10 +6515,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_bottom_track_5" hierarchy_level="2">
@@ -6598,7 +6600,60 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_bottom_track_15" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_1__2_"/>
+				<instance level="2" name="mem_bottom_track_15"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="c"/>
+				<path id="1" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_bottom_track_17" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_1__2_"/>
+				<instance level="2" name="mem_bottom_track_17"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_bottom_track_19" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_1__2_"/>
+				<instance level="2" name="mem_bottom_track_19"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -7265,7 +7320,6 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -7273,10 +7327,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_track_3" hierarchy_level="2">
@@ -7289,7 +7339,6 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -7297,10 +7346,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_track_5" hierarchy_level="2">
@@ -7313,7 +7358,6 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -7321,10 +7365,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_track_7" hierarchy_level="2">
@@ -7336,8 +7376,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="c"/>
+				<path id="2" net_name="c"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -7345,10 +7384,6 @@
 			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
-				<bit memory_port="mem_out[3]" value="0"/>
-				<bit memory_port="mem_out[4]" value="0"/>
-				<bit memory_port="mem_out[5]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_track_9" hierarchy_level="2">
@@ -7396,6 +7431,60 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_left_track_15" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_2__1_"/>
+				<instance level="2" name="mem_left_track_15"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_left_track_17" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_2__1_"/>
+				<instance level="2" name="mem_left_track_17"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
+			</input_nets>
+			<output_nets>
+				<path id="0" net_name="unmapped"/>
+			</output_nets>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+			</bitstream>
+		</bitstream_block>
+		<bitstream_block name="mem_left_track_19" hierarchy_level="2">
+			<hierarchy>
+				<instance level="0" name="fpga_top"/>
+				<instance level="1" name="sb_2__1_"/>
+				<instance level="2" name="mem_left_track_19"/>
+			</hierarchy>
+			<input_nets>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="a"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>

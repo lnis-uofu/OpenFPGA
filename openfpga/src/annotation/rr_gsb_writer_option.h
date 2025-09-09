@@ -24,7 +24,7 @@ class RRGSBWriterOption {
   std::string output_directory() const;
   bool unique_module_only() const;
   bool include_rr_info() const;
-  bool include_cb_content(const t_rr_type& cb_type) const;
+  bool include_cb_content(const e_rr_type& cb_type) const;
   bool include_sb_content() const;
   std::vector<std::string> include_gsb_names() const;
   bool verbose_output() const;

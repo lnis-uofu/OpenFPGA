@@ -1321,7 +1321,7 @@ CircuitModelId CircuitLibrary::add_model(
 
   /* Pass-gate-related parameters */
   pass_gate_logic_types_.push_back(NUM_CIRCUIT_MODEL_PASS_GATE_TYPES);
-  pass_gate_logic_sizes_.emplace_back();
+  pass_gate_logic_sizes_.emplace_back(0.0f, 0.0f);
 
   /* Multiplexer-related parameters */
   mux_structure_.push_back(NUM_CIRCUIT_MODEL_STRUCTURE_TYPES);
@@ -1337,13 +1337,13 @@ CircuitModelId CircuitLibrary::add_model(
   gate_types_.push_back(NUM_CIRCUIT_MODEL_GATE_TYPES);
 
   /* RRAM-related design technology information */
-  rram_res_.emplace_back();
-  wprog_set_.emplace_back();
-  wprog_reset_.emplace_back();
+  rram_res_.emplace_back(0.0f, 0.0f);
+  wprog_set_.emplace_back(0.0f, 0.0f);
+  wprog_reset_.emplace_back(0.0f, 0.0f);
 
   /* Wire parameters */
   wire_types_.push_back(NUM_WIRE_MODEL_TYPES);
-  wire_rc_.emplace_back();
+  wire_rc_.emplace_back(0.0f, 0.0f);
   wire_num_levels_.push_back(-1);
 
   /* Build the fast look-up for circuit models */

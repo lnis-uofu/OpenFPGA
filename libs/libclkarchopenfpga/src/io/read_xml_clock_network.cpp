@@ -293,15 +293,15 @@ static void read_xml_clock_spine_intermediate_driver(
 /********************************************************************
  * Convert string to the enumerate of model type
  *******************************************************************/
-static t_rr_type string_to_track_type(const std::string& type_string) {
-  for (size_t itype = 0; itype < NUM_RR_TYPES; ++itype) {
-    if (std::string(rr_node_typename[itype]) == type_string) {
-      return static_cast<t_rr_type>(itype);
+static e_rr_type string_to_track_type(const std::string& type_string) {
+  for (const auto& type : RR_TYPES) {
+    if (std::string(rr_node_typename[type]) == type_string) {
+      return type;
     }
   }
 
   /* Reach here, we have an invalid value, error out */
-  return NUM_RR_TYPES;
+  return e_rr_type::NUM_RR_TYPES;
 }
 
 /********************************************************************
@@ -367,11 +367,12 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
     std::string track_type_name =
       get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_TYPE, loc_data)
         .as_string();
-    t_rr_type track_type = string_to_track_type(track_type_name);
-    if (CHANX != track_type && CHANY != track_type) {
+    e_rr_type track_type = string_to_track_type(track_type_name);
+    if (e_rr_type::CHANX != track_type && e_rr_type::CHANY != track_type) {
       archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_spine),
                      "Invalid track type! Expect '%s' or '%s'!\n",
-                     rr_node_typename[CHANX], rr_node_typename[CHANY]);
+                     rr_node_typename[e_rr_type::CHANX],
+                     rr_node_typename[e_rr_type::CHANY]);
     }
     clk_ntwk.set_spine_track_type(spine_id, track_type);
 

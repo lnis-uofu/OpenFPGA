@@ -12,19 +12,20 @@ sb_0__2_:
   - mux_2level_tapbuf_size2
 sb_1__0_:
   - mux_2level_tapbuf_size5
-  - mux_2level_tapbuf_size4
   - mux_2level_tapbuf_size3
   - mux_2level_tapbuf_size2
+  - mux_2level_tapbuf_size4
   - mux_2level_tapbuf_size10
   - mux_2level_tapbuf_size9
   - mux_2level_tapbuf_size11
 sb_1__1_:
-  - mux_2level_tapbuf_size13
+  - mux_2level_tapbuf_size12
   - mux_2level_tapbuf_size9
+  - mux_2level_tapbuf_size10
+  - mux_2level_tapbuf_size11
 sb_1__2_:
   - mux_2level_tapbuf_size9
   - mux_2level_tapbuf_size7
-  - mux_2level_tapbuf_size4
   - mux_2level_tapbuf_size3
   - mux_2level_tapbuf_size2
 sb_2__0_:
@@ -34,7 +35,7 @@ sb_2__1_:
   - mux_2level_tapbuf_size11
   - mux_2level_tapbuf_size9
   - mux_2level_tapbuf_size10
-  - mux_2level_tapbuf_size4
+  - mux_2level_tapbuf_size3
   - mux_2level_tapbuf_size2
 sb_2__2_:
   - mux_2level_tapbuf_size3

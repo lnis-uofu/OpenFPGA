@@ -29,7 +29,7 @@ std::string generate_grid_module_port_name_in_top_module(
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
   const RRNodeId& inode);
 
-t_rr_type find_top_module_cb_type_by_sb_side(const e_side& sb_side);
+e_rr_type find_top_module_cb_type_by_sb_side(const e_side& sb_side);
 
 vtr::Point<size_t> find_top_module_gsb_coordinate_by_sb_side(
   const RRGSB& rr_gsb, const e_side& sb_side);

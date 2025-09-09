@@ -274,7 +274,7 @@ static void print_spice_physical_tile_netlist(
   const std::string& subckt_dir, t_physical_tile_type_ptr phy_block_type,
   const e_side& border_side) {
   /* Check code: if this is an IO block, the border side MUST be valid */
-  if (true == is_io_type(phy_block_type)) {
+  if (phy_block_type->is_io()) {
     VTR_ASSERT(NUM_2D_SIDES != border_side);
   }
 
@@ -284,11 +284,11 @@ static void print_spice_physical_tile_netlist(
     subckt_dir +
     generate_grid_block_netlist_name(
       std::string(GRID_MODULE_NAME_PREFIX) + std::string(phy_block_type->name),
-      is_io_type(phy_block_type), border_side,
+      phy_block_type->is_io(), border_side,
       std::string(SPICE_NETLIST_FILE_POSTFIX)));
 
   /* Echo status */
-  if (true == is_io_type(phy_block_type)) {
+  if (phy_block_type->is_io()) {
     SideManager side_manager(border_side);
     VTR_LOG("Writing SPICE Netlist '%s' for physical tile '%s' at %s side ...",
             spice_fname.c_str(), phy_block_type->name.c_str(),
@@ -312,7 +312,7 @@ static void print_spice_physical_tile_netlist(
    * manager */
   std::string grid_module_name = generate_grid_block_module_name(
     std::string(GRID_SPICE_FILE_NAME_PREFIX), std::string(phy_block_type->name),
-    is_io_type(phy_block_type), border_side);
+    phy_block_type->is_io(), border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
@@ -386,9 +386,9 @@ void print_spice_grids(NetlistManager& netlist_manager,
   for (const t_physical_tile_type& physical_tile :
        device_ctx.physical_tile_types) {
     /* Bypass empty type or nullptr */
-    if (true == is_empty_type(&physical_tile)) {
+    if (physical_tile.is_empty()) {
       continue;
-    } else if (true == is_io_type(&physical_tile)) {
+    } else if (physical_tile.is_io()) {
       /* Special for I/O block:
        * We will search the grids and see where the I/O blocks are located:
        * - If a I/O block locates on border sides of FPGA fabric:

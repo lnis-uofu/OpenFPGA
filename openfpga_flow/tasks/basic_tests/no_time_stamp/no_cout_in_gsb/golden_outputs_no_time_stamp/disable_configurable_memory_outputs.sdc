@@ -74,6 +74,8 @@ set_disable_timing fpga_top/sb_*__*_/mem_top_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_top_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_top_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_top_track_*/DFFR_*_/QN
+set_disable_timing fpga_top/sb_*__*_/mem_top_track_*/DFFR_*_/Q
+set_disable_timing fpga_top/sb_*__*_/mem_top_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/Q
@@ -82,6 +84,8 @@ set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/QN
+set_disable_timing fpga_top/sb_*__*_/mem_left_track_*/DFFR_*_/Q
+set_disable_timing fpga_top/sb_*__*_/mem_left_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_left_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_left_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_left_track_*/DFFR_*_/Q
@@ -130,8 +134,6 @@ set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_right_track_*/DFFR_*_/QN
-set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/Q
-set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/Q
 set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/QN
 set_disable_timing fpga_top/sb_*__*_/mem_bottom_track_*/DFFR_*_/Q

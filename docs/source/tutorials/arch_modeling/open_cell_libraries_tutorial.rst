@@ -24,7 +24,7 @@ To follow along, go to the root directory of OpenFPGA and enter:
 
 .. code-block:: bash
 
-   python3 openfpga_flow/scripts_run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs 
+   python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs 
 
 This will run a prebuilt task with OpenFPGA cell libraries. When the task is finished, there will be many auto-generated files to look through. For this tutorial, we are interested in the ``luts.v`` and ``and2_formal.vcd`` files. The **OR2** gate is used as a control circuit in the **lut6** circuit model, and the ``and2_formal.vcd`` file will have the resulting waveforms from the simulation run by the task. To open the ``luts.v`` file, run the following command:
 
@@ -264,7 +264,7 @@ Verification begins by running the following command:
 
 .. code-block:: bash
 
-   python3 openfpga_flow/scripts_run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
+   python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
 
 The task may output this error:
 
@@ -483,5 +483,6 @@ We have now verified that the Skywater PDK Cell Library has been instantiated an
 .. _PDK: https://github.com/google/skywater-pdk
 
 .. _GTKWave: https://github.com/gtkwave/gtkwave
+
 
 

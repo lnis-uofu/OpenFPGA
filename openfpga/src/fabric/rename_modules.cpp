@@ -55,7 +55,7 @@ int update_module_map_name_with_indexing_names(ModuleNameMap& module_name_map,
     VTR_LOGV(verbose, "Now use indexing name for module '%s' (was '%s')\n",
              name_using_index.c_str(), name_using_coord.c_str());
   }
-  for (t_rr_type cb_type : {CHANX, CHANY}) {
+  for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
     for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(cb_type);
          ++icb) {
       const RRGSB& unique_mirror =
