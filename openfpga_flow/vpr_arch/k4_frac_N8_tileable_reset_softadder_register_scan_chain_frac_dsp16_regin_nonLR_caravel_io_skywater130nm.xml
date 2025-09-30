@@ -47,13 +47,15 @@
         <port name="Y" clock="clk"/>
       </output_ports>
     </model>
-    <model name="mult_16">
+    <model name="mult_16_regin">
       <input_ports>
-        <port name="A" combinational_sink_ports="Y"/>
-        <port name="B" combinational_sink_ports="Y"/>
+        <port name="clk" is_clock="1"/>
+        <port name="reset" clock="clk"/>
+        <port name="A" clock="clk"/>
+        <port name="B" clock="clk"/>
       </input_ports>
       <output_ports>
-        <port name="Y"/>
+        <port name="Y" clock="clk"/>
       </output_ports>
     </model>
     <!-- A virtual model for I/O to be used in the physical mode of io block -->
@@ -944,7 +946,7 @@
               </direct>
               <direct name="b2b" input="mult_8x8_slice_0.B_cfg" output="mult_8x8_regin.B">
               </direct>
-              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice_0.OUT_cfg">
+              <direct name="out2out" input="mult_8x8_regin.Y" output="mult_8x8_slice_0.OUT_cfg">
               </direct>
             </interconnect>
           </mode>
@@ -991,7 +993,7 @@
               </direct>
               <direct name="b2b" input="mult_8x8_slice_1.B_cfg" output="mult_8x8_regin.B">
               </direct>
-              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice_1.OUT_cfg">
+              <direct name="out2out" input="mult_8x8_regin.Y" output="mult_8x8_slice_1.OUT_cfg">
               </direct>
             </interconnect>
           </mode>
