@@ -902,7 +902,7 @@
       <clock name="clk" num_pins="1"/>
       <output name="out" num_pins="32"/>
       <mode name="mult_8x8">
-        <pb_type name="mult_8x8_slice" num_pb="2">
+        <pb_type name="mult_8x8_slice_0" num_pb="1">
           <input name="A_cfg" num_pins="8"/>
           <input name="B_cfg" num_pins="8"/>
           <input name="reset" num_pins="1"/>
@@ -917,11 +917,11 @@
               <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.B" out_port="mult_8x8.Y"/>
             </pb_type>
             <interconnect>
-              <direct name="a2a" input="mult_8x8_slice.A_cfg" output="mult_8x8.A">
+              <direct name="a2a" input="mult_8x8_slice_0.A_cfg" output="mult_8x8.A">
               </direct>
-              <direct name="b2b" input="mult_8x8_slice.B_cfg" output="mult_8x8.B">
+              <direct name="b2b" input="mult_8x8_slice_0.B_cfg" output="mult_8x8.B">
               </direct>
-              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice.OUT_cfg">
+              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice_0.OUT_cfg">
               </direct>
             </interconnect>
           </mode>
@@ -938,37 +938,86 @@
               <T_clock_to_Q max="124e-12" port="mult_8x8_regin.Y" clock="clk"/>
             </pb_type>
             <interconnect>
-              <direct name="clk2clk" input="mult_8x8_slice.clk" output="mult_8x8_regin.clk"/>
-              <direct name="rst2rst" input="mult_8x8_slice.reset" output="mult_8x8_regin.reset"/>
-              <direct name="a2a" input="mult_8x8_slice.A_cfg" output="mult_8x8_regin.A">
+              <direct name="clk2clk" input="mult_8x8_slice_0.clk" output="mult_8x8_regin.clk"/>
+              <direct name="rst2rst" input="mult_8x8_slice_0.reset" output="mult_8x8_regin.reset"/>
+              <direct name="a2a" input="mult_8x8_slice_0.A_cfg" output="mult_8x8_regin.A">
               </direct>
-              <direct name="b2b" input="mult_8x8_slice.B_cfg" output="mult_8x8_regin.B">
+              <direct name="b2b" input="mult_8x8_slice_0.B_cfg" output="mult_8x8_regin.B">
               </direct>
-              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice.OUT_cfg">
+              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice_0.OUT_cfg">
+              </direct>
+            </interconnect>
+          </mode>
+        </pb_type>
+        <pb_type name="mult_8x8_slice_1" num_pb="1">
+          <input name="A_cfg" num_pins="8"/>
+          <input name="B_cfg" num_pins="8"/>
+          <input name="reset" num_pins="1"/>
+          <clock name="clk" num_pins="1"/>
+          <output name="OUT_cfg" num_pins="16"/>
+          <mode name="mult_8x8_comb">
+            <pb_type name="mult_8x8" blif_model=".subckt mult_8" num_pb="1">
+              <input name="A" num_pins="8"/>
+              <input name="B" num_pins="8"/>
+              <output name="Y" num_pins="16"/>
+              <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.A" out_port="mult_8x8.Y"/>
+              <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.B" out_port="mult_8x8.Y"/>
+            </pb_type>
+            <interconnect>
+              <direct name="a2a" input="mult_8x8_slice_1.A_cfg" output="mult_8x8.A">
+              </direct>
+              <direct name="b2b" input="mult_8x8_slice_1.B_cfg" output="mult_8x8.B">
+              </direct>
+              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice_1.OUT_cfg">
+              </direct>
+            </interconnect>
+          </mode>
+          <mode name="mult_8x8_regin">
+            <pb_type name="mult_8x8_regin" blif_model=".subckt mult_8_regin" num_pb="1">
+              <input name="A" num_pins="8"/>
+              <input name="B" num_pins="8"/>
+              <input name="reset" num_pins="1"/>
+              <clock name="clk" num_pins="1"/>
+              <output name="Y" num_pins="16"/>
+              <T_setup value="66e-12" port="mult_8x8_regin.A" clock="clk"/>
+              <T_setup value="66e-12" port="mult_8x8_regin.B" clock="clk"/>
+              <T_setup value="66e-12" port="mult_8x8_regin.reset" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="mult_8x8_regin.Y" clock="clk"/>
+            </pb_type>
+            <interconnect>
+              <direct name="clk2clk" input="mult_8x8_slice_1.clk" output="mult_8x8_regin.clk"/>
+              <direct name="rst2rst" input="mult_8x8_slice_1.reset" output="mult_8x8_regin.reset"/>
+              <direct name="a2a" input="mult_8x8_slice_1.A_cfg" output="mult_8x8_regin.A">
+              </direct>
+              <direct name="b2b" input="mult_8x8_slice_1.B_cfg" output="mult_8x8_regin.B">
+              </direct>
+              <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice_1.OUT_cfg">
               </direct>
             </interconnect>
           </mode>
         </pb_type>
         <interconnect>
-          <complete name="clk2clk" input="mult_16.clk" output="mult_8x8_slice[0:1].clk"/>
-          <complete name="rst2rst" input="mult_16.reset" output="mult_8x8_slice[0:1].reset"/>
-          <direct name="a2a_0" input="mult_16.a[0:7]" output="mult_8x8_slice[0].A_cfg[0:7]">
-            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.a[0:7]" out_port="mult_8x8_slice[0].A_cfg[0:7]"/>
+          <direct name="clk2clk_0" input="mult_16.clk" output="mult_8x8_slice_0.clk"/>
+          <direct name="clk2clk_1" input="mult_16.clk" output="mult_8x8_slice_1.clk"/>
+          <direct name="rst2rst_0" input="mult_16.reset" output="mult_8x8_slice_0.reset"/>
+          <direct name="rst2rst_1" input="mult_16.reset" output="mult_8x8_slice_1.reset"/>
+          <direct name="a2a_0" input="mult_16.a[0:7]" output="mult_8x8_slice_0.A_cfg[0:7]">
+            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.a[0:7]" out_port="mult_8x8_slice_0.A_cfg[0:7]"/>
           </direct>
-          <direct name="a2a_1" input="mult_16.a[8:15]" output="mult_8x8_slice[1].A_cfg[0:7]">
-            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.a[8:15]" out_port="mult_8x8_slice[1].A_cfg[0:7]"/>
+          <direct name="a2a_1" input="mult_16.a[8:15]" output="mult_8x8_slice_1.A_cfg[0:7]">
+            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.a[8:15]" out_port="mult_8x8_slice_1.A_cfg[0:7]"/>
           </direct>
-          <direct name="b2b_0" input="mult_16.b[0:7]" output="mult_8x8_slice[0].B_cfg[0:7]">
-            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.b[0:7]" out_port="mult_8x8_slice[0].B_cfg[0:7]"/>
+          <direct name="b2b_0" input="mult_16.b[0:7]" output="mult_8x8_slice_0.B_cfg[0:7]">
+            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.b[0:7]" out_port="mult_8x8_slice_0.B_cfg[0:7]"/>
           </direct>
-          <direct name="b2b_1" input="mult_16.b[8:15]" output="mult_8x8_slice[1].B_cfg[0:7]">
-            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.b[8:15]" out_port="mult_8x8_slice[1].B_cfg[0:7]"/>
+          <direct name="b2b_1" input="mult_16.b[8:15]" output="mult_8x8_slice_1.B_cfg[0:7]">
+            <delay_constant max="134e-12" min="74e-12" in_port="mult_16.b[8:15]" out_port="mult_8x8_slice_1.B_cfg[0:7]"/>
           </direct>
-          <direct name="out2out_0" input="mult_8x8_slice[0].OUT_cfg[0:15]" output="mult_16.out[0:15]">
-            <delay_constant max="1.93e-9" min="74e-12" in_port="mult_8x8_slice[0].OUT_cfg[0:15]" out_port="mult_16.out[0:15]"/>
+          <direct name="out2out_0" input="mult_8x8_slice_0.OUT_cfg[0:15]" output="mult_16.out[0:15]">
+            <delay_constant max="1.93e-9" min="74e-12" in_port="mult_8x8_slice_0.OUT_cfg[0:15]" out_port="mult_16.out[0:15]"/>
           </direct>
-          <direct name="out2out_1" input="mult_8x8_slice[1].OUT_cfg[0:15]" output="mult_16.out[16:31]">
-            <delay_constant max="1.93e-9" min="74e-12" in_port="mult_8x8_slice[1].OUT_cfg[0:15]" out_port="mult_16.out[16:31]"/>
+          <direct name="out2out_1" input="mult_8x8_slice_1.OUT_cfg[0:15]" output="mult_16.out[16:31]">
+            <delay_constant max="1.93e-9" min="74e-12" in_port="mult_8x8_slice_1.OUT_cfg[0:15]" out_port="mult_16.out[16:31]"/>
           </direct>
         </interconnect>
       </mode>
