@@ -53,7 +53,7 @@ class VprDeviceAnnotation {
   e_interconnect interconnect_physical_type(
     t_interconnect* pb_interconnect) const;
   CircuitPortId pb_circuit_port(t_port* pb_port) const;
-  std::vector<size_t> pb_type_mode_bits(t_pb_type* pb_type) const;
+  std::vector<char> pb_type_mode_bits(t_pb_type* pb_type) const;
   std::string pb_type_mode_bits_to_string(t_pb_type* pb_type) const;
   /* Get the unique index of a pb_graph_node */
   PbGraphNodeId pb_graph_node_unique_index(
@@ -117,7 +117,7 @@ class VprDeviceAnnotation {
                                       const e_interconnect& physical_type);
   void add_pb_circuit_port(t_port* pb_port, const CircuitPortId& circuit_port);
   void add_pb_type_mode_bits(t_pb_type* pb_type,
-                             const std::vector<size_t>& mode_bits,
+                             const std::vector<char>& mode_bits,
                              const bool& verbose);
   void add_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node);
   void add_physical_pb_graph_node(t_pb_graph_node* operating_pb_graph_node,
@@ -196,7 +196,7 @@ class VprDeviceAnnotation {
    * - if the pb_type is an operating pb_type, the mode bits will be applied
    *   when the operating pb_type is used by packer
    */
-  std::map<t_pb_type*, std::vector<size_t>> pb_type_mode_bits_;
+  std::map<t_pb_type*, std::vector<char>> pb_type_mode_bits_;
 
   /* Pair a pb_port to its physical pb_port
    * Note:
