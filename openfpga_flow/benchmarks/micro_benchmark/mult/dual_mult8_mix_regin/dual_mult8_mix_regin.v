@@ -10,21 +10,18 @@ input rst;
 input [0 : DATA_WIDTH - 1] a0, b0, a1, b1;
 output [0 : 2*DATA_WIDTH - 1] out0, out1;
 
-(* keep *)
   mult_8 mult8_dsp (
 		.A(a0),
 		.B(b0),
-		.Y(out0),
+		.Y(out0)
 	);
 
-(* keep *)
   mult_8_regin mult8_regin_dsp (
         .clk(clk),
         .reset(rst),
 		.A(a1),
 		.B(b1),
-		.Y(out1),
+		.Y(out1)
 	);
-
 
 endmodule

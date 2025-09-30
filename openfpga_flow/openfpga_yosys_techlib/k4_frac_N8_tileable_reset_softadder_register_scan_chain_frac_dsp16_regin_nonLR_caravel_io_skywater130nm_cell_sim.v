@@ -29,7 +29,7 @@ endmodule
 //-----------------------------
 module mult_8_regin(
   input clk,
-  input rst,
+  input reset,
   input [0:7] A,
   input [0:7] B,
   output [0:15] Y
@@ -37,7 +37,7 @@ module mult_8_regin(
 
 reg [0:7] A_reg;
 reg [0:7] B_reg;
-always @(posedge clk or posedge rst) begin
+always @(posedge clk or posedge reset) begin
   if (rst == 1'b1) begin
     A_reg <= 0;
     B_reg <= 0;
