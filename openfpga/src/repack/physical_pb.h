@@ -69,7 +69,7 @@ class PhysicalPb {
                        const t_pb_graph_pin* pb_graph_pin,
                        const AtomNetlist::TruthTable& truth_table);
   void set_mode_bits(const PhysicalPbId& pb,
-                     const std::vector<size_t>& mode_bits);
+                     const std::vector<char>& mode_bits);
   void set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                  const t_pb_graph_pin* pb_graph_pin,
                                  const AtomNetId& atom_net);
