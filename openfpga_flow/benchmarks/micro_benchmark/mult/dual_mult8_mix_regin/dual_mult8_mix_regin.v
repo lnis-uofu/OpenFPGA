@@ -3,7 +3,7 @@
 //  Author:        Xifan Tang
 //-------------------------------------------------------
 
-module dual_mult8_mix_design(clk, rst, a0, b0, out0, a1, b1, out1);
+module dual_mult8_mix_regin(clk, rst, a0, b0, out0, a1, b1, out1);
 parameter DATA_WIDTH = 8;  /* declare a parameter. default required */
 input clk;
 input rst;
