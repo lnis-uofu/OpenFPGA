@@ -272,6 +272,18 @@
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
       <col type="mult_16" startx="2" starty="1" repeatx="8" priority="20"/>
     </auto_layout>
+    <fixed_layout name="3x2" width="5" height="4">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <row type="io_top" starty="H-1" priority="100"/>
+      <row type="io_bottom" starty="0" priority="100"/>
+      <col type="io_left" startx="0" priority="100"/>
+      <col type="io_right" startx="W-1" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+      <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="mult_16" startx="2" starty="1" repeatx="8" priority="20"/>
+    </fixed_layout>
     <fixed_layout name="3x4" width="5" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <row type="io_top" starty="H-1" priority="100"/>
