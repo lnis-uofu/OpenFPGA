@@ -98,7 +98,7 @@ PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
   return truth_tables_[pb];
 }
 
-std::vector<size_t> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
+std::vector<char> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return mode_bits_[pb];
 }
@@ -218,10 +218,8 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
   }
   /* Aggregate on mode bits: 'x' will not overwrite anything */
   for (size_t ibit = 0; ibit < mode_bits.size(); ibit++) {
-    if (mode_bits[ibit] == '1') {
-      mode_bits_[pb][ibit] = 1;
-    } else if (mode_bits[ibit] == '0') {
-      mode_bits_[pb][ibit] = 0;
+    if (mode_bits[ibit] == '1' || mode_bits[ibit] == '0') {
+      mode_bits_[pb][ibit] = mode_bits[ibit];
     } else if (mode_bits[ibit] != 'x') {
       VTR_LOG_ERROR("Invalid mode bit '%c'! Expect [1|0|x]\n", mode_bits[ibit]);
       exit(openfpga::CMD_EXEC_FATAL_ERROR);

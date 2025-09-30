@@ -34,13 +34,13 @@ namespace openfpga {
  * Decode mode bits "01..." to a bitstream vector
  *******************************************************************/
 static std::vector<bool> generate_mode_select_bitstream(
-  const std::vector<size_t>& mode_bits) {
+  const std::vector<char>& mode_bits) {
   std::vector<bool> mode_select_bitstream;
 
   for (const size_t& mode_bit : mode_bits) {
     /* Error out for unexpected bits */
-    VTR_ASSERT((0 == mode_bit) || (1 == mode_bit));
-    mode_select_bitstream.push_back(1 == mode_bit);
+    VTR_ASSERT(('0' == mode_bit) || ('1' == mode_bit));
+    mode_select_bitstream.push_back('1' == mode_bit);
   }
 
   return mode_select_bitstream;

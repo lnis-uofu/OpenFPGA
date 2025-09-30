@@ -54,7 +54,7 @@ class PhysicalPb {
                           const t_pb_graph_pin* pb_graph_pin) const;
   std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> truth_tables(
     const PhysicalPbId& pb) const;
-  std::vector<size_t> mode_bits(const PhysicalPbId& pb) const;
+  std::vector<char> mode_bits(const PhysicalPbId& pb) const;
   std::string fixed_bitstream(const PhysicalPbId& pb) const;
   size_t fixed_bitstream_offset(const PhysicalPbId& pb) const;
   std::string fixed_mode_select_bitstream(const PhysicalPbId& pb) const;
@@ -112,7 +112,7 @@ class PhysicalPb {
               std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable>>
     truth_tables_;
 
-  vtr::vector<PhysicalPbId, std::vector<size_t>> mode_bits_;
+  vtr::vector<PhysicalPbId, std::vector<char>> mode_bits_;
 
   vtr::vector<PhysicalPbId, std::string> fixed_bitstreams_;
   vtr::vector<PhysicalPbId, size_t> fixed_bitstream_offsets_;
