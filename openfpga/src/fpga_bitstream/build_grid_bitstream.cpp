@@ -26,6 +26,7 @@
 #include "pb_type_utils.h"
 #include "physical_types_util.h"
 #include "vpr_utils.h"
+#include "command_exit_codes.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
