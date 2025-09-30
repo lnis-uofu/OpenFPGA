@@ -11,6 +11,7 @@ apt-get install -y \
     cmake \
     curl \
     doxygen \
+    libfl-dev \
     flex \
     fontconfig \
     gdb \
