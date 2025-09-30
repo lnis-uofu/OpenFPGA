@@ -38,7 +38,7 @@ module mult_8_regin(
 reg [0:7] A_reg;
 reg [0:7] B_reg;
 always @(posedge clk or posedge reset) begin
-  if (rst == 1'b1) begin
+  if (reset == 1'b1) begin
     A_reg <= 0;
     B_reg <= 0;
   end else begin
