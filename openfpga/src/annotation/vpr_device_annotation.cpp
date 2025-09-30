@@ -143,8 +143,8 @@ std::vector<size_t> VprDeviceAnnotation::pb_type_mode_bits(
 std::string VprDeviceAnnotation::pb_type_mode_bits_to_string(
   t_pb_type* pb_type) const {
   std::string mode_bits_str;
-  for (const size_t& bit : pb_type_mode_bits(pb_type)) {
-    mode_bits_str += std::to_string(bit);
+  for (const char& bit : pb_type_mode_bits(pb_type)) {
+    mode_bits_str += bit;
   }
   return mode_bits_str;
 }

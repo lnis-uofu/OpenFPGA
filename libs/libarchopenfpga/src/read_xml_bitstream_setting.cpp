@@ -80,8 +80,9 @@ static void read_xml_bitstream_default_mode_setting(
     get_attribute(xml_pb_type, XML_DEFAULT_MODE_BITS_ATTRIBUTE_MODE_BITS,
                   loc_data)
       .as_string();
-  std::vector<size_t> mode_bits =
-    parse_mode_bits(xml_pb_type, loc_data, mode_bits_attr);
+  /* Operating pb_type always allow dont care bits */
+  std::vector<char> mode_bits =
+    parse_mode_bits(xml_pb_type, loc_data, mode_bits_attr, true);
 
   /* Add to bitstream setting */
   bitstream_setting.add_bitstream_default_mode_setting(

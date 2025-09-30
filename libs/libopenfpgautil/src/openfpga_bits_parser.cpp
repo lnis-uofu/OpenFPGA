@@ -21,13 +21,14 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-BitsParser::BitsParser(const std::string& data) {
+BitsParser::BitsParser(const std::string& data, const bool& accept_dont_care_bits) {
   delim_ = '\'';
   splitter_ = '_';
   bin_format_be_code_ = 'B';
   bin_format_le_code_ = 'b';
   hex_format_be_code_ = 'H';
   hex_format_le_code_ = 'h';
+  accept_dont_care_bits_ = accept_dont_care_bits;
   set_data(data);
 }
 
@@ -67,8 +68,14 @@ void BitsParser::parse_bin_format(const std::string& bits_str,
       result_.push_back('0');
     } else if ('1' == bit_char) {
       result_.push_back('1');
-    } else if ('x' == bit_char) {
+    } else if ('x' == bit_char && accept_dont_care_bits_) {
       result_.push_back('x');
+    } else if (!accept_dont_care_bits_) {
+      VTR_LOG_ERROR(
+        "Unexpected '%c' character found in the bits '%s'! "
+        "Only expect ['0' | '1' ]\n",
+        bit_char, bits_str.c_str());
+      valid_ = false;
     } else {
       VTR_LOG_ERROR(
         "Unexpected '%c' character found in the bits '%s'! "

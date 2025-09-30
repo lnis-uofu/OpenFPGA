@@ -222,11 +222,12 @@ static void read_xml_pb_type_annotation(
       .as_string());
 
   /* Parse mode bits which are applied to both pb_types */
-  std::vector<size_t> mode_bit_data =
+  std::vector<char> mode_bit_data =
     parse_mode_bits(xml_pb_type, loc_data,
                     get_attribute(xml_pb_type, "mode_bits", loc_data,
                                   pugiutil::ReqOpt::OPTIONAL)
-                      .as_string());
+                      .as_string(), 
+                    !pb_type_annotation.is_physical_pb_type());
   pb_type_annotation.set_mode_bits(mode_bit_data);
 
   /* If this is a physical pb_type, circuit model name is an optional attribute,
