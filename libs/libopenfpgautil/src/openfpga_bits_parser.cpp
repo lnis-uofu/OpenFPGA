@@ -39,7 +39,7 @@ std::string BitsParser::data() const { return data_; }
 
 bool BitsParser::valid() const { return valid_; }
 
-std::vector<size_t> BitsParser::result() const { return result_; }
+std::vector<char> BitsParser::result() const { return result_; }
 
 /************************************************************************
  * Public Mutators
@@ -64,13 +64,15 @@ void BitsParser::parse_bin_format(const std::string& bits_str,
     bits_str_pure.end());
   for (const char& bit_char : bits_str_pure) {
     if ('0' == bit_char) {
-      result_.push_back(0);
+      result_.push_back('0');
     } else if ('1' == bit_char) {
-      result_.push_back(1);
+      result_.push_back('1');
+    } else if ('x' == bit_char) {
+      result_.push_back('x');
     } else {
       VTR_LOG_ERROR(
         "Unexpected '%c' character found in the bits '%s'! "
-        "Only allow either '0' or '1'\n",
+        "Only expect ['0' | '1' | 'x']\n",
         bit_char, bits_str.c_str());
       valid_ = false;
     }
