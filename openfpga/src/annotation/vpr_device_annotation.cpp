@@ -128,14 +128,14 @@ CircuitPortId VprDeviceAnnotation::pb_circuit_port(t_port* pb_port) const {
   return pb_circuit_ports_.at(pb_port);
 }
 
-std::vector<size_t> VprDeviceAnnotation::pb_type_mode_bits(
+std::vector<char> VprDeviceAnnotation::pb_type_mode_bits(
   t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_pb_type*, std::vector<size_t>>::const_iterator it =
+  std::map<t_pb_type*, std::vector<char>>::const_iterator it =
     pb_type_mode_bits_.find(pb_type);
   if (it == pb_type_mode_bits_.end()) {
     /* Return an empty vector */
-    return std::vector<size_t>();
+    return std::vector<char>();
   }
   return pb_type_mode_bits_.at(pb_type);
 }
@@ -143,8 +143,8 @@ std::vector<size_t> VprDeviceAnnotation::pb_type_mode_bits(
 std::string VprDeviceAnnotation::pb_type_mode_bits_to_string(
   t_pb_type* pb_type) const {
   std::string mode_bits_str;
-  for (const size_t& bit : pb_type_mode_bits(pb_type)) {
-    mode_bits_str += std::to_string(bit);
+  for (const char& bit : pb_type_mode_bits(pb_type)) {
+    mode_bits_str += bit;
   }
   return mode_bits_str;
 }
@@ -568,10 +568,9 @@ void VprDeviceAnnotation::add_pb_circuit_port(
 }
 
 void VprDeviceAnnotation::add_pb_type_mode_bits(
-  t_pb_type* pb_type, const std::vector<size_t>& mode_bits,
-  const bool& verbose) {
+  t_pb_type* pb_type, const std::vector<char>& mode_bits, const bool& verbose) {
   /* Warn any override attempt */
-  std::map<t_pb_type*, std::vector<size_t>>::const_iterator it =
+  std::map<t_pb_type*, std::vector<char>>::const_iterator it =
     pb_type_mode_bits_.find(pb_type);
   if (it != pb_type_mode_bits_.end()) {
     VTR_LOGV_WARN(verbose, "Override the mode bits mapping for pb_type '%s'!\n",

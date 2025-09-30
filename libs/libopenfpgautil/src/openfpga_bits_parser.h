@@ -37,12 +37,12 @@ namespace openfpga {
  ***********************************************************************/
 class BitsParser {
  public: /* Constructors*/
-  BitsParser(const std::string& data);
+  BitsParser(const std::string& data, const bool& accept_dont_care_bits);
 
  public: /* Public Accessors */
   std::string data() const;
   bool valid() const;
-  std::vector<size_t> result() const;
+  std::vector<char> result() const;
 
  public: /* Public Mutators */
   void set_data(const std::string& data);
@@ -62,8 +62,9 @@ class BitsParser {
   char hex_format_be_code_;
   char bin_format_le_code_;
   char hex_format_le_code_;
-  std::vector<size_t> result_;
+  std::vector<char> result_;
   bool valid_;
+  bool accept_dont_care_bits_;
 };
 
 }  // namespace openfpga

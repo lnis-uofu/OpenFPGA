@@ -3,6 +3,7 @@
  ******************************************************************************/
 #include "physical_pb.h"
 
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -97,7 +98,7 @@ PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
   return truth_tables_[pb];
 }
 
-std::vector<size_t> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
+std::vector<char> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return mode_bits_[pb];
 }
@@ -197,10 +198,29 @@ void PhysicalPb::set_truth_table(const PhysicalPbId& pb,
 }
 
 void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
-                               const std::vector<size_t>& mode_bits) {
+                               const std::vector<char>& mode_bits) {
   VTR_ASSERT(true == valid_pb_id(pb));
 
-  mode_bits_[pb] = mode_bits;
+  if (mode_bits_[pb].empty()) {
+    mode_bits_[pb] = mode_bits;
+    return;
+  }
+  if (mode_bits.size() != mode_bits_[pb].size()) {
+    VTR_LOG_ERROR(
+      "Provided mode bits length (%lu) does not match the size of existing one "
+      "(%lu)!\n",
+      mode_bits.size(), mode_bits_[pb].size());
+    exit(openfpga::CMD_EXEC_FATAL_ERROR);
+  }
+  /* Aggregate on mode bits: 'x' will not overwrite anything */
+  for (size_t ibit = 0; ibit < mode_bits.size(); ibit++) {
+    if (mode_bits[ibit] == '1' || mode_bits[ibit] == '0') {
+      mode_bits_[pb][ibit] = mode_bits[ibit];
+    } else if (mode_bits[ibit] != 'x') {
+      VTR_LOG_ERROR("Invalid mode bit '%c'! Expect [1|0|x]\n", mode_bits[ibit]);
+      exit(openfpga::CMD_EXEC_FATAL_ERROR);
+    }
+  }
 }
 
 void PhysicalPb::add_atom_block(const PhysicalPbId& pb,
