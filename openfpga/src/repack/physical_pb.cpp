@@ -202,13 +202,6 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
   VTR_ASSERT(true == valid_pb_id(pb));
 
   if (mode_bits_[pb].empty()) {
-    /* Sanity checks */
-    for (size_t ibit = 0; ibit < mode_bits.size(); ibit++) {
-      if (mode_bits[ibit] != '1' && mode_bits[ibit] != '0') {
-        VTR_LOG_ERROR("Invalid mode bit '%c'! Expect [1|0]\n", mode_bits[ibit]);
-        exit(openfpga::CMD_EXEC_FATAL_ERROR);
-      }
-    }
     mode_bits_[pb] = mode_bits;
     return;
   }
