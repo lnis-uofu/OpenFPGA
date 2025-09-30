@@ -226,7 +226,7 @@ static void read_xml_pb_type_annotation(
     parse_mode_bits(xml_pb_type, loc_data,
                     get_attribute(xml_pb_type, "mode_bits", loc_data,
                                   pugiutil::ReqOpt::OPTIONAL)
-                      .as_string(), 
+                      .as_string(),
                     !pb_type_annotation.is_physical_pb_type());
   pb_type_annotation.set_mode_bits(mode_bit_data);
 

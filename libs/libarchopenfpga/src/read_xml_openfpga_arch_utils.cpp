@@ -22,9 +22,9 @@
  * We only allow the bit to either '0' or '1'
  *******************************************************************/
 std::vector<char> parse_mode_bits(pugi::xml_node& xml_mode_bits,
-                                    const pugiutil::loc_data& loc_data,
-                                    const std::string& mode_bit_str,
-                                    const bool& accept_dont_care_bits) {
+                                  const pugiutil::loc_data& loc_data,
+                                  const std::string& mode_bit_str,
+                                  const bool& accept_dont_care_bits) {
   /* Return if the input is empty */
   openfpga::BitsParser bits_parser(mode_bit_str, accept_dont_care_bits);
   if (!bits_parser.valid()) {

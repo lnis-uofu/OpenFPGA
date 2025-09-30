@@ -21,7 +21,8 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-BitsParser::BitsParser(const std::string& data, const bool& accept_dont_care_bits) {
+BitsParser::BitsParser(const std::string& data,
+                       const bool& accept_dont_care_bits) {
   delim_ = '\'';
   splitter_ = '_';
   bin_format_be_code_ = 'B';

@@ -568,8 +568,7 @@ void VprDeviceAnnotation::add_pb_circuit_port(
 }
 
 void VprDeviceAnnotation::add_pb_type_mode_bits(
-  t_pb_type* pb_type, const std::vector<char>& mode_bits,
-  const bool& verbose) {
+  t_pb_type* pb_type, const std::vector<char>& mode_bits, const bool& verbose) {
   /* Warn any override attempt */
   std::map<t_pb_type*, std::vector<char>>::const_iterator it =
     pb_type_mode_bits_.find(pb_type);

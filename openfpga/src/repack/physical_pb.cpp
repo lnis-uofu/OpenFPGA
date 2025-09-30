@@ -3,9 +3,9 @@
  ******************************************************************************/
 #include "physical_pb.h"
 
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-#include "command_exit_codes.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -206,7 +206,10 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
     return;
   }
   if (mode_bits.size() != mode_bits_[pb].size()) {
-    VTR_LOG_ERROR("Provided mode bits length (%lu) does not match the size of existing one (%lu)!\n", mode_bits.size(), mode_bits_[pb].size());
+    VTR_LOG_ERROR(
+      "Provided mode bits length (%lu) does not match the size of existing one "
+      "(%lu)!\n",
+      mode_bits.size(), mode_bits_[pb].size());
     exit(openfpga::CMD_EXEC_FATAL_ERROR);
   }
   /* Aggregate on mode bits: 'x' will not overwrite anything */

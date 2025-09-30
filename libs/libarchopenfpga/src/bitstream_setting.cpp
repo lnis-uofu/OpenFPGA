@@ -125,8 +125,7 @@ std::string BitstreamSetting::default_mode_bits_to_string(
   VTR_ASSERT(true ==
              valid_bitstream_default_mode_setting_id(default_mode_setting_id));
   std::string mode_bits_str;
-  for (const char& bit :
-       pb_type_default_mode_bits_[default_mode_setting_id]) {
+  for (const char& bit : pb_type_default_mode_bits_[default_mode_setting_id]) {
     mode_bits_str += bit;
   }
   return mode_bits_str;
