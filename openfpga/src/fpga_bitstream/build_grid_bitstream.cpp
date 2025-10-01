@@ -14,6 +14,7 @@
 #include "build_grid_bitstream.h"
 #include "build_mux_bitstream.h"
 #include "circuit_library_utils.h"
+#include "command_exit_codes.h"
 #include "lut_utils.h"
 #include "module_manager_utils.h"
 #include "mux_bitstream_constants.h"
@@ -31,16 +32,49 @@
 namespace openfpga {
 
 /********************************************************************
- * Decode mode bits "01..." to a bitstream vector
+ * Decode mode bits "01x..." to a bitstream vector
+ * Apply final correction on the dont care bits by referring to the base mode
+ *bits from physical mode
  *******************************************************************/
 static std::vector<bool> generate_mode_select_bitstream(
-  const std::vector<size_t>& mode_bits) {
+  const std::vector<char>& mode_bits,
+  const std::vector<char>& base_mode_bits = std::vector<char>()) {
   std::vector<bool> mode_select_bitstream;
 
-  for (const size_t& mode_bit : mode_bits) {
-    /* Error out for unexpected bits */
-    VTR_ASSERT((0 == mode_bit) || (1 == mode_bit));
-    mode_select_bitstream.push_back(1 == mode_bit);
+  /* In absence of base mode bits, all the mode bits must be valid!
+   * If a base mode bits is provided, use it to correct the 'x' bits in the mode
+   * bits */
+  if (base_mode_bits.empty()) {
+    for (const char& mode_bit : mode_bits) {
+      /* Error out for unexpected bits */
+      if ('0' != mode_bit && '1' != mode_bit) {
+        VTR_LOG_ERROR(
+          "Final mode bits still contain dont care bits! Expect [0 | 1]! "
+          "Please ensure all the operating mode bits and physical mode bits "
+          "can fully resolve dont care bits!\n");
+        exit(openfpga::CMD_EXEC_FATAL_ERROR);
+      }
+      mode_select_bitstream.push_back('1' == mode_bit);
+    }
+  } else {
+    if (mode_bits.size() != base_mode_bits.size()) {
+      VTR_LOG_ERROR(
+        "Physical mode bits (%lu) does not match the size of operating mode "
+        "bits (%lu)!\n",
+        base_mode_bits.size(), mode_bits.size());
+      exit(openfpga::CMD_EXEC_FATAL_ERROR);
+    }
+    for (size_t ibit = 0; ibit < mode_bits.size(); ++ibit) {
+      if (mode_bits[ibit] == 'x') {
+        mode_select_bitstream.push_back('1' == base_mode_bits[ibit]);
+      } else if ('0' == mode_bits[ibit] || '1' == mode_bits[ibit]) {
+        mode_select_bitstream.push_back('1' == mode_bits[ibit]);
+      } else {
+        VTR_LOG_ERROR("Invalid final mode bits ('%c')! Expect [0 | 1 | x]!\n",
+                      mode_bits[ibit]);
+        exit(openfpga::CMD_EXEC_FATAL_ERROR);
+      }
+    }
   }
 
   return mode_select_bitstream;
@@ -86,8 +120,9 @@ static void build_primitive_bitstream(
 
   std::vector<bool> mode_select_bitstream;
   if (true == physical_pb.valid_pb_id(primitive_pb_id)) {
-    mode_select_bitstream =
-      generate_mode_select_bitstream(physical_pb.mode_bits(primitive_pb_id));
+    mode_select_bitstream = generate_mode_select_bitstream(
+      physical_pb.mode_bits(primitive_pb_id),
+      device_annotation.pb_type_mode_bits(primitive_pb_type));
     /* If the physical pb contains fixed mode-select bitstream, overload here */
     if (false ==
         physical_pb.fixed_mode_select_bitstream(primitive_pb_id).empty()) {
@@ -607,8 +642,9 @@ static void build_lut_bitstream(
   if (0 != lut_mode_select_ports.size()) {
     std::vector<bool> mode_select_bitstream;
     if (true == physical_pb.valid_pb_id(lut_pb_id)) {
-      mode_select_bitstream =
-        generate_mode_select_bitstream(physical_pb.mode_bits(lut_pb_id));
+      mode_select_bitstream = generate_mode_select_bitstream(
+        physical_pb.mode_bits(lut_pb_id),
+        device_annotation.pb_type_mode_bits(lut_pb_type));
 
       /* If the physical pb contains fixed mode-select bitstream, overload here
        */

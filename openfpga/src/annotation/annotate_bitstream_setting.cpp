@@ -149,7 +149,7 @@ static int annotate_bitstream_default_mode_setting(
     target_pb_mode_names = bitstream_setting.default_mode_parent_mode_names(
       bitstream_default_mode_setting_id);
 
-    std::vector<size_t> mode_bits =
+    std::vector<char> mode_bits =
       bitstream_setting.default_mode_bits(bitstream_default_mode_setting_id);
 
     /* Pb type information are located at the logic_block_types in the device

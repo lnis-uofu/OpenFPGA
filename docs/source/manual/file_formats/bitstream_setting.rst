@@ -82,6 +82,10 @@ The following syntax are applicable to the XML definition tagged by ``default_mo
 
   .. note:: Mode bits are default in big-endian format!
 
+  .. note:: For operating modes, mode bits in binary format can contain dont care bit ``x``. This allows operating mode to overwrite only part of the mode bits . Dont care bits will be replaced by the deterministic bit ``1`` or ``0`` by mode bits from other operating modes. If the dont care bit remains after all the operating modes are applied, it will be corrected by the mode bits from physical mode.
+
+  .. warning:: Hex format does not support any dont care bits!
+
   In binary format with a few available options: 
 
   .. code-block:: xml
@@ -97,6 +101,22 @@ The following syntax are applicable to the XML definition tagged by ``default_mo
     <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6b'110010"/>
     <!-- BIN in little endian with splitter -->
     <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6b'11_0010"/>
+
+  Binary format can contain dont care bit ``x`` with a few available options: 
+
+  .. code-block:: xml
+
+    <!-- The following are equivalent in functionality -->
+    <!-- BIN in big endian defined implicitedly -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="01x0x1"/>
+    <!-- BIN in big endian -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6B'01x0x1"/>
+    <!-- BIN in big endian with splitter -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6B'01_x0x1"/>
+    <!-- BIN in little endian -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6b'1x0x10"/>
+    <!-- BIN in little endian with splitter -->
+    <default_mode_bits name="clb.fle[arithmetic].soft_adder.adder_lut4" mode_bits="6b'1x_0x10"/>
 
   In hexadecimal format with a few available options: 
 

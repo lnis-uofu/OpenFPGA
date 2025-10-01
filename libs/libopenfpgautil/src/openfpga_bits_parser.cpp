@@ -21,13 +21,15 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-BitsParser::BitsParser(const std::string& data) {
+BitsParser::BitsParser(const std::string& data,
+                       const bool& accept_dont_care_bits) {
   delim_ = '\'';
   splitter_ = '_';
   bin_format_be_code_ = 'B';
   bin_format_le_code_ = 'b';
   hex_format_be_code_ = 'H';
   hex_format_le_code_ = 'h';
+  accept_dont_care_bits_ = accept_dont_care_bits;
   set_data(data);
 }
 
@@ -39,7 +41,7 @@ std::string BitsParser::data() const { return data_; }
 
 bool BitsParser::valid() const { return valid_; }
 
-std::vector<size_t> BitsParser::result() const { return result_; }
+std::vector<char> BitsParser::result() const { return result_; }
 
 /************************************************************************
  * Public Mutators
@@ -64,13 +66,21 @@ void BitsParser::parse_bin_format(const std::string& bits_str,
     bits_str_pure.end());
   for (const char& bit_char : bits_str_pure) {
     if ('0' == bit_char) {
-      result_.push_back(0);
+      result_.push_back('0');
     } else if ('1' == bit_char) {
-      result_.push_back(1);
+      result_.push_back('1');
+    } else if ('x' == bit_char && accept_dont_care_bits_) {
+      result_.push_back('x');
+    } else if (!accept_dont_care_bits_) {
+      VTR_LOG_ERROR(
+        "Unexpected '%c' character found in the bits '%s'! "
+        "Only expect ['0' | '1' ]\n",
+        bit_char, bits_str.c_str());
+      valid_ = false;
     } else {
       VTR_LOG_ERROR(
         "Unexpected '%c' character found in the bits '%s'! "
-        "Only allow either '0' or '1'\n",
+        "Only expect ['0' | '1' | 'x']\n",
         bit_char, bits_str.c_str());
       valid_ = false;
     }

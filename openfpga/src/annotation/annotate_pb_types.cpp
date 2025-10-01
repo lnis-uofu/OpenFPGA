@@ -1018,8 +1018,8 @@ static void link_vpr_pb_type_to_mode_bits_explicit_annotation(
 
     /* Convert the vector of integer to string */
     std::string mode_bits_str;
-    for (const size_t& bit : pb_type_annotation.mode_bits()) {
-      mode_bits_str += std::to_string(bit);
+    for (const char& bit : pb_type_annotation.mode_bits()) {
+      mode_bits_str += bit;
     }
 
     /* Collect the information about the full hierarchy of physical pb_type to

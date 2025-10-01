@@ -11,6 +11,7 @@ apt-get install -y \
     cmake \
     curl \
     doxygen \
+    libfl-dev \
     flex \
     fontconfig \
     gdb \
@@ -45,12 +46,6 @@ apt-get install -y \
     zip \
     swig \
     expect \
-    g++-9 \
-    gcc-9 \
-    g++-10 \
-    gcc-10 \
-    g++-11 \
-    gcc-11 \
     libxml2-utils
 
 # Install Ubuntu 20.04 packages
@@ -62,6 +57,12 @@ if [ "$(lsb_release -rs)" = "20.04" ]; then
         gcc-7 \
         g++-8 \
         gcc-8 \
+        g++-9 \
+        gcc-9 \
+        g++-10 \
+        gcc-10 \
+        g++-11 \
+        gcc-11 \
         clang-6.0 \
         clang-7 \
         clang-8 \
@@ -73,9 +74,24 @@ elif [ "$(lsb_release -rs)" = "22.04" ]; then
     apt-get install -y \
         exuberant-ctags \
         qtbase5-dev \
+        g++-9 \
+        gcc-9 \
+        g++-10 \
+        gcc-10 \
+        g++-11 \
+        gcc-11 \
         clang-11 \
         clang-12 \
         clang-13 \
         clang-14 \
         clang-format-14
+# Install Ubuntu 24.04 packages
+elif [ "$(lsb_release -rs)" = "24.04" ]; then
+    apt-get install -y \
+        exuberant-ctags \
+        qtbase5-dev \
+        g++-13 \
+        gcc-13 \
+        clang-18 \
+        clang-format-18
 fi

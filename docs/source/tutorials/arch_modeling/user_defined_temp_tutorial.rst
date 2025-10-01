@@ -33,7 +33,7 @@ From the OpenFPGA root directory, run the command:
 
 .. code-block:: bash
 
-   python3 openfpga_flow/scripts_run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
+   python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
 
 Running this command should fail and produce the following errors:
 
@@ -86,7 +86,7 @@ Now we can return to the root directory and run this command again:
 
 .. code-block:: bash
 
-   python3 openfpga_flow/scripts_run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
+   python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
    
 The task should now complete without any errors.
 
@@ -171,6 +171,6 @@ Finally, rerun this command from the OpenFPGA root directory to ensure it is wor
 
 .. code-block:: bash
 
-   python3 openfpga_flow/scripts_run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
+   python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
 
 

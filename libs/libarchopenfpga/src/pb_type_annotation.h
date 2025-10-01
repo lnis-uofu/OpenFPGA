@@ -45,7 +45,7 @@ class PbTypeAnnotation {
   bool is_physical_pb_type() const;
   std::string physical_mode_name() const;
   std::string idle_mode_name() const;
-  std::vector<size_t> mode_bits() const;
+  std::vector<char> mode_bits() const;
   std::string circuit_model_name() const;
   float physical_pb_type_index_factor() const;
   int physical_pb_type_index_offset() const;
@@ -66,7 +66,7 @@ class PbTypeAnnotation {
   void set_physical_parent_mode_names(const std::vector<std::string>& names);
   void set_physical_mode_name(const std::string& name);
   void set_idle_mode_name(const std::string& name);
-  void set_mode_bits(const std::vector<size_t>& mode_bits);
+  void set_mode_bits(const std::vector<char>& mode_bits);
   void set_circuit_model_name(const std::string& name);
   void set_physical_pb_type_index_factor(const float& value);
   void set_physical_pb_type_index_offset(const int& value);
@@ -116,7 +116,7 @@ class PbTypeAnnotation {
   std::string idle_mode_name_;
 
   /* Configuration bits to select an operting mode for the circuit mode name */
-  std::vector<size_t> mode_bits_;
+  std::vector<char> mode_bits_;
 
   /* Circuit mode name linked to a physical pb_type.
    * This is only applicable to the physical pb_type

@@ -28,7 +28,7 @@ env:
 jobs:
   change_detect:
     name: "Detect code changes"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
@@ -252,52 +252,47 @@ jobs:
           git config --global --add safe.directory '*'
           make all BUILD_TYPE=$BUILD_TYPE 
 
-# TODO: Support 24.04
-#  ubuntu_support:
-#    needs: change_detect
-#    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
-#    name: ${{ matrix.config.name }}
-#    runs-on: ubuntu-20.04
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        config:
-#          - name: "Build (GCC-11 on Ubuntu 20.04)"
-#            cc: gcc-11
-#            cxx: g++-11
-#            dependency_version: "ubuntu20p04"
-#          - name: "Build (Clang-10 on Ubuntu 20.04)"
-#            cc: clang-10
-#            cxx: clang++-10
-#            dependency_version: "ubuntu20p04"
-#    # Define the steps to run the build job
-#    env:
-#      CC: ${{ matrix.config.cc }}
-#      CXX: ${{ matrix.config.cxx }}
-#    steps:
-#      - name: Cancel previous
-#        uses: styfle/cancel-workflow-action@0.12.1
-#        with:
-#          access_token: ${{ github.token }}
-#          
-#      - name: Checkout OpenFPGA repo
-#        uses: actions/checkout@v4
-#
-#      - name: Install dependencies
-#        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
-#      
-#      - name: Dump tool versions
-#        run: |
-#          cmake --version
-#          ${CC} --version
-#          ${CXX} --version
-#
-#      - uses: hendrikmuhs/ccache-action@v1
-#
-#      - name: Build
-#        shell: bash
-#        run: |
-#          make all BUILD_TYPE=$BUILD_TYPE 
+  # Support 24.04
+  ubuntu_support:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Build (GCC-13 on Ubuntu 24.04)"
+            cc: gcc-13
+            cxx: g++-13
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v4
+  
+      - name: Install dependencies
+        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+      
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          ${CXX} --version
+  
+      - uses: hendrikmuhs/ccache-action@v1
+  
+      - name: Build
+        shell: bash
+        run: |
+          make all BUILD_TYPE=$BUILD_TYPE 
 
   debug_build:
     needs: change_detect

@@ -49,6 +49,9 @@ run-task fpga_verilog/dsp/single_mode_mult_8x8 $@
 echo -e "Testing Verilog generation with heterogeneous fabric using 16-bit multi-mode multipliers ";
 run-task fpga_verilog/dsp/multi_mode_mult_16x16 $@
 
+echo -e "Testing Verilog generation with heterogeneous fabric using 16-bit multi-mode multipliers with optional input registers ";
+run-task fpga_verilog/dsp/multi_mode_regin_mult_16x16 $@
+
 echo -e "Testing Verilog generation with heterogeneous fabric using multi-width 16-bit multi-mode multipliers ";
 run-task fpga_verilog/dsp/wide_multi_mode_mult_16x16 $@
 
