@@ -158,8 +158,8 @@ class LbRouter {
 
     t_explored_node_stats() {
       prev_index = LbRRNodeId::INVALID();
-      explored_id = OPEN;
-      enqueue_id = OPEN;
+      explored_id = UNDEFINED;
+      enqueue_id = UNDEFINED;
       inet = NetId::INVALID();
       enqueue_cost = 0;
     }

@@ -139,7 +139,7 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
       VTR_ASSERT(true == src_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, src_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string src_grid_port_name = generate_grid_port_name(
         src_grid_pin_width, src_grid_pin_height, subtile_index,
@@ -396,7 +396,7 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, sink_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
@@ -524,7 +524,7 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, sink_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
@@ -1211,8 +1211,8 @@ static int build_tile_port_and_nets_from_pb(
 
   /* Create a map between pin class type and grid pin direction */
   std::map<e_pin_type, ModuleManager::e_module_port_type> pin_type2type_map;
-  pin_type2type_map[RECEIVER] = ModuleManager::MODULE_INPUT_PORT;
-  pin_type2type_map[DRIVER] = ModuleManager::MODULE_OUTPUT_PORT;
+  pin_type2type_map[e_pin_type::RECEIVER] = ModuleManager::MODULE_INPUT_PORT;
+  pin_type2type_map[e_pin_type::DRIVER] = ModuleManager::MODULE_OUTPUT_PORT;
 
   /* Iterate over sides, height and pins */
   for (const e_side& side : grid_pin_sides) {
@@ -1233,7 +1233,7 @@ static int build_tile_port_and_nets_from_pb(
           int subtile_index =
             vpr_device_annotation.physical_tile_pin_subtile_index(phy_tile,
                                                                   ipin);
-          VTR_ASSERT(OPEN != subtile_index &&
+          VTR_ASSERT(UNDEFINED != subtile_index &&
                      subtile_index < phy_tile->capacity);
           std::string port_name = generate_grid_port_name(
             iwidth, iheight, subtile_index, side, pin_info);

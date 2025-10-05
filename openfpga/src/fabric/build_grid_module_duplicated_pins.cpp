@@ -99,7 +99,7 @@ void add_grid_module_duplicated_pb_type_ports(
           int subtile_index =
             vpr_device_annotation.physical_tile_pin_subtile_index(
               grid_type_descriptor, ipin);
-          VTR_ASSERT(OPEN != subtile_index &&
+          VTR_ASSERT(UNDEFINED != subtile_index &&
                      subtile_index < grid_type_descriptor->capacity);
           /* Generate the pin name
            * For each RECEIVER PIN or DRIVER PIN for direct connection,

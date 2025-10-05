@@ -330,8 +330,8 @@ bool LbRouter::try_route_net(
         if (explore_id_index_ > 2000000000) {
           /* overflow protection */
           for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
-            explored_node_tb_[id].explored_id = OPEN;
-            explored_node_tb_[id].enqueue_id = OPEN;
+            explored_node_tb_[id].explored_id = UNDEFINED;
+            explored_node_tb_[id].enqueue_id = UNDEFINED;
             explore_id_index_ = 1;
           }
         }
@@ -339,8 +339,8 @@ bool LbRouter::try_route_net(
         /* Route failed, reset the explore id index */
         reset_explored_node_tb();
         for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
-          explored_node_tb_[id].explored_id = OPEN;
-          explored_node_tb_[id].enqueue_id = OPEN;
+          explored_node_tb_[id].explored_id = UNDEFINED;
+          explored_node_tb_[id].enqueue_id = UNDEFINED;
           explore_id_index_ = 1;
         }
       }
@@ -732,7 +732,7 @@ void LbRouter::expand_rt_rec(t_trace* rt, const LbRRNodeId& prev_index,
   enode.prev_index = prev_index;
   pq_.push(enode);
   explored_node_tb_[enode.node_index].inet = irt_net;
-  explored_node_tb_[enode.node_index].explored_id = OPEN;
+  explored_node_tb_[enode.node_index].explored_id = UNDEFINED;
   explored_node_tb_[enode.node_index].enqueue_id = explore_id_index;
   explored_node_tb_[enode.node_index].enqueue_cost = 0;
   explored_node_tb_[enode.node_index].prev_index = prev_index;
@@ -1049,9 +1049,9 @@ bool LbRouter::check_net(const LbRRGraph& lb_rr_graph,
 void LbRouter::reset_explored_node_tb() {
   for (t_explored_node_stats& explored_node : explored_node_tb_) {
     explored_node.prev_index = LbRRNodeId::INVALID();
-    explored_node.explored_id = OPEN;
+    explored_node.explored_id = UNDEFINED;
     explored_node.inet = NetId::INVALID();
-    explored_node.enqueue_id = OPEN;
+    explored_node.enqueue_id = UNDEFINED;
     explored_node.enqueue_cost = 0;
   }
 }
