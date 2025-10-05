@@ -87,7 +87,8 @@ std::string generate_sb_module_grid_port_name(
   VTR_ASSERT(true == pin_info.is_valid());
   int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
     physical_tile, pin_id);
-  VTR_ASSERT(UNDEFINED != subtile_index && subtile_index < physical_tile->capacity);
+  VTR_ASSERT(UNDEFINED != subtile_index &&
+             subtile_index < physical_tile->capacity);
 
   return prefix + std::string("_") +
          generate_routing_module_grid_port_name(
@@ -123,7 +124,8 @@ std::string generate_cb_module_grid_port_name(
   VTR_ASSERT(true == pin_info.is_valid());
   int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
     physical_tile, pin_id);
-  VTR_ASSERT(UNDEFINED != subtile_index && subtile_index < physical_tile->capacity);
+  VTR_ASSERT(UNDEFINED != subtile_index &&
+             subtile_index < physical_tile->capacity);
 
   return prefix + std::string("_") +
          generate_routing_module_grid_port_name(
