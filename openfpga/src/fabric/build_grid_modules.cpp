@@ -89,7 +89,7 @@ static void add_grid_module_pb_type_ports(
           int subtile_index =
             vpr_device_annotation.physical_tile_pin_subtile_index(
               grid_type_descriptor, ipin);
-          VTR_ASSERT(OPEN != subtile_index &&
+          VTR_ASSERT(UNDEFINED != subtile_index &&
                      subtile_index < grid_type_descriptor->capacity);
           std::string port_name = generate_grid_port_name(
             iwidth, iheight, subtile_index, side, pin_info);

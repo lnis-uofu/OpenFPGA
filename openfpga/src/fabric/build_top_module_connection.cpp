@@ -139,7 +139,7 @@ static void add_top_module_nets_connect_grids_and_sb(
       VTR_ASSERT(true == src_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, src_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string src_grid_port_name = generate_grid_port_name(
         src_grid_pin_width, src_grid_pin_height, subtile_index,
@@ -316,7 +316,7 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
       VTR_ASSERT(true == src_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, src_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
 
       /* Pins for direct connection are NOT duplicated.
@@ -535,7 +535,7 @@ static void add_top_module_nets_connect_grids_and_cb(
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, sink_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
@@ -618,7 +618,7 @@ static void add_top_module_nets_connect_grids_and_cb(
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, sink_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,

@@ -130,7 +130,7 @@ static void add_module_nets_tile_direct_connection(
   VTR_ASSERT(true == src_pin_info.is_valid());
   int src_subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
     src_grid_type_descriptor, src_tile_pin);
-  VTR_ASSERT(OPEN != src_subtile_index &&
+  VTR_ASSERT(UNDEFINED != src_subtile_index &&
              src_subtile_index < src_grid_type_descriptor->capacity);
   std::string src_port_name =
     generate_grid_port_name(src_pin_width, src_pin_height, src_subtile_index,
@@ -165,7 +165,7 @@ static void add_module_nets_tile_direct_connection(
   int sink_subtile_index =
     vpr_device_annotation.physical_tile_pin_subtile_index(
       sink_grid_type_descriptor, sink_tile_pin);
-  VTR_ASSERT(OPEN != src_subtile_index &&
+  VTR_ASSERT(UNDEFINED != src_subtile_index &&
              src_subtile_index < sink_grid_type_descriptor->capacity);
   std::string sink_port_name =
     generate_grid_port_name(sink_pin_width, sink_pin_height, sink_subtile_index,

@@ -184,7 +184,7 @@ AtomNetlist::TruthTable adapt_truth_table_for_frac_lut(
   const size_t& lut_frac_level, const size_t& lut_output_mask,
   const AtomNetlist::TruthTable& truth_table) {
   /* No adaption required for when the lut_frac_level is not set */
-  if (size_t(OPEN) == lut_frac_level) {
+  if (size_t(UNDEFINED) == lut_frac_level) {
     return truth_table;
   }
 
