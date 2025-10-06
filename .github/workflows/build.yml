@@ -279,7 +279,10 @@ jobs:
         uses: actions/checkout@v4
   
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+        run:
+          sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+          sudo bash ./.github/workflows/install_dependencies_run_ubuntu.sh
+          sudo python3 -m pip install -r requirements.txt
       
       - name: Dump tool versions
         run: |
@@ -293,6 +296,11 @@ jobs:
         shell: bash
         run: |
           make all BUILD_TYPE=$BUILD_TYPE 
+
+      - name: Quick Test
+        shell: bash
+        run: |
+          source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
 
   debug_build:
     needs: change_detect
