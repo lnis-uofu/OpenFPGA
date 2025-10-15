@@ -79,7 +79,7 @@ std::string generate_sb_module_grid_port_name(
   t_physical_tile_type_ptr physical_tile =
     vpr_device_grid.get_physical_type(t_physical_tile_loc(
       rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node),
-      rr_graph.node_layer(rr_node)));
+      rr_graph.node_layer_low(rr_node)));
   int pin_width_offset = physical_tile->pin_width_offset[pin_id];
   int pin_height_offset = physical_tile->pin_height_offset[pin_id];
   BasicPort pin_info =
@@ -116,7 +116,7 @@ std::string generate_cb_module_grid_port_name(
   t_physical_tile_type_ptr physical_tile =
     vpr_device_grid.get_physical_type(t_physical_tile_loc(
       rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node),
-      rr_graph.node_layer(rr_node)));
+      rr_graph.node_layer_low(rr_node)));
   int pin_width_offset = physical_tile->pin_width_offset[pin_id];
   int pin_height_offset = physical_tile->pin_height_offset[pin_id];
   BasicPort pin_info =
