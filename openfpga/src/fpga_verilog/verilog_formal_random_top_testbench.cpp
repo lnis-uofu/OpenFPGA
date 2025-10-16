@@ -149,8 +149,7 @@ static void print_verilog_random_testbench_fpga_instance(
   /* Always use explicit port mapping */
   print_verilog_testbench_benchmark_instance(
     fp,
-    std::string(circuit_name +
-                std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX)),
+    generate_preconfig_top_module_name(circuit_name),
     std::string(FPGA_INSTANCE_NAME), std::string(), std::string(),
     std::string(), std::string(FPGA_PORT_POSTFIX), std::vector<std::string>(),
     false, atom_ctx, netlist_annotation, pin_constraints, bus_group,
