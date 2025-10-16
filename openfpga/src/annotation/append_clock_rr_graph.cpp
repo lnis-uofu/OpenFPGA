@@ -138,7 +138,8 @@ static void add_rr_graph_block_clock_nodes(
             layer, chan_coord.x(), chan_coord.y(), chan_type, curr_node_ptc);
           rr_graph_builder.set_node_direction(clk_node, node_dir);
           rr_graph_builder.set_node_capacity(clk_node, 1);
-          rr_graph_builder.set_node_layer(clk_node, layer);
+          rr_graph_builder.set_node_layer(clk_node, static_cast<char>(layer),
+                                          static_cast<char>(layer));
           /* set cost_index using segment id */
           rr_graph_builder.set_node_cost_index(
             clk_node, RRIndexedDataId(cost_index_offset +

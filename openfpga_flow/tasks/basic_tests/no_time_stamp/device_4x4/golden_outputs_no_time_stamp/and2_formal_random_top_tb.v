@@ -47,7 +47,7 @@ module and2_top_formal_verification_random_tb;
 	initial begin
 		clk[0] <= 1'b0;
 		while(1) begin
-			#0.8577655554
+			#0.8611018062
 			clk[0] <= !clk[0];
 		end
 	end
@@ -106,7 +106,7 @@ initial begin
 	$timeformat(-9, 2, "ns", 20);
 	$display("Simulation start");
 // ----- Can be changed by the user for his/her need -------
-	#12.00871754
+	#12.05542564
 	if(nb_error == 0) begin
 		$display("Simulation Succeed");
 	end else begin
