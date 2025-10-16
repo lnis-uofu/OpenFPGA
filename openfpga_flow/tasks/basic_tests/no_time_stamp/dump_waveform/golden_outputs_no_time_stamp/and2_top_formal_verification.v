@@ -495,14 +495,14 @@ end
 `ifdef DUMP_FSDB
 initial begin
 	$fsdbDumpfile("and2.fsdb");
-	$fsdbDumpvars(0, "U0_formal_verification");
+	$fsdbDumpvars(0, "and2_top_formal_verification");
 end
 `endif
 // ------ Use DUMP_VCD to enable VCD waveform output -----
 `ifdef DUMP_VCD
 initial begin
 	$dumpfile("and2.vcd");
-	$dumpvars(0, "U0_formal_verification");
+	$dumpvars(0, "and2_top_formal_verification");
 end
 `endif
 endmodule

@@ -294,6 +294,8 @@ std::string generate_const_value_module_output_port_name(
 std::string generate_analysis_sdc_file_name(
   const std::string& circuit_name, const std::string& file_name_postfix);
 
+std::string generate_preconfig_top_module_name(const std::string& circuit_name);
+
 } /* end namespace openfpga */
 
 #endif
