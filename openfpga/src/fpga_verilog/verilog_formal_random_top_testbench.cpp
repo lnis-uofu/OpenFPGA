@@ -17,8 +17,8 @@
 #include "fabric_global_port_info_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 #include "openfpga_digest.h"
-#include "openfpga_port.h"
 #include "openfpga_naming.h"
+#include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
 #include "simulation_utils.h"
 #include "verilog_constants.h"
@@ -149,8 +149,7 @@ static void print_verilog_random_testbench_fpga_instance(
 
   /* Always use explicit port mapping */
   print_verilog_testbench_benchmark_instance(
-    fp,
-    generate_preconfig_top_module_name(circuit_name),
+    fp, generate_preconfig_top_module_name(circuit_name),
     std::string(FPGA_INSTANCE_NAME), std::string(), std::string(),
     std::string(), std::string(FPGA_PORT_POSTFIX), std::vector<std::string>(),
     false, atom_ctx, netlist_annotation, pin_constraints, bus_group,

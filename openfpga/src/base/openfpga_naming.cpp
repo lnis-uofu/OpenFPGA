@@ -9,9 +9,9 @@
 
 #include "circuit_library_utils.h"
 #include "openfpga_reserved_words.h"
-#include "verilog_constants.h"
 #include "openfpga_side_manager.h"
 #include "pb_type_utils.h"
+#include "verilog_constants.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -1612,7 +1612,8 @@ std::string generate_analysis_sdc_file_name(
  * The format is
  *   <circuit_name>_<constant_postfix>
  ********************************************************************/
-std::string generate_preconfig_top_module_name(const std::string& circuit_name) {
+std::string generate_preconfig_top_module_name(
+  const std::string& circuit_name) {
   return circuit_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX);
 }
 
