@@ -18,6 +18,7 @@
 #include "openfpga_atom_netlist_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_port.h"
+#include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "simulation_utils.h"
 #include "verilog_constants.h"
