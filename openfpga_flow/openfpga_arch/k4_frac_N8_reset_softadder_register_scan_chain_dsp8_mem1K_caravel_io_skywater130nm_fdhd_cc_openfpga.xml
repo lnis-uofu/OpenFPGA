@@ -248,6 +248,8 @@
     <direct name="carry_chain" circuit_model_name="direct_interc"/>
     <direct name="shift_register" circuit_model_name="direct_interc"/>
     <direct name="scan_chain" circuit_model_name="direct_interc" type="inter_column" x_dir="positive" y_dir="positive"/>
+    <direct name="cim_direct0" circuit_model_name="direct_interc"/>
+    <direct name="cim_direct1" circuit_model_name="direct_interc"/>
   </direct_connection>
   <tile_annotations>
     <global_port name="clk" is_clock="true" default_val="0">
