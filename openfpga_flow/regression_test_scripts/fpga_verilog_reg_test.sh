@@ -58,6 +58,9 @@ run-task fpga_verilog/dsp/wide_multi_mode_mult_16x16 $@
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode registerable multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8_reg $@
 
+echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit multiplier + dual port ram 1k ";
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k $@
+
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity $@
 
