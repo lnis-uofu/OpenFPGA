@@ -976,7 +976,7 @@ static int build_top_module_global_net_for_given_grid_module(
   /* Walk through each instance considering the unique sub tile and capacity
    * range, each instance may have an independent pin to be driven by a global
    * net! */
-  int curr_sub_tile_start_pin_index = 0;
+  //int curr_sub_tile_start_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
     int grid_pin_start_index = physical_tile->num_pins;
@@ -1005,7 +1005,6 @@ static int build_top_module_global_net_for_given_grid_module(
             return CMD_EXEC_FATAL_ERROR;
           }
           grid_pin_start_index =
-            curr_sub_tile_start_pin_index +
             (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
             tile_port.absolute_first_pin_index;
           physical_tile_port = tile_port;
@@ -1082,7 +1081,7 @@ static int build_top_module_global_net_for_given_grid_module(
     }
     /* Note that the start pin index for a new type of tile should be calculated
      * by the accumulated number of pins of previous sub tiles */
-    curr_sub_tile_start_pin_index += sub_tile.num_phy_pins;
+//    curr_sub_tile_start_pin_index += sub_tile.num_phy_pins;
   }
 
   return CMD_EXEC_SUCCESS;
