@@ -991,6 +991,7 @@ static int build_top_module_global_net_for_given_grid_module(
      * subtile, connect to all the pins from sub tiles */
     for (int subtile_index = sub_tile.capacity.low;
          subtile_index <= sub_tile.capacity.high; subtile_index++) {
+      bool found_matched_subtile_port = false;
       for (const t_physical_tile_port& tile_port : sub_tile.ports) {
         if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
           BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
@@ -1008,8 +1009,12 @@ static int build_top_module_global_net_for_given_grid_module(
             (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
             tile_port.absolute_first_pin_index;
           physical_tile_port = tile_port;
+          found_matched_subtile_port = true;
           break;
         }
+      }
+      if (!found_matched_subtile_port) {
+        continue;
       }
       /* Ensure the pin index is valid */
       VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);
