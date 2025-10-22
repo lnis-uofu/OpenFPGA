@@ -125,7 +125,7 @@
      -->
     <!-- Top-side has 1 I/O per tile -->
     <tile name="io_top" area="0">
-      <sub_tile name="io_top" capacity="1">
+      <sub_tile name="io_top" capacity="8">
         <equivalent_sites>
           <site pb_type="io"/>
         </equivalent_sites>
@@ -139,7 +139,7 @@
     </tile>
     <!-- Right-side has 1 I/O per tile -->
     <tile name="io_right" area="0">
-      <sub_tile name="io_right" capacity="1">
+      <sub_tile name="io_right" capacity="10">
         <equivalent_sites>
           <site pb_type="io"/>
         </equivalent_sites>
@@ -167,7 +167,7 @@
     </tile>
     <!-- Left-side has 1 I/O per tile -->
     <tile name="io_left" area="0">
-      <sub_tile name="io_left" capacity="1">
+      <sub_tile name="io_left" capacity="10">
         <equivalent_sites>
           <site pb_type="io"/>
         </equivalent_sites>
