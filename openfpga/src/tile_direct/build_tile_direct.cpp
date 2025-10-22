@@ -63,20 +63,30 @@ static std::string parse_direct_port(const std::string& direct_tile_inf) {
  * If the given side is NUM_2D_SIDES, we will search all the sides
  ***************************************************************************************/
 static bool is_pin_locate_at_physical_tile_side(
-  t_physical_tile_type_ptr physical_tile, const size_t& pin_width_offset,
-  const size_t& pin_height_offset, const size_t& pin_id,
+  t_physical_tile_type_ptr physical_tile, const size_t& pin_id,
   const e_side& pin_side) {
   if (NUM_2D_SIDES == pin_side) {
     for (size_t side = 0; side < NUM_2D_SIDES; ++side) {
-      if (true == physical_tile->pinloc[pin_width_offset][pin_height_offset]
-                                       [side][pin_id]) {
+      for (size_t iheight = 0; iheight < physical_tile->height; ++iheight) {
+        for (size_t iwidth = 0; iwidth < physical_tile->width; ++iwidth) {
+          if (true == physical_tile->pinloc[iwidth][iheight]
+                                           [side][pin_id]) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  for (size_t iheight = 0; iheight < physical_tile->height; ++iheight) {
+    for (size_t iwidth = 0; iwidth < physical_tile->width; ++iwidth) {
+      if (true == physical_tile->pinloc[iwidth][iheight]
+                                       [size_t(pin_side)][pin_id]) {
         return true;
       }
     }
   }
-
-  return physical_tile
-    ->pinloc[pin_width_offset][pin_height_offset][size_t(pin_side)][pin_id];
+  return false;
 }
 
 /***************************************************************************************
@@ -84,8 +94,7 @@ static bool is_pin_locate_at_physical_tile_side(
  * Return the pair of [subtile_index, pin_id]
  ***************************************************************************************/
 static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
-  t_physical_tile_type_ptr physical_tile, const size_t& pin_width_offset,
-  const size_t& pin_height_offset, const BasicPort& tile_port,
+  t_physical_tile_type_ptr physical_tile, const BasicPort& tile_port,
   const e_side& pin_side, const int& subtile_index) {
   std::vector<size_t> pin_ids;
 
@@ -107,7 +116,7 @@ static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
           VTR_ASSERT(pin_id < physical_tile->num_pins);
           /* Check if the pin is located on the wanted side */
           if (true == is_pin_locate_at_physical_tile_side(
-                        physical_tile, pin_width_offset, pin_height_offset,
+                        physical_tile, 
                         pin_id, pin_side)) {
             pin_ids.push_back(pin_id);
           }
@@ -135,7 +144,7 @@ static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
         }
         /* Check if the pin is located on the wanted side */
         if (true == is_pin_locate_at_physical_tile_side(
-                      physical_tile, pin_width_offset, pin_height_offset,
+                      physical_tile, 
                       pin_id, pin_side)) {
           pin_ids.push_back(pin_id);
         }
@@ -152,8 +161,7 @@ static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
  * Return the pair of [subtile_index, pin_id]
  ***************************************************************************************/
 static std::map<size_t, std::vector<size_t>> find_physical_tile_pin_id(
-  t_physical_tile_type_ptr physical_tile, const size_t& pin_width_offset,
-  const size_t& pin_height_offset, const BasicPort& tile_port,
+  t_physical_tile_type_ptr physical_tile, const BasicPort& tile_port,
   const e_side& pin_side) {
   std::map<size_t, std::vector<size_t>> pin_ids;
 
@@ -174,7 +182,7 @@ static std::map<size_t, std::vector<size_t>> find_physical_tile_pin_id(
             VTR_ASSERT(pin_id < physical_tile->num_pins);
             /* Check if the pin is located on the wanted side */
             if (true == is_pin_locate_at_physical_tile_side(
-                          physical_tile, pin_width_offset, pin_height_offset,
+                          physical_tile, 
                           pin_id, pin_side)) {
               pin_ids[subtile_index].push_back(pin_id);
             }
@@ -205,7 +213,7 @@ static std::map<size_t, std::vector<size_t>> find_physical_tile_pin_id(
           }
           /* Check if the pin is located on the wanted side */
           if (true == is_pin_locate_at_physical_tile_side(
-                        physical_tile, pin_width_offset, pin_height_offset,
+                        physical_tile, 
                         pin_id, pin_side)) {
             pin_ids[subtile_index].push_back(pin_id);
           }
@@ -499,9 +507,7 @@ static void build_inner_column_row_tile_direct(
       for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
         /* Try to find the pin in this tile */
         std::map<size_t, std::vector<size_t>> from_pin_pairs = find_physical_tile_pin_id(
-          from_phy_tile_type,
-          device_ctx.grid.get_width_offset(from_phy_tile_loc),
-          device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port,
+          from_phy_tile_type, from_tile_port,
           from_side);
         /* If nothing found, we can continue */
         if (0 == from_pin_pairs.size()) {
@@ -537,8 +543,7 @@ static void build_inner_column_row_tile_direct(
             std::vector<size_t> from_pins = from_pin_pair.second;
             size_t to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
             std::vector<size_t> to_pins = find_physical_tile_pin_id_on_specific_subtile(
-              to_phy_tile_type, device_ctx.grid.get_width_offset(to_phy_tile_loc),
-              device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
+              to_phy_tile_type, to_tile_port,
               to_side, to_subtile_index);
             /* If nothing found, we can continue */
             if (0 == to_pins.size()) {
@@ -681,8 +686,7 @@ static void build_inter_column_row_tile_direct(
                                               from_grid_coord.y(), 0);
         std::map<size_t, std::vector<size_t>> from_pin_pairs = find_physical_tile_pin_id(
           device_ctx.grid.get_physical_type(from_phy_tile_loc),
-          device_ctx.grid.get_width_offset(from_phy_tile_loc),
-          device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port,
+          from_tile_port,
           from_side);
         /* If nothing found, we can continue */
         if (0 == from_pin_pairs.size()) {
@@ -714,8 +718,7 @@ static void build_inter_column_row_tile_direct(
             int to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
             std::vector<size_t> to_pins = find_physical_tile_pin_id_on_specific_subtile(
               device_ctx.grid.get_physical_type(to_phy_tile_loc),
-              device_ctx.grid.get_width_offset(to_phy_tile_loc),
-              device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
+              to_tile_port,
               to_side, to_subtile_index);
             /* If nothing found, we can continue */
             if (0 == to_pins.size()) {
@@ -796,8 +799,7 @@ static void build_inter_column_row_tile_direct(
                                             from_grid_coord.y(), 0);
       std::map<size_t, std::vector<size_t>> from_pin_pairs = find_physical_tile_pin_id(
         device_ctx.grid.get_physical_type(from_phy_tile_loc),
-        device_ctx.grid.get_width_offset(from_phy_tile_loc),
-        device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port,
+        from_tile_port,
         from_side);
       /* If nothing found, we can continue */
       if (0 == from_pin_pairs.size()) {
@@ -829,8 +831,7 @@ static void build_inter_column_row_tile_direct(
           size_t to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
           std::vector<size_t> to_pins = find_physical_tile_pin_id_on_specific_subtile(
             device_ctx.grid.get_physical_type(to_phy_tile_loc),
-            device_ctx.grid.get_width_offset(to_phy_tile_loc),
-            device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
+            to_tile_port,
             to_side, to_subtile_index);
           /* If nothing found, we can continue */
           if (0 == to_pins.size()) {
