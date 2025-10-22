@@ -254,7 +254,7 @@
   <tile_annotations>
     <global_port name="clk" is_clock="true" default_val="0">
       <tile name="clb" port="clk" x="-1" y="-1"/>
-      <tile name="memory" port="clk"/>
+      <tile name="cim8_1k" port="clk" x="-1" y="-1"/>
     </global_port>
     <global_port name="Reset" is_reset="true" default_val="1">
       <tile name="clb" port="reset" x="-1" y="-1"/>
