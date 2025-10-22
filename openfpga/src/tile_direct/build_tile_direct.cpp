@@ -96,10 +96,10 @@ static bool is_pin_locate_at_physical_tile_side(
  * Find the pin ids of a physical tile based on the given port name, LSB and MSB
  * Return the pair of [subtile_index, pin_id]
  ***************************************************************************************/
-static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
+static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
   t_physical_tile_type_ptr physical_tile, const BasicPort& tile_port,
   const int& subtile_index) {
-  std::vector<size_t> pin_ids;
+  SubtilePinMap pin_ids;
 
   /* Walk through the port of the tile */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
@@ -122,7 +122,7 @@ static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
             if (true == is_pin_locate_at_physical_tile_side(
                           physical_tile, 
                           pin_id, pin_side)) {
-              pin_ids.push_back(pin_id);
+              pin_ids.push_back(std::make_pair(pin_id, pin_side));
             }
           }
         }
@@ -152,7 +152,7 @@ static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
           if (true == is_pin_locate_at_physical_tile_side(
                         physical_tile, 
                         pin_id, pin_side)) {
-            pin_ids.push_back(pin_id);
+            pin_ids.push_back(std::make_pair(pin_id, pin_side));
           }
         }
       }
@@ -167,9 +167,9 @@ static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
  * Find the pin ids of a physical tile based on the given port name, LSB and MSB
  * Return the pair of [subtile_index, pin_id]
  ***************************************************************************************/
-static std::map<size_t, std::vector<size_t>> find_physical_tile_pin_id(
+static SubtilePinInfo find_physical_tile_pin_id(
   t_physical_tile_type_ptr physical_tile, const BasicPort& tile_port) {
-  std::map<size_t, std::vector<size_t>> pin_ids;
+  SubtilePinInfo pin_ids;
 
   /* Walk through the port of the tile */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
@@ -224,7 +224,7 @@ static std::map<size_t, std::vector<size_t>> find_physical_tile_pin_id(
             if (true == is_pin_locate_at_physical_tile_side(
                           physical_tile, 
                           pin_id, pin_side)) {
-              pin_ids[subtile_index].push_back(pin_id);
+              pin_ids[subtile_index].push_back(std::make_pair(pin_id, pin_side));
             }
           }
         }
@@ -547,9 +547,9 @@ static void build_inner_column_row_tile_direct(
        */
       /* Try to find the pin in this tile */
       for (auto from_pin_pair : from_pin_pairs) {
-        SubTilePinMap from_pins = from_pin_pair.second;
+        SubtilePinMap from_pins = from_pin_pair.second;
         size_t to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
-        SubTilePinMap to_pins = find_physical_tile_pin_id_on_specific_subtile(
+        SubtilePinMap to_pins = find_physical_tile_pin_id_on_specific_subtile(
           to_phy_tile_type, to_tile_port,
           to_subtile_index);
         /* If nothing found, we can continue */
@@ -572,16 +572,15 @@ static void build_inner_column_row_tile_direct(
                    "%s[%lu][%lu].%s[%lu] at side '%s'\n",
                    from_tile_name.c_str(), x, y,
                    from_tile_port.get_name().c_str(), from_pins[ipin].first,
-                   TOTAL_2D_SIDE_STRINGS[from_side], to_tile_name.c_str(),
+                   TOTAL_2D_SIDE_STRINGS[from_pins[ipin].second], to_tile_name.c_str(),
                    to_grid_coord.x(), to_grid_coord.y(),
                    to_tile_port.get_name().c_str(), to_pins[ipin].first,
-                   TOTAL_2D_SIDE_STRINGS[to_side]);
+                   TOTAL_2D_SIDE_STRINGS[to_pins[ipin].second]);
           TileDirectId tile_direct_id = tile_direct.add_direct(
             from_grid_coord, from_pins[ipin].second, from_pins[ipin].first, to_grid_coord,
             to_pins[ipin].second, to_pins[ipin].first);
           tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
         }
-      }
       }
     }
   }
