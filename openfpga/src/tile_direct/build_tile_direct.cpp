@@ -81,12 +81,81 @@ static bool is_pin_locate_at_physical_tile_side(
 
 /***************************************************************************************
  * Find the pin ids of a physical tile based on the given port name, LSB and MSB
+ * Return the pair of [subtile_index, pin_id]
  ***************************************************************************************/
-static std::vector<size_t> find_physical_tile_pin_id(
+static std::vector<size_t> find_physical_tile_pin_id_on_specific_subtile(
+  t_physical_tile_type_ptr physical_tile, const size_t& pin_width_offset,
+  const size_t& pin_height_offset, const BasicPort& tile_port,
+  const e_side& pin_side, const int& subtile_index) {
+  std::vector<size_t> pin_ids;
+
+  /* Walk through the port of the tile */
+  for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
+    for (const t_physical_tile_port& physical_tile_port : sub_tile.ports) {
+      if (std::string(physical_tile_port.name) != tile_port.get_name()) {
+        continue;
+      }
+      if (subtile_index < sub_tile.capacity.low || subtile_index > sub_tile.capacity.high) {
+        continue; /* Not the subtile we want, go to the next */
+      }
+      /* If the wanted port is invalid, it assumes that we want the full port */
+      if (false == tile_port.is_valid()) {
+        for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
+          int pin_id = (subtile_index - sub_tile.capacity.low) *
+                         sub_tile.num_phy_pins / sub_tile.capacity.total() +
+                       physical_tile_port.absolute_first_pin_index + ipin;
+          VTR_ASSERT(pin_id < physical_tile->num_pins);
+          /* Check if the pin is located on the wanted side */
+          if (true == is_pin_locate_at_physical_tile_side(
+                        physical_tile, pin_width_offset, pin_height_offset,
+                        pin_id, pin_side)) {
+            pin_ids.push_back(pin_id);
+          }
+        }
+        continue;
+      }
+      /* Find the LSB and MSB of the pin */
+      VTR_ASSERT_SAFE(true == tile_port.is_valid());
+      BasicPort ref_port(physical_tile_port.name, physical_tile_port.num_pins);
+      if (false == ref_port.contained(tile_port)) {
+        VTR_LOG_ERROR(
+          "Defined direct port '%s[%lu:%lu]' is out of range for physical port "
+          "'%s[%lu:%lu]'!\n",
+          tile_port.get_name().c_str(), tile_port.get_lsb(),
+          tile_port.get_msb(), ref_port.get_name().c_str(), ref_port.get_lsb(),
+          ref_port.get_msb());
+        exit(1);
+      }
+      for (const size_t& ipin : tile_port.pins()) {
+        int pin_id = (subtile_index - sub_tile.capacity.low) *
+                     sub_tile.num_phy_pins / sub_tile.capacity.total() +
+                     physical_tile_port.absolute_first_pin_index + ipin;
+        if (pin_id >= physical_tile->num_pins) {
+          VTR_ASSERT(pin_id < physical_tile->num_pins);
+        }
+        /* Check if the pin is located on the wanted side */
+        if (true == is_pin_locate_at_physical_tile_side(
+                      physical_tile, pin_width_offset, pin_height_offset,
+                      pin_id, pin_side)) {
+          pin_ids.push_back(pin_id);
+        }
+      }
+    }
+  }
+
+  return pin_ids;
+}
+
+
+/***************************************************************************************
+ * Find the pin ids of a physical tile based on the given port name, LSB and MSB
+ * Return the pair of [subtile_index, pin_id]
+ ***************************************************************************************/
+static std::map<size_t, std::vector<size_t>> find_physical_tile_pin_id(
   t_physical_tile_type_ptr physical_tile, const size_t& pin_width_offset,
   const size_t& pin_height_offset, const BasicPort& tile_port,
   const e_side& pin_side) {
-  std::vector<size_t> pin_ids;
+  std::map<size_t, std::vector<size_t>> pin_ids;
 
   /* Walk through the port of the tile */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
@@ -107,7 +176,7 @@ static std::vector<size_t> find_physical_tile_pin_id(
             if (true == is_pin_locate_at_physical_tile_side(
                           physical_tile, pin_width_offset, pin_height_offset,
                           pin_id, pin_side)) {
-              pin_ids.push_back(pin_id);
+              pin_ids[subtile_index].push_back(pin_id);
             }
           }
         }
@@ -126,15 +195,20 @@ static std::vector<size_t> find_physical_tile_pin_id(
         exit(1);
       }
       for (const size_t& ipin : tile_port.pins()) {
-        int pin_id = physical_tile_port.absolute_first_pin_index +
-                     ipin * sub_tile.num_phy_pins / sub_tile.capacity.total() +
-                     ipin;
-        VTR_ASSERT(pin_id < physical_tile->num_pins);
-        /* Check if the pin is located on the wanted side */
-        if (true == is_pin_locate_at_physical_tile_side(
-                      physical_tile, pin_width_offset, pin_height_offset,
-                      pin_id, pin_side)) {
-          pin_ids.push_back(pin_id);
+        for (int subtile_index = sub_tile.capacity.low;
+             subtile_index <= sub_tile.capacity.high; subtile_index++) {
+          int pin_id = (subtile_index - sub_tile.capacity.low) *
+                       sub_tile.num_phy_pins / sub_tile.capacity.total() +
+                       physical_tile_port.absolute_first_pin_index + ipin;
+          if (pin_id >= physical_tile->num_pins) {
+            VTR_ASSERT(pin_id < physical_tile->num_pins);
+          }
+          /* Check if the pin is located on the wanted side */
+          if (true == is_pin_locate_at_physical_tile_side(
+                        physical_tile, pin_width_offset, pin_height_offset,
+                        pin_id, pin_side)) {
+            pin_ids[subtile_index].push_back(pin_id);
+          }
         }
       }
     }
@@ -424,13 +498,13 @@ static void build_inner_column_row_tile_direct(
        */
       for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
         /* Try to find the pin in this tile */
-        std::vector<size_t> from_pins = find_physical_tile_pin_id(
+        std::map<size_t, std::vector<size_t>> from_pin_pairs = find_physical_tile_pin_id(
           from_phy_tile_type,
           device_ctx.grid.get_width_offset(from_phy_tile_loc),
           device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port,
           from_side);
         /* If nothing found, we can continue */
-        if (0 == from_pins.size()) {
+        if (0 == from_pin_pairs.size()) {
           continue;
         }
 
@@ -459,38 +533,42 @@ static void build_inner_column_row_tile_direct(
          */
         for (const e_side& to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
           /* Try to find the pin in this tile */
-          std::vector<size_t> to_pins = find_physical_tile_pin_id(
-            to_phy_tile_type, device_ctx.grid.get_width_offset(to_phy_tile_loc),
-            device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
-            to_side);
-          /* If nothing found, we can continue */
-          if (0 == to_pins.size()) {
-            continue;
-          }
+          for (auto from_pin_pair : from_pin_pairs) {
+            std::vector<size_t> from_pins = from_pin_pair.second;
+            size_t to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
+            std::vector<size_t> to_pins = find_physical_tile_pin_id_on_specific_subtile(
+              to_phy_tile_type, device_ctx.grid.get_width_offset(to_phy_tile_loc),
+              device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
+              to_side, to_subtile_index);
+            /* If nothing found, we can continue */
+            if (0 == to_pins.size()) {
+              continue;
+            }
 
-          /* If from port and to port do not match in sizes, error out */
-          if (from_pins.size() != to_pins.size()) {
-            report_direct_from_port_and_to_port_mismatch(
-              vpr_direct, from_tile_port, to_tile_port);
-            exit(1);
-          }
+            /* If from port and to port do not match in sizes, error out */
+            if (from_pins.size() != to_pins.size()) {
+              report_direct_from_port_and_to_port_mismatch(
+                vpr_direct, from_tile_port, to_tile_port);
+              exit(1);
+            }
 
-          /* Now add the tile direct */
-          for (size_t ipin = 0; ipin < from_pins.size(); ++ipin) {
-            VTR_LOGV(verbose,
-                     "Built a inner-column/row tile-to-tile direct from "
-                     "%s[%lu][%lu].%s[%lu] at side '%s' to "
-                     "%s[%lu][%lu].%s[%lu] at side '%s'\n",
-                     from_tile_name.c_str(), x, y,
-                     from_tile_port.get_name().c_str(), from_pins[ipin],
-                     TOTAL_2D_SIDE_STRINGS[from_side], to_tile_name.c_str(),
-                     to_grid_coord.x(), to_grid_coord.y(),
-                     to_tile_port.get_name().c_str(), to_pins[ipin],
-                     TOTAL_2D_SIDE_STRINGS[to_side]);
-            TileDirectId tile_direct_id = tile_direct.add_direct(
-              from_grid_coord, from_side, from_pins[ipin], to_grid_coord,
-              to_side, to_pins[ipin]);
-            tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
+            for (size_t ipin = 0; ipin < from_pins.size(); ++ipin) {
+              /* Now add the tile direct */
+              VTR_LOGV(verbose,
+                       "Built a inner-column/row tile-to-tile direct from "
+                       "%s[%lu][%lu].%s[%lu] at side '%s' to "
+                       "%s[%lu][%lu].%s[%lu] at side '%s'\n",
+                       from_tile_name.c_str(), x, y,
+                       from_tile_port.get_name().c_str(), from_pins[ipin],
+                       TOTAL_2D_SIDE_STRINGS[from_side], to_tile_name.c_str(),
+                       to_grid_coord.x(), to_grid_coord.y(),
+                       to_tile_port.get_name().c_str(), to_pins[ipin],
+                       TOTAL_2D_SIDE_STRINGS[to_side]);
+              TileDirectId tile_direct_id = tile_direct.add_direct(
+                from_grid_coord, from_side, from_pins[ipin], to_grid_coord,
+                to_side, to_pins[ipin]);
+              tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
+            }
           }
         }
       }
@@ -601,13 +679,13 @@ static void build_inter_column_row_tile_direct(
         /* Try to find the pin in this tile */
         t_physical_tile_loc from_phy_tile_loc(from_grid_coord.x(),
                                               from_grid_coord.y(), 0);
-        std::vector<size_t> from_pins = find_physical_tile_pin_id(
+        std::map<size_t, std::vector<size_t>> from_pin_pairs = find_physical_tile_pin_id(
           device_ctx.grid.get_physical_type(from_phy_tile_loc),
           device_ctx.grid.get_width_offset(from_phy_tile_loc),
           device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port,
           from_side);
         /* If nothing found, we can continue */
-        if (0 == from_pins.size()) {
+        if (0 == from_pin_pairs.size()) {
           continue;
         }
 
@@ -631,40 +709,44 @@ static void build_inter_column_row_tile_direct(
           /* Try to find the pin in this tile */
           t_physical_tile_loc to_phy_tile_loc(to_grid_coord.x(),
                                               to_grid_coord.y(), 0);
-          std::vector<size_t> to_pins = find_physical_tile_pin_id(
-            device_ctx.grid.get_physical_type(to_phy_tile_loc),
-            device_ctx.grid.get_width_offset(to_phy_tile_loc),
-            device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
-            to_side);
-          /* If nothing found, we can continue */
-          if (0 == to_pins.size()) {
-            continue;
-          }
+          for (auto from_pin_pair : from_pin_pairs) {
+            std::vector<size_t> from_pins = from_pin_pair.second;
+            int to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
+            std::vector<size_t> to_pins = find_physical_tile_pin_id_on_specific_subtile(
+              device_ctx.grid.get_physical_type(to_phy_tile_loc),
+              device_ctx.grid.get_width_offset(to_phy_tile_loc),
+              device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
+              to_side, to_subtile_index);
+            /* If nothing found, we can continue */
+            if (0 == to_pins.size()) {
+              continue;
+            }
 
-          /* If from port and to port do not match in sizes, error out */
-          if (from_pins.size() != to_pins.size()) {
-            report_direct_from_port_and_to_port_mismatch(
-              vpr_direct, from_tile_port, to_tile_port);
-            exit(1);
-          }
+            /* If from port and to port do not match in sizes, error out */
+            if (from_pins.size() != to_pins.size()) {
+              report_direct_from_port_and_to_port_mismatch(
+                vpr_direct, from_tile_port, to_tile_port);
+              exit(1);
+            }
 
-          /* Now add the tile direct */
-          for (size_t ipin = 0; ipin < from_pins.size(); ++ipin) {
-            VTR_LOGV(verbose,
-                     "Built a inter-column/row tile-to-tile direct from "
-                     "%s[%lu][%lu].%s[%lu] at side '%s' to "
-                     "%s[%lu][%lu].%s[%lu] at side '%s'\n",
-                     from_tile_name.c_str(), from_grid_coord.x(),
-                     from_grid_coord.y(), from_tile_port.get_name().c_str(),
-                     from_pins[ipin], TOTAL_2D_SIDE_STRINGS[from_side],
-                     to_tile_name.c_str(), to_grid_coord.x(), to_grid_coord.y(),
-                     to_tile_port.get_name().c_str(), to_pins[ipin],
-                     TOTAL_2D_SIDE_STRINGS[to_side]);
+            /* Now add the tile direct */
+            for (size_t ipin = 0; ipin < from_pins.size(); ++ipin) {
+              VTR_LOGV(verbose,
+                       "Built a inter-column/row tile-to-tile direct from "
+                       "%s[%lu][%lu].%s[%lu] at side '%s' to "
+                       "%s[%lu][%lu].%s[%lu] at side '%s'\n",
+                       from_tile_name.c_str(), from_grid_coord.x(),
+                       from_grid_coord.y(), from_tile_port.get_name().c_str(),
+                       from_pins[ipin], TOTAL_2D_SIDE_STRINGS[from_side],
+                       to_tile_name.c_str(), to_grid_coord.x(), to_grid_coord.y(),
+                       to_tile_port.get_name().c_str(), to_pins[ipin],
+                       TOTAL_2D_SIDE_STRINGS[to_side]);
 
-            TileDirectId tile_direct_id = tile_direct.add_direct(
-              from_grid_coord, from_side, from_pins[ipin], to_grid_coord,
-              to_side, to_pins[ipin]);
-            tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
+              TileDirectId tile_direct_id = tile_direct.add_direct(
+                from_grid_coord, from_side, from_pins[ipin], to_grid_coord,
+                to_side, to_pins[ipin]);
+              tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
+            }
           }
         }
       }
@@ -712,13 +794,13 @@ static void build_inter_column_row_tile_direct(
       /* Try to find the pin in this tile */
       t_physical_tile_loc from_phy_tile_loc(from_grid_coord.x(),
                                             from_grid_coord.y(), 0);
-      std::vector<size_t> from_pins = find_physical_tile_pin_id(
+      std::map<size_t, std::vector<size_t>> from_pin_pairs = find_physical_tile_pin_id(
         device_ctx.grid.get_physical_type(from_phy_tile_loc),
         device_ctx.grid.get_width_offset(from_phy_tile_loc),
         device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port,
         from_side);
       /* If nothing found, we can continue */
-      if (0 == from_pins.size()) {
+      if (0 == from_pin_pairs.size()) {
         continue;
       }
 
@@ -742,40 +824,44 @@ static void build_inter_column_row_tile_direct(
         /* Try to find the pin in this tile */
         t_physical_tile_loc to_phy_tile_loc(to_grid_coord.x(),
                                             to_grid_coord.y(), 0);
-        std::vector<size_t> to_pins = find_physical_tile_pin_id(
-          device_ctx.grid.get_physical_type(to_phy_tile_loc),
-          device_ctx.grid.get_width_offset(to_phy_tile_loc),
-          device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
-          to_side);
-        /* If nothing found, we can continue */
-        if (0 == to_pins.size()) {
-          continue;
-        }
+        for (auto from_pin_pair : from_pin_pairs) {
+          std::vector<size_t> from_pins = from_pin_pair.second;
+          size_t to_subtile_index = from_pin_pair.first + vpr_direct.sub_tile_offset; 
+          std::vector<size_t> to_pins = find_physical_tile_pin_id_on_specific_subtile(
+            device_ctx.grid.get_physical_type(to_phy_tile_loc),
+            device_ctx.grid.get_width_offset(to_phy_tile_loc),
+            device_ctx.grid.get_height_offset(to_phy_tile_loc), to_tile_port,
+            to_side, to_subtile_index);
+          /* If nothing found, we can continue */
+          if (0 == to_pins.size()) {
+            continue;
+          }
 
-        /* If from port and to port do not match in sizes, error out */
-        if (from_pins.size() != to_pins.size()) {
-          report_direct_from_port_and_to_port_mismatch(
-            vpr_direct, from_tile_port, to_tile_port);
-          exit(1);
-        }
+          /* If from port and to port do not match in sizes, error out */
+          if (from_pins.size() != to_pins.size()) {
+            report_direct_from_port_and_to_port_mismatch(
+              vpr_direct, from_tile_port, to_tile_port);
+            exit(1);
+          }
 
-        /* Now add the tile direct */
-        for (size_t ipin = 0; ipin < from_pins.size(); ++ipin) {
-          VTR_LOGV(verbose,
-                   "Built a inter-column/row tile-to-tile direct from "
-                   "%s[%lu][%lu].%s[%lu] at side '%s' to %s[%lu][%lu].%s[%lu] "
-                   "at side '%s'\n",
-                   from_tile_name.c_str(), from_grid_coord.x(),
-                   from_grid_coord.y(), from_tile_port.get_name().c_str(),
-                   from_pins[ipin], TOTAL_2D_SIDE_STRINGS[from_side],
-                   to_tile_name.c_str(), to_grid_coord.x(), to_grid_coord.y(),
-                   to_tile_port.get_name().c_str(), to_pins[ipin],
-                   TOTAL_2D_SIDE_STRINGS[to_side]);
+          /* Now add the tile direct */
+          for (size_t ipin = 0; ipin < from_pins.size(); ++ipin) {
+            VTR_LOGV(verbose,
+                     "Built a inter-column/row tile-to-tile direct from "
+                     "%s[%lu][%lu].%s[%lu] at side '%s' to %s[%lu][%lu].%s[%lu] "
+                     "at side '%s'\n",
+                     from_tile_name.c_str(), from_grid_coord.x(),
+                     from_grid_coord.y(), from_tile_port.get_name().c_str(),
+                     from_pins[ipin], TOTAL_2D_SIDE_STRINGS[from_side],
+                     to_tile_name.c_str(), to_grid_coord.x(), to_grid_coord.y(),
+                     to_tile_port.get_name().c_str(), to_pins[ipin],
+                     TOTAL_2D_SIDE_STRINGS[to_side]);
 
-          TileDirectId tile_direct_id =
-            tile_direct.add_direct(from_grid_coord, from_side, from_pins[ipin],
-                                   to_grid_coord, to_side, to_pins[ipin]);
-          tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
+            TileDirectId tile_direct_id =
+              tile_direct.add_direct(from_grid_coord, from_side, from_pins[ipin],
+                                     to_grid_coord, to_side, to_pins[ipin]);
+            tile_direct.set_arch_direct_id(tile_direct_id, arch_direct_id);
+          }
         }
       }
     }
