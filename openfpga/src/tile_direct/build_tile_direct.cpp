@@ -67,8 +67,8 @@ static bool is_pin_locate_at_physical_tile_side(
   const e_side& pin_side) {
   if (NUM_2D_SIDES == pin_side) {
     for (size_t side = 0; side < NUM_2D_SIDES; ++side) {
-      for (size_t iheight = 0; iheight < physical_tile->height; ++iheight) {
-        for (size_t iwidth = 0; iwidth < physical_tile->width; ++iwidth) {
+      for (int iheight = 0; iheight < physical_tile->height; ++iheight) {
+        for (int iwidth = 0; iwidth < physical_tile->width; ++iwidth) {
           if (true == physical_tile->pinloc[iwidth][iheight]
                                            [side][pin_id]) {
             return true;
@@ -78,8 +78,8 @@ static bool is_pin_locate_at_physical_tile_side(
     }
     return false;
   }
-  for (size_t iheight = 0; iheight < physical_tile->height; ++iheight) {
-    for (size_t iwidth = 0; iwidth < physical_tile->width; ++iwidth) {
+  for (int iheight = 0; iheight < physical_tile->height; ++iheight) {
+    for (int iwidth = 0; iwidth < physical_tile->width; ++iwidth) {
       if (true == physical_tile->pinloc[iwidth][iheight]
                                        [size_t(pin_side)][pin_id]) {
         return true;
