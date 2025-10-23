@@ -501,6 +501,9 @@ static void build_inner_column_row_tile_direct(
       if (true == is_empty_type(from_phy_tile_type)) {
         continue;
       }
+      if (!device_ctx.grid.is_root_location(from_phy_tile_loc)) {
+        continue;
+      }
 
       /* Bypass the grid that does not fit the from_tile name */
       if (from_tile_name != std::string(from_phy_tile_type->name)) {
@@ -535,6 +538,9 @@ static void build_inner_column_row_tile_direct(
         device_ctx.grid.get_physical_type(to_phy_tile_loc);
       /* Bypass the grid that does not fit the from_tile name */
       if (to_tile_name != std::string(to_phy_tile_type->name)) {
+        continue;
+      }
+      if (!device_ctx.grid.is_root_location(to_phy_tile_loc)) {
         continue;
       }
 
