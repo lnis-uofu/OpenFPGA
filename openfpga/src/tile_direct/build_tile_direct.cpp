@@ -101,6 +101,7 @@ static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
   SubtilePinMap pin_ids;
 
   /* Walk through the port of the tile */
+  int curr_sub_tile_start_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     for (const t_physical_tile_port& physical_tile_port : sub_tile.ports) {
       if (std::string(physical_tile_port.name) != tile_port.get_name()) {
@@ -113,7 +114,7 @@ static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
       /* If the wanted port is invalid, it assumes that we want the full port */
       if (false == tile_port.is_valid()) {
         for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
-          int pin_id = (subtile_index - sub_tile.capacity.low) *
+          int pin_id = curr_sub_tile_start_pin_index + (subtile_index - sub_tile.capacity.low) *
                          sub_tile.num_phy_pins / sub_tile.capacity.total() +
                        physical_tile_port.absolute_first_pin_index + ipin;
           VTR_ASSERT(pin_id < physical_tile->num_pins);
@@ -140,7 +141,7 @@ static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
         exit(1);
       }
       for (const size_t& ipin : tile_port.pins()) {
-        int pin_id = (subtile_index - sub_tile.capacity.low) *
+        int pin_id = curr_sub_tile_start_pin_index +  (subtile_index - sub_tile.capacity.low) *
                        sub_tile.num_phy_pins / sub_tile.capacity.total() +
                      physical_tile_port.absolute_first_pin_index + ipin;
         if (pin_id >= physical_tile->num_pins) {
@@ -155,6 +156,9 @@ static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
         }
       }
     }
+    /* Note that the start pin index for a new type of tile should be calculated
+     * by the accumulated number of pins of previous sub tiles */
+    curr_sub_tile_start_pin_index += sub_tile.num_phy_pins;
   }
 
   return pin_ids;
@@ -169,6 +173,7 @@ static SubtilePinInfo find_physical_tile_pin_id(
   SubtilePinInfo pin_ids;
 
   /* Walk through the port of the tile */
+  int curr_sub_tile_start_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     for (const t_physical_tile_port& physical_tile_port : sub_tile.ports) {
       if (std::string(physical_tile_port.name) != tile_port.get_name()) {
@@ -179,7 +184,7 @@ static SubtilePinInfo find_physical_tile_pin_id(
         for (int subtile_index = sub_tile.capacity.low;
              subtile_index <= sub_tile.capacity.high; subtile_index++) {
           for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
-            int pin_id = (subtile_index - sub_tile.capacity.low) *
+            int pin_id = curr_sub_tile_start_pin_index +  (subtile_index - sub_tile.capacity.low) *
                            sub_tile.num_phy_pins / sub_tile.capacity.total() +
                          physical_tile_port.absolute_first_pin_index + ipin;
             VTR_ASSERT(pin_id < physical_tile->num_pins);
@@ -210,7 +215,7 @@ static SubtilePinInfo find_physical_tile_pin_id(
       for (const size_t& ipin : tile_port.pins()) {
         for (int subtile_index = sub_tile.capacity.low;
              subtile_index <= sub_tile.capacity.high; subtile_index++) {
-          int pin_id = (subtile_index - sub_tile.capacity.low) *
+          int pin_id =  curr_sub_tile_start_pin_index + (subtile_index - sub_tile.capacity.low) *
                          sub_tile.num_phy_pins / sub_tile.capacity.total() +
                        physical_tile_port.absolute_first_pin_index + ipin;
           if (pin_id >= physical_tile->num_pins) {
@@ -227,6 +232,9 @@ static SubtilePinInfo find_physical_tile_pin_id(
         }
       }
     }
+    /* Note that the start pin index for a new type of tile should be calculated
+     * by the accumulated number of pins of previous sub tiles */
+    curr_sub_tile_start_pin_index += sub_tile.num_phy_pins;
   }
 
   return pin_ids;
