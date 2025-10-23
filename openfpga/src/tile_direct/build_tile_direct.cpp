@@ -114,7 +114,8 @@ static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
       /* If the wanted port is invalid, it assumes that we want the full port */
       if (false == tile_port.is_valid()) {
         for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
-          int pin_id = curr_sub_tile_start_pin_index + (subtile_index - sub_tile.capacity.low) *
+          int pin_id = curr_sub_tile_start_pin_index +
+                       (subtile_index - sub_tile.capacity.low) *
                          sub_tile.num_phy_pins / sub_tile.capacity.total() +
                        physical_tile_port.absolute_first_pin_index + ipin;
           VTR_ASSERT(pin_id < physical_tile->num_pins);
@@ -141,7 +142,8 @@ static SubtilePinMap find_physical_tile_pin_id_on_specific_subtile(
         exit(1);
       }
       for (const size_t& ipin : tile_port.pins()) {
-        int pin_id = curr_sub_tile_start_pin_index +  (subtile_index - sub_tile.capacity.low) *
+        int pin_id = curr_sub_tile_start_pin_index +
+                     (subtile_index - sub_tile.capacity.low) *
                        sub_tile.num_phy_pins / sub_tile.capacity.total() +
                      physical_tile_port.absolute_first_pin_index + ipin;
         if (pin_id >= physical_tile->num_pins) {
@@ -184,7 +186,8 @@ static SubtilePinInfo find_physical_tile_pin_id(
         for (int subtile_index = sub_tile.capacity.low;
              subtile_index <= sub_tile.capacity.high; subtile_index++) {
           for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
-            int pin_id = curr_sub_tile_start_pin_index +  (subtile_index - sub_tile.capacity.low) *
+            int pin_id = curr_sub_tile_start_pin_index +
+                         (subtile_index - sub_tile.capacity.low) *
                            sub_tile.num_phy_pins / sub_tile.capacity.total() +
                          physical_tile_port.absolute_first_pin_index + ipin;
             VTR_ASSERT(pin_id < physical_tile->num_pins);
@@ -215,7 +218,8 @@ static SubtilePinInfo find_physical_tile_pin_id(
       for (const size_t& ipin : tile_port.pins()) {
         for (int subtile_index = sub_tile.capacity.low;
              subtile_index <= sub_tile.capacity.high; subtile_index++) {
-          int pin_id =  curr_sub_tile_start_pin_index + (subtile_index - sub_tile.capacity.low) *
+          int pin_id = curr_sub_tile_start_pin_index +
+                       (subtile_index - sub_tile.capacity.low) *
                          sub_tile.num_phy_pins / sub_tile.capacity.total() +
                        physical_tile_port.absolute_first_pin_index + ipin;
           if (pin_id >= physical_tile->num_pins) {
