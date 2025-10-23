@@ -228,17 +228,6 @@ static int check_tile_annotation_conflicts_with_physical_tile(
             tile_annotation.global_port_name(tile_global_port).c_str());
           num_err++;
         }
-        if (1 < found_matched_physical_tile_port) {
-          VTR_LOGF_ERROR(
-            __FILE__, __LINE__,
-            "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match more "
-            "than "
-            "1 physical tile port!\n",
-            required_tile_name.c_str(), required_tile_port.get_name().c_str(),
-            required_tile_port.get_lsb(), required_tile_port.get_msb(),
-            tile_annotation.global_port_name(tile_global_port).c_str());
-          num_err++;
-        }
       }
 
       /* If we found no match, error out */
