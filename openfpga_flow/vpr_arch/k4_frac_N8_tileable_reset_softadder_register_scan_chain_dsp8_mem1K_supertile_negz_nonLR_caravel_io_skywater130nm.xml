@@ -230,24 +230,51 @@
       </sub_tile>
     </tile>
     <tile name="cim8_1k" height="2" area="396000">
-      <sub_tile name="mult_8" capacity="1">
+      <sub_tile name="clb">
         <equivalent_sites>
-          <site pb_type="mult_8" pin_mapping="direct"/>
+          <site pb_type="clb"/>
         </equivalent_sites>
-        <input name="a" num_pins="8"/>
-        <input name="b" num_pins="8"/>
-        <output name="out" num_pins="16"/>
+        <input name="I0" num_pins="2" equivalent="full"/>
+        <input name="I0i" num_pins="2" equivalent="none"/>
+        <input name="I1" num_pins="2" equivalent="full"/>
+        <input name="I1i" num_pins="2" equivalent="none"/>
+        <input name="I2" num_pins="2" equivalent="full"/>
+        <input name="I2i" num_pins="2" equivalent="none"/>
+        <input name="I3" num_pins="2" equivalent="full"/>
+        <input name="I3i" num_pins="2" equivalent="none"/>
+        <input name="I4" num_pins="2" equivalent="full"/>
+        <input name="I4i" num_pins="2" equivalent="none"/>
+        <input name="I5" num_pins="2" equivalent="full"/>
+        <input name="I5i" num_pins="2" equivalent="none"/>
+        <input name="I6" num_pins="2" equivalent="full"/>
+        <input name="I6i" num_pins="2" equivalent="none"/>
+        <input name="I7" num_pins="2" equivalent="full"/>
+        <input name="I7i" num_pins="2" equivalent="none"/>
+        <input name="reg_in" num_pins="1"/>
+        <input name="sc_in" num_pins="1"/>
+        <input name="cin" num_pins="1"/>
+        <input name="reset" num_pins="1" is_non_clock_global="true"/>
+        <output name="O" num_pins="16" equivalent="none"/>
+        <output name="reg_out" num_pins="1"/>
+        <output name="sc_out" num_pins="1"/>
+        <output name="cout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-          <fc_override port_name="out" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="reg_in" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="reg_out" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
         </fc>
-        <!--  Highly recommand to customize pin location when direct connection is used!!! -->
         <!--pinlocations pattern="spread"/-->
         <pinlocations pattern="custom">
-          <loc side="left"/>
-          <loc side="top"/>
-          <loc side="right" yoffset="0">mult_8.a[0:2] mult_8.b[0:2] mult_8.out[0:5]</loc>
-          <loc side="right" yoffset="1">mult_8.a[3:5] mult_8.b[3:5] mult_8.out[6:10]</loc>
-          <loc side="bottom">mult_8.a[6:7] mult_8.b[6:7] mult_8.out[11:15]</loc>
+          <loc side="left">clb.clk clb.reset</loc>
+          <loc side="top">clb.reg_in clb.sc_in clb.cin clb.O[7:0] clb.I0 clb.I0i clb.I1 clb.I1i clb.I2 clb.I2i clb.I3 clb.I3i</loc>
+          <loc side="right">clb.O[15:8] clb.I4 clb.I4i clb.I5 clb.I5i clb.I6 clb.I6i clb.I7 clb.I7i</loc>
+          <loc side="bottom">clb.reg_out clb.sc_out clb.cout</loc>
         </pinlocations>
       </sub_tile>
       <sub_tile name="memory" capacity="2">
@@ -272,6 +299,26 @@
           <loc side="right" yoffset="0">memory.waddr[4:4] memory.raddr[4:4] memory.data_in[4:4] memory.data_out[4:4]</loc>
           <loc side="right" yoffset="1">memory.waddr[5:5] memory.raddr[5:5] memory.data_in[5:5] memory.data_out[5:5]</loc>
           <loc side="bottom" yoffset="0">memory.wen memory.waddr[6:6] memory.raddr[6:6] memory.data_in[6:6] memory.data_out[6:6] memory.ren memory.data_in[7:7] memory.data_out[7:7]</loc>
+        </pinlocations>
+      </sub_tile>
+      <sub_tile name="mult_8" capacity="1">
+        <equivalent_sites>
+          <site pb_type="mult_8" pin_mapping="direct"/>
+        </equivalent_sites>
+        <input name="a" num_pins="8"/>
+        <input name="b" num_pins="8"/>
+        <output name="out" num_pins="16"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="out" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left"/>
+          <loc side="top"/>
+          <loc side="right" yoffset="0">mult_8.a[0:2] mult_8.b[0:2] mult_8.out[0:5]</loc>
+          <loc side="right" yoffset="1">mult_8.a[3:5] mult_8.b[3:5] mult_8.out[6:10]</loc>
+          <loc side="bottom">mult_8.a[6:7] mult_8.b[6:7] mult_8.out[11:15]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
@@ -389,8 +436,8 @@
     <direct name="carry_chain" from_pin="clb.cout" to_pin="clb.cin" x_offset="0" y_offset="-1" z_offset="0"/>
     <direct name="shift_register" from_pin="clb.reg_out" to_pin="clb.reg_in" x_offset="0" y_offset="-1" z_offset="0"/>
     <direct name="scan_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0"/>
-    <direct name="cim_direct0" from_pin="cim8_1k.out[7:0]" to_pin="cim8_1k.data_in[7:0]" x_offset="0" y_offset="0" z_offset="1"/>
-    <direct name="cim_direct1" from_pin="cim8_1k.out[15:8]" to_pin="cim8_1k.data_in[7:0]" x_offset="0" y_offset="0" z_offset="2"/>
+    <direct name="cim_direct0" from_pin="cim8_1k.out[7:0]" to_pin="cim8_1k.data_in[7:0]" x_offset="0" y_offset="0" z_offset="-2"/>
+    <direct name="cim_direct1" from_pin="cim8_1k.out[15:8]" to_pin="cim8_1k.data_in[7:0]" x_offset="0" y_offset="0" z_offset="-1"/>
   </directlist>
   <complexblocklist>
     <!-- Define input pads begin -->

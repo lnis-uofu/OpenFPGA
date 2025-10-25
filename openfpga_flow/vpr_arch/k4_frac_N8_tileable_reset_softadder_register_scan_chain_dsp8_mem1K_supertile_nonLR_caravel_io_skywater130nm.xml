@@ -230,6 +230,53 @@
       </sub_tile>
     </tile>
     <tile name="cim8_1k" height="2" area="396000">
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I0" num_pins="2" equivalent="full"/>
+        <input name="I0i" num_pins="2" equivalent="none"/>
+        <input name="I1" num_pins="2" equivalent="full"/>
+        <input name="I1i" num_pins="2" equivalent="none"/>
+        <input name="I2" num_pins="2" equivalent="full"/>
+        <input name="I2i" num_pins="2" equivalent="none"/>
+        <input name="I3" num_pins="2" equivalent="full"/>
+        <input name="I3i" num_pins="2" equivalent="none"/>
+        <input name="I4" num_pins="2" equivalent="full"/>
+        <input name="I4i" num_pins="2" equivalent="none"/>
+        <input name="I5" num_pins="2" equivalent="full"/>
+        <input name="I5i" num_pins="2" equivalent="none"/>
+        <input name="I6" num_pins="2" equivalent="full"/>
+        <input name="I6i" num_pins="2" equivalent="none"/>
+        <input name="I7" num_pins="2" equivalent="full"/>
+        <input name="I7i" num_pins="2" equivalent="none"/>
+        <input name="reg_in" num_pins="1"/>
+        <input name="sc_in" num_pins="1"/>
+        <input name="cin" num_pins="1"/>
+        <input name="reset" num_pins="1" is_non_clock_global="true"/>
+        <output name="O" num_pins="16" equivalent="none"/>
+        <output name="reg_out" num_pins="1"/>
+        <output name="sc_out" num_pins="1"/>
+        <output name="cout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="reg_in" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="reg_out" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left">clb.clk clb.reset</loc>
+          <loc side="top">clb.reg_in clb.sc_in clb.cin clb.O[7:0] clb.I0 clb.I0i clb.I1 clb.I1i clb.I2 clb.I2i clb.I3 clb.I3i</loc>
+          <loc side="right">clb.O[15:8] clb.I4 clb.I4i clb.I5 clb.I5i clb.I6 clb.I6i clb.I7 clb.I7i</loc>
+          <loc side="bottom">clb.reg_out clb.sc_out clb.cout</loc>
+        </pinlocations>
+      </sub_tile>
       <sub_tile name="mult_8" capacity="1">
         <equivalent_sites>
           <site pb_type="mult_8" pin_mapping="direct"/>
