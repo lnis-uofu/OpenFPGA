@@ -60,6 +60,9 @@ run-task fpga_verilog/dsp/single_mode_mult_8x8_reg $@
 
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit multiplier + dual port ram 1k ";
 run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_negz $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile_negz $@
 
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity $@
