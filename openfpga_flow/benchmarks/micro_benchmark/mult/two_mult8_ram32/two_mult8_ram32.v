@@ -13,12 +13,15 @@ output [31:0] out;
 
 wire [15:0] mult_y0;
 wire [15:0] mult_y1;
+wire [31:0] mult_y;
 wire wen;
 wire ren;
 
 assign wen = 1'b1;
 assign ren = 1'b1;
 
+assign mult_y[31:16] = mult_y1;
+assign mult_y[15:0] = mult_y0;
 assign mult_y0 = a0 * b0;
 assign mult_y1 = a1 * b1;
 
@@ -28,8 +31,8 @@ dual_port_ram_16k RAM0 (
   .ren(ren),
   .waddr(waddr),
   .raddr(raddr),
-  .din({mult_y1, mult_y0}),
-  .dout(out[31:0])
+  .din(mult_y),
+  .dout(out)
 );
 
 endmodule
