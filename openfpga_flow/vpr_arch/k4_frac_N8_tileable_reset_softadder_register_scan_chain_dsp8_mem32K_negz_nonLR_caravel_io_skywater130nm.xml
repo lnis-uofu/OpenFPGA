@@ -229,7 +229,7 @@
         </pinlocations>
       </sub_tile>
     </tile>
-    <tile name="cim8_16k" height="2" area="396000">
+    <tile name="cim8_32k" height="2" area="396000">
       <sub_tile name="memory" capacity="1">
         <equivalent_sites>
           <site pb_type="memory"/>
@@ -288,7 +288,7 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="cim8_16k" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cim8_32k" startx="2" starty="1" repeatx="8" priority="20"/>
     </auto_layout>
     <fixed_layout name="3x2" width="5" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
@@ -300,7 +300,7 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="cim8_16k" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cim8_32k" startx="2" starty="1" repeatx="8" priority="20"/>
     </fixed_layout>
     <fixed_layout name="12x12" width="14" height="14">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
@@ -312,7 +312,7 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="cim8_16k" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cim8_32k" startx="2" starty="1" repeatx="8" priority="20"/>
     </fixed_layout>
   </layout>
   <device>
@@ -388,8 +388,8 @@
     <direct name="carry_chain" from_pin="clb.cout" to_pin="clb.cin" x_offset="0" y_offset="-1" z_offset="0"/>
     <direct name="shift_register" from_pin="clb.reg_out" to_pin="clb.reg_in" x_offset="0" y_offset="-1" z_offset="0"/>
     <direct name="scan_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0"/>
-    <direct name="cim_direct0" from_pin="cim8_16k.out[15:0]" to_pin="cim8_16k.d_in[15:0]" x_offset="0" y_offset="0" z_offset="-1"/>
-    <direct name="cim_direct1" from_pin="cim8_16k.out[15:0]" to_pin="cim8_16k.d_in[31:16]" x_offset="0" y_offset="0" z_offset="-2"/>
+    <direct name="cim_direct0" from_pin="cim8_32k.out[15:0]" to_pin="cim8_32k.d_in[15:0]" x_offset="0" y_offset="0" z_offset="-1"/>
+    <direct name="cim_direct1" from_pin="cim8_32k.out[15:0]" to_pin="cim8_32k.d_in[31:16]" x_offset="0" y_offset="0" z_offset="-2"/>
   </directlist>
   <complexblocklist>
     <!-- Define input pads begin -->
