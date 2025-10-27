@@ -97,7 +97,7 @@
         <port name="Q" clock="clk"/>
       </output_ports>
     </model>
-    <model name="dual_port_ram">
+    <model name="dpram_512x32">
       <input_ports>
         <!-- write address lines -->
         <port name="waddr" clock="clk"/>
@@ -229,13 +229,13 @@
         </pinlocations>
       </sub_tile>
     </tile>
-    <tile name="cim8_32k" height="2" area="396000">
+    <tile name="cim8_16k" height="2" area="396000">
       <sub_tile name="memory" capacity="1">
         <equivalent_sites>
           <site pb_type="memory"/>
         </equivalent_sites>
-        <input name="waddr" num_pins="10"/>
-        <input name="raddr" num_pins="10"/>
+        <input name="waddr" num_pins="9"/>
+        <input name="raddr" num_pins="9"/>
         <input name="d_in" num_pins="32"/>
         <input name="wen" num_pins="1"/>
         <input name="ren" num_pins="1"/>
@@ -249,7 +249,7 @@
           <loc side="left" yoffset="1">memory.waddr[0:2] memory.raddr[0:2] memory.d_in[0:7] memory.d_out[0:7]</loc>
           <loc side="left" yoffset="0">memory.waddr[3:5] memory.raddr[3:5] memory.d_in[8:15] memory.d_out[8:15]</loc>
           <loc side="right" yoffset="1">memory.waddr[6:7] memory.raddr[6:7] memory.d_in[16:23] memory.d_out[16:23]</loc>
-          <loc side="right" yoffset="0">memory.waddr[8:9] memory.raddr[8:9] memory.d_in[24:31] memory.d_out[24:31]</loc>
+          <loc side="right" yoffset="0">memory.waddr[8:8] memory.raddr[8:8] memory.d_in[24:31] memory.d_out[24:31]</loc>
           <loc side="bottom"></loc>
         </pinlocations>
       </sub_tile>
@@ -288,7 +288,7 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="cim8_32k" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cim8_16k" startx="2" starty="1" repeatx="8" priority="20"/>
     </auto_layout>
     <fixed_layout name="3x2" width="5" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
@@ -300,7 +300,7 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="cim8_32k" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cim8_16k" startx="2" starty="1" repeatx="8" priority="20"/>
     </fixed_layout>
     <fixed_layout name="12x12" width="14" height="14">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
@@ -312,7 +312,7 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="cim8_32k" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cim8_16k" startx="2" starty="1" repeatx="8" priority="20"/>
     </fixed_layout>
   </layout>
   <device>
@@ -388,8 +388,8 @@
     <direct name="carry_chain" from_pin="clb.cout" to_pin="clb.cin" x_offset="0" y_offset="-1" z_offset="0"/>
     <direct name="shift_register" from_pin="clb.reg_out" to_pin="clb.reg_in" x_offset="0" y_offset="-1" z_offset="0"/>
     <direct name="scan_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0"/>
-    <direct name="cim_direct0" from_pin="cim8_32k.out[15:0]" to_pin="cim8_32k.d_in[15:0]" x_offset="0" y_offset="0" z_offset="-1"/>
-    <direct name="cim_direct1" from_pin="cim8_32k.out[15:0]" to_pin="cim8_32k.d_in[31:16]" x_offset="0" y_offset="0" z_offset="-2"/>
+    <direct name="cim_direct0" from_pin="cim8_16k.out[15:0]" to_pin="cim8_16k.d_in[15:0]" x_offset="0" y_offset="0" z_offset="-1"/>
+    <direct name="cim_direct1" from_pin="cim8_16k.out[15:0]" to_pin="cim8_16k.d_in[31:16]" x_offset="0" y_offset="0" z_offset="-2"/>
   </directlist>
   <complexblocklist>
     <!-- Define input pads begin -->
@@ -965,8 +965,8 @@
     <!-- Define fracturable multiplier end -->
     <!-- Define single-mode dual-port memory begin -->
     <pb_type name="memory">
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
+      <input name="waddr" num_pins="9"/>
+      <input name="raddr" num_pins="9"/>
       <input name="d_in" num_pins="32"/>
       <input name="wen" num_pins="1"/>
       <input name="ren" num_pins="1"/>
@@ -977,9 +977,9 @@
                  Should align to the process technology we using to create the 16K dual-port RAM
         -->
       <mode name="mem_512x32_dp">
-        <pb_type name="mem_512x32_dp" blif_model=".subckt dual_port_ram" class="memory" num_pb="1">
-          <input name="waddr" num_pins="10" port_class="address"/>
-          <input name="raddr" num_pins="10" port_class="address"/>
+        <pb_type name="mem_512x32_dp" blif_model=".subckt dpram_512x32" class="memory" num_pb="1">
+          <input name="waddr" num_pins="9" port_class="address"/>
+          <input name="raddr" num_pins="9" port_class="address"/>
           <input name="d_in" num_pins="32" port_class="data_in"/>
           <input name="wen" num_pins="1" port_class="write_en"/>
           <input name="ren" num_pins="1" port_class="write_en"/>

@@ -12,10 +12,10 @@ module $__MY_DPRAM_512x32 (
       .clk    (CLK1),
       .wen    (A1EN),
       .waddr    (A1ADDR),
-      .data_in    (A1DATA),
+      .d_in    (A1DATA),
       .ren    (B1EN),
       .raddr    (B1ADDR),
-      .data_out    (B1DATA) );
+      .d_out    (B1DATA) );
   endgenerate
 
 endmodule
