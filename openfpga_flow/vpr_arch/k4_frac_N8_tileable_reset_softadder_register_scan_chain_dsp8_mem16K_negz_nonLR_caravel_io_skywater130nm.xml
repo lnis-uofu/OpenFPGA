@@ -242,6 +242,7 @@
         <output name="d_out" num_pins="32"/>
         <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
           <fc_override port_name="d_in" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
@@ -977,7 +978,7 @@
                  Should align to the process technology we using to create the 16K dual-port RAM
         -->
       <mode name="mem_512x32_dp">
-        <pb_type name="mem_512x32_dp" blif_model=".subckt dpram_512x32" class="memory" num_pb="1">
+        <pb_type name="mem_512x32_dp" blif_model=".subckt dpram_512x32" num_pb="1">
           <input name="waddr" num_pins="9" port_class="address"/>
           <input name="raddr" num_pins="9" port_class="address"/>
           <input name="d_in" num_pins="32" port_class="data_in"/>
