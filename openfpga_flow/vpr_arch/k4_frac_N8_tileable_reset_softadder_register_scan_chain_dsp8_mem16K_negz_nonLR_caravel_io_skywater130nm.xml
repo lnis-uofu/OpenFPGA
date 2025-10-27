@@ -250,7 +250,7 @@
           <loc side="left" yoffset="0">memory.waddr[3:5] memory.raddr[3:5] memory.d_in[8:15] memory.d_out[8:15]</loc>
           <loc side="right" yoffset="1">memory.waddr[6:7] memory.raddr[6:7] memory.d_in[16:23] memory.d_out[16:23]</loc>
           <loc side="right" yoffset="0">memory.waddr[8:8] memory.raddr[8:8] memory.d_in[24:31] memory.d_out[24:31]</loc>
-          <loc side="bottom"></loc>
+          <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
       <sub_tile name="mult_8" capacity="2">
