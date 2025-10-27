@@ -7,8 +7,8 @@ module two_mult8_ram32(a0, b0, a1, b1, clk, waddr, raddr, out);
 input [7:0] a0, b0;
 input [7:0] a1, b1;
 input clk;
-input [9:0] waddr;
-input [9:0] raddr;
+input [8:0] waddr;
+input [8:0] raddr;
 output [31:0] out;
 
 wire [15:0] mult_y0;
@@ -22,7 +22,7 @@ assign ren = 1'b1;
 assign mult_y0 = a0 * b0;
 assign mult_y1 = a1 * b1;
 
-dual_port_ram_32k RAM0 (
+dual_port_ram_16k RAM0 (
   .clk(clk),
   .wen(wen),
   .ren(ren),

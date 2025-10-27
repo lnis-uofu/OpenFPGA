@@ -5,17 +5,17 @@
 // Coder       : Xifan Tang
 //-----------------------------------------------------
 
-module dual_port_ram_32k (
+module dual_port_ram_16k (
   input clk,
   input wen,
   input ren,
-  input [9:0] waddr,
-  input [9:0] raddr,
+  input [8:0] waddr,
+  input [8:0] raddr,
   input [31:0] din,
   output [31:0] dout
 );
 
-    dual_port_sram_32kb memory_0 (
+    dual_port_sram_16kb memory_0 (
       .wclk    (clk),
       .wen    (wen),
       .waddr    (waddr),
@@ -27,18 +27,18 @@ module dual_port_ram_32k (
 
 endmodule
 
-module dual_port_sram_32kb (
+module dual_port_sram_16kb (
   input wclk,
   input wen,
-  input [9:0] waddr,
+  input [8:0] waddr,
   input [31:0] data_in,
   input rclk,
   input ren,
-  input [9:0] raddr,
+  input [8:0] raddr,
   output [31:0] data_out
 );
 
-  reg [31:0] ram[1023:0];
+  reg [31:0] ram[511:0];
   reg [31:0] internal;
 
   assign data_out = internal;
