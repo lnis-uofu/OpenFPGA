@@ -59,7 +59,7 @@ The following is an example.
   # Build the bitstream 
   #  - Output the fabric-independent bitstream to a file
   build_architecture_bitstream --verbose \
-                               --file /var/tmp/xtang/openfpga_test_src/fabric_indepenent_bitstream.xml
+                               --write_file /var/tmp/xtang/openfpga_test_src/fabric_indepenent_bitstream.xml
   
   # Build fabric-dependent bitstream
   build_fabric_bitstream --verbose
