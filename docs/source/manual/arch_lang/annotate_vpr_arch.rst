@@ -94,6 +94,8 @@ For subtile port merge support (see an illustrative example in :numref:`fig_subt
 
 For global port support:
 
+.. note:: If you choose to route the global signal through the global port network, you should set the ``--clock_modelling ideal`` when running VPR.
+
 - ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
 
 - ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
