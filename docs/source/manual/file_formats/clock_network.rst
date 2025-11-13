@@ -3,7 +3,7 @@
 Clock Network (.xml)
 --------------------
 
-.. note:: If you choose to route the global signal through the programmable network, you should set the ``--clock_modelling ideal`` when running VPR.
+.. note:: If you choose to route the global signal through the programmable network, you should set the ``--clock_modeling ideal`` when running VPR.
 
 The XML-based clock network description language is used to describe 
 
