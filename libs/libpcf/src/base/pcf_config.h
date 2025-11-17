@@ -1,5 +1,5 @@
-#ifndef PCF_DATA_H
-#define PCF_DATA_H
+#ifndef PCF_CONFIG_H
+#define PCF_CONFIG_H
 
 /********************************************************************
  * This file include the declaration of pcf data
@@ -14,7 +14,6 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
-#include "pcf_config.h"
 #include "pcf_data_fwd.h"
 
 /* Begin namespace openfpga */
@@ -35,60 +34,60 @@ namespace openfpga {
  *   pcf_data.set_io_pin(io_id, pin_name);
  *
  *******************************************************************/
-class PcfData {
+class PcfConfig {
  public: /* Types */
-  typedef vtr::vector<PcfIoConstraintId, PcfIoConstraintId>::const_iterator
-    pcf_io_constraint_iterator;
+  typedef vtr::vector<PcfCustomConstraintId,
+                      PcfCustomConstraintId>::const_iterator
+    pcf_custom_constraint_iterator;
   /* Create range */
-  typedef vtr::Range<pcf_io_constraint_iterator> pcf_io_constraint_range;
+  typedef vtr::Range<pcf_custom_constraint_iterator>
+    pcf_custom_constraint_range;
 
  public: /* Constructors */
-  PcfData();
+  PcfConfig();
 
  public: /* Accessors: aggregates */
-  pcf_io_constraint_range io_constraints() const;
+  pcf_custom_constraint_range custom_constraints() const;
 
  public: /* Public Accessors: Basic data query */
   /* Get the pin to be constrained */
-  openfpga::BasicPort io_pin(const PcfIoConstraintId& io_id) const;
 
-  /* Get the net to be constrained */
-  std::string io_net(const PcfIoConstraintId& io_id) const;
-
+  openfpga::BasicPort custom_constraint_pin(
+    const PcfCustomConstraintId& custom_constraint_id) const;
   /* Check if there are any io constraints */
   bool empty() const;
 
-  /* Check if the data is valid: each pin can only be mapped to one net */
-  bool validate() const;
-
  public: /* Public Mutators */
   /* Reserve a number of design constraints to be memory efficent */
-  void reserve_io_constraints(const size_t& num_io_constraints);
 
-  /* Add a pin constraint to storage */
-  PcfIoConstraintId create_io_constraint();
+  PcfCustomConstraintId create_custom_constraint();
 
-  /* Set the net for an io constraint */
-  void set_io_net(const PcfIoConstraintId& io_id, const std::string& net);
+  void set_custom_constraint_value(
+    const PcfCustomConstraintId& costum_constraint_id,
+    const std::string& value);
 
-  /* Set the net for an io constraint */
-  void set_io_pin(const PcfIoConstraintId& io_id, const std::string& pin);
+  void set_custom_constraint_option(
+    const PcfCustomConstraintId& costum_constraint_id,
+    const std::string& option);
+
+  void set_custom_constraint_pin(
+    const PcfCustomConstraintId& costum_constraint_id, const std::string& pin);
 
  public: /* Public invalidators/validators */
   /* Show if the constraint id is a valid for data queries */
-  bool valid_io_constraint_id(const PcfIoConstraintId& io_id) const;
+  bool valid_custom_constraint_id(
+    const PcfCustomConstraintId& custom_constraint_id) const;
 
  private: /* Internal data */
-  /* Unique ids for each design constraint */
-  vtr::vector<PcfIoConstraintId, PcfIoConstraintId> io_constraint_ids_;
+  vtr::vector<PcfCustomConstraintId, PcfCustomConstraintId>
+    custom_constraint_ids_;
 
-  /* Pins to constraint */
-  vtr::vector<PcfIoConstraintId, openfpga::BasicPort> io_constraint_pins_;
+  vtr::vector<PcfCustomConstraintId, openfpga::BasicPort>
+    custom_constraint_pins_;
 
-  /* Nets to constraint */
-  vtr::vector<PcfIoConstraintId, std::string> io_constraint_nets_;
+  vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_options_;
 
-  PcfConfig pcf_config_;
+  vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_values_;
 };
 
 } /* End namespace openfpga*/
