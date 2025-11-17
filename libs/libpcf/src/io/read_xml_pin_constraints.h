@@ -12,5 +12,6 @@
  * Function declaration
  *******************************************************************/
 PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname);
-
+int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
+                         const pugiutil::loc_data& loc_data);
 #endif

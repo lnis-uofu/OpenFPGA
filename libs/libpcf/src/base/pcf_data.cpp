@@ -3,9 +3,11 @@
 #include <algorithm>
 
 #include "openfpga_port_parser.h"
+#include "pugixml.hpp"
+#include "pugixml_util.hpp"
+#include "read_xml_pin_constraints.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
 /* Begin namespace openfpga */
 namespace openfpga {
 
@@ -23,6 +25,32 @@ PcfData::PcfData() { return; }
  ***********************************************************************/
 PcfData::pcf_io_constraint_range PcfData::io_constraints() const {
   return vtr::make_range(io_constraint_ids_.begin(), io_constraint_ids_.end());
+}
+
+int PcfData::read_pcf_conifg(const std::string& pcf_config_file) {
+  // int status = openfpga::CMD_EXEC_FATAL_ERROR;
+
+  pugi::xml_node Next;
+
+  /* Parse the file */
+  pugi::xml_document doc;
+  pugiutil::loc_data loc_data;
+
+  loc_data = pugiutil::load_xml(doc, pcf_config_file.c_str());
+
+  /* First node should be <openfpga_architecture> */
+  auto xml_pcf_config = get_single_child(doc, "pcf_config", loc_data);
+
+  /* Parse circuit_models to circuit library
+   * under the node <module_circuit_models>
+   */
+  auto xml_pcf_commands = get_single_child(xml_pcf_config, "command", loc_data);
+
+  for (pugi::xml_node xml_command : xml_pcf_commands.children()) {
+    read_xml_pcf_command(xml_command, loc_data);
+  }
+
+  return 0;
 }
 
 /************************************************************************

@@ -47,6 +47,7 @@ class PcfData {
 
  public: /* Accessors: aggregates */
   pcf_io_constraint_range io_constraints() const;
+  int read_pcf_conifg(const std::string& pcf_config_file);
 
  public: /* Public Accessors: Basic data query */
   /* Get the pin to be constrained */

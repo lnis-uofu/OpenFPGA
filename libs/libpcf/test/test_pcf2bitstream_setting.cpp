@@ -14,6 +14,7 @@
 #include "pcf_reader.h"
 #include "read_csv_io_pin_table.h"
 #include "read_xml_io_location_map.h"
+#include "read_xml_pin_constraints.h"
 
 int main(int argc, const char** argv) {
   /* Ensure we have the following arguments:
@@ -26,6 +27,8 @@ int main(int argc, const char** argv) {
   /* Parse the input files */
   openfpga::PcfData pcf_data;
   openfpga::read_pcf(argv[1], pcf_data);
+
+  pcf_data.read_pcf_conifg(argv[2]);
   VTR_LOG("Read the design constraints from a pcf file: %s.\n", argv[1]);
 
   //   openfpga::PcfConfig pcf_config;

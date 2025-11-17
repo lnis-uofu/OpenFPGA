@@ -68,27 +68,49 @@ PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname) {
   pugi::xml_document doc;
   pugiutil::loc_data loc_data;
 
-  try {
-    loc_data = pugiutil::load_xml(doc, pin_constraint_fname);
+  loc_data = pugiutil::load_xml(doc, pin_constraint_fname);
 
-    pugi::xml_node xml_root =
-      get_single_child(doc, "pin_constraints", loc_data);
+  pugi::xml_node xml_root = get_single_child(doc, "pin_constraints", loc_data);
 
-    size_t num_pin_constraints =
-      std::distance(xml_root.children().begin(), xml_root.children().end());
-    /* Reserve memory space for the region */
-    pin_constraints.reserve_pin_constraints(num_pin_constraints);
+  size_t num_pin_constraints =
+    std::distance(xml_root.children().begin(), xml_root.children().end());
+  /* Reserve memory space for the region */
+  pin_constraints.reserve_pin_constraints(num_pin_constraints);
 
-    for (pugi::xml_node xml_pin_constraint : xml_root.children()) {
-      /* Error out if the XML child has an invalid name! */
-      if (xml_pin_constraint.name() != std::string("set_io")) {
-        bad_tag(xml_pin_constraint, loc_data, xml_root, {"set_io"});
-      }
-      read_xml_pin_constraint(xml_pin_constraint, loc_data, pin_constraints);
+  for (pugi::xml_node xml_pin_constraint : xml_root.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_pin_constraint.name() != std::string("set_io")) {
+      bad_tag(xml_pin_constraint, loc_data, xml_root, {"set_io"});
     }
-  } catch (pugiutil::XmlError& e) {
-    archfpga_throw(pin_constraint_fname, e.line(), "%s", e.what());
+    read_xml_pin_constraint(xml_pin_constraint, loc_data, pin_constraints);
   }
 
   return pin_constraints;
+}
+
+int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
+                         const pugiutil::loc_data& loc_data) {
+  std::string command_name =
+    get_attribute(xml_pcf_command, "name", loc_data).as_string();
+
+  std::string command_type =
+    get_attribute(xml_pcf_command, "type", loc_data).as_string();
+
+  auto xml_pcf_options = get_single_child(xml_pcf_command, "option", loc_data);
+  for (auto xml_pcf_option : xml_pcf_options) {
+    std::string option_name =
+      get_attribute(xml_pcf_option, "name", loc_data).as_string();
+    std::string option_type =
+      get_attribute(xml_pcf_option, "type", loc_data).as_string();
+    auto xml_pcf_option_modes =
+      get_single_child(xml_pcf_option, "mode", loc_data);
+    for (auto xml_pcf_option_mode : xml_pcf_option_modes) {
+      std::string mode_name =
+        get_attribute(xml_pcf_option_mode, "name", loc_data).as_string();
+      // std::string mode_value = get_attribute(xml_pcf_option_mode,
+      // loc_data).as_string();
+    }
+  }
+
+  return 0;
 }
