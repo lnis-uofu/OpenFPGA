@@ -18,6 +18,7 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "pugixml_util.hpp"
 #include "read_xml_pin_constraints.h"
 #include "read_xml_util.h"
 
@@ -96,20 +97,22 @@ int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
   std::string command_type =
     get_attribute(xml_pcf_command, "type", loc_data).as_string();
 
-  auto xml_pcf_options = get_single_child(xml_pcf_command, "option", loc_data);
-  for (auto xml_pcf_option : xml_pcf_options) {
+  auto xml_pcf_option = get_first_child(xml_pcf_command, "option", loc_data);
+  while (xml_pcf_option) {
     std::string option_name =
       get_attribute(xml_pcf_option, "name", loc_data).as_string();
     std::string option_type =
       get_attribute(xml_pcf_option, "type", loc_data).as_string();
-    auto xml_pcf_option_modes =
-      get_single_child(xml_pcf_option, "mode", loc_data);
-    for (auto xml_pcf_option_mode : xml_pcf_option_modes) {
+    auto xml_pcf_option_mode = get_first_child(xml_pcf_option, "mode", loc_data,
+                                               pugiutil::ReqOpt::OPTIONAL);
+    while (xml_pcf_option_mode) {
       std::string mode_name =
         get_attribute(xml_pcf_option_mode, "name", loc_data).as_string();
-      // std::string mode_value = get_attribute(xml_pcf_option_mode,
-      // loc_data).as_string();
+      std::string mode_value =
+        get_attribute(xml_pcf_option_mode, "value", loc_data).as_string();
+      xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
     }
+    xml_pcf_option = xml_pcf_option.next_sibling();
   }
 
   return 0;

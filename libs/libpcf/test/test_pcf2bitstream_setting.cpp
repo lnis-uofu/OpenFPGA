@@ -22,14 +22,13 @@ int main(int argc, const char** argv) {
    * 2. Input - configuration xml
    * 5. Output - BitstreamSetting data structure
    */
-  VTR_ASSERT(6 == argc);
 
   /* Parse the input files */
   openfpga::PcfData pcf_data;
   openfpga::read_pcf(argv[1], pcf_data);
-
+  VTR_LOG("Read the pcf config file: %s.\n", argv[2]);
   pcf_data.read_pcf_conifg(argv[2]);
-  VTR_LOG("Read the design constraints from a pcf file: %s.\n", argv[1]);
+ 
 
   //   openfpga::PcfConfig pcf_config;
   //   openfpga::read_pcfconfig(argv[2], pcf_config);

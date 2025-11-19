@@ -44,12 +44,9 @@ int PcfData::read_pcf_conifg(const std::string& pcf_config_file) {
   /* Parse circuit_models to circuit library
    * under the node <module_circuit_models>
    */
-  auto xml_pcf_commands = get_single_child(xml_pcf_config, "command", loc_data);
-
-  for (pugi::xml_node xml_command : xml_pcf_commands.children()) {
+  for (pugi::xml_node xml_command : xml_pcf_config.children()) {
     read_xml_pcf_command(xml_command, loc_data);
   }
-
   return 0;
 }
 

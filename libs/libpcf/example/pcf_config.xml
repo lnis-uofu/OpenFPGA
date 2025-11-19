@@ -1,0 +1,21 @@
+<pcf_config>
+  <command name="set_delay_chain" type="delay_chain">
+    <!-- Define an option -pad where user must provide a valid pin name available in pin table CSV -->
+    <option name="pad" type="pin"/>
+    <option name="delay" type="mode">
+      <!-- Assume min. step is 0.1ns and max range is 0.3ns -->
+      <mode name="0.1ns" value="00001" />
+      <mode name="0.2ns" value="00010"/>
+      <mode name="0.2ns" value="00100"/>
+    </option>
+  </command>
+  <command name="set_watch_dog" type="delay_chain">
+    <option name="pad" type="pin"/>
+    <option name="mode" type="mode">
+      <!-- Assume three modes: NORMAL, LOW_SPEED, HIGH_SPEED -->
+      <mode name="NORMAL" value = "00001"/>
+      <mode name="LOW_SPEED" value = "00010"/>
+      <mode name="HIGH_SPEED" value="00100"/>
+    </option>
+  </command>
+</pcf_config>
