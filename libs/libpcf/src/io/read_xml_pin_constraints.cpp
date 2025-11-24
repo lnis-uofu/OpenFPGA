@@ -22,6 +22,7 @@
 #include "read_xml_pin_constraints.h"
 #include "read_xml_util.h"
 
+
 /********************************************************************
  * Parse XML codes of a <set_io> to an object of PinConstraint
  *******************************************************************/
@@ -89,31 +90,3 @@ PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname) {
   return pin_constraints;
 }
 
-int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
-                         const pugiutil::loc_data& loc_data) {
-  std::string command_name =
-    get_attribute(xml_pcf_command, "name", loc_data).as_string();
-
-  std::string command_type =
-    get_attribute(xml_pcf_command, "type", loc_data).as_string();
-
-  auto xml_pcf_option = get_first_child(xml_pcf_command, "option", loc_data);
-  while (xml_pcf_option) {
-    std::string option_name =
-      get_attribute(xml_pcf_option, "name", loc_data).as_string();
-    std::string option_type =
-      get_attribute(xml_pcf_option, "type", loc_data).as_string();
-    auto xml_pcf_option_mode = get_first_child(xml_pcf_option, "mode", loc_data,
-                                               pugiutil::ReqOpt::OPTIONAL);
-    while (xml_pcf_option_mode) {
-      std::string mode_name =
-        get_attribute(xml_pcf_option_mode, "name", loc_data).as_string();
-      std::string mode_value =
-        get_attribute(xml_pcf_option_mode, "value", loc_data).as_string();
-      xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
-    }
-    xml_pcf_option = xml_pcf_option.next_sibling();
-  }
-
-  return 0;
-}

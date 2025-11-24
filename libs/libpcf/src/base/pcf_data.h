@@ -16,6 +16,7 @@
 #include "openfpga_port.h"
 #include "pcf_config.h"
 #include "pcf_data_fwd.h"
+#include "pcf_custom_command.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -47,7 +48,6 @@ class PcfData {
 
  public: /* Accessors: aggregates */
   pcf_io_constraint_range io_constraints() const;
-  int read_pcf_conifg(const std::string& pcf_config_file);
 
  public: /* Public Accessors: Basic data query */
   /* Get the pin to be constrained */
@@ -61,6 +61,9 @@ class PcfData {
 
   /* Check if the data is valid: each pin can only be mapped to one net */
   bool validate() const;
+
+  PcfCustomCommandId create_custom_command(const std::string& command_name, const std::string& command_type);
+
 
  public: /* Public Mutators */
   /* Reserve a number of design constraints to be memory efficent */
@@ -90,6 +93,7 @@ class PcfData {
   vtr::vector<PcfIoConstraintId, std::string> io_constraint_nets_;
 
   PcfConfig pcf_config_;
+  PcfCustomCommand pcf_custom_command_;
 };
 
 } /* End namespace openfpga*/

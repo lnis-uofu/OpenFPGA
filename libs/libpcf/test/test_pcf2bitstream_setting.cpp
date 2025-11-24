@@ -27,7 +27,7 @@ int main(int argc, const char** argv) {
   openfpga::PcfData pcf_data;
   openfpga::read_pcf(argv[1], pcf_data);
   VTR_LOG("Read the pcf config file: %s.\n", argv[2]);
-  pcf_data.read_pcf_conifg(argv[2]);
+  openfpga::read_pcf_conifg(argv[2], pcf_data);
  
 
   //   openfpga::PcfConfig pcf_config;

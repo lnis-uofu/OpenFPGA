@@ -80,4 +80,64 @@ int read_pcf(const char* fname, PcfData& pcf_data,
   return 0;
 }
 
+int read_pcf_conifg(const std::string& pcf_config_file, PcfData& pcf_data) {
+  // int status = openfpga::CMD_EXEC_FATAL_ERROR;
+
+  pugi::xml_node Next;
+
+  /* Parse the file */
+  pugi::xml_document doc;
+  pugiutil::loc_data loc_data;
+
+  loc_data = pugiutil::load_xml(doc, pcf_config_file.c_str());
+
+  /* First node should be <openfpga_architecture> */
+  auto xml_pcf_config = get_single_child(doc, "pcf_config", loc_data);
+
+  /* Parse circuit_models to circuit library
+   * under the node <module_circuit_models>
+   */
+  for (pugi::xml_node xml_command : xml_pcf_config.children()) {
+    int status = read_xml_pcf_command(xml_command, loc_data, pcf_data);
+    if(status != 0){
+      VTR_LOG_ERROR("Fail to read command from PCF Config file!\n");
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
+                         const pugiutil::loc_data& loc_data, PcfData& pcf_data) {
+  
+  std::string command_name =
+    get_attribute(xml_pcf_command, "name", loc_data).as_string();
+
+  std::string command_type =
+    get_attribute(xml_pcf_command, "type", loc_data).as_string();
+  
+  PcfCustomCommandId command_id = pcf_data.create_custom_command(command_name, command_type);
+  auto xml_pcf_option = get_first_child(xml_pcf_command, "option", loc_data);
+  while (xml_pcf_option) {
+    std::string option_name =
+      get_attribute(xml_pcf_option, "name", loc_data).as_string();
+    std::string option_type =
+      get_attribute(xml_pcf_option, "type", loc_data).as_string();
+    auto xml_pcf_option_mode = get_first_child(xml_pcf_option, "mode", loc_data,
+                                               pugiutil::ReqOpt::OPTIONAL);
+    PcfCustomCommandOptionId option_id = pcf_data.create_custom_command(command_id， option_name, option_type);
+    while (xml_pcf_option_mode) {
+      std::string mode_name =
+        get_attribute(xml_pcf_option_mode, "name", loc_data).as_string();
+      std::string mode_value =
+        get_attribute(xml_pcf_option_mode, "value", loc_data).as_string();
+      xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
+      PcfCustomCommandModeId mode_id = pcf_data.create_custom_command(option_id, mode_name, mode_value);
+    }
+    xml_pcf_option = xml_pcf_option.next_sibling();
+  }
+
+  return 0;
+}
+
 } /* end namespace openfpga */

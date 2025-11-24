@@ -27,29 +27,6 @@ PcfData::pcf_io_constraint_range PcfData::io_constraints() const {
   return vtr::make_range(io_constraint_ids_.begin(), io_constraint_ids_.end());
 }
 
-int PcfData::read_pcf_conifg(const std::string& pcf_config_file) {
-  // int status = openfpga::CMD_EXEC_FATAL_ERROR;
-
-  pugi::xml_node Next;
-
-  /* Parse the file */
-  pugi::xml_document doc;
-  pugiutil::loc_data loc_data;
-
-  loc_data = pugiutil::load_xml(doc, pcf_config_file.c_str());
-
-  /* First node should be <openfpga_architecture> */
-  auto xml_pcf_config = get_single_child(doc, "pcf_config", loc_data);
-
-  /* Parse circuit_models to circuit library
-   * under the node <module_circuit_models>
-   */
-  for (pugi::xml_node xml_command : xml_pcf_config.children()) {
-    read_xml_pcf_command(xml_command, loc_data);
-  }
-  return 0;
-}
-
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
@@ -147,6 +124,23 @@ void PcfData::set_io_pin(const PcfIoConstraintId& io_id,
 bool PcfData::valid_io_constraint_id(const PcfIoConstraintId& io_id) const {
   return (size_t(io_id) < io_constraint_ids_.size()) &&
          (io_id == io_constraint_ids_[io_id]);
+}
+
+PcfCustomCommandId PcfData::create_custom_command(const std::string& command_name, const std::string& command_type) {
+  PcfCustomCommandId custom_command_id = pcf_custom_command_.create_custom_command();
+  pcf_custom_command_.set_custom_command_name(custom_command_id);
+  pcf_custom_command_.set_custom_command_type(custom_command_id);
+  return custom_command_id;
+}
+
+PcfCustomCommandOptionId PcfData::create_custom_option(const PcfCustomCommandId& command_id, const std::string& option_name, const std::string& option_type) {
+  PcfCustomCommandOptionId custom_option_id = pcf_custom_command_.create_custom_option(command_id, option_name, option_type);
+  return custom_option_id;
+}
+
+PcfCustomCommandModeId PcfData::create_custom_mode(const PcfCustomCommandOptionId& option_id, const std::string& mode_name, const std::string& mode_type) {
+  PcfCustomCommandModeId custom_mode_id = pcf_custom_command_.create_custom_mode(option_id, mode_name, mode_type);
+  return custom_mode_id;
 }
 
 } /* End namespace openfpga*/
