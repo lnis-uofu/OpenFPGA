@@ -62,13 +62,12 @@ class PcfCustomConstraint {
 
   PcfCustomConstraintId create_custom_constraint();
 
-  void set_custom_constraint_value(
-    const PcfCustomConstraintId& costum_constraint_id,
-    const std::string& value);
+  void set_custom_constraint_pin_mode(
+    const PcfCustomConstraintId& costum_constraint_id, const std::string& mode);
 
-  void set_custom_constraint_option(
-    const PcfCustomConstraintId& costum_constraint_id,
-    const std::string& option);
+  void set_custom_constraint_command(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const std::string& command_name);
 
   void set_custom_constraint_pin(
     const PcfCustomConstraintId& costum_constraint_id, const std::string& pin);
@@ -85,9 +84,10 @@ class PcfCustomConstraint {
   vtr::vector<PcfCustomConstraintId, openfpga::BasicPort>
     custom_constraint_pins_;
 
-  vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_options_;
+  vtr::vector<PcfCustomConstraintId, std::string>
+    custom_constraint_command_name_;
 
-  vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_values_;
+  vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_pin_mode_;
 };
 
 } /* End namespace openfpga*/

@@ -4,6 +4,8 @@
 #include <sstream>
 
 /* Headers from vtrutil library */
+#include <iostream>
+
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -60,25 +62,55 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
           break;  // or ignore the full line comment and move on
         } else {
           bool valid_command = false;
-          for (auto it : pcf_custom_command.custom_commands()) {
+          bool valid_option = false;
+          for (auto it_command : pcf_custom_command.custom_commands()) {
             std::string custom_command =
-              pcf_custom_command.custom_command_name(it);
+              pcf_custom_command.custom_command_name(it_command);
             if (word.find(custom_command) == 0) {
               valid_command = true;
+              std::string option_name;
+              std::string option_value;
+              while (ss >> option_name >> option_value) {
+                valid_option = false;
+                for (auto it_option :
+                     pcf_custom_command.command_options(it_command)) {
+                  /* match from index 1 cause option will have "-" in front,
+                   * such as "-pad" */
+                  if (option_name.find(pcf_custom_command.custom_option_name(
+                        it_option)) == 1) {
+                    valid_option = true;
+                    PcfCustomConstraintId constraint_id =
+                      pcf_data.create_custom_constraint();
+                    std::string option_type =
+                      pcf_custom_command.custom_option_type(it_option);
+                    if (option_type == "pin") {
+                      pcf_data.set_custom_constraint_pin(constraint_id,
+                                                         option_value);
+                    } else if (option_type == "mode") {
+                      pcf_data.set_custom_constraint_pin_mode(constraint_id,
+                                                              option_value);
+                    }
+                    /* do something here, store the constriant option and its
+                     * value */
+                    break;
+                  }
+                }
+              }
               /*set constraint info into pcf_data*/
-
               break;
             }
           }
-          if (reduce_error_to_warning) {
-            VTR_LOG_WARN("Bypass unknown command '%s' !\n", word.c_str());
-            break;
-          } else {
-            /* Reach unknown command for OpenFpga, error out */
-            VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
-            num_err++;
-            break;  // and move onto next line. without this, it will accept
-                    // more following values on this line
+          if (!valid_command || !valid_option) {
+            if (reduce_error_to_warning) {
+              VTR_LOG_WARN("Bypass unknown command '%s' !\n", word.c_str());
+              break;
+            } else {
+              /* Reach unknown command for OpenFpga, error out */
+              VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
+              num_err++;
+              break;  // and move onto next line. without this, it will accept
+                      // more following values on this line
+            }
           }
         }
       }

@@ -118,6 +118,24 @@ void PcfData::set_io_pin(const PcfIoConstraintId& io_id,
   io_constraint_pins_[io_id] = port_parser.port();
 }
 
+PcfCustomConstraintId PcfData::create_custom_constraint() {
+  /* Create a new id */
+  PcfCustomConstraintId custom_constraint_id =
+    pcf_custom_constraint_.create_custom_constraint();
+  return custom_constraint_id;
+}
+
+void PcfData::set_custom_constraint_pin_mode(
+  const PcfCustomConstraintId& custom_constraint_id, const std::string& mode) {
+  pcf_custom_constraint_.set_custom_constraint_pin_mode(custom_constraint_id,
+                                                        mode);
+}
+
+void PcfData::set_custom_constraint_pin(
+  const PcfCustomConstraintId& custom_constraint_id, const std::string& pin) {
+  pcf_custom_constraint_.set_custom_constraint_pin(custom_constraint_id, pin);
+}
+
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/

@@ -74,6 +74,13 @@ class PcfData {
 
   /* Set the net for an io constraint */
   void set_io_pin(const PcfIoConstraintId& io_id, const std::string& pin);
+  PcfCustomConstraintId create_custom_constraint();
+
+  void set_custom_constraint_pin_mode(
+    const PcfCustomConstraintId& custom_constraint_id, const std::string& mode);
+
+  void set_custom_constraint_pin(
+    const PcfCustomConstraintId& custom_constraint_id, const std::string& pin);
 
  public: /* Public invalidators/validators */
   /* Show if the constraint id is a valid for data queries */

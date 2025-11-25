@@ -52,23 +52,23 @@ PcfCustomConstraintId PcfCustomConstraint::create_custom_constraint() {
 
   custom_constraint_ids_.push_back(custom_id);
   custom_constraint_pins_.emplace_back();
-  custom_constraint_options_.emplace_back();
-  custom_constraint_values_.emplace_back();
+  custom_constraint_pin_mode_.emplace_back();
+  custom_constraint_command_name_.emplace_back();
 
   return custom_id;
 }
 
-void PcfCustomConstraint::set_custom_constraint_option(
-  const PcfCustomConstraintId& custom_constraint_id,
-  const std::string& option) {
+void PcfCustomConstraint::set_custom_constraint_pin_mode(
+  const PcfCustomConstraintId& custom_constraint_id, const std::string& mode) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
-  custom_constraint_options_[custom_constraint_id] = option;
+  custom_constraint_pin_mode_[custom_constraint_id] = mode;
 }
 
-void PcfCustomConstraint::set_custom_constraint_value(
-  const PcfCustomConstraintId& custom_constraint_id, const std::string& value) {
+void PcfCustomConstraint::set_custom_constraint_command(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const std::string& command_name) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
-  custom_constraint_values_[custom_constraint_id] = value;
+  custom_constraint_command_name_[custom_constraint_id] = command_name;
 }
 
 void PcfCustomConstraint::set_custom_constraint_pin(
@@ -87,4 +87,5 @@ bool PcfCustomConstraint::valid_custom_constraint_id(
   return (size_t(custom_constraint_id) < custom_constraint_ids_.size()) &&
          (custom_constraint_id == custom_constraint_ids_[custom_constraint_id]);
 }
+
 } /* End namespace openfpga*/

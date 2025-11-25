@@ -163,6 +163,16 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
   return 0;
 }
 
+std::vector<PcfCustomCommandOptionId> PcfCustomCommand::command_options(
+  const PcfCustomCommandId& command_id) const {
+  return custom_command_id_to_option_id_[command_id];
+}
+
+std::vector<PcfCustomCommandModeId> PcfCustomCommand::option_modes(
+  const PcfCustomCommandOptionId& option_id) const {
+  return custom_option_id_to_mode_id_[option_id];
+}
+
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/
@@ -182,4 +192,29 @@ bool PcfCustomCommand::valid_custom_mode_id(
   return (size_t(custom_mode_id) < custom_mode_ids_.size()) &&
          (custom_mode_id == custom_mode_ids_[custom_mode_id]);
 }
+
+bool PcfCustomCommand::valid_command(const std::string command_name) const {
+  bool valid_command = false;
+  for (auto it : custom_commands()) {
+    if (command_name.find(custom_command_name(it)) == 0) {
+      valid_command = true;
+      break;
+    }
+  }
+  return valid_command;
+}
+
+bool PcfCustomCommand::valid_option(const std::string command_name,
+                                    const std::string option_name) const {
+  bool valid_option = false;
+  auto command_id = find_command_id(command_name);
+  for (auto it : command_options(command_id)) {
+    if (option_name.find(custom_option_name(it)) == 0) {
+      valid_option = true;
+      break;
+    }
+  }
+  return valid_option;
+}
+
 } /* End namespace openfpga*/
