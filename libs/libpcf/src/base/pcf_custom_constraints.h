@@ -34,7 +34,7 @@ namespace openfpga {
  *   pcf_data.set_io_pin(io_id, pin_name);
  *
  *******************************************************************/
-class PcfConfig {
+class PcfCustomConstraint {
  public: /* Types */
   typedef vtr::vector<PcfCustomConstraintId,
                       PcfCustomConstraintId>::const_iterator
@@ -44,7 +44,7 @@ class PcfConfig {
     pcf_custom_constraint_range;
 
  public: /* Constructors */
-  PcfConfig();
+  PcfCustomConstraint();
 
  public: /* Accessors: aggregates */
   pcf_custom_constraint_range custom_constraints() const;

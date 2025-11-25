@@ -1,4 +1,4 @@
-#include "pcf_config.h"
+#include "pcf_custom_constraints.h"
 
 #include <algorithm>
 
@@ -16,12 +16,13 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-PcfConfig::PcfConfig() { return; }
+PcfCustomConstraint::PcfCustomConstraint() { return; }
 
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
-PcfConfig::pcf_custom_constraint_range PcfConfig::custom_constraints() const {
+PcfCustomConstraint::pcf_custom_constraint_range
+PcfCustomConstraint::custom_constraints() const {
   return vtr::make_range(custom_constraint_ids_.begin(),
                          custom_constraint_ids_.end());
 }
@@ -29,20 +30,22 @@ PcfConfig::pcf_custom_constraint_range PcfConfig::custom_constraints() const {
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
-openfpga::BasicPort PcfConfig::custom_constraint_pin(
+openfpga::BasicPort PcfCustomConstraint::custom_constraint_pin(
   const PcfCustomConstraintId& custom_constraint_id) const {
   /* validate the io_id */
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   return custom_constraint_pins_[custom_constraint_id];
 }
 
-bool PcfConfig::empty() const { return 0 == custom_constraint_ids_.size(); }
+bool PcfCustomConstraint::empty() const {
+  return 0 == custom_constraint_ids_.size();
+}
 
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
 
-PcfCustomConstraintId PcfConfig::create_custom_constraint() {
+PcfCustomConstraintId PcfCustomConstraint::create_custom_constraint() {
   /* Create a new id */
   PcfCustomConstraintId custom_id =
     PcfCustomConstraintId(custom_constraint_ids_.size());
@@ -55,20 +58,20 @@ PcfCustomConstraintId PcfConfig::create_custom_constraint() {
   return custom_id;
 }
 
-void PcfConfig::set_custom_constraint_option(
+void PcfCustomConstraint::set_custom_constraint_option(
   const PcfCustomConstraintId& custom_constraint_id,
   const std::string& option) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   custom_constraint_options_[custom_constraint_id] = option;
 }
 
-void PcfConfig::set_custom_constraint_value(
+void PcfCustomConstraint::set_custom_constraint_value(
   const PcfCustomConstraintId& custom_constraint_id, const std::string& value) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   custom_constraint_values_[custom_constraint_id] = value;
 }
 
-void PcfConfig::set_custom_constraint_pin(
+void PcfCustomConstraint::set_custom_constraint_pin(
   const PcfCustomConstraintId& custom_constraint_id, const std::string& pin) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   PortParser port_parser(pin);
@@ -79,7 +82,7 @@ void PcfConfig::set_custom_constraint_pin(
  * Internal invalidators/validators
  ***********************************************************************/
 /* Validators */
-bool PcfConfig::valid_custom_constraint_id(
+bool PcfCustomConstraint::valid_custom_constraint_id(
   const PcfCustomConstraintId& custom_constraint_id) const {
   return (size_t(custom_constraint_id) < custom_constraint_ids_.size()) &&
          (custom_constraint_id == custom_constraint_ids_[custom_constraint_id]);

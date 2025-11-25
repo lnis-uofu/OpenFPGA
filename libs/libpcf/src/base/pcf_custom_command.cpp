@@ -66,11 +66,11 @@ std::string PcfCustomCommand::custom_mode_name(
   return custom_mode_names_[custom_mode_id];
 }
 
-std::string PcfCustomCommand::custom_mode_type(
+std::string PcfCustomCommand::custom_mode_value(
   const PcfCustomCommandModeId& custom_mode_id) const {
   /* validate the io_id */
   VTR_ASSERT(valid_custom_mode_id(custom_mode_id));
-  return custom_mode_types_[custom_mode_id];
+  return custom_mode_values_[custom_mode_id];
 }
 
 bool PcfCustomCommand::empty() const { return 0 == custom_command_ids_.size(); }
@@ -79,7 +79,8 @@ bool PcfCustomCommand::empty() const { return 0 == custom_command_ids_.size(); }
  * Public Mutators
  ***********************************************************************/
 
-PcfCustomCommandId PcfCustomCommand::create_custom_command() {
+int PcfCustomCommand::create_custom_command(const std::string& command_name,
+                                            const std::string& command_type) {
   /* Create a new id */
   PcfCustomCommandId custom_command_id =
     PcfCustomCommandId(custom_command_ids_.size());
@@ -87,9 +88,11 @@ PcfCustomCommandId PcfCustomCommand::create_custom_command() {
   custom_command_ids_.push_back(custom_command_id);
   custom_command_names_.emplace_back();
   custom_command_types_.emplace_back();
+  custom_command_names_[custom_command_id] = command_name;
+  custom_command_types_[custom_command_id] = command_type;
   custom_command_id_to_option_id_.emplace_back();
 
-  return custom_command_id;
+  return 0;
 }
 
 void PcfCustomCommand::set_custom_command_name(
@@ -104,31 +107,61 @@ void PcfCustomCommand::set_custom_command_type(
   custom_command_types_[custom_command_id] = value;
 }
 
-PcfCustomCommandOptionId PcfCustomCommand::create_custom_option(
-  const PcfCustomCommandId& command_id, const std::string& option_name,
-  const std::string& option_type) {
+PcfCustomCommandId PcfCustomCommand::find_command_id(
+  const std::string& command_name) const {
+  for (auto it : custom_commands()) {
+    if (custom_command_name(it) == command_name) {
+      return it;
+    }
+  }
+  VTR_LOG_ERROR("Command %s is not found", command_name.c_str());
+  exit(1);
+}
+PcfCustomCommandOptionId PcfCustomCommand::find_option_id(
+  const std::string& command_name, const std::string& option_name) const {
+  auto command_id = find_command_id(command_name);
+  for (auto it : command_options(command_id)) {
+    if (custom_option_name(it) == option_name) {
+      return it;
+    }
+  }
+  VTR_LOG_ERROR("Option %s for command %s is not found", option_name.c_str(),
+                command_name.c_str());
+  exit(1);
+}
+
+int PcfCustomCommand::create_custom_option(const std::string& command_name,
+                                           const std::string& option_name,
+                                           const std::string& option_type) {
+  auto command_id = find_command_id(command_name);
+
   PcfCustomCommandOptionId custom_option_id =
     PcfCustomCommandOptionId(custom_option_ids_.size());
   custom_command_id_to_option_id_[command_id].push_back(custom_option_id);
   custom_option_ids_.push_back(custom_option_id);
+  custom_option_names_.emplace_back();
+  custom_option_types_.emplace_back();
   custom_option_names_[custom_option_id] = option_name;
   custom_option_types_[custom_option_id] = option_type;
   custom_option_id_to_mode_id_.emplace_back();
-  return custom_option_id;
+  return 0;
 }
 
-PcfCustomCommandModeId PcfCustomCommand::create_custom_mode(
-  const PcfCustomCommandOptionId& option_id, const std::string& mode_name,
-  const std::string& mode_type) {
-  PcfCustomCommandModeId custom_mode_id = PcfCustomCommandModeId(custom_mode_ids_.size());
+int PcfCustomCommand::create_custom_mode(const std::string& command_name,
+                                         const std::string& option_name,
+                                         const std::string& mode_name,
+                                         const std::string& mode_value) {
+  auto option_id = find_option_id(command_name, option_name);
+  PcfCustomCommandModeId custom_mode_id =
+    PcfCustomCommandModeId(custom_mode_ids_.size());
   custom_option_id_to_mode_id_[option_id].push_back(custom_mode_id);
   custom_mode_ids_.push_back(custom_mode_id);
+  custom_mode_names_.emplace_back();
+  custom_mode_values_.emplace_back();
   custom_mode_names_[custom_mode_id] = mode_name;
-  custom_mode_types_[custom_mode_id] = mode_type;
-  return custom_mode_id;
+  custom_mode_values_[custom_mode_id] = mode_value;
+  return 0;
 }
-
-
 
 /************************************************************************
  * Internal invalidators/validators

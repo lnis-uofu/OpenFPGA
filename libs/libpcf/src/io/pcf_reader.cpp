@@ -27,8 +27,8 @@ constexpr const char COMMENT = '#';
  * Return 1 if there are serious errors when parsing data
  * Return 2 if fail when opening files
  *******************************************************************/
-int read_pcf(const char* fname, PcfData& pcf_data,
-             bool reduce_error_to_warning) {
+int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
+             const PcfCustomCommand& pcf_custom_command) {
   vtr::ScopedStartFinishTimer timer("Read " + std::string(fname));
 
   /* Create a file handler */
@@ -59,6 +59,17 @@ int read_pcf(const char* fname, PcfData& pcf_data,
         } else if (word[0] == COMMENT) {  // if it's a comment
           break;  // or ignore the full line comment and move on
         } else {
+          bool valid_command = false;
+          for (auto it : pcf_custom_command.custom_commands()) {
+            std::string custom_command =
+              pcf_custom_command.custom_command_name(it);
+            if (word.find(custom_command) == 0) {
+              valid_command = true;
+              /*set constraint info into pcf_data*/
+
+              break;
+            }
+          }
           if (reduce_error_to_warning) {
             VTR_LOG_WARN("Bypass unknown command '%s' !\n", word.c_str());
             break;
@@ -80,7 +91,8 @@ int read_pcf(const char* fname, PcfData& pcf_data,
   return 0;
 }
 
-int read_pcf_conifg(const std::string& pcf_config_file, PcfData& pcf_data) {
+int read_pcf_conifg(const std::string& pcf_config_file,
+                    PcfCustomCommand& pcf_custom_command) {
   // int status = openfpga::CMD_EXEC_FATAL_ERROR;
 
   pugi::xml_node Next;
@@ -98,8 +110,9 @@ int read_pcf_conifg(const std::string& pcf_config_file, PcfData& pcf_data) {
    * under the node <module_circuit_models>
    */
   for (pugi::xml_node xml_command : xml_pcf_config.children()) {
-    int status = read_xml_pcf_command(xml_command, loc_data, pcf_data);
-    if(status != 0){
+    int status =
+      read_xml_pcf_command(xml_command, loc_data, pcf_custom_command);
+    if (status != 0) {
       VTR_LOG_ERROR("Fail to read command from PCF Config file!\n");
       return 1;
     }
@@ -108,15 +121,16 @@ int read_pcf_conifg(const std::string& pcf_config_file, PcfData& pcf_data) {
 }
 
 int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
-                         const pugiutil::loc_data& loc_data, PcfData& pcf_data) {
-  
+                         const pugiutil::loc_data& loc_data,
+                         PcfCustomCommand& pcf_custom_command) {
   std::string command_name =
     get_attribute(xml_pcf_command, "name", loc_data).as_string();
 
   std::string command_type =
     get_attribute(xml_pcf_command, "type", loc_data).as_string();
-  
-  PcfCustomCommandId command_id = pcf_data.create_custom_command(command_name, command_type);
+
+  int status =
+    pcf_custom_command.create_custom_command(command_name, command_type);
   auto xml_pcf_option = get_first_child(xml_pcf_command, "option", loc_data);
   while (xml_pcf_option) {
     std::string option_name =
@@ -125,14 +139,16 @@ int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       get_attribute(xml_pcf_option, "type", loc_data).as_string();
     auto xml_pcf_option_mode = get_first_child(xml_pcf_option, "mode", loc_data,
                                                pugiutil::ReqOpt::OPTIONAL);
-    PcfCustomCommandOptionId option_id = pcf_data.create_custom_command(command_id， option_name, option_type);
+    status = pcf_custom_command.create_custom_option(command_name, option_name,
+                                                     option_type);
     while (xml_pcf_option_mode) {
       std::string mode_name =
         get_attribute(xml_pcf_option_mode, "name", loc_data).as_string();
       std::string mode_value =
         get_attribute(xml_pcf_option_mode, "value", loc_data).as_string();
       xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
-      PcfCustomCommandModeId mode_id = pcf_data.create_custom_command(option_id, mode_name, mode_value);
+      status = pcf_custom_command.create_custom_mode(command_name, option_name,
+                                                     mode_name, mode_value);
     }
     xml_pcf_option = xml_pcf_option.next_sibling();
   }

@@ -26,13 +26,12 @@ typedef vtr::StrongId<pcf_custom_command_id_tag> PcfCustomCommandId;
 
 struct pcf_custom_command_option_id_tag;
 
-typedef vtr::StrongId<pcf_custom_command_option_id_tag> PcfCustomCommandOptionId;
+typedef vtr::StrongId<pcf_custom_command_option_id_tag>
+  PcfCustomCommandOptionId;
 
 struct pcf_custom_command_mode_id_tag;
 
 typedef vtr::StrongId<pcf_custom_command_mode_id_tag> PcfCustomCommandModeId;
-
-
 
 /* Short declaration of class */
 class PcfData;

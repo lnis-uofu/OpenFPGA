@@ -22,7 +22,6 @@
 #include "read_xml_pin_constraints.h"
 #include "read_xml_util.h"
 
-
 /********************************************************************
  * Parse XML codes of a <set_io> to an object of PinConstraint
  *******************************************************************/
@@ -89,4 +88,3 @@ PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname) {
 
   return pin_constraints;
 }
-

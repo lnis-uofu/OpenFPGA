@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "command_exit_codes.h"
 #include "openfpga_port_parser.h"
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"
@@ -124,23 +125,6 @@ void PcfData::set_io_pin(const PcfIoConstraintId& io_id,
 bool PcfData::valid_io_constraint_id(const PcfIoConstraintId& io_id) const {
   return (size_t(io_id) < io_constraint_ids_.size()) &&
          (io_id == io_constraint_ids_[io_id]);
-}
-
-PcfCustomCommandId PcfData::create_custom_command(const std::string& command_name, const std::string& command_type) {
-  PcfCustomCommandId custom_command_id = pcf_custom_command_.create_custom_command();
-  pcf_custom_command_.set_custom_command_name(custom_command_id);
-  pcf_custom_command_.set_custom_command_type(custom_command_id);
-  return custom_command_id;
-}
-
-PcfCustomCommandOptionId PcfData::create_custom_option(const PcfCustomCommandId& command_id, const std::string& option_name, const std::string& option_type) {
-  PcfCustomCommandOptionId custom_option_id = pcf_custom_command_.create_custom_option(command_id, option_name, option_type);
-  return custom_option_id;
-}
-
-PcfCustomCommandModeId PcfData::create_custom_mode(const PcfCustomCommandOptionId& option_id, const std::string& mode_name, const std::string& mode_type) {
-  PcfCustomCommandModeId custom_mode_id = pcf_custom_command_.create_custom_mode(option_id, mode_name, mode_type);
-  return custom_mode_id;
 }
 
 } /* End namespace openfpga*/

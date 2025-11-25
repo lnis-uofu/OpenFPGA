@@ -47,19 +47,22 @@ class PcfCustomCommand {
  public: /* Accessors: aggregates */
   pcf_custom_command_range custom_commands() const;
 
-  std::vector<PcfCustomCommandOptionId> command_options(
-    const PcfCustomCommandId& command_id) const {
-    return custom_command_id_to_option_id_[command_id];
-  }
+  /* Check if there are any io constraints */
+  bool empty() const;
 
-  std::vector<PcfCustomCommandModeId> option_modes(
-    const PcfCustomCommandOptionId& option_id) const {
-    return custom_option_id_to_mode_id_[option_id];
-  }
+ public: /* Public Mutators */
+  /* Reserve a number of design constraints to be memory efficent */
 
- public: /* Public Accessors: Basic data query */
-  /* Get the pin to be constrained */
+  int create_custom_command(const std::string& command_name,
+                            const std::string& command_type);
 
+  int create_custom_option(const std::string& command_name,
+                           const std::string& option_name,
+                           const std::string& option_type);
+  int create_custom_mode(const std::string& command_name,
+                         const std::string& option_name,
+                         const std::string& mode_name,
+                         const std::string& mode_value);
   std::string custom_command_name(
     const PcfCustomCommandId& custom_command_id) const;
 
@@ -72,22 +75,26 @@ class PcfCustomCommand {
   std::string custom_option_type(
     const PcfCustomCommandOptionId& custom_option_id) const;
 
-  std::string custom_mode_name(const PcfCustomCommandModeId& custom_mode_id) const;
+  std::string custom_mode_name(
+    const PcfCustomCommandModeId& custom_mode_id) const;
 
-  std::string custom_mode_type(const PcfCustomCommandModeId& custom_mode_id) const;
+  std::string custom_mode_value(
+    const PcfCustomCommandModeId& custom_mode_id) const;
 
-  /* Check if there are any io constraints */
-  bool empty() const;
+ private: /* Internal data */
+  PcfCustomCommandId find_command_id(const std::string& command_name) const;
+  PcfCustomCommandOptionId find_option_id(const std::string& command_name,
+                                          const std::string& option_name) const;
 
- public: /* Public Mutators */
-  /* Reserve a number of design constraints to be memory efficent */
+  std::vector<PcfCustomCommandOptionId> command_options(
+    const PcfCustomCommandId& command_id) const {
+    return custom_command_id_to_option_id_[command_id];
+  }
 
-  PcfCustomCommandId create_custom_command();
-  PcfCustomCommandOptionId create_custom_option(const PcfCustomCommandId& command_id,
-                                         const std::string& option_name, const std::string& option_type);
-  PcfCustomCommandModeId create_custom_mode(const PcfCustomCommandOptionId& option_id,
-                                     const std::string& mode_name,
-                                     const std::string& mode_type);
+  std::vector<PcfCustomCommandModeId> option_modes(
+    const PcfCustomCommandOptionId& option_id) const {
+    return custom_option_id_to_mode_id_[option_id];
+  }
 
   void set_custom_command_name(const PcfCustomCommandId& custom_command_id,
                                const std::string& value);
@@ -95,15 +102,14 @@ class PcfCustomCommand {
   void set_custom_command_type(const PcfCustomCommandId& custom_command_id,
                                const std::string& value);
 
- public: /* Public invalidators/validators */
-  /* Show if the constraint id is a valid for data queries */
   bool valid_custom_command_id(
     const PcfCustomCommandId& custom_command_id) const;
 
-  bool valid_custom_option_id(const PcfCustomCommandOptionId& custom_option_id) const;
+  bool valid_custom_option_id(
+    const PcfCustomCommandOptionId& custom_option_id) const;
   bool valid_custom_mode_id(const PcfCustomCommandModeId& custom_mode_id) const;
 
- private: /* Internal data */
+ private:
   vtr::vector<PcfCustomCommandId, PcfCustomCommandId> custom_command_ids_;
 
   vtr::vector<PcfCustomCommandId, std::string> custom_command_names_;
@@ -127,7 +133,7 @@ class PcfCustomCommand {
 
   vtr::vector<PcfCustomCommandModeId, std::string> custom_mode_names_;
 
-  vtr::vector<PcfCustomCommandModeId, std::string> custom_mode_types_;
+  vtr::vector<PcfCustomCommandModeId, std::string> custom_mode_values_;
 };
 
 } /* End namespace openfpga*/
