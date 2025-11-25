@@ -27,13 +27,13 @@ int main(int argc, const char** argv) {
   openfpga::PcfData pcf_data;
   VTR_LOG("Read the pcf config file: %s.\n", argv[2]);
   openfpga::PcfCustomCommand pcf_custom_command;
-  openfpga::read_pcf_conifg(argv[2], pcf_custom_command);
-  openfpga::read_pcf(argv[1], pcf_data, true, pcf_custom_command);
-
-  //   openfpga::PcfConfig pcf_config;
-  //   openfpga::read_pcfconfig(argv[2], pcf_config);
-  //   VTR_LOG("Read the design constraints conifguration from a config file:
-  //   %s.\n", argv[2]);
+  openfpga::read_pcf_conifg(
+    argv[2], pcf_custom_command); /* pcf config.xml will be converted to data
+                                     structure PcfCustomCommand*/
+  openfpga::read_pcf(
+    argv[1], pcf_data, true,
+    pcf_custom_command); /*pcf reader will set custom constraints based on
+                            custom commands*/
 
   //   /* Convert */
   int status = 0;

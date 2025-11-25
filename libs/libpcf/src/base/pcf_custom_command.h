@@ -67,6 +67,21 @@ class PcfCustomCommand {
                          const std::string& option_name,
                          const std::string& mode_name,
                          const std::string& mode_value);
+
+  std::string custom_mode_value(const std::string& command_name,
+                                const std::string& option_name,
+                                const std::string& mode_name) const;
+
+  std::string custom_option_type(const std::string& command_name,
+                                 const std::string& option_name) const;
+
+  std::vector<PcfCustomCommandOptionId> command_options(
+    const PcfCustomCommandId& command_id) const;
+
+  std::vector<PcfCustomCommandModeId> option_modes(
+    const PcfCustomCommandOptionId& option_id) const;
+
+ private: /* Internal data */
   std::string custom_command_name(
     const PcfCustomCommandId& custom_command_id) const;
 
@@ -85,16 +100,12 @@ class PcfCustomCommand {
   std::string custom_mode_value(
     const PcfCustomCommandModeId& custom_mode_id) const;
 
-  std::vector<PcfCustomCommandOptionId> command_options(
-    const PcfCustomCommandId& command_id) const;
-
-  std::vector<PcfCustomCommandModeId> option_modes(
-    const PcfCustomCommandOptionId& option_id) const;
-
- private: /* Internal data */
   PcfCustomCommandId find_command_id(const std::string& command_name) const;
   PcfCustomCommandOptionId find_option_id(const std::string& command_name,
                                           const std::string& option_name) const;
+  PcfCustomCommandModeId find_mode_id(const std::string& command_name,
+                                      const std::string& option_name,
+                                      const std::string& mode_name) const;
 
   void set_custom_command_name(const PcfCustomCommandId& custom_command_id,
                                const std::string& value);

@@ -82,6 +82,10 @@ class PcfData {
   void set_custom_constraint_pin(
     const PcfCustomConstraintId& custom_constraint_id, const std::string& pin);
 
+  void set_custom_constraint_command(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const std::string& command_name);
+
  public: /* Public invalidators/validators */
   /* Show if the constraint id is a valid for data queries */
   bool valid_io_constraint_id(const PcfIoConstraintId& io_id) const;
@@ -97,7 +101,6 @@ class PcfData {
   vtr::vector<PcfIoConstraintId, std::string> io_constraint_nets_;
 
   PcfCustomConstraint pcf_custom_constraint_;
-  PcfCustomCommand pcf_custom_command_;
 };
 
 } /* End namespace openfpga*/

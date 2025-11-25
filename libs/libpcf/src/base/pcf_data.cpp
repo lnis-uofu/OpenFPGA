@@ -136,6 +136,13 @@ void PcfData::set_custom_constraint_pin(
   pcf_custom_constraint_.set_custom_constraint_pin(custom_constraint_id, pin);
 }
 
+void PcfData::set_custom_constraint_command(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const std::string& command_name) {
+  pcf_custom_constraint_.set_custom_constraint_command(custom_constraint_id,
+                                                       command_name);
+}
+
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/

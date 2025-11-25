@@ -63,41 +63,32 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
         } else {
           bool valid_command = false;
           bool valid_option = false;
-          for (auto it_command : pcf_custom_command.custom_commands()) {
-            std::string custom_command =
-              pcf_custom_command.custom_command_name(it_command);
-            if (word.find(custom_command) == 0) {
-              valid_command = true;
-              std::string option_name;
-              std::string option_value;
-              while (ss >> option_name >> option_value) {
-                valid_option = false;
-                for (auto it_option :
-                     pcf_custom_command.command_options(it_command)) {
-                  /* match from index 1 cause option will have "-" in front,
-                   * such as "-pad" */
-                  if (option_name.find(pcf_custom_command.custom_option_name(
-                        it_option)) == 1) {
-                    valid_option = true;
-                    PcfCustomConstraintId constraint_id =
-                      pcf_data.create_custom_constraint();
-                    std::string option_type =
-                      pcf_custom_command.custom_option_type(it_option);
-                    if (option_type == "pin") {
-                      pcf_data.set_custom_constraint_pin(constraint_id,
-                                                         option_value);
-                    } else if (option_type == "mode") {
-                      pcf_data.set_custom_constraint_pin_mode(constraint_id,
-                                                              option_value);
-                    }
-                    /* do something here, store the constriant option and its
-                     * value */
-                    break;
-                  }
+          valid_command = pcf_custom_command.valid_command(word);
+          if (valid_command) {
+            std::string option_name;
+            std::string option_value;
+            PcfCustomConstraintId constraint_id =
+              pcf_data.create_custom_constraint();
+            pcf_data.set_custom_constraint_command(constraint_id, word);
+            while (ss >> option_name >> option_value) {
+              valid_option = false;
+              option_name.erase(0, 1); /* omit "-" in front of option */
+              valid_option = pcf_custom_command.valid_option(word, option_name);
+              if (valid_option) {
+                std::string option_type =
+                  pcf_custom_command.custom_option_type(word, option_name);
+                if (option_type == "pin") {
+                  pcf_data.set_custom_constraint_pin(constraint_id,
+                                                     option_value);
+                } else if (option_type == "mode") {
+                  std::string mode_value = pcf_custom_command.custom_mode_value(
+                    word, option_name, option_value);
+                  pcf_data.set_custom_constraint_pin_mode(constraint_id,
+                                                          mode_value);
                 }
+              } else {
+                break;
               }
-              /*set constraint info into pcf_data*/
-              break;
             }
           }
           if (!valid_command || !valid_option) {

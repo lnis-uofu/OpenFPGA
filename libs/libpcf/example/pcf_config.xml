@@ -6,7 +6,7 @@
       <!-- Assume min. step is 0.1ns and max range is 0.3ns -->
       <mode name="0.1ns" value="00001" />
       <mode name="0.2ns" value="00010"/>
-      <mode name="0.2ns" value="00100"/>
+      <mode name="0.3ns" value="00100"/>
     </option>
   </command>
   <command name="set_watch_dog" type="delay_chain">

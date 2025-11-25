@@ -59,6 +59,13 @@ std::string PcfCustomCommand::custom_option_type(
   return custom_option_types_[custom_option_id];
 }
 
+std::string PcfCustomCommand::custom_option_type(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the io_id */
+  auto custom_option_id = find_option_id(command_name, option_name);
+  return custom_option_type(custom_option_id);
+}
+
 std::string PcfCustomCommand::custom_mode_name(
   const PcfCustomCommandModeId& custom_mode_id) const {
   /* validate the io_id */
@@ -71,6 +78,14 @@ std::string PcfCustomCommand::custom_mode_value(
   /* validate the io_id */
   VTR_ASSERT(valid_custom_mode_id(custom_mode_id));
   return custom_mode_values_[custom_mode_id];
+}
+
+std::string PcfCustomCommand::custom_mode_value(
+  const std::string& command_name, const std::string& option_name,
+  const std::string& mode_name) const {
+  /* validate the io_id */
+  auto custom_mode_id = find_mode_id(command_name, option_name, mode_name);
+  return custom_mode_value(custom_mode_id);
 }
 
 bool PcfCustomCommand::empty() const { return 0 == custom_command_ids_.size(); }
@@ -127,6 +142,20 @@ PcfCustomCommandOptionId PcfCustomCommand::find_option_id(
   }
   VTR_LOG_ERROR("Option %s for command %s is not found", option_name.c_str(),
                 command_name.c_str());
+  exit(1);
+}
+
+PcfCustomCommandModeId PcfCustomCommand::find_mode_id(
+  const std::string& command_name, const std::string& option_name,
+  const std::string& mode_name) const {
+  auto option_id = find_option_id(command_name, option_name);
+  for (auto it : option_modes(option_id)) {
+    if (custom_mode_name(it) == mode_name) {
+      return it;
+    }
+  }
+  VTR_LOG_ERROR("Mode %s of Option %s for command %s is not found",
+                mode_name.c_str(), option_name.c_str(), command_name.c_str());
   exit(1);
 }
 
