@@ -24,6 +24,43 @@ namespace openfpga {
  * which VPR can force I/O placement
  *******************************************************************/
 template <class T>
+int pcf2bistream_setting_wrapper_template(const Command& cmd,
+                                          const CommandContext& cmd_context) {
+  /* todo: create a factory to produce this in the future*/
+  CommandOptionId opt_pcf = cmd.option("pcf");
+  CommandOptionId opt_pcf_config = cmd.option("pcf_config");
+  CommandOptionId opt_reduce_error_to_warning =
+    cmd.option("reduce_error_to_warning");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  std::string pcf_fname = cmd_context.option_value(cmd, opt_pcf);
+  std::string pcf_config_fname = cmd_context.option_value(cmd, opt_pcf_config);
+
+  /* Parse the input files */
+
+  openfpga::PcfCustomCommand pcf_custom_command;
+  openfpga::read_pcf_conifg(pcf_config_fname, pcf_custom_command);
+
+  openfpga::PcfData pcf_data;
+  openfpga::read_pcf(
+    pcf_fname.c_str(), pcf_data,
+    cmd_context.option_enable(cmd, opt_reduce_error_to_warning),
+    pcf_custom_command);
+  VTR_LOG("Read the design constraints from a pcf file: %s.\n",
+          pcf_fname.c_str());
+
+  int status = pcf2bistream_setting(pcf_data);
+  if (status) {
+    return status;
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Top-level function to convert a .pcf file to a .place file which
+ * which VPR can force I/O placement
+ *******************************************************************/
+template <class T>
 int pcf2place_wrapper_template(const Command& cmd,
                                const CommandContext& cmd_context) {
   /* todo: create a factory to produce this in the future*/

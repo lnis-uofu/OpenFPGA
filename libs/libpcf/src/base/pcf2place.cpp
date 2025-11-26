@@ -129,4 +129,15 @@ int pcf2place(const PcfData& pcf_data,
   return num_err;
 }
 
+/********************************************************************
+ * set bitstream setting from custom pcf commands
+ *
+ * Return 0 if successful
+ * Return 1 if there are serious errors
+ *******************************************************************/
+int pcf2bistream_setting(const PcfData& pcf_data) {
+  int num_err = 0;
+  return num_err;
+}
+
 } /* end namespace openfpga */

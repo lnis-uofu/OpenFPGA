@@ -25,6 +25,7 @@ int pcf2place(const PcfData& pcf_data,
               const std::vector<std::string>& output_nets,
               const IoPinTable& io_pin_table,
               const IoLocationMap& io_location_map, IoNetPlace& io_net_place);
+int pcf2bistream_setting(const PcfData& pcf_data);
 
 } /* End namespace openfpga*/
 

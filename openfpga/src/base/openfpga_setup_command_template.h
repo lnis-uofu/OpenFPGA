@@ -619,6 +619,48 @@ ShellCommandId add_pcf2place_command_template(
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: pcf2bistream_setting
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_pcf2bistream_setting_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const bool& hidden) {
+  Command shell_cmd("pcf2bistream_setting");
+
+  /* Add an option '--pcf'*/
+  CommandOptionId opt_pcf_file =
+    shell_cmd.add_option("pcf", true, "file path to the user pin constraint");
+  shell_cmd.set_option_require_value(opt_pcf_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pcf_config'*/
+  CommandOptionId opt_pcf_config_file =
+    shell_cmd.add_option("pcf_config", true,
+                         "file path to the pcf config file which defines "
+                         "custom pcf commands (.xml)");
+  shell_cmd.set_option_require_value(opt_pcf_config_file, openfpga::OPT_STRING);
+
+  /* Add an option '--reduce_error_to_warning' */
+  shell_cmd.add_option(
+    "reduce_error_to_warning", false,
+    "reduce error to warning while reading commands in pcf file");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Convert user Pin Constraint File (.pcf) to an placement file",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     pcf2bistream_setting_wrapper_template<T>);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: read_openfpga_clock_arch
  * - Add associated options
  * - Add command dependency
