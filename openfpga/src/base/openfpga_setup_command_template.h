@@ -651,7 +651,7 @@ ShellCommandId add_pcf2bistream_setting_command_template(
 
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "Convert user Pin Constraint File (.pcf) to an placement file",
+    shell_cmd, "Convert user Pin Constraint File (.pcf) to bitstream settings",
     hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
