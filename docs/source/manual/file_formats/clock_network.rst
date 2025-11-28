@@ -3,6 +3,8 @@
 Clock Network (.xml)
 --------------------
 
+.. note:: If you choose to route the global signal through the programmable network, you should set the ``--clock_modeling ideal`` when running VPR. In such case, VPR will still reserve an I/O for the global signals without any routing traces. If you are minimize the I/O for your FPGA, please take the number of reserved I/Os into account!
+
 The XML-based clock network description language is used to describe 
 
 - One or more programmable clock networks constaining programmable switches for routing clock signals
