@@ -19,7 +19,7 @@ VprBitstreamAnnotation::VprBitstreamAnnotation() { return; }
  * Public accessors
  ***********************************************************************/
 std::vector<VprBitstreamAnnotation::BitstreamSourceInfo> 
-VprBitstreamAnnotation::pb_type_bitstream_source(t_pb_type* pb_type) const {
+VprBitstreamAnnotation::pb_type_bitstream_sources(t_pb_type* pb_type) const {
   auto result = bitstream_sources_.find(pb_type);
   if (result != bitstream_sources_.end()) {
     return result->second;
@@ -41,7 +41,7 @@ std::string VprBitstreamAnnotation::pb_type_default_mode_bits(
 }
 
 std::vector<VprBitstreamAnnotation::BitstreamSourceInfo> 
-VprBitstreamAnnotation::pb_type_mode_select_bitstream_source(
+VprBitstreamAnnotation::pb_type_mode_select_bitstream_sources(
   t_pb_type* pb_type) const {
   auto result = mode_select_bitstream_sources_.find(pb_type);
   if (result != mode_select_bitstream_sources_.end()) {

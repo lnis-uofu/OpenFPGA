@@ -76,13 +76,12 @@ class PhysicalPb {
   void set_wire_lut_output(const PhysicalPbId& pb,
                            const t_pb_graph_pin* pb_graph_pin,
                            const bool& wire_lut_output);
-  void set_fixed_bitstream(const PhysicalPbId& pb,
-                           const std::string& fixed_bitstream);
-  void set_fixed_bitstream_offset(const PhysicalPbId& pb, const size_t& offset);
-  void set_fixed_mode_select_bitstream(const PhysicalPbId& pb,
-                                       const std::string& fixed_bitstream);
-  void set_fixed_mode_select_bitstream_offset(const PhysicalPbId& pb,
-                                              const size_t& offset);
+  void add_fixed_bitstream(const PhysicalPbId& pb,
+                           const std::string& fixed_bitstream,
+                           const size_t& offset);
+  void add_fixed_mode_select_bitstream(const PhysicalPbId& pb,
+                                       const std::string& fixed_bitstream,
+                                       const size_t& offset);
 
  public: /* Public validators/invalidators */
   bool valid_pb_id(const PhysicalPbId& pb_id) const;
@@ -114,11 +113,11 @@ class PhysicalPb {
 
   vtr::vector<PhysicalPbId, std::vector<char>> mode_bits_;
 
-  vtr::vector<PhysicalPbId, std::string> fixed_bitstreams_;
-  vtr::vector<PhysicalPbId, size_t> fixed_bitstream_offsets_;
+  vtr::vector<PhysicalPbId, std::string<std::string>> fixed_bitstreams_;
+  vtr::vector<PhysicalPbId, std::string<size_t>> fixed_bitstream_offsets_;
 
-  vtr::vector<PhysicalPbId, std::string> fixed_mode_select_bitstreams_;
-  vtr::vector<PhysicalPbId, size_t> fixed_mode_select_bitstream_offsets_;
+  vtr::vector<PhysicalPbId, std::string<std::string>> fixed_mode_select_bitstreams_;
+  vtr::vector<PhysicalPbId, std::string<size_t>> fixed_mode_select_bitstream_offsets_;
 
   /* Fast lookup */
   std::map<const t_pb_graph_node*, PhysicalPbId> type2id_map_;

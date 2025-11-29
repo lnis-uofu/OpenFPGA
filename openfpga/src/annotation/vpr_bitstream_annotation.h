@@ -48,10 +48,10 @@ class VprBitstreamAnnotation {
   VprBitstreamAnnotation();
 
  public: /* Public accessors */
-  std::vector<BitstreamSourceInfo> pb_type_bitstream_source(t_pb_type* pb_type) const;
+  std::vector<BitstreamSourceInfo> pb_type_bitstream_sources(t_pb_type* pb_type) const;
   std::string pb_type_default_mode_bits(t_pb_type* pb_type) const;
 
-  std::vector<BitstreamSourceInfo> pb_type_mode_select_bitstream_source(
+  std::vector<BitstreamSourceInfo> pb_type_mode_select_bitstream_sources(
     t_pb_type* pb_type) const;
   size_t interconnect_default_path_id(t_interconnect* interconnect) const;
   ClockTreePinId clock_tap_routing_pin(const ClockTreeId& tree_id) const;
