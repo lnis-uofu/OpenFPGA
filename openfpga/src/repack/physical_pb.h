@@ -37,6 +37,13 @@ class PhysicalPb {
   typedef vtr::vector<PhysicalPbId, PhysicalPbId>::const_iterator
     physical_pb_iterator;
   typedef vtr::Range<physical_pb_iterator> physical_pb_range;
+  struct FixedBitstreamInfo {
+    std::string content;
+    size_t offset;
+    FixedBitstreamInfo(const std::string& cont, const size_t& ofs)
+      : content(cont), offset(ofs) {
+    }
+  };
 
  public: /* Public aggregators */
   physical_pb_range pbs() const;
@@ -55,10 +62,8 @@ class PhysicalPb {
   std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> truth_tables(
     const PhysicalPbId& pb) const;
   std::vector<char> mode_bits(const PhysicalPbId& pb) const;
-  std::string fixed_bitstream(const PhysicalPbId& pb) const;
-  size_t fixed_bitstream_offset(const PhysicalPbId& pb) const;
-  std::string fixed_mode_select_bitstream(const PhysicalPbId& pb) const;
-  size_t fixed_mode_select_bitstream_offset(const PhysicalPbId& pb) const;
+  std::vector<FixedBitstreamInfo> fixed_bitstreams(const PhysicalPbId& pb) const;
+  std::vector<FixedBitstreamInfo> fixed_mode_select_bitstreams(const PhysicalPbId& pb) const;
 
  public: /* Public mutators */
   PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
@@ -113,11 +118,9 @@ class PhysicalPb {
 
   vtr::vector<PhysicalPbId, std::vector<char>> mode_bits_;
 
-  vtr::vector<PhysicalPbId, std::string<std::string>> fixed_bitstreams_;
-  vtr::vector<PhysicalPbId, std::string<size_t>> fixed_bitstream_offsets_;
+  vtr::vector<PhysicalPbId, std::vector<FixedBitstreamInfo>> fixed_bitstreams_;
 
-  vtr::vector<PhysicalPbId, std::string<std::string>> fixed_mode_select_bitstreams_;
-  vtr::vector<PhysicalPbId, std::string<size_t>> fixed_mode_select_bitstream_offsets_;
+  vtr::vector<PhysicalPbId, std::vector<FixedBitstreamInfo>> fixed_mode_select_bitstreams_;
 
   /* Fast lookup */
   std::map<const t_pb_graph_node*, PhysicalPbId> type2id_map_;
