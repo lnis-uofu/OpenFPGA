@@ -39,6 +39,9 @@ class VprBitstreamAnnotation {
       }
       return false;
     };
+    BitstreamSourceInfo(const e_bitstream_source_type& t, const std::string& cont, const size_t& ofs)
+      : type(t), content(cont), offset(ofs) {
+    }
   };
 
  public: /* Constructor */

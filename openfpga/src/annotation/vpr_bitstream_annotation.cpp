@@ -82,26 +82,21 @@ int VprBitstreamAnnotation::add_pb_type_bitstream_source(
   /* Check if there is any duplication */
   for (const auto& src_info : bitstream_sources_[pb_type]) {
     if (src_info.overlap(bitstream_source)) {
+      continue;
     }
   }
-  bitstream_sources_[pb_type] = bitstream_source;
-  bitstream_contents_[pb_type] = bitstream_content;
-  bitstream_offsets_[pb_type] = offset;
+  bitstream_sources_[pb_type].push_back(bitstream_source);
 }
 
-void VprBitstreamAnnotation::set_pb_type_mode_select_bitstream_source(
-  t_pb_type* pb_type, const e_bitstream_source_type& bitstream_source) {
-  mode_select_bitstream_sources_[pb_type] = bitstream_source;
-}
-
-void VprBitstreamAnnotation::set_pb_type_mode_select_bitstream_content(
-  t_pb_type* pb_type, const std::string& bitstream_content) {
-  mode_select_bitstream_contents_[pb_type] = bitstream_content;
-}
-
-void VprBitstreamAnnotation::set_pb_type_mode_select_bitstream_offset(
-  t_pb_type* pb_type, const size_t& offset) {
-  mode_select_bitstream_offsets_[pb_type] = offset;
+int VprBitstreamAnnotation::add_pb_type_mode_select_bitstream_source(
+  t_pb_type* pb_type, const BitstreamSourceInfo& bitstream_source) {
+  /* Check if there is any duplication */
+  for (const auto& src_info : mode_select_bitstream_sources_[pb_type]) {
+    if (src_info.overlap(bitstream_source)) {
+      continue;
+    }
+  }
+  mode_select_bitstream_sources_[pb_type].push_back(bitstream_source);
 }
 
 void VprBitstreamAnnotation::set_pb_type_default_mode_bits(
