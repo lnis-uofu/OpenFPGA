@@ -33,6 +33,8 @@ run-task fpga_bitstream/repack_wire_lut $@
 run-task fpga_bitstream/repack_wire_lut_strong $@
 run-task fpga_bitstream/repack_ignore_nets $@
 
+echo -e "Testing overloading parameters from eblif";
+run-task fpga_bitstream/overload_eblif_param $@
 echo -e "Testing overloading default paths for programmable interconnect when generating bitstream";
 run-task fpga_bitstream/overload_mux_default_path $@
 echo -e "Testing overloading mode bits for DSP blocks when generating bitstream";
