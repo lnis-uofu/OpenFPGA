@@ -162,7 +162,7 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
+      <port type="input" prefix="rst" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
       <port type="output" prefix="match0" lib_name="M0" size="1"/>
       <port type="output" prefix="match1" lib_name="M1" size="1"/>
       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
@@ -198,6 +198,6 @@
     <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="DFFSRQ"/>
     <!-- End physical pb_type binding in complex block IO -->
     <!-- Bind the primitive pb_type in the physical mode to a circuit model -->
-    <pb_type name="cnt8[single_cnt_8].cnt_8_slice.core" circuit_model_name="cnt8" mode_bits="16'h0000"/>
+    <pb_type name="cnt8[single_cnt_8].cnt_8_slice.core" circuit_model_name="cnt8" mode_bits="16H'0000"/>
   </pb_type_annotations>
 </openfpga_architecture>
