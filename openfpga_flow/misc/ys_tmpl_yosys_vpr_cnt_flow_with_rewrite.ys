@@ -2,7 +2,7 @@
 # Read verilog files
 read_verilog ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
 # Read technology library
-read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
+read_verilog ${YOSYS_CELL_SIM_VERILOG}
 
 # Technology mapping
 hierarchy -top ${TOP_MODULE}
