@@ -70,9 +70,7 @@
         <input name="I" num_pins="10" equivalent="full"/>
         <output name="O" num_pins="4" equivalent="none"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
-        </fc>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="spread"/>
       </sub_tile>
     </tile>
@@ -85,10 +83,7 @@
         <clock name="clk" num_pins="1"/>
         <output name="match0" num_pins="1"/>
         <output name="match1" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
-          <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
-        </fc>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="spread"/>
       </sub_tile>
     </tile>
@@ -336,7 +331,7 @@
           <clock name="clk" num_pins="1"/>
           <output name="match0" num_pins="1"/>
           <output name="match1" num_pins="1"/>
-          <pb_type name="cnt_8_core" blif_model=".subckt cnt_8" num_pb="1">
+          <pb_type name="core" blif_model=".subckt cnt_8" num_pb="1">
             <clock name="clk" num_pins="1"/>
             <input name="rst" num_pins="1"/>
             <output name="match0" num_pins="1"/>
@@ -347,10 +342,10 @@
             <T_clock_to_Q max="0.2e-9" min="0.15e-9" port="match1" clock="clk"/>
           </pb_type>
           <interconnect>
-            <direct name="c2c" input="cnt_8_slice.clk" output="cnt_8_core.clk"/>
-            <direct name="r2r" input="cnt_8_slice.reset" output="cnt_8_core.rst"/>
-            <direct name="m0_2_m0" input="cnt_8_core.match0" output="cnt_8_slice.match0">
-            <direct name="m1_2_m1" input="cnt_8_core.match1" output="cnt_8_slice.match1">
+            <direct name="c2c" input="cnt_8_slice.clk" output="core.clk"/>
+            <direct name="r2r" input="cnt_8_slice.reset" output="core.rst"/>
+            <direct name="m0_2_m0" input="core.match0" output="cnt_8_slice.match0">
+            <direct name="m1_2_m1" input="core.match1" output="cnt_8_slice.match1">
             </direct>
           </interconnect>
         </pb_type>
