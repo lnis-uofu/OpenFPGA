@@ -144,9 +144,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   mode_bits_.emplace_back();
 
   fixed_bitstreams_.emplace_back();
-  fixed_bitstream_offsets_.push_back(0);
   fixed_mode_select_bitstreams_.emplace_back();
-  fixed_mode_select_bitstream_offsets_.push_back(0);
 
   /* Register in the name2id map */
   type2id_map_[pb_graph_node] = pb;

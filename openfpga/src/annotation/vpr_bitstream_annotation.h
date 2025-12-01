@@ -33,7 +33,7 @@ class VprBitstreamAnnotation {
     e_bitstream_source_type type = e_bitstream_source_type::NUM_TYPES;
     std::string content;
     size_t offset;
-    bool overlap(const BitstreamSourceInfo& ref) {
+    bool overlap(const BitstreamSourceInfo& ref) const {
       if (type == ref.type && content == ref.content) {
         return true;
       }

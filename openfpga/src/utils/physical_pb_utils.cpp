@@ -362,8 +362,8 @@ void rec_update_physical_pb_from_operating_pb(
      * bind the bitstream value from atom block to the physical pb
      */
     for (const auto& bitstrm_src : bitstream_annotation.pb_type_bitstream_sources(pb_type)) {
-      if (bitstrm_src.type =!= VprBitstreamAnnotation::e_bitstream_source_type::
-          BITSTREAM_SOURCE_EBLIF) {
+      if (bitstrm_src.type != VprBitstreamAnnotation::e_bitstream_source_type::
+          EBLIF) {
         continue; /* Bypass unmatched sources*/
       }
       StringToken tokenizer = bitstrm_src.content;
@@ -371,7 +371,7 @@ void rec_update_physical_pb_from_operating_pb(
       /* The token-level check should be done much earlier!!! */
       if (2 != tokens.size()) {
         VTR_LOG_ERROR("Invalid bitstream content '%s'. Expect '.param <string>' or '.attr <string>'\n",
-                      bitstr_src.content.c_str());
+                      bitstrm_src.content.c_str());
         exit(openfpga::CMD_EXEC_FATAL_ERROR);
       }
       /* The token is typically organized as <.param|.attr> <identifier string>
@@ -403,8 +403,8 @@ void rec_update_physical_pb_from_operating_pb(
      * bind the bitstream value from atom block to the physical pb
      */
     for (const auto& bitstrm_src : bitstream_annotation.pb_type_mode_select_bitstream_sources(pb_type)) {
-      if (bitstrm_src.type =!= VprBitstreamAnnotation::e_bitstream_source_type::
-          BITSTREAM_SOURCE_EBLIF) {
+      if (bitstrm_src.type != VprBitstreamAnnotation::e_bitstream_source_type::
+          EBLIF) {
         continue; /* Bypass unmatched sources*/
       }
       StringToken tokenizer =
@@ -413,7 +413,7 @@ void rec_update_physical_pb_from_operating_pb(
       /* FIXME: The token-level check should be done much earlier!!! */
       if (2 != tokens.size()) {
         VTR_LOG_ERROR("Invalid mode-select bitstream content '%s'. Expect '.param <string>' or '.attr <string>'\n",
-                      bitstr_src.content.c_str());
+                      bitstrm_src.content.c_str());
         exit(openfpga::CMD_EXEC_FATAL_ERROR);
       }
       /* The token is typically organized as <.param|.attr> <identifier string>

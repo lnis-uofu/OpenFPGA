@@ -102,7 +102,6 @@ bool VprBitstreamAnnotation::add_pb_type_mode_select_bitstream_source(
   mode_select_bitstream_sources_[pb_type].push_back(bitstream_source);
   return true;
 }
-}
 
 void VprBitstreamAnnotation::set_pb_type_default_mode_bits(
   t_pb_type* pb_type, const std::string& default_mode_bits) {
