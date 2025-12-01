@@ -97,7 +97,7 @@
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-      <col type="cnt8" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cnt" startx="2" starty="1" repeatx="8" priority="20"/>
     </auto_layout>
     <fixed_layout name="2x2" width="2" height="2">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
@@ -105,7 +105,7 @@
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-      <col type="cnt8" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="cnt" startx="2" starty="1" repeatx="8" priority="20"/>
     </fixed_layout>
   </layout>
   <device>
@@ -336,17 +336,16 @@
             <input name="rst" num_pins="1"/>
             <output name="match0" num_pins="1"/>
             <output name="match1" num_pins="1"/>
-            <T_setup value="0.1e-9" port="rst" clock="clk"/>
-            <T_hold value="0.1e-10" port="rst" clock="clk"/>
-            <T_clock_to_Q max="0.2e-9" min="0.15e-9" port="match0" clock="clk"/>
-            <T_clock_to_Q max="0.2e-9" min="0.15e-9" port="match1" clock="clk"/>
+            <T_setup value="0.1e-9" port="core.rst" clock="clk"/>
+            <T_hold value="0.1e-10" port="core.rst" clock="clk"/>
+            <T_clock_to_Q max="0.2e-9" min="0.15e-9" port="core.match0" clock="clk"/>
+            <T_clock_to_Q max="0.2e-9" min="0.15e-9" port="core.match1" clock="clk"/>
           </pb_type>
           <interconnect>
             <direct name="c2c" input="cnt_8_slice.clk" output="core.clk"/>
             <direct name="r2r" input="cnt_8_slice.reset" output="core.rst"/>
-            <direct name="m0_2_m0" input="core.match0" output="cnt_8_slice.match0">
-            <direct name="m1_2_m1" input="core.match1" output="cnt_8_slice.match1">
-            </direct>
+            <direct name="m0_2_m0" input="core.match0" output="cnt_8_slice.match0"/>
+            <direct name="m1_2_m1" input="core.match1" output="cnt_8_slice.match1"/>
           </interconnect>
         </pb_type>
         <interconnect>
