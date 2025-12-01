@@ -103,13 +103,14 @@ std::vector<char> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
   return mode_bits_[pb];
 }
 
-std::vector<PhysicalPb::FixedBitstreamInfo> PhysicalPb::fixed_bitstreams(const PhysicalPbId& pb) const {
+std::vector<PhysicalPb::FixedBitstreamInfo> PhysicalPb::fixed_bitstreams(
+  const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return fixed_bitstreams_[pb];
 }
 
-std::vector<PhysicalPb::FixedBitstreamInfo> PhysicalPb::fixed_mode_select_bitstreams(
-  const PhysicalPbId& pb) const {
+std::vector<PhysicalPb::FixedBitstreamInfo>
+PhysicalPb::fixed_mode_select_bitstreams(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return fixed_mode_select_bitstreams_[pb];
 }
@@ -245,9 +246,8 @@ void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,
 void PhysicalPb::add_fixed_bitstream(const PhysicalPbId& pb,
                                      const std::string& fixed_bitstream,
                                      const size_t& offset) {
-
   VTR_ASSERT(true == valid_pb_id(pb));
-  FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset); 
+  FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset);
   fixed_bitstreams_[pb].push_back(fix_bitstrm);
 }
 
@@ -255,7 +255,7 @@ void PhysicalPb::add_fixed_mode_select_bitstream(
   const PhysicalPbId& pb, const std::string& fixed_bitstream,
   const size_t& offset) {
   VTR_ASSERT(true == valid_pb_id(pb));
-  FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset); 
+  FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset);
   fixed_mode_select_bitstreams_[pb].push_back(fix_bitstrm);
 }
 

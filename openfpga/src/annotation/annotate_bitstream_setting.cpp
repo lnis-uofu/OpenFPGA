@@ -88,9 +88,9 @@ static int annotate_bitstream_pb_type_setting(
        */
       VprBitstreamAnnotation::BitstreamSourceInfo bitstrm_src(
         VprBitstreamAnnotation::e_bitstream_source_type::EBLIF,
-        bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id),
-        bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id)
-       );
+        bitstream_setting.pb_type_bitstream_content(
+          bitstream_pb_type_setting_id),
+        bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
 
       bool status = false;
       if (false == bitstream_setting.is_mode_select_bitstream(
@@ -100,13 +100,14 @@ static int annotate_bitstream_pb_type_setting(
       } else {
         VTR_ASSERT_SAFE(false == bitstream_setting.is_mode_select_bitstream(
                                    bitstream_pb_type_setting_id));
-        status = vpr_bitstream_annotation.add_pb_type_mode_select_bitstream_source(
-          target_pb_type, bitstrm_src);
+        status =
+          vpr_bitstream_annotation.add_pb_type_mode_select_bitstream_source(
+            target_pb_type, bitstrm_src);
       }
       if (!status) {
         link_success = false;
         break;
-      } 
+      }
 
       link_success = true;
     }

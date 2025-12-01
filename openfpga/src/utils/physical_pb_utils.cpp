@@ -9,10 +9,10 @@
 #include "vtr_log.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "lut_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_tokenizer.h"
-#include "command_exit_codes.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
 
@@ -361,17 +361,20 @@ void rec_update_physical_pb_from_operating_pb(
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
      */
-    for (const auto& bitstrm_src : bitstream_annotation.pb_type_bitstream_sources(pb_type)) {
-      if (bitstrm_src.type != VprBitstreamAnnotation::e_bitstream_source_type::
-          EBLIF) {
+    for (const auto& bitstrm_src :
+         bitstream_annotation.pb_type_bitstream_sources(pb_type)) {
+      if (bitstrm_src.type !=
+          VprBitstreamAnnotation::e_bitstream_source_type::EBLIF) {
         continue; /* Bypass unmatched sources*/
       }
       StringToken tokenizer = bitstrm_src.content;
       std::vector<std::string> tokens = tokenizer.split(" ");
       /* The token-level check should be done much earlier!!! */
       if (2 != tokens.size()) {
-        VTR_LOG_ERROR("Invalid bitstream content '%s'. Expect '.param <string>' or '.attr <string>'\n",
-                      bitstrm_src.content.c_str());
+        VTR_LOG_ERROR(
+          "Invalid bitstream content '%s'. Expect '.param <string>' or '.attr "
+          "<string>'\n",
+          bitstrm_src.content.c_str());
         exit(openfpga::CMD_EXEC_FATAL_ERROR);
       }
       /* The token is typically organized as <.param|.attr> <identifier string>
@@ -384,7 +387,7 @@ void rec_update_physical_pb_from_operating_pb(
             continue;
           }
           phy_pb.add_fixed_bitstream(physical_pb, param_search.second,
-            bitstrm_src.offset);
+                                     bitstrm_src.offset);
         }
       } else if (std::string(".attr") == tokens[0]) {
         for (const auto& attr_search :
@@ -394,7 +397,7 @@ void rec_update_physical_pb_from_operating_pb(
             continue;
           }
           phy_pb.add_fixed_bitstream(physical_pb, attr_search.second,
-            bitstrm_src.offset);
+                                     bitstrm_src.offset);
         }
       }
     }
@@ -402,18 +405,20 @@ void rec_update_physical_pb_from_operating_pb(
     /* if the operating pb type has mode-select bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
      */
-    for (const auto& bitstrm_src : bitstream_annotation.pb_type_mode_select_bitstream_sources(pb_type)) {
-      if (bitstrm_src.type != VprBitstreamAnnotation::e_bitstream_source_type::
-          EBLIF) {
+    for (const auto& bitstrm_src :
+         bitstream_annotation.pb_type_mode_select_bitstream_sources(pb_type)) {
+      if (bitstrm_src.type !=
+          VprBitstreamAnnotation::e_bitstream_source_type::EBLIF) {
         continue; /* Bypass unmatched sources*/
       }
-      StringToken tokenizer =
-        bitstrm_src.content;
+      StringToken tokenizer = bitstrm_src.content;
       std::vector<std::string> tokens = tokenizer.split(" ");
       /* FIXME: The token-level check should be done much earlier!!! */
       if (2 != tokens.size()) {
-        VTR_LOG_ERROR("Invalid mode-select bitstream content '%s'. Expect '.param <string>' or '.attr <string>'\n",
-                      bitstrm_src.content.c_str());
+        VTR_LOG_ERROR(
+          "Invalid mode-select bitstream content '%s'. Expect '.param "
+          "<string>' or '.attr <string>'\n",
+          bitstrm_src.content.c_str());
         exit(openfpga::CMD_EXEC_FATAL_ERROR);
       }
       /* The token is typically organized as <.param|.attr> <identifier string>
@@ -425,9 +430,8 @@ void rec_update_physical_pb_from_operating_pb(
           if (param_search.first != tokens[1]) {
             continue;
           }
-          phy_pb.add_fixed_mode_select_bitstream(physical_pb,
-                                                 param_search.second,
-                                                 bitstrm_src.offset);
+          phy_pb.add_fixed_mode_select_bitstream(
+            physical_pb, param_search.second, bitstrm_src.offset);
         }
       } else if (std::string(".attr") == tokens[0]) {
         for (const auto& attr_search :
@@ -436,9 +440,8 @@ void rec_update_physical_pb_from_operating_pb(
           if (attr_search.first == tokens[1]) {
             continue;
           }
-          phy_pb.add_fixed_mode_select_bitstream(physical_pb,
-                                                 attr_search.second,
-                                                 bitstrm_src.offset);
+          phy_pb.add_fixed_mode_select_bitstream(
+            physical_pb, attr_search.second, bitstrm_src.offset);
         }
       }
     }

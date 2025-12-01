@@ -124,7 +124,8 @@ static void build_primitive_bitstream(
       physical_pb.mode_bits(primitive_pb_id),
       device_annotation.pb_type_mode_bits(primitive_pb_type));
     /* If the physical pb contains fixed mode-select bitstream, overload here */
-    for (const auto& fix_bitstrm : physical_pb.fixed_mode_select_bitstreams(primitive_pb_id)) {
+    for (const auto& fix_bitstrm :
+         physical_pb.fixed_mode_select_bitstreams(primitive_pb_id)) {
       std::string fixed_mode_select_bitstream = fix_bitstrm.content;
       size_t mode_bits_start_index = fix_bitstrm.offset;
       /* Ensure the length matches!!! */
@@ -645,7 +646,8 @@ static void build_lut_bitstream(
 
       /* If the physical pb contains fixed mode-select bitstream, overload here
        */
-      for (const auto& fix_bitstrm : physical_pb.fixed_mode_select_bitstreams(lut_pb_id)) {
+      for (const auto& fix_bitstrm :
+           physical_pb.fixed_mode_select_bitstreams(lut_pb_id)) {
         std::string fixed_mode_select_bitstream = fix_bitstrm.content;
         size_t mode_bits_start_index = fix_bitstrm.offset;
         /* Ensure the length matches!!! */

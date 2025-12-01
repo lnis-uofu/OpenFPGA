@@ -18,7 +18,7 @@ VprBitstreamAnnotation::VprBitstreamAnnotation() { return; }
 /************************************************************************
  * Public accessors
  ***********************************************************************/
-std::vector<VprBitstreamAnnotation::BitstreamSourceInfo> 
+std::vector<VprBitstreamAnnotation::BitstreamSourceInfo>
 VprBitstreamAnnotation::pb_type_bitstream_sources(t_pb_type* pb_type) const {
   auto result = bitstream_sources_.find(pb_type);
   if (result != bitstream_sources_.end()) {
@@ -40,7 +40,7 @@ std::string VprBitstreamAnnotation::pb_type_default_mode_bits(
   return std::string();
 }
 
-std::vector<VprBitstreamAnnotation::BitstreamSourceInfo> 
+std::vector<VprBitstreamAnnotation::BitstreamSourceInfo>
 VprBitstreamAnnotation::pb_type_mode_select_bitstream_sources(
   t_pb_type* pb_type) const {
   auto result = mode_select_bitstream_sources_.find(pb_type);
@@ -82,7 +82,10 @@ bool VprBitstreamAnnotation::add_pb_type_bitstream_source(
   /* Check if there is any duplication */
   for (const auto& src_info : bitstream_sources_[pb_type]) {
     if (src_info.overlap(bitstream_source)) {
-      VTR_LOG_ERROR("The bitstream source (eblif) has a collison: '%s' for pb_type '%s' is defined more than once!\n", src_info.content.c_str(), pb_type->name);
+      VTR_LOG_ERROR(
+        "The bitstream source (eblif) has a collison: '%s' for pb_type '%s' is "
+        "defined more than once!\n",
+        src_info.content.c_str(), pb_type->name);
       return false;
     }
   }
@@ -95,7 +98,10 @@ bool VprBitstreamAnnotation::add_pb_type_mode_select_bitstream_source(
   /* Check if there is any duplication */
   for (const auto& src_info : mode_select_bitstream_sources_[pb_type]) {
     if (src_info.overlap(bitstream_source)) {
-      VTR_LOG_ERROR("The mode-select bitstream source (eblif) has a collison: '%s' for pb_type '%s' is defined more than once!\n", src_info.content.c_str(), pb_type->name);
+      VTR_LOG_ERROR(
+        "The mode-select bitstream source (eblif) has a collison: '%s' for "
+        "pb_type '%s' is defined more than once!\n",
+        src_info.content.c_str(), pb_type->name);
       return false;
     }
   }
