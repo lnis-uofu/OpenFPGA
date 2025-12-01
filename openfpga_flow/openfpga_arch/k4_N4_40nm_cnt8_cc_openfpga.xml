@@ -163,8 +163,8 @@
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
-      <port type="output" prefix="match0" lib_name="MATCH0" size="1"/>
-      <port type="output" prefix="match1" lib_name="MATCH1" size="1"/>
+      <port type="output" prefix="match0" lib_name="M0" size="1"/>
+      <port type="output" prefix="match1" lib_name="M1" size="1"/>
       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
       <port type="sram" prefix="MODE" size="16" mode_select="true" circuit_model_name="DFF" default_val="0"/>
     </circuit_model>
