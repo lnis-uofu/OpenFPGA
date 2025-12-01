@@ -16,8 +16,8 @@ module pwm_cnt8 (
 	output m1_out;
 
     cnt_8 #(
-      .MATCH0_REF(11000000),
-      .MATCH1_REF(11110000)
+      .MATCH0_REF(8'b11000000),
+      .MATCH1_REF(8'b11110000)
     ) CNT0 (
       .clk(clk),
       .rst(reset),
