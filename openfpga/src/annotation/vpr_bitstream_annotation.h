@@ -38,7 +38,7 @@ class VprBitstreamAnnotation {
         return true;
       }
       return false;
-    };
+    }
     BitstreamSourceInfo(const e_bitstream_source_type& t, const std::string& cont, const size_t& ofs)
       : type(t), content(cont), offset(ofs) {
     }
@@ -57,13 +57,13 @@ class VprBitstreamAnnotation {
   ClockTreePinId clock_tap_routing_pin(const ClockTreeId& tree_id) const;
 
  public: /* Public mutators */
-  void add_pb_type_bitstream_source(
+  bool add_pb_type_bitstream_source(
     t_pb_type* pb_type, const BitstreamSourceInfo& src_info);
 
   void set_pb_type_default_mode_bits(t_pb_type* pb_type,
                                      const std::string& default_mode_bits);
 
-  void add_pb_type_mode_select_bitstream_source(
+  bool add_pb_type_mode_select_bitstream_source(
     t_pb_type* pb_type, const BitstreamSourceInfo& src_info);
   void set_interconnect_default_path_id(t_interconnect* interconnect,
                                         const size_t& default_path_id);
