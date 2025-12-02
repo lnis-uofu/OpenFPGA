@@ -1,7 +1,7 @@
 function(auto_package_lib file_list)
   foreach (src ${file_list})
       if(IS_SYMLINK ${src})
-          file(REAL_PATH ${src} TARGET_PATH)
+          file(REAL_PATH ${src} target)
           message("Follow the real path to .so file: ${src} ->  ${target}")
           install(FILES ${target}
               DESTINATION ${CMAKE_INSTALL_LIBDIR}
