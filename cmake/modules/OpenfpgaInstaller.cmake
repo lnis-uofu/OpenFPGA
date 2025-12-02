@@ -30,8 +30,6 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
 )
 
 install(RUNTIME_DEPENDENCY_SET my_app_deps
-  # Specify the targets whose dependencies should be bundled
-  TARGETS ALL
   # Specify the destination for the libraries
   DESTINATION bin
   # Optional: Exclude system libraries (default behavior often sufficient)
