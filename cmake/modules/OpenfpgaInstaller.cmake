@@ -29,9 +29,11 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
         COMPONENT openfpga_package
 )
 
-install(RUNTIME_DEPENDENCY_SET my_app_deps
-  # Specify the destination for the libraries
-  DESTINATION bin
-  # Optional: Exclude system libraries (default behavior often sufficient)
-  # EXCLUDE_SYSTEM_LIBS TRUE
+# Use file(GET_RUNTIME_DEPENDENCIES) to find all dependent libraries of 'my_executable'
+file(GET_RUNTIME_DEPENDENCIES
+    TARGETS openfpga
+    # The destination for the discovered libraries relative to the install prefix
+    DESTINATION lib
+    # Optional: Filter out system libraries you do not want to bundle (e.g., system32 on Windows)
+    # EXCLUDE_SYSTEM_LIBS ON 
 )
