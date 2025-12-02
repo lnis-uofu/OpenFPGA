@@ -375,5 +375,6 @@ endif()
 # For installer
 if (OPENFPGA_WITH_INSTALLER)
   include(OpenfpgaInstaller)
+  include(OpenfpgaDeps)
   include(OpenfpgaPackaging)
 endif()
