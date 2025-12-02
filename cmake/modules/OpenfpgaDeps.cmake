@@ -14,7 +14,7 @@ foreach (src ${OPENSSL_LIBRARIES})
     if(IS_SYMLINK ${src})
         file(REAL_PATH ${src} TARGET_PATH)
         message("Follow the real path to .so file: ${src} ->  ${TARGET_PATH}")
-        install(FILES ${TARGET_PATH}}
+        install(FILES ${TARGET_PATH}
             DESTINATION ${CMAKE_INSTALL_LIBDIR}
             COMPONENT dep_package
         )
