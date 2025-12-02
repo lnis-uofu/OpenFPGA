@@ -43,6 +43,8 @@ set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 
 #Create the project 
 project("OpenFPGA-tool-suites" C CXX)
+# Enable symlink resolution for all subsequent find_package calls
+#set(CMAKE_FIND_PACKAGE_RESOLVE_SYMLINKS TRUE)
 
 # Version number
 file (STRINGS "VERSION.md" VERSION_NUMBER)
