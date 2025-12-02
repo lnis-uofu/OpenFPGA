@@ -29,11 +29,19 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
         COMPONENT openfpga_package
 )
 
-# Use file(GET_RUNTIME_DEPENDENCIES) to find all dependent libraries of 'my_executable'
-file(GET_RUNTIME_DEPENDENCIES
-    TARGETS openfpga
-    # The destination for the discovered libraries relative to the install prefix
-    DESTINATION lib
-    # Optional: Filter out system libraries you do not want to bundle (e.g., system32 on Windows)
-    # EXCLUDE_SYSTEM_LIBS ON 
-)
+# Use install(CODE) to run file(GET_RUNTIME_DEPENDENCIES) at install time
+install(CODE [[
+  file(GET_RUNTIME_DEPENDENCIES
+    EXECUTABLES "$<TARGET_FILE:openfpga>"
+    RESOLVED_DEPENDENCIES_VAR resolved_deps
+    UNRESOLVED_DEPENDENCIES_VAR unresolved_deps
+  )
+
+  foreach(dep ${resolved_deps})
+    file(INSTALL FILES "${dep}" DESTINATION "${INSTALL_BIN_DIR}")
+  endforeach()
+
+  if(unresolved_deps)
+    message(WARNING "Unresolved dependencies detected: ${unresolved_deps}")
+  endif()
+]])
