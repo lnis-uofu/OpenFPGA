@@ -29,7 +29,7 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
         COMPONENT openfpga_package
 )
 
-#set(INSTALL_BIN_DIR "${CMAKE_INSTALL_BINDIR}")
+set(INSTALL_BIN_DIR "${CMAKE_INSTALL_BINDIR}")
 ## Use install(CODE) to run file(GET_RUNTIME_DEPENDENCIES) at install time
 #install(CODE [[
 #  file(GET_RUNTIME_DEPENDENCIES

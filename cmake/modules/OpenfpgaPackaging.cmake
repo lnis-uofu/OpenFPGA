@@ -65,6 +65,12 @@ cpack_add_component(openfpga_package
   DESCRIPTION "Main engine for OpenFPGA Tool Suites"
 )
 
+cpack_add_component(dep_package
+  REQUIRED
+  DISPLAY_NAME "Enviornment package"
+  DESCRIPTION "Dependency packages for OpenFPGA Tool Suites"
+)
+
 if (OPENFPGA_INSTALL_DOC)
   message("Include documentation in installer")
   cpack_add_component(openfpga_doc_package
