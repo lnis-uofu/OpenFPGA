@@ -1,3 +1,5 @@
+# Automatically follow the symbolic link to an .so file
+# and add it to installer. Good for collecting dependencies
 function(auto_package_lib file_list)
   foreach (src ${file_list})
       if(IS_SYMLINK ${src})
