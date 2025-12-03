@@ -76,12 +76,7 @@ if (OPENFPGA_USES_IPO)
     set_property(TARGET openfpga APPEND PROPERTY LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
 endif()
 
-install(TARGETS libopenfpga 
+install(TARGETS libopenfpga openfpga 
         DESTINATION bin
         COMPONENT openfpga_package
 )
-install(TARGETS openfpga
-        RUNTIME DESTINATION bin
-        COMPONENT openfpga_package
-)
-
