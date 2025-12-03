@@ -10,9 +10,9 @@ find_package(OpenSSL REQUIRED COMPONENTS SSL Crypto)
 auto_package_lib(${OPENSSL_LIBRARIES})
 
 # BOOST
-find_package(Boost 1.87.0 CONFIG QUIET)
-find_package(Boost REQUIRED COMPONENTS date_time unit_test_framework system filesystem)
-auto_package_lib(${Boost_LIBRARIES})
+#find_package(Boost 1.87.0 CONFIG QUIET)
+#find_package(Boost REQUIRED COMPONENTS date_time unit_test_framework system filesystem)
+#auto_package_lib(${Boost_LIBRARIES})
 
 # ZLIB
 find_package(ZLIB REQUIRED)
