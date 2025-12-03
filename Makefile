@@ -101,7 +101,7 @@ installer:
 # .. option:: INSTALLER_TYPE
 #
 #   Define the type of installer, can be [STGZ|DEB|IFW] (default: STGZ). for example, ``INSTALLER_TYPE=DEB`` indicates to create a DEB package
-	cpack --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE} --verbose
+	cpack --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE} #--verbose
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules

@@ -29,21 +29,21 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
         COMPONENT openfpga_package
 )
 
-set(INSTALL_BIN_DIR "${CMAKE_INSTALL_LIBDIR}")
+#set(INSTALL_BIN_DIR "${CMAKE_INSTALL_LIBDIR}")
 ## Use install(CODE) to run file(GET_RUNTIME_DEPENDENCIES) at install time
-install(CODE [[
-  file(GET_RUNTIME_DEPENDENCIES
-#    EXECUTABLES $<TARGET_FILE:openfpga>
-    RESOLVED_DEPENDENCIES_VAR resolved_deps
-    UNRESOLVED_DEPENDENCIES_VAR unresolved_deps
-  )
-
-  foreach(dep ${resolved_deps})
-    message(INFO "Resolved dependency: ${dep}")
-    file(INSTALL FILES "${dep}" DESTINATION "${INSTALL_BIN_DIR}")
-  endforeach()
-
-  if(unresolved_deps)
-    message(WARNING "Unresolved dependencies detected: ${unresolved_deps}")
-  endif()
-]])
+#install(CODE [[
+#  file(GET_RUNTIME_DEPENDENCIES
+#    EXECUTABLES $<TARGET_FILE:ALL>
+#    RESOLVED_DEPENDENCIES_VAR resolved_deps
+#    UNRESOLVED_DEPENDENCIES_VAR unresolved_deps
+#  )
+#
+#  foreach(dep ${resolved_deps})
+#    message(INFO "Resolved dependency: ${dep}")
+#    file(INSTALL FILES "${dep}" DESTINATION "${INSTALL_BIN_DIR}")
+#  endforeach()
+#
+#  if(unresolved_deps)
+#    message(WARNING "Unresolved dependencies detected: ${unresolved_deps}")
+#  endif()
+#]])
