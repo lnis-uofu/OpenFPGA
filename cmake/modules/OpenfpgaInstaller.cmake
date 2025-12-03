@@ -33,7 +33,7 @@ set(INSTALL_BIN_DIR "${CMAKE_INSTALL_BINDIR}")
 ## Use install(CODE) to run file(GET_RUNTIME_DEPENDENCIES) at install time
 install(CODE [[
   file(GET_RUNTIME_DEPENDENCIES
-    EXECUTABLES $<TARGET_FILE:openfpga>
+#    EXECUTABLES $<TARGET_FILE:openfpga>
     RESOLVED_DEPENDENCIES_VAR resolved_deps
     UNRESOLVED_DEPENDENCIES_VAR unresolved_deps
   )
