@@ -2,7 +2,7 @@
 #define PCF_CUSTOM_COMMAND_H
 
 /********************************************************************
- * This file include the declaration of pcf data
+ * This file include the declaration of pcf custom command
  *******************************************************************/
 #include <array>
 #include <map>
@@ -20,18 +20,17 @@
 namespace openfpga {
 
 /********************************************************************
- * A data structure to constain PCF data
- * This data structure may include a number of design constraints
- * - I/O constraint, for instance, force a net to be mapped to specific pin
+ * A data structure to define PCF custom command
+ * This data structure may include a number of custom command for design
+ *constraints
+ * - such as set_watch_dog
  *
  * Typical usage:
  * --------------
  *   // Create an object
- *   PcfData pcf_data;
- *   // Add a constraint
- *   PcfIoConstraintId io_id = pcf_data.create_io_constraint();
- *   pcf_data.set_io_net(io_id, net_name);
- *   pcf_data.set_io_pin(io_id, pin_name);
+ *   PcfCustomCommand pcf_custom_command;
+ *   // Read command definition from a config.xml
+ *  openfpga::read_pcf_conifg("pcf_config.xml", pcf_custom_command);
  *
  *******************************************************************/
 class PcfCustomCommand {

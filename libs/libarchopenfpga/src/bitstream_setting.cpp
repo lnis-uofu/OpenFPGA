@@ -192,6 +192,10 @@ bool BitstreamSetting::overwrite_bitstream_value(
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
+int BitstreamSetting::read_bitstream_from_pcf(const PcfData& pcf_data) {
+  return 0;
+};
+
 BitstreamPbTypeSettingId BitstreamSetting::add_bitstream_pb_type_setting(
   const std::string& pb_type_name,
   const std::vector<std::string>& parent_pb_type_names,

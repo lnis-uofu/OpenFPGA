@@ -24,8 +24,9 @@ namespace openfpga {
  * which VPR can force I/O placement
  *******************************************************************/
 template <class T>
-int pcf2bistream_setting_wrapper_template(const Command& cmd,
-                                          const CommandContext& cmd_context) {
+int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
+                                           const Command& cmd,
+                                           const CommandContext& cmd_context) {
   /* todo: create a factory to produce this in the future*/
   CommandOptionId opt_pcf = cmd.option("pcf");
   CommandOptionId opt_pcf_config = cmd.option("pcf_config");
@@ -48,8 +49,8 @@ int pcf2bistream_setting_wrapper_template(const Command& cmd,
     pcf_custom_command);
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
-
-  int status = pcf2bistream_setting(pcf_data);
+  auto bitstream_setting = openfpga_context.mutable_bitstream_setting();
+  int status = pcf2bitstream_setting(pcf_data, bitstream_setting);
   if (status) {
     return status;
   }

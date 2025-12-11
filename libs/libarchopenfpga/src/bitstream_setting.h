@@ -10,6 +10,7 @@
 
 #include "bitstream_setting_fwd.h"
 #include "openfpga_port.h"
+#include "pcf_data.h"
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
 
@@ -147,6 +148,9 @@ class BitstreamSetting {
 
  public: /* Public Mutators */
   /* pb_type settings */
+
+  int read_bitstream_from_pcf(const PcfData& pcf_data);
+
   BitstreamPbTypeSettingId add_bitstream_pb_type_setting(
     const std::string& pb_type_name,
     const std::vector<std::string>& parent_pb_type_names,

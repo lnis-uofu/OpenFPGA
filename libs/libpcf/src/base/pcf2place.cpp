@@ -135,8 +135,11 @@ int pcf2place(const PcfData& pcf_data,
  * Return 0 if successful
  * Return 1 if there are serious errors
  *******************************************************************/
-int pcf2bistream_setting(const PcfData& pcf_data) {
+int pcf2bitstream_setting(const PcfData& pcf_data,
+                          const IoLocationMap& io_location_map,
+                          BitstreamSetting& bitstream_setting) {
   int num_err = 0;
+  num_err += bitstream_setting.read_bitstream_from_pcf(pcf_data);
   return num_err;
 }
 

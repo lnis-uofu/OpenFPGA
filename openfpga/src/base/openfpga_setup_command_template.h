@@ -655,7 +655,7 @@ ShellCommandId add_pcf2bistream_setting_command_template(
     hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
-                                     pcf2bistream_setting_wrapper_template<T>);
+                                     pcf2bitstream_setting_wrapper_template<T>);
 
   return shell_cmd_id;
 }
