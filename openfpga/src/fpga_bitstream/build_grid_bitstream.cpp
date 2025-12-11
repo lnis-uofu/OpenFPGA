@@ -124,12 +124,10 @@ static void build_primitive_bitstream(
       physical_pb.mode_bits(primitive_pb_id),
       device_annotation.pb_type_mode_bits(primitive_pb_type));
     /* If the physical pb contains fixed mode-select bitstream, overload here */
-    if (false ==
-        physical_pb.fixed_mode_select_bitstream(primitive_pb_id).empty()) {
-      std::string fixed_mode_select_bitstream =
-        physical_pb.fixed_mode_select_bitstream(primitive_pb_id);
-      size_t mode_bits_start_index =
-        physical_pb.fixed_mode_select_bitstream_offset(primitive_pb_id);
+    for (const auto& fix_bitstrm :
+         physical_pb.fixed_mode_select_bitstreams(primitive_pb_id)) {
+      std::string fixed_mode_select_bitstream = fix_bitstrm.content;
+      size_t mode_bits_start_index = fix_bitstrm.offset;
       /* Ensure the length matches!!! */
       if (mode_select_bitstream.size() - mode_bits_start_index <
           fixed_mode_select_bitstream.size()) {
@@ -616,9 +614,9 @@ static void build_lut_bitstream(
       physical_pb.truth_tables(lut_pb_id),
       circuit_lib.port_default_value(lut_regular_sram_ports[0]));
     /* If the physical pb contains fixed bitstream, overload here */
-    if (false == physical_pb.fixed_bitstream(lut_pb_id).empty()) {
-      std::string fixed_bitstream = physical_pb.fixed_bitstream(lut_pb_id);
-      size_t start_index = physical_pb.fixed_bitstream_offset(lut_pb_id);
+    for (const auto& fix_bitstrm : physical_pb.fixed_bitstreams(lut_pb_id)) {
+      std::string fixed_bitstream = fix_bitstrm.content;
+      size_t start_index = fix_bitstrm.offset;
       /* Ensure the length matches!!! */
       if (lut_bitstream.size() - start_index < fixed_bitstream.size()) {
         VTR_LOG_ERROR(
@@ -648,11 +646,10 @@ static void build_lut_bitstream(
 
       /* If the physical pb contains fixed mode-select bitstream, overload here
        */
-      if (false == physical_pb.fixed_mode_select_bitstream(lut_pb_id).empty()) {
-        std::string fixed_mode_select_bitstream =
-          physical_pb.fixed_mode_select_bitstream(lut_pb_id);
-        size_t mode_bits_start_index =
-          physical_pb.fixed_mode_select_bitstream_offset(lut_pb_id);
+      for (const auto& fix_bitstrm :
+           physical_pb.fixed_mode_select_bitstreams(lut_pb_id)) {
+        std::string fixed_mode_select_bitstream = fix_bitstrm.content;
+        size_t mode_bits_start_index = fix_bitstrm.offset;
         /* Ensure the length matches!!! */
         if (mode_select_bitstream.size() - mode_bits_start_index <
             fixed_mode_select_bitstream.size()) {

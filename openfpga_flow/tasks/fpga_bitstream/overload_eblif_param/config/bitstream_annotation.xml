@@ -1,0 +1,4 @@
+<openfpga_bitstream_setting>
+  <pb_type name="cnt8[single_cnt_8].cnt_8_slice.core" source="eblif" content=".param MATCH0_REF" is_mode_select_bitstream="true" bitstream_offset="0"/>
+  <pb_type name="cnt8[single_cnt_8].cnt_8_slice.core" source="eblif" content=".param MATCH1_REF" is_mode_select_bitstream="true" bitstream_offset="8"/>
+</openfpga_bitstream_setting>

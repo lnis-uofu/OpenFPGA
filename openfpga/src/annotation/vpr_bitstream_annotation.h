@@ -25,43 +25,44 @@ namespace openfpga {
  *******************************************************************/
 class VprBitstreamAnnotation {
  public: /* Type */
-  enum e_bitstream_source_type {
-    BITSTREAM_SOURCE_EBLIF,
-    NUM_BITSTREAM_SOURCE_TYPES
+  enum class e_bitstream_source_type { EBLIF, NUM_TYPES };
+  struct BitstreamSourceInfo {
+    e_bitstream_source_type type = e_bitstream_source_type::NUM_TYPES;
+    std::string content;
+    size_t offset;
+    bool overlap(const BitstreamSourceInfo& ref) const {
+      if (type == ref.type && content == ref.content) {
+        return true;
+      }
+      return false;
+    }
+    BitstreamSourceInfo(const e_bitstream_source_type& t,
+                        const std::string& cont, const size_t& ofs)
+      : type(t), content(cont), offset(ofs) {}
   };
 
  public: /* Constructor */
   VprBitstreamAnnotation();
 
  public: /* Public accessors */
-  e_bitstream_source_type pb_type_bitstream_source(t_pb_type* pb_type) const;
-  std::string pb_type_bitstream_content(t_pb_type* pb_type) const;
-  size_t pb_type_bitstream_offset(t_pb_type* pb_type) const;
+  std::vector<BitstreamSourceInfo> pb_type_bitstream_sources(
+    t_pb_type* pb_type) const;
   std::string pb_type_default_mode_bits(t_pb_type* pb_type) const;
 
-  e_bitstream_source_type pb_type_mode_select_bitstream_source(
+  std::vector<BitstreamSourceInfo> pb_type_mode_select_bitstream_sources(
     t_pb_type* pb_type) const;
-  std::string pb_type_mode_select_bitstream_content(t_pb_type* pb_type) const;
-  size_t pb_type_mode_select_bitstream_offset(t_pb_type* pb_type) const;
   size_t interconnect_default_path_id(t_interconnect* interconnect) const;
   ClockTreePinId clock_tap_routing_pin(const ClockTreeId& tree_id) const;
 
  public: /* Public mutators */
-  void set_pb_type_bitstream_source(
-    t_pb_type* pb_type, const e_bitstream_source_type& bitstream_source);
-  void set_pb_type_bitstream_content(t_pb_type* pb_type,
-                                     const std::string& bitstream_content);
-  void set_pb_type_bitstream_offset(t_pb_type* pb_type, const size_t& offset);
+  bool add_pb_type_bitstream_source(t_pb_type* pb_type,
+                                    const BitstreamSourceInfo& src_info);
 
   void set_pb_type_default_mode_bits(t_pb_type* pb_type,
                                      const std::string& default_mode_bits);
 
-  void set_pb_type_mode_select_bitstream_source(
-    t_pb_type* pb_type, const e_bitstream_source_type& bitstream_source);
-  void set_pb_type_mode_select_bitstream_content(
-    t_pb_type* pb_type, const std::string& bitstream_content);
-  void set_pb_type_mode_select_bitstream_offset(t_pb_type* pb_type,
-                                                const size_t& offset);
+  bool add_pb_type_mode_select_bitstream_source(
+    t_pb_type* pb_type, const BitstreamSourceInfo& src_info);
   void set_interconnect_default_path_id(t_interconnect* interconnect,
                                         const size_t& default_path_id);
   void set_clock_tap_routing_pin(const ClockTreeId& tree_id,
@@ -70,21 +71,14 @@ class VprBitstreamAnnotation {
  private: /* Internal data */
   /* For regular bitstreams */
   /* A look up for pb type to find bitstream source type */
-  std::map<t_pb_type*, e_bitstream_source_type> bitstream_sources_;
-  /* Binding from pb type to bitstream content */
-  std::map<t_pb_type*, std::string> bitstream_contents_;
-  /* Offset to be applied to bitstream */
-  std::map<t_pb_type*, size_t> bitstream_offsets_;
+  std::map<t_pb_type*, std::vector<BitstreamSourceInfo>> bitstream_sources_;
   /* Binding from pb type to default mode bits */
   std::map<t_pb_type*, std::string> default_mode_bits_;
 
   /* For mode-select bitstreams */
   /* A look up for pb type to find bitstream source type */
-  std::map<t_pb_type*, e_bitstream_source_type> mode_select_bitstream_sources_;
-  /* Binding from pb type to bitstream content */
-  std::map<t_pb_type*, std::string> mode_select_bitstream_contents_;
-  /* Offset to be applied to mode-select bitstream */
-  std::map<t_pb_type*, size_t> mode_select_bitstream_offsets_;
+  std::map<t_pb_type*, std::vector<BitstreamSourceInfo>>
+    mode_select_bitstream_sources_;
 
   /* A look up for interconnect to find default path indices
    * Note: this is different from the default path in bitstream setting which is
