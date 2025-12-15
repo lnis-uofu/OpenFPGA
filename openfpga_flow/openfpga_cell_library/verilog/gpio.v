@@ -86,6 +86,19 @@ end
 endmodule
 
 //-----------------------------------------------------
+// Function    : A minimum output pad with extra mode bits
+//-----------------------------------------------------
+module GPOUT_EMODE (
+  output Y, // External PAD signal
+  input A, // Data output
+  input [0:3] MODE_I, // Extra mode bits from bitstream
+  output [0:3] MODE_O // Extra mode bits to drive external cells
+);
+  assign Y = A;
+  assign MODE_O = MODE_I;
+endmodule
+
+//-----------------------------------------------------
 // Function    : A minimum embedded I/O
 //               just an overlay to interface other components
 //-----------------------------------------------------
