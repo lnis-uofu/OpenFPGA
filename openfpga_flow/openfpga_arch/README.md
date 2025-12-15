@@ -40,5 +40,8 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - abspath: All the paths in the architecture file are absolute and hardcoded.
 - ecb: *Enhanced Connection Block* where connection blocks includes feedback connections
 - <Hex|Bin>ModeBits: Use hexadecimal or binary format for mode bits
+- emode: I/O has extra mode bits to drive external blocks outside the FPGA fabric. The extra mode bits are assigned by bitstream through custom PCF commands
+- pdl: I/O has a *Programmable Delay Line* (PDL) to insert delay to input and output signals. The delay can be configured by bitstream through custom PCF commands
+
 
 Other features are used in naming should be listed here.
