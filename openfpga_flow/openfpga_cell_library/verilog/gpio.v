@@ -57,6 +57,34 @@ module GPOUT (
   assign Y = A;
 endmodule
 
+
+//-----------------------------------------------------
+// Function    : A minimum input pad with a programmable delay chain inside
+// Notes       : This is a RTL model which may not be synthesizable
+//               but sufficient to validate EDA features
+//               You may implement a synthesizable one in your own needs
+//-----------------------------------------------------
+module GPIN_PDL (
+  input A, // External PAD signal
+  output reg Y, // Data input
+  input [0:2] MODE_PDL // Control bits for programmable delay chain
+);
+// A 8-step programmable delay chain. Each step is 0.1ns 
+always @(A, MODE_PDL) begin
+  case (MODE_PDL)
+    3'b000: Y = A; 
+    3'b001: Y = #0.1 A; 
+    3'b010: Y = #0.2 A; 
+    3'b011: Y = #0.3 A; 
+    3'b100: Y = #0.4 A; 
+    3'b101: Y = #0.5 A; 
+    3'b110: Y = #0.6 A; 
+    3'b111: Y = #0.7 A; 
+    default: Y = A;
+  endcase
+end
+endmodule
+
 //-----------------------------------------------------
 // Function    : A minimum embedded I/O
 //               just an overlay to interface other components
