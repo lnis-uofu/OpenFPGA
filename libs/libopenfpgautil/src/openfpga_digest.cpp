@@ -166,7 +166,8 @@ static bool create_dir_path(const std::string& dir_path, const bool& verbose) {
  * This function will try to create all the parent directory before
  * creating the last level.
  ********************************************************************/
-static bool rec_create_dir_path(const std::string& dir_path) {
+static bool rec_create_dir_path(const std::string& dir_path,
+                                const bool& verbose) {
   /* Give up if the path is empty */
   if (true == dir_path.empty()) {
     VTR_LOG_WARN("Directory path is empty and nothing will be created.\n");
@@ -202,7 +203,8 @@ static bool rec_create_dir_path(const std::string& dir_path) {
     std::string sub_dir = dir_path.substr(0, pos);
 
     /* Turn on verbose output only for the last position: the leaf directory */
-    if (false == create_dir_path(sub_dir, &pos == &slash_pos.back())) {
+    if (false ==
+        create_dir_path(sub_dir, (&pos == &slash_pos.back()) && verbose)) {
       return false;
     }
   }
@@ -217,14 +219,15 @@ static bool rec_create_dir_path(const std::string& dir_path) {
  * Strongly recommend to use the recursive way, as it can maximum
  * guarantee the success in creation of directories
  ********************************************************************/
-void create_directory(const std::string& dir_path, const bool& recursive) {
+void create_directory(const std::string& dir_path, const bool& recursive,
+                      const bool& verbose) {
   std::string formatted_dir_path = format_dir_path(dir_path);
   bool status = false;
 
   if (true == recursive) {
-    status = rec_create_dir_path(formatted_dir_path);
+    status = rec_create_dir_path(formatted_dir_path, verbose);
   } else {
-    status = create_dir_path(formatted_dir_path, true);
+    status = create_dir_path(formatted_dir_path, verbose);
   }
 
   if (false == status) {
