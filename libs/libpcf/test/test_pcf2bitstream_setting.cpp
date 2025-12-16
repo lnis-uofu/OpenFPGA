@@ -34,7 +34,8 @@ int main(int argc, const char** argv) {
     argv[1], pcf_data, true,
     pcf_custom_command); /*pcf reader will set custom constraints based on
                             custom commands*/
-
+  openfpga::BitstreamSetting bitstream_setting;
+  bitstream_setting.read_bitstream_from_pcf(pcf_data);
   //   /* Convert */
   int status = 0;
   // pcf2bitStreamSetting(pcf_data, pcf_config);

@@ -54,6 +54,16 @@ class PcfCustomConstraint {
 
   openfpga::BasicPort custom_constraint_pin(
     const PcfCustomConstraintId& custom_constraint_id) const;
+
+  std::string custom_constraint_pb_type(
+    const PcfCustomConstraintId& custom_constraint_id) const;
+
+  int custom_constraint_pb_type_offset(
+    const PcfCustomConstraintId& custom_constraint_id) const;
+
+  std::string custom_constraint_mode(
+    const PcfCustomConstraintId& custom_constraint_id) const;
+
   /* Check if there are any io constraints */
   bool empty() const;
 
@@ -72,6 +82,13 @@ class PcfCustomConstraint {
   void set_custom_constraint_pin(
     const PcfCustomConstraintId& costum_constraint_id, const std::string& pin);
 
+  void set_custom_constraint_pb_type(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const std::string& pb_type);
+
+  void set_custom_constraint_pb_type_offset(
+    const PcfCustomConstraintId& custom_constraint_id, const int& offset);
+
  public: /* Public invalidators/validators */
   /* Show if the constraint id is a valid for data queries */
   bool valid_custom_constraint_id(
@@ -83,7 +100,9 @@ class PcfCustomConstraint {
 
   vtr::vector<PcfCustomConstraintId, openfpga::BasicPort>
     custom_constraint_pins_;
+  vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_pb_type_;
 
+  vtr::vector<PcfCustomConstraintId, int> custom_constraint_pb_type_offset_;
   vtr::vector<PcfCustomConstraintId, std::string>
     custom_constraint_command_name_;
 

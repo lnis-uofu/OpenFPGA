@@ -1,5 +1,6 @@
 #include "bitstream_setting.h"
 
+#include "openfpga_pb_parser.h"
 #include "vtr_assert.h"
 
 /* namespace openfpga begins */
@@ -193,6 +194,28 @@ bool BitstreamSetting::overwrite_bitstream_value(
  * Public Mutators
  ***********************************************************************/
 int BitstreamSetting::read_bitstream_from_pcf(const PcfData& pcf_data) {
+  const PcfCustomConstraint pcf_custom_constraint =
+    pcf_data.custom_constraint();
+  for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
+    std::string pb_type =
+      pcf_custom_constraint.custom_constraint_pb_type(constraint_id);
+    std::string mode =
+      pcf_custom_constraint.custom_constraint_mode(constraint_id);
+
+    std::vector<char> modes_vec(mode.begin(), mode.end());
+
+    int offset =
+      pcf_custom_constraint.custom_constraint_pb_type_offset(constraint_id);
+    openfpga::BasicPort pin =
+      pcf_custom_constraint.custom_constraint_pin(constraint_id);
+
+    openfpga::PbParser pb_parser(pb_type);
+    BitstreamPbTypeSettingId pb_type_setting_id = add_bitstream_pb_type_setting(
+      pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), "", "");
+    set_bitstream_offset(pb_type_setting_id, offset);
+    add_bitstream_default_mode_setting(pb_parser.leaf(), pb_parser.parents(),
+                                       pb_parser.modes(), modes_vec);
+  }
   return 0;
 };
 

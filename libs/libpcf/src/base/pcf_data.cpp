@@ -131,6 +131,19 @@ void PcfData::set_custom_constraint_pin_mode(
                                                         mode);
 }
 
+void PcfData::set_custom_constraint_pb_type(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const std::string& pb_type) {
+  pcf_custom_constraint_.set_custom_constraint_pb_type(custom_constraint_id,
+                                                       pb_type);
+}
+
+void PcfData::set_custom_constraint_pb_type_offset(
+  const PcfCustomConstraintId& custom_constraint_id, const int& offset) {
+  pcf_custom_constraint_.set_custom_constraint_pb_type_offset(
+    custom_constraint_id, offset);
+}
+
 void PcfData::set_custom_constraint_pin(
   const PcfCustomConstraintId& custom_constraint_id, const std::string& pin) {
   pcf_custom_constraint_.set_custom_constraint_pin(custom_constraint_id, pin);

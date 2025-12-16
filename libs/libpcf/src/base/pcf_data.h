@@ -49,6 +49,10 @@ class PcfData {
  public: /* Accessors: aggregates */
   pcf_io_constraint_range io_constraints() const;
 
+  const PcfCustomConstraint custom_constraint() const {
+    return pcf_custom_constraint_;
+  }
+
  public: /* Public Accessors: Basic data query */
   /* Get the pin to be constrained */
   openfpga::BasicPort io_pin(const PcfIoConstraintId& io_id) const;
@@ -78,6 +82,13 @@ class PcfData {
 
   void set_custom_constraint_pin_mode(
     const PcfCustomConstraintId& custom_constraint_id, const std::string& mode);
+
+  void set_custom_constraint_pb_type(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const std::string& pb_type);
+
+  void set_custom_constraint_pb_type_offset(
+    const PcfCustomConstraintId& custom_constraint_id, const int& offset);
 
   void set_custom_constraint_pin(
     const PcfCustomConstraintId& custom_constraint_id, const std::string& pin);

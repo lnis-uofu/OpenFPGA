@@ -38,6 +38,20 @@ std::string PcfCustomCommand::custom_command_name(
   return custom_command_names_[custom_command_id];
 }
 
+std::string PcfCustomCommand::custom_command_pb_type(
+  const std::string& custom_command_name) const {
+  /* validate the io_id */
+  auto custom_command_id = find_command_id(custom_command_name);
+  return custom_command_pb_types_[custom_command_id];
+}
+
+int PcfCustomCommand::custom_command_pb_type_offset(
+  const std::string& custom_command_name) const {
+  /* validate the io_id */
+  auto custom_command_id = find_command_id(custom_command_name);
+  return custom_command_pb_type_offset_[custom_command_id];
+}
+
 std::string PcfCustomCommand::custom_command_type(
   const PcfCustomCommandId& custom_command_id) const {
   /* validate the io_id */
@@ -104,7 +118,7 @@ int PcfCustomCommand::create_custom_command(const std::string& command_name,
   custom_command_names_.emplace_back();
   custom_command_types_.emplace_back();
   custom_command_pb_types_.emplace_back();
-  custom_command_pbtype_offset_.emplace_back();
+  custom_command_pb_type_offset_.emplace_back();
   custom_command_names_[custom_command_id] = command_name;
   custom_command_types_[custom_command_id] = command_type;
   custom_command_id_to_option_id_.emplace_back();
@@ -121,7 +135,7 @@ void PcfCustomCommand::set_custom_command_pb_type(
 void PcfCustomCommand::set_custom_command_pb_type_offset(
   const std::string& command_name, const int& offset) {
   auto command_id = find_command_id(command_name);
-  custom_command_pbtype_offset_[command_id] = offset;
+  custom_command_pb_type_offset_[command_id] = offset;
 }
 
 PcfCustomCommandId PcfCustomCommand::find_command_id(

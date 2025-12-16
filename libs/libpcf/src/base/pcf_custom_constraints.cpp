@@ -37,6 +37,27 @@ openfpga::BasicPort PcfCustomConstraint::custom_constraint_pin(
   return custom_constraint_pins_[custom_constraint_id];
 }
 
+std::string PcfCustomConstraint::custom_constraint_pb_type(
+  const PcfCustomConstraintId& custom_constraint_id) const {
+  /* validate the io_id */
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  return custom_constraint_pb_type_[custom_constraint_id];
+}
+
+int PcfCustomConstraint::custom_constraint_pb_type_offset(
+  const PcfCustomConstraintId& custom_constraint_id) const {
+  /* validate the io_id */
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  return custom_constraint_pb_type_offset_[custom_constraint_id];
+}
+
+std::string PcfCustomConstraint::custom_constraint_mode(
+  const PcfCustomConstraintId& custom_constraint_id) const {
+  /* validate the io_id */
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  return custom_constraint_pin_mode_[custom_constraint_id];
+}
+
 bool PcfCustomConstraint::empty() const {
   return 0 == custom_constraint_ids_.size();
 }
@@ -54,6 +75,8 @@ PcfCustomConstraintId PcfCustomConstraint::create_custom_constraint() {
   custom_constraint_pins_.emplace_back();
   custom_constraint_pin_mode_.emplace_back();
   custom_constraint_command_name_.emplace_back();
+  custom_constraint_pb_type_.emplace_back();
+  custom_constraint_pb_type_offset_.emplace_back();
 
   return custom_id;
 }
@@ -76,6 +99,19 @@ void PcfCustomConstraint::set_custom_constraint_pin(
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   PortParser port_parser(pin);
   custom_constraint_pins_[custom_constraint_id] = port_parser.port();
+}
+
+void PcfCustomConstraint::set_custom_constraint_pb_type(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const std::string& pb_type) {
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  custom_constraint_pb_type_[custom_constraint_id] = pb_type;
+}
+
+void PcfCustomConstraint::set_custom_constraint_pb_type_offset(
+  const PcfCustomConstraintId& custom_constraint_id, const int& offset) {
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  custom_constraint_pb_type_offset_[custom_constraint_id] = offset;
 }
 
 /************************************************************************
