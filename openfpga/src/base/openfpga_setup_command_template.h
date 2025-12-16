@@ -147,6 +147,11 @@ ShellCommandId add_read_bitstream_setting_command_template(
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  /* Add an option '--append'*/
+  shell_cmd.add_option("append", false,
+                       "Append data from pcf command to bitstreamsetting. If "
+                       "not specified, the default is false");
+
   /* Add command 'read_openfpga_bitstream_setting' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "read OpenFPGA bitstream setting file", hidden);
