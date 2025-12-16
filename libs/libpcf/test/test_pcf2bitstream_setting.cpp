@@ -35,14 +35,6 @@ int main(int argc, const char** argv) {
     pcf_custom_command); /*pcf reader will set custom constraints based on
                             custom commands*/
 
-  openfpga::IoLocationMap io_location_map =
-    openfpga::read_xml_io_location_map(argv[3]);
-  VTR_LOG("Read the I/O location map from an XML file: %s.\n", argv[3]);
-
-  // openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(
-  //   argv[4], openfpga::e_pin_table_direction_convention::QUICKLOGIC);
-  // VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[4]);
-
   //   /* Convert */
   int status = 0;
   // pcf2bitStreamSetting(pcf_data, pcf_config);

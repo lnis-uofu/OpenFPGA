@@ -56,6 +56,12 @@ class PcfCustomCommand {
  public: /* Public Mutators */
   /* Reserve a number of design constraints to be memory efficent */
 
+  void set_custom_command_pb_type(const std::string& command_name,
+                                  const std::string& pb_type);
+
+  void set_custom_command_pb_type_offset(const std::string& command_name,
+                                         const int& offset);
+
   int create_custom_command(const std::string& command_name,
                             const std::string& command_type);
 
@@ -106,12 +112,6 @@ class PcfCustomCommand {
                                       const std::string& option_name,
                                       const std::string& mode_name) const;
 
-  void set_custom_command_name(const PcfCustomCommandId& custom_command_id,
-                               const std::string& value);
-
-  void set_custom_command_type(const PcfCustomCommandId& custom_command_id,
-                               const std::string& value);
-
   bool valid_custom_command_id(
     const PcfCustomCommandId& custom_command_id) const;
 
@@ -125,6 +125,10 @@ class PcfCustomCommand {
   vtr::vector<PcfCustomCommandId, std::string> custom_command_names_;
 
   vtr::vector<PcfCustomCommandId, std::string> custom_command_types_;
+
+  vtr::vector<PcfCustomCommandId, std::string> custom_command_pb_types_;
+
+  vtr::vector<PcfCustomCommandId, int> custom_command_pbtype_offset_;
 
   vtr::vector<PcfCustomCommandId, std::vector<PcfCustomCommandOptionId>>
     custom_command_id_to_option_id_;
