@@ -10,8 +10,8 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_pb_parser.h"
 #include "pcf2place.h"
-
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -138,9 +138,35 @@ int pcf2place(const PcfData& pcf_data,
 int pcf2bitstream_setting(const PcfData& pcf_data,
                           const IoLocationMap& io_location_map,
                           BitstreamSetting& bitstream_setting) {
-  int num_err = 0;
-  num_err += bitstream_setting.read_bitstream_from_pcf(pcf_data);
-  return num_err;
+  const PcfCustomConstraint pcf_custom_constraint =
+    pcf_data.custom_constraint();
+  for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
+    std::string pb_type =
+      pcf_custom_constraint.custom_constraint_pb_type(constraint_id);
+    std::string mode =
+      pcf_custom_constraint.custom_constraint_mode(constraint_id);
+    std::vector<char> modes_vec(mode.begin(), mode.end());
+    int offset =
+      pcf_custom_constraint.custom_constraint_pb_type_offset(constraint_id);
+    openfpga::BasicPort int_pin =
+      pcf_custom_constraint.custom_constraint_pin(constraint_id);
+    size_t x = io_location_map.io_x(int_pin);
+    size_t y = io_location_map.io_y(int_pin);
+    size_t z = io_location_map.io_z(int_pin);
+    /* Sanity check */
+    if (size_t(-1) == x || size_t(-1) == y || size_t(-1) == z) {
+      VTR_LOG_ERROR(
+        "Invalid coordinate (%ld, %ld, %ld) found for io pin '%s[%lu]'!\n", x,
+        y, z, int_pin.get_name().c_str(), int_pin.get_lsb());
+      continue;
+    }
+    std::array<size_t, 3> coord = {x, y, z};
+    openfpga::PbParser pb_parser(pb_type);
+    bitstream_setting.add_bitstream_pcf_mode_setting(
+      pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
+      coord, offset);
+  }
+  return 0;
 }
 
 } /* end namespace openfpga */

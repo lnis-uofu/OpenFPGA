@@ -24,26 +24,6 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
-/**
- * @brief Check if a given line is a C++ style comment (starts with "//") or is
- * empty.
- *
- * This function skips leading whitespace and then checks whether the first
- * non-whitespace characters are "//". Empty lines are also treated as comments.
- *
- * @param line The input line of text to check.
- * @return true if the line is a comment or empty, false otherwise.
- */
-bool is_comment_line(const std::string& line) {
-  constexpr const char COMMENT = '#';
-  if (line[0] == COMMENT) return true;
-  size_t pos = line.find_first_not_of(" \t");
-  if (pos == std::string::npos) {
-    return true;
-  }
-  return line[pos] == '/' && (pos + 1 < line.size()) && line[pos + 1] == '/';
-}
-
 /********************************************************************
  * A writer to output a repack pin constraint object to XML format
  *
@@ -80,8 +60,8 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
           PcfIoConstraintId io_id = pcf_data.create_io_constraint();
           pcf_data.set_io_net(io_id, net_name);
           pcf_data.set_io_pin(io_id, pin_name);
-        } else if (is_comment_line(word)) {  // if it's a comment
-          VTR_LOG_WARN("Bypass command line '%s' !\n", word.c_str());
+        } else if (word[0] == COMMENT) {  // if it's a comment
+          VTR_LOG_WARN("Bypass comment line '%s' !\n", word.c_str());
           break;  // or ignore the full line comment and move on
         } else {
           bool valid_command = false;
