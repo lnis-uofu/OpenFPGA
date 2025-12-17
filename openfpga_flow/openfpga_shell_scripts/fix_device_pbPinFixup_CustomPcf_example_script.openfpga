@@ -1,5 +1,3 @@
-pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF_FILE}
-
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
 vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --skip_sync_clustering_and_routing_results on
@@ -10,9 +8,11 @@ read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 
+pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF_FILE}
+
 # Read OpenFPGA bitstream settings
 # Note that additional information will be appended to the data produced by the pcf2bitstream_setting command
-read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
+read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE} --append
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
