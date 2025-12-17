@@ -90,7 +90,8 @@ static void build_primitive_bitstream(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& device_annotation, const PhysicalPb& physical_pb,
   const PhysicalPbId& primitive_pb_id, t_pb_type* primitive_pb_type,
-  const bool& verbose) {
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const bool& pcf_mode_speicified, const bool& verbose) {
   /* Ensure a valid physical pritimive pb */
   if (nullptr == primitive_pb_type) {
     VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid primitive_pb_type!\n");
@@ -119,7 +120,14 @@ static void build_primitive_bitstream(
   }
 
   std::vector<bool> mode_select_bitstream;
-  if (true == physical_pb.valid_pb_id(primitive_pb_id)) {
+  if (pcf_mode_speicified) {
+    mode_select_bitstream = generate_mode_select_bitstream(
+      bitstream_annotation.pb_type_pcf_mode_bits(primitive_pb_type));
+    VTR_LOG(
+      " \n Specified pcf mode bits are: %s \n",
+      bitstream_annotation.pb_type_pcf_mode_bits_to_string(primitive_pb_type)
+        .c_str());
+  } else if (true == physical_pb.valid_pb_id(primitive_pb_id)) {
     mode_select_bitstream = generate_mode_select_bitstream(
       physical_pb.mode_bits(primitive_pb_id),
       device_annotation.pb_type_mode_bits(primitive_pb_type));
@@ -746,7 +754,7 @@ static void rec_build_physical_block_bitstream(
   const VprBitstreamAnnotation& bitstream_annotation, const e_side& border_side,
   const PhysicalPb& physical_pb, const PhysicalPbId& pb_id,
   t_pb_graph_node* physical_pb_graph_node, const size_t& pb_graph_node_index,
-  const bool& verbose) {
+  const bool& pcf_mode_speicified, const bool& verbose) {
   /* Get the physical pb_type that is linked to the pb_graph node */
   t_pb_type* physical_pb_type = physical_pb_graph_node->pb_type;
 
@@ -807,7 +815,7 @@ static void rec_build_physical_block_bitstream(
           child_pb,
           &(physical_pb_graph_node
               ->child_pb_graph_nodes[physical_mode->index][ipb][jpb]),
-          jpb, verbose);
+          jpb, pcf_mode_speicified, verbose);
       }
     }
   }
@@ -834,7 +842,7 @@ static void rec_build_physical_block_bitstream(
         build_primitive_bitstream(
           bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block,
           module_manager, circuit_lib, device_annotation, physical_pb, pb_id,
-          physical_pb_type, verbose);
+          physical_pb_type, bitstream_annotation, pcf_mode_speicified, verbose);
         break;
       default:
         VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -950,6 +958,11 @@ static void build_physical_block_bitstream(
       device_annotation.physical_tile_z_to_subtile_index(grid_type, z);
     VTR_ASSERT(1 ==
                grid_type->sub_tiles[sub_tile_index].equivalent_sites.size());
+    bool pcf_mode_speicified = false;
+    std::array<size_t, 3> pcf_loc = {grid_coord.x(), grid_coord.y(), z};
+    if (bitstream_annotation.pcf_coord_pb_type(pcf_loc)) {
+      pcf_mode_speicified = true;
+    }
     for (t_logical_block_type_ptr lb_type :
          grid_type->sub_tiles[sub_tile_index].equivalent_sites) {
       /* Bypass empty pb_graph */
@@ -965,7 +978,7 @@ static void build_physical_block_bitstream(
           grid_configurable_block, module_manager, module_name_map, circuit_lib,
           mux_lib, atom_ctx, device_annotation, bitstream_annotation,
           border_side, PhysicalPb(), PhysicalPbId::INVALID(),
-          lb_type->pb_graph_head, z, verbose);
+          lb_type->pb_graph_head, z, pcf_mode_speicified, verbose);
       } else {
         const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
           place_annotation.grid_blocks(grid_coord)[z]);
@@ -980,7 +993,8 @@ static void build_physical_block_bitstream(
           bitstream_manager, grouped_mem_inst_scoreboard,
           grid_configurable_block, module_manager, module_name_map, circuit_lib,
           mux_lib, atom_ctx, device_annotation, bitstream_annotation,
-          border_side, phy_pb, top_pb_id, pb_graph_head, z, verbose);
+          border_side, phy_pb, top_pb_id, pb_graph_head, z, pcf_mode_speicified,
+          verbose);
       }
     }
   }

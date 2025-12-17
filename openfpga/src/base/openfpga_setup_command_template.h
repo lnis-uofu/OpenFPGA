@@ -629,19 +629,19 @@ ShellCommandId add_pcf2place_command_template(
  * - Add command dependency
  *******************************************************************/
 template <class T>
-ShellCommandId add_pcf2bistream_setting_command_template(
+ShellCommandId add_pcf2bitstream_setting_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
   const bool& hidden) {
-  Command shell_cmd("pcf2bistream_setting");
+  Command shell_cmd("pcf2bitstream_setting");
 
   /* Add an option '--pcf'*/
   CommandOptionId opt_pcf_file =
     shell_cmd.add_option("pcf", true, "file path to the user pin constraint");
   shell_cmd.set_option_require_value(opt_pcf_file, openfpga::OPT_STRING);
 
-  /* Add an option '--pcf_config'*/
+  /* Add an option '--config'*/
   CommandOptionId opt_pcf_config_file =
-    shell_cmd.add_option("pcf_config", true,
+    shell_cmd.add_option("config", true,
                          "file path to the pcf config file which defines "
                          "custom pcf commands (.xml)");
   shell_cmd.set_option_require_value(opt_pcf_config_file, openfpga::OPT_STRING);
@@ -1126,6 +1126,8 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
    * Command 'pcf2place'
    */
   add_pcf2place_command_template<T>(shell, openfpga_setup_cmd_class, hidden);
+  add_pcf2bitstream_setting_command_template<T>(shell, openfpga_setup_cmd_class,
+                                                hidden);
 
   /********************************
    * Command 'read_openfpga_arch'

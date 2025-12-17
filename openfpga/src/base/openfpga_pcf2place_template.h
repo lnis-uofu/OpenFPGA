@@ -29,7 +29,7 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
                                            const CommandContext& cmd_context) {
   /* todo: create a factory to produce this in the future*/
   CommandOptionId opt_pcf = cmd.option("pcf");
-  CommandOptionId opt_pcf_config = cmd.option("pcf_config");
+  CommandOptionId opt_pcf_config = cmd.option("config");
   CommandOptionId opt_reduce_error_to_warning =
     cmd.option("reduce_error_to_warning");
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -49,8 +49,8 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
     pcf_custom_command);
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
-  auto bitstream_setting = openfpga_context.mutable_bitstream_setting();
-  int status = pcf2bitstream_setting(pcf_data, bitstream_setting);
+  int status = pcf2bitstream_setting(
+    pcf_data, openfpga_context.mutable_bitstream_setting());
   if (status) {
     return status;
   }

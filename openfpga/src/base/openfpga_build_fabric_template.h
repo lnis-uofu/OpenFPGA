@@ -222,6 +222,22 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.module_graph(), g_vpr_ctx.device().grid,
     cmd_context.option_enable(cmd, opt_group_tile));
 
+  /* update vpr bitstream annotation with io location map */
+  const auto io_location_map = openfpga_ctx.io_location_map();
+  auto& bitstream_annotation = openfpga_ctx.mutable_vpr_bitstream_annotation();
+  for (const auto& [pb_type, int_pin] :
+       bitstream_annotation.pb_type_pcf_pins()) {
+    size_t x = io_location_map.io_x(int_pin);
+    size_t y = io_location_map.io_y(int_pin);
+    size_t z = io_location_map.io_z(int_pin);
+    /* Sanity check */
+    if (size_t(-1) == x || size_t(-1) == y || size_t(-1) == z) {
+      continue;
+    }
+    std::array<size_t, 3> coord = {x, y, z};
+    bitstream_annotation.add_pcf_coord_pb_type(coord, pb_type);
+  }
+
   /* Build fabric global port information */
   openfpga_ctx.mutable_fabric_global_port_info() =
     build_fabric_global_port_info(

@@ -131,4 +131,73 @@ void VprBitstreamAnnotation::set_clock_tap_routing_pin(
   clock_tap_routing_pins_[tree_id] = tree_pin_id;
 }
 
+std::string VprBitstreamAnnotation::pb_type_pcf_mode_bits_to_string(
+  t_pb_type* pb_type) const {
+  std::string mode_bits_str;
+  for (const char& bit : pb_type_pcf_mode_bits(pb_type)) {
+    mode_bits_str += bit;
+  }
+  return mode_bits_str;
+}
+
+std::vector<char> VprBitstreamAnnotation::pb_type_pcf_mode_bits(
+  t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, std::vector<char>>::const_iterator it =
+    pb_type_pcf_mode_bits_.find(pb_type);
+  if (it == pb_type_pcf_mode_bits_.end()) {
+    /* Return an empty vector */
+    return std::vector<char>();
+  }
+  return pb_type_pcf_mode_bits_.at(pb_type);
+}
+
+void VprBitstreamAnnotation::add_pb_type_pcf_mode_bits(
+  t_pb_type* pb_type, const std::vector<char>& mode_bits, const bool& verbose) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, std::vector<char>>::const_iterator it =
+    pb_type_pcf_mode_bits_.find(pb_type);
+  if (it != pb_type_pcf_mode_bits_.end()) {
+    VTR_LOGV_WARN(verbose,
+                  "Override the pcf mode bits mapping for pb_type '%s'!\n",
+                  pb_type->name);
+  }
+
+  pb_type_pcf_mode_bits_[pb_type] = mode_bits;
+}
+
+void VprBitstreamAnnotation::add_pb_type_pcf_pins(t_pb_type* pb_type,
+                                                  const BasicPort& pcf_pin,
+                                                  const bool& verbose) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, BasicPort>::const_iterator it =
+    pb_type_pcf_pins_.find(pb_type);
+  if (it != pb_type_pcf_pins_.end()) {
+    VTR_LOGV_WARN(verbose, "Override the pcf pin mapping for pb_type '%s'!\n",
+                  pcf_pin.get_name().c_str());
+  }
+
+  pb_type_pcf_pins_[pb_type] = pcf_pin;
+}
+std::map<t_pb_type*, BasicPort> VprBitstreamAnnotation::pb_type_pcf_pins()
+  const {
+  return pb_type_pcf_pins_;
+}
+
+void VprBitstreamAnnotation::add_pcf_coord_pb_type(
+  const std::array<size_t, 3>& coord, t_pb_type* pb_type) {
+  pcf_coord_pb_type_[coord] = pb_type;
+}
+
+t_pb_type* VprBitstreamAnnotation::pcf_coord_pb_type(
+  const std::array<size_t, 3>& coord) const {
+  auto it = pcf_coord_pb_type_.find(coord);
+  if (it == pcf_coord_pb_type_.end()) {
+    return nullptr;
+  }
+  VTR_LOG("\n PCF mode bits specified for location: <%d, %d, %d> \n", coord[0],
+          coord[1], coord[2]);
+  return it->second;
+}
+
 } /* End namespace openfpga*/

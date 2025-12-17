@@ -169,10 +169,10 @@ std::string BitstreamSetting::pcf_mode_bits_to_string(
   }
   return mode_bits_str;
 }
-std::array<size_t, 3> BitstreamSetting::pcf_mode_coord(
+BasicPort BitstreamSetting::pcf_pin(
   const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
   VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
-  return pb_type_pcf_mode_coords_[pcf_mode_setting_id];
+  return pb_type_pcf_pin_[pcf_mode_setting_id];
 }
 int BitstreamSetting::pcf_mode_bitstream_offset(
   const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
@@ -294,7 +294,7 @@ BitstreamPCFModeSettingId BitstreamSetting::add_bitstream_pcf_mode_setting(
   const std::string& pb_type_name,
   const std::vector<std::string>& parent_pb_type_names,
   const std::vector<std::string>& parent_mode_names,
-  const std::vector<char>& mode_bits, const std::array<size_t, 3>& pb_coord,
+  const std::vector<char>& mode_bits, const BasicPort& pb_pin,
   const int& offset) {
   BitstreamPCFModeSettingId pcf_mode_setting_id =
     BitstreamPCFModeSettingId(pcf_mode_setting_ids_.size());
@@ -303,7 +303,7 @@ BitstreamPCFModeSettingId BitstreamSetting::add_bitstream_pcf_mode_setting(
   pcf_mode_parent_pb_type_names_.push_back(parent_pb_type_names);
   pcf_mode_parent_mode_names_.push_back(parent_mode_names);
   pb_type_pcf_mode_bits_.push_back(mode_bits);
-  pb_type_pcf_mode_coords_.push_back(pb_coord);
+  pb_type_pcf_pin_.push_back(pb_pin);
   pb_type_pcf_mode_bitstream_offset_.push_back(offset);
   return pcf_mode_setting_id;
 }

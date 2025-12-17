@@ -136,7 +136,6 @@ int pcf2place(const PcfData& pcf_data,
  * Return 1 if there are serious errors
  *******************************************************************/
 int pcf2bitstream_setting(const PcfData& pcf_data,
-                          const IoLocationMap& io_location_map,
                           BitstreamSetting& bitstream_setting) {
   const PcfCustomConstraint pcf_custom_constraint =
     pcf_data.custom_constraint();
@@ -150,21 +149,11 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
       pcf_custom_constraint.custom_constraint_pb_type_offset(constraint_id);
     openfpga::BasicPort int_pin =
       pcf_custom_constraint.custom_constraint_pin(constraint_id);
-    size_t x = io_location_map.io_x(int_pin);
-    size_t y = io_location_map.io_y(int_pin);
-    size_t z = io_location_map.io_z(int_pin);
-    /* Sanity check */
-    if (size_t(-1) == x || size_t(-1) == y || size_t(-1) == z) {
-      VTR_LOG_ERROR(
-        "Invalid coordinate (%ld, %ld, %ld) found for io pin '%s[%lu]'!\n", x,
-        y, z, int_pin.get_name().c_str(), int_pin.get_lsb());
-      continue;
-    }
-    std::array<size_t, 3> coord = {x, y, z};
+
     openfpga::PbParser pb_parser(pb_type);
     bitstream_setting.add_bitstream_pcf_mode_setting(
       pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
-      coord, offset);
+      int_pin, offset);
   }
   return 0;
 }

@@ -42,7 +42,8 @@ int main(int argc, const char** argv) {
   /* Convert */
   openfpga::BitstreamSetting bitstream_setting;
   int status = 0;
-  status = pcf2bitstream_setting(pcf_data, io_location_map, bitstream_setting);
+  status = pcf2bitstream_setting(pcf_data, bitstream_setting);
+
   if (status) {
     return status;
   }

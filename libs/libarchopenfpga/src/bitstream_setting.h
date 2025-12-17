@@ -141,8 +141,7 @@ class BitstreamSetting {
     const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
   std::string pcf_mode_bits_to_string(
     const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
-  std::array<size_t, 3> pcf_mode_coord(
-    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  BasicPort pcf_pin(const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
   int pcf_mode_bitstream_offset(
     const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
 
@@ -193,7 +192,7 @@ class BitstreamSetting {
     const std::string& pb_type_name,
     const std::vector<std::string>& parent_pb_type_names,
     const std::vector<std::string>& parent_mode_names,
-    const std::vector<char>& mode_bits, const std::array<size_t, 3>& pb_coord,
+    const std::vector<char>& mode_bits, const BasicPort& pb_pin,
     const int& offset);
 
   /* Clock routing settings */
@@ -271,8 +270,7 @@ class BitstreamSetting {
     pcf_mode_parent_mode_names_;
   vtr::vector<BitstreamPCFModeSettingId, std::vector<char>>
     pb_type_pcf_mode_bits_;
-  vtr::vector<BitstreamPCFModeSettingId, std::array<size_t, 3>>
-    pb_type_pcf_mode_coords_;
+  vtr::vector<BitstreamPCFModeSettingId, BasicPort> pb_type_pcf_pin_;
   vtr::vector<BitstreamPCFModeSettingId, int>
     pb_type_pcf_mode_bitstream_offset_;
 
