@@ -10,6 +10,9 @@ echo -e "Basic regression tests";
 echo -e "Test multiple runs of vpr"
 run-task basic_tests/vpr_standalone $@
 
+echo -e "Test specify mode bits from pcf command"
+run-task fpga_verilog/io/io_pdl_emode $@
+
 echo -e "Test source commands in openfpga shell"
 run-task basic_tests/source_command/source_string $@
 run-task basic_tests/source_command/source_file $@
