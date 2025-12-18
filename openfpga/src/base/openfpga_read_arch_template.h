@@ -186,11 +186,9 @@ int read_bitstream_setting_template(T& openfpga_context, const Command& cmd,
       arch_file_name.c_str(), openfpga_context.mutable_bitstream_setting());
     VTR_ASSERT(status == CMD_EXEC_SUCCESS);
   } else {
-    openfpga::BitstreamSetting bitstream_setting;
-    status = read_xml_openfpga_bitstream_settings(arch_file_name.c_str(),
-                                                  bitstream_setting);
-
-    openfpga_context.mutable_bitstream_setting() = std::move(bitstream_setting);
+    openfpga_context.mutable_bitstream_setting().clear();
+    status = read_xml_openfpga_bitstream_settings(
+      arch_file_name.c_str(), openfpga_context.mutable_bitstream_setting());
     VTR_ASSERT(status == CMD_EXEC_SUCCESS);
   }
 

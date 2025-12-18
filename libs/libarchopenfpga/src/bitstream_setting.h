@@ -226,6 +226,7 @@ class BitstreamSetting {
   bool valid_bitstream_interconnect_setting_id(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
+  void clear();
 
  private: /* Internal data */
   /* Pb type -related settings

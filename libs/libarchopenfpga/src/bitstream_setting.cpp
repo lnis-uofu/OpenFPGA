@@ -419,4 +419,49 @@ bool BitstreamSetting::valid_overwrite_bitstream_id(
          (id == overwrite_bitstream_ids_[id]);
 }
 
+void BitstreamSetting::clear() {
+  pb_type_setting_ids_.clear();
+  pb_type_names_.clear();
+  parent_pb_type_names_.clear();
+  parent_mode_names_.clear();
+  pb_type_bitstream_sources_.clear();
+  pb_type_bitstream_contents_.clear();
+  is_mode_select_bitstreams_.clear();
+
+  bitstream_offsets_.clear();
+
+  /* Pb type - default mode bits overwrite */
+  default_mode_setting_ids_.clear();
+  default_mode_pb_type_names_.clear();
+  default_mode_parent_pb_type_names_.clear();
+  default_mode_parent_mode_names_.clear();
+  pb_type_default_mode_bits_.clear();
+
+  /* Mode setting from pcf command */
+
+  pcf_mode_setting_ids_.clear();
+  pcf_mode_pb_type_names_.clear();
+  pcf_mode_parent_pb_type_names_.clear();
+  pcf_mode_parent_mode_names_.clear();
+  pb_type_pcf_mode_bits_.clear();
+  pb_type_pcf_pin_.clear();
+  pb_type_pcf_mode_bitstream_offset_.clear();
+
+  /* Clock routing */
+
+  clock_routing_setting_ids_.clear();
+  clock_routing_network_names_.clear();
+  clock_routing_pins_.clear();
+
+  interconnect_setting_ids_.clear();
+  interconnect_names_.clear();
+  interconnect_parent_pb_type_names_.clear();
+  interconnect_parent_mode_names_.clear();
+  interconnect_default_paths_.clear();
+
+  non_fabric_.clear();
+  overwrite_bitstream_ids_.clear();
+  overwrite_bitstream_paths_.clear();
+  overwrite_bitstream_values_.clear();
+}
 }  // namespace openfpga
