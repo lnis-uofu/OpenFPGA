@@ -15,6 +15,7 @@
 #include "pcf_config_constants.h"
 #include "pcf_reader.h"
 #include "read_xml_util.h"
+#include "command_exit_codes.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

@@ -12,6 +12,7 @@
 #include "openfpga_digest.h"
 #include "openfpga_pb_parser.h"
 #include "pcf2place.h"
+#include "command_exit_codes.h"
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -158,7 +159,7 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     VTR_LOGV(verbose, "Specified mode bits to be %s for pb_type %s\n",
              mode.c_str(), pb_type.c_str());
   }
-  return openfpga::CMD_EXEC_SUCCESS;
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
