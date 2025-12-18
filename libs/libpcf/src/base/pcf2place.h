@@ -27,7 +27,8 @@ int pcf2place(const PcfData& pcf_data,
               const IoPinTable& io_pin_table,
               const IoLocationMap& io_location_map, IoNetPlace& io_net_place);
 int pcf2bitstream_setting(const PcfData& pcf_data,
-                          BitstreamSetting& bitstream_setting);
+                          BitstreamSetting& bitstream_setting,
+                          const bool& verbose = false);
 
 } /* End namespace openfpga*/
 

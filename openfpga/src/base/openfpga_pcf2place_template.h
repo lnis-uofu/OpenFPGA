@@ -50,7 +50,8 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
   int status = pcf2bitstream_setting(
-    pcf_data, openfpga_context.mutable_bitstream_setting());
+    pcf_data, openfpga_context.mutable_bitstream_setting(),
+    cmd_context.option_enable(cmd, opt_verbose));
   if (status) {
     return status;
   }

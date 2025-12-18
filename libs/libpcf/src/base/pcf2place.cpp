@@ -136,7 +136,8 @@ int pcf2place(const PcfData& pcf_data,
  * Return 1 if there are serious errors
  *******************************************************************/
 int pcf2bitstream_setting(const PcfData& pcf_data,
-                          BitstreamSetting& bitstream_setting) {
+                          BitstreamSetting& bitstream_setting,
+                          const bool& verbose) {
   const PcfCustomConstraint pcf_custom_constraint =
     pcf_data.custom_constraint();
   for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
@@ -154,6 +155,8 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     bitstream_setting.add_bitstream_pcf_mode_setting(
       pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
       int_pin, offset);
+    VTR_LOGV(verbose, "Specified mode bits to be %s for pb_type %s\n",
+             mode.c_str(), pb_type.c_str());
   }
   return 0;
 }
