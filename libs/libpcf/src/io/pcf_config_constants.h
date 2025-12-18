@@ -1,5 +1,4 @@
-#ifndef PCF_CUSTOM_COMMAND_CONSTANTS_H
-#define PCF_CUSTOM_COMMAND_CONSTANTS_H
+#pragma once
 
 /* Constants required by XML parser */
 
@@ -26,4 +25,4 @@ constexpr const char* XML_VALID_NODE_NAMES[] = {
   XML_COMMAND_TYPE_NODE_NAME, XML_PB_TYPE_NODE_NAME, XML_OPTION_TYPE_NODE_NAME,
   XML_MODE_TYPE_NODE_NAME};
 
-#endif
+
