@@ -158,7 +158,7 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     VTR_LOGV(verbose, "Specified mode bits to be %s for pb_type %s\n",
              mode.c_str(), pb_type.c_str());
   }
-  return 0;
+  return openfpga::CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

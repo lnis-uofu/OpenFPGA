@@ -52,8 +52,8 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
   int status = pcf2bitstream_setting(
     pcf_data, openfpga_context.mutable_bitstream_setting(),
     cmd_context.option_enable(cmd, opt_verbose));
-  if (status) {
-    return status;
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
 }

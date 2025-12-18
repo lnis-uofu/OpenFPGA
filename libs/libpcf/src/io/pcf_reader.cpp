@@ -129,7 +129,7 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
 
 int read_pcf_conifg(const std::string& pcf_config_file,
                     PcfCustomCommand& pcf_custom_command) {
-  // int status = openfpga::CMD_EXEC_FATAL_ERROR;
+  int status = CMD_EXEC_FATAL_ERROR;
 
   pugi::xml_node Next;
 
@@ -150,16 +150,15 @@ int read_pcf_conifg(const std::string& pcf_config_file,
     if (xml_command.name() != std::string(XML_COMMAND_TYPE_NODE_NAME)) {
       bad_tag(xml_command, loc_data, xml_pcf_config,
               {XML_COMMAND_TYPE_NODE_NAME});
-      return 1;
+      return CMD_EXEC_FATAL_ERROR;
     }
-    int status =
-      read_xml_pcf_command(xml_command, loc_data, pcf_custom_command);
-    if (status != 0) {
+    status = read_xml_pcf_command(xml_command, loc_data, pcf_custom_command);
+    if (status != CMD_EXEC_SUCCESS) {
       VTR_LOG_ERROR("Fail to read command from PCF Config file!\n");
-      return 1;
+      return CMD_EXEC_FATAL_ERROR;
     }
   }
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
@@ -181,7 +180,7 @@ int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
         xml_child.name() != std::string(XML_PB_TYPE_NODE_NAME)) {
       bad_tag(xml_child, loc_data, xml_pcf_command,
               {XML_OPTION_TYPE_NODE_NAME, XML_PB_TYPE_NODE_NAME});
-      return 1;
+      return CMD_EXEC_FATAL_ERROR;
     }
 
     /*parse option*/
@@ -222,7 +221,7 @@ int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
                                                            offset);
     }
   }
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

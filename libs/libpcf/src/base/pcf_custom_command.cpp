@@ -123,7 +123,7 @@ int PcfCustomCommand::create_custom_command(const std::string& command_name,
   custom_command_types_[custom_command_id] = command_type;
   custom_command_id_to_option_id_.emplace_back();
 
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 void PcfCustomCommand::set_custom_command_pb_type(
@@ -189,7 +189,7 @@ int PcfCustomCommand::create_custom_option(const std::string& command_name,
   custom_option_names_[custom_option_id] = option_name;
   custom_option_types_[custom_option_id] = option_type;
   custom_option_id_to_mode_id_.emplace_back();
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 int PcfCustomCommand::create_custom_mode(const std::string& command_name,
@@ -205,7 +205,7 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
   custom_mode_values_.emplace_back();
   custom_mode_names_[custom_mode_id] = mode_name;
   custom_mode_values_[custom_mode_id] = mode_value;
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 std::vector<PcfCustomCommandOptionId> PcfCustomCommand::command_options(

@@ -176,18 +176,19 @@ int read_xml_openfpga_bitstream_settings(
   try {
     loc_data = pugiutil::load_xml(doc, bitstream_setting_file_name);
 
-    /* Second node should be <openfpga_simulation_setting> */
+    /* Second node should be <openfpga_bitstream_setting> */
     auto xml_bitstream_settings =
       get_single_child(doc, "openfpga_bitstream_setting", loc_data);
 
-    /* Parse simulation settings to data structure */
+    /* Parse bitstream settings to data structure */
     int status = read_xml_bitstream_setting(xml_bitstream_settings, loc_data,
                                             openfpga_bitstream_setting);
-    if (status != 0) {
+    if (status != openfpga::CMD_EXEC_SUCCESS) {
       return openfpga::CMD_EXEC_FATAL_ERROR;
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(bitstream_setting_file_name, e.line(), "%s", e.what());
+    return openfpga::CMD_EXEC_FATAL_ERROR;
   }
 
   return openfpga::CMD_EXEC_SUCCESS;
