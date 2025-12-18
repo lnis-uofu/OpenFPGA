@@ -68,6 +68,8 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
           bool valid_command = false;
           bool valid_option = false;
           valid_command = pcf_custom_command.valid_command(word);
+          /*ToDO: can consider use parse_command API to parse the command from
+           * pcf */
           if (valid_command) {
             std::string option_name;
             std::string option_value;
