@@ -35,20 +35,9 @@ int main(int argc, const char** argv) {
     pcf_custom_command); /*pcf reader will set custom constraints based on
                             custom commands*/
 
-  openfpga::IoLocationMap io_location_map =
-    openfpga::read_xml_io_location_map(argv[3]);
-  VTR_LOG("Read the I/O location map from an XML file: %s.\n", argv[3]);
-
   /* Convert */
   openfpga::BitstreamSetting bitstream_setting;
   int status = 0;
   status = pcf2bitstream_setting(pcf_data, bitstream_setting);
-
-  if (status) {
-    return status;
-  }
-  /* Output */
-  //   status = io_net_place.write_to_place_file(argv[5], true, true);
-
   return status;
 }
