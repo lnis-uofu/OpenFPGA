@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
+#include "command_exit_codes.h"
 #include "openfpga_port_parser.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-#include "command_exit_codes.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {

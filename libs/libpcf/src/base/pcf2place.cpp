@@ -9,10 +9,10 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_pb_parser.h"
 #include "pcf2place.h"
-#include "command_exit_codes.h"
 /* begin namespace openfpga */
 namespace openfpga {
 

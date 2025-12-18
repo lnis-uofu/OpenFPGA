@@ -48,7 +48,7 @@ class IoLocationMap {
   int write_to_xml_file(const std::string& fname,
                         const bool& include_time_stamp,
                         const bool& verbose) const;
-  bool is_valid_coord(const int& x, const int& y, const int& z);
+  bool is_valid_coord(const int& x, const int& y, const int& z) const;
 
  private: /* Internal Data */
   /* I/O index fast lookup by [x][y][z] location

@@ -11,11 +11,11 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "pcf_config_constants.h"
 #include "pcf_reader.h"
 #include "read_xml_util.h"
-#include "command_exit_codes.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
