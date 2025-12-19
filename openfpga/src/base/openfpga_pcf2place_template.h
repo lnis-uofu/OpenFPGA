@@ -39,8 +39,6 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
 
   std::string pcf_fname = cmd_context.option_value(cmd, opt_pcf);
   std::string pcf_config_fname = cmd_context.option_value(cmd, opt_pcf_config);
-  std::string fpga_io_map_fname =
-    cmd_context.option_value(cmd, opt_fpga_io_map);
   std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
   /* FIXME: This part is dirty. Should have function to handle the legalization */
   e_pin_table_direction_convention pin_table_dir_convention =
