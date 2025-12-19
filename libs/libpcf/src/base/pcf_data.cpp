@@ -2,10 +2,13 @@
 
 #include <algorithm>
 
+#include "command_exit_codes.h"
 #include "openfpga_port_parser.h"
+#include "pugixml.hpp"
+#include "pugixml_util.hpp"
+#include "read_xml_pin_constraints.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
 /* Begin namespace openfpga */
 namespace openfpga {
 
@@ -113,6 +116,44 @@ void PcfData::set_io_pin(const PcfIoConstraintId& io_id,
   VTR_ASSERT(valid_io_constraint_id(io_id));
   PortParser port_parser(pin);
   io_constraint_pins_[io_id] = port_parser.port();
+}
+
+PcfCustomConstraintId PcfData::create_custom_constraint() {
+  /* Create a new id */
+  PcfCustomConstraintId custom_constraint_id =
+    pcf_custom_constraint_.create_custom_constraint();
+  return custom_constraint_id;
+}
+
+void PcfData::set_custom_constraint_pin_mode(
+  const PcfCustomConstraintId& custom_constraint_id, const std::string& mode) {
+  pcf_custom_constraint_.set_custom_constraint_pin_mode(custom_constraint_id,
+                                                        mode);
+}
+
+void PcfData::set_custom_constraint_pb_type(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const std::string& pb_type) {
+  pcf_custom_constraint_.set_custom_constraint_pb_type(custom_constraint_id,
+                                                       pb_type);
+}
+
+void PcfData::set_custom_constraint_pb_type_offset(
+  const PcfCustomConstraintId& custom_constraint_id, const int& offset) {
+  pcf_custom_constraint_.set_custom_constraint_pb_type_offset(
+    custom_constraint_id, offset);
+}
+
+void PcfData::set_custom_constraint_pin(
+  const PcfCustomConstraintId& custom_constraint_id, const std::string& pin) {
+  pcf_custom_constraint_.set_custom_constraint_pin(custom_constraint_id, pin);
+}
+
+void PcfData::set_custom_constraint_command(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const std::string& command_name) {
+  pcf_custom_constraint_.set_custom_constraint_command(custom_constraint_id,
+                                                       command_name);
 }
 
 /************************************************************************

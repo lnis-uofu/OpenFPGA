@@ -170,14 +170,27 @@ int read_bitstream_setting_template(T& openfpga_context, const Command& cmd,
    * before reaching this fuction
    */
   CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_append = cmd.option("append");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
   std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
-
+  bool append = false;
+  if (cmd_context.option_enable(cmd, opt_append)) {
+    append = true;
+  }
   VTR_LOG("Reading XML bitstream setting '%s'...\n", arch_file_name.c_str());
-  openfpga_context.mutable_bitstream_setting() =
-    read_xml_openfpga_bitstream_settings(arch_file_name.c_str());
+  int status = CMD_EXEC_FATAL_ERROR;
+  if (append) {
+    status = read_xml_openfpga_bitstream_settings(
+      arch_file_name.c_str(), openfpga_context.mutable_bitstream_setting());
+    VTR_ASSERT(status == CMD_EXEC_SUCCESS);
+  } else {
+    openfpga_context.mutable_bitstream_setting().clear();
+    status = read_xml_openfpga_bitstream_settings(
+      arch_file_name.c_str(), openfpga_context.mutable_bitstream_setting());
+    VTR_ASSERT(status == CMD_EXEC_SUCCESS);
+  }
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

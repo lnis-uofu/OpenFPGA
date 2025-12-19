@@ -14,6 +14,7 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "command_exit_codes.h"
 #include "openfpga_arch_linker.h"
 #include "read_xml_bitstream_setting.h"
 #include "read_xml_circuit_library.h"
@@ -161,11 +162,10 @@ openfpga::SimulationSetting read_xml_openfpga_simulation_settings(
 /********************************************************************
  * Top-level function to parse an XML file and load data to bitstream settings
  *******************************************************************/
-openfpga::BitstreamSetting read_xml_openfpga_bitstream_settings(
-  const char* bitstream_setting_file_name) {
+int read_xml_openfpga_bitstream_settings(
+  const char* bitstream_setting_file_name,
+  openfpga::BitstreamSetting& openfpga_bitstream_setting) {
   vtr::ScopedStartFinishTimer timer("Read OpenFPGA bitstream settings");
-
-  openfpga::BitstreamSetting openfpga_bitstream_setting;
 
   pugi::xml_node Next;
 
@@ -176,17 +176,20 @@ openfpga::BitstreamSetting read_xml_openfpga_bitstream_settings(
   try {
     loc_data = pugiutil::load_xml(doc, bitstream_setting_file_name);
 
-    /* Second node should be <openfpga_simulation_setting> */
+    /* Second node should be <openfpga_bitstream_setting> */
     auto xml_bitstream_settings =
       get_single_child(doc, "openfpga_bitstream_setting", loc_data);
 
-    /* Parse simulation settings to data structure */
-    openfpga_bitstream_setting =
-      read_xml_bitstream_setting(xml_bitstream_settings, loc_data);
-
+    /* Parse bitstream settings to data structure */
+    int status = read_xml_bitstream_setting(xml_bitstream_settings, loc_data,
+                                            openfpga_bitstream_setting);
+    if (status != openfpga::CMD_EXEC_SUCCESS) {
+      return openfpga::CMD_EXEC_FATAL_ERROR;
+    }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(bitstream_setting_file_name, e.line(), "%s", e.what());
+    return openfpga::CMD_EXEC_FATAL_ERROR;
   }
 
-  return openfpga_bitstream_setting;
+  return openfpga::CMD_EXEC_SUCCESS;
 }

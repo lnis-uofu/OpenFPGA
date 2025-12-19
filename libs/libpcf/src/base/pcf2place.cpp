@@ -9,9 +9,10 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
+#include "openfpga_pb_parser.h"
 #include "pcf2place.h"
-
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -127,6 +128,38 @@ int pcf2place(const PcfData& pcf_data,
   }
 
   return num_err;
+}
+
+/********************************************************************
+ * set bitstream setting from custom pcf commands
+ *
+ * Return 0 if successful
+ * Return 1 if there are serious errors
+ *******************************************************************/
+int pcf2bitstream_setting(const PcfData& pcf_data,
+                          BitstreamSetting& bitstream_setting,
+                          const bool& verbose) {
+  const PcfCustomConstraint pcf_custom_constraint =
+    pcf_data.custom_constraint();
+  for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
+    std::string pb_type =
+      pcf_custom_constraint.custom_constraint_pb_type(constraint_id);
+    std::string mode =
+      pcf_custom_constraint.custom_constraint_mode(constraint_id);
+    std::vector<char> modes_vec(mode.begin(), mode.end());
+    int offset =
+      pcf_custom_constraint.custom_constraint_pb_type_offset(constraint_id);
+    openfpga::BasicPort int_pin =
+      pcf_custom_constraint.custom_constraint_pin(constraint_id);
+
+    openfpga::PbParser pb_parser(pb_type);
+    bitstream_setting.add_bitstream_pcf_mode_setting(
+      pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
+      int_pin, offset);
+    VTR_LOGV(verbose, "Specified mode bits to be %s for pb_type %s\n",
+             mode.c_str(), pb_type.c_str());
+  }
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

@@ -12,5 +12,4 @@
  * Function declaration
  *******************************************************************/
 PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname);
-
 #endif

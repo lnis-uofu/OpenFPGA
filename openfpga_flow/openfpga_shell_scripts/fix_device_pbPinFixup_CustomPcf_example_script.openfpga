@@ -8,9 +8,14 @@ read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 
+pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF_FILE}
+
+# Read OpenFPGA bitstream settings
+# Note that additional information will be appended to the data produced by the pcf2bitstream_setting command
+read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE} --append
+
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
-
 link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
 
 # Check and correct any naming conflicts in the BLIF netlist

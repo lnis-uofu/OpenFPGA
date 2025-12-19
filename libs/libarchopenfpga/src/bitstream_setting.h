@@ -10,6 +10,7 @@
 
 #include "bitstream_setting_fwd.h"
 #include "openfpga_port.h"
+#include "pcf_data.h"
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
 
@@ -63,6 +64,9 @@ class BitstreamSetting {
   typedef vtr::vector<BitstreamDefaultModeSettingId,
                       BitstreamDefaultModeSettingId>::const_iterator
     bitstream_default_mode_setting_iterator;
+  typedef vtr::vector<BitstreamPCFModeSettingId,
+                      BitstreamPCFModeSettingId>::const_iterator
+    bitstream_pcf_mode_setting_iterator;
   typedef vtr::vector<BitstreamClockRoutingSettingId,
                       BitstreamClockRoutingSettingId>::const_iterator
     bitstream_clock_routing_setting_iterator;
@@ -77,6 +81,9 @@ class BitstreamSetting {
     bitstream_pb_type_setting_range;
   typedef vtr::Range<bitstream_default_mode_setting_iterator>
     bitstream_default_mode_setting_range;
+
+  typedef vtr::Range<bitstream_pcf_mode_setting_iterator>
+    bitstream_pcf_mode_setting_range;
   typedef vtr::Range<bitstream_clock_routing_setting_iterator>
     bitstream_clock_routing_setting_range;
   typedef vtr::Range<bitstream_interconnect_setting_iterator>
@@ -89,6 +96,7 @@ class BitstreamSetting {
  public: /* Accessors: aggregates */
   bitstream_pb_type_setting_range pb_type_settings() const;
   bitstream_default_mode_setting_range default_mode_settings() const;
+  bitstream_pcf_mode_setting_range pcf_mode_settings() const;
   bitstream_clock_routing_setting_range clock_routing_settings() const;
   bitstream_interconnect_setting_range interconnect_settings() const;
   overwrite_bitstream_range overwrite_bitstreams() const;
@@ -121,6 +129,21 @@ class BitstreamSetting {
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
   std::string default_mode_bits_to_string(
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+
+  /* Pcf Mode Bit settings */
+  std::string pcf_mode_pb_type_name(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  std::vector<std::string> pcf_mode_parent_pb_type_names(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  std::vector<std::string> pcf_mode_parent_mode_names(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  std::vector<char> pcf_mode_bits(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  std::string pcf_mode_bits_to_string(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  BasicPort pcf_pin(const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
+  int pcf_mode_bitstream_offset(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
 
   /* Clock routing settings */
   std::string clock_routing_network(
@@ -164,6 +187,13 @@ class BitstreamSetting {
     const std::vector<std::string>& parent_pb_type_names,
     const std::vector<std::string>& parent_mode_names,
     const std::vector<char>& mode_bits);
+  /*Pcf mode bit setting*/
+  BitstreamPCFModeSettingId add_bitstream_pcf_mode_setting(
+    const std::string& pb_type_name,
+    const std::vector<std::string>& parent_pb_type_names,
+    const std::vector<std::string>& parent_mode_names,
+    const std::vector<char>& mode_bits, const BasicPort& pb_pin,
+    const int& offset);
 
   /* Clock routing settings */
   BitstreamClockRoutingSettingId add_bitstream_clock_routing_setting(
@@ -189,11 +219,14 @@ class BitstreamSetting {
     const BitstreamPbTypeSettingId& pb_type_setting_id) const;
   bool valid_bitstream_default_mode_setting_id(
     const BitstreamDefaultModeSettingId& default_mode_setting_id) const;
+  bool valid_bitstream_pcf_mode_setting_id(
+    const BitstreamPCFModeSettingId& pcf_mode_setting_id) const;
   bool valid_bitstream_clock_routing_setting_id(
     const BitstreamClockRoutingSettingId& clock_routing_setting_id) const;
   bool valid_bitstream_interconnect_setting_id(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
+  void clear();
 
  private: /* Internal data */
   /* Pb type -related settings
@@ -227,6 +260,20 @@ class BitstreamSetting {
     default_mode_parent_mode_names_;
   vtr::vector<BitstreamDefaultModeSettingId, std::vector<char>>
     pb_type_default_mode_bits_;
+
+  /* Mode setting from pcf command */
+  vtr::vector<BitstreamPCFModeSettingId, BitstreamPCFModeSettingId>
+    pcf_mode_setting_ids_;
+  vtr::vector<BitstreamPCFModeSettingId, std::string> pcf_mode_pb_type_names_;
+  vtr::vector<BitstreamPCFModeSettingId, std::vector<std::string>>
+    pcf_mode_parent_pb_type_names_;
+  vtr::vector<BitstreamPCFModeSettingId, std::vector<std::string>>
+    pcf_mode_parent_mode_names_;
+  vtr::vector<BitstreamPCFModeSettingId, std::vector<char>>
+    pb_type_pcf_mode_bits_;
+  vtr::vector<BitstreamPCFModeSettingId, BasicPort> pb_type_pcf_pin_;
+  vtr::vector<BitstreamPCFModeSettingId, int>
+    pb_type_pcf_mode_bitstream_offset_;
 
   /* Clock routing */
   vtr::vector<BitstreamClockRoutingSettingId, BitstreamClockRoutingSettingId>

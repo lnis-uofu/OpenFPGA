@@ -55,6 +55,7 @@ class VprDeviceAnnotation {
   CircuitPortId pb_circuit_port(t_port* pb_port) const;
   std::vector<char> pb_type_mode_bits(t_pb_type* pb_type) const;
   std::string pb_type_mode_bits_to_string(t_pb_type* pb_type) const;
+
   /* Get the unique index of a pb_graph_node */
   PbGraphNodeId pb_graph_node_unique_index(
     t_pb_graph_node* pb_graph_node) const;

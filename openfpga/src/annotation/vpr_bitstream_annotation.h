@@ -49,6 +49,19 @@ class VprBitstreamAnnotation {
     t_pb_type* pb_type) const;
   std::string pb_type_default_mode_bits(t_pb_type* pb_type) const;
 
+  std::string pb_type_pcf_mode_bits_to_string(t_pb_type* pb_type) const;
+
+  std::vector<char> pb_type_pcf_mode_bits(t_pb_type* pb_type) const;
+  void add_pb_type_pcf_mode_bits(t_pb_type* pb_type,
+                                 const std::vector<char>& mode_bits,
+                                 const bool& verbose);
+  void add_pb_type_pcf_offset(t_pb_type* pb_type, const int& offset,
+                              const bool& verbose);
+
+  int pb_type_pcf_offset(t_pb_type* pb_type) const;
+
+  void add_pb_type_pcf_pins(t_pb_type* pb_type, const BasicPort& pcf_pin,
+                            const bool& verbose);
   std::vector<BitstreamSourceInfo> pb_type_mode_select_bitstream_sources(
     t_pb_type* pb_type) const;
   size_t interconnect_default_path_id(t_interconnect* interconnect) const;
@@ -67,6 +80,10 @@ class VprBitstreamAnnotation {
                                         const size_t& default_path_id);
   void set_clock_tap_routing_pin(const ClockTreeId& tree_id,
                                  const ClockTreePinId& tree_pin_id);
+  std::map<t_pb_type*, BasicPort> pb_type_pcf_pins() const;
+  void add_pcf_coord_pb_type(const std::array<size_t, 3>& coord,
+                             t_pb_type* pb_type);
+  t_pb_type* pcf_coord_pb_type(const std::array<size_t, 3>& coord) const;
 
  private: /* Internal data */
   /* For regular bitstreams */
@@ -90,6 +107,11 @@ class VprBitstreamAnnotation {
    * be routed through Note that for each clock tree, only one pin is allowed
    */
   std::map<ClockTreeId, ClockTreePinId> clock_tap_routing_pins_;
+
+  std::map<t_pb_type*, std::vector<char>> pb_type_pcf_mode_bits_;
+  std::map<t_pb_type*, BasicPort> pb_type_pcf_pins_;
+  std::map<t_pb_type*, int> pb_type_pcf_offset_;
+  std::map<std::array<size_t, 3>, t_pb_type*> pcf_coord_pb_type_;
 };
 
 } /* End namespace openfpga*/
