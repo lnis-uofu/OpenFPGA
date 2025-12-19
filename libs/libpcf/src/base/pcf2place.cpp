@@ -138,6 +138,7 @@ int pcf2place(const PcfData& pcf_data,
  *******************************************************************/
 int pcf2bitstream_setting(const PcfData& pcf_data,
                           BitstreamSetting& bitstream_setting,
+                          const IoPinTable& io_pin_table,
                           const bool& verbose) {
   const PcfCustomConstraint pcf_custom_constraint =
     pcf_data.custom_constraint();
@@ -149,8 +150,34 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     std::vector<char> modes_vec(mode.begin(), mode.end());
     int offset =
       pcf_custom_constraint.custom_constraint_pb_type_offset(constraint_id);
-    openfpga::BasicPort int_pin =
+    openfpga::BasicPort ext_pin =
       pcf_custom_constraint.custom_constraint_pin(constraint_id);
+
+    /* Find the internal pin name from pin table, currently we only support
+     * 1-to-1 mapping */
+    auto int_pin_ids = io_pin_table.find_internal_pin_by_name_only(ext_pin);
+    if (0 == int_pin_ids.size()) {
+      VTR_LOG_ERROR(
+        "Cannot find any internal pin that net '%s' is mapped through an "
+        "external pin '%s[%lu]'!\n",
+        net.c_str(), ext_pin.get_name().c_str(), ext_pin.get_lsb());
+      num_err++;
+      continue;
+    } else if (1 < int_pin_ids.size()) {
+      VTR_LOG_ERROR(
+        "Found multiple internal pins that net '%s' is mapped through an "
+        "external pin '%s[%lu]'! Please double check your pin table!\n",
+        net.c_str(), ext_pin.get_name().c_str(), ext_pin.get_lsb());
+      for (auto int_pin_id : int_pin_ids) {
+        VTR_LOG("%s[%ld]\n",
+                io_pin_table.internal_pin(int_pin_id).get_name().c_str(),
+                io_pin_table.internal_pin(int_pin_id).get_lsb());
+      }
+      num_err++;
+      continue;
+    }
+    VTR_ASSERT(1 == int_pin_ids.size());
+    BasicPort int_pin = io_pin_table.internal_pin(int_pin_ids[0]);
 
     openfpga::PbParser pb_parser(pb_type);
     bitstream_setting.add_bitstream_pcf_mode_setting(

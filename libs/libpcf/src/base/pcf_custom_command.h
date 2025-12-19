@@ -49,9 +49,9 @@ class PcfCustomCommand {
   /* Check if there are any io constraints */
   bool empty() const;
 
-  bool valid_command(const std::string command_name) const;
-  bool valid_option(const std::string command_name,
-                    const std::string option_name) const;
+  bool valid_command(const std::string& command_name) const;
+  bool valid_option(const std::string& command_name,
+                    const std::string& option_name) const;
 
  public: /* Public Mutators */
   /* Reserve a number of design constraints to be memory efficent */

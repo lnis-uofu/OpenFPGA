@@ -83,6 +83,8 @@ class IoPinTable {
   /* Given an external pin, find all the internal pin that is mapped */
   std::vector<IoPinTableId> find_internal_pin(
     const BasicPort& ext_pin, const e_io_direction& pin_direction) const;
+  std::vector<IoPinTableId> find_internal_pin_by_name_only(
+    const BasicPort& ext_pin) const;
   /* Check if there are any pins */
   bool empty() const;
 

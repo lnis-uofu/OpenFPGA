@@ -646,6 +646,25 @@ ShellCommandId add_pcf2bitstream_setting_command_template(
                          "custom pcf commands (.xml)");
   shell_cmd.set_option_require_value(opt_pcf_config_file, openfpga::OPT_STRING);
 
+  /* Add an option '--fpga_io_map'*/
+  CommandOptionId opt_fpga_io_map_file = shell_cmd.add_option(
+    "fpga_io_map", true, "file path to FPGA I/O location map (.xml)");
+  shell_cmd.set_option_require_value(opt_fpga_io_map_file,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table'*/
+  CommandOptionId opt_pin_table_file = shell_cmd.add_option(
+    "pin_table", true, "file path to the pin table (.csv)");
+  shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table_direction_convention'*/
+  CommandOptionId opt_pin_table_dir_convention =
+    shell_cmd.add_option("pin_table_direction_convention", false,
+                         "the convention to follow when inferring pin "
+                         "direction from the name of ports in pin table file");
+  shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
+                                     openfpga::OPT_STRING);
+
   /* Add an option '--reduce_error_to_warning' */
   shell_cmd.add_option(
     "reduce_error_to_warning", false,
