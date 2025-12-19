@@ -140,6 +140,7 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
                           BitstreamSetting& bitstream_setting,
                           const IoPinTable& io_pin_table,
                           const bool& verbose) {
+  int num_err = 0;
   const PcfCustomConstraint pcf_custom_constraint =
     pcf_data.custom_constraint();
   for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
@@ -158,16 +159,16 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     auto int_pin_ids = io_pin_table.find_internal_pin_by_name_only(ext_pin);
     if (0 == int_pin_ids.size()) {
       VTR_LOG_ERROR(
-        "Cannot find any internal pin that net '%s' is mapped through an "
+        "Cannot find any internal pin mapped to an "
         "external pin '%s[%lu]'!\n",
-        net.c_str(), ext_pin.get_name().c_str(), ext_pin.get_lsb());
+        ext_pin.get_name().c_str(), ext_pin.get_lsb());
       num_err++;
       continue;
     } else if (1 < int_pin_ids.size()) {
       VTR_LOG_ERROR(
-        "Found multiple internal pins that net '%s' is mapped through an "
+        "Found multiple internal pins that is mapped to an "
         "external pin '%s[%lu]'! Please double check your pin table!\n",
-        net.c_str(), ext_pin.get_name().c_str(), ext_pin.get_lsb());
+        ext_pin.get_name().c_str(), ext_pin.get_lsb());
       for (auto int_pin_id : int_pin_ids) {
         VTR_LOG("%s[%ld]\n",
                 io_pin_table.internal_pin(int_pin_id).get_name().c_str(),
@@ -186,7 +187,7 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     VTR_LOGV(verbose, "Specified mode bits to be %s for pb_type %s\n",
              mode.c_str(), pb_type.c_str());
   }
-  return CMD_EXEC_SUCCESS;
+  return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
