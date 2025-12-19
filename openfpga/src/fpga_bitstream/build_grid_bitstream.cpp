@@ -153,8 +153,8 @@ static void build_primitive_bitstream(
     mode_select_bitstream = generate_mode_select_bitstream(
       device_annotation.pb_type_mode_bits(primitive_pb_type));
 
-    auto pcf_mode_select_bitstream = generate_mode_select_bitstream(
-      bitstream_annotation.pb_type_pcf_mode_bits(primitive_pb_type));
+    auto pcf_mode_select_bitstream =
+      bitstream_annotation.pb_type_pcf_mode_bits(primitive_pb_type);
 
     /* Add offset */
     size_t mode_bits_start_index =
