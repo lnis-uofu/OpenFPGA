@@ -179,9 +179,36 @@ void VprBitstreamAnnotation::add_pb_type_pcf_pins(t_pb_type* pb_type,
 
   pb_type_pcf_pins_[pb_type] = pcf_pin;
 }
+
 std::map<t_pb_type*, BasicPort> VprBitstreamAnnotation::pb_type_pcf_pins()
   const {
   return pb_type_pcf_pins_;
+}
+
+void VprBitstreamAnnotation::add_pb_type_pcf_offset(t_pb_type* pb_type,
+                                                    const int& offset,
+                                                    const bool& verbose) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, int>::const_iterator it =
+    pb_type_pcf_offset_.find(pb_type);
+  if (it != pb_type_pcf_offset_.end()) {
+    VTR_LOGV_WARN(verbose,
+                  "Override the pcf mode offset mapping for pb_type '%s'!\n",
+                  pb_type->name);
+  }
+
+  pb_type_pcf_offset_[pb_type] = offset;
+}
+
+int VprBitstreamAnnotation::pb_type_pcf_offset(t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, int>::const_iterator it =
+    pb_type_pcf_offset_.find(pb_type);
+  if (it == pb_type_pcf_offset_.end()) {
+    /* Return an empty vector */
+    return 0;
+  }
+  return pb_type_pcf_offset_.at(pb_type);
 }
 
 void VprBitstreamAnnotation::add_pcf_coord_pb_type(

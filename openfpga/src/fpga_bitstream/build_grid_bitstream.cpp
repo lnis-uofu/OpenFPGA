@@ -120,14 +120,7 @@ static void build_primitive_bitstream(
   }
 
   std::vector<bool> mode_select_bitstream;
-  if (pcf_mode_specified) {
-    mode_select_bitstream = generate_mode_select_bitstream(
-      bitstream_annotation.pb_type_pcf_mode_bits(primitive_pb_type));
-    VTR_LOG(
-      " \n Specified pcf mode bits are: %s \n",
-      bitstream_annotation.pb_type_pcf_mode_bits_to_string(primitive_pb_type)
-        .c_str());
-  } else if (true == physical_pb.valid_pb_id(primitive_pb_id)) {
+  if (true == physical_pb.valid_pb_id(primitive_pb_id)) {
     mode_select_bitstream = generate_mode_select_bitstream(
       physical_pb.mode_bits(primitive_pb_id),
       device_annotation.pb_type_mode_bits(primitive_pb_type));
@@ -154,6 +147,42 @@ static void build_primitive_bitstream(
         mode_select_bitstream[bit_index + mode_bits_start_index] =
           ('1' == fixed_mode_select_bitstream[bit_index]);
       }
+    }
+  } else if (pcf_mode_specified) {
+    /*default mode bits */
+    mode_select_bitstream = generate_mode_select_bitstream(
+      device_annotation.pb_type_mode_bits(primitive_pb_type));
+
+    auto pcf_mode_select_bitstream = generate_mode_select_bitstream(
+      bitstream_annotation.pb_type_pcf_mode_bits(primitive_pb_type));
+
+    /* Add offset */
+    size_t mode_bits_start_index =
+      bitstream_annotation.pb_type_pcf_offset(primitive_pb_type);
+    VTR_LOG(
+      " \n Specified pcf mode bits are: %s. Bitstream offset is %d\n",
+      bitstream_annotation.pb_type_pcf_mode_bits_to_string(primitive_pb_type)
+        .c_str(),
+      mode_bits_start_index);
+
+    /* Ensure the length matches!!! */
+    if (mode_select_bitstream.size() - mode_bits_start_index <
+        pcf_mode_select_bitstream.size()) {
+      VTR_LOG_ERROR(
+        "Unmatched length of pcf mode_select_bitstream %s!Expected to be "
+        "less than %ld bits\n",
+        bitstream_annotation.pb_type_pcf_mode_bits_to_string(primitive_pb_type)
+          .c_str(),
+        mode_select_bitstream.size() - mode_bits_start_index);
+      exit(1);
+    }
+    /* Overload the bitstream here */
+    for (size_t bit_index = 0; bit_index < pcf_mode_select_bitstream.size();
+         ++bit_index) {
+      VTR_ASSERT('0' == pcf_mode_select_bitstream[bit_index] ||
+                 '1' == pcf_mode_select_bitstream[bit_index]);
+      mode_select_bitstream[bit_index + mode_bits_start_index] =
+        ('1' == pcf_mode_select_bitstream[bit_index]);
     }
   } else { /* get default mode_bits */
     mode_select_bitstream = generate_mode_select_bitstream(

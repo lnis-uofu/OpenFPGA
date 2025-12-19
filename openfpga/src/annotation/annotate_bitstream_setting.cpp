@@ -235,6 +235,8 @@ static int annotate_bitstream_pcf_mode_setting(
       bitstream_setting.pcf_mode_bits(bitstream_pcf_mode_setting_id);
     BasicPort pcf_pin =
       bitstream_setting.pcf_pin(bitstream_pcf_mode_setting_id);
+    int offset = bitstream_setting.pcf_mode_bitstream_offset(
+      bitstream_pcf_mode_setting_id);
     /* Pb type information are located at the logic_block_types in the device
      * context of VPR We iterate over the vectors and find the pb_type matches
      * the parent_pb_type_name
@@ -279,6 +281,8 @@ static int annotate_bitstream_pcf_mode_setting(
                                                          mode_bits, false);
       vpr_bitstream_annotation.add_pb_type_pcf_pins(target_pb_type, pcf_pin,
                                                     false);
+      vpr_bitstream_annotation.add_pb_type_pcf_offset(target_pb_type, offset,
+                                                      false);
 
       link_success = true;
     }

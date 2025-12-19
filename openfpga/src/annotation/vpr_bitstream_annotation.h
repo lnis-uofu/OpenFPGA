@@ -55,6 +55,11 @@ class VprBitstreamAnnotation {
   void add_pb_type_pcf_mode_bits(t_pb_type* pb_type,
                                  const std::vector<char>& mode_bits,
                                  const bool& verbose);
+  void add_pb_type_pcf_offset(t_pb_type* pb_type, const int& offset,
+                              const bool& verbose);
+
+  int pb_type_pcf_offset(t_pb_type* pb_type) const;
+
   void add_pb_type_pcf_pins(t_pb_type* pb_type, const BasicPort& pcf_pin,
                             const bool& verbose);
   std::vector<BitstreamSourceInfo> pb_type_mode_select_bitstream_sources(
@@ -105,6 +110,7 @@ class VprBitstreamAnnotation {
 
   std::map<t_pb_type*, std::vector<char>> pb_type_pcf_mode_bits_;
   std::map<t_pb_type*, BasicPort> pb_type_pcf_pins_;
+  std::map<t_pb_type*, int> pb_type_pcf_offset_;
   std::map<std::array<size_t, 3>, t_pb_type*> pcf_coord_pb_type_;
 };
 
