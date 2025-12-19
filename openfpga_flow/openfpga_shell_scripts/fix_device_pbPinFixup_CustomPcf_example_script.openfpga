@@ -8,7 +8,7 @@ read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 
-pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF_FILE} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
+pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF_FILE} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
 
 # Read OpenFPGA bitstream settings
 # Note that additional information will be appended to the data produced by the pcf2bitstream_setting command

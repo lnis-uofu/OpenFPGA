@@ -1,5 +1,5 @@
 # Convert .pcf to a .place file that VPR can accept
-pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
+pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
 pcf2place --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --fpga_fix_pins ${OPENFPGA_VPR_FIX_PINS_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
 
 # Run VPR for the 'and' design
