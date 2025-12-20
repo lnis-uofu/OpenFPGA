@@ -135,7 +135,7 @@ void print_pnr_sdc_constrain_configurable_chain(
   const float& min_delay, const bool& include_time_stamp,
   const ModuleManager& module_manager) {
   /* Create the directory */
-  create_directory(find_path_dir_name(sdc_fname));
+  create_directory(find_path_dir_name(sdc_fname), true, true);
 
   /* Start time count */
   std::string timer_message =

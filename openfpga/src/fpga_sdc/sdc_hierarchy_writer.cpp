@@ -43,7 +43,7 @@ void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
   std::string dir_path = format_dir_path(find_path_dir_name(fname));
 
   /* Create directories */
-  create_directory(dir_path);
+  create_directory(dir_path, true, true);
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);
@@ -129,7 +129,7 @@ void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
   std::string dir_path = format_dir_path(find_path_dir_name(fname));
 
   /* Create directories */
-  create_directory(dir_path);
+  create_directory(dir_path, true, true);
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);
@@ -283,7 +283,7 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
   std::string dir_path = format_dir_path(find_path_dir_name(fname));
 
   /* Create directories */
-  create_directory(dir_path);
+  create_directory(dir_path, true, true);
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);

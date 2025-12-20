@@ -22,8 +22,9 @@ std::string find_path_file_name(const std::string& file_name);
 
 std::string find_path_dir_name(const std::string& file_name);
 
-void create_directory(const std::string& dir_path, const bool& recursive = true,
-                      const bool& verbose = true);
+void create_directory(const std::string& dir_path,
+                      const bool& recursive,
+                      const bool& verbose);
 
 bool write_space_to_file(std::fstream& fp, const size_t& num_space);
 
