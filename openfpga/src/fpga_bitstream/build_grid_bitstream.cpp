@@ -148,7 +148,12 @@ static void build_primitive_bitstream(
           ('1' == fixed_mode_select_bitstream[bit_index]);
       }
     }
-  } else if (pcf_mode_specified) {
+  } else { /* get default mode_bits */
+    mode_select_bitstream = generate_mode_select_bitstream(
+      device_annotation.pb_type_mode_bits(primitive_pb_type));
+  }
+  /* Update mode bits from PCF command */
+  if (pcf_mode_specified) {
     /*default mode bits */
     mode_select_bitstream = generate_mode_select_bitstream(
       device_annotation.pb_type_mode_bits(primitive_pb_type));
@@ -184,9 +189,6 @@ static void build_primitive_bitstream(
       mode_select_bitstream[bit_index + mode_bits_start_index] =
         ('1' == pcf_mode_select_bitstream[bit_index]);
     }
-  } else { /* get default mode_bits */
-    mode_select_bitstream = generate_mode_select_bitstream(
-      device_annotation.pb_type_mode_bits(primitive_pb_type));
   }
 
   /* Ensure the length of bitstream matches the side of memory circuits */
