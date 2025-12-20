@@ -65,6 +65,10 @@ run-task fpga_verilog/dsp/dual_mult_8x8_chain_dpram16k_negz $@
 run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile $@
 run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile_negz $@
 
+echo -e "Test specify mode bits from pcf command"
+run-task fpga_verilog/io/io_pdl_emode $@
+run-task fpga_verilog/io/io_pdl_emode_fix_pins $@
+
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity $@
 

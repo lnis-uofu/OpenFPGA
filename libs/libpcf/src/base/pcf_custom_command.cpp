@@ -239,7 +239,7 @@ bool PcfCustomCommand::valid_custom_mode_id(
          (custom_mode_id == custom_mode_ids_[custom_mode_id]);
 }
 
-bool PcfCustomCommand::valid_command(const std::string command_name) const {
+bool PcfCustomCommand::valid_command(const std::string& command_name) const {
   bool valid_command = false;
   for (auto it : custom_commands()) {
     if (command_name.find(custom_command_name(it)) == 0) {
@@ -250,8 +250,8 @@ bool PcfCustomCommand::valid_command(const std::string command_name) const {
   return valid_command;
 }
 
-bool PcfCustomCommand::valid_option(const std::string command_name,
-                                    const std::string option_name) const {
+bool PcfCustomCommand::valid_option(const std::string& command_name,
+                                    const std::string& option_name) const {
   bool valid_option = false;
   auto command_id = find_command_id(command_name);
   for (auto it : command_options(command_id)) {

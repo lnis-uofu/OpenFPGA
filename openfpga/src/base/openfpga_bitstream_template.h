@@ -57,7 +57,8 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
       find_path_dir_name(cmd_context.option_value(cmd, opt_write_file));
 
     /* Create directories */
-    create_directory(src_dir_path);
+    create_directory(src_dir_path, true,
+                     cmd_context.option_enable(cmd, opt_verbose));
 
     write_xml_architecture_bitstream(
       openfpga_ctx.bitstream_manager(),
@@ -118,7 +119,8 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
     find_path_dir_name(cmd_context.option_value(cmd, opt_file));
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true,
+                   cmd_context.option_enable(cmd, opt_verbose));
 
   /* Check file format requirements */
   std::string file_format("plain_text");
@@ -194,7 +196,8 @@ int write_io_mapping_template(const T& openfpga_ctx, const Command& cmd,
     find_path_dir_name(cmd_context.option_value(cmd, opt_file));
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true,
+                   cmd_context.option_enable(cmd, opt_verbose));
 
   /* Create a module as the top-level fabric, and add it to the module manager
    */
@@ -241,7 +244,7 @@ int report_bitstream_distribution_template(const T& openfpga_ctx,
     find_path_dir_name(cmd_context.option_value(cmd, opt_file));
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, true);
 
   /* Default depth requirement, this is to limit the report size by default */
   int depth = 1;

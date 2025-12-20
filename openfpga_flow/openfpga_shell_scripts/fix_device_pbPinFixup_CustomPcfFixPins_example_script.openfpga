@@ -1,14 +1,16 @@
+# Convert .pcf to a .place file that VPR can accept
+pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
+pcf2place --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --fpga_fix_pins ${OPENFPGA_VPR_FIX_PINS_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
+
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --skip_sync_clustering_and_routing_results on
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --skip_sync_clustering_and_routing_results on --fix_clusters ${OPENFPGA_VPR_FIX_PINS_FILE}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
-
-pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF_FILE} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
 
 # Read OpenFPGA bitstream settings
 # Note that additional information will be appended to the data produced by the pcf2bitstream_setting command

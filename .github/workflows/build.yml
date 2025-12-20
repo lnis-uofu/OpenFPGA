@@ -110,7 +110,7 @@ jobs:
           ${CC} --version
           ${CXX} --version
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build
         shell: bash
@@ -205,7 +205,7 @@ jobs:
           ${CC} --version
           ${CXX} --version
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build
         shell: bash
@@ -244,7 +244,7 @@ jobs:
           ${CC} --version
           ${CXX} --version
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build
         shell: bash
@@ -291,7 +291,7 @@ jobs:
           ${CXX} --version
           python3 --version
   
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
   
       - name: Build
         shell: bash
@@ -309,14 +309,14 @@ jobs:
     # Prevents from running on forks where no custom runners are available
     #if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }} && ${{ github.repository_owner == 'lnis-uofu' }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: "Debug Build (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+          - name: "Debug Build (Ubuntu 24.04)"
+            cc: gcc-13
+            cxx: g++-13
             build_type: debug
             cores: 4
     # Define the steps to run the build job
@@ -345,7 +345,7 @@ jobs:
           ${CXX} --version
           python3 --version
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build
         shell: bash
@@ -396,7 +396,7 @@ jobs:
           ${CC} --version
           ${CXX} --version
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build
         shell: bash
@@ -446,7 +446,7 @@ jobs:
           ${CC} --version
           ${CXX} --version
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build
         shell: bash

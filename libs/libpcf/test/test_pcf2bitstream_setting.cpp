@@ -27,16 +27,20 @@ int main(int argc, const char** argv) {
   openfpga::PcfData pcf_data;
   VTR_LOG("Read the pcf config file: %s.\n", argv[2]);
   openfpga::PcfCustomCommand pcf_custom_command;
-  openfpga::read_pcf_conifg(
+  openfpga::read_pcf_config(
     argv[2], pcf_custom_command); /* pcf config.xml will be converted to data
                                      structure PcfCustomCommand*/
-  openfpga::read_pcf(
-    argv[1], pcf_data, true,
-    pcf_custom_command); /*pcf reader will set custom constraints based on
-                            custom commands*/
+  openfpga::read_pcf(argv[1], pcf_data, pcf_custom_command, true,
+                     true); /*pcf reader will set custom constraints based on
+                   custom commands*/
+
+  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(
+    argv[4], openfpga::e_pin_table_direction_convention::QUICKLOGIC);
+  VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[3]);
 
   /* Convert */
   openfpga::BitstreamSetting bitstream_setting;
-  int status = pcf2bitstream_setting(pcf_data, bitstream_setting);
+  int status =
+    pcf2bitstream_setting(pcf_data, bitstream_setting, io_pin_table, true);
   return status;
 }

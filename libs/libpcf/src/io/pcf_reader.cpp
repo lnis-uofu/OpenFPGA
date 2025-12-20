@@ -25,6 +25,69 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
+static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
+                                const pugiutil::loc_data& loc_data,
+                                PcfCustomCommand& pcf_custom_command) {
+  std::string command_name =
+    get_attribute(xml_pcf_command, XML_COMMAND_TYPE_ATTRIBUTE_NAME, loc_data)
+      .as_string();
+
+  std::string command_type =
+    get_attribute(xml_pcf_command, XML_COMMAND_TYPE_ATTRIBUTE_TYPE, loc_data)
+      .as_string();
+
+  int status =
+    pcf_custom_command.create_custom_command(command_name, command_type);
+
+  for (pugi::xml_node xml_child : xml_pcf_command.children()) {
+    if (xml_child.name() != std::string(XML_OPTION_TYPE_NODE_NAME) &&
+        xml_child.name() != std::string(XML_PB_TYPE_NODE_NAME)) {
+      bad_tag(xml_child, loc_data, xml_pcf_command,
+              {XML_OPTION_TYPE_NODE_NAME, XML_PB_TYPE_NODE_NAME});
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    /*parse option*/
+    if (xml_child.name() == std::string(XML_OPTION_TYPE_NODE_NAME)) {
+      std::string option_name =
+        get_attribute(xml_child, XML_OPTION_ATTRIBUTE_NAME, loc_data)
+          .as_string();
+      std::string option_type =
+        get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
+          .as_string();
+      auto xml_pcf_option_mode =
+        get_first_child(xml_child, XML_MODE_TYPE_NODE_NAME, loc_data,
+                        pugiutil::ReqOpt::OPTIONAL);
+      status = pcf_custom_command.create_custom_option(
+        command_name, option_name, option_type);
+      while (xml_pcf_option_mode) {
+        std::string mode_name =
+          get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_NAME, loc_data)
+            .as_string();
+        std::string mode_value =
+          get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_VALUE, loc_data)
+            .as_string();
+        xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
+        status = pcf_custom_command.create_custom_mode(
+          command_name, option_name, mode_name, mode_value);
+      }
+    }
+    /*parse pb_type*/
+    if (xml_child.name() == std::string(XML_PB_TYPE_NODE_NAME)) {
+      std::string pb_type_name =
+        get_attribute(xml_child, XML_PB_TYPE_ATTRIBUTE_NAME, loc_data)
+          .as_string();
+      int offset =
+        get_attribute(xml_child, XML_PB_TYPE_ATTRIBUTE_OFFSET, loc_data)
+          .as_int();
+      pcf_custom_command.set_custom_command_pb_type(command_name, pb_type_name);
+      pcf_custom_command.set_custom_command_pb_type_offset(command_name,
+                                                           offset);
+    }
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
 /********************************************************************
  * A writer to output a repack pin constraint object to XML format
  *
@@ -32,8 +95,9 @@ constexpr const char COMMENT = '#';
  * Return 1 if there are serious errors when parsing data
  * Return 2 if fail when opening files
  *******************************************************************/
-int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
-             const PcfCustomCommand& pcf_custom_command) {
+int read_pcf(const char* fname, PcfData& pcf_data,
+             const PcfCustomCommand& pcf_custom_command,
+             bool reduce_error_to_warning, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Read " + std::string(fname));
 
   /* Create a file handler */
@@ -62,7 +126,7 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
           pcf_data.set_io_net(io_id, net_name);
           pcf_data.set_io_pin(io_id, pin_name);
         } else if (word[0] == COMMENT) {  // if it's a comment
-          VTR_LOG_WARN("Bypass comment line '%s' !\n", word.c_str());
+          VTR_LOGV(verbose, "Bypass comment line '%s' !\n", word.c_str());
           break;  // or ignore the full line comment and move on
         } else {
           bool valid_command = false;
@@ -130,7 +194,7 @@ int read_pcf(const char* fname, PcfData& pcf_data, bool reduce_error_to_warning,
   return 0;
 }
 
-int read_pcf_conifg(const std::string& pcf_config_file,
+int read_pcf_config(const std::string& pcf_config_file,
                     PcfCustomCommand& pcf_custom_command) {
   int status = CMD_EXEC_FATAL_ERROR;
 
@@ -159,69 +223,6 @@ int read_pcf_conifg(const std::string& pcf_config_file,
     if (status != CMD_EXEC_SUCCESS) {
       VTR_LOG_ERROR("Fail to read command from PCF Config file!\n");
       return CMD_EXEC_FATAL_ERROR;
-    }
-  }
-  return CMD_EXEC_SUCCESS;
-}
-
-int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
-                         const pugiutil::loc_data& loc_data,
-                         PcfCustomCommand& pcf_custom_command) {
-  std::string command_name =
-    get_attribute(xml_pcf_command, XML_COMMAND_TYPE_ATTRIBUTE_NAME, loc_data)
-      .as_string();
-
-  std::string command_type =
-    get_attribute(xml_pcf_command, XML_COMMAND_TYPE_ATTRIBUTE_TYPE, loc_data)
-      .as_string();
-
-  int status =
-    pcf_custom_command.create_custom_command(command_name, command_type);
-
-  for (pugi::xml_node xml_child : xml_pcf_command.children()) {
-    if (xml_child.name() != std::string(XML_OPTION_TYPE_NODE_NAME) &&
-        xml_child.name() != std::string(XML_PB_TYPE_NODE_NAME)) {
-      bad_tag(xml_child, loc_data, xml_pcf_command,
-              {XML_OPTION_TYPE_NODE_NAME, XML_PB_TYPE_NODE_NAME});
-      return CMD_EXEC_FATAL_ERROR;
-    }
-
-    /*parse option*/
-    if (xml_child.name() == std::string(XML_OPTION_TYPE_NODE_NAME)) {
-      std::string option_name =
-        get_attribute(xml_child, XML_OPTION_ATTRIBUTE_NAME, loc_data)
-          .as_string();
-      std::string option_type =
-        get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
-          .as_string();
-      auto xml_pcf_option_mode =
-        get_first_child(xml_child, XML_MODE_TYPE_NODE_NAME, loc_data,
-                        pugiutil::ReqOpt::OPTIONAL);
-      status = pcf_custom_command.create_custom_option(
-        command_name, option_name, option_type);
-      while (xml_pcf_option_mode) {
-        std::string mode_name =
-          get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_NAME, loc_data)
-            .as_string();
-        std::string mode_value =
-          get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_VALUE, loc_data)
-            .as_string();
-        xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
-        status = pcf_custom_command.create_custom_mode(
-          command_name, option_name, mode_name, mode_value);
-      }
-    }
-    /*parse pb_type*/
-    if (xml_child.name() == std::string(XML_PB_TYPE_NODE_NAME)) {
-      std::string pb_type_name =
-        get_attribute(xml_child, XML_PB_TYPE_ATTRIBUTE_NAME, loc_data)
-          .as_string();
-      int offset =
-        get_attribute(xml_child, XML_PB_TYPE_ATTRIBUTE_OFFSET, loc_data)
-          .as_int();
-      pcf_custom_command.set_custom_command_pb_type(command_name, pb_type_name);
-      pcf_custom_command.set_custom_command_pb_type_offset(command_name,
-                                                           offset);
     }
   }
   return CMD_EXEC_SUCCESS;

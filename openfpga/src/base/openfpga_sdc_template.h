@@ -55,7 +55,7 @@ int write_pnr_sdc_template(const T& openfpga_ctx, const Command& cmd,
     format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
   /* Create directories */
-  create_directory(sdc_dir_path);
+  create_directory(sdc_dir_path, true, true);
 
   PnrSdcOption options(sdc_dir_path);
 
@@ -202,7 +202,7 @@ int write_analysis_sdc_template(const T& openfpga_ctx, const Command& cmd,
     format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
   /* Create directories */
-  create_directory(sdc_dir_path);
+  create_directory(sdc_dir_path, true, true);
 
   AnalysisSdcOption options(sdc_dir_path);
   options.set_generate_sdc_analysis(true);

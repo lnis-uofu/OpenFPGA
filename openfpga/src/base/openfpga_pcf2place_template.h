@@ -32,25 +32,60 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
   CommandOptionId opt_pcf_config = cmd.option("config");
   CommandOptionId opt_reduce_error_to_warning =
     cmd.option("reduce_error_to_warning");
+  CommandOptionId opt_pin_table = cmd.option("pin_table");
+  CommandOptionId opt_pin_table_dir_convention =
+    cmd.option("pin_table_direction_convention");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   std::string pcf_fname = cmd_context.option_value(cmd, opt_pcf);
   std::string pcf_config_fname = cmd_context.option_value(cmd, opt_pcf_config);
+  std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
+  /* FIXME: This part is dirty. Should have function to handle the legalization
+   */
+  e_pin_table_direction_convention pin_table_dir_convention =
+    e_pin_table_direction_convention::EXPLICIT;
+  if (cmd_context.option_enable(cmd, opt_pin_table_dir_convention)) {
+    std::string pin_table_dir_convention_str =
+      cmd_context.option_value(cmd, opt_pin_table_dir_convention);
+    if (pin_table_dir_convention_str ==
+        std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+          e_pin_table_direction_convention::EXPLICIT))) {
+      pin_table_dir_convention = e_pin_table_direction_convention::EXPLICIT;
+    } else if (pin_table_dir_convention_str ==
+               std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+                 e_pin_table_direction_convention::QUICKLOGIC))) {
+      pin_table_dir_convention = e_pin_table_direction_convention::QUICKLOGIC;
+    } else {
+      VTR_LOG_ERROR(
+        "Invalid pin naming convention ('%s') to identify port direction for "
+        "pin table! Expect ['%s'|'%s'].\n",
+        pin_table_dir_convention_str.c_str(),
+        PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+          e_pin_table_direction_convention::EXPLICIT),
+        PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+          e_pin_table_direction_convention::QUICKLOGIC));
+    }
+  }
 
   /* Parse the input files */
-
   openfpga::PcfCustomCommand pcf_custom_command;
-  openfpga::read_pcf_conifg(pcf_config_fname, pcf_custom_command);
+  openfpga::read_pcf_config(pcf_config_fname, pcf_custom_command);
 
   openfpga::PcfData pcf_data;
   openfpga::read_pcf(
-    pcf_fname.c_str(), pcf_data,
+    pcf_fname.c_str(), pcf_data, pcf_custom_command,
     cmd_context.option_enable(cmd, opt_reduce_error_to_warning),
-    pcf_custom_command);
+    cmd_context.option_enable(cmd, opt_verbose));
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
+
+  IoPinTable io_pin_table =
+    read_csv_io_pin_table(pin_table_fname.c_str(), pin_table_dir_convention);
+  VTR_LOG("Read the I/O pin table from a csv file: %s.\n",
+          pin_table_fname.c_str());
+
   int status = pcf2bitstream_setting(
-    pcf_data, openfpga_context.mutable_bitstream_setting(),
+    pcf_data, openfpga_context.mutable_bitstream_setting(), io_pin_table,
     cmd_context.option_enable(cmd, opt_verbose));
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
@@ -112,9 +147,11 @@ int pcf2place_wrapper_template(const Command& cmd,
 
   /* Parse the input files */
   openfpga::PcfData pcf_data;
+  openfpga::PcfCustomCommand pcf_cust_cmd;
   openfpga::read_pcf(
-    pcf_fname.c_str(), pcf_data,
-    cmd_context.option_enable(cmd, opt_reduce_error_to_warning));
+    pcf_fname.c_str(), pcf_data, pcf_cust_cmd,
+    cmd_context.option_enable(cmd, opt_reduce_error_to_warning),
+    cmd_context.option_enable(cmd, opt_verbose));
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
           pcf_fname.c_str());
 
