@@ -27,7 +27,8 @@ int main(int argc, const char** argv) {
 
   /* Parse the input files */
   openfpga::PcfData pcf_data;
-  openfpga::read_pcf(argv[1], pcf_data, openfpga::PcfCustomCommand(), true, true);
+  openfpga::read_pcf(argv[1], pcf_data, openfpga::PcfCustomCommand(), true,
+                     true);
   VTR_LOG("Read the design constraints from a pcf file: %s.\n", argv[1]);
 
   blifparse::BlifHeadReader callback;

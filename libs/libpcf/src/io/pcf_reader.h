@@ -17,16 +17,14 @@ namespace openfpga {
 
 /* Parse a .pcf file through a stream, return an object which contains all the
  * data */
-int read_pcf(const char* fname,
-             PcfData& pcf_data,
+int read_pcf(const char* fname, PcfData& pcf_data,
              const PcfCustomCommand& pcf_custom_command,
-             bool reduce_error_to_warning,
-             const bool& verbose);
+             bool reduce_error_to_warning, const bool& verbose);
 int read_pcf_config(const std::string& pcf_config_file,
                     PcfCustomCommand& pcf_custom_command);
-//int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
-//                         const pugiutil::loc_data& loc_data,
-//                         PcfCustomCommand& pcf_custom_command);
+// int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
+//                          const pugiutil::loc_data& loc_data,
+//                          PcfCustomCommand& pcf_custom_command);
 } /* End namespace openfpga*/
 
 #endif

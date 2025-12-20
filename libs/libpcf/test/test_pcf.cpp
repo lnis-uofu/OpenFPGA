@@ -17,7 +17,8 @@ int main(int argc, const char** argv) {
 
   /* Parse the fabric key from an XML file */
   openfpga::PcfData pcf_data;
-  openfpga::read_pcf(argv[1], pcf_data, openfpga::PcfCustomCommand(), true, true);
+  openfpga::read_pcf(argv[1], pcf_data, openfpga::PcfCustomCommand(), true,
+                     true);
   VTR_LOG("Read the design constraints from a pcf file: %s.\n", argv[1]);
 
   /* Output to an XML file

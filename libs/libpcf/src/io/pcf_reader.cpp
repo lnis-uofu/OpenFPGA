@@ -26,8 +26,8 @@ namespace openfpga {
 constexpr const char COMMENT = '#';
 
 static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
-                         const pugiutil::loc_data& loc_data,
-                         PcfCustomCommand& pcf_custom_command) {
+                                const pugiutil::loc_data& loc_data,
+                                PcfCustomCommand& pcf_custom_command) {
   std::string command_name =
     get_attribute(xml_pcf_command, XML_COMMAND_TYPE_ATTRIBUTE_NAME, loc_data)
       .as_string();
@@ -88,7 +88,6 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
   return CMD_EXEC_SUCCESS;
 }
 
-
 /********************************************************************
  * A writer to output a repack pin constraint object to XML format
  *
@@ -96,11 +95,9 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
  * Return 1 if there are serious errors when parsing data
  * Return 2 if fail when opening files
  *******************************************************************/
-int read_pcf(const char* fname,
-             PcfData& pcf_data,
+int read_pcf(const char* fname, PcfData& pcf_data,
              const PcfCustomCommand& pcf_custom_command,
-             bool reduce_error_to_warning,
-             const bool& verbose) {
+             bool reduce_error_to_warning, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Read " + std::string(fname));
 
   /* Create a file handler */

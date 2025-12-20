@@ -138,8 +138,7 @@ int pcf2place(const PcfData& pcf_data,
  *******************************************************************/
 int pcf2bitstream_setting(const PcfData& pcf_data,
                           BitstreamSetting& bitstream_setting,
-                          const IoPinTable& io_pin_table,
-                          const bool& verbose) {
+                          const IoPinTable& io_pin_table, const bool& verbose) {
   int num_err = 0;
   const PcfCustomConstraint pcf_custom_constraint =
     pcf_data.custom_constraint();

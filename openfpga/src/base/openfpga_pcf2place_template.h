@@ -40,7 +40,8 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
   std::string pcf_fname = cmd_context.option_value(cmd, opt_pcf);
   std::string pcf_config_fname = cmd_context.option_value(cmd, opt_pcf_config);
   std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
-  /* FIXME: This part is dirty. Should have function to handle the legalization */
+  /* FIXME: This part is dirty. Should have function to handle the legalization
+   */
   e_pin_table_direction_convention pin_table_dir_convention =
     e_pin_table_direction_convention::EXPLICIT;
   if (cmd_context.option_enable(cmd, opt_pin_table_dir_convention)) {
@@ -72,8 +73,7 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
 
   openfpga::PcfData pcf_data;
   openfpga::read_pcf(
-    pcf_fname.c_str(), pcf_data,
-    pcf_custom_command,
+    pcf_fname.c_str(), pcf_data, pcf_custom_command,
     cmd_context.option_enable(cmd, opt_reduce_error_to_warning),
     cmd_context.option_enable(cmd, opt_verbose));
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
@@ -85,8 +85,7 @@ int pcf2bitstream_setting_wrapper_template(T& openfpga_context,
           pin_table_fname.c_str());
 
   int status = pcf2bitstream_setting(
-    pcf_data, openfpga_context.mutable_bitstream_setting(),
-    io_pin_table, 
+    pcf_data, openfpga_context.mutable_bitstream_setting(), io_pin_table,
     cmd_context.option_enable(cmd, opt_verbose));
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
@@ -150,8 +149,7 @@ int pcf2place_wrapper_template(const Command& cmd,
   openfpga::PcfData pcf_data;
   openfpga::PcfCustomCommand pcf_cust_cmd;
   openfpga::read_pcf(
-    pcf_fname.c_str(), pcf_data,
-    pcf_cust_cmd,
+    pcf_fname.c_str(), pcf_data, pcf_cust_cmd,
     cmd_context.option_enable(cmd, opt_reduce_error_to_warning),
     cmd_context.option_enable(cmd, opt_verbose));
   VTR_LOG("Read the design constraints from a pcf file: %s.\n",
