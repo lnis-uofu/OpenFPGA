@@ -145,11 +145,11 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
   for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
     std::string pb_type =
       pcf_custom_constraint.custom_constraint_pb_type(constraint_id);
-    std::string mode =
+    std::vector<std::string> modes =
       pcf_custom_constraint.custom_constraint_mode(constraint_id);
-    std::vector<char> modes_vec(mode.begin(), mode.end());
-    int offset =
-      pcf_custom_constraint.custom_constraint_pb_type_offset(constraint_id);
+
+    std::vector<int> offsets =
+      pcf_custom_constraint.custom_constraint_mode_offset(constraint_id);
     openfpga::BasicPort ext_pin =
       pcf_custom_constraint.custom_constraint_pin(constraint_id);
 
@@ -180,11 +180,15 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     BasicPort int_pin = io_pin_table.internal_pin(int_pin_ids[0]);
 
     openfpga::PbParser pb_parser(pb_type);
-    bitstream_setting.add_bitstream_pcf_mode_setting(
-      pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
-      int_pin, offset);
-    VTR_LOGV(verbose, "Specified mode bits to be %s for pb_type %s\n",
-             mode.c_str(), pb_type.c_str());
+    for (auto i = 0; i < modes.size(); i++) {
+      std::vector<char> modes_vec(modes[i].begin(), modes[i].end());
+      int offset = offsets[i];
+      bitstream_setting.add_bitstream_pcf_mode_setting(
+        pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
+        int_pin, offset);
+    }
+    VTR_LOGV(verbose, "Specified %d sets of mode bits for pb_type %s\n",
+             modes.size(), pb_type.c_str());
   }
   return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
 }

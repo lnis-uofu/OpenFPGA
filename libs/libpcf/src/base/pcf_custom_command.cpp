@@ -34,63 +34,78 @@ PcfCustomCommand::pcf_custom_command_range PcfCustomCommand::custom_commands()
 
 std::string PcfCustomCommand::custom_command_name(
   const PcfCustomCommandId& custom_command_id) const {
-  /* validate the io_id */
+  /* validate the command_id */
   VTR_ASSERT(valid_custom_command_id(custom_command_id));
   return custom_command_names_[custom_command_id];
 }
 
 std::string PcfCustomCommand::custom_command_pb_type(
   const std::string& custom_command_name) const {
-  /* validate the io_id */
+  /* validate the command_id */
   auto custom_command_id = find_command_id(custom_command_name);
   return custom_command_pb_types_[custom_command_id];
 }
 
 int PcfCustomCommand::custom_command_pb_type_offset(
   const std::string& custom_command_name) const {
-  /* validate the io_id */
+  /* validate the command_id */
   auto custom_command_id = find_command_id(custom_command_name);
   return custom_command_pb_type_offset_[custom_command_id];
 }
 
 std::string PcfCustomCommand::custom_command_type(
   const PcfCustomCommandId& custom_command_id) const {
-  /* validate the io_id */
+  /* validate the command_id */
   VTR_ASSERT(valid_custom_command_id(custom_command_id));
   return custom_command_types_[custom_command_id];
 }
 
 std::string PcfCustomCommand::custom_option_name(
   const PcfCustomCommandOptionId& custom_option_id) const {
-  /* validate the io_id */
+  /* validate the option_id */
   VTR_ASSERT(valid_custom_option_id(custom_option_id));
   return custom_option_names_[custom_option_id];
 }
 
 std::string PcfCustomCommand::custom_option_type(
   const PcfCustomCommandOptionId& custom_option_id) const {
-  /* validate the io_id */
+  /* validate the option_id */
   VTR_ASSERT(valid_custom_option_id(custom_option_id));
   return custom_option_types_[custom_option_id];
 }
 
 std::string PcfCustomCommand::custom_option_type(
   const std::string& command_name, const std::string& option_name) const {
-  /* validate the io_id */
+  /* validate the option_id */
   auto custom_option_id = find_option_id(command_name, option_name);
   return custom_option_type(custom_option_id);
 }
 
+int PcfCustomCommand::custom_mode_offset(
+  const PcfCustomCommandModeId& custom_mode_id) const {
+  /* validate the option_id */
+  VTR_ASSERT(valid_custom_mode_id(custom_mode_id));
+  return custom_mode_offset_[custom_mode_id];
+}
+
+int PcfCustomCommand::custom_mode_offset(const std::string& command_name,
+                                         const std::string& option_name,
+                                         const std::string& mode_name) const {
+  /* validate the mode_id */
+  auto custom_mode_id = find_mode_id(command_name, option_name, mode_name);
+  return custom_mode_offset(custom_mode_id);
+}
+
 std::string PcfCustomCommand::custom_mode_name(
   const PcfCustomCommandModeId& custom_mode_id) const {
-  /* validate the io_id */
+  /* validate the mode_id */
   VTR_ASSERT(valid_custom_mode_id(custom_mode_id));
   return custom_mode_names_[custom_mode_id];
 }
 
 std::string PcfCustomCommand::custom_mode_value(
   const PcfCustomCommandModeId& custom_mode_id) const {
-  /* validate the io_id */
+  /* validate the mode_id */
   VTR_ASSERT(valid_custom_mode_id(custom_mode_id));
   return custom_mode_values_[custom_mode_id];
 }
@@ -98,7 +113,7 @@ std::string PcfCustomCommand::custom_mode_value(
 std::string PcfCustomCommand::custom_mode_value(
   const std::string& command_name, const std::string& option_name,
   const std::string& mode_name) const {
-  /* validate the io_id */
+  /* validate the mode_id */
   auto custom_mode_id = find_mode_id(command_name, option_name, mode_name);
   return custom_mode_value(custom_mode_id);
 }
@@ -187,8 +202,10 @@ int PcfCustomCommand::create_custom_option(const std::string& command_name,
   custom_option_ids_.push_back(custom_option_id);
   custom_option_names_.emplace_back();
   custom_option_types_.emplace_back();
+
   custom_option_names_[custom_option_id] = option_name;
   custom_option_types_[custom_option_id] = option_type;
+
   custom_option_id_to_mode_id_.emplace_back();
   return CMD_EXEC_SUCCESS;
 }
@@ -196,7 +213,8 @@ int PcfCustomCommand::create_custom_option(const std::string& command_name,
 int PcfCustomCommand::create_custom_mode(const std::string& command_name,
                                          const std::string& option_name,
                                          const std::string& mode_name,
-                                         const std::string& mode_value) {
+                                         const std::string& mode_value,
+                                         const int& mode_offset) {
   auto option_id = find_option_id(command_name, option_name);
   PcfCustomCommandModeId custom_mode_id =
     PcfCustomCommandModeId(custom_mode_ids_.size());
@@ -204,8 +222,10 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
   custom_mode_ids_.push_back(custom_mode_id);
   custom_mode_names_.emplace_back();
   custom_mode_values_.emplace_back();
+  custom_mode_offset_.emplace_back();
   custom_mode_names_[custom_mode_id] = mode_name;
   custom_mode_values_[custom_mode_id] = mode_value;
+  custom_mode_offset_[custom_mode_id] = mode_offset;
   return CMD_EXEC_SUCCESS;
 }
 

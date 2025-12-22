@@ -15,6 +15,7 @@ constexpr const char* XML_PB_TYPE_ATTRIBUTE_OFFSET = "offset";
 constexpr const char* XML_OPTION_TYPE_NODE_NAME = "option";
 constexpr const char* XML_OPTION_ATTRIBUTE_NAME = "name";
 constexpr const char* XML_OPTION_ATTRIBUTE_TYPE = "type";
+constexpr const char* XML_OPTION_ATTRIBUTE_OFFSET = "offset";
 
 constexpr const char* XML_MODE_TYPE_NODE_NAME = "mode";
 constexpr const char* XML_MODE_ATTRIBUTE_NAME = "name";

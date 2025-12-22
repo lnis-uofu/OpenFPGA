@@ -44,18 +44,25 @@ std::string PcfCustomConstraint::custom_constraint_pb_type(
   return custom_constraint_pb_type_[custom_constraint_id];
 }
 
-int PcfCustomConstraint::custom_constraint_pb_type_offset(
+std::vector<int> PcfCustomConstraint::custom_constraint_pb_type_offset(
   const PcfCustomConstraintId& custom_constraint_id) const {
   /* validate the io_id */
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   return custom_constraint_pb_type_offset_[custom_constraint_id];
 }
 
-std::string PcfCustomConstraint::custom_constraint_mode(
+std::vector<std::string> PcfCustomConstraint::custom_constraint_mode(
   const PcfCustomConstraintId& custom_constraint_id) const {
   /* validate the io_id */
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   return custom_constraint_pin_mode_[custom_constraint_id];
+}
+
+std::vector<int> PcfCustomConstraint::custom_constraint_mode_offset(
+  const PcfCustomConstraintId& custom_constraint_id) const {
+  /* validate the io_id */
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  return custom_constraint_pin_mode_offset_[custom_constraint_id];
 }
 
 bool PcfCustomConstraint::empty() const {
@@ -74,6 +81,7 @@ PcfCustomConstraintId PcfCustomConstraint::create_custom_constraint() {
   custom_constraint_ids_.push_back(custom_id);
   custom_constraint_pins_.emplace_back();
   custom_constraint_pin_mode_.emplace_back();
+  custom_constraint_pin_mode_offset_.emplace_back();
   custom_constraint_command_name_.emplace_back();
   custom_constraint_pb_type_.emplace_back();
   custom_constraint_pb_type_offset_.emplace_back();
@@ -84,7 +92,14 @@ PcfCustomConstraintId PcfCustomConstraint::create_custom_constraint() {
 void PcfCustomConstraint::set_custom_constraint_pin_mode(
   const PcfCustomConstraintId& custom_constraint_id, const std::string& mode) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
-  custom_constraint_pin_mode_[custom_constraint_id] = mode;
+  custom_constraint_pin_mode_[custom_constraint_id].push_back(mode);
+}
+
+void PcfCustomConstraint::set_custom_constraint_pin_mode_offset(
+  const PcfCustomConstraintId& custom_constraint_id, const int& mode_offset) {
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  custom_constraint_pin_mode_offset_[custom_constraint_id].push_back(
+    mode_offset);
 }
 
 void PcfCustomConstraint::set_custom_constraint_command(
@@ -111,7 +126,7 @@ void PcfCustomConstraint::set_custom_constraint_pb_type(
 void PcfCustomConstraint::set_custom_constraint_pb_type_offset(
   const PcfCustomConstraintId& custom_constraint_id, const int& offset) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
-  custom_constraint_pb_type_offset_[custom_constraint_id] = offset;
+  custom_constraint_pb_type_offset_[custom_constraint_id].push_back(offset);
 }
 
 /************************************************************************

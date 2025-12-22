@@ -131,6 +131,12 @@ void PcfData::set_custom_constraint_pin_mode(
                                                         mode);
 }
 
+void PcfData::set_custom_constraint_pin_mode_offset(
+  const PcfCustomConstraintId& custom_constraint_id, const int& mode_offset) {
+  pcf_custom_constraint_.set_custom_constraint_pin_mode_offset(
+    custom_constraint_id, mode_offset);
+}
+
 void PcfData::set_custom_constraint_pb_type(
   const PcfCustomConstraintId& custom_constraint_id,
   const std::string& pb_type) {

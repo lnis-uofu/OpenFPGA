@@ -55,11 +55,18 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       std::string option_type =
         get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
           .as_string();
+      status = pcf_custom_command.create_custom_option(
+        command_name, option_name, option_type);
+
       auto xml_pcf_option_mode =
         get_first_child(xml_child, XML_MODE_TYPE_NODE_NAME, loc_data,
                         pugiutil::ReqOpt::OPTIONAL);
-      status = pcf_custom_command.create_custom_option(
-        command_name, option_name, option_type);
+      int mode_offset = -1;
+      if (xml_pcf_option_mode) {
+        mode_offset =
+          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_OFFSET, loc_data)
+            .as_int();
+      }
       while (xml_pcf_option_mode) {
         std::string mode_name =
           get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_NAME, loc_data)
@@ -69,7 +76,7 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
             .as_string();
         xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
         status = pcf_custom_command.create_custom_mode(
-          command_name, option_name, mode_name, mode_value);
+          command_name, option_name, mode_name, mode_value, mode_offset);
       }
     }
     /*parse pb_type*/
@@ -147,29 +154,32 @@ int read_pcf(const char* fname, PcfData& pcf_data,
               if (valid_option) {
                 std::string option_type =
                   pcf_custom_command.custom_option_type(word, option_name);
+
                 if (option_type == "pin") {
                   pcf_data.set_custom_constraint_pin(constraint_id,
                                                      option_value);
                 } else if (option_type == "mode") {
                   std::string mode_value = pcf_custom_command.custom_mode_value(
                     word, option_name, option_value);
+                  int mode_offset = pcf_custom_command.custom_mode_offset(
+                    word, option_name, option_value);
                   pcf_data.set_custom_constraint_pin_mode(constraint_id,
                                                           mode_value);
+                  pcf_data.set_custom_constraint_pin_mode_offset(constraint_id,
+                                                                 mode_offset);
                 }
-
-                /* set pb_type and offset */
-                std::string pb_type =
-                  pcf_custom_command.custom_command_pb_type(word);
-                int pb_type_offset =
-                  pcf_custom_command.custom_command_pb_type_offset(word);
-                pcf_data.set_custom_constraint_pb_type(constraint_id, pb_type);
-                pcf_data.set_custom_constraint_pb_type_offset(constraint_id,
-                                                              pb_type_offset);
-
               } else {
                 break;
               }
             }
+            /* set pb_type and offset */
+            std::string pb_type =
+              pcf_custom_command.custom_command_pb_type(word);
+            int pb_type_offset =
+              pcf_custom_command.custom_command_pb_type_offset(word);
+            pcf_data.set_custom_constraint_pb_type(constraint_id, pb_type);
+            pcf_data.set_custom_constraint_pb_type_offset(constraint_id,
+                                                          pb_type_offset);
           }
           if (!valid_command || !valid_option) {
             if (reduce_error_to_warning) {

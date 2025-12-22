@@ -34,9 +34,9 @@ int main(int argc, const char** argv) {
                      true); /*pcf reader will set custom constraints based on
                    custom commands*/
 
-  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(
-    argv[4], openfpga::e_pin_table_direction_convention::QUICKLOGIC);
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[3]);
+  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(
+    argv[3], openfpga::e_pin_table_direction_convention::EXPLICIT);
 
   /* Convert */
   openfpga::BitstreamSetting bitstream_setting;
