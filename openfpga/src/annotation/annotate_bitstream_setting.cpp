@@ -263,20 +263,20 @@ static int annotate_bitstream_pcf_mode_setting(
       }
 
       /* Found one, pre-check and build annotation */
-      if (vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() !=
+      if (vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() -
+            offset <
           mode_bits.size()) {
         VTR_LOG_ERROR(
-          "Mismatches in length of default mode bits for a pb_type '%s' which "
-          "is defined in bitstream setting ('%s') "
-          "from OpenFPGA architecture description ('%s')\n",
-          target_pb_type_names[0].c_str(),
+          "Unmatched length of pcf mode_select_bitstream %s!Expected to be "
+          "less than %ld bits\n",
           bitstream_setting
             .pcf_mode_bits_to_string(bitstream_pcf_mode_setting_id)
             .c_str(),
-          vpr_device_annotation.pb_type_mode_bits_to_string(target_pb_type)
-            .c_str());
+          vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() -
+            offset);
         return CMD_EXEC_FATAL_ERROR;
       }
+
       vpr_bitstream_annotation.add_pb_type_pcf_mode_bits(target_pb_type,
                                                          mode_bits, false);
       vpr_bitstream_annotation.add_pb_type_pcf_pins(target_pb_type, pcf_pin,
