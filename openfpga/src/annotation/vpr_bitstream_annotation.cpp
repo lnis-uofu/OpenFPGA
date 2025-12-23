@@ -131,23 +131,28 @@ void VprBitstreamAnnotation::set_clock_tap_routing_pin(
   clock_tap_routing_pins_[tree_id] = tree_pin_id;
 }
 
-std::string VprBitstreamAnnotation::pb_type_pcf_mode_bits_to_string(
+std::vector<std::string>
+VprBitstreamAnnotation::pb_type_pcf_mode_bits_to_string(
   t_pb_type* pb_type) const {
-  std::string mode_bits_str;
-  for (const char& bit : pb_type_pcf_mode_bits(pb_type)) {
-    mode_bits_str += bit;
+  std::vector<std::string> mode_bits_str;
+  for (const auto& char_vect : pb_type_pcf_mode_bits(pb_type)) {
+    std::string mode_bits;
+    for (const char& bit : char_vect) {
+      mode_bits += bit;
+    }
+    mode_bits_str.push_back(mode_bits);
   }
   return mode_bits_str;
 }
 
-std::vector<char> VprBitstreamAnnotation::pb_type_pcf_mode_bits(
+std::vector<std::vector<char>> VprBitstreamAnnotation::pb_type_pcf_mode_bits(
   t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_pb_type*, std::vector<char>>::const_iterator it =
+  std::map<t_pb_type*, std::vector<std::vector<char>>>::const_iterator it =
     pb_type_pcf_mode_bits_.find(pb_type);
   if (it == pb_type_pcf_mode_bits_.end()) {
     /* Return an empty vector */
-    return std::vector<char>();
+    return std::vector<std::vector<char>>();
   }
   return pb_type_pcf_mode_bits_.at(pb_type);
 }
@@ -155,15 +160,14 @@ std::vector<char> VprBitstreamAnnotation::pb_type_pcf_mode_bits(
 void VprBitstreamAnnotation::add_pb_type_pcf_mode_bits(
   t_pb_type* pb_type, const std::vector<char>& mode_bits, const bool& verbose) {
   /* Warn any override attempt */
-  std::map<t_pb_type*, std::vector<char>>::const_iterator it =
+  std::map<t_pb_type*, std::vector<std::vector<char>>>::const_iterator it =
     pb_type_pcf_mode_bits_.find(pb_type);
   if (it != pb_type_pcf_mode_bits_.end()) {
     VTR_LOGV_WARN(verbose,
                   "Override the pcf mode bits mapping for pb_type '%s'!\n",
                   pb_type->name);
   }
-
-  pb_type_pcf_mode_bits_[pb_type] = mode_bits;
+  pb_type_pcf_mode_bits_[pb_type].push_back(mode_bits);
 }
 
 void VprBitstreamAnnotation::add_pb_type_pcf_pins(t_pb_type* pb_type,
@@ -189,7 +193,7 @@ void VprBitstreamAnnotation::add_pb_type_pcf_offset(t_pb_type* pb_type,
                                                     const int& offset,
                                                     const bool& verbose) {
   /* Warn any override attempt */
-  std::map<t_pb_type*, int>::const_iterator it =
+  std::map<t_pb_type*, std::vector<int>>::const_iterator it =
     pb_type_pcf_offset_.find(pb_type);
   if (it != pb_type_pcf_offset_.end()) {
     VTR_LOGV_WARN(verbose,
@@ -197,16 +201,17 @@ void VprBitstreamAnnotation::add_pb_type_pcf_offset(t_pb_type* pb_type,
                   pb_type->name);
   }
 
-  pb_type_pcf_offset_[pb_type] = offset;
+  pb_type_pcf_offset_[pb_type].push_back(offset);
 }
 
-int VprBitstreamAnnotation::pb_type_pcf_offset(t_pb_type* pb_type) const {
+std::vector<int> VprBitstreamAnnotation::pb_type_pcf_offset(
+  t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_pb_type*, int>::const_iterator it =
+  std::map<t_pb_type*, std::vector<int>>::const_iterator it =
     pb_type_pcf_offset_.find(pb_type);
   if (it == pb_type_pcf_offset_.end()) {
     /* Return an empty vector */
-    return 0;
+    return std::vector<int>();
   }
   return pb_type_pcf_offset_.at(pb_type);
 }

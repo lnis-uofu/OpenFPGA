@@ -3,23 +3,13 @@
     <!-- Define an option -pad where user must provide a valid pin name available in pin table CSV -->
     <option name="pad" type="pin"/>
     <!-- The pb_type that is associated to the configuration bits. Offset is applied to the index when overwrite the bitstream -->
-    <pb_type name="gp_inpad.inpad" offset="0"/>
-    <option name="delay" type="mode">
-      <!-- Assume min. step is 0.1ns and max range is 0.3ns -->
-      <mode name="0.0ns" value = "000" />
-      <mode name="0.1ns" value = "001" />
-      <mode name="0.2ns" value =  "010"/>
-      <mode name="0.3ns" value = "011" />
-      <mode name="0.4ns" value = "100" />
-      <mode name="0.5ns" value = "101" />
-      <mode name="0.6ns" value = "110" />
-      <mode name="0.7ns" value = "111"/>
-    </option>
+    <pb_type name="gp_inpad.inpad"/>
+    <option name="delay" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
   </command>
     <command name="set_watch_dog" type="delay_chain">
     <option name="pad" type="pin"/>
-    <pb_type name="gp_outpad.outpad" offset="0"/>
-    <option name="mode" type="mode">
+    <pb_type name="gp_outpad.outpad"/>
+    <option name="mode" type="mode" offset="0">
       <!-- Assume three modes: NORMAL, LOW_SPEED, HIGH_SPEED -->
       <mode name="NORMAL" value = "0001"/>
       <mode name="LOW_SPEED" value = "0010" />

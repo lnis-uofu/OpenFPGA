@@ -158,36 +158,41 @@ static void build_primitive_bitstream(
     mode_select_bitstream = generate_mode_select_bitstream(
       device_annotation.pb_type_mode_bits(primitive_pb_type));
 
-    auto pcf_mode_select_bitstream =
+    auto pcf_mode_select_bitstream_vec =
       bitstream_annotation.pb_type_pcf_mode_bits(primitive_pb_type);
 
     /* Add offset */
-    size_t mode_bits_start_index =
+    auto mode_bits_start_index_vec =
       bitstream_annotation.pb_type_pcf_offset(primitive_pb_type);
-    VTR_LOG(
-      " \n Specified pcf mode bits are: %s. Bitstream offset is %d\n",
-      bitstream_annotation.pb_type_pcf_mode_bits_to_string(primitive_pb_type)
-        .c_str(),
-      mode_bits_start_index);
+    for (size_t it = 0; it < pcf_mode_select_bitstream_vec.size(); it++) {
+      auto pcf_mode_select_bitstream = pcf_mode_select_bitstream_vec[it];
+      auto mode_bits_start_index = mode_bits_start_index_vec[it];
+      VTR_LOG(" \n Specified pcf mode bits are: %s. Bitstream offset is %d\n",
+              bitstream_annotation
+                .pb_type_pcf_mode_bits_to_string(primitive_pb_type)[it]
+                .c_str(),
+              mode_bits_start_index);
 
-    /* Ensure the length matches!!! */
-    if (mode_select_bitstream.size() - mode_bits_start_index <
-        pcf_mode_select_bitstream.size()) {
-      VTR_LOG_ERROR(
-        "Unmatched length of pcf mode_select_bitstream %s!Expected to be "
-        "less than %ld bits\n",
-        bitstream_annotation.pb_type_pcf_mode_bits_to_string(primitive_pb_type)
-          .c_str(),
-        mode_select_bitstream.size() - mode_bits_start_index);
-      exit(1);
-    }
-    /* Overload the bitstream here */
-    for (size_t bit_index = 0; bit_index < pcf_mode_select_bitstream.size();
-         ++bit_index) {
-      VTR_ASSERT('0' == pcf_mode_select_bitstream[bit_index] ||
-                 '1' == pcf_mode_select_bitstream[bit_index]);
-      mode_select_bitstream[bit_index + mode_bits_start_index] =
-        ('1' == pcf_mode_select_bitstream[bit_index]);
+      /* Ensure the length matches!!! */
+      if (mode_select_bitstream.size() - mode_bits_start_index <
+          pcf_mode_select_bitstream.size()) {
+        VTR_LOG_ERROR(
+          "Unmatched length of pcf mode_select_bitstream %s!Expected to be "
+          "less than %ld bits\n",
+          bitstream_annotation
+            .pb_type_pcf_mode_bits_to_string(primitive_pb_type)[it]
+            .c_str(),
+          mode_select_bitstream.size() - mode_bits_start_index);
+        exit(1);
+      }
+      /* Overload the bitstream here */
+      for (size_t bit_index = 0; bit_index < pcf_mode_select_bitstream.size();
+           ++bit_index) {
+        VTR_ASSERT('0' == pcf_mode_select_bitstream[bit_index] ||
+                   '1' == pcf_mode_select_bitstream[bit_index]);
+        mode_select_bitstream[bit_index + mode_bits_start_index] =
+          ('1' == pcf_mode_select_bitstream[bit_index]);
+      }
     }
   }
 

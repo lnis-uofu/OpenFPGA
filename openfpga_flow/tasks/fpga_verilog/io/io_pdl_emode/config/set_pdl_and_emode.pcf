@@ -1,9 +1,9 @@
 # This is a custom command. The FPGA may contain a delay chain in a I/O pad pad_fpga_io[0]. 
 # The detailed step and range is defined in the configuration file. User only need to define the delay number
 # PCF parser will decode the mode bits
-set_delay_chain -pad pad_fpga_i[0] -delay 0.2ns
+set_delay_chain -pad pad_fpga_i[0] -delay 2
 # This is a custom command. The FPGA may drive a peripheral block, e.g., a watchdog, in this case.
 # The peripheral block is configured through the mode bits in a I/O pad pad_fpga_io[1] 
 # User can specify the operating of the watchdog. User only specify the mode name
 # PCF parser will decode the mode bits
-set_watch_dog -pad pad_fpga_o[0] -mode NORMAL
+set_watch_dog -pad pad_fpga_o[0] -mode NORMAL -status ENABLE
