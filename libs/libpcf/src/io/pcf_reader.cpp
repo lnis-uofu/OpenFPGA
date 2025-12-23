@@ -25,6 +25,43 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
+static std::vector<std::string> generateBinaryStrings(std::size_t num_bits,
+                                                      unsigned int max_decimal,
+                                                      bool little_endian) {
+  if (num_bits == 0) {
+    throw std::invalid_argument("num_bits must be > 0");
+  }
+
+  const unsigned int max_representable =
+    (num_bits >= 32) ? std::numeric_limits<unsigned int>::max()
+                     : ((1u << num_bits) - 1);
+
+  if (max_decimal > max_representable) {
+    throw std::invalid_argument("max_decimal exceeds num_bits capacity");
+  }
+
+  std::vector<std::string> result;
+  result.reserve(max_decimal + 1);
+
+  for (unsigned int value = 0; value <= max_decimal; ++value) {
+    std::string bits(num_bits, '0');
+
+    for (std::size_t i = 0; i < num_bits; ++i) {
+      if (value & (1u << i)) {
+        bits[num_bits - 1 - i] = '1';  // MSB-first
+      }
+    }
+
+    if (little_endian) {
+      std::reverse(bits.begin(), bits.end());
+    }
+
+    result.push_back(bits);
+  }
+
+  return result;
+}
+
 static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
                                 const pugiutil::loc_data& loc_data,
                                 PcfCustomCommand& pcf_custom_command) {
@@ -55,9 +92,38 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       std::string option_type =
         get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
           .as_string();
-      status = pcf_custom_command.create_custom_option(
-        command_name, option_name, option_type);
+      VTR_ASSERT(option_type == "decimal" || option_type == "pin" ||
+                 option_type == "mode");
+      /*The case the mode is defined using decimal*/
+      if (option_type == "decimal") {
+        status = pcf_custom_command.create_custom_option(command_name,
+                                                         option_name, "mode");
+        int num_bits =
+          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_NUM_BITS, loc_data)
+            .as_int();
+        unsigned int max_decimal =
+          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_MAX_DECIMAL, loc_data)
+            .as_int();
+        bool little_endian =
+          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_LITTLE_ENDIAN, loc_data)
+            .as_bool();
+        int mode_offset =
+          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_OFFSET, loc_data)
+            .as_int();
 
+        std::vector<std::string> mode_bits =
+          generateBinaryStrings(num_bits, max_decimal, little_endian);
+        for (auto it = 0; it < mode_bits.size(); it++) {
+          std::string mode_name = std::to_string(it);
+          std::string mode_value = mode_bits[it];
+          status = pcf_custom_command.create_custom_mode(
+            command_name, option_name, mode_name, mode_value, mode_offset);
+        }
+      } else {
+        status = pcf_custom_command.create_custom_option(
+          command_name, option_name, option_type);
+      }
+      /*The case the mode is defined explicitly*/
       auto xml_pcf_option_mode =
         get_first_child(xml_child, XML_MODE_TYPE_NODE_NAME, loc_data,
                         pugiutil::ReqOpt::OPTIONAL);

@@ -15,6 +15,7 @@
       <mode name="0.6ns" value = "110" />
       <mode name="0.7ns" value = "111"/>
     </option>
+    <option name="delay2" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
   </command>
     <command name="set_watch_dog" type="delay_chain">
     <option name="pad" type="pin"/>
