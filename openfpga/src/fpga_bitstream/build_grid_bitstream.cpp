@@ -164,7 +164,7 @@ static void build_primitive_bitstream(
     /* Add offset */
     auto mode_bits_start_index_vec =
       bitstream_annotation.pb_type_pcf_offset(primitive_pb_type);
-    for (auto it = 0; it < pcf_mode_select_bitstream_vec.size(); it++) {
+    for (size_t it = 0; it < pcf_mode_select_bitstream_vec.size(); it++) {
       auto pcf_mode_select_bitstream = pcf_mode_select_bitstream_vec[it];
       auto mode_bits_start_index = mode_bits_start_index_vec[it];
       VTR_LOG(" \n Specified pcf mode bits are: %s. Bitstream offset is %d\n",
