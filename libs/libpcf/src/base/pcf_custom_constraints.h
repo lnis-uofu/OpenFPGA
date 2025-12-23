@@ -58,7 +58,7 @@ class PcfCustomConstraint {
   std::string custom_constraint_pb_type(
     const PcfCustomConstraintId& custom_constraint_id) const;
 
-  std::vector<int> custom_constraint_pb_type_offset(
+  int custom_constraint_pb_type_offset(
     const PcfCustomConstraintId& custom_constraint_id) const;
 
   std::vector<std::string> custom_constraint_mode(
@@ -104,8 +104,7 @@ class PcfCustomConstraint {
     custom_constraint_pins_;
   vtr::vector<PcfCustomConstraintId, std::string> custom_constraint_pb_type_;
 
-  vtr::vector<PcfCustomConstraintId, std::vector<int>>
-    custom_constraint_pb_type_offset_;
+  vtr::vector<PcfCustomConstraintId, int> custom_constraint_pb_type_offset_;
   vtr::vector<PcfCustomConstraintId, std::string>
     custom_constraint_command_name_;
 

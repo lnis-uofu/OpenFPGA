@@ -44,7 +44,7 @@ std::string PcfCustomConstraint::custom_constraint_pb_type(
   return custom_constraint_pb_type_[custom_constraint_id];
 }
 
-std::vector<int> PcfCustomConstraint::custom_constraint_pb_type_offset(
+int PcfCustomConstraint::custom_constraint_pb_type_offset(
   const PcfCustomConstraintId& custom_constraint_id) const {
   /* validate the io_id */
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
@@ -126,7 +126,7 @@ void PcfCustomConstraint::set_custom_constraint_pb_type(
 void PcfCustomConstraint::set_custom_constraint_pb_type_offset(
   const PcfCustomConstraintId& custom_constraint_id, const int& offset) {
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
-  custom_constraint_pb_type_offset_[custom_constraint_id].push_back(offset);
+  custom_constraint_pb_type_offset_[custom_constraint_id] = offset;
 }
 
 /************************************************************************
