@@ -12,6 +12,7 @@
 
 /* Headers from openfpgautil library */
 #include "command_exit_codes.h"
+#include "openfpga_decode.h"
 #include "openfpga_digest.h"
 #include "pcf_config_constants.h"
 #include "pcf_reader.h"
@@ -25,9 +26,8 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
-static std::vector<std::string> generateBinaryStrings(std::size_t num_bits,
-                                                      unsigned int max_decimal,
-                                                      bool little_endian) {
+static std::vector<std::string> generate_binary_strings(
+  std::size_t num_bits, unsigned int max_decimal, bool little_endian) {
   if (num_bits == 0) {
     throw std::invalid_argument("num_bits must be > 0");
   }
@@ -44,19 +44,9 @@ static std::vector<std::string> generateBinaryStrings(std::size_t num_bits,
   result.reserve(max_decimal + 1);
 
   for (unsigned int value = 0; value <= max_decimal; ++value) {
-    std::string bits(num_bits, '0');
-
-    for (std::size_t i = 0; i < num_bits; ++i) {
-      if (value & (1u << i)) {
-        bits[num_bits - 1 - i] = '1';  // MSB-first
-      }
-    }
-
-    if (little_endian) {
-      std::reverse(bits.begin(), bits.end());
-    }
-
-    result.push_back(bits);
+    std::vector<char> bits = itobin_charvec(value, num_bits);
+    std::string bits_str(bits.begin(), bits.end());
+    result.push_back(bits_str);
   }
 
   return result;
@@ -83,7 +73,6 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
               {XML_OPTION_TYPE_NODE_NAME, XML_PB_TYPE_NODE_NAME});
       return CMD_EXEC_FATAL_ERROR;
     }
-
     /*parse option*/
     if (xml_child.name() == std::string(XML_OPTION_TYPE_NODE_NAME)) {
       std::string option_name =
@@ -112,7 +101,7 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
             .as_int();
 
         std::vector<std::string> mode_bits =
-          generateBinaryStrings(num_bits, max_decimal, little_endian);
+          generate_binary_strings(num_bits, max_decimal, little_endian);
         for (auto it = 0; it < mode_bits.size(); it++) {
           std::string mode_name = std::to_string(it);
           std::string mode_value = mode_bits[it];
@@ -155,13 +144,18 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       std::string pb_type_name =
         get_attribute(xml_child, XML_PB_TYPE_ATTRIBUTE_NAME, loc_data)
           .as_string();
-      int offset =
-        get_attribute(xml_child, XML_PB_TYPE_ATTRIBUTE_OFFSET, loc_data)
-          .as_int();
+
       pcf_custom_command.set_custom_command_pb_type(command_name, pb_type_name);
-      pcf_custom_command.set_custom_command_pb_type_offset(command_name,
-                                                           offset);
     }
+  }
+  bool conflict =
+    pcf_custom_command.command_mode_offset_conflict_check(command_name);
+  if (conflict) {
+    VTR_LOG_ERROR(
+      "Please check offset for options of command %s, there shows conflicts! "
+      "\n",
+      command_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
 }
@@ -246,11 +240,7 @@ int read_pcf(const char* fname, PcfData& pcf_data,
             /* set pb_type and offset */
             std::string pb_type =
               pcf_custom_command.custom_command_pb_type(word);
-            int pb_type_offset =
-              pcf_custom_command.custom_command_pb_type_offset(word);
             pcf_data.set_custom_constraint_pb_type(constraint_id, pb_type);
-            pcf_data.set_custom_constraint_pb_type_offset(constraint_id,
-                                                          pb_type_offset);
           }
           if (!valid_command || !valid_option) {
             if (reduce_error_to_warning) {

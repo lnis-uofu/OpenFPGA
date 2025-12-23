@@ -59,9 +59,6 @@ class PcfCustomCommand {
   void set_custom_command_pb_type(const std::string& command_name,
                                   const std::string& pb_type);
 
-  void set_custom_command_pb_type_offset(const std::string& command_name,
-                                         const int& offset);
-
   int create_custom_command(const std::string& command_name,
                             const std::string& command_type);
 
@@ -87,8 +84,8 @@ class PcfCustomCommand {
   std::string custom_command_pb_type(
     const std::string& custom_command_name) const;
 
-  int custom_command_pb_type_offset(
-    const std::string& custom_command_name) const;
+  bool command_mode_offset_conflict_check(
+    const std::string& command_name) const;
 
  private: /* Internal data */
   std::vector<PcfCustomCommandOptionId> command_options(
@@ -138,8 +135,6 @@ class PcfCustomCommand {
   vtr::vector<PcfCustomCommandId, std::string> custom_command_types_;
 
   vtr::vector<PcfCustomCommandId, std::string> custom_command_pb_types_;
-
-  vtr::vector<PcfCustomCommandId, int> custom_command_pb_type_offset_;
 
   vtr::vector<PcfCustomCommandId, std::vector<PcfCustomCommandOptionId>>
     custom_command_id_to_option_id_;

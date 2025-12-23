@@ -1,12 +1,12 @@
 #include "pcf_custom_command.h"
 
 #include <algorithm>
+#include <set>
 
 #include "command_exit_codes.h"
 #include "openfpga_port_parser.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
 /* Begin namespace openfpga */
 namespace openfpga {
 
@@ -44,13 +44,6 @@ std::string PcfCustomCommand::custom_command_pb_type(
   /* validate the command_id */
   auto custom_command_id = find_command_id(custom_command_name);
   return custom_command_pb_types_[custom_command_id];
-}
-
-int PcfCustomCommand::custom_command_pb_type_offset(
-  const std::string& custom_command_name) const {
-  /* validate the command_id */
-  auto custom_command_id = find_command_id(custom_command_name);
-  return custom_command_pb_type_offset_[custom_command_id];
 }
 
 std::string PcfCustomCommand::custom_command_type(
@@ -131,12 +124,9 @@ int PcfCustomCommand::create_custom_command(const std::string& command_name,
     PcfCustomCommandId(custom_command_ids_.size());
 
   custom_command_ids_.push_back(custom_command_id);
-  custom_command_names_.emplace_back();
-  custom_command_types_.emplace_back();
+  custom_command_names_.emplace_back(command_name);
+  custom_command_types_.emplace_back(command_type);
   custom_command_pb_types_.emplace_back();
-  custom_command_pb_type_offset_.emplace_back();
-  custom_command_names_[custom_command_id] = command_name;
-  custom_command_types_[custom_command_id] = command_type;
   custom_command_id_to_option_id_.emplace_back();
 
   return CMD_EXEC_SUCCESS;
@@ -146,12 +136,6 @@ void PcfCustomCommand::set_custom_command_pb_type(
   const std::string& command_name, const std::string& pb_type) {
   auto command_id = find_command_id(command_name);
   custom_command_pb_types_[command_id] = pb_type;
-}
-
-void PcfCustomCommand::set_custom_command_pb_type_offset(
-  const std::string& command_name, const int& offset) {
-  auto command_id = find_command_id(command_name);
-  custom_command_pb_type_offset_[command_id] = offset;
 }
 
 PcfCustomCommandId PcfCustomCommand::find_command_id(
@@ -200,12 +184,8 @@ int PcfCustomCommand::create_custom_option(const std::string& command_name,
     PcfCustomCommandOptionId(custom_option_ids_.size());
   custom_command_id_to_option_id_[command_id].push_back(custom_option_id);
   custom_option_ids_.push_back(custom_option_id);
-  custom_option_names_.emplace_back();
-  custom_option_types_.emplace_back();
-
-  custom_option_names_[custom_option_id] = option_name;
-  custom_option_types_[custom_option_id] = option_type;
-
+  custom_option_names_.emplace_back(option_name);
+  custom_option_types_.emplace_back(option_type);
   custom_option_id_to_mode_id_.emplace_back();
   return CMD_EXEC_SUCCESS;
 }
@@ -220,12 +200,9 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
     PcfCustomCommandModeId(custom_mode_ids_.size());
   custom_option_id_to_mode_id_[option_id].push_back(custom_mode_id);
   custom_mode_ids_.push_back(custom_mode_id);
-  custom_mode_names_.emplace_back();
-  custom_mode_values_.emplace_back();
-  custom_mode_offset_.emplace_back();
-  custom_mode_names_[custom_mode_id] = mode_name;
-  custom_mode_values_[custom_mode_id] = mode_value;
-  custom_mode_offset_[custom_mode_id] = mode_offset;
+  custom_mode_names_.emplace_back(mode_name);
+  custom_mode_values_.emplace_back(mode_value);
+  custom_mode_offset_.emplace_back(mode_offset);
   return CMD_EXEC_SUCCESS;
 }
 
@@ -281,6 +258,37 @@ bool PcfCustomCommand::valid_option(const std::string& command_name,
     }
   }
   return valid_option;
+}
+
+bool PcfCustomCommand::command_mode_offset_conflict_check(
+  const std::string& command_name) const {
+  if (!valid_command(command_name)) {
+    VTR_LOG_ERROR("Command %s is invalid! \n", command_name.c_str());
+  }
+  auto command_id = find_command_id(command_name);
+  std::vector<int> valid_bit_index;
+  /* record the bit position of all modes of a command. If they overlap with
+   * each other, then there is offset conflict*/
+  for (auto option_id : command_options(command_id)) {
+    auto mode_id_vec = option_modes(option_id);
+    if (mode_id_vec.empty()) {
+      continue; /*bypass option with type pin*/
+    }
+    auto mode_id = mode_id_vec[0]; /*all modes in a single option has the same
+                        bit size and offset. therefore we just take out the
+                        first mode to do the conflict check*/
+    int mode_offset = custom_mode_offset(mode_id);
+    int mode_bit_size = custom_mode_value(mode_id).size();
+    for (int i = mode_offset; i < mode_offset + mode_bit_size; i++) {
+      if (std::find(valid_bit_index.begin(), valid_bit_index.end(), i) !=
+          valid_bit_index
+            .end()) { /*find duplicate bit position index, there is conflict*/
+        return true;
+      }
+      valid_bit_index.push_back(i);
+    }
+  }
+  return false;
 }
 
 } /* End namespace openfpga*/
