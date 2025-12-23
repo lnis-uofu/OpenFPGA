@@ -119,30 +119,35 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
           status = pcf_custom_command.create_custom_mode(
             command_name, option_name, mode_name, mode_value, mode_offset);
         }
+      } else if (option_type == "mode") {
+        status = pcf_custom_command.create_custom_option(
+          command_name, option_name, option_type);
+        /*The case the mode is defined explicitly*/
+        auto xml_pcf_option_mode =
+          get_first_child(xml_child, XML_MODE_TYPE_NODE_NAME, loc_data,
+                          pugiutil::ReqOpt::OPTIONAL);
+        int mode_offset = -1;
+        if (xml_pcf_option_mode) {
+          mode_offset =
+            get_attribute(xml_child, XML_OPTION_ATTRIBUTE_OFFSET, loc_data)
+              .as_int();
+        }
+        while (xml_pcf_option_mode) {
+          std::string mode_name =
+            get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_NAME,
+                          loc_data)
+              .as_string();
+          std::string mode_value =
+            get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_VALUE,
+                          loc_data)
+              .as_string();
+          xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
+          status = pcf_custom_command.create_custom_mode(
+            command_name, option_name, mode_name, mode_value, mode_offset);
+        }
       } else {
         status = pcf_custom_command.create_custom_option(
           command_name, option_name, option_type);
-      }
-      /*The case the mode is defined explicitly*/
-      auto xml_pcf_option_mode =
-        get_first_child(xml_child, XML_MODE_TYPE_NODE_NAME, loc_data,
-                        pugiutil::ReqOpt::OPTIONAL);
-      int mode_offset = -1;
-      if (xml_pcf_option_mode) {
-        mode_offset =
-          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_OFFSET, loc_data)
-            .as_int();
-      }
-      while (xml_pcf_option_mode) {
-        std::string mode_name =
-          get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_NAME, loc_data)
-            .as_string();
-        std::string mode_value =
-          get_attribute(xml_pcf_option_mode, XML_MODE_ATTRIBUTE_VALUE, loc_data)
-            .as_string();
-        xml_pcf_option_mode = xml_pcf_option_mode.next_sibling();
-        status = pcf_custom_command.create_custom_mode(
-          command_name, option_name, mode_name, mode_value, mode_offset);
       }
     }
     /*parse pb_type*/
