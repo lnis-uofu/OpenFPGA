@@ -70,6 +70,12 @@ class PcfCustomCommand {
                          const std::string& mode_name,
                          const std::string& mode_value, const int& mode_offset);
 
+  int create_custom_decimal_mode(const std::string& command_name,
+                                 const std::string& option_name,
+                                 const int& num_bits, const int& max_val,
+                                 const bool& little_endian,
+                                 const int& mode_offset);
+
   std::string custom_mode_value(const std::string& command_name,
                                 const std::string& option_name,
                                 const std::string& mode_name) const;
@@ -87,12 +93,27 @@ class PcfCustomCommand {
   bool command_mode_offset_conflict_check(
     const std::string& command_name) const;
 
+  int custom_decimal_mode_offset(const std::string& command_name,
+                                 const std::string& option_name) const;
+
+  int custom_decimal_mode_num_bits(const std::string& command_name,
+                                   const std::string& option_name) const;
+
+  int custom_decimal_mode_max_val(const std::string& command_name,
+                                  const std::string& option_name) const;
+
+  bool custom_decimal_mode_little_endian(const std::string& command_name,
+                                         const std::string& option_name) const;
+
  private: /* Internal data */
   std::vector<PcfCustomCommandOptionId> command_options(
     const PcfCustomCommandId& command_id) const;
 
   std::vector<PcfCustomCommandModeId> option_modes(
     const PcfCustomCommandOptionId& option_id) const;
+  PcfCustomCommandModeId option_decimal_modes(
+    const PcfCustomCommandOptionId& option_id) const;
+
   std::string custom_command_name(
     const PcfCustomCommandId& custom_command_id) const;
 
@@ -112,6 +133,14 @@ class PcfCustomCommand {
 
   std::string custom_mode_value(
     const PcfCustomCommandModeId& custom_mode_id) const;
+  bool custom_decimal_mode_little_endian(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
+  int custom_decimal_mode_offset(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
+  int custom_decimal_mode_num_bits(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
+  int custom_decimal_mode_max_val(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
 
   PcfCustomCommandId find_command_id(const std::string& command_name) const;
   PcfCustomCommandOptionId find_option_id(const std::string& command_name,
@@ -119,6 +148,8 @@ class PcfCustomCommand {
   PcfCustomCommandModeId find_mode_id(const std::string& command_name,
                                       const std::string& option_name,
                                       const std::string& mode_name) const;
+  PcfCustomCommandModeId find_decimal_mode_id(
+    const std::string& command_name, const std::string& option_name) const;
 
   bool valid_custom_command_id(
     const PcfCustomCommandId& custom_command_id) const;
@@ -126,6 +157,8 @@ class PcfCustomCommand {
   bool valid_custom_option_id(
     const PcfCustomCommandOptionId& custom_option_id) const;
   bool valid_custom_mode_id(const PcfCustomCommandModeId& custom_mode_id) const;
+  bool valid_custom_decimal_mode_id(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
 
  private:
   vtr::vector<PcfCustomCommandId, PcfCustomCommandId> custom_command_ids_;
@@ -142,6 +175,9 @@ class PcfCustomCommand {
   vtr::vector<PcfCustomCommandOptionId, std::vector<PcfCustomCommandModeId>>
     custom_option_id_to_mode_id_;
 
+  vtr::vector<PcfCustomCommandOptionId, PcfCustomCommandModeId>
+    custom_option_id_to_decimal_mode_id_;
+
   vtr::vector<PcfCustomCommandOptionId, PcfCustomCommandOptionId>
     custom_option_ids_;
 
@@ -156,6 +192,17 @@ class PcfCustomCommand {
   vtr::vector<PcfCustomCommandModeId, std::string> custom_mode_values_;
 
   vtr::vector<PcfCustomCommandModeId, int> custom_mode_offset_;
+
+  vtr::vector<PcfCustomCommandModeId, PcfCustomCommandModeId>
+    custom_decimal_mode_ids_;
+
+  vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_num_bits_;
+
+  vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_max_values_;
+
+  vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_offset_;
+
+  vtr::vector<PcfCustomCommandModeId, bool> custom_decimal_mode_little_endian_;
 };
 
 } /* End namespace openfpga*/

@@ -111,6 +111,74 @@ std::string PcfCustomCommand::custom_mode_value(
   return custom_mode_value(custom_mode_id);
 }
 
+int PcfCustomCommand::custom_decimal_mode_offset(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_offset(custom_decimal_mode_id);
+}
+
+int PcfCustomCommand::custom_decimal_mode_offset(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_offset_[custom_decimal_mode_id];
+}
+
+int PcfCustomCommand::custom_decimal_mode_num_bits(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_num_bits(custom_decimal_mode_id);
+}
+
+int PcfCustomCommand::custom_decimal_mode_num_bits(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_num_bits_[custom_decimal_mode_id];
+}
+
+int PcfCustomCommand::custom_decimal_mode_max_val(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_max_val(custom_decimal_mode_id);
+}
+
+int PcfCustomCommand::custom_decimal_mode_max_val(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_max_values_[custom_decimal_mode_id];
+}
+
+bool PcfCustomCommand::custom_decimal_mode_little_endian(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_little_endian(custom_decimal_mode_id);
+}
+
+bool PcfCustomCommand::custom_decimal_mode_little_endian(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_little_endian_[custom_decimal_mode_id];
+}
+
 bool PcfCustomCommand::empty() const { return 0 == custom_command_ids_.size(); }
 
 /************************************************************************
@@ -175,6 +243,12 @@ PcfCustomCommandModeId PcfCustomCommand::find_mode_id(
   exit(1);
 }
 
+PcfCustomCommandModeId PcfCustomCommand::find_decimal_mode_id(
+  const std::string& command_name, const std::string& option_name) const {
+  auto option_id = find_option_id(command_name, option_name);
+  return option_decimal_modes(option_id);
+}
+
 int PcfCustomCommand::create_custom_option(const std::string& command_name,
                                            const std::string& option_name,
                                            const std::string& option_type) {
@@ -187,6 +261,7 @@ int PcfCustomCommand::create_custom_option(const std::string& command_name,
   custom_option_names_.emplace_back(option_name);
   custom_option_types_.emplace_back(option_type);
   custom_option_id_to_mode_id_.emplace_back();
+  custom_option_id_to_decimal_mode_id_.emplace_back();
   return CMD_EXEC_SUCCESS;
 }
 
@@ -206,14 +281,47 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
   return CMD_EXEC_SUCCESS;
 }
 
+int PcfCustomCommand::create_custom_decimal_mode(
+  const std::string& command_name, const std::string& option_name,
+  const int& num_bits, const int& max_val, const bool& little_endian,
+  const int& mode_offset) {
+  auto option_id = find_option_id(command_name, option_name);
+  PcfCustomCommandModeId custom_decimal_mode_id =
+    PcfCustomCommandModeId(custom_decimal_mode_ids_.size());
+  custom_option_id_to_decimal_mode_id_[option_id] = custom_decimal_mode_id;
+  custom_decimal_mode_ids_.push_back(custom_decimal_mode_id);
+  custom_decimal_mode_num_bits_.emplace_back(num_bits);
+  custom_decimal_mode_max_values_.emplace_back(max_val);
+  custom_decimal_mode_little_endian_.emplace_back(little_endian);
+  custom_decimal_mode_offset_.emplace_back(mode_offset);
+  return CMD_EXEC_SUCCESS;
+}
+
 std::vector<PcfCustomCommandOptionId> PcfCustomCommand::command_options(
   const PcfCustomCommandId& command_id) const {
+  if (!valid_custom_command_id(command_id)) {
+    VTR_LOG_ERROR("Invalid command found. Please check!\n");
+    exit(1);
+  }
   return custom_command_id_to_option_id_[command_id];
 }
 
 std::vector<PcfCustomCommandModeId> PcfCustomCommand::option_modes(
   const PcfCustomCommandOptionId& option_id) const {
+  if (!valid_custom_option_id(option_id)) {
+    VTR_LOG_ERROR("Invalid option found. Please check!\n");
+    exit(1);
+  }
   return custom_option_id_to_mode_id_[option_id];
+}
+
+PcfCustomCommandModeId PcfCustomCommand::option_decimal_modes(
+  const PcfCustomCommandOptionId& option_id) const {
+  if (!valid_custom_option_id(option_id)) {
+    VTR_LOG_ERROR("Invalid option found. Please check!\n");
+    exit(1);
+  }
+  return custom_option_id_to_decimal_mode_id_[option_id];
 }
 
 /************************************************************************
@@ -234,6 +342,12 @@ bool PcfCustomCommand::valid_custom_mode_id(
   const PcfCustomCommandModeId& custom_mode_id) const {
   return (size_t(custom_mode_id) < custom_mode_ids_.size()) &&
          (custom_mode_id == custom_mode_ids_[custom_mode_id]);
+}
+bool PcfCustomCommand::valid_custom_decimal_mode_id(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  return (size_t(custom_decimal_mode_id) < custom_decimal_mode_ids_.size()) &&
+         (custom_decimal_mode_id ==
+          custom_decimal_mode_ids_[custom_decimal_mode_id]);
 }
 
 bool PcfCustomCommand::valid_command(const std::string& command_name) const {
@@ -270,22 +384,35 @@ bool PcfCustomCommand::command_mode_offset_conflict_check(
   /* record the bit position of all modes of a command. If they overlap with
    * each other, then there is offset conflict*/
   for (auto option_id : command_options(command_id)) {
-    auto mode_id_vec = option_modes(option_id);
-    if (mode_id_vec.empty()) {
-      continue; /*bypass option with type pin*/
-    }
-    auto mode_id = mode_id_vec[0]; /*all modes in a single option has the same
-                        bit size and offset. therefore we just take out the
-                        first mode to do the conflict check*/
-    int mode_offset = custom_mode_offset(mode_id);
-    int mode_bit_size = custom_mode_value(mode_id).size();
-    for (int i = mode_offset; i < mode_offset + mode_bit_size; i++) {
-      if (std::find(valid_bit_index.begin(), valid_bit_index.end(), i) !=
-          valid_bit_index
-            .end()) { /*find duplicate bit position index, there is conflict*/
-        return true;
+    std::string option_type = custom_option_type(option_id);
+    if (option_type == "mode") {
+      auto mode_id_vec = option_modes(option_id);
+      auto mode_id = mode_id_vec[0]; /*all modes in a single option has the same
+                          bit size and offset. therefore we just take out the
+                          first mode to do the conflict check*/
+      int mode_offset = custom_mode_offset(mode_id);
+      int mode_bit_size = custom_mode_value(mode_id).size();
+      for (int i = mode_offset; i < mode_offset + mode_bit_size; i++) {
+        if (std::find(valid_bit_index.begin(), valid_bit_index.end(), i) !=
+            valid_bit_index
+              .end()) { /*find duplicate bit position index, there is conflict*/
+          return true;
+        }
+        valid_bit_index.push_back(i);
       }
-      valid_bit_index.push_back(i);
+    } else if (option_type == "decimal") {
+      auto decimal_mode_id = option_decimal_modes(option_id);
+      int decimal_mode_offset = custom_decimal_mode_offset(decimal_mode_id);
+      int decimal_mode_bit_size = custom_decimal_mode_num_bits(decimal_mode_id);
+      for (int i = decimal_mode_offset;
+           i < decimal_mode_offset + decimal_mode_bit_size; i++) {
+        if (std::find(valid_bit_index.begin(), valid_bit_index.end(), i) !=
+            valid_bit_index
+              .end()) { /*find duplicate bit position index, there is conflict*/
+          return true;
+        }
+        valid_bit_index.push_back(i);
+      }
     }
   }
   return false;
