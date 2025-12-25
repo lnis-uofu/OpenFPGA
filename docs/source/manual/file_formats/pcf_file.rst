@@ -33,7 +33,7 @@ In addition to standard pin assignment commands, the PCF file supports custom co
 
 .. note:: 
    Custom PCF commands allow users to specify platform-specific configuration options (such as delay chains or peripheral modes) without dealing with low-level bitstream encodings. 
-   The detailed behavior, valid options, and encoding rules of each custom command are defined in ``pcf_command_config.xml`` and automatically interpreted by the PCF parser.
+   The detailed behavior, valid options, and encoding rules of each custom command are defined in :ref:`file_format_pcf_custom_command_config_file` and automatically interpreted by the PCF parser.
 
 An example of PCF file using custom commands is shown as follows:
 
