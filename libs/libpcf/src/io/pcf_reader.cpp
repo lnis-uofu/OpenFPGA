@@ -4,8 +4,7 @@
 #include <sstream>
 
 /* Headers from vtrutil library */
-#include <iostream>
-
+#include <cstdint>
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -26,29 +25,39 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
+
 static std::string generate_binary_strings(std::size_t num_bits,
-                                           unsigned int max_decimal,
+                                           std::uint64_t max_decimal,
                                            bool little_endian,
-                                           unsigned int decimal_value) {
-  if (num_bits == 0) {
-    throw std::invalid_argument("num_bits must be > 0\n");
+                                           std::uint64_t decimal_value) {
+  if (num_bits == 0 || num_bits > 64) {
+    VTR_LOG_ERROR("num_bits must be in range [1, 64]\n");
+    exit(1);
   }
 
-  const unsigned int max_representable =
-    (num_bits >= 32) ? std::numeric_limits<unsigned int>::max()
-                     : ((1u << num_bits) - 1);
+  const std::uint64_t max_representable =
+    (num_bits == 64)
+      ? std::numeric_limits<std::uint64_t>::max()
+      : ((std::uint64_t(1) << num_bits) - 1);
 
   if (max_decimal > max_representable) {
-    throw std::invalid_argument("max_decimal exceeds num_bits capacity\n");
+    VTR_LOG_ERROR("max_decimal exceeds num_bits capacity\n");
+    exit(1);
   }
 
   if (decimal_value > max_decimal) {
-    throw std::invalid_argument(
+    VTR_LOG_ERROR(
       "User specified decimal value exceeds max_decimal\n");
+    exit(1);
   }
+
   std::vector<char> bits = itobin_charvec(decimal_value, num_bits);
-  std::string bits_str(bits.begin(), bits.end());
-  return bits_str;
+
+  if (little_endian) {
+    std::reverse(bits.begin(), bits.end());
+  }
+
+  return std::string(bits.begin(), bits.end());
 }
 
 static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
