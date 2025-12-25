@@ -46,13 +46,23 @@ An example of the file is shown as follows.
 
   Defines a configurable parameter for the custom command.
 
-  - **pin**: Specifies an I/O pad. Users provide a valid pad name from the pin table. The parser validates the name.  
-  - **mode**: Users select a predefined mode by name (e.g., NORMAL, LOW_SPEED, HIGH_SPEED). Each mode has an explicit bit pattern defined in the configuration file.  
-  - **decimal**: Users provide a numeric value (e.g., delay). The parser computes the corresponding bit pattern or mode bits. Attributes include:  
-    - **num_bits**: Number of bits used for encoding  
-    - **max**: Maximum allowed value  
-    - **little_endian**: Bit ordering  
-    - **offset**: Bit offset applied when overwriting the bitstream  
+  - **pin**:  
+    Specifies an I/O pad. Users provide a valid pad name from the pin table.  
+    The parser validates the name.
+
+  - **mode**:  
+    Users select a predefined mode by name (e.g., NORMAL, LOW_SPEED, HIGH_SPEED).  
+    Each mode has an explicit bit pattern defined in the configuration file.
+
+  - **decimal**:  
+    Users provide a numeric value (e.g., delay). The parser computes the corresponding bit pattern or mode bits.
+
+    Attributes include:
+
+    - **num_bits**: Number of bits used for encoding
+    - **max**: Maximum allowed value
+    - **little_endian**: Bit ordering
+    - **offset**: Bit offset applied when overwriting the bitstream
 
 .. option:: pb_type name="<string>"
 

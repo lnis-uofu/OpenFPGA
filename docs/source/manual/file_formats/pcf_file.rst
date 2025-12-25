@@ -25,8 +25,8 @@ An example of a standard PCF file is shown as follows:
 
   .. note:: FPGA devices have different pin names, depending on their naming rules. Please contact your vendor for details.
 
-Custom command examples
-~~~~~~~~~~~~~~~~~~~~~~~
+Custom pcf command examples
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 In addition to standard pin assignment commands, the PCF file supports custom commands defined in :ref:`file_format_pcf_custom_command_config_file`. These commands provide a structured way for users to configure platform-specific hardware features through PCF.
