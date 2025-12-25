@@ -385,7 +385,7 @@ bool PcfCustomCommand::command_mode_offset_conflict_check(
    * each other, then there is offset conflict*/
   for (auto option_id : command_options(command_id)) {
     std::string option_type = custom_option_type(option_id);
-    if (option_type == "mode") {
+    if (option_type == OPTION_TYPE_MODE) {
       auto mode_id_vec = option_modes(option_id);
       auto mode_id = mode_id_vec[0]; /*all modes in a single option has the same
                           bit size and offset. therefore we just take out the
@@ -400,7 +400,7 @@ bool PcfCustomCommand::command_mode_offset_conflict_check(
         }
         valid_bit_index.push_back(i);
       }
-    } else if (option_type == "decimal") {
+    } else if (option_type == OPTION_TYPE_DECIMAL) {
       auto decimal_mode_id = option_decimal_modes(option_id);
       int decimal_mode_offset = custom_decimal_mode_offset(decimal_mode_id);
       int decimal_mode_bit_size = custom_decimal_mode_num_bits(decimal_mode_id);

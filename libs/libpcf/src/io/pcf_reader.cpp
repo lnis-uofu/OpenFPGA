@@ -80,12 +80,12 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       std::string option_type =
         get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
           .as_string();
-      VTR_ASSERT(option_type == "decimal" || option_type == "pin" ||
-                 option_type == "mode");
+      VTR_ASSERT(option_type == OPTION_TYPE_DECIMAL || option_type == OPTION_TYPE_PIN ||
+                 option_type == OPTION_TYPE_MODE);
       /*The case the mode is defined using decimal*/
-      if (option_type == "decimal") {
+      if (option_type == OPTION_TYPE_DECIMAL) {
         status = pcf_custom_command.create_custom_option(
-          command_name, option_name, "decimal");
+          command_name, option_name, OPTION_TYPE_DECIMAL);
         int num_bits =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_NUM_BITS, loc_data)
             .as_int();
@@ -215,10 +215,10 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                 std::string option_type =
                   pcf_custom_command.custom_option_type(word, option_name);
 
-                if (option_type == "pin") {
+                if (option_type == OPTION_TYPE_PIN) {
                   pcf_data.set_custom_constraint_pin(constraint_id,
                                                      option_value);
-                } else if (option_type == "mode") {
+                } else if (option_type == OPTION_TYPE_MODE) {
                   std::string mode_value = pcf_custom_command.custom_mode_value(
                     word, option_name, option_value);
                   int mode_offset = pcf_custom_command.custom_mode_offset(
@@ -227,7 +227,7 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                                                           mode_value);
                   pcf_data.set_custom_constraint_pin_mode_offset(constraint_id,
                                                                  mode_offset);
-                } else if (option_type == "decimal") {
+                } else if (option_type == OPTION_TYPE_DECIMAL) {
                   int num_bits =
                     pcf_custom_command.custom_decimal_mode_num_bits(
                       word, option_name);
