@@ -5,9 +5,9 @@
  * This file include the declaration of pcf custom command
  *******************************************************************/
 #include <array>
+#include <cstdint>
 #include <map>
 #include <string>
-
 /* Headers from vtrutil library */
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
