@@ -5,6 +5,7 @@
 
 /* Headers from vtrutil library */
 #include <cstdint>
+
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -25,7 +26,6 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
-
 static std::string generate_binary_strings(std::size_t num_bits,
                                            std::uint64_t max_decimal,
                                            bool little_endian,
@@ -36,9 +36,8 @@ static std::string generate_binary_strings(std::size_t num_bits,
   }
 
   const std::uint64_t max_representable =
-    (num_bits == 64)
-      ? std::numeric_limits<std::uint64_t>::max()
-      : ((std::uint64_t(1) << num_bits) - 1);
+    (num_bits == 64) ? std::numeric_limits<std::uint64_t>::max()
+                     : ((std::uint64_t(1) << num_bits) - 1);
 
   if (max_decimal > max_representable) {
     VTR_LOG_ERROR("max_decimal exceeds num_bits capacity\n");
@@ -46,8 +45,7 @@ static std::string generate_binary_strings(std::size_t num_bits,
   }
 
   if (decimal_value > max_decimal) {
-    VTR_LOG_ERROR(
-      "User specified decimal value exceeds max_decimal\n");
+    VTR_LOG_ERROR("User specified decimal value exceeds max_decimal\n");
     exit(1);
   }
 
@@ -89,7 +87,8 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       std::string option_type =
         get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
           .as_string();
-      VTR_ASSERT(option_type == OPTION_TYPE_DECIMAL || option_type == OPTION_TYPE_PIN ||
+      VTR_ASSERT(option_type == OPTION_TYPE_DECIMAL ||
+                 option_type == OPTION_TYPE_PIN ||
                  option_type == OPTION_TYPE_MODE);
       /*The case the mode is defined using decimal*/
       if (option_type == OPTION_TYPE_DECIMAL) {
@@ -98,9 +97,9 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
         int num_bits =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_NUM_BITS, loc_data)
             .as_int();
-        unsigned int max_decimal =
+        std::uint64_t max_decimal = std::stoull(
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_MAX_DECIMAL, loc_data)
-            .as_int();
+            .as_string());
         bool little_endian =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_LITTLE_ENDIAN, loc_data)
             .as_bool();
@@ -240,7 +239,7 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                   int num_bits =
                     pcf_custom_command.custom_decimal_mode_num_bits(
                       word, option_name);
-                  int max_decimal =
+                  std::uint64_t max_decimal =
                     pcf_custom_command.custom_decimal_mode_max_val(word,
                                                                    option_name);
                   bool little_endian =
@@ -248,7 +247,7 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                                                                    option_name);
                   std::string mode_value = generate_binary_strings(
                     num_bits, max_decimal, little_endian,
-                    std::stoi(option_value));
+                    std::stoull(option_value));
                   int mode_offset =
                     pcf_custom_command.custom_decimal_mode_offset(word,
                                                                   option_name);

@@ -72,7 +72,8 @@ class PcfCustomCommand {
 
   int create_custom_decimal_mode(const std::string& command_name,
                                  const std::string& option_name,
-                                 const int& num_bits, const int& max_val,
+                                 const int& num_bits,
+                                 const std::uint64_t& max_val,
                                  const bool& little_endian,
                                  const int& mode_offset);
 
@@ -139,7 +140,7 @@ class PcfCustomCommand {
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
   int custom_decimal_mode_num_bits(
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
-  int custom_decimal_mode_max_val(
+  std::uint64_t custom_decimal_mode_max_val(
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
 
   PcfCustomCommandId find_command_id(const std::string& command_name) const;
@@ -198,7 +199,8 @@ class PcfCustomCommand {
 
   vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_num_bits_;
 
-  vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_max_values_;
+  vtr::vector<PcfCustomCommandModeId, std::uint64_t>
+    custom_decimal_mode_max_values_;
 
   vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_offset_;
 

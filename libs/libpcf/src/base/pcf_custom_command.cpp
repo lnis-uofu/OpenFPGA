@@ -5,6 +5,7 @@
 
 #include "command_exit_codes.h"
 #include "openfpga_port_parser.h"
+#include "pcf_config_constants.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 /* Begin namespace openfpga */
@@ -152,7 +153,7 @@ int PcfCustomCommand::custom_decimal_mode_max_val(
   return custom_decimal_mode_max_val(custom_decimal_mode_id);
 }
 
-int PcfCustomCommand::custom_decimal_mode_max_val(
+std::uint64_t PcfCustomCommand::custom_decimal_mode_max_val(
   const PcfCustomCommandModeId& custom_decimal_mode_id) const {
   /* validate the mode_id */
   if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
@@ -283,7 +284,7 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
 
 int PcfCustomCommand::create_custom_decimal_mode(
   const std::string& command_name, const std::string& option_name,
-  const int& num_bits, const int& max_val, const bool& little_endian,
+  const int& num_bits, const std::uint64_t& max_val, const bool& little_endian,
   const int& mode_offset) {
   auto option_id = find_option_id(command_name, option_name);
   PcfCustomCommandModeId custom_decimal_mode_id =

@@ -23,9 +23,9 @@ constexpr const char* XML_MODE_TYPE_NODE_NAME = "mode";
 constexpr const char* XML_MODE_ATTRIBUTE_NAME = "name";
 constexpr const char* XML_MODE_ATTRIBUTE_VALUE = "value";
 
-constexpr conts char* OPTION_TYPE_DECIMAL= "decimal";
-constexpr conts char* OPTION_TYPE_MODE= "mode";
-constexpr conts char* OPTION_TYPE_PIN= "pin";
+constexpr const char* OPTION_TYPE_DECIMAL = "decimal";
+constexpr const char* OPTION_TYPE_MODE = "mode";
+constexpr const char* OPTION_TYPE_PIN = "pin";
 
 /* Sanity check constants */
 constexpr const char* XML_VALID_NODE_NAMES[] = {
