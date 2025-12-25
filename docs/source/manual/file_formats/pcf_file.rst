@@ -7,12 +7,8 @@ Pin Constraints File (.pcf)
 
 The PCF file is the file which **users** should craft to assign their I/O constraints.
 
-In addition to standard pin assignment commands, the PCF file supports custom commands defined in :ref:`_file_format_pcf_custom_command_config_file`. These commands provide a structured way for users to configure platform-specific hardware features through PCF.
-
-.. note:: 
-   Custom PCF commands allow users to specify platform-specific configuration options (such as delay chains or peripheral modes) without dealing with low-level bitstream encodings. 
-   The detailed behavior, valid options, and encoding rules of each custom command are defined in ``pcf_command_config.xml`` and automatically interpreted by the PCF parser.
-
+Standard pcf command examples
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example of a standard PCF file is shown as follows:
 
 .. code-block:: pcf
@@ -32,6 +28,15 @@ An example of a standard PCF file is shown as follows:
 Custom command examples
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+
+In addition to standard pin assignment commands, the PCF file supports custom commands defined in :ref:`file_format_pcf_custom_command_config_file`. These commands provide a structured way for users to configure platform-specific hardware features through PCF.
+
+.. note:: 
+   Custom PCF commands allow users to specify platform-specific configuration options (such as delay chains or peripheral modes) without dealing with low-level bitstream encodings. 
+   The detailed behavior, valid options, and encoding rules of each custom command are defined in ``pcf_command_config.xml`` and automatically interpreted by the PCF parser.
+
+An example of PCF file using custom commands is shown as follows:
+
 .. code-block:: pcf
 
   # Configure a delay chain on input pad pad_fpga_i[0]
@@ -47,5 +52,5 @@ Custom command examples
 
 .. option:: <custom_command_name> <option> <value> ...
 
-  .. note:: Each option must match the definitions in :ref:`_file_format_pcf_custom_command_config_file`. 
+  .. note:: Each option must match the definitions in :ref:`file_format_pcf_custom_command_config_file`. 
      The value provided must be valid according to the configuration file. The PCF parser will automatically validate and encode the values.
