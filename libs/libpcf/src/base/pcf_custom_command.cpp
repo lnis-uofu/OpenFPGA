@@ -146,7 +146,7 @@ int PcfCustomCommand::custom_decimal_mode_num_bits(
   return custom_decimal_mode_num_bits_[custom_decimal_mode_id];
 }
 
-int PcfCustomCommand::custom_decimal_mode_max_val(
+std::uint64_t PcfCustomCommand::custom_decimal_mode_max_val(
   const std::string& command_name, const std::string& option_name) const {
   /* validate the mode_id */
   auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);

@@ -100,7 +100,7 @@ class PcfCustomCommand {
   int custom_decimal_mode_num_bits(const std::string& command_name,
                                    const std::string& option_name) const;
 
-  int custom_decimal_mode_max_val(const std::string& command_name,
+  std::uint64_t custom_decimal_mode_max_val(const std::string& command_name,
                                   const std::string& option_name) const;
 
   bool custom_decimal_mode_little_endian(const std::string& command_name,
