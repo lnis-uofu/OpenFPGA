@@ -9,8 +9,7 @@ PCF Custom Command Configuration File (.xml)
 PCF is the unified file used by users to manipulate FPGA I/Os. Custom commands in PCF provide a simple and straightforward way for users to configure FPGA I/Os into their desired operating modes without understanding the underlying bitstream-level details. The custom command configuration file encapsulates the mapping from these high-level commands to the corresponding bit-level configuration details.
 
 
-The following diagram illustrates how the PCF custom commands configure FPGA modules
-through the management stack and special I/O interface:
+The following diagram illustrates how the PCF custom commands configure FPGA modules through the management stack and special I/O interface:
 
 .. image:: ./figures/pcf_custom_command.png
    :alt: FPGA Domain with Management Stack and Fabric
@@ -31,8 +30,7 @@ As shown in the figure:
 
   set_delay_chain -pad pad_io[0] -delay 0.2
 
-  The parser converts this value to the corresponding bit pattern and programs the
-  Delay Chain via the Special I/O.
+The parser converts this value to the corresponding bit pattern and programs the Delay Chain via the Special I/O.
 
 An example of a PCF custom command configuration file is shown below:
 
