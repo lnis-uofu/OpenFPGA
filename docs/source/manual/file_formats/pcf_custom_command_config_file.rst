@@ -8,7 +8,33 @@ PCF Custom Command Configuration File (.xml)
 
 PCF is the unified file used by users to manipulate FPGA I/Os. Custom commands in PCF provide a simple and straightforward way for users to configure FPGA I/Os into their desired operating modes without understanding the underlying bitstream-level details. The custom command configuration file encapsulates the mapping from these high-level commands to the corresponding bit-level configuration details.
 
-For example, a custom command configureation file is shown as follows.
+
+The following diagram illustrates how the PCF custom commands configure FPGA modules
+through the management stack and special I/O interface:
+
+.. image:: ./figures/pcf_custom_command.png
+   :alt: FPGA Domain with Management Stack and Fabric
+   :align: center
+   :width: 80%
+
+As shown in the figure:
+
+- **FPGA Management Stack** contains functional modules such as the Delay Chain and WDT.
+  Each module receives configuration bits from the PCF parser based on the user-specified
+  commands.
+- **Special I/O** interfaces transfer configuration bits from the management stack to
+  the corresponding hardware blocks in the **FPGA Fabric**.
+- Users interact only with high-level commands in the PCF file. For example, to configure
+  a programmable delay chain in an I/O, the user simply specifies:
+
+::
+
+  set_delay_chain -pad pad_io[0] -delay 0.2
+
+  The parser converts this value to the corresponding bit pattern and programs the
+  Delay Chain via the Special I/O.
+
+An example of a PCF custom command configuration file is shown below:
 
 .. code-block:: xml
 
@@ -19,7 +45,7 @@ For example, a custom command configureation file is shown as follows.
       <option name="delay" type="mode" offset="0">
         <mode name="0.1ns">00001</mode>
         <mode name="0.2ns">00010</mode>
-        <mode name="0.2ns">00100</mode>
+        <mode name="0.3ns">00100</mode>
       </option>
     </command>
 
@@ -29,15 +55,6 @@ For example, a custom command configureation file is shown as follows.
       <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
     </command>
   </pcf_config>
-
-
-when configuring a programmable delay chain in an I/O, users only need to specify
-the desired delay value through a custom command, without understanding the underlying
-bitstream-level details:
-::
-
-  set_delay_chain -pad pad_io[0] -delay 0.2
-
 
 .. option:: command name="<string>"
 
