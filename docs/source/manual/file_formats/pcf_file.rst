@@ -11,7 +11,7 @@ Standard pcf command examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example of a standard PCF file is shown as follows:
 
-.. code-block:: pcf
+.. code-block:: xml
 
   set_io a pad_fpga_io[0]
   set_io b[0] pad_fpga_io[4]
@@ -37,7 +37,7 @@ In addition to standard pin assignment commands, the PCF file supports custom co
 
 An example of PCF file using custom commands is shown as follows:
 
-.. code-block:: pcf
+.. code-block:: xml
 
   # Configure a delay chain on input pad pad_fpga_i[0]
   # The detailed step and range are defined in the configuration file.

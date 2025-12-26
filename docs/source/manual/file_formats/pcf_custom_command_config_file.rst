@@ -4,7 +4,7 @@ PCF Custom Command Configuration File (.xml)
 --------------------------------------------
 
 .. note:: This file defines custom PCF commands that can be used in a Pin Constraints File (PCF).  
-   It specifies how user-facing commands are translated into FPGA configuration bits.
+   It specifies how user-facing commands are translated into FPGA configuration bits. See details in :ref:`openfpga_setup_commands_pcf2bitstream_setting`.
 
 The custom command configuration file aims to show:
 
@@ -54,15 +54,29 @@ An example of the file is shown as follows.
     Users select a predefined mode by name (e.g., NORMAL, LOW_SPEED, HIGH_SPEED).  
     Each mode has an explicit bit pattern defined in the configuration file.
 
-  - **decimal**:  
-    Users provide a numeric value (e.g., delay). The parser computes the corresponding bit pattern or mode bits.
+  - **decimal**:
+    Users specify a numeric value (for example, a delay parameter). The parser converts this value into the corresponding bit pattern or mode bits.
 
-    Attributes include:
+    .. note::
+      The following options are required when the type is set to ``decimal``:
 
-    - **num_bits**: Number of bits used for encoding
-    - **max**: Maximum allowed value
-    - **little_endian**: Bit ordering
-    - **offset**: Bit offset applied when overwriting the bitstream
+      - **num_bits**: Number of bits used to encode the numeric value.
+      - **max**: Maximum allowable value in decimal format. This value must be representable by ``num_bits``.
+      - **little_endian**: Specifies the bit ordering used during encoding.
+      - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
+        value is written starting at this bit position, and occupies ``num_bits`` consecutive
+        bits.
+
+    **Example**
+
+    If ``num_bits`` is set to 4, the maximum representable value is 15 (binary ``1111``).
+    Therefore, ``max`` should not exceed 15.
+
+    If ``offset`` is set to 8, the 4-bit encoded value overwrites bit positions
+    ``[8 : 11]`` in the target bitstream (inclusive).
+
+    When a user provides a value greater than ``max``, the parser reports an error and
+    aborts bitstream generation, preventing bits overflow.
 
 .. option:: pb_type name="<string>"
 
