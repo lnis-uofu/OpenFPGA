@@ -30,7 +30,7 @@ As shown in the figure:
 
   set_delay_chain -pad pad_io[0] -delay 0.2
 
-`set_delay_chain` is defined in the following PCF custom command configuration file:
+where ``set_delay_chain`` is defined in the following PCF custom command configuration file:
 
 .. code-block:: xml
 
@@ -87,17 +87,18 @@ The parser converts this value to the corresponding bit pattern and programs the
       - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
         value is written starting at this bit position, and occupies ``num_bits`` consecutive
         bits.
+        
+    .. note::
+      **Example**
 
-    **Example**
+      If ``num_bits`` is set to 4, the maximum representable value is 15 (binary ``1111``).
+      Therefore, ``max`` should not exceed 15.
 
-    If ``num_bits`` is set to 4, the maximum representable value is 15 (binary ``1111``).
-    Therefore, ``max`` should not exceed 15.
+      If ``offset`` is set to 8, the 4-bit encoded value overwrites bit positions
+      ``[8 : 11]`` in the target bitstream (inclusive).
 
-    If ``offset`` is set to 8, the 4-bit encoded value overwrites bit positions
-    ``[8 : 11]`` in the target bitstream (inclusive).
-
-    When a user provides a value greater than ``max``, the parser reports an error and
-    aborts bitstream generation, preventing bits overflow.
+      When a user provides a value greater than ``max``, the parser reports an error and
+      aborts bitstream generation, preventing bits overflow.
 
 .. option:: pb_type name="<string>"
 
