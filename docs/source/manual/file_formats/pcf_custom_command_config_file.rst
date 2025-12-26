@@ -30,9 +30,7 @@ As shown in the figure:
 
   set_delay_chain -pad pad_io[0] -delay 0.2
 
-The parser converts this value to the corresponding bit pattern and programs the Delay Chain via the Special I/O.
-
-An example of a PCF custom command configuration file is shown below:
+which is defined in the following PCF custom command configuration file:
 
 .. code-block:: xml
 
@@ -53,6 +51,9 @@ An example of a PCF custom command configuration file is shown below:
       <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
     </command>
   </pcf_config>
+  
+The parser converts this value to the corresponding bit pattern and programs the Delay Chain via the Special I/O.
+
 
 .. option:: command name="<string>"
 
