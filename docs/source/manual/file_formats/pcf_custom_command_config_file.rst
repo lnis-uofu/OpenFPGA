@@ -11,12 +11,16 @@ PCF is the unified file used by users to manipulate FPGA I/Os. Custom commands i
 
 The following diagram illustrates how the PCF custom commands configure FPGA modules through the management stack and special I/O interface:
 
-.. image:: ./figures/pcf_custom_command.png
-   :alt: FPGA Domain with Management Stack and Fabric
-   :align: center
-   :width: 80%
 
-As shown in the figure:
+.. _fig_pcf_custom_command:
+
+.. figure:: /figures/pcf_custom_command.png
+   :width: 100%
+   :alt: An example of FPGA Domain with Management Stack and Fabric 
+
+   An example of FPGA Domain with Management Stack and Fabric
+
+As shown in the figure :numref:`fig_pcf_custom_command`
 
 - **FPGA Management Stack** contains functional modules such as the Delay Chain and WDT.
   Each module receives configuration bits from the PCF parser based on the user-specified
@@ -54,7 +58,8 @@ where ``set_delay_chain`` is defined in the following PCF custom command configu
 
 The parser converts value ``0.2`` to the corresponding bit pattern ``00010`` and programs the Delay Chain via the Special I/O.
 
-General Settings
+General Settings
+^^^^^^^^^^^^^^^^
 
 The following syntax are applicable to the XML definition under the root node ``pcf_config``
 
