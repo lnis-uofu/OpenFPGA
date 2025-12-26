@@ -14,7 +14,7 @@ The following diagram illustrates how the PCF custom commands configure FPGA mod
 
 .. _fig_pcf_custom_command:
 
-.. figure:: /figures/pcf_custom_command.png
+.. figure:: ./figures/pcf_custom_command.png
    :width: 100%
    :alt: An example of FPGA Domain with Management Stack and Fabric 
 
