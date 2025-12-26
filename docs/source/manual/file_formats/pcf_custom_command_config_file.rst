@@ -6,11 +6,19 @@ PCF Custom Command Configuration File (.xml)
 .. note:: This file defines custom PCF commands that can be used in a Pin Constraints File (PCF).  
    It specifies how user-facing commands are translated into FPGA configuration bits. See details in :ref:`openfpga_setup_commands_pcf2bitstream_setting`.
 
-The custom command configuration file aims to show:
+PCF is the unified file used by users to manipulate FPGA I/Os.
+Custom commands in PCF provide a simple and straightforward way for users to configure FPGA I/Os into their desired operating modes.
 
-- The list of available custom commands in the platform  
-- The options associated with each command  
-- The encoding rules (explicit mode or decimal calculation) for each option  
+For example, when configuring a programmable delay chain in an I/O, users only need to specify
+the desired delay value through a custom command, without understanding the underlying
+bitstream-level details:
+
+::
+
+  set_delay_chain -pad pad_io[0] -value 0.2ns
+
+The custom command configuration file encapsulates the mapping from these high-level options
+to the corresponding bit-level configuration details.
 
 An example of the file is shown as follows.
 
