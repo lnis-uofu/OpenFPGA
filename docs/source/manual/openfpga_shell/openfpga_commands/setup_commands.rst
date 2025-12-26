@@ -471,7 +471,7 @@ pcf2place
 
     Show verbose log
 
-
+.. _openfpga_setup_commands_pcf2bitstream_setting:
 
 pcf2bitstream_setting
 ~~~~~~~~~~~~~~~~~~~~~
