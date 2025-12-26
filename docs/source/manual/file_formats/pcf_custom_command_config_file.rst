@@ -6,21 +6,9 @@ PCF Custom Command Configuration File (.xml)
 .. note:: This file defines custom PCF commands that can be used in :ref:`file_format_pin_constraints_file`.  
    It specifies how user-facing commands are translated into FPGA configuration bits. See details in :ref:`openfpga_setup_commands_pcf2bitstream_setting`.
 
-PCF is the unified file used by users to manipulate FPGA I/Os.
-Custom commands in PCF provide a simple and straightforward way for users to configure FPGA I/Os into their desired operating modes.
+PCF is the unified file used by users to manipulate FPGA I/Os. Custom commands in PCF provide a simple and straightforward way for users to configure FPGA I/Os into their desired operating modes without understanding the underlying bitstream-level details. The custom command configuration file encapsulates the mapping from these high-level commands to the corresponding bit-level configuration details.
 
-For example, when configuring a programmable delay chain in an I/O, users only need to specify
-the desired delay value through a custom command, without understanding the underlying
-bitstream-level details:
-
-::
-
-  set_delay_chain -pad pad_io[0] -value 0.2ns
-
-The custom command configuration file encapsulates the mapping from these high-level options
-to the corresponding bit-level configuration details.
-
-An example of the file is shown as follows.
+For example, a custom command configureation file is shown as follows.
 
 .. code-block:: xml
 
@@ -28,25 +16,28 @@ An example of the file is shown as follows.
     <command name="set_delay_chain" type="delay_chain">
       <option name="pad" type="pin"/>
       <pb_type name="gp_inpad.inpad"/>
-      <option name="delay" type="decimal" num_bits="64" max="18446744073709551615" little_endian="false" offset="0"/>
+      <option name="delay" type="mode" offset="0">
+        <mode name="0.1ns">00001</mode>
+        <mode name="0.2ns">00010</mode>
+        <mode name="0.2ns">00100</mode>
+      </option>
     </command>
 
     <command name="set_watch_dog" type="peripheral">
       <option name="pad" type="pin"/>
       <pb_type name="gp_outpad.outpad"/>
-      <option name="mode" type="mode" offset="0">
-        <mode name="NORMAL" value="0001"/>
-        <mode name="LOW_SPEED" value="0010"/>
-        <mode name="HIGH_SPEED" value="0100"/>
-      </option>
+      <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
     </command>
   </pcf_config>
 
-Once the commands are defined, users can easily use them in a PCF file. For example:
 
-.. code-block:: text
+when configuring a programmable delay chain in an I/O, users only need to specify
+the desired delay value through a custom command, without understanding the underlying
+bitstream-level details:
+::
 
-  set_watch_dog -pad pad_fpga_o[0] -mode NORMAL
+  set_delay_chain -pad pad_io[0] -delay 0.2
+
 
 .. option:: command name="<string>"
 
