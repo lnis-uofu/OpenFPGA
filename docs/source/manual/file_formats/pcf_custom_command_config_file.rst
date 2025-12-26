@@ -3,7 +3,7 @@
 PCF Custom Command Configuration File (.xml)
 --------------------------------------------
 
-.. note:: This file defines custom PCF commands that can be used in a Pin Constraints File (PCF) :ref:`file_format_pin_constraints_file` .  
+.. note:: This file defines custom PCF commands that can be used in :ref:`file_format_pin_constraints_file`.  
    It specifies how user-facing commands are translated into FPGA configuration bits. See details in :ref:`openfpga_setup_commands_pcf2bitstream_setting`.
 
 PCF is the unified file used by users to manipulate FPGA I/Os.
