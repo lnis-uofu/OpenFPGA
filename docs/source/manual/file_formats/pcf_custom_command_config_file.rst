@@ -3,7 +3,7 @@
 PCF Custom Command Configuration File (.xml)
 --------------------------------------------
 
-.. note:: This file defines custom PCF commands that can be used in a Pin Constraints File (PCF).  
+.. note:: This file defines custom PCF commands that can be used in a Pin Constraints File (PCF) :ref:`file_format_pin_constraints_file` .  
    It specifies how user-facing commands are translated into FPGA configuration bits. See details in :ref:`openfpga_setup_commands_pcf2bitstream_setting`.
 
 PCF is the unified file used by users to manipulate FPGA I/Os.
@@ -42,6 +42,12 @@ An example of the file is shown as follows.
     </command>
   </pcf_config>
 
+Once the commands are defined, users can easily use them in a PCF file. For example:
+
+.. code-block:: text
+
+  set_watch_dog -pad pad_fpga_o[0] -mode NORMAL
+
 .. option:: command name="<string>"
 
   The name of the custom command as used in the PCF file.
@@ -55,7 +61,7 @@ An example of the file is shown as follows.
   Defines a configurable parameter for the custom command.
 
   - **pin**:  
-    Specifies an I/O pad. Users provide a valid pad name from the pin table.  
+    Specifies an I/O pad. Users provide a valid pad name from the pin table :ref:`file_format_pin_table_file`.  
     The parser validates the name.
 
   - **mode**:  

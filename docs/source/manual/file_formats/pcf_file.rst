@@ -7,8 +7,8 @@ Pin Constraints File (.pcf)
 
 The PCF file is the file which **users** should craft to assign their I/O constraints.
 
-Standard pcf command examples
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Built-in Commands
+~~~~~~~~~~~~~~~~~
 An example of a standard PCF file is shown as follows:
 
 .. code-block:: xml
@@ -25,8 +25,10 @@ An example of a standard PCF file is shown as follows:
 
   .. note:: FPGA devices have different pin names, depending on their naming rules. Please contact your vendor for details.
 
-Custom pcf command examples
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  .. note:: Built-in PCF commands cannot be overloaded. 
+    
+Custom Commands
+~~~~~~~~~~~~~~~
 
 
 In addition to standard pin assignment commands, the PCF file supports custom commands defined in :ref:`file_format_pcf_custom_command_config_file`. These commands provide a structured way for users to configure platform-specific hardware features through PCF.
