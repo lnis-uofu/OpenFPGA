@@ -54,6 +54,9 @@ where ``set_delay_chain`` is defined in the following PCF custom command configu
 
 The parser converts value ``0.2`` to the corresponding bit pattern ``00010`` and programs the Delay Chain via the Special I/O.
 
+General Settings
+
+The following syntax are applicable to the XML definition under the root node ``pcf_config``
 
 .. option:: command name="<string>"
 
