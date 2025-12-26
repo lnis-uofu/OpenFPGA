@@ -52,7 +52,7 @@ where ``set_delay_chain`` is defined in the following PCF custom command configu
     </command>
   </pcf_config>
 
-The parser converts this value to the corresponding bit pattern and programs the Delay Chain via the Special I/O.
+The parser converts value ``0.2`` to the corresponding bit pattern ``00010`` and programs the Delay Chain via the Special I/O.
 
 
 .. option:: command name="<string>"
@@ -87,7 +87,7 @@ The parser converts this value to the corresponding bit pattern and programs the
       - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
         value is written starting at this bit position, and occupies ``num_bits`` consecutive
         bits.
-        
+
     .. note::
       **Example**
 
