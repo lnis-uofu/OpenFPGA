@@ -476,7 +476,7 @@ pcf2place
 pcf2bitstream_setting
 ~~~~~~~~~~~~~~~~~~~~~
 
-  Convert custome commands defined in a Pin Constraint File (.pcf, see details in :ref:`file_format_pcf_file`) to bitstream settings.
+  Convert custome commands defined in a Pin Constraint File (see details in :ref:`file_format_pcf_file`) to bitstream settings.
   
   .. option:: --pcf <string>
   
