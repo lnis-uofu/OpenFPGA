@@ -243,8 +243,8 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                     pcf_custom_command.custom_decimal_mode_max_val(word,
                                                                    option_name);
                   bool little_endian =
-                    pcf_custom_command.custom_decimal_mode_max_val(word,
-                                                                   option_name);
+                    pcf_custom_command.custom_decimal_mode_little_endian(
+                      word, option_name);
                   std::string mode_value = generate_binary_strings(
                     num_bits, max_decimal, little_endian,
                     std::stoull(option_value));
