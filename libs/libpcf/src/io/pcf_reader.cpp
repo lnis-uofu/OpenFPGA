@@ -4,7 +4,7 @@
 #include <sstream>
 
 /* Headers from vtrutil library */
-#include <iostream>
+#include <cstdint>
 
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -26,30 +26,36 @@ namespace openfpga {
  *************************************************/
 constexpr const char COMMENT = '#';
 
-static std::vector<std::string> generate_binary_strings(
-  std::size_t num_bits, unsigned int max_decimal, bool little_endian) {
-  if (num_bits == 0) {
-    throw std::invalid_argument("num_bits must be > 0");
+static std::string generate_binary_strings(std::size_t num_bits,
+                                           std::uint64_t max_decimal,
+                                           bool little_endian,
+                                           std::uint64_t decimal_value) {
+  if (num_bits == 0 || num_bits > 64) {
+    VTR_LOG_ERROR("num_bits must be in range [1, 64]\n");
+    exit(1);
   }
 
-  const unsigned int max_representable =
-    (num_bits >= 32) ? std::numeric_limits<unsigned int>::max()
-                     : ((1u << num_bits) - 1);
+  const std::uint64_t max_representable =
+    (num_bits == 64) ? std::numeric_limits<std::uint64_t>::max()
+                     : ((std::uint64_t(1) << num_bits) - 1);
 
   if (max_decimal > max_representable) {
-    throw std::invalid_argument("max_decimal exceeds num_bits capacity");
+    VTR_LOG_ERROR("max_decimal exceeds num_bits capacity\n");
+    exit(1);
   }
 
-  std::vector<std::string> result;
-  result.reserve(max_decimal + 1);
-
-  for (unsigned int value = 0; value <= max_decimal; ++value) {
-    std::vector<char> bits = itobin_charvec(value, num_bits);
-    std::string bits_str(bits.begin(), bits.end());
-    result.push_back(bits_str);
+  if (decimal_value > max_decimal) {
+    VTR_LOG_ERROR("User specified decimal value exceeds max_decimal\n");
+    exit(1);
   }
 
-  return result;
+  std::vector<char> bits = itobin_charvec(decimal_value, num_bits);
+
+  if (little_endian) {
+    std::reverse(bits.begin(), bits.end());
+  }
+
+  return std::string(bits.begin(), bits.end());
 }
 
 static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
@@ -81,18 +87,19 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
       std::string option_type =
         get_attribute(xml_child, XML_OPTION_ATTRIBUTE_TYPE, loc_data)
           .as_string();
-      VTR_ASSERT(option_type == "decimal" || option_type == "pin" ||
-                 option_type == "mode");
+      VTR_ASSERT(option_type == OPTION_TYPE_DECIMAL ||
+                 option_type == OPTION_TYPE_PIN ||
+                 option_type == OPTION_TYPE_MODE);
       /*The case the mode is defined using decimal*/
-      if (option_type == "decimal") {
-        status = pcf_custom_command.create_custom_option(command_name,
-                                                         option_name, "mode");
+      if (option_type == OPTION_TYPE_DECIMAL) {
+        status = pcf_custom_command.create_custom_option(
+          command_name, option_name, OPTION_TYPE_DECIMAL);
         int num_bits =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_NUM_BITS, loc_data)
             .as_int();
-        unsigned int max_decimal =
+        std::uint64_t max_decimal = std::stoull(
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_MAX_DECIMAL, loc_data)
-            .as_int();
+            .as_string());
         bool little_endian =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_LITTLE_ENDIAN, loc_data)
             .as_bool();
@@ -100,14 +107,10 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_OFFSET, loc_data)
             .as_int();
 
-        std::vector<std::string> mode_bits =
-          generate_binary_strings(num_bits, max_decimal, little_endian);
-        for (auto it = 0; it < mode_bits.size(); it++) {
-          std::string mode_name = std::to_string(it);
-          std::string mode_value = mode_bits[it];
-          status = pcf_custom_command.create_custom_mode(
-            command_name, option_name, mode_name, mode_value, mode_offset);
-        }
+        pcf_custom_command.create_custom_decimal_mode(
+          command_name, option_name, num_bits, max_decimal, little_endian,
+          mode_offset);
+
       } else if (option_type == "mode") {
         status = pcf_custom_command.create_custom_option(
           command_name, option_name, option_type);
@@ -220,14 +223,34 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                 std::string option_type =
                   pcf_custom_command.custom_option_type(word, option_name);
 
-                if (option_type == "pin") {
+                if (option_type == OPTION_TYPE_PIN) {
                   pcf_data.set_custom_constraint_pin(constraint_id,
                                                      option_value);
-                } else if (option_type == "mode") {
+                } else if (option_type == OPTION_TYPE_MODE) {
                   std::string mode_value = pcf_custom_command.custom_mode_value(
                     word, option_name, option_value);
                   int mode_offset = pcf_custom_command.custom_mode_offset(
                     word, option_name, option_value);
+                  pcf_data.set_custom_constraint_pin_mode(constraint_id,
+                                                          mode_value);
+                  pcf_data.set_custom_constraint_pin_mode_offset(constraint_id,
+                                                                 mode_offset);
+                } else if (option_type == OPTION_TYPE_DECIMAL) {
+                  int num_bits =
+                    pcf_custom_command.custom_decimal_mode_num_bits(
+                      word, option_name);
+                  std::uint64_t max_decimal =
+                    pcf_custom_command.custom_decimal_mode_max_val(word,
+                                                                   option_name);
+                  bool little_endian =
+                    pcf_custom_command.custom_decimal_mode_max_val(word,
+                                                                   option_name);
+                  std::string mode_value = generate_binary_strings(
+                    num_bits, max_decimal, little_endian,
+                    std::stoull(option_value));
+                  int mode_offset =
+                    pcf_custom_command.custom_decimal_mode_offset(word,
+                                                                  option_name);
                   pcf_data.set_custom_constraint_pin_mode(constraint_id,
                                                           mode_value);
                   pcf_data.set_custom_constraint_pin_mode_offset(constraint_id,

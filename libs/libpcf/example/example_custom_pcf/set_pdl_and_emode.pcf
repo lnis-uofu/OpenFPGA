@@ -6,4 +6,4 @@ set_delay_chain -pad pad_fpga_i[0] -delay 2
 # The peripheral block is configured through the mode bits in a I/O pad pad_fpga_io[1] 
 # User can specify the operating of the watchdog. User only specify the mode name
 # PCF parser will decode the mode bits
-set_watch_dog -pad pad_fpga_o[0] -mode NORMAL -mode LOW_SPEED
+set_watch_dog -pad pad_fpga_o[0] -mode NORMAL
