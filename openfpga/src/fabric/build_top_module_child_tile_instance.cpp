@@ -1734,6 +1734,10 @@ static void add_module_nets_connect_tile_direct_connection(
   /* Find the module name of sink clb */
   vtr::Point<size_t> des_clb_coord =
     tile_direct.to_tile_coordinate(tile_direct_id);
+  /* Skip if the src and des has the same coordinate. It is treated as internal connections by the tile-level net builder */
+  if (src_clb_coord == des_clb_coord) {
+    return;
+  }
   FabricTileId des_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(des_clb_coord);
   vtr::Point<size_t> des_tile_coord = fabric_tile.tile_coordinate(des_tile_id);

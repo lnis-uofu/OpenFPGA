@@ -16,6 +16,8 @@
 #include "module_manager.h"
 #include "rr_graph_view.h"
 #include "tile_annotation.h"
+#include "tile_direct.h"
+#include "arch_direct.h"
 #include "vpr_device_annotation.h"
 
 /********************************************************************
@@ -33,6 +35,8 @@ int build_tile_modules(
   const TileAnnotation& tile_annotation, const CircuitLibrary& circuit_lib,
   const CircuitModelId& sram_model,
   const e_config_protocol_type& sram_orgz_type,
+  const TileDirect& tile_direct,
+  const ArchDirect& arch_direct, 
   const bool& name_module_using_index, const bool& perimeter_cb,
   const bool& frame_view, const bool& verbose);
 

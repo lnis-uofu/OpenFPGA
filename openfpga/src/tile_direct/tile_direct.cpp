@@ -59,6 +59,20 @@ ArchDirectId TileDirect::arch_direct(const TileDirectId& direct_id) const {
   return arch_directs_[direct_id];
 }
 
+std::vector<TileDirectId> TileDirect::find_feedback_connection_to_tile_pin(const vtr::Point<size_t>& from_tile_coord, const e_side& from_tile_side, const size_t& from_tile_pin) const {
+  /* TODO: This is very slow. Need a fast lookup. There could be thousands or millions of edges when FPGA size increases. Traverse is not a good idea. */
+  std::vector<TileDirectId> ret;
+  for (auto id : directs()) {
+    if (from_tile_coords_[id] == from_tile_coord && 
+        from_tile_sides_[id] == from_tile_side &&
+        from_tile_pins_[id] == from_tile_pin &&
+        to_tile_coord_[id] == from_tile_coord) {
+      ret.push_back(id);
+    }
+  }
+  return ret;
+}
+
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/

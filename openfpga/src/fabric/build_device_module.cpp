@@ -128,6 +128,7 @@ int build_device_module_graph(
       openfpga_ctx.device_rr_gsb(), vpr_device_ctx.rr_graph,
       openfpga_ctx.arch().tile_annotations, openfpga_ctx.arch().circuit_lib,
       sram_model, openfpga_ctx.arch().config_protocol.type(),
+      openfpga_ctx.tile_direct(), openfpga_ctx.arch().arch_direct, 
       name_module_using_index, vpr_device_ctx.arch->perimeter_cb, frame_view,
       verbose);
   }
