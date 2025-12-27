@@ -66,11 +66,21 @@ std::vector<TileDirectId> TileDirect::find_feedback_connection_to_tile_pin(const
     if (from_tile_coords_[id] == from_tile_coord && 
         from_tile_sides_[id] == from_tile_side &&
         from_tile_pins_[id] == from_tile_pin &&
-        to_tile_coord_[id] == from_tile_coord) {
+        to_tile_coords_[id] == from_tile_coord) {
       ret.push_back(id);
     }
   }
   return ret;
+}
+
+bool TileDirect::require_tile_internal_direct(const vtr::Point<size_t>& curr_tile_coord) const {
+  for (auto id : directs()) {
+    if (from_tile_coords_[id] == curr_tile_coord && 
+        to_tile_coords_[id] == curr_tile_coord) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /******************************************************************************

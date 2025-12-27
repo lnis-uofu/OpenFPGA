@@ -1162,12 +1162,13 @@ static int build_tile_module_ports_from_cb(
 static int build_tile_port_and_nets_between_pb(
   ModuleManager& module_manager, const ModuleId& tile_module,
   const DeviceGrid& grids, const size_t& layer,
-  const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
+  const VprDeviceAnnotation& vpr_device_annotation,
   const TileAnnotation& tile_annotation, const vtr::Point<size_t>& pb_coord,
   const std::vector<size_t>& pb_instances, const FabricTile& fabric_tile,
   const FabricTileId& curr_fabric_tile_id, const size_t& ipb,
   const TileDirect& tile_direct,
   const ArchDirect& arch_direct, 
+  const CircuitLibrary& circuit_lib,
   const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   vtr::Point<size_t> grid_coord = fabric_tile.pb_coordinates(curr_fabric_tile_id)[ipb];
   if (!tile_direct.require_tile_internal_direct(grid_coord)) {
@@ -1272,7 +1273,7 @@ static int build_tile_port_and_nets_between_pb(
                      ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
             /* Check if the port requires a direct connection */
             for (auto des_tdir_id : tile_direct.find_feedback_connection_to_tile_pin(grid_coord, side, ipin)) {
-              size_t des_side = tile_direct.to_tile_pin(des_tdir_id);
+              e_side des_side = tile_direct.to_tile_side(des_tdir_id);
               size_t des_ipin = tile_direct.to_tile_pin(des_tdir_id);
               BasicPort des_pin_info =
                 vpr_device_annotation.physical_tile_pin_port_info(phy_tile, des_ipin);
@@ -1359,7 +1360,7 @@ static int build_tile_port_and_nets_between_pb(
                                                direct_instance_id, direct_output_port_id, 0);
                 module_manager.add_module_net_sink(tile_module, net_direct_sink,
                                                    pb_module, pb_instance,
-                                                   sink_port_id, 0);
+                                                   des_pb_module_port_id, 0);
               }
             }
           } else {
@@ -1613,6 +1614,7 @@ static int build_tile_module_ports_and_nets(
   const std::vector<size_t>& sb_instances,
   const TileDirect& tile_direct,
   const ArchDirect& arch_direct, 
+  const CircuitLibrary& circuit_lib,
   const bool& name_module_using_index,
   const bool& perimeter_cb, const bool& frame_view, const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
@@ -1676,8 +1678,9 @@ static int build_tile_module_ports_and_nets(
       fabric_tile.pb_coordinates(fabric_tile_id)[ipb];
     status_code = build_tile_port_and_nets_between_pb(
       module_manager, tile_module, grids, layer, vpr_device_annotation,
-      rr_graph_view, tile_annotation, pb_coord, pb_instances, fabric_tile,
-      fabric_tile_id, ipb, tile_direct, arch_direct, perimeter_cb, frame_view, verbose);
+      tile_annotation, pb_coord, pb_instances, fabric_tile,
+      fabric_tile_id, ipb, tile_direct, arch_direct, circuit_lib,
+      perimeter_cb, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
@@ -1888,7 +1891,7 @@ static int build_tile_module(
     module_manager, tile_module, grids, layer, vpr_device_annotation,
     device_rr_gsb, rr_graph_view, tile_annotation, fabric_tile, fabric_tile_id,
     pb_instances, cb_instances, sb_instances,
-    tile_direct, arch_direct,
+    tile_direct, arch_direct, circuit_lib,
     name_module_using_index,
     perimeter_cb, frame_view, verbose);
 
