@@ -41,6 +41,10 @@ class TileDirect {
   e_side to_tile_side(const TileDirectId& direct_id) const;
   size_t to_tile_pin(const TileDirectId& direct_id) const;
   ArchDirectId arch_direct(const TileDirectId& direct_id) const;
+  std::vector<TileDirectId> find_feedback_connection_to_tile_pin(
+    const vtr::Point<size_t>& from_tile_coord, const e_side& from_tile_side,
+    const size_t& from_tile_pin) const;
+  bool require_tile_internal_direct(const vtr::Point<size_t>& tile_coord) const;
 
  public: /* Public mutators */
   TileDirectId add_direct(const vtr::Point<size_t>& from_tile_coord,
