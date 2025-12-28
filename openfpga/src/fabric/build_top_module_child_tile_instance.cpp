@@ -1362,12 +1362,10 @@ static int build_top_module_global_net_for_given_tile_module(
           if (false == ref_tile_port.contained(tile_port_to_connect)) {
             VTR_LOG_ERROR(
               "Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of "
-              "physical tile port '%s[%lu:%lu]'!",
+              "physical tile port '%s'!",
               tile_annotation.global_port_name(tile_global_port).c_str(),
-              tile_port_to_connect.get_name().c_str(),
-              tile_port_to_connect.get_lsb(), tile_port_to_connect.get_msb(),
-              ref_tile_port.get_name().c_str(), ref_tile_port.get_lsb(),
-              ref_tile_port.get_msb());
+              tile_port_to_connect.to_verilog_string().c_str(),
+              ref_tile_port.to_verilog_string().c_str());
             return CMD_EXEC_FATAL_ERROR;
           }
           grid_pin_start_index =
@@ -1379,7 +1377,16 @@ static int build_top_module_global_net_for_given_tile_module(
         }
       }
       /* Ensure the pin index is valid */
-      VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);
+      if (grid_pin_start_index >= physical_tile->num_pins) {
+        VTR_LOG_ERROR(
+          "Grid pin index '%d' for tile annotation '%s' port '%s' is out of the range of "
+          "total number of pins '%d'!",
+          grid_pin_start_index,
+          tile_annotation.global_port_name(tile_global_port).c_str(),
+          tile_port_to_connect.to_verilog_string().c_str(),
+          physical_tile->num_pins);
+        return CMD_EXEC_FATAL_ERROR;
+      }
       /* Ensure port width is in range */
       VTR_ASSERT(src_port.get_width() == tile_port_to_connect.get_width());
 
