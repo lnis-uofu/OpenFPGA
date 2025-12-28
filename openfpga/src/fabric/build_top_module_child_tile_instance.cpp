@@ -1342,6 +1342,16 @@ static int build_top_module_global_net_for_given_tile_module(
    * range, each instance may have an independent pin to be driven by a global
    * net! */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
+    bool subtile_contain_required_port = false;
+    for (const t_physical_tile_port& tile_port : sub_tile.ports) {
+      if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
+        subtile_contain_required_port = true;
+        break;
+      }
+    }
+    if (!subtile_contain_required_port) {
+      continue;
+    }
     VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
     int grid_pin_start_index = physical_tile->num_pins;
     t_physical_tile_port physical_tile_port;
@@ -1362,7 +1372,7 @@ static int build_top_module_global_net_for_given_tile_module(
           if (false == ref_tile_port.contained(tile_port_to_connect)) {
             VTR_LOG_ERROR(
               "Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of "
-              "physical tile port '%s'!",
+              "physical tile port '%s'!\n",
               tile_annotation.global_port_name(tile_global_port).c_str(),
               tile_port_to_connect.to_verilog_string().c_str(),
               ref_tile_port.to_verilog_string().c_str());
@@ -1380,11 +1390,11 @@ static int build_top_module_global_net_for_given_tile_module(
       if (grid_pin_start_index >= physical_tile->num_pins) {
         VTR_LOG_ERROR(
           "Grid pin index '%d' for tile annotation '%s' port '%s' is out of the range of "
-          "total number of pins '%d'!",
+          "total number of pins '%d' for subtile '%s'\n!",
           grid_pin_start_index,
           tile_annotation.global_port_name(tile_global_port).c_str(),
           tile_port_to_connect.to_verilog_string().c_str(),
-          physical_tile->num_pins);
+          physical_tile->num_pins, sub_tile.name.c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
       /* Ensure port width is in range */
