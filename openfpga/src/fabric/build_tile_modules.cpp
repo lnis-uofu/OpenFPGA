@@ -1251,7 +1251,7 @@ static int build_tile_port_and_nets_between_pb(
           if (!module_manager.valid_module_port_id(pb_module,
                                                    pb_module_port_id)) {
             VTR_LOG_ERROR(
-              "Failed to find port '%s' for pb module '%s' required by "
+              "Failed to find source port '%s' for pb module '%s' required by "
               "tile[%lu][%lu]!\n",
               pb_port.to_verilog_string().c_str(), pb_module_name.c_str(),
               pb_coord.x(), pb_coord.y());
@@ -1296,7 +1296,7 @@ static int build_tile_port_and_nets_between_pb(
               if (!module_manager.valid_module_port_id(pb_module,
                                                        des_pb_module_port_id)) {
                 VTR_LOG_ERROR(
-                  "Failed to find port '%s' for pb module '%s' required by "
+                  "Failed to find destination port '%s' for pb module '%s' required by "
                   "tile[%lu][%lu]!\n",
                   des_pb_port.to_verilog_string().c_str(),
                   pb_module_name.c_str(), pb_coord.x(), pb_coord.y());
