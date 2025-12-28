@@ -1389,7 +1389,8 @@ static int build_top_module_global_net_for_given_tile_module(
       /* Ensure the pin index is valid */
       if (grid_pin_start_index >= physical_tile->num_pins) {
         VTR_LOG_ERROR(
-          "Grid pin index '%d' for tile annotation '%s' port '%s' is out of the range of "
+          "Grid pin index '%d' for tile annotation '%s' port '%s' is out of "
+          "the range of "
           "total number of pins '%d' for subtile '%s'\n!",
           grid_pin_start_index,
           tile_annotation.global_port_name(tile_global_port).c_str(),
