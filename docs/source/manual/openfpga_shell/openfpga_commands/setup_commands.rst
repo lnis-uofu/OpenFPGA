@@ -471,6 +471,44 @@ pcf2place
 
     Show verbose log
 
+.. _openfpga_setup_commands_pcf2bitstream_setting:
+
+pcf2bitstream_setting
+~~~~~~~~~~~~~~~~~~~~~
+
+  Convert custome commands defined in a Pin Constraint File (see details in :ref:`file_format_pcf_file`) to bitstream settings.
+  
+  .. option:: --pcf <string>
+  
+    Specify the path to the users' pin constraint file
+
+  .. option:: --pin_table <string>
+
+    Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
+  
+   .. note::
+      The pin table file and the ``pin_table_direction_convention`` must be
+      the same as the one used by the ``pcf2place`` command.
+      See :ref:`openfpga_setup_commands_pcf2place`.
+
+  .. option:: --pin_table_direction_convention <string>
+
+    Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
+
+  .. option:: --config <string>
+    
+    Specify the file path to the pcf config file which defines custom pcf commands (.xml). See details in :ref:`file_format_pcf_custom_command_config_file`
+
+  .. option:: --reduce_error_to_warning
+
+    Reduce error to warning while reading commands in pcf file
+  
+  .. warning:: Exercise extreme caution when adding this option – be sure you completely understand why the issue is being flagged, and why it is OK to treat as a warning instead of an error.
+
+  .. option:: --verbose
+
+    Show verbose log
+
 .. _openfpga_setup_commands_rename_modules:
 
 rename_modules

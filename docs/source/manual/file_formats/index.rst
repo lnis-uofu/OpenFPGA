@@ -32,6 +32,8 @@ OpenFPGA widely uses XML format for interchangeable files
 
    pcf_file
 
+   pcf_custom_command_config_file
+
    pin_table_file
 
    clock_network
