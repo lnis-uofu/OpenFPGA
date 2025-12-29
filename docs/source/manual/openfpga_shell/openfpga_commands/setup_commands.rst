@@ -485,6 +485,11 @@ pcf2bitstream_setting
   .. option:: --pin_table <string>
 
     Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
+  
+   .. note::
+      The pin table file and the ``pin_table_direction_convention`` must be
+      the same as the one used by the ``pcf2place`` command.
+      See :ref:`openfpga_setup_commands_pcf2place`.
 
   .. option:: --pin_table_direction_convention <string>
 

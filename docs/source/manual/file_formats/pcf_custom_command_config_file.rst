@@ -32,7 +32,7 @@ As shown in the figure :numref:`fig_pcf_custom_command`
 
 ::
 
-  set_delay_chain -pad pad_io[0] -delay 0.2
+  set_delay_chain -pad pad_io[0] -delay 0.2ns
 
 where ``set_delay_chain`` is defined in the following PCF custom command configuration file:
 
@@ -56,7 +56,7 @@ where ``set_delay_chain`` is defined in the following PCF custom command configu
     </command>
   </pcf_config>
 
-The parser converts value ``0.2`` to the corresponding bit pattern ``00010`` and programs the Delay Chain via the Special I/O.
+The parser will map the mode name ``0.2ns`` to the corresponding bit pattern ``00010`` and programs the Delay Chain via the Special I/O.
 
 General Settings
 ^^^^^^^^^^^^^^^^
@@ -89,12 +89,12 @@ The following syntax are applicable to the XML definition under the root node ``
     .. note::
       The following options are required when the type is set to ``decimal``:
 
-      - **num_bits**: Number of bits used to encode the numeric value.
-      - **max**: Maximum allowable value in decimal format. This value must be representable by ``num_bits``.
-      - **little_endian**: Specifies the bit ordering used during encoding.
-      - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
-        value is written starting at this bit position, and occupies ``num_bits`` consecutive
-        bits.
+  - **num_bits**: Number of bits used to encode the numeric value.
+  - **max**: Maximum allowable value in decimal format. This value must be representable by ``num_bits``.
+  - **little_endian**: Specifies the bit ordering used during encoding.
+  - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
+    value is written starting at this bit position, and occupies ``num_bits`` consecutive
+    bits.
 
     .. note::
       **Example**
