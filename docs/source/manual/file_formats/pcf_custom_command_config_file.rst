@@ -89,10 +89,10 @@ The following syntax are applicable to the XML definition under the root node ``
   .. note::
     The following options are required when the type is set to ``decimal``:
 
-    **num_bits**: Number of bits used to encode the numeric value.
-    **max**: Maximum allowable value in decimal format. This value must be representable by ``num_bits``.
-    **little_endian**: Specifies the bit ordering used during encoding.
-    **offset**: Bit offset applied when overwriting the target bitstream. The encoded
+    - **num_bits**: Number of bits used to encode the numeric value.
+    - **max**: Maximum allowable value in decimal format. This value must be representable by ``num_bits``.
+    - **little_endian**: Specifies the bit ordering used during encoding.
+    - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
       value is written starting at this bit position, and occupies ``num_bits`` consecutive
       bits.
 
