@@ -61,9 +61,9 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
           chan_side_manager.set_side(side);
           chan_side = chan_side_manager.get_side();
           /* For channel node, we do not know the node direction
-          * But we are pretty sure it is either IN_PORT or OUT_PORT
-          * So we just try and find what is valid
-          */
+           * But we are pretty sure it is either IN_PORT or OUT_PORT
+           * So we just try and find what is valid
+           */
           driver_node_index =
             rr_gsb.get_chan_node_index(chan_side, driver_node);
           if (-1 != driver_node_index) {
