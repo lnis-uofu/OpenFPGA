@@ -295,6 +295,48 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           continue;
         }
 
+        /* Add the OPIN node to the GSB only if they drive a CHANX/Y in the current SB*/
+        bool connected_opin_in_curr_sb = false;
+        for (RREdgeId edge : vpr_device_ctx.rr_graph.edge_range(inode)) {
+          RRNodeId to_node = vpr_device_ctx.rr_graph.edge_sink_node(edge);
+          /* Check if the to_node is a channel node */
+          if (vpr_device_ctx.rr_graph.node_type(to_node) == e_rr_type::CHANX ||
+              vpr_device_ctx.rr_graph.node_type(to_node) == e_rr_type::CHANY) {
+                
+              int to_xlow = vpr_device_ctx.rr_graph.node_xlow(to_node);
+              int to_ylow = vpr_device_ctx.rr_graph.node_ylow(to_node);
+              int to_xhigh = vpr_device_ctx.rr_graph.node_xhigh(to_node);
+              int to_yhigh = vpr_device_ctx.rr_graph.node_yhigh(to_node);
+
+              /* Pick the driver location based on direction */
+              int driver_x = (vpr_device_ctx.rr_graph.node_direction(to_node) == Direction::INC) ? to_xlow : to_xhigh;
+              int driver_y = (vpr_device_ctx.rr_graph.node_direction(to_node) == Direction::INC) ? to_ylow : to_yhigh;
+              Direction driver_dir = vpr_device_ctx.rr_graph.node_direction(to_node);
+
+            
+              /* Check if the channel node is in the current SB */
+              // [x][y] for Decremental wires
+              if (driver_x == gsb_coord.x() && driver_y == gsb_coord.y() && driver_dir == Direction::DEC){
+                connected_opin_in_curr_sb = true;
+                break;
+              }
+              // [x+1][y] for Incremental wires
+              if (driver_x == gsb_coord.x() + 1 && driver_y == gsb_coord.y() && driver_dir == Direction::INC){
+                connected_opin_in_curr_sb = true;
+                break;
+              }
+              // [x][y+1] for Incremental wires
+              if(driver_x == gsb_coord.x() && driver_y == gsb_coord.y() + 1 && driver_dir == Direction::INC){
+                connected_opin_in_curr_sb = true;
+                break;
+              }
+          }
+        }
+        /* If the OPIN does not drive a channel in the current SB, skip it */
+        if (!connected_opin_in_curr_sb) {
+          continue; 
+        }
+
         /* Grid[x+1][y+1] Bottom side outputs pins */
         rr_gsb.add_opin_node(inode, side_manager.get_side());
       }
