@@ -309,14 +309,14 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
             int to_yhigh = vpr_device_ctx.rr_graph.node_yhigh(to_node);
 
             /* Pick the driver location based on direction */
-            int driver_x = (vpr_device_ctx.rr_graph.node_direction(to_node) ==
+            size_t driver_x = static_cast<size_t>((vpr_device_ctx.rr_graph.node_direction(to_node) ==
                             Direction::INC)
                              ? to_xlow
-                             : to_xhigh;
-            int driver_y = (vpr_device_ctx.rr_graph.node_direction(to_node) ==
+                             : to_xhigh);
+            size_t driver_y = static_cast<size_t>((vpr_device_ctx.rr_graph.node_direction(to_node) ==
                             Direction::INC)
                              ? to_ylow
-                             : to_yhigh;
+                             : to_yhigh);
             Direction driver_dir =
               vpr_device_ctx.rr_graph.node_direction(to_node);
 
