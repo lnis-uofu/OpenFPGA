@@ -154,7 +154,8 @@ class BitstreamManager {
 
   /* Find the child block in a bitstream manager with a given name */
   ConfigBlockId find_child_block(const ConfigBlockId& block_id,
-                                 const std::string& child_block_name) const;
+                                 const std::string& child_block_name,
+                                 const bool& verbose = false) const;
 
   /* Find path id of a block */
   int block_path_id(const ConfigBlockId& block_id) const;

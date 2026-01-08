@@ -4,6 +4,7 @@
 #include "bitstream_manager.h"
 
 #include <algorithm>
+#include <regex>
 
 #include "arch_error.h"
 #include "bitstream_manager_utils.h"
@@ -110,24 +111,136 @@ std::vector<ConfigBitId> BitstreamManager::block_bits(
 
 /* Find the child block in a bitstream manager with a given name */
 ConfigBlockId BitstreamManager::find_child_block(
-  const ConfigBlockId& block_id, const std::string& child_block_name) const {
+  const ConfigBlockId& block_id, 
+  const std::string& child_block_name,
+  const bool& verbose) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
   std::vector<ConfigBlockId> candidates;
 
+  /**
+   * Extracts the suffix of the input string that comes after the last numeric token 
+   * that is surrounded by underscores (e.g., "_123_").
+   * 
+   * - If such a number exists and is not at the end of the string, returns everything after it.
+   * - If the last number is at the end of the string, falls back to the second-to-last one.
+   * - If no valid underscore-wrapped number is found, returns the whole string 
+   *   (stripped of leading underscores).
+   * 
+   * Example:
+   *   "grid_io_bottom_0_io_0_mem_iopad_a2f_o_0" → "mem_iopad_a2f_o_0"
+   *   "_module_123_" → "module_123_"
+   *   "__no_number_here__" → "no_number_here__"
+   */
+  auto extract_last_token = [](const std::string& name) -> std::string {
+    std::regex re(R"(_\d+_)");  // Match digits surrounded by underscores
+    std::vector<std::pair<size_t, size_t>> matches;
+
+    for (auto it = std::sregex_iterator(name.begin(), name.end(), re);
+         it != std::sregex_iterator(); ++it) {
+        matches.emplace_back(it->position(), it->length());
+    }
+
+    if (!matches.empty()) {
+        size_t cut_pos, cut_len;
+
+        auto& last = matches.back();
+
+        // If the number is at the end (e.g., "_0" with no trailing underscore), fallback
+        if (last.first + last.second == name.size()) {
+            if (matches.size() > 1) {
+                cut_pos = matches[matches.size() - 2].first;
+                cut_len = matches[matches.size() - 2].second;
+            } else {
+              // No valid earlier match, return full string trimmed
+              cut_pos = 0;
+              cut_len = 0;
+            }
+        } else {
+            cut_pos = last.first;
+            cut_len = last.second;
+        }
+
+        std::string rest = name.substr(cut_pos + cut_len);
+        size_t s = rest.find_first_not_of('_');
+        return (s == std::string::npos) ? "" : rest.substr(s);
+    }
+
+    // No valid numbers with underscores found → return whole string stripped of leading '_'
+    size_t s = name.find_first_not_of('_');
+    return (s == std::string::npos) ? "" : name.substr(s);
+  };
+
+  /**
+   * Checks whether the given keyword appears as a complete token within the input string.
+   * 
+   * - Leading and trailing underscores are stripped from both the input and the keyword.
+   * - A "token" is defined as a substring that is either:
+   *     - at the beginning or end of the input, or
+   *     - surrounded by underscores.
+   * - The match must exactly equal the keyword with no extra characters attached.
+   *
+   * Example:
+   *   input = "_foo_bar_baz_", keyword = "bar" → returns true
+   *   input = "foobar_baz",    keyword = "foo" → returns false (not a whole token)
+   */
+  auto match_token = [](const std::string& input, const std::string& keyword) {
+    // Strip leading and trailing underscores
+    size_t start = input.find_first_not_of('_');
+    size_t end = input.find_last_not_of('_');
+    std::string input_trimmed = (start == std::string::npos) ? "" : input.substr(start, end - start + 1);
+
+    start = keyword.find_first_not_of('_');
+    end = keyword.find_last_not_of('_');
+    std::string keyword_trimmed = (start == std::string::npos) ? "" : keyword.substr(start, end - start + 1);
+
+    // Apply regex to match whole token delimited by underscores or string boundaries
+    std::string pattern = "(^|_)" + keyword_trimmed + "($)";
+    return std::regex_search(input_trimmed, std::regex(pattern));
+  };
+
+  std::string child_block_name_stripped = extract_last_token(child_block_name);
+
+  // First search for the exact match and then search for the token match
   for (const ConfigBlockId& child : block_children(block_id)) {
-    if (0 == child_block_name.compare(block_name(child))) {
+    if (match_token(block_name(child), child_block_name)) {
       candidates.push_back(child);
     }
   }
 
+  // If no exact match is found, search for the token match
+  if (candidates.size() == 0) {
+    for (const ConfigBlockId& child : block_children(block_id)) {
+      if (match_token(block_name(child), child_block_name_stripped)) {
+        candidates.push_back(child);
+      }
+    }
+  }
+
   /* We should have 0 or 1 candidate! */
-  VTR_ASSERT(0 == candidates.size() || 1 == candidates.size());
+  if (candidates.size() > 1) {
+    VTR_LOGV(verbose, "Found multiple candidates for child block '%s(%s)' in block '%s':\n",
+            child_block_name.c_str(),
+            child_block_name_stripped.c_str(),
+            block_name(block_id).c_str());
+    for (const ConfigBlockId& child : candidates) {
+      VTR_LOGV(verbose, "  %s\n", block_name(child).c_str());
+    }
+  }
+  
   if (0 == candidates.size()) {
+    VTR_LOGV(verbose, "No candidate found for child block '%s(%s)' in block '%s':\n",
+            child_block_name.c_str(),
+            child_block_name_stripped.c_str(),
+            block_name(block_id).c_str());
+    for (const ConfigBlockId& child : block_children(block_id)) {
+      VTR_LOGV(verbose, "  %s\n", block_name(child).c_str());
+    }
     /* Not found, return an invalid value */
     return ConfigBlockId::INVALID();
   }
+  VTR_ASSERT(0 == candidates.size() || 1 == candidates.size());
   return candidates[0];
 }
 
