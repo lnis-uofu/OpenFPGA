@@ -49,6 +49,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
 
   CommandOptionId opt_activity_file = cmd.option("activity_file");
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
+  CommandOptionId opt_reorder_incoming_edges = cmd.option("reorder_incoming_edges");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Build fast look-up between physical tile pin index and port information */
@@ -121,7 +122,8 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
       cmd_context.option_enable(cmd, opt_verbose));
     sort_device_rr_gsb_ipin_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
-      cmd_context.option_enable(cmd, opt_verbose));
+      cmd_context.option_enable(cmd, opt_verbose),
+      cmd_context.option_enable(cmd, opt_reorder_incoming_edges));
   }
 
   /* Build multiplexer library */
