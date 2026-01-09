@@ -464,6 +464,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
+                                           const bool reorder_incoming_edges,
                                            const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Sort incoming edges for each routing track output node of General Switch "
@@ -483,7 +484,7 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
       vtr::Point<size_t> gsb_coordinate(ix, iy);
       RRGSB& rr_gsb = device_rr_gsb.get_mutable_gsb(gsb_coordinate);
-      rr_gsb.sort_chan_node_in_edges(rr_graph);
+      rr_gsb.sort_chan_node_in_edges(rr_graph, reorder_incoming_edges);
 
       gsb_cnt++; /* Update counter */
 

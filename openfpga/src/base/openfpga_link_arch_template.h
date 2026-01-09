@@ -120,6 +120,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
+      cmd_context.option_enable(cmd, opt_reorder_incoming_edges),
       cmd_context.option_enable(cmd, opt_verbose));
     sort_device_rr_gsb_ipin_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
