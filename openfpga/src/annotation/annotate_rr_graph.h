@@ -26,6 +26,7 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
 
 void sort_device_rr_gsb_ipin_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
+                                           const bool reorder_incoming_edges,
                                            const bool& verbose_output);
 
 void annotate_rr_graph_circuit_models(
