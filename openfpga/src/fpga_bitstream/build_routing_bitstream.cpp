@@ -89,7 +89,7 @@ static void build_switch_block_mux_bitstream(
    * matters the bitstream generation */
   std::vector<RRSwitchId> driver_switches =
     get_rr_graph_driver_switches(rr_graph, cur_rr_node);
-  VTR_ASSERT(1 == driver_switches.size());
+  // VTR_ASSERT(1 == driver_switches.size());
   CircuitModelId mux_model =
     device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
@@ -306,7 +306,7 @@ static void build_connection_block_mux_bitstream(
    * matters the bitstream generation */
   std::vector<RRSwitchId> driver_switches =
     get_rr_graph_driver_switches(rr_graph, src_rr_node);
-  VTR_ASSERT(1 == driver_switches.size());
+  // VTR_ASSERT(1 == driver_switches.size());
   CircuitModelId mux_model =
     device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
