@@ -65,6 +65,10 @@ read_openfpga_bitstream_setting
      
     Specify the file name. For example, ``--file bitstream_setting.xml`` 
 
+  .. option:: --append
+
+    Append the bitstream setting to an existing one (may be already read or loaded throught command :ref:`openfpga_setup_commands_pcf2bitstream_setting`). By default, this is disabled.
+
   .. option:: --verbose
 
     Show verbose log
@@ -72,7 +76,7 @@ read_openfpga_bitstream_setting
 write_openfpga_bitstream_setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Write the OpenFPGA XML bitstream settings to a file
+  Write the OpenFPGA XML bitstream settings to a file. If multiple files have been read, only 1 file will be written out.
 
   .. option:: --file <string> or -f <string>
      
