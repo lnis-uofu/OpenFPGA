@@ -13,6 +13,7 @@
 #include "openfpga_digest.h"
 #include "openfpga_pb_parser.h"
 #include "pcf2place.h"
+
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -193,4 +194,11 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
   return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
 }
 
+int pcf2sdc_file_generation(const PcfData& pcf_data,
+                            BoundaryTiming& boundary_timing,
+                            const IoPinTable& io_pin_table,
+                            const std::string sdc_file_path,
+                            const bool& verbose) {
+  return CMD_EXEC_SUCCESS;
+}
 } /* end namespace openfpga */

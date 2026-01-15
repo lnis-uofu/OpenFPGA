@@ -7,11 +7,11 @@
 #include <vector>
 
 #include "bitstream_setting.h"
+#include "boundary_timing.h"
 #include "io_location_map.h"
 #include "io_net_place.h"
 #include "io_pin_table.h"
 #include "pcf_data_fwd.h"
-
 /* Begin namespace openfpga */
 namespace openfpga {
 
@@ -30,7 +30,11 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
                           BitstreamSetting& bitstream_setting,
                           const IoPinTable& io_pin_table,
                           const bool& verbose = false);
-
+int pcf2sdc_file_generation(const PcfData& pcf_data,
+                            BoundaryTiming& boundary_timing,
+                            const IoPinTable& io_pin_table,
+                            const std::string sdc_file_path,
+                            const bool& verbose);
 } /* End namespace openfpga*/
 
 #endif
