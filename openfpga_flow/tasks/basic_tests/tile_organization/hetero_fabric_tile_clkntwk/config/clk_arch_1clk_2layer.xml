@@ -16,7 +16,7 @@
     <spine name="rib_lvl1_sw1_lower" start_x="1" start_y="1" end_x="1" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
     <spine name="rib_lvl1_sw2_upper" start_x="2" start_y="2" end_x="2" end_y="3" type="CHANY" direction="INC_DIRECTION"/>
     <spine name="rib_lvl1_sw2_lower" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
-    <spine name="rib_lvl1_sw3_upper" start_x="3" start_y="2" end_x="3" end_y="3" type="CHANY" direction="INC_DIRECTION"/>
+    <spine name="rib_lvl1_sw3_upper" start_x="3" start_y="2" end_x="3" end_y="2" type="CHANY" direction="INC_DIRECTION"/>
     <spine name="rib_lvl1_sw3_lower" start_x="3" start_y="1" end_x="3" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
     <taps>
       <all from_pin="clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
