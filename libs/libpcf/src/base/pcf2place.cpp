@@ -9,8 +9,6 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include <iostream>
-
 #include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_pb_parser.h"
