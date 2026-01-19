@@ -175,7 +175,7 @@
         <!--  Highly recommand to customize pin location when direct connection is used!!! -->
         <!--pinlocations pattern="spread"/-->
         <pinlocations pattern="custom">
-          <loc side="left"></loc>
+          <loc side="left"/>
           <loc side="top">clb.cin</loc>
           <loc side="right">clb.clk clb.O[9:0] clb.I[19:0]</loc>
           <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
@@ -198,7 +198,7 @@
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
-          <loc side="left" yoffset="0"></loc>
+          <loc side="left" yoffset="0"/>
           <loc side="top" yoffset="1"/>
           <loc side="right" yoffset="0">memory.clk memory.wen memory.waddr[0:2] memory.raddr[0:2] memory.data_in[0:2] memory.data_out[0:2]</loc>
           <loc side="right" yoffset="1">memory.ren memory.waddr[3:5] memory.raddr[3:5] memory.data_in[3:5] memory.data_out[3:5]</loc>
