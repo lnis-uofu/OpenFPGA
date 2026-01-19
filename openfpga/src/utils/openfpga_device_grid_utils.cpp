@@ -120,4 +120,16 @@ generate_perimeter_tile_coordinates(const DeviceGrid& grids) {
   return io_coordinates;
 }
 
+/* Heterogeneous architecture should contain at least 1 grid whose height > 1 or
+ * width > 1 */
+bool device_grid_contain_heterogeneous_block(const DeviceGrid& grids) {
+  for (auto loc : grids.all_locations()) {
+    if (grids.get_tile_bb(loc).width() > 0 ||
+        grids.get_tile_bb(loc).height() > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } /* end namespace openfpga */
