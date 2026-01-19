@@ -1,8 +1,8 @@
 #include "append_clock_rr_graph.h"
 
 #include "command_exit_codes.h"
-#include "openfpga_physical_tile_utils.h"
 #include "openfpga_device_grid_utils.h"
+#include "openfpga_physical_tile_utils.h"
 #include "rr_graph_builder_utils.h"
 #include "rr_graph_cost.h"
 #include "vtr_assert.h"
@@ -898,10 +898,14 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   vtr::ScopedStartFinishTimer timer(
     "Appending programmable clock network to routing resource graph");
 
-  /* Sanity check: must have through channel enabled if this is a heterogenous architecture ! */
-  if (device_grid_contain_heterogeneous_block(vpr_device_ctx.grid) && !vpr_device_ctx.arch->through_channel) {
+  /* Sanity check: must have through channel enabled if this is a heterogenous
+   * architecture ! */
+  if (device_grid_contain_heterogeneous_block(vpr_device_ctx.grid) &&
+      !vpr_device_ctx.arch->through_channel) {
     VTR_LOG_ERROR(
-      "To use clock network in heterogeneous architecture (contain block whose height and width > 1), the through_channel option must be enabled in routing architecture\n");
+      "To use clock network in heterogeneous architecture (contain block whose "
+      "height and width > 1), the through_channel option must be enabled in "
+      "routing architecture\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 
