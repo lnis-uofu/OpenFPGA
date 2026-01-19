@@ -673,10 +673,6 @@ ShellCommandId add_pcf2sdc_command_template(
   shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
                                      openfpga::OPT_STRING);
 
-  /* Add an option '--no_time_stamp' */
-  shell_cmd.add_option("no_time_stamp", false,
-                       "Do not print time stamp in output files");
-
   /* Add an option '--reduce_error_to_warning' */
   shell_cmd.add_option(
     "reduce_error_to_warning", false,

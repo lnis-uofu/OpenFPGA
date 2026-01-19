@@ -207,7 +207,6 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   CommandOptionId opt_pcf = cmd.option("pcf");
   CommandOptionId opt_blif = cmd.option("blif");
   CommandOptionId opt_pin_table = cmd.option("pin_table");
-  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_sdc_file = cmd.option("sdc_file");
   CommandOptionId opt_boundary_timing_file = cmd.option("boundary_timing");
   CommandOptionId opt_arch_file = cmd.option("vpr_arch_file");
