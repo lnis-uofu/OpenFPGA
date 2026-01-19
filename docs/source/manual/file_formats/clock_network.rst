@@ -52,7 +52,7 @@ The entry point of a clock tree must be at a valid connection block.
 
    An example of programmable clock network considering a 2x2 FPGA fabric
 
-Note that when the ``perimeter_cb`` is enabled for routing architecture (See details in :ref:`addon_vpr_syntax`), clock entry point can be indeed at the fringe of FPGA fabrics. See example in :numref:`prog_clock_network_example_2x2_perimeter_cb`. 
+Note that when the ``perimeter_cb`` is enabled for routing architecture (See details in :ref:`addon_vpr_syntax`), clock entry point can be indeed at the fringe of FPGA fabrics. See example in :numref:`fig_prog_clock_network_example_2x2_perimeter_cb`. 
 
 .. _fig_prog_clock_network_example_2x2_perimeter_cb:
 

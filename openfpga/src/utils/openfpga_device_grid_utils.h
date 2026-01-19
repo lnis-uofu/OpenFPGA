@@ -27,6 +27,8 @@ generate_perimeter_grid_coordinates(const DeviceGrid& grids);
 std::map<e_side, std::vector<vtr::Point<size_t>>>
 generate_perimeter_tile_coordinates(const DeviceGrid& grids);
 
+bool device_grid_contain_heterogeneous_block(const DeviceGrid& grids);
+
 } /* end namespace openfpga */
 
 #endif

@@ -230,6 +230,7 @@ run-task basic_tests/tile_organization/homo_fabric_tile_global_tile_clock $@
 run-task basic_tests/tile_organization/homo_fabric_tile_adder_chain $@
 run-task basic_tests/tile_organization/homo_fabric_tile_clkntwk $@
 run-task basic_tests/tile_organization/hetero_fabric_tile $@
+run-task basic_tests/tile_organization/hetero_fabric_tile_clkntwk $@
 run-task basic_tests/tile_organization/homo_fabric_tile_ecb_2x2_preconfig $@
 
 echo -e "Testing group config block";
