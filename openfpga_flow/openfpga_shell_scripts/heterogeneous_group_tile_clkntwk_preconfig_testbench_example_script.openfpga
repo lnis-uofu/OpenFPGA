@@ -25,7 +25,6 @@ route_clock_rr_graph
 check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
 
 # Apply fix-up to Look-Up Table truth tables based on packing results
-pb_pin_fixup
 lut_truth_table_fixup
 
 # Build the module graph
