@@ -1,0 +1,6 @@
+<boundary_timing>
+  <!-- Use the external pin name from pin table. Unit of timing is sec. -->
+  <pin name="pad_fpga_i[26]" max="0.5e-9" min="0.1e-9"/>
+  <pin name="pad_fpga_i[17]" max="0.2e-9" min="0.2e-9"/>
+  <pin name="pad_fpga_o[29]" max="0.3e-9" min="0.3e-9"/>
+</boundary_timing>

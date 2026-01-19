@@ -3,6 +3,7 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
+#include "atom_netlist_utils.h"
 #include "blif_head_reader.h"
 #include "command.h"
 #include "command_context.h"
@@ -11,11 +12,13 @@
 #include "openfpga_digest.h"
 #include "pcf2place.h"
 #include "pcf_reader.h"
+#include "read_blif.h"
 #include "read_csv_io_pin_table.h"
+#include "read_xml_arch_file.h"
+#include "read_xml_boundary_timing.h"
 #include "read_xml_io_location_map.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -261,7 +264,7 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   VTR_LOG("Read the boundary timing file: %s.\n",
           boundary_timing_fname.c_str());
   openfpga::BoundaryTiming boundary_timing =
-    openfpga::read_xml_boundary_timing(boundary_timing_fname);
+    openfpga::read_xml_boundary_timing(boundary_timing_fname.c_str());
 
   IoPinTable io_pin_table =
     read_csv_io_pin_table(pin_table_fname.c_str(), pin_table_dir_convention);
@@ -271,12 +274,13 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   t_arch* arch = new t_arch;
   std::vector<t_physical_tile_type> physical_tile_types;
   std::vector<t_logical_block_type> logical_block_types;
-  xml_read_arch(argv[5], false, arch, physical_tile_types, logical_block_types);
+  xml_read_arch(arch_fname.c_str(), false, arch, physical_tile_types,
+                logical_block_types);
 
   // read netlist and set up atom netlist
   const LogicalModels& logical_models = arch->models;
   AtomNetlist atom_ntlist =
-    read_blif(e_circuit_format::BLIF, arch_fname.c_str(), logical_models);
+    read_blif(e_circuit_format::BLIF, blif_fname.c_str(), logical_models);
 
   std::vector<std::string> clock_names;  // Assume just one clock
   std::set<AtomPinId> netlist_clock_drivers =
@@ -298,8 +302,8 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     clock_name = clock_names[0];
   }
   /* Convert */
-  status = pcf2sdc_file_generation(pcf_data, boundary_timing, io_pin_table,
-                                   clock_name, sdc_fname, true);
+  int status = pcf2sdc_file_generation(pcf_data, boundary_timing, io_pin_table,
+                                       clock_name, sdc_fname, true);
 
   if (status) {
     return status;
