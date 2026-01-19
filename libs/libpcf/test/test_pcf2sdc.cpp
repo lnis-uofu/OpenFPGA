@@ -77,8 +77,3 @@ int main(int argc, const char** argv) {
 
   return status;
 }
-
-/* pcf boundary_timing_file io_pin_table sdc_file_path vpr_arch_file blif_file
- */
-/*pcf2sdc.pcf boundary_timing.xml pin_table.csv final.sdc  vpr_arch.xml
- * and2_latch.blif */

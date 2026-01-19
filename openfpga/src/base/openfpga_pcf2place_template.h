@@ -198,8 +198,7 @@ int pcf2place_wrapper_template(const Command& cmd,
 }
 
 /********************************************************************
- * Top-level function to convert a .pcf file to a .place file which
- * which VPR can force I/O placement
+ * Top-level function to convert a .pcf file to a .sdc file which
  *******************************************************************/
 template <class T>
 int pcf2sdc_wrapper_template(const Command& cmd,
