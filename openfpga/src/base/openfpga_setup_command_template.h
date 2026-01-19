@@ -211,6 +211,9 @@ ShellCommandId add_link_arch_command_template(
   shell_cmd.add_option("sort_gsb_chan_node_in_edges", false,
                        "Sort all the incoming edges for each routing track "
                        "output node in General Switch Blocks (GSBs)");
+  shell_cmd.add_option("reorder_incoming_edges", false,
+                       "Reorder the incoming edges for each routing track "
+                       "output node in General Switch Blocks (GSBs)");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
