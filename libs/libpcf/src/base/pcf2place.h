@@ -30,12 +30,12 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
                           BitstreamSetting& bitstream_setting,
                           const IoPinTable& io_pin_table,
                           const bool& verbose = false);
-int pcf2sdc_file_generation(const PcfData& pcf_data,
-                            BoundaryTiming& boundary_timing,
-                            const IoPinTable& io_pin_table,
-                            const std::string& clock_name,
-                            const std::string sdc_file_path,
-                            const bool& verbose);
+int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
+                                 BoundaryTiming& boundary_timing,
+                                 const IoPinTable& io_pin_table,
+                                 const std::string& clock_name,
+                                 const std::string sdc_file_path,
+                                 const bool& verbose);
 } /* End namespace openfpga*/
 
 #endif

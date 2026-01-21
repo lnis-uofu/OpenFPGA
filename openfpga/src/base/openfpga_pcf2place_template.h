@@ -300,8 +300,8 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     clock_name = clock_names[0];
   }
   /* Convert */
-  int status = pcf2sdc_file_generation(pcf_data, boundary_timing, io_pin_table,
-                                       clock_name, sdc_fname, true);
+  int status = pcf2sdc_from_boundary_timing(
+    pcf_data, boundary_timing, io_pin_table, clock_name, sdc_fname, true);
 
   if (status) {
     return status;

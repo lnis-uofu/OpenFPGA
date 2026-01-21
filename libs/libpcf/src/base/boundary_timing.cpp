@@ -71,6 +71,16 @@ std::string BoundaryTiming::pin_min_delay(
   return min;
 }
 
+bool BoundaryTiming::pin_delay_constrained(
+  const openfpga::BasicPort& pin) const {
+  std::string max = pin_max_delay(pin);
+  std::string min = pin_min_delay(pin);
+  if (!max.empty() && !min.empty()) {
+    return true;
+  }
+  return false;
+}
+
 bool BoundaryTiming::empty() const { return 0 == pin_constraint_ids_.size(); }
 
 /************************************************************************

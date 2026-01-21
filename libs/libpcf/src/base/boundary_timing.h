@@ -22,6 +22,17 @@ running STA on a mapped eFPGA.
  *******************************************************************/
 namespace openfpga {
 class BoundaryTiming {
+  /********************************************************************
+  PinConstraintId is a strong identifier that is shared across multiple data
+  structures. Developers must ensure that PinConstraintId values are globally
+  consistent and interchangeable between these data structures within a single
+  run.
+
+  In particular, a run must be based on exactly one pin table and one PCF file.
+  Providing multiple pin tables or multiple PCF files in the same run will break
+  the consistency assumptions of PinConstraintId and may lead to undefined
+  behavior.
+  *******************************************************************/
  public: /* Types */
   typedef vtr::vector<PinConstraintId, PinConstraintId>::const_iterator
     pin_constraint_iterator;
@@ -47,6 +58,7 @@ class BoundaryTiming {
 
   std::string pin_min_delay(const openfpga::BasicPort& pin) const;
 
+  bool pin_delay_constrained(const openfpga::BasicPort& pin) const;
   /* Check if there are any pin constraints */
   bool empty() const;
 

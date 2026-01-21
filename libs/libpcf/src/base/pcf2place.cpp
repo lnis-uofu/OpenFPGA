@@ -194,12 +194,12 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
   return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
 }
 
-int pcf2sdc_file_generation(const PcfData& pcf_data,
-                            BoundaryTiming& boundary_timing,
-                            const IoPinTable& io_pin_table,
-                            const std::string& clock_name,
-                            const std::string sdc_file_path,
-                            const bool& verbose) {
+int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
+                                 BoundaryTiming& boundary_timing,
+                                 const IoPinTable& io_pin_table,
+                                 const std::string& clock_name,
+                                 const std::string sdc_file_path,
+                                 const bool& verbose) {
   /*write sdc file*/
   int num_err = 0;
   const std::string SET_INPUT_DELAY = "set_input_delay";
@@ -216,7 +216,8 @@ int pcf2sdc_file_generation(const PcfData& pcf_data,
     auto net = pcf_data.io_net(io_constrain_id);
     std::string max = boundary_timing.pin_max_delay(ext_pin);
     std::string min = boundary_timing.pin_min_delay(ext_pin);
-    if (max.empty() || min.empty()) {
+
+    if (!boundary_timing.pin_delay_constrained(ext_pin)) {
       VTR_LOG_ERROR("Boundary timing is not defined for pin %s",
                     ext_pin.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
@@ -257,9 +258,6 @@ int pcf2sdc_file_generation(const PcfData& pcf_data,
           << " [get_ports {" << net << "}]" << std::endl;
     }
   }
-  if (num_err > 0) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  return CMD_EXEC_SUCCESS;
+  return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
 }
 } /* end namespace openfpga */
