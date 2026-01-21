@@ -2,7 +2,7 @@
 pcf2bitstream_setting --config ${OPENFPGA_PCF_CONFIG_FILE} --pcf ${OPENFPGA_PCF} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
 pcf2place --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --fpga_fix_pins ${OPENFPGA_VPR_FIX_PINS_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION}
 
-pcf2sdc --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION} --sdc_file ${SDC_FILE} --vpr_arch_file ${VPR_ARCH_FILE} --boundary_timing ${BOUNDARY_TIMING_FILE} --reduce_error_to_warning 
+pcf2sdc --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION} --sdc_file final.sdc --vpr_arch_file ${VPR_ARCH_FILE} --boundary_timing ${BOUNDARY_TIMING_FILE} --reduce_error_to_warning 
 
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
