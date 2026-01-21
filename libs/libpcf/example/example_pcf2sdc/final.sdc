@@ -1,0 +1,8 @@
+set_input_delay -clock clk -max 0.5e-9 [get_ports {a}]
+set_input_delay -clock clk -min 0.1e-9 [get_ports {a}]
+set_input_delay -clock clk -max 0.2e-9 [get_ports {b}]
+set_input_delay -clock clk -min 0.2e-9 [get_ports {b}]
+set_output_delay -clock clk -max 0.3e-9 [get_ports {c}]
+set_output_delay -clock clk -min 0.3e-9 [get_ports {c}]
+set_output_delay -clock clk -max 0.4e-9 [get_ports {d}]
+set_output_delay -clock clk -min 0.4e-9 [get_ports {d}]
