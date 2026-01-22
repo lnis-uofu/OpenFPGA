@@ -109,6 +109,10 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_path_only = cmd.option("path_only");
   CommandOptionId opt_value_only = cmd.option("value_only");
   CommandOptionId opt_trim_path = cmd.option("trim_path");
+  /* This option is used to specify whether to write the reordered fabric
+   * bitstream This is currently used for QL MSC bitstream generation
+   */
+  CommandOptionId opt_reorder = cmd.option("reorder");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
@@ -158,23 +162,62 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  const openfpga::FabricBitstream& fabric_bitstream =
+    cmd_context.option_enable(cmd, opt_reorder)
+      ? openfpga_ctx.reorder_fabric_bitstream()
+      : openfpga_ctx.fabric_bitstream();
+
   if (bitfile_writer_opt.output_file_type() ==
       BitstreamWriterOption::e_bitfile_type::XML) {
     status = write_fabric_bitstream_to_xml_file(
-      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+      openfpga_ctx.bitstream_manager(), fabric_bitstream,
       openfpga_ctx.arch().config_protocol, bitfile_writer_opt);
   } else {
     VTR_ASSERT_SAFE(bitfile_writer_opt.output_file_type() ==
                     BitstreamWriterOption::e_bitfile_type::TEXT);
     /* By default, output in plain text format */
     status = write_fabric_bitstream_to_text_file(
-      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+      openfpga_ctx.bitstream_manager(), fabric_bitstream,
       openfpga_ctx.blwl_shift_register_banks(),
       openfpga_ctx.arch().config_protocol,
       openfpga_ctx.fabric_global_port_info(), bitfile_writer_opt);
   }
 
   return status;
+}
+
+/********************************************************************
+ * A wrapper function to call the reorder_bitstream() in FPGA bitstream
+ *******************************************************************/
+template <class T>
+int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
+                                            const CommandContext& cmd_context) {
+  CommandOptionId opt_reorder_map = cmd.option("reorder_map");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path =
+    find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Read the bitstream reorder map */
+  BitstreamReorderMap bitstream_reorder_map(
+    cmd_context.option_value(cmd, opt_reorder_map));
+
+  /* Build fabric bitstream here */
+  openfpga_ctx.mutable_reorder_fabric_bitstream() =
+    build_fabric_dependent_bitstream_with_reorder(
+      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+      openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(),
+      bitstream_reorder_map, cmd_context.option_value(cmd, opt_file),
+      cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 }
 
 /********************************************************************
