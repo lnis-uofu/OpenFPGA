@@ -214,7 +214,7 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
 
   for (auto io_constrain_id : pcf_data.io_constraints()) {
     auto ext_pin = pcf_data.io_pin(io_constrain_id);
-    auto net = generate_xml_port_name(pcf_data.io_net(io_constrain_id).c_str());
+    auto net = generate_xml_port_name(ext_pin);
     std::string max = boundary_timing.pin_max_delay(ext_pin);
     std::string min = boundary_timing.pin_min_delay(ext_pin);
 
