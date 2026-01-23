@@ -294,11 +294,9 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   }
 
   std::string clock_name;
-  if (clock_names.empty()) {
-    clock_name = "virtual_clock";
-  } else {
-    clock_name = clock_names[0];
-  }
+  /*force clock to be virtual_clock*/
+  clock_name = "virtual_clock";
+
   /* Convert */
   int status = pcf2sdc_from_boundary_timing(
     pcf_data, boundary_timing, io_pin_table, clock_name, sdc_fname, true);
