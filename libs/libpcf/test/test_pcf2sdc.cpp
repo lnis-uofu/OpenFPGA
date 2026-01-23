@@ -25,31 +25,6 @@ int main(int argc, const char** argv) {
    * 4. Output - sdc file
    */
 
-  /*read blif and find netlist clock*/
-  // read vpr arch file
-  t_arch* arch = new t_arch;
-  std::vector<t_physical_tile_type> physical_tile_types;
-  std::vector<t_logical_block_type> logical_block_types;
-  xml_read_arch(argv[5], false, arch, physical_tile_types, logical_block_types);
-
-  // read netlist and set up atom netlist
-  const LogicalModels& logical_models = arch->models;
-  AtomNetlist atom_ntlist =
-    read_blif(e_circuit_format::BLIF, argv[6], logical_models);
-
-  std::vector<std::string> clock_names;  // Assume just one clock
-  std::set<AtomPinId> netlist_clock_drivers =
-    find_netlist_logical_clock_drivers(atom_ntlist, logical_models);
-  for (auto clock_driver : netlist_clock_drivers) {
-    AtomNetId net_id = atom_ntlist.pin_net(clock_driver);
-    VTR_LOG("  Netlist Clock is '%s' ", atom_ntlist.net_name(net_id).c_str());
-    clock_names.push_back(atom_ntlist.net_name(net_id).c_str());
-  }
-  if (clock_names.size() > 1) {
-    VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");
-    return 1;
-  }
-
   openfpga::PcfData pcf_data;
   VTR_LOG("Read the pcf file: %s.\n", argv[1]);
   openfpga::PcfCustomCommand pcf_custom_command;
@@ -66,14 +41,10 @@ int main(int argc, const char** argv) {
     argv[3], openfpga::e_pin_table_direction_convention::EXPLICIT);
 
   /* Convert */
-  std::string clock_name;
-  if (clock_names.empty()) {
-    clock_name = "virtual_clock";
-  } else {
-    clock_name = clock_names[0];
-  }
-  int status = pcf2sdc_file_generation(pcf_data, boundary_timing, io_pin_table,
-                                       clock_name, argv[4], true);
+  std::string clock_name = "virtual_clock";
+
+  int status = pcf2sdc_from_boundary_timing(
+    pcf_data, boundary_timing, io_pin_table, clock_name, argv[4], true);
 
   return status;
 }
