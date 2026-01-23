@@ -17,6 +17,7 @@
 #include "read_circuit.h"
 #include "read_csv_io_pin_table.h"
 #include "read_xml_arch_file.h"
+#include "write_xml_boundary_timing.h"
 int main(int argc, const char** argv) {
   /* Ensure we have the following arguments:
    * 1. Input - Users Design Constraints (.pcf)
@@ -46,5 +47,7 @@ int main(int argc, const char** argv) {
   int status = pcf2sdc_from_boundary_timing(
     pcf_data, boundary_timing, io_pin_table, clock_name, argv[4], true);
 
+  status = write_xml_boundary_timing("boundary_timing_output_file.xml",
+                                     boundary_timing);
   return status;
 }
