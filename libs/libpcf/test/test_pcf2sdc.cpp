@@ -48,7 +48,7 @@ int main(int argc, const char** argv) {
   int status = pcf2sdc_from_boundary_timing(
     pcf_data, boundary_timing, io_pin_table, clock_name, argv[4], true);
 
-  if (status != CMD_EXEC_SUCCESS) {
+  if (status != openfpga::CMD_EXEC_SUCCESS) {
     return status;
   }
   status = write_xml_boundary_timing("boundary_timing_output_file.xml",
