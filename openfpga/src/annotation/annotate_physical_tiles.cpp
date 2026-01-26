@@ -5,12 +5,61 @@
 /* Headers from vtrutil library */
 #include "annotate_physical_tiles.h"
 
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/* Identify equivalent sites for each subtile
+ * - if there is only 1 equivalent site, it is the physical one 
+ * - if there are >1 equivalent sites, there must be a definition */
+int build_physical_tile_equivalent_sites(
+  const DeviceContext& vpr_device_ctx,
+  const TileAnnotation& tile_annotation,
+  VprDeviceAnnotation& vpr_device_annotation) {
+  size_t num_err = 0;
+  vtr::ScopedStartFinishTimer timer(
+    "Identify physical equivalent sites for subtiles");
+  for (const t_physical_tile_type& phy_tile :
+       vpr_device_ctx.physical_tile_types) {
+    for (const t_sub_tile& s_tile : phy_tile.sub_tiles) {
+      if (s_tile.equivalent_sites.size() == 0) {
+        VTR_LOG_ERROR("No equivalent sites are defined under subtile '%s'\n", s_tile.name.c_str());
+        num_err++;
+        continue;
+      }
+      if (s_tile.equivalent_sites.size() == 1) {
+        /* Auto infer as the physical site */
+        vpr_device_annotation.set_subtile_physical_equivalent_site(phy_tile, s_tile.name, s_tile.equivalent_sites[0]);
+        continue;
+      }
+      /* Must have a specific definition */
+      if (!tile_annotation.is_physical_equivalent_site_defined(phy_tile.name, s_tile.name)) {
+        VTR_LOG_ERROR("More than 1 equivalent sites are defined under subtile '%s' of tile '%s' but no specific physical equivalent site is defined\n", s_tile.name.c_str(), phy_tile->name.c_str());
+        num_err++;
+        continue;
+      }
+      std::string req_lb_name = tile_annotation.physical_equivalent_site(phy_tile.name, s_tile.name);
+      bool valid_req_lb = false;
+      for (auto lb_type : s_tile.equivalent_sites) {
+        if (lb_type->name == req_lb_name) {
+          vpr_device_annotation.set_subtile_physical_equivalent_site(phy_tile, s_tile.name, lb_type);
+          valid_req_lb = true;
+          break;
+        }
+      }
+      if (!valid_req_lb) {
+        VTR_LOG_ERROR("For subtile '%s' of tile '%s' but the specified physical equivalent site '%s' is not a valid pb_type\n", s_tile.name.c_str(), phy_tile->name.c_str(), req_lb_name.c_str());
+        num_err++;
+        continue;
+      }
+    }
+  }
+  return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
+}
 
 /********************************************************************
  * Build the fast look-up for each physical tile between

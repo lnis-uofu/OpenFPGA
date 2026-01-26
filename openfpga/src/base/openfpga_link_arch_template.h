@@ -54,6 +54,10 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
     g_vpr_ctx.device(), openfpga_ctx.mutable_vpr_device_annotation());
+  /* Build subtile physical equivalent sites */
+  build_physical_tile_equivalent_sites(
+    g_vpr_ctx.device(), openfpga_ctx.arch().tile_annotations,
+    openfpga_ctx.mutable_vpr_device_annotation());
 
   /* Annotate pb_type graphs
    * - physical pb_type

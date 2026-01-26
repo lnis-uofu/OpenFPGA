@@ -15,6 +15,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+int build_physical_tile_equivalent_sites(
+  const DeviceContext& vpr_device_ctx,
+  const TileAnnotation& tile_annotation,
+  VprDeviceAnnotation& vpr_device_annotation);
+
 void build_physical_tile_pin2port_info(
   const DeviceContext& vpr_device_ctx,
   VprDeviceAnnotation& vpr_device_annotation);
