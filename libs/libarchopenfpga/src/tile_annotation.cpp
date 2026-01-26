@@ -45,6 +45,16 @@ std::vector<std::string> TileAnnotation::tile_ports_to_merge(
   return result->second;
 }
 
+std::vector<std::pair<std::string, std::string>> TileAnnotation::physical_equivalent_sites() const {
+  std::vector<std::pair<std::string, std::string>> ret;
+  for (auto t_pair : phy_equ_site_maps_) {
+    for (auto st_pair : t_pair.second) {
+      ret.push_back(std::make_pair(t_pair.first, st_pair.first));
+    }
+  }
+  return ret;
+}
+
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
