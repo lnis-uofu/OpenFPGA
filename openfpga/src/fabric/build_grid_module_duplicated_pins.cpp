@@ -324,9 +324,8 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(false == is_empty_type(grid_type_descriptor));
 
-  /* FIXME: Currently support only 1 equivalent site! Should clarify this
-   * limitation in documentation! */
-  t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
+  t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(grid_type_descriptor, sub_tile.name);
+  VTR_ASSERT(nullptr != lb_type);
   t_pb_graph_node* top_pb_graph_node = lb_type->pb_graph_head;
   VTR_ASSERT(nullptr != top_pb_graph_node);
   size_t child_inst_subtile_index = sub_tile.capacity.low + child_instance;

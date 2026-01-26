@@ -992,46 +992,43 @@ static void build_physical_block_bitstream(
   for (size_t z = 0; z < place_annotation.grid_blocks(grid_coord).size(); ++z) {
     int sub_tile_index =
       device_annotation.physical_tile_z_to_subtile_index(grid_type, z);
-    VTR_ASSERT(1 ==
-               grid_type->sub_tiles[sub_tile_index].equivalent_sites.size());
+    t_logical_block_type_ptr lb_type = device_annotation.physical_equivalent_site(grid_type, grid_type->sub_tiles[sub_tile_index].name);
+    VTR_ASSERT(lb_type != nullptr);
     bool pcf_mode_specified = false;
     std::array<size_t, 3> pcf_loc = {grid_coord.x(), grid_coord.y(), z};
     if (bitstream_annotation.pcf_coord_pb_type(pcf_loc)) {
       pcf_mode_specified = true;
     }
-    for (t_logical_block_type_ptr lb_type :
-         grid_type->sub_tiles[sub_tile_index].equivalent_sites) {
-      /* Bypass empty pb_graph */
-      if (nullptr == lb_type->pb_graph_head) {
-        continue;
-      }
+    /* Bypass empty pb_graph */
+    if (nullptr == lb_type->pb_graph_head) {
+      continue;
+    }
 
-      if (ClusterBlockId::INVALID() ==
-          place_annotation.grid_blocks(grid_coord)[z]) {
-        /* Recursively traverse the pb_graph and generate bitstream */
-        rec_build_physical_block_bitstream(
-          bitstream_manager, grouped_mem_inst_scoreboard,
-          grid_configurable_block, module_manager, module_name_map, circuit_lib,
-          mux_lib, atom_ctx, device_annotation, bitstream_annotation,
-          border_side, PhysicalPb(), PhysicalPbId::INVALID(),
-          lb_type->pb_graph_head, z, pcf_mode_specified, verbose);
-      } else {
-        const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
-          place_annotation.grid_blocks(grid_coord)[z]);
+    if (ClusterBlockId::INVALID() ==
+        place_annotation.grid_blocks(grid_coord)[z]) {
+      /* Recursively traverse the pb_graph and generate bitstream */
+      rec_build_physical_block_bitstream(
+        bitstream_manager, grouped_mem_inst_scoreboard,
+        grid_configurable_block, module_manager, module_name_map, circuit_lib,
+        mux_lib, atom_ctx, device_annotation, bitstream_annotation,
+        border_side, PhysicalPb(), PhysicalPbId::INVALID(),
+        lb_type->pb_graph_head, z, pcf_mode_specified, verbose);
+    } else {
+      const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
+        place_annotation.grid_blocks(grid_coord)[z]);
 
-        /* Get the top-level node of the pb_graph */
-        t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
-        VTR_ASSERT(nullptr != pb_graph_head);
-        const PhysicalPbId& top_pb_id = phy_pb.find_pb(pb_graph_head);
+      /* Get the top-level node of the pb_graph */
+      t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
+      VTR_ASSERT(nullptr != pb_graph_head);
+      const PhysicalPbId& top_pb_id = phy_pb.find_pb(pb_graph_head);
 
-        /* Recursively traverse the pb_graph and generate bitstream */
-        rec_build_physical_block_bitstream(
-          bitstream_manager, grouped_mem_inst_scoreboard,
-          grid_configurable_block, module_manager, module_name_map, circuit_lib,
-          mux_lib, atom_ctx, device_annotation, bitstream_annotation,
-          border_side, phy_pb, top_pb_id, pb_graph_head, z, pcf_mode_specified,
-          verbose);
-      }
+      /* Recursively traverse the pb_graph and generate bitstream */
+      rec_build_physical_block_bitstream(
+        bitstream_manager, grouped_mem_inst_scoreboard,
+        grid_configurable_block, module_manager, module_name_map, circuit_lib,
+        mux_lib, atom_ctx, device_annotation, bitstream_annotation,
+        border_side, phy_pb, top_pb_id, pb_graph_head, z, pcf_mode_specified,
+        verbose);
     }
   }
 }

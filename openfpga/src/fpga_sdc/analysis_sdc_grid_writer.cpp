@@ -540,9 +540,9 @@ static void print_analysis_sdc_disable_pb_block_unused_resources(
 
   int sub_tile_index =
     device_annotation.physical_tile_z_to_subtile_index(grid_type, grid_z);
-  VTR_ASSERT(1 == grid_type->sub_tiles[sub_tile_index].equivalent_sites.size());
-  t_pb_graph_node* pb_graph_head =
-    grid_type->sub_tiles[sub_tile_index].equivalent_sites[0]->pb_graph_head;
+  t_logical_block_type_ptr lb_type = device_annotation.physical_equivalent_site(grid_type, grid_type->sub_tiles[sub_tile_index].name);
+  VTR_ASSERT(nullptr != lb_type);
+  t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
   VTR_ASSERT(nullptr != pb_graph_head);
 
   /* Find an unique name to the pb instance in this grid

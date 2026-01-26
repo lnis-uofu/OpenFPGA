@@ -310,9 +310,10 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
     }
 
     for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
-      VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
+      t_logical_block_type_ptr lb_type = device_annotation.physical_equivalent_site(physical_tile, sub_tile.name);
+      VTR_ASSERT(nullptr != lb_type);
       t_pb_graph_node* pb_graph_head =
-        sub_tile.equivalent_sites[0]->pb_graph_head;
+        lb_type->pb_graph_head;
       if (nullptr == pb_graph_head) {
         continue;
       }

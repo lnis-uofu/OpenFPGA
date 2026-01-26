@@ -1352,7 +1352,6 @@ static int build_top_module_global_net_for_given_tile_module(
     if (!subtile_contain_required_port) {
       continue;
     }
-    VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
     int grid_pin_start_index = physical_tile->num_pins;
     t_physical_tile_port physical_tile_port;
     physical_tile_port.num_pins = 0;

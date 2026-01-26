@@ -100,6 +100,7 @@ class VprDeviceAnnotation {
                                        const int& subtile_z) const;
   int physical_tile_z_to_start_pin_index(t_physical_tile_type_ptr physical_tile,
                                          const int& subtile_z) const;
+  t_logical_block_type_ptr physical_equivalent_site(t_physical_tile_type_ptr physical_tile, const std::string& sub_tile_name) const;
 
  public: /* Public mutators */
   void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);

@@ -455,6 +455,21 @@ int VprDeviceAnnotation::physical_tile_z_to_start_pin_index(
   return pin_search_result->second;
 }
 
+
+t_logical_block_type_ptr VprDeviceAnnotation::physical_equivalent_site(
+  t_physical_tile_type_ptr physical_tile,
+  const std::string& sub_tile_name) const {
+  auto phy_tile_result = physical_equivalent_sites_.find(physical_tile);
+  if (phy_tile_result == physical_equivalent_sites_.end()) {
+    return nullptr;
+  }
+  auto site_result = phy_tile_result->second.find(sub_tile_name);
+  if (site_result == phy_tile_result->second.end()) {
+    return nullptr;
+  }
+  return site_result->second;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -823,7 +838,7 @@ void VprDeviceAnnotation::add_physical_tile_z_to_start_pin_index(
     start_pin_index;
 }
 
-void set_subtile_physical_equivalent_site(t_physical_tile_type_ptr physical_tile,
+void VprDeviceAnnotation::set_subtile_physical_equivalent_site(t_physical_tile_type_ptr physical_tile,
     const std::string& sub_tile_name, t_logical_block_type_ptr phy_site) {
   physical_equivalent_sites_[physical_tile][sub_tile_name] = phy_site;
 }
