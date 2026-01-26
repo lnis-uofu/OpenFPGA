@@ -54,7 +54,7 @@ static void write_xml_tile_annotation_global_port(
                       tile_annotation.global_port_is_reset(global_port_id));
 
   write_xml_attribute(
-    fp, XML_TILE_ANNOTATIONS_GLOBAL_PORT_ATTR_DEFAULT_VALUE,
+    fp, XML_TILE_ANNOTATIONS_GLOBAL_PORT_ATTR_DEFAULT_VAL,
     tile_annotation.global_port_default_value(global_port_id));
 
   fp << ">"
@@ -148,7 +148,7 @@ void write_xml_tile_annotations(std::fstream& fp, const char* fname,
    * under the root node <openfpga_arch>
    */
   fp << "\t"
-     << "<" <<
+     << "<"
      << XML_TILE_ANNOTATIONS_NODE_NAME
      << ">"
      << "\n";

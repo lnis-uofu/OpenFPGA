@@ -127,17 +127,17 @@ bool TileAnnotation::is_tile_port_to_merge(const std::string& tile_name,
          std::find(result->second.begin(), result->second.end(), port_name);
 }
 
-bool is_physical_equivalent_site_defined(const std::string& tile_name,
+bool TileAnnotation::is_physical_equivalent_site_defined(const std::string& tile_name,
                                          const std::string& subtile_name) const {
   const auto& tile_result = phy_equ_site_maps_.find(tile_name);
   if (tile_result == phy_equ_site_maps_.end()) {
-    return std::string();
+    return false;
   }
   const auto& stile_result = tile_result->second.find(subtile_name);
   return stile_result != tile_result->second.end();
 }
 
-std::string physical_equivalent_site(const std::string& tile_name,
+std::string  TileAnnotation::physical_equivalent_site(const std::string& tile_name,
                                      const std::string& subtile_name) const {
   const auto& tile_result = phy_equ_site_maps_.find(tile_name);
   if (tile_result == phy_equ_site_maps_.end()) {
@@ -272,9 +272,9 @@ int TileAnnotation::add_merge_subtile_ports(const std::string& tile_name,
   return CMD_EXEC_SUCCESS;
 }
 
-int set_physical_equivalent_site(const std::string& tile_name,
+int  TileAnnotation::set_physical_equivalent_site(const std::string& tile_name,
                                  const std::string& subtile_name,
-                                 const std::string& site_name) const {
+                                 const std::string& site_name) {
   auto t_result = phy_equ_site_maps_.find(tile_name);
   if (t_result != phy_equ_site_maps_.end()) {
     auto st_result = t_result->second.find(subtile_name);

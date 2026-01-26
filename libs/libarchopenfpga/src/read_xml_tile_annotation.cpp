@@ -20,6 +20,7 @@
 #include "openfpga_port_parser.h"
 #include "openfpga_tokenizer.h"
 #include "read_xml_tile_annotation.h"
+#include "tile_annotation_xml_constants.h"
 
 /********************************************************************
  * Parse XML description for an interconnection annotation
@@ -159,7 +160,7 @@ static int read_xml_tile_physical_equivalent_site_annotation(
   const std::string& site_attr =
     get_attribute(xml_tile, XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_SITE, loc_data).as_string();
 
-  tile_annotation.set_physical_equivalent_site(tile_attr, stile_attr, site_attr);
+  return tile_annotation.set_physical_equivalent_site(tile_attr, stile_attr, site_attr);
 }
 
 /********************************************************************
