@@ -65,6 +65,11 @@ class TileAnnotation {
   bool is_tile_port_to_merge(const std::string& tile_name,
                              const std::string& port_name) const;
 
+  bool is_physical_equivalent_site_defined(const std::string& tile_name,
+                                       const std::string& subtile_name) const;
+  std::string physical_equivalent_site(const std::string& tile_name,
+                                       const std::string& subtile_name) const;
+
  public: /* Public mutators */
   /* By default, we do not set it as a clock.
    * Users should set it through the set_global_port_is_clock() function
@@ -88,6 +93,10 @@ class TileAnnotation {
 
   int add_merge_subtile_ports(const std::string& tile_name,
                               const std::string& port_name);
+
+  int set_physical_equivalent_site(const std::string& tile_name,
+                                   const std::string& subtile_name,
+                                   const std::string& site_name);
 
  public: /* Public validator */
   bool valid_global_port_id(const TileGlobalPortId& global_port_id) const;
@@ -118,6 +127,9 @@ class TileAnnotation {
   /* Merge port information for tiles */
   std::map<std::string, std::vector<std::string>>
     tile_ports_to_merge_;  // tile_name -> port_name
+
+  /* Physical equivalent sites, map[tile_name][subtile_name]->site_name */
+  std::map<std::string, std::map<std::string, std::string>> phy_equ_site_maps_;
 };
 
 }  // namespace openfpga
