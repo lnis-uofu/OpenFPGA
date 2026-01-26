@@ -10,6 +10,7 @@
 #include "vtr_log.h"
 /* Headers from fabric key */
 #include "atom_netlist_utils.h"
+#include "command_exit_codes.h"
 #include "io_pin_table.h"
 #include "pcf2place.h"
 #include "pcf_reader.h"
