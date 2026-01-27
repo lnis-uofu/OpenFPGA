@@ -33,12 +33,13 @@ int build_physical_tile_equivalent_sites(
       }
       if (s_tile.equivalent_sites.size() == 1) {
         /* Auto infer as the physical site */
-        vpr_device_annotation.set_subtile_physical_equivalent_site(phy_tile, s_tile.name, s_tile.equivalent_sites[0]);
+        vpr_device_annotation.set_subtile_physical_equivalent_site(&phy_tile, s_tile.name, s_tile.equivalent_sites[0]);
+        VTR_LOG("Auto infer equivalent site '%s' under subtile '%s' as the physical one\n", s_tile.equivalent_sites[0]->name.c_str(), s_tile.name.c_str());
         continue;
       }
       /* Must have a specific definition */
       if (!tile_annotation.is_physical_equivalent_site_defined(phy_tile.name, s_tile.name)) {
-        VTR_LOG_ERROR("More than 1 equivalent sites are defined under subtile '%s' of tile '%s' but no specific physical equivalent site is defined\n", s_tile.name.c_str(), phy_tile->name.c_str());
+        VTR_LOG_ERROR("More than 1 equivalent sites are defined under subtile '%s' of tile '%s' but no specific physical equivalent site is defined\n", s_tile.name.c_str(), phy_tile.name.c_str());
         num_err++;
         continue;
       }
@@ -46,13 +47,13 @@ int build_physical_tile_equivalent_sites(
       bool valid_req_lb = false;
       for (auto lb_type : s_tile.equivalent_sites) {
         if (lb_type->name == req_lb_name) {
-          vpr_device_annotation.set_subtile_physical_equivalent_site(phy_tile, s_tile.name, lb_type);
+          vpr_device_annotation.set_subtile_physical_equivalent_site(&phy_tile, s_tile.name, lb_type);
           valid_req_lb = true;
           break;
         }
       }
       if (!valid_req_lb) {
-        VTR_LOG_ERROR("For subtile '%s' of tile '%s' but the specified physical equivalent site '%s' is not a valid pb_type\n", s_tile.name.c_str(), phy_tile->name.c_str(), req_lb_name.c_str());
+        VTR_LOG_ERROR("For subtile '%s' of tile '%s' but the specified physical equivalent site '%s' is not a valid pb_type\n", s_tile.name.c_str(), phy_tile.name.c_str(), req_lb_name.c_str());
         num_err++;
         continue;
       }

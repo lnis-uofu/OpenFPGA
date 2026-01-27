@@ -1191,7 +1191,7 @@ static int build_physical_tile_module(
   for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
     for (int iz = sub_tile.capacity.low; iz < sub_tile.capacity.high + 1;
          ++iz) {
-      t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(grid_type_descriptor, sub_tile.name);
+      t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(phy_block_type, sub_tile.name);
       VTR_ASSERT(nullptr != lb_type);
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
@@ -1251,7 +1251,7 @@ static int build_physical_tile_module(
                                   tile_annotation, border_side, perimeter_cb);
     /* Add module nets to connect the pb_type ports to sub modules */
     for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
-      t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(grid_type_descriptor, sub_tile.name);
+      t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(phy_block_type, sub_tile.name);
       VTR_ASSERT(nullptr != lb_type);
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
@@ -1278,7 +1278,7 @@ static int build_physical_tile_module(
 
     /* Add module nets to connect the duplicated pb_type ports to sub modules */
     for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
-      t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(grid_type_descriptor, sub_tile.name);
+      t_logical_block_type_ptr lb_type = vpr_device_annotation.physical_equivalent_site(phy_block_type, sub_tile.name);
       VTR_ASSERT(nullptr != lb_type);
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
