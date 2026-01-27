@@ -1,8 +1,8 @@
 <boundary_timing>
-  <!-- Use the external pin name from pin table. Unit of timing is sec. -->
-  <pin name="TOP_2_IN[0]" max="0.5e-9" min="0.1e-9"/>
-  <pin name="TOP_2_IN[2]" max="0.2e-9" min="0.2e-9"/>
-  <pin name="TOP_0_OUT[0]" max="0.3e-9" min="0.3e-9"/>
-  <pin name="TOP_0_OUT[2]" max="0.4e-9" min="0.4e-9"/>
+  <!-- Use the external pin name from pin table. Unit of timing is ns. -->
+  <pin name="TOP_2_IN[0]" max="0.5" min="0.1"/>
+  <pin name="TOP_2_IN[2]" max="0.2" min="0.2"/>
+  <pin name="TOP_0_OUT[0]" max="0.3" min="0.3"/>
+  <pin name="TOP_0_OUT[2]" max="0.4" min="0.4"/>
 </boundary_timing>
 
