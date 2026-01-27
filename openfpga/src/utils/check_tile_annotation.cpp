@@ -255,7 +255,7 @@ static int check_tile_annotation_conflicts_with_physical_tile(
 
   /* Check physical equivalent site definition are valid */
   for (auto tile_info : tile_annotation.physical_equivalent_sites()) {
-    /* Ensure the tile name is valid */ 
+    /* Ensure the tile name is valid */
     bool valid_tile_name = false;
     bool valid_subtile_name = false;
     for (const t_physical_tile_type& physical_tile : physical_tile_types) {
@@ -273,11 +273,17 @@ static int check_tile_annotation_conflicts_with_physical_tile(
       break;
     }
     if (!valid_tile_name) {
-      VTR_LOG_ERROR("Invalid tile name '%s' from physical equivalent sites which is not defined in VPR architecture\n", tile_info.first.c_str());
+      VTR_LOG_ERROR(
+        "Invalid tile name '%s' from physical equivalent sites which is not "
+        "defined in VPR architecture\n",
+        tile_info.first.c_str());
       num_err++;
     }
     if (!valid_subtile_name) {
-      VTR_LOG_ERROR("Invalid subtile name '%s' under tile '%s' from physical equivalent sites which is not defined in VPR architecture\n", tile_info.second.c_str(), tile_info.first.c_str());
+      VTR_LOG_ERROR(
+        "Invalid subtile name '%s' under tile '%s' from physical equivalent "
+        "sites which is not defined in VPR architecture\n",
+        tile_info.second.c_str(), tile_info.first.c_str());
       num_err++;
     }
   }

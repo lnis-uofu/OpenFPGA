@@ -42,7 +42,8 @@ class TileAnnotation {
   std::vector<std::string> tiles_to_merge_ports() const;
   std::vector<std::string> tile_ports_to_merge(
     const std::string& tile_name) const;
-  std::vector<std::pair<std::string, std::string>> physical_equivalent_sites() const;
+  std::vector<std::pair<std::string, std::string>> physical_equivalent_sites()
+    const;
 
  public: /* Public accessors */
   std::string global_port_name(const TileGlobalPortId& global_port_id) const;
@@ -66,8 +67,8 @@ class TileAnnotation {
   bool is_tile_port_to_merge(const std::string& tile_name,
                              const std::string& port_name) const;
 
-  bool is_physical_equivalent_site_defined(const std::string& tile_name,
-                                       const std::string& subtile_name) const;
+  bool is_physical_equivalent_site_defined(
+    const std::string& tile_name, const std::string& subtile_name) const;
   std::string physical_equivalent_site(const std::string& tile_name,
                                        const std::string& subtile_name) const;
 

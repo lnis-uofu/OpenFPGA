@@ -992,7 +992,9 @@ static void build_physical_block_bitstream(
   for (size_t z = 0; z < place_annotation.grid_blocks(grid_coord).size(); ++z) {
     int sub_tile_index =
       device_annotation.physical_tile_z_to_subtile_index(grid_type, z);
-    t_logical_block_type_ptr lb_type = device_annotation.physical_equivalent_site(grid_type, grid_type->sub_tiles[sub_tile_index].name);
+    t_logical_block_type_ptr lb_type =
+      device_annotation.physical_equivalent_site(
+        grid_type, grid_type->sub_tiles[sub_tile_index].name);
     VTR_ASSERT(lb_type != nullptr);
     bool pcf_mode_specified = false;
     std::array<size_t, 3> pcf_loc = {grid_coord.x(), grid_coord.y(), z};
@@ -1008,11 +1010,11 @@ static void build_physical_block_bitstream(
         place_annotation.grid_blocks(grid_coord)[z]) {
       /* Recursively traverse the pb_graph and generate bitstream */
       rec_build_physical_block_bitstream(
-        bitstream_manager, grouped_mem_inst_scoreboard,
-        grid_configurable_block, module_manager, module_name_map, circuit_lib,
-        mux_lib, atom_ctx, device_annotation, bitstream_annotation,
-        border_side, PhysicalPb(), PhysicalPbId::INVALID(),
-        lb_type->pb_graph_head, z, pcf_mode_specified, verbose);
+        bitstream_manager, grouped_mem_inst_scoreboard, grid_configurable_block,
+        module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
+        device_annotation, bitstream_annotation, border_side, PhysicalPb(),
+        PhysicalPbId::INVALID(), lb_type->pb_graph_head, z, pcf_mode_specified,
+        verbose);
     } else {
       const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
         place_annotation.grid_blocks(grid_coord)[z]);
@@ -1024,11 +1026,10 @@ static void build_physical_block_bitstream(
 
       /* Recursively traverse the pb_graph and generate bitstream */
       rec_build_physical_block_bitstream(
-        bitstream_manager, grouped_mem_inst_scoreboard,
-        grid_configurable_block, module_manager, module_name_map, circuit_lib,
-        mux_lib, atom_ctx, device_annotation, bitstream_annotation,
-        border_side, phy_pb, top_pb_id, pb_graph_head, z, pcf_mode_specified,
-        verbose);
+        bitstream_manager, grouped_mem_inst_scoreboard, grid_configurable_block,
+        module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
+        device_annotation, bitstream_annotation, border_side, phy_pb, top_pb_id,
+        pb_graph_head, z, pcf_mode_specified, verbose);
     }
   }
 }

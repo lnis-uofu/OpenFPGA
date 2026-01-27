@@ -11,9 +11,9 @@
 #include "vtr_log.h"
 
 /* Headers from readarchopenfpga library */
+#include "tile_annotation_xml_constants.h"
 #include "write_xml_tile_annotation.h"
 #include "write_xml_utils.h"
-#include "tile_annotation_xml_constants.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -29,9 +29,7 @@ static void write_xml_tile_annotation_global_port(
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t\t"
-     << "<"
-     << XML_TILE_ANNOTATIONS_GLOBAL_PORT_NODE_NAME
-     << " ";
+     << "<" << XML_TILE_ANNOTATIONS_GLOBAL_PORT_NODE_NAME << " ";
 
   write_xml_attribute(fp, XML_TILE_ANNOTATIONS_GLOBAL_PORT_ATTR_NAME,
                       tile_annotation.global_port_name(global_port_id).c_str());
@@ -65,9 +63,7 @@ static void write_xml_tile_annotation_global_port(
        tile_annotation.global_port_tile_names(global_port_id).size();
        ++tile_info_id) {
     fp << "\t\t\t"
-       << "<"
-       << XML_TILE_ANNOTATIONS_GLOBAL_PORT_TILE_NODE_NAME
-       << " ";
+       << "<" << XML_TILE_ANNOTATIONS_GLOBAL_PORT_TILE_NODE_NAME << " ";
     write_xml_attribute(
       fp, XML_TILE_ANNOTATIONS_GLOBAL_PORT_TILE_ATTR_NAME,
       tile_annotation.global_port_tile_names(global_port_id)[tile_info_id]
@@ -89,9 +85,7 @@ static void write_xml_tile_annotation_global_port(
   }
 
   fp << "\t\t"
-     << "</"
-     << XML_TILE_ANNOTATIONS_GLOBAL_PORT_NODE_NAME
-     << ">";
+     << "</" << XML_TILE_ANNOTATIONS_GLOBAL_PORT_NODE_NAME << ">";
 }
 
 /********************************************************************
@@ -104,12 +98,12 @@ static void write_xml_tile_annotation_subtile_port_to_merge(
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t\t"
-     << "<"
-     << XML_TILE_ANNOTATIONS_MERGE_SUBTILE_PORTS_NODE_NAME
-     << " ";
+     << "<" << XML_TILE_ANNOTATIONS_MERGE_SUBTILE_PORTS_NODE_NAME << " ";
 
-  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_MERGE_SUBTILE_PORTS_ATTR_TILE, tile_name.c_str());
-  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_MERGE_SUBTILE_PORTS_ATTR_PORT, port_name.c_str());
+  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_MERGE_SUBTILE_PORTS_ATTR_TILE,
+                      tile_name.c_str());
+  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_MERGE_SUBTILE_PORTS_ATTR_PORT,
+                      port_name.c_str());
 
   fp << "/>";
 }
@@ -124,13 +118,17 @@ static void write_xml_tile_annotation_physical_equivalent_site(
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t\t"
-     << "<"
-     << XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_NODE_NAME
-     << " ";
+     << "<" << XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_NODE_NAME << " ";
 
-  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_TILE, tile_name.c_str());
-  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_SUBTILE, subtile_name.c_str());
-  write_xml_attribute(fp, XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_SITE, site_name.c_str());
+  write_xml_attribute(fp,
+                      XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_TILE,
+                      tile_name.c_str());
+  write_xml_attribute(
+    fp, XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_SUBTILE,
+    subtile_name.c_str());
+  write_xml_attribute(fp,
+                      XML_TILE_ANNOTATIONS_PHYSICAL_EQUIVALENT_SITE_ATTR_SITE,
+                      site_name.c_str());
 
   fp << "/>";
 }
@@ -148,9 +146,7 @@ void write_xml_tile_annotations(std::fstream& fp, const char* fname,
    * under the root node <openfpga_arch>
    */
   fp << "\t"
-     << "<"
-     << XML_TILE_ANNOTATIONS_NODE_NAME
-     << ">"
+     << "<" << XML_TILE_ANNOTATIONS_NODE_NAME << ">"
      << "\n";
 
   /* Write device model one by one */
@@ -167,14 +163,15 @@ void write_xml_tile_annotations(std::fstream& fp, const char* fname,
     }
   }
   for (auto tile_info : tile_annotation.physical_equivalent_sites()) {
-    write_xml_tile_annotation_physical_equivalent_site(fp, fname, tile_info.first, tile_info.second, tile_annotation.physical_equivalent_site(tile_info.first, tile_info.second));
+    write_xml_tile_annotation_physical_equivalent_site(
+      fp, fname, tile_info.first, tile_info.second,
+      tile_annotation.physical_equivalent_site(tile_info.first,
+                                               tile_info.second));
   }
 
   /* Write the root node for pb_type annotations */
   fp << "\t"
-     << "</"
-     << XML_TILE_ANNOTATIONS_NODE_NAME
-     << ">"
+     << "</" << XML_TILE_ANNOTATIONS_NODE_NAME << ">"
      << "\n";
 }
 
