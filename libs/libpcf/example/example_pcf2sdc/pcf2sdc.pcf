@@ -1,0 +1,4 @@
+set_io a TOP_2_IN[0]
+set_io b TOP_2_IN[2]
+set_io c TOP_0_OUT[0]
+set_io d TOP_0_OUT[2]
