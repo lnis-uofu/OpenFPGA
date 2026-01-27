@@ -26,6 +26,7 @@
 #include "read_xml_technology_library.h"
 #include "read_xml_tile_annotation.h"
 #include "read_xml_util.h"
+#include "tile_annotation_xml_constants.h"
 
 /********************************************************************
  * Top-level function to parse an XML file and load data to :

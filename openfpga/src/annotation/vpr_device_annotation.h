@@ -100,6 +100,9 @@ class VprDeviceAnnotation {
                                        const int& subtile_z) const;
   int physical_tile_z_to_start_pin_index(t_physical_tile_type_ptr physical_tile,
                                          const int& subtile_z) const;
+  t_logical_block_type_ptr physical_equivalent_site(
+    t_physical_tile_type_ptr physical_tile,
+    const std::string& sub_tile_name) const;
 
  public: /* Public mutators */
   void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
@@ -159,6 +162,9 @@ class VprDeviceAnnotation {
   void add_physical_tile_z_to_start_pin_index(
     t_physical_tile_type_ptr physical_tile, const int& subtile_z,
     const int& start_pin_index);
+  void set_subtile_physical_equivalent_site(
+    t_physical_tile_type_ptr physical_tile, const std::string& sub_tile_name,
+    t_logical_block_type_ptr phy_site);
 
  private: /* Internal data */
   /* Pair a regular pb_type to its physical pb_type */
@@ -272,6 +278,10 @@ class VprDeviceAnnotation {
    */
   std::map<t_physical_tile_type_ptr, std::map<int, int>>
     physical_tile_z_to_start_pin_indices_;
+  /* Physical equivalent sites */
+  std::map<t_physical_tile_type_ptr,
+           std::map<std::string, t_logical_block_type_ptr>>
+    physical_equivalent_sites_;
 };
 
 } /* End namespace openfpga*/

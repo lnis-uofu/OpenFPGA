@@ -549,7 +549,10 @@ void print_pnr_sdc_constrain_grid_timing(
     }
 
     for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
-      VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
+      t_logical_block_type_ptr lb_type =
+        device_annotation.physical_equivalent_site(&physical_tile,
+                                                   sub_tile.name);
+      VTR_ASSERT(lb_type != nullptr);
       t_pb_graph_node* pb_graph_head =
         sub_tile.equivalent_sites[0]->pb_graph_head;
       if (nullptr == pb_graph_head) {

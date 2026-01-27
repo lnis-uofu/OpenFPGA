@@ -978,7 +978,6 @@ static int build_top_module_global_net_for_given_grid_module(
    * net! */
   int curr_sub_tile_start_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
-    VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
     int grid_pin_start_index = physical_tile->num_pins;
     t_physical_tile_port physical_tile_port;
     physical_tile_port.num_pins = 0;

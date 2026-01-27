@@ -45,6 +45,17 @@ std::vector<std::string> TileAnnotation::tile_ports_to_merge(
   return result->second;
 }
 
+std::vector<std::pair<std::string, std::string>>
+TileAnnotation::physical_equivalent_sites() const {
+  std::vector<std::pair<std::string, std::string>> ret;
+  for (auto t_pair : phy_equ_site_maps_) {
+    for (auto st_pair : t_pair.second) {
+      ret.push_back(std::make_pair(t_pair.first, st_pair.first));
+    }
+  }
+  return ret;
+}
+
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
@@ -115,6 +126,29 @@ bool TileAnnotation::is_tile_port_to_merge(const std::string& tile_name,
   }
   return result->second.end() !=
          std::find(result->second.begin(), result->second.end(), port_name);
+}
+
+bool TileAnnotation::is_physical_equivalent_site_defined(
+  const std::string& tile_name, const std::string& subtile_name) const {
+  const auto& tile_result = phy_equ_site_maps_.find(tile_name);
+  if (tile_result == phy_equ_site_maps_.end()) {
+    return false;
+  }
+  const auto& stile_result = tile_result->second.find(subtile_name);
+  return stile_result != tile_result->second.end();
+}
+
+std::string TileAnnotation::physical_equivalent_site(
+  const std::string& tile_name, const std::string& subtile_name) const {
+  const auto& tile_result = phy_equ_site_maps_.find(tile_name);
+  if (tile_result == phy_equ_site_maps_.end()) {
+    return std::string();
+  }
+  const auto& stile_result = tile_result->second.find(subtile_name);
+  if (stile_result == tile_result->second.end()) {
+    return std::string();
+  }
+  return stile_result->second;
 }
 
 /************************************************************************
@@ -236,6 +270,25 @@ int TileAnnotation::add_merge_subtile_ports(const std::string& tile_name,
       return CMD_EXEC_FATAL_ERROR;
     }
   }
+  return CMD_EXEC_SUCCESS;
+}
+
+int TileAnnotation::set_physical_equivalent_site(
+  const std::string& tile_name, const std::string& subtile_name,
+  const std::string& site_name) {
+  auto t_result = phy_equ_site_maps_.find(tile_name);
+  if (t_result != phy_equ_site_maps_.end()) {
+    auto st_result = t_result->second.find(subtile_name);
+    if (st_result != t_result->second.end()) {
+      VTR_LOG_ERROR(
+        "Duplicated definition on physical equivalent site '%s' for the "
+        "subtile '%s' of tile '%s' (Was '%s')\n",
+        site_name.c_str(), subtile_name.c_str(), tile_name.c_str(),
+        st_result->second.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  phy_equ_site_maps_[tile_name][subtile_name] = site_name;
   return CMD_EXEC_SUCCESS;
 }
 
