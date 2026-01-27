@@ -8,6 +8,6 @@ set_delay_chain -pad pad_fpga_di[2] -delay 0.2ns
 # PCF parser will decode the mode bits
 set_watch_dog -pad pad_fpga_eo[2] -mode NORMAL
 # regular pin location assignments
-set_io a pad_fpga_di[2]
+set_io a pad_fpga_i[2]
 set_io b pad_fpga_i[17]
 set_io c pad_fpga_eo[2]
