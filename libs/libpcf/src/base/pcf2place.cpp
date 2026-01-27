@@ -199,6 +199,7 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
                                  BoundaryTiming& boundary_timing,
                                  const IoPinTable& io_pin_table,
                                  const std::string& clock_name,
+                                 const double& clock_period,
                                  const std::string sdc_file_path,
                                  const bool& verbose) {
   /*write sdc file*/
@@ -211,6 +212,10 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
     VTR_LOG_ERROR("Failed to open file %s \n", sdc_file_path.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
+
+  ofs << "create_clock -name " << clock_name << " -period " << clock_period
+      << " -waveform "
+      << "{0 " << clock_period / 2 << "} \n";
 
   for (auto io_constrain_id : pcf_data.io_constraints()) {
     auto ext_pin = pcf_data.io_pin(io_constrain_id);

@@ -261,8 +261,9 @@ int pcf2sdc_wrapper_template(const Command& cmd,
 
   VTR_LOG("Read the boundary timing file: %s.\n",
           boundary_timing_fname.c_str());
-  openfpga::BoundaryTiming boundary_timing =
-    openfpga::read_xml_boundary_timing(boundary_timing_fname.c_str());
+  openfpga::BoundaryTiming boundary_timing;
+  openfpga::read_xml_boundary_timing(boundary_timing_fname.c_str(),
+                                     boundary_timing);
 
   IoPinTable io_pin_table =
     read_csv_io_pin_table(pin_table_fname.c_str(), pin_table_dir_convention);
@@ -291,15 +292,26 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   if (clock_names.size() > 1) {
     VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");
     return 1;
+  } else {
+    VTR_LOG(
+      "Skip generating sdc file from pcf file as there is no clock in the "
+      "current design!\n");
+    std::ofstream ofs(sdc_fname);
+    if (!ofs.is_open()) {
+      VTR_LOG_ERROR("Failed to generate file %s \n", sdc_fname.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    return CMD_EXEC_SUCCESS;
   }
 
   std::string clock_name;
   /*force clock to be virtual_clock*/
   clock_name = "virtual_clock";
-
+  double clock_period = 10;
   /* Convert */
-  int status = pcf2sdc_from_boundary_timing(
-    pcf_data, boundary_timing, io_pin_table, clock_name, sdc_fname, true);
+  int status =
+    pcf2sdc_from_boundary_timing(pcf_data, boundary_timing, io_pin_table,
+                                 clock_name, clock_period, sdc_fname, true);
 
   if (status) {
     return status;

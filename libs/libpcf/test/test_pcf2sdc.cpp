@@ -35,8 +35,8 @@ int main(int argc, const char** argv) {
                    custom commands*/
 
   VTR_LOG("Read the boundary timing file: %s.\n", argv[2]);
-  openfpga::BoundaryTiming boundary_timing =
-    openfpga::read_xml_boundary_timing(argv[2]);
+  openfpga::BoundaryTiming boundary_timing;
+  openfpga::read_xml_boundary_timing(argv[2], boundary_timing);
 
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[3]);
   openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(
@@ -44,9 +44,10 @@ int main(int argc, const char** argv) {
 
   /* Convert */
   std::string clock_name = "virtual_clock";
-
-  int status = pcf2sdc_from_boundary_timing(
-    pcf_data, boundary_timing, io_pin_table, clock_name, argv[4], true);
+  double clock_period = 10;
+  int status =
+    pcf2sdc_from_boundary_timing(pcf_data, boundary_timing, io_pin_table,
+                                 clock_name, clock_period, argv[4], true);
 
   if (status != openfpga::CMD_EXEC_SUCCESS) {
     return status;

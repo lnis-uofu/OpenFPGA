@@ -34,6 +34,7 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
                                  BoundaryTiming& boundary_timing,
                                  const IoPinTable& io_pin_table,
                                  const std::string& clock_name,
+                                 const double& clock_period,
                                  const std::string sdc_file_path,
                                  const bool& verbose);
 } /* End namespace openfpga*/

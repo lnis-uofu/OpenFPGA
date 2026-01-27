@@ -44,38 +44,6 @@ static void read_xml_one_boundary_timing(pugi::xml_node& xml_timing,
                                              min_delay);
 }
 
-/********************************************************************
- * Parse XML codes about <io_coordinates> to an object of PinConstraints
- *******************************************************************/
-BoundaryTiming read_xml_boundary_timing(const char* fname) {
-  vtr::ScopedStartFinishTimer timer("Read Boundary Timing xml file");
-
-  BoundaryTiming boundary_timing;
-
-  /* Parse the file */
-  pugi::xml_document doc;
-  pugiutil::loc_data loc_data;
-
-  try {
-    loc_data = pugiutil::load_xml(doc, fname);
-
-    pugi::xml_node xml_root =
-      get_single_child(doc, "boundary_timing", loc_data);
-
-    for (pugi::xml_node xml_timing : xml_root.children()) {
-      /* Error out if the XML child has an invalid name! */
-      if (xml_timing.name() != std::string("pin")) {
-        bad_tag(xml_timing, loc_data, xml_root, {"pin"});
-      }
-      read_xml_one_boundary_timing(xml_timing, loc_data, boundary_timing);
-    }
-  } catch (pugiutil::XmlError& e) {
-    archfpga_throw(fname, e.line(), "%s", e.what());
-  }
-
-  return boundary_timing;
-}
-
 int read_xml_boundary_timing(const char* fname, BoundaryTiming& bdy_timing,
                              const bool& append, const bool& verbose) {
   /* Parse the file */
