@@ -202,6 +202,20 @@
       <port type="sram" prefix="mode" lib_name="MODE_I" size="4" mode_select="true" circuit_model_name="DFF" default_val="0"/>
       <port type="output" prefix="emode_o" lib_name="MODE_O" size="4" is_global="true" is_io="true"/>
     </circuit_model>
+    <circuit_model type="iopad" name="GPIN" prefix="GPIN" is_default="true" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
+      <design_technology type="cmos"/>
+      <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+      <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+      <port type="inout" prefix="PAD" lib_name="A" size="1" is_global="true" is_io="true" is_data_io="true"/>
+      <port type="output" prefix="inpad" lib_name="Y" size="1"/>
+    </circuit_model>
+    <circuit_model type="iopad" name="GPOUT" prefix="GPOUT" is_default="false" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
+      <design_technology type="cmos"/>
+      <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+      <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+      <port type="inout" prefix="PAD" lib_name="Y" size="1" is_global="true" is_io="true" is_data_io="true"/>
+      <port type="input" prefix="outpad" lib_name="A" size="1"/>
+    </circuit_model>
   </circuit_library>
   <configuration_protocol>
     <organization type="scan_chain" circuit_model_name="DFF" num_regions="1"/>
