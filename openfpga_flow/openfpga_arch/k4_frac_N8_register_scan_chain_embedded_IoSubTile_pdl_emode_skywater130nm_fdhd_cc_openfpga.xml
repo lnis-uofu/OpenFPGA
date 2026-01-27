@@ -225,9 +225,9 @@
   </direct_connection>
   <tile_annotations>
     <physical_equivalent_site tile="gp_inpad" subtile="gp_inpad" site="gp_inpad"/>
-    <physical_equivalent_site tile="gp_inpad_pdl" subtile="gp_inpad_pdl" site="gp_inpad_pdl"/>
+    <physical_equivalent_site tile="gp_inpad" subtile="gp_inpad_pdl" site="gp_inpad_pdl"/>
     <physical_equivalent_site tile="gp_outpad" subtile="gp_outpad" site="gp_outpad"/>
-    <physical_equivalent_site tile="gp_outpad_emode" subtile="gp_outpad_emode" site="gp_outpad_emode"/>
+    <physical_equivalent_site tile="gp_outpad" subtile="gp_outpad_emode" site="gp_outpad_emode"/>
   </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
