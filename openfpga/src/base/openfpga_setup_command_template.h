@@ -657,9 +657,13 @@ ShellCommandId add_pcf2sdc_command_template(
 
   /* Add an option '--input_sdc'*/
   CommandOptionId opt_input_sdc_file = shell_cmd.add_option(
-    "input_sdc", true, "file path to the input sdc file (.sdc). The generated SDC content will be appended to this file. If not specified, a new file will be created and the SDC will be written to the output_sdc path.");
-    
-    /* Add an option '--output_sdc'*/
+    "input_sdc", false,
+    "file path to the input sdc file (.sdc). The generated SDC content will be "
+    "appended to this file. If not specified, a new file will be created and "
+    "the SDC will be written to the output_sdc path.");
+  shell_cmd.set_option_require_value(opt_input_sdc_file, openfpga::OPT_STRING);
+
+  /* Add an option '--output_sdc'*/
   CommandOptionId opt_output_sdc_file = shell_cmd.add_option(
     "output_sdc", true, "file path to the generated sdc file (.sdc).");
   shell_cmd.set_option_require_value(opt_output_sdc_file, openfpga::OPT_STRING);

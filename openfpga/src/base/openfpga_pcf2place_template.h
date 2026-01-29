@@ -289,6 +289,29 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     VTR_LOG(
       "Skip generating sdc file from pcf file as there is no clock in the "
       "current design!\n");
+    /*generated an empty sdc file or append to input_sdc*/
+    if (!input_sdc.empty()) {
+      std::ifstream ifs(input_sdc);
+      if (!ifs.is_open()) {
+        VTR_LOG_ERROR("Failed to open input SDC file %s\n", input_sdc.c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      {
+        std::ofstream ofs(sdc_fname);
+        if (!ofs.is_open()) {
+          VTR_LOG_ERROR("Failed to generate file %s\n", sdc_fname.c_str());
+          return CMD_EXEC_FATAL_ERROR;
+        }
+        ofs << ifs.rdbuf();
+      }
+    }
+    std::ofstream ofs(sdc_fname, std::ios::app);
+    if (!ofs.is_open()) {
+      VTR_LOG_ERROR("Failed to generate file %s \n", sdc_fname.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    return CMD_EXEC_SUCCESS;
   }
 
   if (!input_sdc.empty()) {
@@ -313,7 +336,7 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     VTR_LOG_ERROR("Failed to open sdc file %s \n", sdc_fname.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
-
+  ofs << "\n";
   std::string clock_name;
   /*force clock to be virtual_clock*/
   clock_name = "virtual_clock";
