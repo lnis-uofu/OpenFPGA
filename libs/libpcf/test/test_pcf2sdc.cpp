@@ -9,15 +9,12 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 /* Headers from fabric key */
-#include "atom_netlist_utils.h"
+
 #include "command_exit_codes.h"
 #include "io_pin_table.h"
 #include "pcf2place.h"
 #include "pcf_reader.h"
-#include "read_blif.h"
-#include "read_circuit.h"
 #include "read_csv_io_pin_table.h"
-#include "read_xml_arch_file.h"
 #include "write_xml_boundary_timing.h"
 int main(int argc, const char** argv) {
   /* Ensure we have the following arguments:
