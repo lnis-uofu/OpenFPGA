@@ -182,7 +182,7 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     BasicPort int_pin = io_pin_table.internal_pin(int_pin_ids[0]);
 
     openfpga::PbParser pb_parser(pb_type);
-    for (auto i = 0; i < modes.size(); i++) {
+    for (size_t i = 0; i < modes.size(); i++) {
       std::vector<char> modes_vec(modes[i].begin(), modes[i].end());
       int offset = offsets[i];
       bitstream_setting.add_bitstream_pcf_mode_setting(
@@ -206,6 +206,8 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
   const std::string SET_INPUT_DELAY = "set_input_delay";
   const std::string SET_OUTPUT_DELAY = "set_output_delay";
 
+  VTR_LOGV(verbose, "Constaint clock '%s' to period %g [ns] \n",
+           clock_name.c_str(), clock_period);
   ofs << "create_clock -name " << clock_name << " -period " << clock_period
       << " -waveform "
       << "{0 " << clock_period / 2 << "} \n";
