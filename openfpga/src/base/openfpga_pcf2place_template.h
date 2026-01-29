@@ -209,6 +209,7 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   /* todo: create a factory to produce this in the future*/
   CommandOptionId opt_pcf = cmd.option("pcf");
   CommandOptionId opt_blif = cmd.option("blif");
+  CommandOptionId opt_ckt_fmt = cmd.option("circuit_format");
   CommandOptionId opt_pin_table = cmd.option("pin_table");
   CommandOptionId opt_input_sdc_file = cmd.option("input_sdc");
   CommandOptionId opt_sdc_file = cmd.option("output_sdc");
@@ -222,6 +223,10 @@ int pcf2sdc_wrapper_template(const Command& cmd,
 
   std::string pcf_fname = cmd_context.option_value(cmd, opt_pcf);
   std::string blif_fname = cmd_context.option_value(cmd, opt_blif);
+  std::string ckt_fmt = "auto";
+  if (cmd_context.option_enable(cmd, opt_ckt_fmt)) {
+    ckt_fmt = cmd_context.option_value(cmd, opt_ckt_fmt);
+  }
   std::string arch_fname = cmd_context.option_value(cmd, opt_arch_file);
   std::string sdc_fname = cmd_context.option_value(cmd, opt_sdc_file);
   std::string input_sdc = "";
@@ -280,11 +285,11 @@ int pcf2sdc_wrapper_template(const Command& cmd,
 
   /*get clk info from blif or eblfi file*/
   std::vector<std::string> clock_names =
-    read_blif_clock_info(arch_fname.c_str(), blif_fname.c_str());
+    read_blif_clock_info(arch_fname.c_str(), blif_fname.c_str(), ckt_fmt.c_str());
 
   if (clock_names.size() > 1) {
     VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");
-    return 1;
+    return CMD_EXEC_FATAL_ERROR;
   } else {
     VTR_LOG(
       "Skip generating sdc file from pcf file as there is no clock in the "
