@@ -287,10 +287,7 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   std::vector<std::string> clock_names = read_blif_clock_info(
     arch_fname.c_str(), blif_fname.c_str(), ckt_fmt.c_str());
 
-  if (clock_names.size() > 1) {
-    VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");
-    return CMD_EXEC_FATAL_ERROR;
-  } else {
+  if (clock_names.size() == 0) {
     VTR_LOG(
       "Skip generating sdc file from pcf file as there is no clock in the "
       "current design!\n");
@@ -343,8 +340,16 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   }
   ofs << "\n";
   std::string clock_name;
+  clock_name = clock_names[0];
+  if (clock_names.size() > 1) {
+    if (!cmd_context.option_enable(cmd, opt_reduce_error_to_warning)) {
+      VTR_LOG_ERROR("Multiple (%lu) clocks are detected in the design, which is not fully support yet. Will consider a virtual clock for all the inputs and outputs, resulting in timing loss\n", clock_names.size());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    VTR_LOG_WARN("Multiple (%lu) clocks are detected in the design, which is not fully support yet. Will consider a virtual clock for all the inputs and outputs, resulting in timing loss\n", clock_names.size());
+    clock_name = "virtual_clock";
+  } 
   /*force clock to be virtual_clock*/
-  clock_name = "virtual_clock";
   double clock_period = 10;
   /* Convert */
   int status =
