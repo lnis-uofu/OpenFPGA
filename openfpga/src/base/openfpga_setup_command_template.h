@@ -655,10 +655,18 @@ ShellCommandId add_pcf2sdc_command_template(
     "pin_table", true, "file path to the pin table (.csv)");
   shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
 
-  /* Add an option '--sdc_file'*/
-  CommandOptionId opt_sdc_file = shell_cmd.add_option(
-    "sdc_file", true, "file path to the generated sdc file (.sdc)");
-  shell_cmd.set_option_require_value(opt_sdc_file, openfpga::OPT_STRING);
+  /* Add an option '--input_sdc'*/
+  CommandOptionId opt_input_sdc_file = shell_cmd.add_option(
+    "input_sdc", false,
+    "file path to the input sdc file (.sdc). The generated SDC content will be "
+    "appended to this file. If not specified, a new file will be created and "
+    "the SDC will be written to the output_sdc path.");
+  shell_cmd.set_option_require_value(opt_input_sdc_file, openfpga::OPT_STRING);
+
+  /* Add an option '--output_sdc'*/
+  CommandOptionId opt_output_sdc_file = shell_cmd.add_option(
+    "output_sdc", true, "file path to the generated sdc file (.sdc).");
+  shell_cmd.set_option_require_value(opt_output_sdc_file, openfpga::OPT_STRING);
 
   /* Add an option '--vpr_arch_file'*/
   CommandOptionId opt_vpr_arch_file = shell_cmd.add_option(
