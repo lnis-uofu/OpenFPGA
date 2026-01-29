@@ -1,0 +1,19 @@
+# This is an artificial microbenchmark
+# which is designed to validate the support
+# on using bitstream information from the .param 
+# attribute of hard macro of LUTs
+#
+.model and2
+.inputs a b
+.outputs c
+
+.subckt adder_lut4 in[1]=a in[0]=b lut4_out[0]=c
+.param LUT 1000100010001000
+
+.end
+
+.model adder_lut4
+.inputs in[3] in[2] in[1] in[0]
+.outputs lut2_out[1] lut2_out[0] lut4_out[0]
+.blackbox
+.end

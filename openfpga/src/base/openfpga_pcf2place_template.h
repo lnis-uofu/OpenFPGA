@@ -13,11 +13,14 @@
 #include "pcf2place.h"
 #include "pcf_reader.h"
 #include "read_blif.h"
+#include "read_blif_clock_info.h"
 #include "read_csv_io_pin_table.h"
+#include "read_interchange_netlist.h"
 #include "read_xml_arch_file.h"
 #include "read_xml_boundary_timing.h"
 #include "read_xml_io_location_map.h"
 #include "vtr_log.h"
+#include "vtr_path.h"
 #include "vtr_time.h"
 /* begin namespace openfpga */
 namespace openfpga {
@@ -207,7 +210,8 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   CommandOptionId opt_pcf = cmd.option("pcf");
   CommandOptionId opt_blif = cmd.option("blif");
   CommandOptionId opt_pin_table = cmd.option("pin_table");
-  CommandOptionId opt_sdc_file = cmd.option("sdc_file");
+  CommandOptionId opt_input_sdc_file = cmd.option("input_sdc");
+  CommandOptionId opt_sdc_file = cmd.option("output_sdc");
   CommandOptionId opt_boundary_timing_file = cmd.option("boundary_timing");
   CommandOptionId opt_arch_file = cmd.option("vpr_arch_file");
   CommandOptionId opt_pin_table_dir_convention =
@@ -220,6 +224,10 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   std::string blif_fname = cmd_context.option_value(cmd, opt_blif);
   std::string arch_fname = cmd_context.option_value(cmd, opt_arch_file);
   std::string sdc_fname = cmd_context.option_value(cmd, opt_sdc_file);
+  std::string input_sdc = "";
+  if (cmd_context.option_enable(cmd, opt_input_sdc_file)) {
+    input_sdc = cmd_context.option_value(cmd, opt_input_sdc_file);
+  }
   std::string boundary_timing_fname =
     cmd_context.option_value(cmd, opt_boundary_timing_file);
   std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
@@ -270,25 +278,10 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n",
           pin_table_fname.c_str());
 
-  t_arch* arch = new t_arch;
-  std::vector<t_physical_tile_type> physical_tile_types;
-  std::vector<t_logical_block_type> logical_block_types;
-  xml_read_arch(arch_fname.c_str(), false, arch, physical_tile_types,
-                logical_block_types);
+  /*get clk info from blif or eblfi file*/
+  std::vector<std::string> clock_names =
+    read_blif_clock_info(arch_fname.c_str(), blif_fname.c_str());
 
-  // read netlist and set up atom netlist
-  const LogicalModels& logical_models = arch->models;
-  AtomNetlist atom_ntlist =
-    read_blif(e_circuit_format::BLIF, blif_fname.c_str(), logical_models);
-
-  std::vector<std::string> clock_names;  // Assume just one clock
-  std::set<AtomPinId> netlist_clock_drivers =
-    find_netlist_logical_clock_drivers(atom_ntlist, logical_models);
-  for (auto clock_driver : netlist_clock_drivers) {
-    AtomNetId net_id = atom_ntlist.pin_net(clock_driver);
-    VTR_LOG("  Netlist Clock is '%s' ", atom_ntlist.net_name(net_id).c_str());
-    clock_names.push_back(atom_ntlist.net_name(net_id).c_str());
-  }
   if (clock_names.size() > 1) {
     VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");
     return 1;
@@ -296,7 +289,24 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     VTR_LOG(
       "Skip generating sdc file from pcf file as there is no clock in the "
       "current design!\n");
-    std::ofstream ofs(sdc_fname);
+    /*generated an empty sdc file or append to input_sdc*/
+    if (!input_sdc.empty()) {
+      std::ifstream ifs(input_sdc);
+      if (!ifs.is_open()) {
+        VTR_LOG_ERROR("Failed to open input SDC file %s\n", input_sdc.c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      {
+        std::ofstream ofs(sdc_fname);
+        if (!ofs.is_open()) {
+          VTR_LOG_ERROR("Failed to generate file %s\n", sdc_fname.c_str());
+          return CMD_EXEC_FATAL_ERROR;
+        }
+        ofs << ifs.rdbuf();
+      }
+    }
+    std::ofstream ofs(sdc_fname, std::ios::app);
     if (!ofs.is_open()) {
       VTR_LOG_ERROR("Failed to generate file %s \n", sdc_fname.c_str());
       return CMD_EXEC_FATAL_ERROR;
@@ -304,6 +314,29 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     return CMD_EXEC_SUCCESS;
   }
 
+  if (!input_sdc.empty()) {
+    std::ifstream ifs(input_sdc);
+    if (!ifs.is_open()) {
+      VTR_LOG_ERROR("Failed to open input SDC file %s\n", input_sdc.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    {
+      std::ofstream ofs(sdc_fname);
+      if (!ofs.is_open()) {
+        VTR_LOG_ERROR("Failed to generate file %s\n", sdc_fname.c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      ofs << ifs.rdbuf();
+    }
+  }
+
+  std::ofstream ofs(sdc_fname, std::ios::app);
+  if (!ofs.is_open()) {
+    VTR_LOG_ERROR("Failed to open sdc file %s \n", sdc_fname.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  ofs << "\n";
   std::string clock_name;
   /*force clock to be virtual_clock*/
   clock_name = "virtual_clock";
@@ -311,7 +344,7 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   /* Convert */
   int status =
     pcf2sdc_from_boundary_timing(pcf_data, boundary_timing, io_pin_table,
-                                 clock_name, clock_period, sdc_fname, true);
+                                 clock_name, clock_period, ofs, true);
 
   if (status) {
     return status;

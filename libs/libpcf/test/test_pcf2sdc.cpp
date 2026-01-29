@@ -9,15 +9,12 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 /* Headers from fabric key */
-#include "atom_netlist_utils.h"
+
 #include "command_exit_codes.h"
 #include "io_pin_table.h"
 #include "pcf2place.h"
 #include "pcf_reader.h"
-#include "read_blif.h"
-#include "read_circuit.h"
 #include "read_csv_io_pin_table.h"
-#include "read_xml_arch_file.h"
 #include "write_xml_boundary_timing.h"
 int main(int argc, const char** argv) {
   /* Ensure we have the following arguments:
@@ -45,9 +42,15 @@ int main(int argc, const char** argv) {
   /* Convert */
   std::string clock_name = "virtual_clock";
   double clock_period = 10;
+  std::ofstream ofs(argv[4]);
+  if (!ofs.is_open()) {
+    VTR_LOG_ERROR("Failed to open sdc file %s \n", argv[4]);
+    return 1;
+  }
+
   int status =
     pcf2sdc_from_boundary_timing(pcf_data, boundary_timing, io_pin_table,
-                                 clock_name, clock_period, argv[4], true);
+                                 clock_name, clock_period, ofs, true);
 
   if (status != openfpga::CMD_EXEC_SUCCESS) {
     return status;
