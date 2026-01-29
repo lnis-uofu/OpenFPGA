@@ -13,11 +13,14 @@
 #include "pcf2place.h"
 #include "pcf_reader.h"
 #include "read_blif.h"
+#include "read_blif_clock_info.h"
 #include "read_csv_io_pin_table.h"
+#include "read_interchange_netlist.h"
 #include "read_xml_arch_file.h"
 #include "read_xml_boundary_timing.h"
 #include "read_xml_io_location_map.h"
 #include "vtr_log.h"
+#include "vtr_path.h"
 #include "vtr_time.h"
 /* begin namespace openfpga */
 namespace openfpga {
@@ -270,25 +273,10 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n",
           pin_table_fname.c_str());
 
-  t_arch* arch = new t_arch;
-  std::vector<t_physical_tile_type> physical_tile_types;
-  std::vector<t_logical_block_type> logical_block_types;
-  xml_read_arch(arch_fname.c_str(), false, arch, physical_tile_types,
-                logical_block_types);
+  /*get clk info from blif or eblfi file*/
+  std::vector<std::string> clock_names =
+    read_blif_clock_info(arch_fname.c_str(), blif_fname.c_str());
 
-  // read netlist and set up atom netlist
-  const LogicalModels& logical_models = arch->models;
-  AtomNetlist atom_ntlist =
-    read_blif(e_circuit_format::BLIF, blif_fname.c_str(), logical_models);
-
-  std::vector<std::string> clock_names;  // Assume just one clock
-  std::set<AtomPinId> netlist_clock_drivers =
-    find_netlist_logical_clock_drivers(atom_ntlist, logical_models);
-  for (auto clock_driver : netlist_clock_drivers) {
-    AtomNetId net_id = atom_ntlist.pin_net(clock_driver);
-    VTR_LOG("  Netlist Clock is '%s' ", atom_ntlist.net_name(net_id).c_str());
-    clock_names.push_back(atom_ntlist.net_name(net_id).c_str());
-  }
   if (clock_names.size() > 1) {
     VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");
     return 1;
@@ -296,12 +284,12 @@ int pcf2sdc_wrapper_template(const Command& cmd,
     VTR_LOG(
       "Skip generating sdc file from pcf file as there is no clock in the "
       "current design!\n");
-    std::ofstream ofs(sdc_fname);
-    if (!ofs.is_open()) {
-      VTR_LOG_ERROR("Failed to generate file %s \n", sdc_fname.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    return CMD_EXEC_SUCCESS;
+  }
+
+  std::ofstream ofs(sdc_fname);
+  if (!ofs.is_open()) {
+    VTR_LOG_ERROR("Failed to generate file %s \n", sdc_fname.c_str());
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   std::string clock_name;
