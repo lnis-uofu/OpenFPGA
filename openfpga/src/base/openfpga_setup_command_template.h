@@ -646,7 +646,9 @@ ShellCommandId add_pcf2sdc_command_template(
 
   /* Add an option '--circuit_format'*/
   CommandOptionId opt_ckt_fmt = shell_cmd.add_option(
-    "circuit_format", false, "circuit format of the blif file. Can be [ auto | blif | eblif ]. By default, it is auto which will detect based on the file extension");
+    "circuit_format", false,
+    "circuit format of the blif file. Can be [ auto | blif | eblif ]. By "
+    "default, it is auto which will detect based on the file extension");
   shell_cmd.set_option_require_value(opt_ckt_fmt, openfpga::OPT_STRING);
 
   /* Add an option '--boundary_timing'*/

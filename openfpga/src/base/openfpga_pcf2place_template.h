@@ -284,8 +284,8 @@ int pcf2sdc_wrapper_template(const Command& cmd,
           pin_table_fname.c_str());
 
   /*get clk info from blif or eblfi file*/
-  std::vector<std::string> clock_names =
-    read_blif_clock_info(arch_fname.c_str(), blif_fname.c_str(), ckt_fmt.c_str());
+  std::vector<std::string> clock_names = read_blif_clock_info(
+    arch_fname.c_str(), blif_fname.c_str(), ckt_fmt.c_str());
 
   if (clock_names.size() > 1) {
     VTR_LOG_ERROR("Only single clock supported. Please check your design! \n");

@@ -7,8 +7,8 @@
 #include <iostream>
 
 #include "read_blif_clock_info.h"
-#include "vtr_log.h"
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 int main(int argc, const char** argv) {
   /* Ensure we have only one or two argument */
@@ -19,7 +19,8 @@ int main(int argc, const char** argv) {
    * 2. Input - blif file
    * 3. Output - All clocks in the blif
    */
-  std::vector<std::string> clock_names = read_blif_clock_info(argv[1], argv[2], argv[3]);
+  std::vector<std::string> clock_names =
+    read_blif_clock_info(argv[1], argv[2], argv[3]);
   VTR_LOG("clock size is: %lu \n", clock_names.size());
   for (auto i : clock_names) {
     VTR_LOG("clock name: %s \n", i.c_str());

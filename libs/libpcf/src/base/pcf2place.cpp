@@ -206,7 +206,8 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
   const std::string SET_INPUT_DELAY = "set_input_delay";
   const std::string SET_OUTPUT_DELAY = "set_output_delay";
 
-  VTR_LOGV(verbose, "Constaint clock '%s' to period %g [ns] \n", clock_name.c_str(), clock_period);
+  VTR_LOGV(verbose, "Constaint clock '%s' to period %g [ns] \n",
+           clock_name.c_str(), clock_period);
   ofs << "create_clock -name " << clock_name << " -period " << clock_period
       << " -waveform "
       << "{0 " << clock_period / 2 << "} \n";

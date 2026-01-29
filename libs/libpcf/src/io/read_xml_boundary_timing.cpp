@@ -52,7 +52,8 @@ int read_xml_boundary_timing(const char* fname, BoundaryTiming& bdy_timing,
   pugiutil::loc_data loc_data;
 
   if (!append) {
-    VTR_LOGV(verbose, "Start with a clean boundary timing as required by user\n");
+    VTR_LOGV(verbose,
+             "Start with a clean boundary timing as required by user\n");
     bdy_timing.clear();
   }
 

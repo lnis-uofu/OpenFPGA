@@ -1,7 +1,9 @@
 #include "read_blif_clock_info.h"
+
 #include "vtr_assert.h"
 #include "vtr_log.h"
 /* Headers from fabric key */
+#include "arch_util.h"
 #include "atom_netlist_utils.h"
 #include "command_exit_codes.h"
 #include "read_blif.h"
@@ -9,7 +11,6 @@
 #include "read_interchange_netlist.h"
 #include "read_xml_arch_file.h"
 #include "vtr_path.h"
-#include "arch_util.h"
 
 std::vector<std::string> read_blif_clock_info(const char* arch_fname,
                                               const char* blif_fname,
@@ -33,10 +34,11 @@ std::vector<std::string> read_blif_clock_info(const char* arch_fname,
     } else if (name_ext[1] == ".eblif") {
       circuit_format = e_circuit_format::EBLIF;
     } else {
-      VPR_FATAL_ERROR(VPR_ERROR_ATOM_NETLIST,
-                      "Failed to auto-determine file format for '%s' expected .blif "
-                      "or .eblif extension \n",
-                      blif_fname);
+      VPR_FATAL_ERROR(
+        VPR_ERROR_ATOM_NETLIST,
+        "Failed to auto-determine file format for '%s' expected .blif "
+        "or .eblif extension \n",
+        blif_fname);
     }
   } else if (blif_ffmt == std::string("blif")) {
     circuit_format = e_circuit_format::BLIF;
@@ -44,9 +46,10 @@ std::vector<std::string> read_blif_clock_info(const char* arch_fname,
     circuit_format = e_circuit_format::EBLIF;
   } else {
     VPR_FATAL_ERROR(VPR_ERROR_ATOM_NETLIST,
-                    "Unknown circuit format '%s' specified by users. Expected [ auto | blif | eblif ]\n",
+                    "Unknown circuit format '%s' specified by users. Expected "
+                    "[ auto | blif | eblif ]\n",
                     blif_ffmt);
-  } 
+  }
 
   AtomNetlist atom_ntlist;
   switch (circuit_format) {
