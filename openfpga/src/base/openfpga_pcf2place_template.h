@@ -210,7 +210,8 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   CommandOptionId opt_pcf = cmd.option("pcf");
   CommandOptionId opt_blif = cmd.option("blif");
   CommandOptionId opt_pin_table = cmd.option("pin_table");
-  CommandOptionId opt_sdc_file = cmd.option("sdc_file");
+  CommandOptionId opt_input_sdc_file = cmd.option("input_sdc");
+  CommandOptionId opt_sdc_file = cmd.option("output_sdc");
   CommandOptionId opt_boundary_timing_file = cmd.option("boundary_timing");
   CommandOptionId opt_arch_file = cmd.option("vpr_arch_file");
   CommandOptionId opt_pin_table_dir_convention =
@@ -223,6 +224,10 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   std::string blif_fname = cmd_context.option_value(cmd, opt_blif);
   std::string arch_fname = cmd_context.option_value(cmd, opt_arch_file);
   std::string sdc_fname = cmd_context.option_value(cmd, opt_sdc_file);
+  std::string input_sdc = "";
+  if (cmd_context.option_enable(cmd, opt_input_sdc_file)) {
+    input_sdc = cmd_context.option_value(cmd, opt_input_sdc_file);
+  }
   std::string boundary_timing_fname =
     cmd_context.option_value(cmd, opt_boundary_timing_file);
   std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
@@ -286,9 +291,26 @@ int pcf2sdc_wrapper_template(const Command& cmd,
       "current design!\n");
   }
 
-  std::ofstream ofs(sdc_fname);
+  if (!input_sdc.empty()) {
+    std::ifstream ifs(input_sdc);
+    if (!ifs.is_open()) {
+      VTR_LOG_ERROR("Failed to open input SDC file %s\n", input_sdc.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    {
+      std::ofstream ofs(sdc_fname);
+      if (!ofs.is_open()) {
+        VTR_LOG_ERROR("Failed to generate file %s\n", sdc_fname.c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      ofs << ifs.rdbuf();
+    }
+  }
+
+  std::ofstream ofs(sdc_fname, std::ios::app);
   if (!ofs.is_open()) {
-    VTR_LOG_ERROR("Failed to generate file %s \n", sdc_fname.c_str());
+    VTR_LOG_ERROR("Failed to open sdc file %s \n", sdc_fname.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 
@@ -299,7 +321,7 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   /* Convert */
   int status =
     pcf2sdc_from_boundary_timing(pcf_data, boundary_timing, io_pin_table,
-                                 clock_name, clock_period, sdc_fname, true);
+                                 clock_name, clock_period, ofs, true);
 
   if (status) {
     return status;
