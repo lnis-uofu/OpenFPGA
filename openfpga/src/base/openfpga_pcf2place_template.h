@@ -343,12 +343,20 @@ int pcf2sdc_wrapper_template(const Command& cmd,
   clock_name = clock_names[0];
   if (clock_names.size() > 1) {
     if (!cmd_context.option_enable(cmd, opt_reduce_error_to_warning)) {
-      VTR_LOG_ERROR("Multiple (%lu) clocks are detected in the design, which is not fully support yet. Will consider a virtual clock for all the inputs and outputs, resulting in timing loss\n", clock_names.size());
+      VTR_LOG_ERROR(
+        "Multiple (%lu) clocks are detected in the design, which is not fully "
+        "support yet. Will consider a virtual clock for all the inputs and "
+        "outputs, resulting in timing loss\n",
+        clock_names.size());
       return CMD_EXEC_FATAL_ERROR;
     }
-    VTR_LOG_WARN("Multiple (%lu) clocks are detected in the design, which is not fully support yet. Will consider a virtual clock for all the inputs and outputs, resulting in timing loss\n", clock_names.size());
+    VTR_LOG_WARN(
+      "Multiple (%lu) clocks are detected in the design, which is not fully "
+      "support yet. Will consider a virtual clock for all the inputs and "
+      "outputs, resulting in timing loss\n",
+      clock_names.size());
     clock_name = "virtual_clock";
-  } 
+  }
   /*force clock to be virtual_clock*/
   double clock_period = 10;
   /* Convert */
