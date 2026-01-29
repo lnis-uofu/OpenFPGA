@@ -9,7 +9,7 @@
 #include "read_interchange_netlist.h"
 #include "read_xml_arch_file.h"
 #include "vtr_path.h"
-#include "arch_utils.h"
+#include "arch_util.h"
 
 std::vector<std::string> read_blif_clock_info(const char* arch_fname,
                                               const char* blif_fname,
@@ -55,7 +55,7 @@ std::vector<std::string> read_blif_clock_info(const char* arch_fname,
       atom_ntlist = read_blif(circuit_format, blif_fname, logical_models);
       break;
     case e_circuit_format::FPGA_INTERCHANGE:
-      atom_ntlist = read_interchange_netlist(blif_fname, &arch);
+      atom_ntlist = read_interchange_netlist(blif_fname, arch);
       break;
     default:
       VPR_FATAL_ERROR(VPR_ERROR_ATOM_NETLIST,

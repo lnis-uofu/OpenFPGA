@@ -108,6 +108,13 @@ PinConstraintId BoundaryTiming::create_pin_boundary_timing(
   return pin_constraint_id;
 }
 
+void BoundaryTiming::clear() {
+  pin_constraint_ids_.clear();
+  pin_constraint_pins_.clear();
+  pin_constraint_max_delay_.clear();
+  pin_constraint_min_delay_.clear();
+}
+
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/

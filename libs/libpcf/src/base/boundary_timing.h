@@ -70,6 +70,8 @@ class BoundaryTiming {
   PinConstraintId create_pin_boundary_timing(const openfpga::BasicPort& pin,
                                              const std::string& max_delay,
                                              const std::string min_delay);
+  /* Remove all the content */
+  void clear();
 
  public: /* Public invalidators/validators */
   /* Show if the pin constraint id is a valid for data queries */

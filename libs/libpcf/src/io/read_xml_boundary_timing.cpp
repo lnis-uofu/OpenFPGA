@@ -46,9 +46,15 @@ static void read_xml_one_boundary_timing(pugi::xml_node& xml_timing,
 
 int read_xml_boundary_timing(const char* fname, BoundaryTiming& bdy_timing,
                              const bool& append, const bool& verbose) {
+  vtr::ScopedStartFinishTimer timer("Read boundary timing file");
   /* Parse the file */
   pugi::xml_document doc;
   pugiutil::loc_data loc_data;
+
+  if (!append) {
+    VTR_LOGV(verbose, "Start with a clean boundary timing as required by user\n");
+    bdy_timing.clear();
+  }
 
   try {
     loc_data = pugiutil::load_xml(doc, fname);
