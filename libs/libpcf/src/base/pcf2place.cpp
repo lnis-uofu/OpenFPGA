@@ -198,7 +198,7 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
 int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
                                  BoundaryTiming& boundary_timing,
                                  const IoPinTable& io_pin_table,
-                                 const std::vector<std::string>& clock_name,
+                                 const std::vector<std::string>& clock_names,
                                  const double& clock_period, std::ostream& ofs,
                                  const bool& verbose) {
   /* No pcf, no boundary timing compensation */
@@ -206,7 +206,7 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
   for (auto io_constrain_id : pcf_data.io_constraints()) {
     auto ext_pin = pcf_data.io_pin(io_constrain_id);
     if (boundary_timing.pin_delay_constrained(ext_pin)) {
-      cnt_pct++;
+      cnt_pcf++;
     }
   }
   if (cnt_pcf == 0) {

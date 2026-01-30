@@ -50,7 +50,7 @@ int main(int argc, const char** argv) {
 
   int status =
     pcf2sdc_from_boundary_timing(pcf_data, boundary_timing, io_pin_table,
-                                 clock_name, clock_period, ofs, true);
+                                 {clock_name}, clock_period, ofs, true);
 
   if (status != openfpga::CMD_EXEC_SUCCESS) {
     return status;
