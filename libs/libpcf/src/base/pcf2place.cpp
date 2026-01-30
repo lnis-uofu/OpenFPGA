@@ -212,7 +212,8 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
   if (cnt_pcf == 0) {
     return CMD_EXEC_SUCCESS;
   }
-  /* Always use virtual clock now. If we can back-trace signals per clock, then we can assign boundary timing to assoicated clock */
+  /* Always use virtual clock now. If we can back-trace signals per clock, then
+   * we can assign boundary timing to assoicated clock */
   std::string vclk_name = "virtual_clock";
   std::string io_clk_name = vclk_name;
   VTR_ASSERT(clock_names.size() == 1);
@@ -220,11 +221,9 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
   VTR_LOGV(verbose, "Constrain clock '%s' to period %g [ns] \n",
            vclk_name.c_str(), clock_period);
   io_clk_name = clock_names[0];
-  ofs << "create_clock " << " -period " << clock_period
-      << " -waveform "
-      << "{0 " << clock_period / 2 << "} "
-      << io_clk_name
-      << "\n";
+  ofs << "create_clock "
+      << " -period " << clock_period << " -waveform "
+      << "{0 " << clock_period / 2 << "} " << io_clk_name << "\n";
 
   /*write sdc file*/
   int num_err = 0;
