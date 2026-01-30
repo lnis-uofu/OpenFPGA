@@ -70,6 +70,7 @@ echo -e "Test specify mode bits from pcf command"
 run-task fpga_verilog/io/io_pdl_emode $@
 run-task fpga_verilog/io/io_pdl_emode_fix_pins $@
 run-task fpga_verilog/io/io_boundary_timing $@
+run-task fpga_verilog/io/io_boundary_timing_dummy $@
 run-task fpga_verilog/io/io_equ_site $@
 
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
