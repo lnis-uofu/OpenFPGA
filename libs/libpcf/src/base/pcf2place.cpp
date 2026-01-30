@@ -198,19 +198,49 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
 int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
                                  BoundaryTiming& boundary_timing,
                                  const IoPinTable& io_pin_table,
-                                 const std::string& clock_name,
+                                 const std::vector<std::string>& clock_name,
                                  const double& clock_period, std::ostream& ofs,
                                  const bool& verbose) {
+  /* No pcf, no boundary timing compensation */
+  size_t cnt_pcf = 0;
+  for (auto io_constrain_id : pcf_data.io_constraints()) {
+    auto ext_pin = pcf_data.io_pin(io_constrain_id);
+    if (boundary_timing.pin_delay_constrained(ext_pin)) {
+      cnt_pct++;
+    }
+  }
+  if (cnt_pcf == 0) {
+    return CMD_EXEC_SUCCESS;
+  }
+  /* Always use virtual clock now. If we can back-trace signals per clock, then we can assign boundary timing to assoicated clock */
+  std::string vclk_name = "virtual_clock";
+  std::string io_clk_name = vclk_name;
+  if (clock_names.empty()) {
+    /* Set a virtual clock to constrain all the ports */
+    VTR_LOGV(verbose, "Constrain virtual clock '%s' to period %g [ns] \n",
+             vclk_name.c_str(), clock_period);
+    ofs << "create_clock -period " << clock_period << "*\n";
+    ofs << "create_clock -name " << vclk_name << " -period " << clock_period
+        << " -waveform "
+        << "{0 " << clock_period / 2 << "} \n";
+    io_clk_name = vclk_name;
+  } else {
+    VTR_ASSERT(clock_names.size() == 1);
+    /* Constrain all the inputs and outputs with the clock */
+    VTR_LOGV(verbose, "Constrain clock '%s' to period %g [ns] \n",
+             vclk_name.c_str(), clock_period);
+    io_clk_name = clock_names[0];
+    ofs << "create_clock " << " -period " << clock_period
+        << " -waveform "
+        << "{0 " << clock_period / 2 << "} "
+        << io_clk_name
+        << "\n";
+  }
+
   /*write sdc file*/
   int num_err = 0;
   const std::string SET_INPUT_DELAY = "set_input_delay";
   const std::string SET_OUTPUT_DELAY = "set_output_delay";
-
-  VTR_LOGV(verbose, "Constaint clock '%s' to period %g [ns] \n",
-           clock_name.c_str(), clock_period);
-  ofs << "create_clock -name " << clock_name << " -period " << clock_period
-      << " -waveform "
-      << "{0 " << clock_period / 2 << "} \n";
 
   for (auto io_constrain_id : pcf_data.io_constraints()) {
     auto ext_pin = pcf_data.io_pin(io_constrain_id);
@@ -238,7 +268,7 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
         "external pin '%s[%lu]'! Please double check your pin table!\n",
         ext_pin.get_name().c_str(), ext_pin.get_lsb());
       for (auto int_pin_id : int_pin_ids) {
-        VTR_LOG("%s[%ld]\n",
+        VTR_LOG("\t%s[%ld]\n",
                 io_pin_table.internal_pin(int_pin_id).get_name().c_str(),
                 io_pin_table.internal_pin(int_pin_id).get_lsb());
       }
@@ -248,14 +278,14 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
 
     auto ext_pin_direction = io_pin_table.pin_direction(int_pin_ids[0]);
     if (ext_pin_direction == IoPinTable::e_io_direction::INPUT) {
-      ofs << SET_INPUT_DELAY << " -clock " << clock_name << " -max " << max
+      ofs << SET_INPUT_DELAY << " -clock " << io_clk_name << " -max " << max
           << " [get_ports {" << net << "}]" << std::endl;
-      ofs << SET_INPUT_DELAY << " -clock " << clock_name << " -min " << min
+      ofs << SET_INPUT_DELAY << " -clock " << io_clk_name << " -min " << min
           << " [get_ports {" << net << "}]" << std::endl;
     } else if (ext_pin_direction == IoPinTable::e_io_direction::OUTPUT) {
-      ofs << SET_OUTPUT_DELAY << " -clock " << clock_name << " -max " << max
+      ofs << SET_OUTPUT_DELAY << " -clock " << io_clk_name << " -max " << max
           << " [get_ports {" << net << "}]" << std::endl;
-      ofs << SET_OUTPUT_DELAY << " -clock " << clock_name << " -min " << min
+      ofs << SET_OUTPUT_DELAY << " -clock " << io_clk_name << " -min " << min
           << " [get_ports {" << net << "}]" << std::endl;
     }
   }
