@@ -3,6 +3,7 @@
  * which reads an XML of I/O location to the associated
  * data structures
  *******************************************************************/
+#include <fstream>
 #include <string>
 
 /* Headers from pugi XML library */
@@ -14,18 +15,13 @@
 #include "vtr_time.h"
 
 /* Headers from libopenfpga util library */
-#include <fstream>
 
 #include "openfpga_port_parser.h"
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "command_exit_codes.h"
 #include "openfpga_digest.h"
-#include "pugixml.hpp"
-#include "read_xml_boundary_timing.h"
-#include "read_xml_util.h"
 #include "write_xml_boundary_timing.h"
-#include "write_xml_utils.cpp"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -44,7 +40,7 @@ static int write_xml_one_boundary_timing(
   auto pin = boundary_timing.pin(pin_constraint);
 
   tree_node.append_attribute(XML_BOUNDARY_TIMING_TREE_NODE_PIN_NAME) =
-    generate_xml_port_name(boundary_timing.pin(pin_constraint)).c_str();
+    boundary_timing.pin(pin_constraint).to_verilog_string().c_str();
 
   tree_node.append_attribute(XML_BOUNDARY_TIMING_TREE_NODE_PIN_MIN_DELAY) =
     boundary_timing.pin_min_delay(pin).c_str();

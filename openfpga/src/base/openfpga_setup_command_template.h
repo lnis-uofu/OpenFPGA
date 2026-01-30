@@ -554,6 +554,59 @@ ShellCommandId add_write_fabric_io_info_command_template(
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: write_boundary_timing_template
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_boundary_timing_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_boundary_timing");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to output the boundary timing information");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--default_timing_value'*/
+  CommandOptionId opt_default_timing_value =
+    shell_cmd.add_option("default_timing_value ", true,
+                         "default timing value of pin max and min delay");
+  shell_cmd.set_option_require_value(opt_default_timing_value,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table'*/
+  CommandOptionId opt_pin_table_file = shell_cmd.add_option(
+    "pin_table", true, "file path to the pin table (.csv)");
+  shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false,
+                       "Do not print time stamp in output files");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command the Shell */
+  ShellCommandId shell_cmd_id =
+    shell.add_command(shell_cmd,
+                      "Write the boundary timing information, e.g., pin and "
+                      "its corresponding max and min delay "
+                      "attributes, to a file",
+                      hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_boundary_timing_info_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: pcf2place
  * - Add associated options
  * - Add command dependency
@@ -1439,6 +1492,12 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   cmd_dependency_rename_modules.push_back(build_fabric_cmd_id);
   add_rename_modules_command_template<T>(shell, openfpga_setup_cmd_class,
                                          cmd_dependency_rename_modules, hidden);
+
+  /*command "write_boundary_timing"*/
+  std::vector<ShellCommandId> cmd_dependency_write_boundary_timing;
+  add_write_boundary_timing_command_template<T>(
+    shell, openfpga_setup_cmd_class, cmd_dependency_write_boundary_timing,
+    hidden);
 
   /********************************
    * Command 'write_module_naming_rules'
