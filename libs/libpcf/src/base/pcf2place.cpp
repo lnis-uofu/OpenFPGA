@@ -219,9 +219,9 @@ int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
     std::string min = boundary_timing.pin_min_delay(ext_pin);
 
     if (!boundary_timing.pin_delay_constrained(ext_pin)) {
-      VTR_LOG_ERROR("Boundary timing is not defined for pin %s",
+      VTR_LOGV_WARN(verbose, "Boundary timing is not defined for pin %s",
                     ext_pin.to_verilog_string().c_str());
-      return CMD_EXEC_FATAL_ERROR;
+      continue;
     }
 
     auto int_pin_ids = io_pin_table.find_internal_pin_by_name_only(ext_pin);
