@@ -562,7 +562,7 @@ template <class T>
 ShellCommandId add_write_boundary_timing_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
-  Command shell_cmd("write_boundary_timing");
+  Command shell_cmd("write_boundary_timing_template");
 
   /* Add an option '--file' in short '-f'*/
   CommandOptionId opt_file = shell_cmd.add_option(
@@ -571,9 +571,10 @@ ShellCommandId add_write_boundary_timing_command_template(
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
   /* Add an option '--default_timing_value'*/
-  CommandOptionId opt_default_timing_value =
-    shell_cmd.add_option("default_timing_value ", true,
-                         "default timing value of pin max and min delay");
+  CommandOptionId opt_default_timing_value = shell_cmd.add_option(
+    "default_timing_value", false,
+    "default timing value of pin max and min delay. If not specified, the "
+    "default timing value will be set to 0.");
   shell_cmd.set_option_require_value(opt_default_timing_value,
                                      openfpga::OPT_STRING);
 
@@ -581,6 +582,14 @@ ShellCommandId add_write_boundary_timing_command_template(
   CommandOptionId opt_pin_table_file = shell_cmd.add_option(
     "pin_table", true, "file path to the pin table (.csv)");
   shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table_direction_convention'*/
+  CommandOptionId opt_pin_table_dir_convention =
+    shell_cmd.add_option("pin_table_direction_convention", false,
+                         "the convention to follow when inferring pin "
+                         "direction from the name of ports in pin table file");
+  shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
+                                     openfpga::OPT_STRING);
 
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
