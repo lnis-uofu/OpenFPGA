@@ -590,11 +590,6 @@ ShellCommandId add_write_boundary_timing_command_template(
                          "direction from the name of ports in pin table file");
   shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
                                      openfpga::OPT_STRING);
-
-  /* Add an option '--no_time_stamp' */
-  shell_cmd.add_option("no_time_stamp", false,
-                       "Do not print time stamp in output files");
-
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 

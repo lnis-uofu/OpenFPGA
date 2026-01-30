@@ -376,11 +376,9 @@ int write_fabric_io_info_template(const T& openfpga_ctx, const Command& cmd,
  * Write the boundary timing information to a file
  *******************************************************************/
 template <class T>
-int write_boundary_timing_info_template(const T& openfpga_ctx,
-                                        const Command& cmd,
+int write_boundary_timing_info_template(const Command& cmd,
                                         const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
-  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
@@ -393,7 +391,7 @@ int write_boundary_timing_info_template(const T& openfpga_ctx,
     cmd.option("pin_table_direction_convention");
 
   std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
-
+  bool verbose_output = cmd_context.option_enable(cmd, opt_verbose);
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
@@ -440,6 +438,8 @@ int write_boundary_timing_info_template(const T& openfpga_ctx,
     bd_timing.create_pin_boundary_timing(pin, default_timimg_value,
                                          default_timimg_value);
   }
+  VTR_LOGV(verbose_output, "write boundary timing file to: %s \n",
+           file_name.c_str());
   /* Write hierarchy to a file */
   return write_xml_boundary_timing(file_name.c_str(), bd_timing);
 }
