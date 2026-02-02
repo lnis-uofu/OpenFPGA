@@ -7,6 +7,9 @@ source openfpga.sh
 ##############################################
 echo -e "FPGA-Bitstream regression tests";
 
+echo -e "Testing bitstream generation for an auto-sized device through flat routing algorithm";
+run-task fpga_bitstream/flat_routing/basic_full_tb $@
+
 echo -e "Testing bitstream generation for an auto-sized device";
 run-task fpga_bitstream/generate_bitstream/configuration_chain/device_auto $@
 run-task fpga_bitstream/generate_bitstream/ql_memory_bank_shift_register/device_auto $@
