@@ -16,6 +16,7 @@
 #include "fabric_key_writer.h"
 #include "globals.h"
 #include "openfpga_naming.h"
+#include "read_csv_io_pin_table.h"
 #include "read_unique_blocks_bin.h"
 #include "read_unique_blocks_xml.h"
 #include "read_xml_fabric_key.h"
@@ -28,9 +29,9 @@
 #include "vtr_time.h"
 #include "write_unique_blocks_bin.h"
 #include "write_unique_blocks_xml.h"
+#include "write_xml_boundary_timing.h"
 #include "write_xml_fabric_pin_physical_location.h"
 #include "write_xml_module_name_map.h"
-
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -369,6 +370,78 @@ int write_fabric_io_info_template(const T& openfpga_ctx, const Command& cmd,
   return openfpga_ctx.io_location_map().write_to_xml_file(
     file_name, !cmd_context.option_enable(cmd, opt_no_time_stamp),
     cmd_context.option_enable(cmd, opt_verbose));
+}
+
+/********************************************************************
+ * Write the boundary timing information to a file
+ *******************************************************************/
+template <class T>
+int write_boundary_timing_info_template(const Command& cmd,
+                                        const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_default_timing_value = cmd.option("default_timing_value");
+  CommandOptionId opt_pin_table = cmd.option("pin_table");
+  CommandOptionId opt_pin_table_dir_convention =
+    cmd.option("pin_table_direction_convention");
+
+  std::string pin_table_fname = cmd_context.option_value(cmd, opt_pin_table);
+  bool verbose_output = cmd_context.option_enable(cmd, opt_verbose);
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+  std::string default_timimg_value = "0";
+  if (cmd_context.option_enable(cmd, opt_default_timing_value)) {
+    default_timimg_value =
+      cmd_context.option_value(cmd, opt_default_timing_value);
+  }
+  e_pin_table_direction_convention pin_table_dir_convention =
+    e_pin_table_direction_convention::EXPLICIT;
+  if (cmd_context.option_enable(cmd, opt_pin_table_dir_convention)) {
+    std::string pin_table_dir_convention_str =
+      cmd_context.option_value(cmd, opt_pin_table_dir_convention);
+    if (pin_table_dir_convention_str ==
+        std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+          e_pin_table_direction_convention::EXPLICIT))) {
+      pin_table_dir_convention = e_pin_table_direction_convention::EXPLICIT;
+    } else if (pin_table_dir_convention_str ==
+               std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+                 e_pin_table_direction_convention::QUICKLOGIC))) {
+      pin_table_dir_convention = e_pin_table_direction_convention::QUICKLOGIC;
+    } else {
+      VTR_LOG_ERROR(
+        "Invalid pin naming convention ('%s') to identify port direction for "
+        "pin table! Expect ['%s'|'%s'].\n",
+        pin_table_dir_convention_str.c_str(),
+        PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+          e_pin_table_direction_convention::EXPLICIT),
+        PIN_TABLE_DIRECTION_CONVENTION_STRING.at(
+          e_pin_table_direction_convention::QUICKLOGIC));
+    }
+  }
+
+  /* Parse the fabric key from an XML file */
+  IoPinTable io_pin_table =
+    read_csv_io_pin_table(pin_table_fname.c_str(), pin_table_dir_convention);
+  VTR_LOG("Read the I/O pin table from a csv file: %s.\n",
+          pin_table_fname.c_str());
+
+  BoundaryTiming bd_timing;
+  for (auto pin_id : io_pin_table.pins()) {
+    auto pin = io_pin_table.external_pin(pin_id);
+    bd_timing.create_pin_boundary_timing(pin, default_timimg_value,
+                                         default_timimg_value);
+  }
+  VTR_LOGV(verbose_output, "write boundary timing file to: %s \n",
+           file_name.c_str());
+  /* Write hierarchy to a file */
+  return write_xml_boundary_timing(file_name.c_str(), bd_timing);
 }
 
 /********************************************************************
