@@ -78,6 +78,8 @@ In the OpenFPGA architecture file, you may define additional attributes for each
 Enhanced Connection Block
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. note:: The flat router of VPR can be enabled through ``--flat_routing on`` when the enhanced connection block is used, to improve Fmax.
+
 The direct connection can also drive routing multiplexers of connection blocks. When such connection occures in a connection block, it is called enhanced connection block.
 :numref:`fig_ecb` illustrates the difference between a regular connection block and an enhanced connection block.
 
