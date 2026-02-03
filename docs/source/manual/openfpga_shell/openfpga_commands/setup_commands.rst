@@ -549,10 +549,6 @@ pcf2sdc
 
     Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
 
-  .. option:: --config <string>
-    
-    Specify the file path to the pcf config file which defines custom pcf commands (.xml). See details in :ref:`file_format_pcf_custom_command_config_file`
-
   .. option:: --input_sdc <string>
   
     Specify the path to the input sdc file (.sdc). The generated SDC content will be appended to this file. If not specified, a new file will be created and the SDC will be written to the output_sdc path
