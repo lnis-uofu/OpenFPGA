@@ -35,8 +35,12 @@ class BasicPort {
   bool contained(const BasicPort& portA)
     const; /* Check if a port is contained by this port */
   size_t get_origin_port_width() const;
-  std::string to_verilog_string()
-    const; /* Generate verilog-style string, e.g., a[0:1] */
+  /* @brief Generate verilog-style string, e.g., a[0:1] */
+  std::string to_verilog_string() const;
+  /* @brief Generate simple verilog-style string for 1-bit port, e.g., a[1]
+   * instead of a[1:1]. This is due to the restrictions of Verilog parsers of
+   * some compilers */
+  std::string to_simple_verilog_string() const;
   /** @brief Find the index of the pin in the reference port w.r.t. to this
    * port. For example, given a reference pin 'a[1]', this port is 'a[0:2]', the
    * pin is the second pin in the port. As a result, the index will be 1. */
