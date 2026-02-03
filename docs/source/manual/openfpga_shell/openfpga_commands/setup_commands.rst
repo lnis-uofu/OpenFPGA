@@ -513,6 +513,68 @@ pcf2bitstream_setting
 
     Show verbose log
 
+.. _openfpga_setup_commands_pcf2sdc:
+
+pcf2sdc
+~~~~~~~~~~~~~~~~~~~~~
+
+  Generate sdc file according to info in a Pin Constraint File (see details in :ref:`file_format_pcf_file`).
+  
+  .. option:: --pcf <string>
+  
+    Specify the path to the users' pin constraint file
+  
+  .. option:: --blif <string>
+  
+    Specify the path to the synthesized netlist (.blif)
+  
+  .. option:: --circuit_format <string>
+  
+    Specify the circuit format of the blif file. Can be [ ``auto`` | ``blif`` | ``eblif`` ]. By default, it is auto which will detect based on the file extension
+
+  .. option:: --boundary_timing <string>
+  
+    Specify the path to file path to FPGA I/O boundary timing file (.xml)
+
+  .. option:: --pin_table <string>
+
+    Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
+  
+   .. note::
+      The pin table file and the ``pin_table_direction_convention`` must be
+      the same as the one used by the ``pcf2place`` command.
+      See :ref:`openfpga_setup_commands_pcf2place`.
+
+  .. option:: --pin_table_direction_convention <string>
+
+    Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
+
+  .. option:: --config <string>
+    
+    Specify the file path to the pcf config file which defines custom pcf commands (.xml). See details in :ref:`file_format_pcf_custom_command_config_file`
+
+  .. option:: --input_sdc <string>
+  
+    Specify the path to the input sdc file (.sdc). The generated SDC content will be appended to this file. If not specified, a new file will be created and the SDC will be written to the output_sdc path
+  
+  .. option:: --output_sdc <string>
+  
+    Specify the path to the generated sdc file (.sdc)
+  
+  .. option:: --vpr_arch_file <string>
+  
+    Specify the path to the vpr arch file (.xml)
+
+  .. option:: --reduce_error_to_warning
+
+    Reduce error to warning while reading commands in pcf file
+  
+  .. warning:: Exercise extreme caution when adding this option – be sure you completely understand why the issue is being flagged, and why it is OK to treat as a warning instead of an error.
+
+  .. option:: --verbose
+
+    Show verbose log
+
 .. _openfpga_setup_commands_rename_modules:
 
 rename_modules
@@ -573,6 +635,34 @@ write_fabric_pin_physical_location
   .. option:: --verbose
 
     Show verbose log
+
+.. _openfpga_setup_commands_write_boundary_timing_template:
+
+write_boundary_timing_template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the FPGA fabric boundary timing information to a specified file, serving as a template for user modification.
+
+  .. option:: --file <string>
+  
+    Specify the file path to be written to. See details in :ref:`file_format_boundary_timing_template_file`
+
+  .. option:: --default_timing_value <string>
+  
+    Specify the default timing value of pin max and min delay. If not specified, the default timing value will be set to 0
+
+  .. option:: --pin_table <string>
+
+    Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
+
+  .. option:: --pin_table_direction_convention <string>
+
+    Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``
+
+  .. option:: --verbose
+
+    Show verbose log
+
 
 .. _openfpga_setup_commands_report_reference:
 
