@@ -121,8 +121,8 @@ endmodule
 //               just an overlay to interface other components
 //-----------------------------------------------------
 module EMBEDDED_IO_GATED (
-  input IN_EN, // active-high enable for the inputs to be propagated
-  input OUT_EN, // active-high enable for the outputs to be propagated
+  input IN_ENB, // active-high enable for the inputs to be propagated
+  input OUT_ENB, // active-high enable for the outputs to be propagated
   input SOC_IN, // Input to drive the inpad signal
   output SOC_OUT, // Output the outpad signal
   output SOC_DIR, // Output the directionality
@@ -131,8 +131,8 @@ module EMBEDDED_IO_GATED (
   input FPGA_DIR // direction control 
 );
 
-  assign FPGA_IN = IN_EN ? SOC_IN : 0;
-  assign SOC_OUT = OUT_EN ? FPGA_OUT : 0;
+  assign FPGA_IN = IN_ENB ? 0 : SOC_IN;
+  assign SOC_OUT = OUT_ENB ? 0 : FPGA_OUT;
   assign SOC_DIR = FPGA_DIR;
 endmodule
 
