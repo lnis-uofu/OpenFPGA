@@ -336,6 +336,8 @@ void print_verilog_testbench_connect_fpga_ios(
     }
     BasicPort module_non_mappable_input_port =
       module_manager.module_port(top_module, gpio_port_id);
+    module_non_mappable_input_port.set_name(module_non_mappable_input_port.get_name() +
+                                   net_name_postfix);
     size_t default_val2fill = 0;
     if (module_manager.port_default_val(top_module, gpio_port_id) == '1') {
       default_val2fill = 1;
