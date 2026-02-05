@@ -280,6 +280,9 @@ class ModuleManager {
   e_side port_side(const ModuleId& module, const ModulePortId& port) const;
   /* Find if a port is a wire connection */
   bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
+  /* Find the default value for the port */
+  char port_default_val(const ModuleId& module,
+                           const ModulePortId& port) const;
   /* Find if a port is mappable to an I/O from users' implementations */
   bool port_is_mappable_io(const ModuleId& module,
                            const ModulePortId& port) const;
@@ -361,6 +364,10 @@ class ModuleManager {
                         const bool& is_wire);
   void set_port_is_wire(const ModuleId& module, const ModulePortId& port_id,
                         const bool& is_wire);
+  /* Set the default value to be considered when building testbenches around the module */
+  void set_port_default_val(const ModuleId& module,
+                               const ModulePortId& port_id,
+                               const char& default_val);
   /* Set a port to be mappable to an I/O from users' implemenations */
   void set_port_is_mappable_io(const ModuleId& module,
                                const ModulePortId& port_id,

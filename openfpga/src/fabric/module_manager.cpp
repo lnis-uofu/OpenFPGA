@@ -1432,8 +1432,8 @@ ModuleId ModuleManager::create_wrapper_module(
     set_port_is_mappable_io(
       wrapper_module, new_port,
       port_is_mappable_io(existing_module, existing_port));
-    set_port_default_value(wrapper_module, new_port,
-                     port_default_value(existing_module, existing_port));
+    set_port_default_val(wrapper_module, new_port,
+                     port_default_val(existing_module, existing_port));
     set_port_is_register(wrapper_module, new_port,
                          port_is_register(existing_module, existing_port));
     set_port_preproc_flag(wrapper_module, new_port,

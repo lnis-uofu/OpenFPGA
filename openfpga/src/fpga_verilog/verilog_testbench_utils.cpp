@@ -337,7 +337,7 @@ void print_verilog_testbench_connect_fpga_ios(
     BasicPort module_non_mappable_input_port =
       module_manager.module_port(top_module, gpio_port_id);
     size_t default_val2fill = 0;
-    if (module_manager.port_default_val(gpio_port_id) == '1') {
+    if (module_manager.port_default_val(top_module, gpio_port_id) == '1') {
       default_val2fill = 1;
     }
     std::vector<size_t> default_values(module_non_mappable_input_port.get_width(),
