@@ -42,6 +42,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - <Hex|Bin>ModeBits: Use hexadecimal or binary format for mode bits
 - emode: I/O has extra mode bits to drive external blocks outside the FPGA fabric. The extra mode bits are assigned by bitstream through custom PCF commands
 - pdl: I/O has a *Programmable Delay Line* (PDL) to insert delay to input and output signals. The delay can be configured by bitstream through custom PCF commands
+- GatedIo: Each I/O has a separated enable signal to gate the input/output signals to/from the FPGA to outside
 
 
 Other features are used in naming should be listed here.

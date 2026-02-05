@@ -81,6 +81,7 @@ run-task fpga_verilog/io/reduced_io $@
 
 echo -e "Testing Verilog generation with embedded I/Os for an FPGA ";
 run-task fpga_verilog/io/embedded_io $@
+run-task fpga_verilog/io/embedded_gated_io $@
 
 echo -e "Testing Verilog generation with SoC I/Os for an FPGA ";
 run-task fpga_verilog/io/soc_io $@
