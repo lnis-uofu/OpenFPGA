@@ -2112,7 +2112,8 @@ static void add_module_io_ports_from_child_modules(
          * module */
         mappable_gpio_ports.push_back(
           module_manager.port_is_mappable_io(child, gpio_port_id));
-        default_val_gpio_ports.push_back(module_manager.port_default_val(child, gpio_port_id));
+        default_val_gpio_ports.push_back(
+          module_manager.port_default_val(child, gpio_port_id));
       }
     }
   }
@@ -2128,7 +2129,8 @@ static void add_module_io_ports_from_child_modules(
     if (true == mappable_gpio_ports[iport]) {
       module_manager.set_port_is_mappable_io(module_id, port_id, true);
     }
-    module_manager.set_port_default_val(module_id, port_id, default_val_gpio_ports[iport]);
+    module_manager.set_port_default_val(module_id, port_id,
+                                        default_val_gpio_ports[iport]);
   }
 
   /* Set up a counter for each type of GPIO port */

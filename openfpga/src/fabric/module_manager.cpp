@@ -877,8 +877,8 @@ void ModuleManager::set_port_is_wire(const ModuleId& module,
 
 /* Set a port to be a mappable I/O */
 void ModuleManager::set_port_default_val(const ModuleId& module,
-                                            const ModulePortId& port_id,
-                                            const char& default_val) {
+                                         const ModulePortId& port_id,
+                                         const char& default_val) {
   /* Must find something, otherwise drop an error */
   VTR_ASSERT(valid_module_port_id(module, port_id));
   port_default_val_[module][port_id] = default_val;
@@ -1433,7 +1433,7 @@ ModuleId ModuleManager::create_wrapper_module(
       wrapper_module, new_port,
       port_is_mappable_io(existing_module, existing_port));
     set_port_default_val(wrapper_module, new_port,
-                     port_default_val(existing_module, existing_port));
+                         port_default_val(existing_module, existing_port));
     set_port_is_register(wrapper_module, new_port,
                          port_is_register(existing_module, existing_port));
     set_port_preproc_flag(wrapper_module, new_port,

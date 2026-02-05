@@ -328,22 +328,22 @@ void print_verilog_testbench_connect_fpga_ios(
 
   /* For non-mappable GPIN, set an initial value */
   for (const ModulePortId& gpio_port_id :
-       module_manager.module_port_ids_by_type(top_module,
-                                             ModuleManager::MODULE_GPIN_PORT)) {
+       module_manager.module_port_ids_by_type(
+         top_module, ModuleManager::MODULE_GPIN_PORT)) {
     /* Only care non-mappable I/O */
     if (module_manager.port_is_mappable_io(top_module, gpio_port_id)) {
       continue;
     }
     BasicPort module_non_mappable_input_port =
       module_manager.module_port(top_module, gpio_port_id);
-    module_non_mappable_input_port.set_name(module_non_mappable_input_port.get_name() +
-                                   net_name_postfix);
+    module_non_mappable_input_port.set_name(
+      module_non_mappable_input_port.get_name() + net_name_postfix);
     size_t default_val2fill = 0;
     if (module_manager.port_default_val(top_module, gpio_port_id) == '1') {
       default_val2fill = 1;
     }
-    std::vector<size_t> default_values(module_non_mappable_input_port.get_width(),
-                                       default_val2fill);
+    std::vector<size_t> default_values(
+      module_non_mappable_input_port.get_width(), default_val2fill);
     print_verilog_wire_constant_values(fp, module_non_mappable_input_port,
                                        default_values, little_endian);
   }
