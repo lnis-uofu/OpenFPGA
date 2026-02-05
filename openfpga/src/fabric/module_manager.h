@@ -641,6 +641,8 @@ class ModuleManager {
   vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
     port_is_mappable_io_; /* If the port is mappable  to an I/O for user's
                              implementations */
+  vtr::vector<ModuleId, vtr::vector<ModulePortId, char>>
+    port_default_val_; /* Used for testbench to set initial value. This is only a reference for global ports. If the port is already defined in the FabricGlobalPort, the default value will NOT be considered. The FabricGlobalPort holds the golden reference */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
     port_is_wire_; /* If the port is a wire, use for Verilog port definition. If
                       enabled: <port_type> reg <port_name>  */
