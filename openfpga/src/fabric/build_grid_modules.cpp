@@ -195,6 +195,12 @@ static void add_primitive_module_fpga_global_io_port(
     module_manager.set_port_is_mappable_io(primitive_module,
                                            primitive_io_port_id, true);
   }
+  char port_default_val = '0';
+  if (circuit_lib.port_default_value(circuit_port) == 1) {
+    port_default_val = '1';
+  }
+  module_manager.set_port_default_val(primitive_module, primitive_io_port_id,
+                                      port_default_val);
 
   ModulePortId logic_io_port_id = module_manager.find_module_port(
     logic_module, circuit_lib.port_prefix(circuit_port));

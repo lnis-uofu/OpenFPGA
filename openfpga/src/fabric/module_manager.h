@@ -280,6 +280,8 @@ class ModuleManager {
   e_side port_side(const ModuleId& module, const ModulePortId& port) const;
   /* Find if a port is a wire connection */
   bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
+  /* Find the default value for the port */
+  char port_default_val(const ModuleId& module, const ModulePortId& port) const;
   /* Find if a port is mappable to an I/O from users' implementations */
   bool port_is_mappable_io(const ModuleId& module,
                            const ModulePortId& port) const;
@@ -361,6 +363,10 @@ class ModuleManager {
                         const bool& is_wire);
   void set_port_is_wire(const ModuleId& module, const ModulePortId& port_id,
                         const bool& is_wire);
+  /* Set the default value to be considered when building testbenches around the
+   * module */
+  void set_port_default_val(const ModuleId& module, const ModulePortId& port_id,
+                            const char& default_val);
   /* Set a port to be mappable to an I/O from users' implemenations */
   void set_port_is_mappable_io(const ModuleId& module,
                                const ModulePortId& port_id,
@@ -641,6 +647,12 @@ class ModuleManager {
   vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
     port_is_mappable_io_; /* If the port is mappable  to an I/O for user's
                              implementations */
+  vtr::vector<ModuleId, vtr::vector<ModulePortId, char>>
+    port_default_val_; /* Used for testbench to set initial value. This is only
+                          a reference for global ports. If the port is already
+                          defined in the FabricGlobalPort, the default value
+                          will NOT be considered. The FabricGlobalPort holds the
+                          golden reference */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
     port_is_wire_; /* If the port is a wire, use for Verilog port definition. If
                       enabled: <port_type> reg <port_name>  */

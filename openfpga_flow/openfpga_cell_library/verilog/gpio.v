@@ -117,6 +117,26 @@ module EMBEDDED_IO (
 endmodule
 
 //-----------------------------------------------------
+// Function    : A minimum embedded I/O
+//               just an overlay to interface other components
+//-----------------------------------------------------
+module EMBEDDED_IO_GATED (
+  input IN_ENB, // active-low enable for the inputs to be propagated
+  input OUT_ENB, // active-low enable for the outputs to be propagated
+  input SOC_IN, // Input to drive the inpad signal
+  output SOC_OUT, // Output the outpad signal
+  output SOC_DIR, // Output the directionality
+  output FPGA_IN, // Input data to FPGA
+  input FPGA_OUT, // Output data from FPGA
+  input FPGA_DIR // direction control 
+);
+
+  assign FPGA_IN = IN_ENB ? 1'bz : SOC_IN;
+  assign SOC_OUT = OUT_ENB ? 1'bz : FPGA_OUT;
+  assign SOC_DIR = FPGA_DIR;
+endmodule
+
+//-----------------------------------------------------
 // Function    : An embedded I/O with an protection circuit
 //               which can force the I/O in input mode
 //               The enable signal IO_ISOL_N is active-low 
