@@ -447,6 +447,14 @@ bool ModuleManager::port_is_wire(const ModuleId& module,
 }
 
 /* Find if a port is a mappable i/o */
+char ModuleManager::port_default_val(const ModuleId& module,
+                                     const ModulePortId& port) const {
+  /* validate both module id and port id*/
+  VTR_ASSERT(valid_module_port_id(module, port));
+  return port_default_val_[module][port];
+}
+
+/* Find if a port is a mappable i/o */
 bool ModuleManager::port_is_mappable_io(const ModuleId& module,
                                         const ModulePortId& port) const {
   /* validate both module id and port id*/
@@ -750,6 +758,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   ports_.emplace_back();
   port_types_.emplace_back();
   port_is_wire_.emplace_back();
+  port_default_val_.emplace_back();
   port_is_mappable_io_.emplace_back();
   port_is_register_.emplace_back();
   port_sides_.emplace_back();
@@ -800,6 +809,7 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   port_sides_[module].push_back(NUM_2D_SIDES);
   port_is_wire_[module].push_back(false);
   port_is_mappable_io_[module].push_back(false);
+  port_default_val_[module].push_back('0');
   port_is_register_[module].push_back(false);
   port_preproc_flags_[module]
     .emplace_back(); /* Create an empty string for the pre-processing flags */
@@ -863,6 +873,15 @@ void ModuleManager::set_port_is_wire(const ModuleId& module,
                                      const bool& is_wire) {
   VTR_ASSERT(valid_module_port_id(module, port_id));
   port_is_wire_[module][port_id] = is_wire;
+}
+
+/* Set a port to be a mappable I/O */
+void ModuleManager::set_port_default_val(const ModuleId& module,
+                                         const ModulePortId& port_id,
+                                         const char& default_val) {
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(valid_module_port_id(module, port_id));
+  port_default_val_[module][port_id] = default_val;
 }
 
 /* Set a port to be a mappable I/O */
@@ -1413,6 +1432,8 @@ ModuleId ModuleManager::create_wrapper_module(
     set_port_is_mappable_io(
       wrapper_module, new_port,
       port_is_mappable_io(existing_module, existing_port));
+    set_port_default_val(wrapper_module, new_port,
+                         port_default_val(existing_module, existing_port));
     set_port_is_register(wrapper_module, new_port,
                          port_is_register(existing_module, existing_port));
     set_port_preproc_flag(wrapper_module, new_port,

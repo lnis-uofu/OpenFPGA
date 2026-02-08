@@ -58,6 +58,21 @@ run-task fpga_verilog/dsp/wide_multi_mode_mult_16x16 $@
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode registerable multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8_reg $@
 
+echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit multiplier + dual port ram 1k ";
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_negz $@
+run-task fpga_verilog/dsp/dual_mult_8x8_chain_dpram16k_negz $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile_negz $@
+run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile_negz_group_tile $@
+
+echo -e "Test specify mode bits from pcf command"
+run-task fpga_verilog/io/io_pdl_emode $@
+run-task fpga_verilog/io/io_pdl_emode_fix_pins $@
+run-task fpga_verilog/io/io_boundary_timing $@
+run-task fpga_verilog/io/io_boundary_timing_dummy $@
+run-task fpga_verilog/io/io_equ_site $@
+
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity $@
 
@@ -66,6 +81,7 @@ run-task fpga_verilog/io/reduced_io $@
 
 echo -e "Testing Verilog generation with embedded I/Os for an FPGA ";
 run-task fpga_verilog/io/embedded_io $@
+run-task fpga_verilog/io/embedded_gated_io $@
 
 echo -e "Testing Verilog generation with SoC I/Os for an FPGA ";
 run-task fpga_verilog/io/soc_io $@

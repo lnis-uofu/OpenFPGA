@@ -71,29 +71,29 @@ int fpga_fabric_verilog(
   std::string src_dir_path = format_dir_path(options.output_directory());
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the primitive block
    * netlists */
   std::string submodule_dir_path =
     src_dir_path + std::string(DEFAULT_SUBMODULE_DIR_NAME);
-  create_directory(submodule_dir_path);
+  create_directory(submodule_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the logic block netlists
    */
   std::string lb_dir_path = src_dir_path + std::string(DEFAULT_LB_DIR_NAME);
-  create_directory(lb_dir_path);
+  create_directory(lb_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the routing block netlists
    */
   std::string rr_dir_path = src_dir_path + std::string(DEFAULT_RR_DIR_NAME);
-  create_directory(rr_dir_path);
+  create_directory(rr_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the tile netlists
    */
   std::string tile_dir_path = src_dir_path + std::string(DEFAULT_TILE_DIR_NAME);
   if (!fabric_tile.empty()) {
-    create_directory(tile_dir_path);
+    create_directory(tile_dir_path, true, options.verbose_output());
   }
 
   /* Print Verilog files containing preprocessing flags */
@@ -194,7 +194,7 @@ int fpga_verilog_full_testbench(
   int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate full testbench for verification, including configuration phase and
    * operating phase */
@@ -242,7 +242,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
    * pre-configured testbench for verification */
@@ -278,7 +278,7 @@ int fpga_verilog_template_testbench(const ModuleManager &module_manager,
   int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
    * pre-configured testbench for verification */
@@ -312,7 +312,7 @@ int fpga_verilog_testbench_io_connection(
   int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
    * pre-configured testbench for verification */
@@ -348,7 +348,7 @@ int fpga_verilog_mock_fpga_wrapper(
   NetlistManager netlist_manager;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
    * pre-configured testbench for verification */
@@ -404,7 +404,7 @@ int fpga_verilog_preconfigured_testbench(
   int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate top-level testbench using random vectors */
   std::string random_top_testbench_file_path =
@@ -445,7 +445,7 @@ int fpga_verilog_simulation_task_info(
   int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Generate exchangeable files which contains simulation settings */
   std::string simulation_ini_file_name = options.simulation_ini_path();

@@ -90,7 +90,7 @@ int write_fabric_key_to_xml_file(
   std::string dir_path = format_dir_path(find_path_dir_name(fname));
 
   /* Create directories */
-  create_directory(dir_path);
+  create_directory(dir_path, true, verbose);
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);

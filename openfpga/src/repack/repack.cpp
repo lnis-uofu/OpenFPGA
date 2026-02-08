@@ -869,10 +869,10 @@ static void add_lb_router_nets(
     }
     /* Get the driver pb pin id, it must be valid */
     int source_pb_pin_id = pb->pb_route[pin].driver_pb_pin_id;
-    if (OPEN == source_pb_pin_id) {
+    if (UNDEFINED == source_pb_pin_id) {
       continue;
     }
-    VTR_ASSERT(OPEN != source_pb_pin_id &&
+    VTR_ASSERT(UNDEFINED != source_pb_pin_id &&
                source_pb_pin_id < pb->pb_graph_node->total_pb_pins);
     /* Find the corresponding pb_graph_pin and its physical pb_graph_pin */
     t_pb_graph_pin* source_pb_pin =

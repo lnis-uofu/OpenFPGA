@@ -1,0 +1,24 @@
+<pcf_config>
+  <command name="set_delay_chain" type="delay_chain">
+    <!-- Define an option -pad where user must provide a valid pin name available in pin table CSV -->
+    <option name="pad" type="pin"/>
+    <!-- The pb_type that is associated to the configuration bits. Offset is applied to the index when overwrite the bitstream -->
+    <pb_type name="gp_inpad.inpad"/>
+    <option name="delay" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
+  </command>
+    <command name="set_watch_dog" type="delay_chain">
+    <option name="pad" type="pin"/>
+    <pb_type name="gp_outpad.outpad"/>
+    <option name="status" type="mode" offset="0">
+      <!--  Assume two modes: ENABLE, DISABLE  -->
+      <mode name="DISABLE" value="0"/>
+      <mode name="ENABLE" value="1"/>
+    </option>
+    <option name="mode" type="mode" offset="1">
+      <!-- Assume three modes: NORMAL, LOW_SPEED, HIGH_SPEED -->
+      <mode name="NORMAL" value = "001"/>
+      <mode name="LOW_SPEED" value = "010" />
+      <mode name="HIGH_SPEED" value = "100" />
+    </option>
+  </command>
+</pcf_config>

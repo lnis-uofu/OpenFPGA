@@ -64,6 +64,17 @@ std::vector<IoPinTableId> IoPinTable::find_internal_pin(
   return int_pin_ids;
 }
 
+std::vector<IoPinTableId> IoPinTable::find_internal_pin_by_name_only(
+  const BasicPort& ext_pin) const {
+  std::vector<IoPinTableId> int_pin_ids;
+  for (auto pin_id : pin_ids_) {
+    if (external_pins_[pin_id] == ext_pin) {
+      int_pin_ids.push_back(pin_id);
+    }
+  }
+  return int_pin_ids;
+}
+
 bool IoPinTable::empty() const { return 0 == pin_ids_.size(); }
 
 /************************************************************************

@@ -147,6 +147,11 @@ ShellCommandId add_read_bitstream_setting_command_template(
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  /* Add an option '--append'*/
+  shell_cmd.add_option("append", false,
+                       "Append data from pcf command to bitstreamsetting. If "
+                       "not specified, the default is false");
+
   /* Add command 'read_openfpga_bitstream_setting' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "read OpenFPGA bitstream setting file", hidden);
@@ -549,6 +554,63 @@ ShellCommandId add_write_fabric_io_info_command_template(
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: write_boundary_timing_template
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_boundary_timing_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_boundary_timing_template");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to output the boundary timing information");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--default_timing_value'*/
+  CommandOptionId opt_default_timing_value = shell_cmd.add_option(
+    "default_timing_value", false,
+    "default timing value of pin max and min delay. If not specified, the "
+    "default timing value will be set to 0.");
+  shell_cmd.set_option_require_value(opt_default_timing_value,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table'*/
+  CommandOptionId opt_pin_table_file = shell_cmd.add_option(
+    "pin_table", true, "file path to the pin table (.csv)");
+  shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table_direction_convention'*/
+  CommandOptionId opt_pin_table_dir_convention =
+    shell_cmd.add_option("pin_table_direction_convention", false,
+                         "the convention to follow when inferring pin "
+                         "direction from the name of ports in pin table file");
+  shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
+                                     openfpga::OPT_STRING);
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command the Shell */
+  ShellCommandId shell_cmd_id =
+    shell.add_command(shell_cmd,
+                      "Write the boundary timing information, e.g., pin and "
+                      "its corresponding max and min delay "
+                      "attributes, to a file",
+                      hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_boundary_timing_info_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: pcf2place
  * - Add associated options
  * - Add command dependency
@@ -614,6 +676,144 @@ ShellCommandId add_pcf2place_command_template(
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      pcf2place_wrapper_template<T>);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: pcf2place
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_pcf2sdc_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const bool& hidden) {
+  Command shell_cmd("pcf2sdc");
+
+  /* Add an option '--pcf'*/
+  CommandOptionId opt_pcf_file =
+    shell_cmd.add_option("pcf", true, "file path to the user pin constraint");
+  shell_cmd.set_option_require_value(opt_pcf_file, openfpga::OPT_STRING);
+
+  /* Add an option '--blif'*/
+  CommandOptionId opt_blif_file = shell_cmd.add_option(
+    "blif", true, "file path to the synthesized netlist (.blif)");
+  shell_cmd.set_option_require_value(opt_blif_file, openfpga::OPT_STRING);
+
+  /* Add an option '--circuit_format'*/
+  CommandOptionId opt_ckt_fmt = shell_cmd.add_option(
+    "circuit_format", false,
+    "circuit format of the blif file. Can be [ auto | blif | eblif ]. By "
+    "default, it is auto which will detect based on the file extension");
+  shell_cmd.set_option_require_value(opt_ckt_fmt, openfpga::OPT_STRING);
+
+  /* Add an option '--boundary_timing'*/
+  CommandOptionId opt_boundary_timing =
+    shell_cmd.add_option("boundary_timing", true,
+                         "file path to FPGA I/O boundary timing file (.xml)");
+  shell_cmd.set_option_require_value(opt_boundary_timing, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table'*/
+  CommandOptionId opt_pin_table_file = shell_cmd.add_option(
+    "pin_table", true, "file path to the pin table (.csv)");
+  shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--input_sdc'*/
+  CommandOptionId opt_input_sdc_file = shell_cmd.add_option(
+    "input_sdc", false,
+    "file path to the input sdc file (.sdc). The generated SDC content will be "
+    "appended to this file. If not specified, a new file will be created and "
+    "the SDC will be written to the output_sdc path.");
+  shell_cmd.set_option_require_value(opt_input_sdc_file, openfpga::OPT_STRING);
+
+  /* Add an option '--output_sdc'*/
+  CommandOptionId opt_output_sdc_file = shell_cmd.add_option(
+    "output_sdc", true, "file path to the generated sdc file (.sdc).");
+  shell_cmd.set_option_require_value(opt_output_sdc_file, openfpga::OPT_STRING);
+
+  /* Add an option '--vpr_arch_file'*/
+  CommandOptionId opt_vpr_arch_file = shell_cmd.add_option(
+    "vpr_arch_file", true, "file path to the vpr arch file (.xml)");
+  shell_cmd.set_option_require_value(opt_vpr_arch_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table_direction_convention'*/
+  CommandOptionId opt_pin_table_dir_convention =
+    shell_cmd.add_option("pin_table_direction_convention", false,
+                         "the convention to follow when inferring pin "
+                         "direction from the name of ports in pin table file");
+  shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--reduce_error_to_warning' */
+  shell_cmd.add_option(
+    "reduce_error_to_warning", false,
+    "reduce error to warning while reading commands in pcf file");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Convert user Pin Constraint File (.pcf) to an placement file",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, pcf2sdc_wrapper_template<T>);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: pcf2bistream_setting
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_pcf2bitstream_setting_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const bool& hidden) {
+  Command shell_cmd("pcf2bitstream_setting");
+
+  /* Add an option '--pcf'*/
+  CommandOptionId opt_pcf_file =
+    shell_cmd.add_option("pcf", true, "file path to the user pin constraint");
+  shell_cmd.set_option_require_value(opt_pcf_file, openfpga::OPT_STRING);
+
+  /* Add an option '--config'*/
+  CommandOptionId opt_pcf_config_file =
+    shell_cmd.add_option("config", true,
+                         "file path to the pcf config file which defines "
+                         "custom pcf commands (.xml)");
+  shell_cmd.set_option_require_value(opt_pcf_config_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table'*/
+  CommandOptionId opt_pin_table_file = shell_cmd.add_option(
+    "pin_table", true, "file path to the pin table (.csv)");
+  shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table_direction_convention'*/
+  CommandOptionId opt_pin_table_dir_convention =
+    shell_cmd.add_option("pin_table_direction_convention", false,
+                         "the convention to follow when inferring pin "
+                         "direction from the name of ports in pin table file");
+  shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--reduce_error_to_warning' */
+  shell_cmd.add_option(
+    "reduce_error_to_warning", false,
+    "reduce error to warning while reading commands in pcf file");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Convert user Pin Constraint File (.pcf) to bitstream settings",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     pcf2bitstream_setting_wrapper_template<T>);
 
   return shell_cmd_id;
 }
@@ -1079,6 +1279,9 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
    * Command 'pcf2place'
    */
   add_pcf2place_command_template<T>(shell, openfpga_setup_cmd_class, hidden);
+  add_pcf2bitstream_setting_command_template<T>(shell, openfpga_setup_cmd_class,
+                                                hidden);
+  add_pcf2sdc_command_template<T>(shell, openfpga_setup_cmd_class, hidden);
 
   /********************************
    * Command 'read_openfpga_arch'
@@ -1293,6 +1496,12 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   cmd_dependency_rename_modules.push_back(build_fabric_cmd_id);
   add_rename_modules_command_template<T>(shell, openfpga_setup_cmd_class,
                                          cmd_dependency_rename_modules, hidden);
+
+  /*command "write_boundary_timing"*/
+  std::vector<ShellCommandId> cmd_dependency_write_boundary_timing;
+  add_write_boundary_timing_command_template<T>(
+    shell, openfpga_setup_cmd_class, cmd_dependency_write_boundary_timing,
+    hidden);
 
   /********************************
    * Command 'write_module_naming_rules'

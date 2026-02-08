@@ -103,7 +103,7 @@ void add_grid_module_net_connect_pb_graph_pin(
     VTR_ASSERT(true == pin_info.is_valid());
     int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
       grid_type_descriptor, grid_pin_index);
-    VTR_ASSERT(OPEN != subtile_index &&
+    VTR_ASSERT(UNDEFINED != subtile_index &&
                subtile_index < grid_type_descriptor->capacity);
     std::string grid_port_name = generate_grid_port_name(
       pin_width, pin_height, subtile_index, side, pin_info);

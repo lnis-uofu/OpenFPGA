@@ -88,7 +88,7 @@ class LbRouter {
 
     int historical_usage; /* Historical usage of using this node */
 
-    t_routing_status() {
+    t_routing_status() noexcept {
       occ = 0;
       mode = nullptr;
       historical_usage = 0;
@@ -156,10 +156,10 @@ class LbRouter {
                         exploration priority queue */
     float enqueue_cost; /* cost of node pused on exploration priority queue */
 
-    t_explored_node_stats() {
+    t_explored_node_stats() noexcept {
       prev_index = LbRRNodeId::INVALID();
-      explored_id = OPEN;
-      enqueue_id = OPEN;
+      explored_id = UNDEFINED;
+      enqueue_id = UNDEFINED;
       inet = NetId::INVALID();
       enqueue_cost = 0;
     }

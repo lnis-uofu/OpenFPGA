@@ -53,23 +53,23 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
   std::string src_dir_path = format_dir_path(options.output_directory());
 
   /* Create directories */
-  create_directory(src_dir_path);
+  create_directory(src_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the primitive block
    * netlists */
   std::string submodule_dir_path =
     src_dir_path + std::string(DEFAULT_SUBMODULE_DIR_NAME);
-  create_directory(submodule_dir_path);
+  create_directory(submodule_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the logic block netlists
    */
   std::string lb_dir_path = src_dir_path + std::string(DEFAULT_LB_DIR_NAME);
-  create_directory(lb_dir_path);
+  create_directory(lb_dir_path, true, options.verbose_output());
 
   /* Sub directory under SRC directory to contain all the routing block netlists
    */
   std::string rr_dir_path = src_dir_path + std::string(DEFAULT_RR_DIR_NAME);
-  create_directory(rr_dir_path);
+  create_directory(rr_dir_path, true, options.verbose_output());
 
   /* Generate primitive Spice modules, which are corner stones of FPGA fabric
    * Note that this function MUST be called before Spice generation of

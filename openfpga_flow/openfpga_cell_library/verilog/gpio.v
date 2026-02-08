@@ -57,6 +57,47 @@ module GPOUT (
   assign Y = A;
 endmodule
 
+
+//-----------------------------------------------------
+// Function    : A minimum input pad with a programmable delay chain inside
+// Notes       : This is a RTL model which may not be synthesizable
+//               but sufficient to validate EDA features
+//               You may implement a synthesizable one in your own needs
+//-----------------------------------------------------
+module GPIN_PDL (
+  input A, // External PAD signal
+  output reg Y, // Data input
+  input [0:2] MODE_PDL // Control bits for programmable delay chain
+);
+// A 8-step programmable delay chain. Each step is 0.1ns 
+always @(A, MODE_PDL) begin
+  case (MODE_PDL)
+    3'b000: Y = A; 
+    3'b001: Y = #0.1 A; 
+    3'b010: Y = #0.2 A; 
+    3'b011: Y = #0.3 A; 
+    3'b100: Y = #0.4 A; 
+    3'b101: Y = #0.5 A; 
+    3'b110: Y = #0.6 A; 
+    3'b111: Y = #0.7 A; 
+    default: Y = A;
+  endcase
+end
+endmodule
+
+//-----------------------------------------------------
+// Function    : A minimum output pad with extra mode bits
+//-----------------------------------------------------
+module GPOUT_EMODE (
+  output Y, // External PAD signal
+  input A, // Data output
+  input [0:3] MODE_I, // Extra mode bits from bitstream
+  output [0:3] MODE_O // Extra mode bits to drive external cells
+);
+  assign Y = A;
+  assign MODE_O = MODE_I;
+endmodule
+
 //-----------------------------------------------------
 // Function    : A minimum embedded I/O
 //               just an overlay to interface other components
@@ -72,6 +113,26 @@ module EMBEDDED_IO (
 
   assign FPGA_IN = SOC_IN;
   assign SOC_OUT = FPGA_OUT;
+  assign SOC_DIR = FPGA_DIR;
+endmodule
+
+//-----------------------------------------------------
+// Function    : A minimum embedded I/O
+//               just an overlay to interface other components
+//-----------------------------------------------------
+module EMBEDDED_IO_GATED (
+  input IN_ENB, // active-low enable for the inputs to be propagated
+  input OUT_ENB, // active-low enable for the outputs to be propagated
+  input SOC_IN, // Input to drive the inpad signal
+  output SOC_OUT, // Output the outpad signal
+  output SOC_DIR, // Output the directionality
+  output FPGA_IN, // Input data to FPGA
+  input FPGA_OUT, // Output data from FPGA
+  input FPGA_DIR // direction control 
+);
+
+  assign FPGA_IN = IN_ENB ? 1'bz : SOC_IN;
+  assign SOC_OUT = OUT_ENB ? 1'bz : FPGA_OUT;
   assign SOC_DIR = FPGA_DIR;
 endmodule
 

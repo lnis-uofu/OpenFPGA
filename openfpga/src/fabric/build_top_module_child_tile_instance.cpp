@@ -1342,7 +1342,16 @@ static int build_top_module_global_net_for_given_tile_module(
    * range, each instance may have an independent pin to be driven by a global
    * net! */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
-    VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
+    bool subtile_contain_required_port = false;
+    for (const t_physical_tile_port& tile_port : sub_tile.ports) {
+      if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
+        subtile_contain_required_port = true;
+        break;
+      }
+    }
+    if (!subtile_contain_required_port) {
+      continue;
+    }
     int grid_pin_start_index = physical_tile->num_pins;
     t_physical_tile_port physical_tile_port;
     physical_tile_port.num_pins = 0;
@@ -1362,12 +1371,10 @@ static int build_top_module_global_net_for_given_tile_module(
           if (false == ref_tile_port.contained(tile_port_to_connect)) {
             VTR_LOG_ERROR(
               "Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of "
-              "physical tile port '%s[%lu:%lu]'!",
+              "physical tile port '%s'!\n",
               tile_annotation.global_port_name(tile_global_port).c_str(),
-              tile_port_to_connect.get_name().c_str(),
-              tile_port_to_connect.get_lsb(), tile_port_to_connect.get_msb(),
-              ref_tile_port.get_name().c_str(), ref_tile_port.get_lsb(),
-              ref_tile_port.get_msb());
+              tile_port_to_connect.to_verilog_string().c_str(),
+              ref_tile_port.to_verilog_string().c_str());
             return CMD_EXEC_FATAL_ERROR;
           }
           grid_pin_start_index =
@@ -1379,7 +1386,17 @@ static int build_top_module_global_net_for_given_tile_module(
         }
       }
       /* Ensure the pin index is valid */
-      VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);
+      if (grid_pin_start_index >= physical_tile->num_pins) {
+        VTR_LOG_ERROR(
+          "Grid pin index '%d' for tile annotation '%s' port '%s' is out of "
+          "the range of "
+          "total number of pins '%d' for subtile '%s'\n!",
+          grid_pin_start_index,
+          tile_annotation.global_port_name(tile_global_port).c_str(),
+          tile_port_to_connect.to_verilog_string().c_str(),
+          physical_tile->num_pins, sub_tile.name.c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
       /* Ensure port width is in range */
       VTR_ASSERT(src_port.get_width() == tile_port_to_connect.get_width());
 
@@ -1734,6 +1751,11 @@ static void add_module_nets_connect_tile_direct_connection(
   /* Find the module name of sink clb */
   vtr::Point<size_t> des_clb_coord =
     tile_direct.to_tile_coordinate(tile_direct_id);
+  /* Skip if the src and des has the same coordinate. It is treated as internal
+   * connections by the tile-level net builder */
+  if (src_clb_coord == des_clb_coord) {
+    return;
+  }
   FabricTileId des_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(des_clb_coord);
   vtr::Point<size_t> des_tile_coord = fabric_tile.tile_coordinate(des_tile_id);
@@ -1805,7 +1827,7 @@ static void add_module_nets_connect_tile_direct_connection(
   VTR_ASSERT(true == src_pin_info.is_valid());
   int src_subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
     src_grid_type_descriptor, src_tile_pin);
-  VTR_ASSERT(OPEN != src_subtile_index &&
+  VTR_ASSERT(UNDEFINED != src_subtile_index &&
              src_subtile_index < src_grid_type_descriptor->capacity);
   std::string src_port_name =
     generate_grid_port_name(src_pin_width, src_pin_height, src_subtile_index,
@@ -1843,7 +1865,7 @@ static void add_module_nets_connect_tile_direct_connection(
   int sink_subtile_index =
     vpr_device_annotation.physical_tile_pin_subtile_index(
       sink_grid_type_descriptor, sink_tile_pin);
-  VTR_ASSERT(OPEN != src_subtile_index &&
+  VTR_ASSERT(UNDEFINED != src_subtile_index &&
              src_subtile_index < sink_grid_type_descriptor->capacity);
   std::string sink_port_name =
     generate_grid_port_name(sink_pin_width, sink_pin_height, sink_subtile_index,

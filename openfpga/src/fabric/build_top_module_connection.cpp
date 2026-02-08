@@ -139,7 +139,7 @@ static void add_top_module_nets_connect_grids_and_sb(
       VTR_ASSERT(true == src_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, src_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string src_grid_port_name = generate_grid_port_name(
         src_grid_pin_width, src_grid_pin_height, subtile_index,
@@ -316,7 +316,7 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
       VTR_ASSERT(true == src_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, src_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
 
       /* Pins for direct connection are NOT duplicated.
@@ -535,7 +535,7 @@ static void add_top_module_nets_connect_grids_and_cb(
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, sink_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
@@ -618,7 +618,7 @@ static void add_top_module_nets_connect_grids_and_cb(
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
         grid_type_descriptor, sink_grid_pin_index);
-      VTR_ASSERT(OPEN != subtile_index &&
+      VTR_ASSERT(UNDEFINED != subtile_index &&
                  subtile_index < grid_type_descriptor->capacity);
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
@@ -978,7 +978,6 @@ static int build_top_module_global_net_for_given_grid_module(
    * net! */
   int curr_sub_tile_start_pin_index = 0;
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
-    VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
     int grid_pin_start_index = physical_tile->num_pins;
     t_physical_tile_port physical_tile_port;
     physical_tile_port.num_pins = 0;
@@ -991,6 +990,7 @@ static int build_top_module_global_net_for_given_grid_module(
      * subtile, connect to all the pins from sub tiles */
     for (int subtile_index = sub_tile.capacity.low;
          subtile_index <= sub_tile.capacity.high; subtile_index++) {
+      bool found_matched_subtile_port = false;
       for (const t_physical_tile_port& tile_port : sub_tile.ports) {
         if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
           BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
@@ -1009,8 +1009,12 @@ static int build_top_module_global_net_for_given_grid_module(
             (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
             tile_port.absolute_first_pin_index;
           physical_tile_port = tile_port;
+          found_matched_subtile_port = true;
           break;
         }
+      }
+      if (!found_matched_subtile_port) {
+        continue;
       }
       /* Ensure the pin index is valid */
       VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);

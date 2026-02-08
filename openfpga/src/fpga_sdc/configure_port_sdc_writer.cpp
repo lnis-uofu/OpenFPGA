@@ -185,7 +185,7 @@ int print_sdc_disable_timing_configure_ports(
   const ModuleManager& module_manager, const bool& include_time_stamp,
   const bool& verbose) {
   /* Create the directory */
-  create_directory(find_path_dir_name(sdc_fname));
+  create_directory(find_path_dir_name(sdc_fname), true, verbose);
 
   /* Start time count */
   std::string timer_message =

@@ -57,9 +57,10 @@ chtype -set $mul t:$__soft_mul# Extract arithmetic functions
 # Run a tech map with default library
 techmap
 alumacc
-share
+pmuxtree
+#share
 opt -nodffe -nosdff
-fsm
+#fsm
 # Run a quick follow-up optimization to sweep out unused nets/signals
 opt -fast -nodffe -nosdff
 # Optimize any memory cells by merging share-able ports and collecting all the ports belonging to memorcy cells  

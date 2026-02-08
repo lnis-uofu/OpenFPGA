@@ -43,7 +43,7 @@ void print_verilog_simulation_info(
   std::string ini_dir_path = format_dir_path(find_path_dir_name(ini_fname));
 
   /* Create directories */
-  create_directory(ini_dir_path);
+  create_directory(ini_dir_path, true, options.verbose_output());
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);

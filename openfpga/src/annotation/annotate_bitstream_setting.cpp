@@ -73,7 +73,7 @@ static int annotate_bitstream_pb_type_setting(
         /* Invalid source, error out! */
         VTR_LOG_ERROR(
           "Invalid bitstream source '%s' for pb_type '%s' which is defined in "
-          "bitstream setting\n",
+          "bitstream setting. Expect only eblif format\n",
           bitstream_setting
             .pb_type_bitstream_source(bitstream_pb_type_setting_id)
             .c_str(),
@@ -86,29 +86,27 @@ static int annotate_bitstream_pb_type_setting(
        * - For mode-select bitstream, set mode-select bitstream content, flags
        * etc.
        */
+      VprBitstreamAnnotation::BitstreamSourceInfo bitstrm_src(
+        VprBitstreamAnnotation::e_bitstream_source_type::EBLIF,
+        bitstream_setting.pb_type_bitstream_content(
+          bitstream_pb_type_setting_id),
+        bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
+
+      bool status = false;
       if (false == bitstream_setting.is_mode_select_bitstream(
                      bitstream_pb_type_setting_id)) {
-        vpr_bitstream_annotation.set_pb_type_bitstream_source(
-          target_pb_type, VprBitstreamAnnotation::e_bitstream_source_type::
-                            BITSTREAM_SOURCE_EBLIF);
-        vpr_bitstream_annotation.set_pb_type_bitstream_content(
-          target_pb_type, bitstream_setting.pb_type_bitstream_content(
-                            bitstream_pb_type_setting_id));
-        vpr_bitstream_annotation.set_pb_type_bitstream_offset(
-          target_pb_type,
-          bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
+        status = vpr_bitstream_annotation.add_pb_type_bitstream_source(
+          target_pb_type, bitstrm_src);
       } else {
         VTR_ASSERT_SAFE(false == bitstream_setting.is_mode_select_bitstream(
                                    bitstream_pb_type_setting_id));
-        vpr_bitstream_annotation.set_pb_type_mode_select_bitstream_source(
-          target_pb_type, VprBitstreamAnnotation::e_bitstream_source_type::
-                            BITSTREAM_SOURCE_EBLIF);
-        vpr_bitstream_annotation.set_pb_type_mode_select_bitstream_content(
-          target_pb_type, bitstream_setting.pb_type_bitstream_content(
-                            bitstream_pb_type_setting_id));
-        vpr_bitstream_annotation.set_pb_type_mode_select_bitstream_offset(
-          target_pb_type,
-          bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
+        status =
+          vpr_bitstream_annotation.add_pb_type_mode_select_bitstream_source(
+            target_pb_type, bitstrm_src);
+      }
+      if (!status) {
+        link_success = false;
+        break;
       }
 
       link_success = true;
@@ -194,6 +192,98 @@ static int annotate_bitstream_default_mode_setting(
       }
       vpr_device_annotation.add_pb_type_mode_bits(target_pb_type, mode_bits,
                                                   false);
+      link_success = true;
+    }
+
+    /* If fail to link bitstream setting to architecture, error out immediately
+     */
+    if (false == link_success) {
+      VTR_LOG_ERROR(
+        "Fail to find a pb_type '%s' which is defined in bitstream setting "
+        "from VPR architecture description\n",
+        target_pb_type_names[0].c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Annotate bitstream setting based on VPR device information
+ *  - Find the pb_type and link to the pcf mode bits
+ *******************************************************************/
+static int annotate_bitstream_pcf_mode_setting(
+  const BitstreamSetting& bitstream_setting,
+  const DeviceContext& vpr_device_ctx,
+  VprBitstreamAnnotation& vpr_bitstream_annotation,
+  const VprDeviceAnnotation& vpr_device_annotation) {
+  for (const auto& bitstream_pcf_mode_setting_id :
+       bitstream_setting.pcf_mode_settings()) {
+    /* Get the full name of pb_type */
+    std::vector<std::string> target_pb_type_names;
+    std::vector<std::string> target_pb_mode_names;
+
+    target_pb_type_names = bitstream_setting.pcf_mode_parent_pb_type_names(
+      bitstream_pcf_mode_setting_id);
+    target_pb_type_names.push_back(
+      bitstream_setting.pcf_mode_pb_type_name(bitstream_pcf_mode_setting_id));
+    target_pb_mode_names = bitstream_setting.pcf_mode_parent_mode_names(
+      bitstream_pcf_mode_setting_id);
+
+    std::vector<char> mode_bits =
+      bitstream_setting.pcf_mode_bits(bitstream_pcf_mode_setting_id);
+    BasicPort pcf_pin =
+      bitstream_setting.pcf_pin(bitstream_pcf_mode_setting_id);
+    int offset = bitstream_setting.pcf_mode_bitstream_offset(
+      bitstream_pcf_mode_setting_id);
+    /* Pb type information are located at the logic_block_types in the device
+     * context of VPR We iterate over the vectors and find the pb_type matches
+     * the parent_pb_type_name
+     */
+    bool link_success = false;
+
+    for (const t_logical_block_type& lb_type :
+         vpr_device_ctx.logical_block_types) {
+      /* By pass nullptr for pb_type head */
+      if (nullptr == lb_type.pb_type) {
+        continue;
+      }
+      /* Check the name of the top-level pb_type, if it does not match, we can
+       * bypass */
+      if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
+        continue;
+      }
+      /* Match the name in the top-level, we go further to search the pb_type in
+       * the graph */
+      t_pb_type* target_pb_type = try_find_pb_type_with_given_path(
+        lb_type.pb_type, target_pb_type_names, target_pb_mode_names);
+      if (nullptr == target_pb_type) {
+        continue;
+      }
+
+      /* Found one, pre-check and build annotation */
+      if (vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() -
+            offset <
+          mode_bits.size()) {
+        VTR_LOG_ERROR(
+          "Unmatched length of pcf mode_select_bitstream %s!Expected to be "
+          "less than %ld bits\n",
+          bitstream_setting
+            .pcf_mode_bits_to_string(bitstream_pcf_mode_setting_id)
+            .c_str(),
+          vpr_device_annotation.pb_type_mode_bits(target_pb_type).size() -
+            offset);
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      vpr_bitstream_annotation.add_pb_type_pcf_mode_bits(target_pb_type,
+                                                         mode_bits, false);
+      vpr_bitstream_annotation.add_pb_type_pcf_pins(target_pb_type, pcf_pin,
+                                                    false);
+      vpr_bitstream_annotation.add_pb_type_pcf_offset(target_pb_type, offset,
+                                                      false);
+
       link_success = true;
     }
 
@@ -432,6 +522,13 @@ int annotate_bitstream_setting(
 
   status = annotate_bitstream_default_mode_setting(
     bitstream_setting, vpr_device_ctx, vpr_device_annotation);
+  if (status == CMD_EXEC_FATAL_ERROR) {
+    return status;
+  }
+
+  status = annotate_bitstream_pcf_mode_setting(
+    bitstream_setting, vpr_device_ctx, vpr_bitstream_annotation,
+    vpr_device_annotation);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }

@@ -1,0 +1,33 @@
+#pragma once
+
+/* Constants required by XML parser */
+
+constexpr const char* XML_PCF_CONFIG_ROOT_NAME = "pcf_config";
+/* Pb-type XML syntax */
+constexpr const char* XML_COMMAND_TYPE_NODE_NAME = "command";
+constexpr const char* XML_COMMAND_TYPE_ATTRIBUTE_NAME = "name";
+constexpr const char* XML_COMMAND_TYPE_ATTRIBUTE_TYPE = "type";
+
+constexpr const char* XML_PB_TYPE_NODE_NAME = "pb_type";
+constexpr const char* XML_PB_TYPE_ATTRIBUTE_NAME = "name";
+
+constexpr const char* XML_OPTION_TYPE_NODE_NAME = "option";
+constexpr const char* XML_OPTION_ATTRIBUTE_NAME = "name";
+constexpr const char* XML_OPTION_ATTRIBUTE_TYPE = "type";
+constexpr const char* XML_OPTION_ATTRIBUTE_NUM_BITS = "num_bits";
+constexpr const char* XML_OPTION_ATTRIBUTE_MAX_DECIMAL = "max";
+constexpr const char* XML_OPTION_ATTRIBUTE_LITTLE_ENDIAN = "little_endian";
+constexpr const char* XML_OPTION_ATTRIBUTE_OFFSET = "offset";
+
+constexpr const char* XML_MODE_TYPE_NODE_NAME = "mode";
+constexpr const char* XML_MODE_ATTRIBUTE_NAME = "name";
+constexpr const char* XML_MODE_ATTRIBUTE_VALUE = "value";
+
+constexpr const char* OPTION_TYPE_DECIMAL = "decimal";
+constexpr const char* OPTION_TYPE_MODE = "mode";
+constexpr const char* OPTION_TYPE_PIN = "pin";
+
+/* Sanity check constants */
+constexpr const char* XML_VALID_NODE_NAMES[] = {
+  XML_COMMAND_TYPE_NODE_NAME, XML_PB_TYPE_NODE_NAME, XML_OPTION_TYPE_NODE_NAME,
+  XML_MODE_TYPE_NODE_NAME};

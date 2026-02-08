@@ -508,6 +508,50 @@ assign QN = CFG_DONE ? !Q : 1'b1;
 
 endmodule //End Of Module
 
+//-----------------------------------------------------
+// Function    : D-type flip-flop with 
+//               - asynchronous active high reset
+//               - scan-chain input
+//               - a scan-chain enable 
+//               - a configure enable, when enabled the registered output will
+//               be released to the CFGQ
+//               - a configure done, when enable, the regsitered output will be released to the Q
+//-----------------------------------------------------
+module CFGDSDFFR_FB (
+  input RST, // Reset input
+  input CK, // Clock Input (can be used with a free running programming clock)
+  input SE, // Scan-chain Enable (used to load the data)
+//input D, // Data Input
+  input SI, // Scan-chain input
+  input CFGE, // Configure enable
+  input CFG_DONE, // Configure done
+  output Q, // Regular Q output
+  output CFGQ, // Data Q output which is released when configure enable is activated
+  output CFGQN // Data Qb output which is released when configure enable is activated
+);
+//------------Internal Variables--------
+reg q_reg;
+wire QN;
+
+//-------------Code Starts Here---------
+always @ ( posedge CK or posedge RST)
+if (RST) begin
+  q_reg <= 1'b0;
+end else if (SE) begin
+  q_reg <= SI;
+end else begin
+    // Ignore D when SE=0 and RST=0 --> Hold previous value
+    q_reg <= q_reg;
+//  q_reg <= D;
+end
+
+assign CFGQ = CFGE ? Q : 1'b0;
+assign CFGQN = CFGE ? QN : 1'b1;
+
+assign Q = CFG_DONE ? q_reg : 1'b0;
+assign QN = CFG_DONE ? !Q : 1'b1;
+
+endmodule //End Of Module
 
 //-----------------------------------------------------
 // Function    : D-type flip-flop with 

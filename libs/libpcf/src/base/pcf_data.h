@@ -14,6 +14,8 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
+#include "pcf_custom_command.h"
+#include "pcf_custom_constraints.h"
 #include "pcf_data_fwd.h"
 
 /* Begin namespace openfpga */
@@ -47,6 +49,10 @@ class PcfData {
  public: /* Accessors: aggregates */
   pcf_io_constraint_range io_constraints() const;
 
+  const PcfCustomConstraint custom_constraint() const {
+    return pcf_custom_constraint_;
+  }
+
  public: /* Public Accessors: Basic data query */
   /* Get the pin to be constrained */
   openfpga::BasicPort io_pin(const PcfIoConstraintId& io_id) const;
@@ -72,6 +78,24 @@ class PcfData {
 
   /* Set the net for an io constraint */
   void set_io_pin(const PcfIoConstraintId& io_id, const std::string& pin);
+  PcfCustomConstraintId create_custom_constraint();
+
+  void set_custom_constraint_pin_mode(
+    const PcfCustomConstraintId& custom_constraint_id, const std::string& mode);
+
+  void set_custom_constraint_pin_mode_offset(
+    const PcfCustomConstraintId& custom_constraint_id, const int& mode_offset);
+
+  void set_custom_constraint_pb_type(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const std::string& pb_type);
+
+  void set_custom_constraint_pin(
+    const PcfCustomConstraintId& custom_constraint_id, const std::string& pin);
+
+  void set_custom_constraint_command(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const std::string& command_name);
 
  public: /* Public invalidators/validators */
   /* Show if the constraint id is a valid for data queries */
@@ -86,6 +110,8 @@ class PcfData {
 
   /* Nets to constraint */
   vtr::vector<PcfIoConstraintId, std::string> io_constraint_nets_;
+
+  PcfCustomConstraint pcf_custom_constraint_;
 };
 
 } /* End namespace openfpga*/

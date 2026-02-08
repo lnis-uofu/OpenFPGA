@@ -19,10 +19,10 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "bitstream_setting_xml_constants.h"
+#include "command_exit_codes.h"
 #include "read_xml_bitstream_setting.h"
 #include "read_xml_openfpga_arch_utils.h"
 #include "read_xml_util.h"
-
 /********************************************************************
  * Parse XML description for a pb_type annotation under a <pb_type> XML node
  *******************************************************************/
@@ -209,10 +209,9 @@ static void read_xml_overwrite_bitstream_setting(
 /********************************************************************
  * Parse XML codes about <openfpga_bitstream_setting> to an object
  *******************************************************************/
-openfpga::BitstreamSetting read_xml_bitstream_setting(
-  pugi::xml_node& Node, const pugiutil::loc_data& loc_data) {
-  openfpga::BitstreamSetting bitstream_setting;
-
+int read_xml_bitstream_setting(pugi::xml_node& Node,
+                               const pugiutil::loc_data& loc_data,
+                               openfpga::BitstreamSetting& bitstream_setting) {
   /* Iterate over the children under this node,
    * each child should be named after <pb_type>
    */
@@ -230,6 +229,7 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
         vec_valid_node_names.push_back(std::string(valid_node_name));
       }
       bad_tag(xml_child, loc_data, Node, vec_valid_node_names);
+      return openfpga::CMD_EXEC_FATAL_ERROR;
     }
 
     if (xml_child.name() == std::string(XML_PB_TYPE_NODE_NAME)) {
@@ -256,5 +256,5 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
     }
   }
 
-  return bitstream_setting;
+  return openfpga::CMD_EXEC_SUCCESS;
 }

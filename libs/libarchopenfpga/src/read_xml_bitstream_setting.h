@@ -12,7 +12,8 @@
  * Function declaration
  *******************************************************************/
 
-openfpga::BitstreamSetting read_xml_bitstream_setting(
-  pugi::xml_node& Node, const pugiutil::loc_data& loc_data);
+int read_xml_bitstream_setting(pugi::xml_node& Node,
+                               const pugiutil::loc_data& loc_data,
+                               openfpga::BitstreamSetting& bitstream_setting);
 
 #endif

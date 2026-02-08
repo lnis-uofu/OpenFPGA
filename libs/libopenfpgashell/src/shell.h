@@ -86,7 +86,7 @@ class Shell {
   };
 
  public: /* Constructor */
-  Shell<T>();
+  Shell();
 
  public: /* Public accessors */
   std::string name() const;

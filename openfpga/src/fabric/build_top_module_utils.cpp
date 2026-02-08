@@ -64,7 +64,7 @@ std::string generate_grid_module_port_name_in_top_module(
   VTR_ASSERT(true == sink_grid_pin_info.is_valid());
   int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
     grid_type_descriptor, sink_grid_pin_index);
-  VTR_ASSERT(OPEN != subtile_index &&
+  VTR_ASSERT(UNDEFINED != subtile_index &&
              subtile_index < grid_type_descriptor->capacity);
   std::string sink_grid_port_name = generate_grid_port_name(
     sink_grid_pin_width, sink_grid_pin_height, subtile_index,

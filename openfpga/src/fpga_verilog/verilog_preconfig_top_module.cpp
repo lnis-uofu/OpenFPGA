@@ -39,8 +39,7 @@ static void print_verilog_preconfig_top_module_ports(
   valid_file_stream(fp);
 
   /* Module declaration */
-  fp << "module " << circuit_name
-     << std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX);
+  fp << "module " << generate_preconfig_top_module_name(circuit_name);
   fp << " (" << std::endl;
 
   /* Port type-to-type mapping */
@@ -501,7 +500,7 @@ int print_verilog_preconfig_top_module(
   /* Add waveform output command, support both fsdb and vcd */
   if (true == options.dump_waveform()) {
     print_verilog_testbench_dump_waveform(
-      fp, circuit_name, std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME));
+      fp, circuit_name, generate_preconfig_top_module_name(circuit_name));
   }
 
   /* Testbench ends*/

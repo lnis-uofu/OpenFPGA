@@ -62,12 +62,24 @@ Here is an example:
 .. code-block:: xml
 
   <tile_annotations>
+    <physical_equivalent_site tile="<string>" subtile="<string>" site="<string>"/>
     <merge_subtile_ports tile="<string>" port="<string>"/>
     <global_port name="<string>" is_clock="<bool>" clock_arch_tree_name="<string>" is_reset="<bool>" is_set="<bool>" default_val="<int>">
       <tile name="<string>" port="<string>" x="<int>" y="<int>"/>
       ...
     </global_port>
   </tile_annotations>
+
+For physical equivalent site, 
+
+.. note:: If there is only 1 equivalent site for a subtile, it will be automatically inferred as the physical site. If there are more than 1 equivalent sites for a subtile, a physical site must be defined explicitedly.
+
+- ``tile="<string>"`` is the name of tile, that is defined in VPR architecture
+
+- ``sub_tile="<string>"`` is the name of sub tile, that is defined in VPR architecture
+
+- ``site="<string>"`` is the name of an equivalent site defined under the subtile, that is defined in VPR architecture
+
 
 For subtile port merge support (see an illustrative example in :numref:`fig_subtile_port_merge`):
 
@@ -93,6 +105,8 @@ For subtile port merge support (see an illustrative example in :numref:`fig_subt
 
 
 For global port support:
+
+.. note:: If you choose to route the global signal through the global port network, you should set the ``--clock_modeling ideal`` when running VPR. In such case, VPR will still reserve an I/O for the global signals without any routing traces. If you are minimize the I/O for your FPGA, please take the number of reserved I/Os into account!
 
 - ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
 

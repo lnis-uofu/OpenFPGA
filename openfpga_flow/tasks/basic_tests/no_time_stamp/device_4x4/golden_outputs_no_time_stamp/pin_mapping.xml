@@ -3,7 +3,7 @@
 -->
 
 <io_mapping>
-	<io name="gfpga_pad_GPIO_PAD[38:38]" net="a" dir="input"/>
-	<io name="gfpga_pad_GPIO_PAD[58:58]" net="b" dir="input"/>
-	<io name="gfpga_pad_GPIO_PAD[17:17]" net="c" dir="output"/>
+	<io name="gfpga_pad_GPIO_PAD[74:74]" net="a" dir="input"/>
+	<io name="gfpga_pad_GPIO_PAD[88:88]" net="b" dir="input"/>
+	<io name="gfpga_pad_GPIO_PAD[68:68]" net="c" dir="output"/>
 </io_mapping>

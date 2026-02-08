@@ -103,26 +103,16 @@ std::vector<char> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
   return mode_bits_[pb];
 }
 
-std::string PhysicalPb::fixed_bitstream(const PhysicalPbId& pb) const {
+std::vector<PhysicalPb::FixedBitstreamInfo> PhysicalPb::fixed_bitstreams(
+  const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return fixed_bitstreams_[pb];
 }
 
-size_t PhysicalPb::fixed_bitstream_offset(const PhysicalPbId& pb) const {
-  VTR_ASSERT(true == valid_pb_id(pb));
-  return fixed_bitstream_offsets_[pb];
-}
-
-std::string PhysicalPb::fixed_mode_select_bitstream(
-  const PhysicalPbId& pb) const {
+std::vector<PhysicalPb::FixedBitstreamInfo>
+PhysicalPb::fixed_mode_select_bitstreams(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return fixed_mode_select_bitstreams_[pb];
-}
-
-size_t PhysicalPb::fixed_mode_select_bitstream_offset(
-  const PhysicalPbId& pb) const {
-  VTR_ASSERT(true == valid_pb_id(pb));
-  return fixed_mode_select_bitstream_offsets_[pb];
 }
 
 /******************************************************************************
@@ -155,9 +145,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   mode_bits_.emplace_back();
 
   fixed_bitstreams_.emplace_back();
-  fixed_bitstream_offsets_.push_back(0);
   fixed_mode_select_bitstreams_.emplace_back();
-  fixed_mode_select_bitstream_offsets_.push_back(0);
 
   /* Register in the name2id map */
   type2id_map_[pb_graph_node] = pb;
@@ -255,28 +243,20 @@ void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,
   wire_lut_outputs_[pb][pb_graph_pin] = wire_lut_output;
 }
 
-void PhysicalPb::set_fixed_bitstream(const PhysicalPbId& pb,
-                                     const std::string& fixed_bitstream) {
+void PhysicalPb::add_fixed_bitstream(const PhysicalPbId& pb,
+                                     const std::string& fixed_bitstream,
+                                     const size_t& offset) {
   VTR_ASSERT(true == valid_pb_id(pb));
-  fixed_bitstreams_[pb] = fixed_bitstream;
+  FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset);
+  fixed_bitstreams_[pb].push_back(fix_bitstrm);
 }
 
-void PhysicalPb::set_fixed_bitstream_offset(const PhysicalPbId& pb,
-                                            const size_t& offset) {
+void PhysicalPb::add_fixed_mode_select_bitstream(
+  const PhysicalPbId& pb, const std::string& fixed_bitstream,
+  const size_t& offset) {
   VTR_ASSERT(true == valid_pb_id(pb));
-  fixed_bitstream_offsets_[pb] = offset;
-}
-
-void PhysicalPb::set_fixed_mode_select_bitstream(
-  const PhysicalPbId& pb, const std::string& fixed_bitstream) {
-  VTR_ASSERT(true == valid_pb_id(pb));
-  fixed_mode_select_bitstreams_[pb] = fixed_bitstream;
-}
-
-void PhysicalPb::set_fixed_mode_select_bitstream_offset(const PhysicalPbId& pb,
-                                                        const size_t& offset) {
-  VTR_ASSERT(true == valid_pb_id(pb));
-  fixed_mode_select_bitstream_offsets_[pb] = offset;
+  FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset);
+  fixed_mode_select_bitstreams_[pb].push_back(fix_bitstrm);
 }
 
 /******************************************************************************

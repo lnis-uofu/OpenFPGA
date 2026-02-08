@@ -111,6 +111,13 @@ std::string BasicPort::to_verilog_string() const {
          std::to_string(get_msb()) + "]";
 }
 
+std::string BasicPort::to_simple_verilog_string() const {
+  if (1 == get_width()) {
+    return get_name() + "[" + std::to_string(get_lsb()) + "]";
+  }
+  return to_verilog_string();
+}
+
 size_t BasicPort::find_ipin(const BasicPort& ref_port) const {
   /* Port name should match first */
   if (!this->mergeable(ref_port)) {

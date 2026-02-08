@@ -9,8 +9,11 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
+#include "openfpga_pb_parser.h"
 #include "pcf2place.h"
+#include "write_xml_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -129,4 +132,151 @@ int pcf2place(const PcfData& pcf_data,
   return num_err;
 }
 
+/********************************************************************
+ * set bitstream setting from custom pcf commands
+ *
+ * Return 0 if successful
+ * Return 1 if there are serious errors
+ *******************************************************************/
+int pcf2bitstream_setting(const PcfData& pcf_data,
+                          BitstreamSetting& bitstream_setting,
+                          const IoPinTable& io_pin_table, const bool& verbose) {
+  int num_err = 0;
+  const PcfCustomConstraint pcf_custom_constraint =
+    pcf_data.custom_constraint();
+  for (auto constraint_id : pcf_custom_constraint.custom_constraints()) {
+    std::string pb_type =
+      pcf_custom_constraint.custom_constraint_pb_type(constraint_id);
+    std::vector<std::string> modes =
+      pcf_custom_constraint.custom_constraint_mode(constraint_id);
+
+    std::vector<int> offsets =
+      pcf_custom_constraint.custom_constraint_mode_offset(constraint_id);
+    openfpga::BasicPort ext_pin =
+      pcf_custom_constraint.custom_constraint_pin(constraint_id);
+
+    /* Find the internal pin name from pin table, currently we only support
+     * 1-to-1 mapping */
+    auto int_pin_ids = io_pin_table.find_internal_pin_by_name_only(ext_pin);
+    if (0 == int_pin_ids.size()) {
+      VTR_LOG_ERROR(
+        "Cannot find any internal pin mapped to an "
+        "external pin '%s[%lu]'!\n",
+        ext_pin.get_name().c_str(), ext_pin.get_lsb());
+      num_err++;
+      continue;
+    } else if (1 < int_pin_ids.size()) {
+      VTR_LOG_ERROR(
+        "Found multiple internal pins that is mapped to an "
+        "external pin '%s[%lu]'! Please double check your pin table!\n",
+        ext_pin.get_name().c_str(), ext_pin.get_lsb());
+      for (auto int_pin_id : int_pin_ids) {
+        VTR_LOG("%s[%ld]\n",
+                io_pin_table.internal_pin(int_pin_id).get_name().c_str(),
+                io_pin_table.internal_pin(int_pin_id).get_lsb());
+      }
+      num_err++;
+      continue;
+    }
+    VTR_ASSERT(1 == int_pin_ids.size());
+    BasicPort int_pin = io_pin_table.internal_pin(int_pin_ids[0]);
+
+    openfpga::PbParser pb_parser(pb_type);
+    for (size_t i = 0; i < modes.size(); i++) {
+      std::vector<char> modes_vec(modes[i].begin(), modes[i].end());
+      int offset = offsets[i];
+      bitstream_setting.add_bitstream_pcf_mode_setting(
+        pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,
+        int_pin, offset);
+    }
+    VTR_LOGV(verbose, "Specified %d sets of mode bits for pb_type %s\n",
+             modes.size(), pb_type.c_str());
+  }
+  return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
+}
+
+int pcf2sdc_from_boundary_timing(const PcfData& pcf_data,
+                                 BoundaryTiming& boundary_timing,
+                                 const IoPinTable& io_pin_table,
+                                 const std::vector<std::string>& clock_names,
+                                 const double& clock_period, std::ostream& ofs,
+                                 const bool& verbose) {
+  /* No pcf, no boundary timing compensation */
+  size_t cnt_pcf = 0;
+  for (auto io_constrain_id : pcf_data.io_constraints()) {
+    auto ext_pin = pcf_data.io_pin(io_constrain_id);
+    if (boundary_timing.pin_delay_constrained(ext_pin)) {
+      cnt_pcf++;
+    }
+  }
+  if (cnt_pcf == 0) {
+    return CMD_EXEC_SUCCESS;
+  }
+  /* Always use virtual clock now. If we can back-trace signals per clock, then
+   * we can assign boundary timing to assoicated clock */
+  std::string vclk_name = "virtual_clock";
+  std::string io_clk_name = vclk_name;
+  VTR_ASSERT(clock_names.size() == 1);
+  /* Constrain all the inputs and outputs with the clock */
+  VTR_LOGV(verbose, "Constrain clock '%s' to period %g [ns] \n",
+           vclk_name.c_str(), clock_period);
+  io_clk_name = clock_names[0];
+  ofs << "create_clock "
+      << " -period " << clock_period << " -waveform "
+      << "{0 " << clock_period / 2 << "} " << io_clk_name << "\n";
+
+  /*write sdc file*/
+  int num_err = 0;
+  const std::string SET_INPUT_DELAY = "set_input_delay";
+  const std::string SET_OUTPUT_DELAY = "set_output_delay";
+
+  for (auto io_constrain_id : pcf_data.io_constraints()) {
+    auto ext_pin = pcf_data.io_pin(io_constrain_id);
+    auto net = pcf_data.io_net(io_constrain_id);
+    std::string max = boundary_timing.pin_max_delay(ext_pin);
+    std::string min = boundary_timing.pin_min_delay(ext_pin);
+
+    if (!boundary_timing.pin_delay_constrained(ext_pin)) {
+      VTR_LOGV_WARN(verbose, "Boundary timing is not defined for pin %s",
+                    ext_pin.to_verilog_string().c_str());
+      continue;
+    }
+
+    auto int_pin_ids = io_pin_table.find_internal_pin_by_name_only(ext_pin);
+    if (0 == int_pin_ids.size()) {
+      VTR_LOG_ERROR(
+        "Cannot find any internal pin mapped to an "
+        "external pin '%s[%lu]'!\n",
+        ext_pin.get_name().c_str(), ext_pin.get_lsb());
+      num_err++;
+      continue;
+    } else if (1 < int_pin_ids.size()) {
+      VTR_LOG_ERROR(
+        "Found multiple internal pins that is mapped to an "
+        "external pin '%s[%lu]'! Please double check your pin table!\n",
+        ext_pin.get_name().c_str(), ext_pin.get_lsb());
+      for (auto int_pin_id : int_pin_ids) {
+        VTR_LOG("\t%s[%ld]\n",
+                io_pin_table.internal_pin(int_pin_id).get_name().c_str(),
+                io_pin_table.internal_pin(int_pin_id).get_lsb());
+      }
+      num_err++;
+      continue;
+    }
+
+    auto ext_pin_direction = io_pin_table.pin_direction(int_pin_ids[0]);
+    if (ext_pin_direction == IoPinTable::e_io_direction::INPUT) {
+      ofs << SET_INPUT_DELAY << " -clock " << io_clk_name << " -max " << max
+          << " [get_ports {" << net << "}]" << std::endl;
+      ofs << SET_INPUT_DELAY << " -clock " << io_clk_name << " -min " << min
+          << " [get_ports {" << net << "}]" << std::endl;
+    } else if (ext_pin_direction == IoPinTable::e_io_direction::OUTPUT) {
+      ofs << SET_OUTPUT_DELAY << " -clock " << io_clk_name << " -max " << max
+          << " [get_ports {" << net << "}]" << std::endl;
+      ofs << SET_OUTPUT_DELAY << " -clock " << io_clk_name << " -min " << min
+          << " [get_ports {" << net << "}]" << std::endl;
+    }
+  }
+  return num_err ? CMD_EXEC_FATAL_ERROR : CMD_EXEC_SUCCESS;
+}
 } /* end namespace openfpga */

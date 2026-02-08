@@ -104,7 +104,7 @@ int IoLocationMap::write_to_xml_file(const std::string& fname,
   std::string dir_path = format_dir_path(find_path_dir_name(fname));
 
   /* Create directories */
-  create_directory(dir_path);
+  create_directory(dir_path, true, verbose);
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);
@@ -168,6 +168,15 @@ int IoLocationMap::write_to_xml_file(const std::string& fname,
            fname.c_str());
 
   return err_code;
+}
+
+bool IoLocationMap::is_valid_coord(const int& x, const int& y,
+                                   const int& z) const {
+  /* Sanity check */
+  if (size_t(-1) == x || size_t(-1) == y || size_t(-1) == z) {
+    return false;
+  }
+  return true;
 }
 
 } /* end namespace openfpga */

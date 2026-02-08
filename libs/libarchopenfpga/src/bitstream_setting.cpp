@@ -1,5 +1,6 @@
 #include "bitstream_setting.h"
 
+#include "openfpga_pb_parser.h"
 #include "vtr_assert.h"
 
 /* namespace openfpga begins */
@@ -22,6 +23,12 @@ BitstreamSetting::bitstream_default_mode_setting_range
 BitstreamSetting::default_mode_settings() const {
   return vtr::make_range(default_mode_setting_ids_.begin(),
                          default_mode_setting_ids_.end());
+}
+
+BitstreamSetting::bitstream_pcf_mode_setting_range
+BitstreamSetting::pcf_mode_settings() const {
+  return vtr::make_range(pcf_mode_setting_ids_.begin(),
+                         pcf_mode_setting_ids_.end());
 }
 
 BitstreamSetting::bitstream_clock_routing_setting_range
@@ -131,6 +138,47 @@ std::string BitstreamSetting::default_mode_bits_to_string(
   return mode_bits_str;
 }
 
+std::string BitstreamSetting::pcf_mode_pb_type_name(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  return pcf_mode_pb_type_names_[pcf_mode_setting_id];
+}
+
+std::vector<std::string> BitstreamSetting::pcf_mode_parent_pb_type_names(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  return pcf_mode_parent_pb_type_names_[pcf_mode_setting_id];
+}
+
+std::vector<std::string> BitstreamSetting::pcf_mode_parent_mode_names(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  return pcf_mode_parent_mode_names_[pcf_mode_setting_id];
+}
+std::vector<char> BitstreamSetting::pcf_mode_bits(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  return pb_type_pcf_mode_bits_[pcf_mode_setting_id];
+}
+std::string BitstreamSetting::pcf_mode_bits_to_string(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  std::string mode_bits_str;
+  for (const char& bit : pb_type_pcf_mode_bits_[pcf_mode_setting_id]) {
+    mode_bits_str += bit;
+  }
+  return mode_bits_str;
+}
+BasicPort BitstreamSetting::pcf_pin(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  return pb_type_pcf_pin_[pcf_mode_setting_id];
+}
+int BitstreamSetting::pcf_mode_bitstream_offset(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_pcf_mode_setting_id(pcf_mode_setting_id));
+  return pb_type_pcf_mode_bitstream_offset_[pcf_mode_setting_id];
+}
 std::string BitstreamSetting::clock_routing_network(
   const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
   VTR_ASSERT(
@@ -192,6 +240,7 @@ bool BitstreamSetting::overwrite_bitstream_value(
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
+
 BitstreamPbTypeSettingId BitstreamSetting::add_bitstream_pb_type_setting(
   const std::string& pb_type_name,
   const std::vector<std::string>& parent_pb_type_names,
@@ -239,6 +288,24 @@ BitstreamSetting::add_bitstream_default_mode_setting(
   pb_type_default_mode_bits_.push_back(mode_bits);
 
   return default_mode_setting_id;
+}
+
+BitstreamPCFModeSettingId BitstreamSetting::add_bitstream_pcf_mode_setting(
+  const std::string& pb_type_name,
+  const std::vector<std::string>& parent_pb_type_names,
+  const std::vector<std::string>& parent_mode_names,
+  const std::vector<char>& mode_bits, const BasicPort& pb_pin,
+  const int& offset) {
+  BitstreamPCFModeSettingId pcf_mode_setting_id =
+    BitstreamPCFModeSettingId(pcf_mode_setting_ids_.size());
+  pcf_mode_setting_ids_.push_back(pcf_mode_setting_id);
+  pcf_mode_pb_type_names_.push_back(pb_type_name);
+  pcf_mode_parent_pb_type_names_.push_back(parent_pb_type_names);
+  pcf_mode_parent_mode_names_.push_back(parent_mode_names);
+  pb_type_pcf_mode_bits_.push_back(mode_bits);
+  pb_type_pcf_pin_.push_back(pb_pin);
+  pb_type_pcf_mode_bitstream_offset_.push_back(offset);
+  return pcf_mode_setting_id;
 }
 
 BitstreamClockRoutingSettingId
@@ -321,6 +388,12 @@ bool BitstreamSetting::valid_bitstream_default_mode_setting_id(
           default_mode_setting_ids_[default_mode_setting_id]);
 }
 
+bool BitstreamSetting::valid_bitstream_pcf_mode_setting_id(
+  const BitstreamPCFModeSettingId& pcf_mode_setting_id) const {
+  return (size_t(pcf_mode_setting_id) < pcf_mode_setting_ids_.size()) &&
+         (pcf_mode_setting_id == pcf_mode_setting_ids_[pcf_mode_setting_id]);
+}
+
 bool BitstreamSetting::valid_bitstream_clock_routing_setting_id(
   const BitstreamClockRoutingSettingId& clock_routing_setting_id) const {
   return (size_t(clock_routing_setting_id) <
@@ -346,4 +419,49 @@ bool BitstreamSetting::valid_overwrite_bitstream_id(
          (id == overwrite_bitstream_ids_[id]);
 }
 
+void BitstreamSetting::clear() {
+  pb_type_setting_ids_.clear();
+  pb_type_names_.clear();
+  parent_pb_type_names_.clear();
+  parent_mode_names_.clear();
+  pb_type_bitstream_sources_.clear();
+  pb_type_bitstream_contents_.clear();
+  is_mode_select_bitstreams_.clear();
+
+  bitstream_offsets_.clear();
+
+  /* Pb type - default mode bits overwrite */
+  default_mode_setting_ids_.clear();
+  default_mode_pb_type_names_.clear();
+  default_mode_parent_pb_type_names_.clear();
+  default_mode_parent_mode_names_.clear();
+  pb_type_default_mode_bits_.clear();
+
+  /* Mode setting from pcf command */
+
+  pcf_mode_setting_ids_.clear();
+  pcf_mode_pb_type_names_.clear();
+  pcf_mode_parent_pb_type_names_.clear();
+  pcf_mode_parent_mode_names_.clear();
+  pb_type_pcf_mode_bits_.clear();
+  pb_type_pcf_pin_.clear();
+  pb_type_pcf_mode_bitstream_offset_.clear();
+
+  /* Clock routing */
+
+  clock_routing_setting_ids_.clear();
+  clock_routing_network_names_.clear();
+  clock_routing_pins_.clear();
+
+  interconnect_setting_ids_.clear();
+  interconnect_names_.clear();
+  interconnect_parent_pb_type_names_.clear();
+  interconnect_parent_mode_names_.clear();
+  interconnect_default_paths_.clear();
+
+  non_fabric_.clear();
+  overwrite_bitstream_ids_.clear();
+  overwrite_bitstream_paths_.clear();
+  overwrite_bitstream_values_.clear();
+}
 }  // namespace openfpga

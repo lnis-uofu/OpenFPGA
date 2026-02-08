@@ -3,6 +3,8 @@
 Clock Network (.xml)
 --------------------
 
+.. note:: If you choose to route the global signal through the programmable network, you should set the ``--clock_modeling ideal`` when running VPR. In such case, VPR will still reserve an I/O for the global signals without any routing traces. If you are minimize the I/O for your FPGA, please take the number of reserved I/Os into account!
+
 The XML-based clock network description language is used to describe 
 
 - One or more programmable clock networks constaining programmable switches for routing clock signals
@@ -50,7 +52,7 @@ The entry point of a clock tree must be at a valid connection block.
 
    An example of programmable clock network considering a 2x2 FPGA fabric
 
-Note that when the ``perimeter_cb`` is enabled for routing architecture (See details in :ref:`addon_vpr_syntax`), clock entry point can be indeed at the fringe of FPGA fabrics. See example in :numref:`prog_clock_network_example_2x2_perimeter_cb`. 
+Note that when the ``perimeter_cb`` is enabled for routing architecture (See details in :ref:`addon_vpr_syntax`), clock entry point can be indeed at the fringe of FPGA fabrics. See example in :numref:`fig_prog_clock_network_example_2x2_perimeter_cb`. 
 
 .. _fig_prog_clock_network_example_2x2_perimeter_cb:
 

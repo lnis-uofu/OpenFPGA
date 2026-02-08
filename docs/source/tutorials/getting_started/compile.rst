@@ -12,14 +12,14 @@ How to Compile
 Supported Operating Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OpenFPGA is continously tested with Ubuntu 22.04
+OpenFPGA is continously tested with Ubuntu 22.04, Ubuntu 24.04 and CentOS 9
 It might work with earlier versions and other distributions.
 
 In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
 
 - CentOS 7.8
+- CentOS 7.9
 - CentOS 8
-- CentOS 9
 - Ubuntu 18.04
 - Ubuntu 21.04
 - Ubuntu 20.04 
@@ -121,20 +121,22 @@ In general, OpenFPGA requires specific versions for the following dependencies:
   version 10.3+ is required to run Verilog-to-Verification flow
   
 
-Ubuntu 20.04
-^^^^^^^^^^^^
+Ubuntu
+^^^^^^
+
+If your OS is Ubuntu 20.04, 22.04 and 24.04, we offer unified scripts to install all the dependencies.
 
 - Dependencies required to build the code base
 
-.. include:: ubuntu20p04_dependencies.sh
+.. include:: ubuntu_dependencies.sh
   :code: shell
 
 - Dependencies required to run regression tests
 
-.. include:: ubuntu20p04_regtest_dependencies.sh
+.. include:: ubuntu_regtest_dependencies.sh
   :code: shell
   
-.. note:: Python packages are also required
+.. note:: Python packages are also required. If you are using Ubuntu 24.04, the required Python version is <= 3.12.3
   
 .. code-block::
 
@@ -145,30 +147,18 @@ Ubuntu 20.04
 .. include:: doc_dependencies.sh
   :code: shell
 
-Ubuntu 22.04
-^^^^^^^^^^^^
+CentOS
+^^^^^^
 
-- Dependencies required to build the code base
+If your OS is CentOS 7.9, we offer the script to install all the dependencies.
 
-.. include:: ubuntu22p04_dependencies.sh
+.. include:: centos7p9_dependencies.sh
   :code: shell
 
-- Dependencies required to run regression tests
+If your OS is CentOS 9, we offer the script to install all the dependencies.
 
-.. include:: ubuntu22p04_regtest_dependencies.sh
+.. include:: centos9_dependencies.sh
   :code: shell
-  
-.. note:: Python packages are also required
-  
-.. code-block::
-
-  python3 -m pip install -r requirements.txt
-
-- Dependencies required to build documentation
-
-.. include:: doc_dependencies.sh
-  :code: shell
-
 
 Running with pre-built docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

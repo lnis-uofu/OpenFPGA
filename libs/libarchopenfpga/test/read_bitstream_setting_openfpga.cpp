@@ -16,8 +16,9 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc));
 
   /* Parse the simulation settings from an XML file */
-  const openfpga::BitstreamSetting& openfpga_bitstream_setting =
-    read_xml_openfpga_bitstream_settings(argv[1]);
+  openfpga::BitstreamSetting openfpga_bitstream_setting;
+  int status =
+    read_xml_openfpga_bitstream_settings(argv[1], openfpga_bitstream_setting);
   VTR_LOG("Parsed bitstream settings from XML %s.\n", argv[1]);
 
   /* Output the simulation settings to an XML file
