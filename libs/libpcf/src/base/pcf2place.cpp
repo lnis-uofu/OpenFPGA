@@ -150,6 +150,9 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     std::vector<std::string> modes =
       pcf_custom_constraint.custom_constraint_mode(constraint_id);
 
+    std::vector<bool> split_reverse =
+      pcf_custom_constraint.custom_constraint_mode_split_reverse(constraint_id);
+
     std::vector<int> offsets =
       pcf_custom_constraint.custom_constraint_mode_offset(constraint_id);
     openfpga::BasicPort ext_pin =
@@ -184,6 +187,11 @@ int pcf2bitstream_setting(const PcfData& pcf_data,
     openfpga::PbParser pb_parser(pb_type);
     for (size_t i = 0; i < modes.size(); i++) {
       std::vector<char> modes_vec(modes[i].begin(), modes[i].end());
+      if (split_reverse[i]) {
+        size_t mid = modes_vec.size() / 2;
+        std::rotate(modes_vec.begin(), modes_vec.begin() + mid,
+                    modes_vec.end());
+      }
       int offset = offsets[i];
       bitstream_setting.add_bitstream_pcf_mode_setting(
         pb_parser.leaf(), pb_parser.parents(), pb_parser.modes(), modes_vec,

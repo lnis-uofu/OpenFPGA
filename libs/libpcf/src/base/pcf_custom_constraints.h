@@ -62,6 +62,8 @@ class PcfCustomConstraint {
     const PcfCustomConstraintId& custom_constraint_id) const;
   std::vector<int> custom_constraint_mode_offset(
     const PcfCustomConstraintId& custom_constraint_id) const;
+  std::vector<bool> custom_constraint_mode_split_reverse(
+    const PcfCustomConstraintId& custom_constraint_id) const;
   /* Check if there are any io constraints */
   bool empty() const;
 
@@ -74,6 +76,10 @@ class PcfCustomConstraint {
     const PcfCustomConstraintId& costum_constraint_id, const std::string& mode);
   void set_custom_constraint_pin_mode_offset(
     const PcfCustomConstraintId& custom_constraint_id, const int& mode_offset);
+
+  void set_custom_constraint_pin_mode_split_reverse(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const bool& split_reverse);
   void set_custom_constraint_command(
     const PcfCustomConstraintId& custom_constraint_id,
     const std::string& command_name);
@@ -105,6 +111,8 @@ class PcfCustomConstraint {
     custom_constraint_pin_mode_;
   vtr::vector<PcfCustomConstraintId, std::vector<int>>
     custom_constraint_pin_mode_offset_;
+  vtr::vector<PcfCustomConstraintId, std::vector<bool>>
+    custom_constraint_pin_mode_split_reverse_;
 };
 
 } /* End namespace openfpga*/

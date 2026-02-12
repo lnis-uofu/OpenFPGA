@@ -137,6 +137,13 @@ void PcfData::set_custom_constraint_pin_mode_offset(
     custom_constraint_id, mode_offset);
 }
 
+void PcfData::set_custom_constraint_pin_mode_split_reverse(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const bool& split_reverse) {
+  pcf_custom_constraint_.set_custom_constraint_pin_mode_split_reverse(
+    custom_constraint_id, split_reverse);
+}
+
 void PcfData::set_custom_constraint_pb_type(
   const PcfCustomConstraintId& custom_constraint_id,
   const std::string& pb_type) {

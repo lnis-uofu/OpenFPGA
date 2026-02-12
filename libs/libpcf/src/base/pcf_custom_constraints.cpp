@@ -58,6 +58,13 @@ std::vector<int> PcfCustomConstraint::custom_constraint_mode_offset(
   return custom_constraint_pin_mode_offset_[custom_constraint_id];
 }
 
+std::vector<bool> PcfCustomConstraint::custom_constraint_mode_split_reverse(
+  const PcfCustomConstraintId& custom_constraint_id) const {
+  /* validate the io_id */
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  return custom_constraint_pin_mode_split_reverse_[custom_constraint_id];
+}
+
 bool PcfCustomConstraint::empty() const {
   return 0 == custom_constraint_ids_.size();
 }
@@ -75,6 +82,7 @@ PcfCustomConstraintId PcfCustomConstraint::create_custom_constraint() {
   custom_constraint_pins_.emplace_back();
   custom_constraint_pin_mode_.emplace_back();
   custom_constraint_pin_mode_offset_.emplace_back();
+  custom_constraint_pin_mode_split_reverse_.emplace_back();
   custom_constraint_command_name_.emplace_back();
   custom_constraint_pb_type_.emplace_back();
 
@@ -92,6 +100,14 @@ void PcfCustomConstraint::set_custom_constraint_pin_mode_offset(
   VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
   custom_constraint_pin_mode_offset_[custom_constraint_id].push_back(
     mode_offset);
+}
+
+void PcfCustomConstraint::set_custom_constraint_pin_mode_split_reverse(
+  const PcfCustomConstraintId& custom_constraint_id,
+  const bool& split_reverse) {
+  VTR_ASSERT(valid_custom_constraint_id(custom_constraint_id));
+  custom_constraint_pin_mode_split_reverse_[custom_constraint_id].push_back(
+    split_reverse);
 }
 
 void PcfCustomConstraint::set_custom_constraint_command(

@@ -86,6 +86,9 @@ class PcfData {
   void set_custom_constraint_pin_mode_offset(
     const PcfCustomConstraintId& custom_constraint_id, const int& mode_offset);
 
+  void set_custom_constraint_pin_mode_split_reverse(
+    const PcfCustomConstraintId& custom_constraint_id,
+    const bool& split_reverse);
   void set_custom_constraint_pb_type(
     const PcfCustomConstraintId& custom_constraint_id,
     const std::string& pb_type);

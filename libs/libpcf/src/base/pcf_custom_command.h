@@ -75,7 +75,8 @@ class PcfCustomCommand {
                                  const int& num_bits,
                                  const std::uint64_t& max_val,
                                  const bool& little_endian,
-                                 const int& mode_offset);
+                                 const int& mode_offset,
+                                 const bool& split_reverse);
 
   std::string custom_mode_value(const std::string& command_name,
                                 const std::string& option_name,
@@ -96,6 +97,9 @@ class PcfCustomCommand {
 
   int custom_decimal_mode_offset(const std::string& command_name,
                                  const std::string& option_name) const;
+
+  bool custom_decimal_mode_split_reverse(const std::string& command_name,
+                                         const std::string& option_name) const;
 
   int custom_decimal_mode_num_bits(const std::string& command_name,
                                    const std::string& option_name) const;
@@ -128,6 +132,8 @@ class PcfCustomCommand {
     const PcfCustomCommandOptionId& custom_option_id) const;
 
   int custom_mode_offset(const PcfCustomCommandModeId& custom_mode_id) const;
+  bool custom_decimal_mode_split_reverse(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
 
   std::string custom_mode_name(
     const PcfCustomCommandModeId& custom_mode_id) const;
@@ -203,6 +209,8 @@ class PcfCustomCommand {
     custom_decimal_mode_max_values_;
 
   vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_offset_;
+
+  vtr::vector<PcfCustomCommandModeId, bool> custom_decimal_mode_split_reverse_;
 
   vtr::vector<PcfCustomCommandModeId, bool> custom_decimal_mode_little_endian_;
 };
