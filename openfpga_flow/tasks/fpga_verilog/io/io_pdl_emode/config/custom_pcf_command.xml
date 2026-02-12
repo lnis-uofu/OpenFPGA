@@ -4,7 +4,7 @@
     <option name="pad" type="pin"/>
     <!-- The pb_type that is associated to the configuration bits. Offset is applied to the index when overwrite the bitstream -->
     <pb_type name="gp_inpad.inpad"/>
-    <option name="delay" type="decimal" num_bits="3" max="6" little_endian="false" offset="0" split_reverse="1"/>
+    <option name="delay" type="decimal" num_bits="3" max="6" little_endian="false" offset="0" split_reverse="false"/>
   </command>
     <command name="set_watch_dog" type="delay_chain">
     <option name="pad" type="pin"/>

@@ -110,7 +110,7 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
         split_reverse =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_SPLIT_REVERSE, loc_data,
                         pugiutil::ReqOpt::OPTIONAL)
-            .as_int();
+            .as_bool();
 
         pcf_custom_command.create_custom_decimal_mode(
           command_name, option_name, num_bits, max_decimal, little_endian,
