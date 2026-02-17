@@ -98,6 +98,8 @@ jobs:
         with:
           # vcpkg will automatically find and use the vcpkg.json in your repo root
           token: ${{ secrets.GITHUB_TOKEN }}
+          manifest-dir: ${{ github.workspace }} # Set to the directory containing your vcpkg.json file
+          triplet: x64-windows-release # This must be set with a valid vcpkg triplet
 
       - name: Install dependencies
         run: ./.github/workflows/install_dependencies_build_win.ps1
