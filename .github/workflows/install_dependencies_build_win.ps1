@@ -58,6 +58,20 @@ if ($AddToPath) {
         )
         Write-Host "PATH updated. Restart your shell to apply."
     }
+    # Most binary packages have: InstallDir/lib
+    $tclLibPath = Join-Path $InstallDir "lib"
+    
+    if (!(Test-Path $tclLibPath)) {
+        Write-Warning "TCL_LIBRARY directory not found at $tclLibPath"
+    } else {
+        Write-Host "Setting TCL_LIBRARY to $tclLibPath"
+        [Environment]::SetEnvironmentVariable(
+            "TCL_LIBRARY",
+            $tclLibPath,
+            $EnvScope
+        )
+        Write-Host "TCL_LIBRARY set in $EnvScope scope."
+    }
 }
 
 Write-Host "Installation complete!"
