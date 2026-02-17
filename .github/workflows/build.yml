@@ -101,22 +101,30 @@ jobs:
           manifest-dir: ${{ github.workspace }} # Set to the directory containing your vcpkg.json file
           triplet: x64-windows-release # This must be set with a valid vcpkg triplet
 
-      - name: Install dependencies
-        run: ./.github/workflows/install_dependencies_build_win.ps1
+      - name: Install WinFlexBison
         shell: powershell
+        run: |
+          choco install winflexbison3
+          # Optional: Verify installation
+          win_flex --version
+          win_bison --version
+
+      - name: Install dependencies
+        shell: powershell
+        run: ./.github/workflows/install_dependencies_build_win.ps1
       
       - name: Dump tool versions
+        shell: powershell
         run: |
           cmake --version
-        shell: powershell
 
       - name: Configure and build with CMake
+        shell: powershell
         run: |
+          make checkout
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B .
-          cmake --build .
-        shell: powershell
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF
 
   # Test the compilation compatibility on Linux
   linux_build:

@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "dependencies": [
     "zlib",
-    "readline",
+    "libreadline",
     "tcl",
-    "swig",
     "openssl",
-    "winflexbison"
+    "pkgconf"
   ]
 }
