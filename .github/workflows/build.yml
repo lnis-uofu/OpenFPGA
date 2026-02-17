@@ -108,7 +108,6 @@ jobs:
           # Optional: Verify installation
           win_flex --version
           win_bison --version
-          wget --version
 
       - name: Install dependencies
         shell: powershell
