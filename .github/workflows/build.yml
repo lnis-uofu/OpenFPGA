@@ -104,7 +104,7 @@ jobs:
       - name: Install WinFlexBison
         shell: powershell
         run: |
-          choco install winflexbison3 wget
+          choco install winflexbison3 wget activetcl
           # Optional: Verify installation
           win_flex --version
           win_bison --version
