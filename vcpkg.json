@@ -4,8 +4,14 @@
   "dependencies": [
     "zlib",
     "readline",
-    "tcl86",
+    "tcl",
     "openssl",
     "pkgconf"
+  ],
+  "overrides": [
+    {
+      "name": "tcl",
+      "version": "8.6.11"
+    }
   ]
 }
