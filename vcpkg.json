@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "dependencies": [
     "zlib",
-    "libreadline",
+    "readline",
     "tcl",
     "openssl",
     "pkgconf"
