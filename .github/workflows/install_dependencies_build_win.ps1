@@ -1,9 +1,65 @@
 # Install dependencies for source code build on powershell
 
-## Download and extract the swigwin package
-#(New-Object System.Net.WebClient).DownloadFile("https://prdownloads.sourceforge.net", "swigwin-4.4.1.zip")
-#Expand-Archive -Path swigwin-4.4.1.zip -DestinationPath .
-## Add the directory containing the swig.exe to the PATH
-#$env:Path += ";$PWD\swigwin-4.4.1"
-## Make the updated PATH available to subsequent steps in the job
-#echo "::add-path::$PWD\swigwin-4.4.1"
+## Download and extract the tcl8.6 package
+param(
+    [string]$DownloadUrl = "https://github.com/teclabat/tcltk-binaries/releases/download/version-8.6.18.14/tcltk86-8.6.18.14.Win10.nightly.20260214.tgz",
+    [switch]$AddToPath = $true
+)
+
+$ErrorActionPreference = "Stop"
+
+# Temporary download path
+$InstallDir = (Get-Location).Path
+$TempArchive = Join-Path $env:TEMP "tcltk.tgz"
+$ExtractDir  = Join-Path $env:TEMP "tcltk_extract"
+
+# Clean up old temp data
+Remove-Item -Path $TempArchive -Force -ErrorAction SilentlyContinue
+Remove-Item -Path $ExtractDir -Recurse -Force -ErrorAction SilentlyContinue
+
+# === Download ===
+Write-Host "Downloading Tcl/Tk TGZ from:" $DownloadUrl
+Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempArchive
+
+# === Extract TGZ ===
+Write-Host "Extracting archive..."
+New-Item -ItemType Directory -Path $ExtractDir -Force | Out-Null
+
+# Try using built-in tar (available in Windows 10+ / PowerShell 7+)
+$tarFound = Get-Command tar.exe -ErrorAction SilentlyContinue
+
+if ($tarFound) {
+    Write-Host "Using built-in tar to extract..."
+    & tar.exe -xzf $TempArchive -C $ExtractDir
+} else {
+    throw "tar.exe not found — cannot extract .tgz"
+}
+
+# === Install (copy files) ===
+Write-Host "Installing to: $InstallDir"
+if (!(Test-Path $InstallDir)) {
+    New-Item -ItemType Directory -Path $InstallDir | Out-Null
+}
+
+# Copy extracted files to target
+Copy-Item -Path (Join-Path $ExtractDir "*") -Destination $InstallDir -Recurse -Force
+
+# === Optionally add bin to PATH ===
+if ($AddToPath) {
+    $binPath = Join-Path $InstallDir "bin"
+    $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+
+    if ($currentPath -notlike "*$binPath*") {
+        Write-Host "Adding $binPath to system PATH..."
+        [Environment]::SetEnvironmentVariable(
+            "Path",
+            "$currentPath;$binPath",
+            "Machine"
+        )
+        Write-Host "PATH updated. Restart your shell to apply."
+    }
+}
+
+Write-Host "Installation complete!"
+Write-Host "Tclsh path:" (Join-Path $InstallDir "bin\tclsh.exe")
+
