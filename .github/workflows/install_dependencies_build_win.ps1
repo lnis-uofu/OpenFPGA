@@ -32,7 +32,7 @@ if ($tarFound) {
     Write-Host "Using built-in tar to extract..."
     & tar.exe -xzf $TempArchive -C $ExtractDir
 } else {
-    throw "tar.exe not found — cannot extract .tgz"
+    throw "tar.exe not found. cannot extract .tgz"
 }
 
 # === Install (copy files) ===
