@@ -68,7 +68,39 @@ jobs:
           fi
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-  # Test the compilation compatibility
+  # Test the compilation compatibility on Windows
+  win_build:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Build Compatibility: MsBuild (Windows-latest)"
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: ./.github/workflows/install_dependencies_build_win.ps1
+        shell: powershell
+      
+      - name: Dump tool versions
+        run: |
+          cmake --version
+
+  # Test the compilation compatibility on Linux
   linux_build:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
