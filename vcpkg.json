@@ -6,7 +6,7 @@
     "readline",
     {
       "name": "tcl",
-      "version": "8.6.11"
+      "version>=": "8.6.11"
     },
     "openssl",
     "pkgconf"
