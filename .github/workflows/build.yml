@@ -92,6 +92,13 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
 
+      - name: vcpkg build
+        uses: johnwason/vcpkg-action@v7
+        id: vcpkg
+        with:
+          # vcpkg will automatically find and use the vcpkg.json in your repo root
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install dependencies
         run: ./.github/workflows/install_dependencies_build_win.ps1
         shell: powershell
@@ -99,6 +106,15 @@ jobs:
       - name: Dump tool versions
         run: |
           cmake --version
+        shell: powershell
+
+      - name: Configure and build with CMake
+        run: |
+          mkdir build
+          cd build
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B .
+          cmake --build .
+        shell: powershell
 
   # Test the compilation compatibility on Linux
   linux_build:
