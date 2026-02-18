@@ -43,6 +43,28 @@ const RRGSB& DeviceRRGSB::get_gsb(const size_t& x, const size_t& y) const {
   return get_gsb(coordinate);
 }
 
+const RRGSBEdges& DeviceRRGSB::get_gsb_edges(
+  const vtr::Point<size_t>& coordinate) const {
+  VTR_ASSERT(validate_coordinate(coordinate));
+  return rr_gsb_edges_[coordinate.x()][coordinate.y()];
+}
+
+const RRGSBEdges& DeviceRRGSB::get_gsb_edges(const size_t& x,
+                                              const size_t& y) const {
+  return get_gsb_edges(vtr::Point<size_t>(x, y));
+}
+
+RRGSBEdges& DeviceRRGSB::get_mutable_gsb_edges(
+  const vtr::Point<size_t>& coordinate) {
+  VTR_ASSERT(validate_coordinate(coordinate));
+  return rr_gsb_edges_[coordinate.x()][coordinate.y()];
+}
+
+RRGSBEdges& DeviceRRGSB::get_mutable_gsb_edges(const size_t& x,
+                                                const size_t& y) {
+  return get_mutable_gsb_edges(vtr::Point<size_t>(x, y));
+}
+
 /* Get a rr switch block in the array with a coordinate */
 const RRGSB& DeviceRRGSB::get_gsb_by_cb_coordinate(
   const vtr::Point<size_t>& coordinate) const {
@@ -68,24 +90,31 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const e_rr_type& cb_type) const {
 /* Identify if unique blocks are preloaded or built */
 bool DeviceRRGSB::is_compressed() const { return is_compressed_; }
 
+/* Check if a Switch Block exists at a given GSB coordinate */
+bool DeviceRRGSB::is_sb_exist(const vtr::Point<size_t>& coord) const {
+  if (false == validate_coordinate(coord)) return false;
+  return get_gsb_edges(coord).is_sb_exist(get_gsb(coord));
+}
+
+bool DeviceRRGSB::is_sb_exist(const size_t& x, const size_t& y) const {
+  return is_sb_exist(vtr::Point<size_t>(x, y));
+}
+
 /* Identify if a GSB actually exists at a location */
-bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
+bool DeviceRRGSB::is_gsb_exist(const RRGraphView& /*rr_graph*/,
                                const vtr::Point<size_t> coord) const {
   /* Out of range, does not exist */
   if (false == validate_coordinate(coord)) {
     return false;
   }
 
-  /* If the GSB is empty, it does not exist */
   if (true == get_gsb(coord).is_cb_exist(e_rr_type::CHANX)) {
     return true;
   }
-
   if (true == get_gsb(coord).is_cb_exist(e_rr_type::CHANY)) {
     return true;
   }
-
-  if (true == get_gsb(coord).is_sb_exist(rr_graph)) {
+  if (true == get_gsb_edges(coord).is_sb_exist(get_gsb(coord))) {
     return true;
   }
 
@@ -242,6 +271,7 @@ const RRGSB& DeviceRRGSB::get_sb_unique_module(
 /* Pre-allocate the rr_switch_block array that the device requires */
 void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
   rr_gsb_.resize(coordinate.x());
+  rr_gsb_edges_.resize(coordinate.x());
 
   gsb_unique_module_id_.resize(coordinate.x());
 
@@ -252,6 +282,7 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
 
   for (size_t x = 0; x < coordinate.x(); ++x) {
     rr_gsb_[x].resize(coordinate.y());
+    rr_gsb_edges_[x].resize(coordinate.y());
 
     gsb_unique_module_id_[x].resize(coordinate.y());
 
@@ -280,6 +311,7 @@ void DeviceRRGSB::reserve_unique_modules() {
 void DeviceRRGSB::resize_upon_need(const vtr::Point<size_t>& coordinate) {
   if (coordinate.x() + 1 > rr_gsb_.size()) {
     rr_gsb_.resize(coordinate.x() + 1);
+    rr_gsb_edges_.resize(coordinate.x() + 1);
 
     sb_unique_module_id_.resize(coordinate.x() + 1);
 
@@ -289,6 +321,7 @@ void DeviceRRGSB::resize_upon_need(const vtr::Point<size_t>& coordinate) {
 
   if (coordinate.y() + 1 > rr_gsb_[coordinate.x()].size()) {
     rr_gsb_[coordinate.x()].resize(coordinate.y() + 1);
+    rr_gsb_edges_[coordinate.x()].resize(coordinate.y() + 1);
     sb_unique_module_id_[coordinate.x()].resize(coordinate.y() + 1);
 
     cbx_unique_module_id_[coordinate.x()].resize(coordinate.y() + 1);
@@ -322,6 +355,7 @@ RRGSB& DeviceRRGSB::get_mutable_gsb(const size_t& x, const size_t& y) {
 /* Add a switch block to the array, which will automatically identify and
  * update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
+                                         const RRGraphInEdges& in_edges,
                                          const e_rr_type& cb_type) {
   /* Make sure a clean start */
   clear_cb_unique_module(cb_type);
@@ -338,10 +372,16 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
 
       /* Traverse the unique_mirror list and check it is an mirror of another
        */
+      const RRGSBEdges& cand_edges = rr_gsb_edges_[ix][iy];
       for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
         const RRGSB& unique_module = get_cb_unique_module(cb_type, id);
-        if (true == is_cb_mirror(rr_graph, device_annotation_, rr_gsb_[ix][iy],
-                                 unique_module, cb_type)) {
+        const vtr::Point<size_t> base_coord =
+          (cb_type == e_rr_type::CHANX) ? cbx_unique_module_[id]
+                                        : cby_unique_module_[id];
+        const RRGSBEdges& base_edges = rr_gsb_edges_[base_coord.x()][base_coord.y()];
+        if (true == is_cb_mirror(rr_graph, in_edges, device_annotation_,
+                                 unique_module, base_edges,
+                                 rr_gsb_[ix][iy], cand_edges, cb_type)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */
@@ -362,7 +402,8 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
 
 /* Add a switch block to the array, which will automatically identify and
  * update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph) {
+void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph,
+                                         const RRGraphInEdges& in_edges) {
   /* Make sure a clean start */
   clear_sb_unique_module();
 
@@ -374,14 +415,18 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph) {
 
       /* Traverse the unique_mirror list and check it is an mirror of another
        */
+      const RRGSBEdges& cand_edges = rr_gsb_edges_[ix][iy];
       for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
         /* Check if the two modules have the same submodules,
          * if so, these two modules are the same, indicating the sb is not
          * unique. else the sb is unique
          */
         const RRGSB& unique_module = get_sb_unique_module(id);
-        if (true == is_sb_mirror(rr_graph, device_annotation_, rr_gsb_[ix][iy],
-                                 unique_module)) {
+        const vtr::Point<size_t>& base_coord = sb_unique_module_[id];
+        const RRGSBEdges& base_edges = rr_gsb_edges_[base_coord.x()][base_coord.y()];
+        if (true == is_sb_mirror(rr_graph, in_edges, device_annotation_,
+                                 unique_module, base_edges,
+                                 rr_gsb_[ix][iy], cand_edges)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */
@@ -449,11 +494,12 @@ void DeviceRRGSB::build_gsb_unique_module() {
   is_compressed_ = true;
 }
 
-void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
-  build_sb_unique_module(rr_graph);
+void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph,
+                                      const RRGraphInEdges& in_edges) {
+  build_sb_unique_module(rr_graph, in_edges);
 
-  build_cb_unique_module(rr_graph, e_rr_type::CHANX);
-  build_cb_unique_module(rr_graph, e_rr_type::CHANY);
+  build_cb_unique_module(rr_graph, in_edges, e_rr_type::CHANX);
+  build_cb_unique_module(rr_graph, in_edges, e_rr_type::CHANY);
 
   build_gsb_unique_module(); /*is_compressed_ flip inside
                                 build_gsb_unique_module*/
