@@ -113,7 +113,7 @@ jobs:
         shell: powershell
         run: |
           ./.github/workflows/install_dependencies_build_win.ps1
-          echo "TCL_DIR=$TCL_DIR" | Out-File -FilePath $env:GITHUB_ENG -Encoding utf8 -Append
+          echo "TCL_DIR=$TCL_DIR" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Dump tool versions
         shell: powershell
