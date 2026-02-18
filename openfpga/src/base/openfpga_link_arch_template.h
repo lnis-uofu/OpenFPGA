@@ -11,6 +11,7 @@
 #include "annotate_physical_tiles.h"
 #include "annotate_placement.h"
 #include "annotate_rr_graph.h"
+#include "rr_graph_in_edges.h"
 #include "annotate_simulation_setting.h"
 #include "append_clock_rr_graph.h"
 #include "build_tile_direct.h"
@@ -93,9 +94,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   openfpga_ctx.mutable_vpr_routing_annotation().init(
     g_vpr_ctx.device().rr_graph);
 
-  // Incase the incoming edges are not built. This may happen when loading
-  // rr_graph from an external file
-  g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
   annotate_vpr_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
                             g_vpr_ctx.atom(),
                             openfpga_ctx.mutable_vpr_routing_annotation(),
@@ -113,22 +111,21 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* Build incoming edges as VPR only builds fan-out edges for each node */
-  VTR_LOG("Built %ld incoming edges for routing resource graph\n",
-          g_vpr_ctx.device().rr_graph.in_edges_count());
-  VTR_ASSERT(g_vpr_ctx.device().rr_graph.validate_in_edges());
+  /* Build OpenFPGA's reverse-edge map (VPR only stores fan-out edges) */
+  RRGraphInEdges in_edges;
+  in_edges.init(g_vpr_ctx.device().rr_graph);
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    cmd_context.option_enable(cmd, opt_verbose));
+    cmd_context.option_enable(cmd, opt_verbose), in_edges);
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
-      cmd_context.option_enable(cmd, opt_verbose));
+      cmd_context.option_enable(cmd, opt_verbose), in_edges);
     sort_device_rr_gsb_ipin_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
-      cmd_context.option_enable(cmd, opt_verbose));
+      cmd_context.option_enable(cmd, opt_verbose), in_edges);
   }
 
   /* Build multiplexer library */

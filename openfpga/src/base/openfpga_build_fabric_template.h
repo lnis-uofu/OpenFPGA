@@ -11,6 +11,7 @@
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "device_rr_gsb.h"
+#include "rr_graph_in_edges.h"
 #include "device_rr_gsb_utils.h"
 #include "fabric_hierarchy_writer.h"
 #include "fabric_key_writer.h"
@@ -46,8 +47,10 @@ void compress_routing_hierarchy_template(T& openfpga_ctx,
     "Identify unique General Switch Blocks (GSBs)");
 
   /* Build unique module lists */
+  RRGraphInEdges in_edges;
+  in_edges.init(g_vpr_ctx.device().rr_graph);
   openfpga_ctx.mutable_device_rr_gsb().build_unique_module(
-    g_vpr_ctx.device().rr_graph);
+    g_vpr_ctx.device().rr_graph, in_edges);
 
   /* Report the stats */
   VTR_LOGV(
