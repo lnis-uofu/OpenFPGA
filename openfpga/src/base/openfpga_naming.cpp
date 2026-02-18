@@ -9,7 +9,7 @@
 
 #include "circuit_library_utils.h"
 #include "openfpga_reserved_words.h"
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 #include "pb_type_utils.h"
 #include "verilog_constants.h"
 #include "vtr_assert.h"

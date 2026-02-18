@@ -10,7 +10,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 #include "rr_graph_in_edges.h"
 #include "rr_gsb_edges.h"
 #include "rr_gsb_utils.h"

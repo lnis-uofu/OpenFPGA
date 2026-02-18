@@ -10,7 +10,7 @@
 #include "command_exit_codes.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 
 /* Headers from vpr library */
 #include "build_routing_module_utils.h"

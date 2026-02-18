@@ -10,7 +10,7 @@
 #include "build_routing_module_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 #include "openfpga_rr_graph_utils.h"
 #include "rr_gsb_edges.h"
 #include "write_xml_device_rr_gsb.h"

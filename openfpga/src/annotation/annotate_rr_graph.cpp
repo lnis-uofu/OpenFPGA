@@ -8,7 +8,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 
 /* Headers from vpr library */
 #include "annotate_rr_graph.h"

@@ -23,7 +23,7 @@
 #include "openfpga_naming.h"
 #include "openfpga_port.h"
 #include "openfpga_scale.h"
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 #include "pnr_sdc_routing_writer.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"

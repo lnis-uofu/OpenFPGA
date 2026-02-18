@@ -12,7 +12,7 @@
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_port_parser.h"
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 #include "openfpga_tokenizer.h"
 
 /* begin namespace openfpga */
