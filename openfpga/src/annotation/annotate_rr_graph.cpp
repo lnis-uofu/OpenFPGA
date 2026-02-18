@@ -14,7 +14,9 @@
 #include "annotate_rr_graph.h"
 #include "physical_types.h"
 #include "rr_graph_view_util.h"
-#include "tileable_rr_graph_utils.h"
+#include "openfpga_rr_graph_utils.h"
+#include "rr_graph_in_edges.h"
+#include "rr_gsb_edges.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -400,9 +402,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     temp_ipin_rr_nodes.clear();
   }
 
-  /* Build OPIN node lists for connection blocks */
-  rr_gsb.build_cb_opin_nodes(vpr_device_ctx.rr_graph);
-
   return rr_gsb;
 }
 
@@ -413,7 +412,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
                             const bool& include_clock,
-                            const bool& verbose_output) {
+                            const bool& verbose_output,
+                            const RRGraphInEdges& in_edges) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
     "graph");
@@ -432,6 +432,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
 
   size_t gsb_cnt = 0;
   size_t layer = 0;
+
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
@@ -447,6 +448,11 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
+
+      /* Build OPIN node lists for connection blocks (uses the stored copy) */
+      device_rr_gsb.get_mutable_gsb_edges(gsb_coordinate).build_cb_opin_nodes(
+        device_rr_gsb.get_gsb(gsb_coordinate), vpr_device_ctx.rr_graph, in_edges);
+
       gsb_cnt++; /* Update counter */
       /* Print info */
       VTR_LOG("[%lu%] Backannotated GSB[%lu][%lu]\r",
@@ -464,7 +470,8 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
-                                           const bool& verbose_output) {
+                                           const bool& verbose_output,
+                                           const RRGraphInEdges& in_edges) {
   vtr::ScopedStartFinishTimer timer(
     "Sort incoming edges for each routing track output node of General Switch "
     "Block(GSB)");
@@ -482,8 +489,9 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
   for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
       vtr::Point<size_t> gsb_coordinate(ix, iy);
-      RRGSB& rr_gsb = device_rr_gsb.get_mutable_gsb(gsb_coordinate);
-      rr_gsb.sort_chan_node_in_edges(rr_graph);
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(gsb_coordinate);
+      device_rr_gsb.get_mutable_gsb_edges(gsb_coordinate)
+        .sort_chan_node_in_edges(rr_gsb, rr_graph, in_edges);
 
       gsb_cnt++; /* Update counter */
 
@@ -508,7 +516,8 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
  *******************************************************************/
 void sort_device_rr_gsb_ipin_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
-                                           const bool& verbose_output) {
+                                           const bool& verbose_output,
+                                           const RRGraphInEdges& in_edges) {
   vtr::ScopedStartFinishTimer timer(
     "Sort incoming edges for each input pin node of General Switch Block(GSB)");
 
@@ -525,8 +534,9 @@ void sort_device_rr_gsb_ipin_node_in_edges(const RRGraphView& rr_graph,
   for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
       vtr::Point<size_t> gsb_coordinate(ix, iy);
-      RRGSB& rr_gsb = device_rr_gsb.get_mutable_gsb(gsb_coordinate);
-      rr_gsb.sort_ipin_node_in_edges(rr_graph);
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(gsb_coordinate);
+      device_rr_gsb.get_mutable_gsb_edges(gsb_coordinate)
+        .sort_ipin_node_in_edges(rr_gsb, rr_graph, in_edges);
 
       gsb_cnt++; /* Update counter */
 
