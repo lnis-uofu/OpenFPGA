@@ -21,6 +21,7 @@
 #include "rr_graph_in_edges.h"
 #include "rr_gsb_edges.h"
 #include "side_manager.h"
+#include "vpr_types.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
