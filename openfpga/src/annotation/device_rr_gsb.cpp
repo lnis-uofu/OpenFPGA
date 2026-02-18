@@ -50,7 +50,7 @@ const RRGSBEdges& DeviceRRGSB::get_gsb_edges(
 }
 
 const RRGSBEdges& DeviceRRGSB::get_gsb_edges(const size_t& x,
-                                              const size_t& y) const {
+                                             const size_t& y) const {
   return get_gsb_edges(vtr::Point<size_t>(x, y));
 }
 
@@ -61,7 +61,7 @@ RRGSBEdges& DeviceRRGSB::get_mutable_gsb_edges(
 }
 
 RRGSBEdges& DeviceRRGSB::get_mutable_gsb_edges(const size_t& x,
-                                                const size_t& y) {
+                                               const size_t& y) {
   return get_mutable_gsb_edges(vtr::Point<size_t>(x, y));
 }
 
@@ -375,13 +375,14 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
       const RRGSBEdges& cand_edges = rr_gsb_edges_[ix][iy];
       for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
         const RRGSB& unique_module = get_cb_unique_module(cb_type, id);
-        const vtr::Point<size_t> base_coord =
-          (cb_type == e_rr_type::CHANX) ? cbx_unique_module_[id]
-                                        : cby_unique_module_[id];
-        const RRGSBEdges& base_edges = rr_gsb_edges_[base_coord.x()][base_coord.y()];
+        const vtr::Point<size_t> base_coord = (cb_type == e_rr_type::CHANX)
+                                                ? cbx_unique_module_[id]
+                                                : cby_unique_module_[id];
+        const RRGSBEdges& base_edges =
+          rr_gsb_edges_[base_coord.x()][base_coord.y()];
         if (true == is_cb_mirror(rr_graph, in_edges, device_annotation_,
-                                 unique_module, base_edges,
-                                 rr_gsb_[ix][iy], cand_edges, cb_type)) {
+                                 unique_module, base_edges, rr_gsb_[ix][iy],
+                                 cand_edges, cb_type)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */
@@ -423,10 +424,11 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph,
          */
         const RRGSB& unique_module = get_sb_unique_module(id);
         const vtr::Point<size_t>& base_coord = sb_unique_module_[id];
-        const RRGSBEdges& base_edges = rr_gsb_edges_[base_coord.x()][base_coord.y()];
+        const RRGSBEdges& base_edges =
+          rr_gsb_edges_[base_coord.x()][base_coord.y()];
         if (true == is_sb_mirror(rr_graph, in_edges, device_annotation_,
-                                 unique_module, base_edges,
-                                 rr_gsb_[ix][iy], cand_edges)) {
+                                 unique_module, base_edges, rr_gsb_[ix][iy],
+                                 cand_edges)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */

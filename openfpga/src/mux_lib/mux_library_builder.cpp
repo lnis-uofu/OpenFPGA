@@ -15,9 +15,9 @@
 #include "mux_library.h"
 #include "mux_library_builder.h"
 #include "mux_utils.h"
+#include "openfpga_rr_graph_utils.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
-#include "openfpga_rr_graph_utils.h"
 #include "rr_graph_in_edges.h"
 
 /* Begin namespace openfpga */

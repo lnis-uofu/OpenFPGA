@@ -16,10 +16,10 @@
 #include "openfpga_naming.h"
 #include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
-#include "side_manager.h"
-#include "sdc_writer_utils.h"
 #include "openfpga_rr_graph_utils.h"
 #include "rr_gsb_edges.h"
+#include "sdc_writer_utils.h"
+#include "side_manager.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -36,8 +36,8 @@ static void print_analysis_sdc_disable_cb_unused_resources(
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const VprRoutingAnnotation& routing_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges,
-  const e_rr_type& cb_type, const bool& compact_routing_hierarchy) {
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const bool& compact_routing_hierarchy) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -270,8 +270,8 @@ static void print_analysis_sdc_disable_unused_cb_ports(
       print_analysis_sdc_disable_cb_unused_resources(
         fp, atom_ctx, module_manager, device_annotation, grids, rr_graph,
         routing_annotation, device_rr_gsb, rr_gsb,
-        device_rr_gsb.get_gsb_edges(ix, iy),
-        cb_type, compact_routing_hierarchy);
+        device_rr_gsb.get_gsb_edges(ix, iy), cb_type,
+        compact_routing_hierarchy);
     }
   }
 }

@@ -17,11 +17,11 @@
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "side_manager.h"
+#include "openfpga_rr_graph_utils.h"
 #include "physical_types_util.h"
 #include "rr_gsb_edges.h"
 #include "rr_gsb_utils.h"
-#include "openfpga_rr_graph_utils.h"
+#include "side_manager.h"
 #include "vpr_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -338,8 +338,10 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
 
   /* This is the source cb that is added to the top module */
   const RRGSB& module_cb = device_rr_gsb.get_gsb(module_gsb_coordinate);
-  const RRGSBEdges& module_cb_edges = device_rr_gsb.get_gsb_edges(module_gsb_coordinate);
-  const RRGSBEdges& rr_gsb_edges = device_rr_gsb.get_gsb_edges(rr_gsb.get_x(), rr_gsb.get_y());
+  const RRGSBEdges& module_cb_edges =
+    device_rr_gsb.get_gsb_edges(module_gsb_coordinate);
+  const RRGSBEdges& rr_gsb_edges =
+    device_rr_gsb.get_gsb_edges(rr_gsb.get_x(), rr_gsb.get_y());
   vtr::Point<size_t> module_cb_coordinate(module_cb.get_cb_x(cb_type),
                                           module_cb.get_cb_y(cb_type));
 
@@ -532,7 +534,8 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
         get_rr_graph_single_node_side(
-          rr_graph, rr_gsb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode)),
+          rr_graph,
+          rr_gsb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode)),
         sink_grid_pin_info);
       ModulePortId sink_grid_port_id =
         module_manager.find_module_port(sink_grid_module, sink_grid_port_name);

@@ -22,13 +22,13 @@
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_port.h"
+#include "openfpga_rr_graph_utils.h"
 #include "openfpga_scale.h"
-#include "side_manager.h"
 #include "pnr_sdc_routing_writer.h"
+#include "rr_gsb_edges.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
-#include "openfpga_rr_graph_utils.h"
-#include "rr_gsb_edges.h"
+#include "side_manager.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -50,9 +50,8 @@ static void print_pnr_sdc_constrain_sb_mux_timing(
   const std::string& module_path, const ModuleManager& module_manager,
   const ModuleId& sb_module, const VprDeviceAnnotation& device_annotation,
   const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges,
-  const e_side& output_node_side, const size_t itrack,
-  const RRNodeId& output_rr_node,
+  const RRGSBEdges& gsb_edges, const e_side& output_node_side,
+  const size_t itrack, const RRNodeId& output_rr_node,
   const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
   valid_file_stream(fp);
@@ -78,9 +77,9 @@ static void print_pnr_sdc_constrain_sb_mux_timing(
   /* Find the module port corresponding to the fan-in rr_nodes of the output
    * rr_node */
   std::vector<ModulePinInfo> module_input_ports =
-    find_switch_block_module_input_ports(
-      module_manager, sb_module, grids, device_annotation, rr_graph, rr_gsb,
-      driver_nodes);
+    find_switch_block_module_input_ports(module_manager, sb_module, grids,
+                                         device_annotation, rr_graph, rr_gsb,
+                                         driver_nodes);
 
   /* Find timing constraints for each path (edge) */
   std::map<ModulePinInfo, float> switch_delays;
@@ -239,10 +238,9 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(
 
       std::string module_path = format_dir_path(root_path) + sb_instance_name;
 
-      print_pnr_sdc_constrain_sb_timing(options, module_path, module_manager,
-                                        device_annotation, grids, rr_graph,
-                                        rr_gsb,
-                                        device_rr_gsb.get_gsb_edges(ix, iy));
+      print_pnr_sdc_constrain_sb_timing(
+        options, module_path, module_manager, device_annotation, grids,
+        rr_graph, rr_gsb, device_rr_gsb.get_gsb_edges(ix, iy));
     }
   }
 }
@@ -264,7 +262,8 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(
 
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
-    if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_sb_x(), rr_gsb.get_sb_y())) {
+    if (false ==
+        device_rr_gsb.is_sb_exist(rr_gsb.get_sb_x(), rr_gsb.get_sb_y())) {
       continue;
     }
 
@@ -280,10 +279,9 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(
 
     std::string module_path = format_dir_path(root_path) + sb_module_name;
 
-    print_pnr_sdc_constrain_sb_timing(options, module_path, module_manager,
-                                      device_annotation, grids, rr_graph,
-                                      rr_gsb,
-                                      device_rr_gsb.get_gsb_edges(gsb_coordinate));
+    print_pnr_sdc_constrain_sb_timing(
+      options, module_path, module_manager, device_annotation, grids, rr_graph,
+      rr_gsb, device_rr_gsb.get_gsb_edges(gsb_coordinate));
   }
 }
 
@@ -296,10 +294,9 @@ static void print_pnr_sdc_constrain_cb_mux_timing(
   const std::string& module_path, const ModuleManager& module_manager,
   const ModuleId& cb_module, const VprDeviceAnnotation& device_annotation,
   const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges,
-  const e_rr_type& cb_type, const e_side& cb_ipin_side, const size_t inode,
-  const RRNodeId& output_rr_node,
-  const bool& constrain_zero_delay_paths) {
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const e_side& cb_ipin_side, const size_t inode,
+  const RRNodeId& output_rr_node, const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -384,8 +381,7 @@ static void print_pnr_sdc_constrain_cb_timing(
   const PnrSdcOption& options, const std::string& module_path,
   const ModuleManager& module_manager,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
   const e_rr_type& cb_type) {
   std::string sdc_dir = options.sdc_dir();
   float time_unit = options.time_unit();
@@ -489,9 +485,8 @@ static void print_pnr_sdc_constrain_cb_timing(
       const RRNodeId& ipin_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       print_pnr_sdc_constrain_cb_mux_timing(
         fp, time_unit, hierarchical, module_path, module_manager, cb_module,
-        device_annotation, grids, rr_graph, rr_gsb, gsb_edges,
-        cb_type, cb_ipin_side, inode, ipin_rr_node,
-        constrain_zero_delay_paths);
+        device_annotation, grids, rr_graph, rr_gsb, gsb_edges, cb_type,
+        cb_ipin_side, inode, ipin_rr_node, constrain_zero_delay_paths);
     }
   }
 
@@ -536,11 +531,9 @@ static void print_pnr_sdc_flatten_routing_constrain_cb_timing(
 
       std::string module_path = format_dir_path(root_path) + cb_instance_name;
 
-      print_pnr_sdc_constrain_cb_timing(options, module_path, module_manager,
-                                        device_annotation, grids, rr_graph,
-                                        rr_gsb,
-                                        device_rr_gsb.get_gsb_edges(ix, iy),
-                                        cb_type);
+      print_pnr_sdc_constrain_cb_timing(
+        options, module_path, module_manager, device_annotation, grids,
+        rr_graph, rr_gsb, device_rr_gsb.get_gsb_edges(ix, iy), cb_type);
     }
   }
 }
@@ -600,11 +593,10 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
 
     std::string module_path = format_dir_path(root_path) + cb_module_name;
 
-    print_pnr_sdc_constrain_cb_timing(options, module_path, module_manager,
-                                      device_annotation, grids, rr_graph,
-                                      unique_mirror,
-                                      device_rr_gsb.get_gsb_edges(gsb_coordinate),
-                                      e_rr_type::CHANX);
+    print_pnr_sdc_constrain_cb_timing(
+      options, module_path, module_manager, device_annotation, grids, rr_graph,
+      unique_mirror, device_rr_gsb.get_gsb_edges(gsb_coordinate),
+      e_rr_type::CHANX);
   }
 
   /* Print SDC for unique Y-direction connection block modules */
@@ -625,11 +617,10 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
 
     std::string module_path = format_dir_path(root_path) + cb_module_name;
 
-    print_pnr_sdc_constrain_cb_timing(options, module_path, module_manager,
-                                      device_annotation, grids, rr_graph,
-                                      unique_mirror,
-                                      device_rr_gsb.get_gsb_edges(gsb_coordinate),
-                                      e_rr_type::CHANY);
+    print_pnr_sdc_constrain_cb_timing(
+      options, module_path, module_manager, device_annotation, grids, rr_graph,
+      unique_mirror, device_rr_gsb.get_gsb_edges(gsb_coordinate),
+      e_rr_type::CHANY);
   }
 }
 

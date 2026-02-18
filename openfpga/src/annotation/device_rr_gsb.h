@@ -123,10 +123,11 @@ class DeviceRRGSB {
     const size_t& y); /* Get a rr switch block in the array with a coordinate */
   void build_unique_module(
     const RRGraphView& rr_graph,
-    const RRGraphInEdges& in_edges); /* Add a switch block to the array, which will
-                                        automatically identify and update the lists
-                                        of unique mirrors and rotatable mirrors */
-  void clear();                   /* clean the content */
+    const RRGraphInEdges&
+      in_edges); /* Add a switch block to the array, which will
+                    automatically identify and update the lists
+                    of unique mirrors and rotatable mirrors */
+  void clear();  /* clean the content */
   void preload_unique_cbx_module(
     const vtr::Point<size_t>& block_coordinate,
     const std::vector<vtr::Point<size_t>>&
@@ -177,12 +178,12 @@ when read_unique_blocks command invoked */
                                const vtr::Point<size_t>& coordinate, size_t id);
   void build_sb_unique_module(
     const RRGraphView& rr_graph,
-    const RRGraphInEdges& in_edges); /* Add a switch block to the array, which will
-                                        automatically identify and update the lists
-                                        of unique mirrors and rotatable mirrors */
+    const RRGraphInEdges&
+      in_edges); /* Add a switch block to the array, which will
+                    automatically identify and update the lists
+                    of unique mirrors and rotatable mirrors */
   void build_cb_unique_module(
-    const RRGraphView& rr_graph,
-    const RRGraphInEdges& in_edges,
+    const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
     const e_rr_type&
       cb_type); /* Add a switch block to the array, which will automatically
                    identify and update the lists of unique side module */

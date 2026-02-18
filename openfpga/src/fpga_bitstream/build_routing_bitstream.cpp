@@ -19,10 +19,10 @@
 #include "mux_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "side_manager.h"
+#include "openfpga_rr_graph_utils.h"
 #include "rr_gsb_edges.h"
 #include "rr_gsb_utils.h"
-#include "openfpga_rr_graph_utils.h"
+#include "side_manager.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -39,8 +39,7 @@ static void build_switch_block_mux_bitstream(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const RRGraphView& rr_graph, const RRNodeId& cur_rr_node,
   const std::vector<RRNodeId>& drive_rr_nodes,
-  const std::vector<RREdgeId>& driver_rr_edges,
-  const AtomContext& atom_ctx,
+  const std::vector<RREdgeId>& driver_rr_edges, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const bool& verbose) {
   /* Check current rr_node is CHANX or CHANY*/
@@ -174,8 +173,8 @@ static void build_switch_block_interc_bitstream(
   const RRGraphView& rr_graph, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges,
-  const e_side& chan_side, const size_t& chan_node_id, const bool& verbose) {
+  const RRGSBEdges& gsb_edges, const e_side& chan_side,
+  const size_t& chan_node_id, const bool& verbose) {
   std::vector<RRNodeId> driver_rr_nodes;
 
   /* Get the node */
@@ -211,8 +210,8 @@ static void build_switch_block_interc_bitstream(
     build_switch_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, module_name_map,
       circuit_lib, mux_lib, rr_graph, cur_rr_node, driver_rr_nodes,
-      gsb_edges.get_chan_node_in_edges(chan_side, chan_node_id),
-      atom_ctx, device_annotation, routing_annotation, verbose);
+      gsb_edges.get_chan_node_in_edges(chan_side, chan_node_id), atom_ctx,
+      device_annotation, routing_annotation, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -270,9 +269,8 @@ static void build_connection_block_mux_bitstream(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const e_side& cb_ipin_side, const size_t& ipin_index,
-  const bool& verbose) {
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
+  const size_t& ipin_index, const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
   std::vector<RREdgeId> driver_rr_edges =
@@ -401,9 +399,8 @@ static void build_connection_block_interc_bitstream(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const e_side& cb_ipin_side, const size_t& ipin_index,
-  const bool& verbose) {
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
+  const size_t& ipin_index, const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
 
   VTR_LOGV(verbose, "\tGenerating bitstream for IPIN '%lu'. Details: %s\n",
@@ -457,8 +454,8 @@ static void build_connection_block_bitstream(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const e_rr_type& cb_type, const bool& verbose) {
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const bool& verbose) {
   /* Find routing multiplexers on the sides of a Connection block where IPIN
    * nodes locate */
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);

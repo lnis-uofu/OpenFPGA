@@ -18,9 +18,9 @@ class RRGraphInEdges;
  * @brief Find the driver switches for a node in the rr_graph
  * This function only return unique driver switches
  */
-std::vector<RRSwitchId> get_rr_graph_driver_switches(const RRGraphView& rr_graph,
-                                                     const RRGraphInEdges& in_edges,
-                                                     const RRNodeId node);
+std::vector<RRSwitchId> get_rr_graph_driver_switches(
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRNodeId node);
 
 /**
  * @brief Find the driver nodes for a node in the rr_graph
@@ -32,22 +32,22 @@ std::vector<RRNodeId> get_rr_graph_driver_nodes(const RRGraphView& rr_graph,
 /**
  * @brief Find the configurable driver nodes for a node in the rr_graph
  */
-std::vector<RRNodeId> get_rr_graph_configurable_driver_nodes(const RRGraphView& rr_graph,
-                                                             const RRGraphInEdges& in_edges,
-                                                             const RRNodeId node);
+std::vector<RRNodeId> get_rr_graph_configurable_driver_nodes(
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRNodeId node);
 
 /**
  * @brief Find the configurable driver nodes for a node in the rr_graph
  */
-std::vector<RRNodeId> get_rr_graph_non_configurable_driver_nodes(const RRGraphView& rr_graph,
-                                                                 const RRGraphInEdges& in_edges,
-                                                                 const RRNodeId node);
+std::vector<RRNodeId> get_rr_graph_non_configurable_driver_nodes(
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRNodeId node);
 
 /**
  * @brief Check if an OPIN of a rr_graph is directly driving an IPIN
  * To meet this requirement, the OPIN must:
  *   - Have only 1 fan-out
- *   - The only fan-out is an IPIN 
+ *   - The only fan-out is an IPIN
  */
 bool is_opin_direct_connected_ipin(const RRGraphView& rr_graph,
                                    const RRNodeId node);
@@ -56,7 +56,7 @@ bool is_opin_direct_connected_ipin(const RRGraphView& rr_graph,
  * @brief Check if an IPIN of a rr_graph is directly connected to an OPIN
  * To meet this requirement, the IPIN must:
  *   - Have only 1 fan-in
- *   - The only fan-in is an OPIN 
+ *   - The only fan-in is an OPIN
  */
 bool is_ipin_direct_connected_opin(const RRGraphView& rr_graph,
                                    const RRGraphInEdges& in_edges,
@@ -64,7 +64,8 @@ bool is_ipin_direct_connected_opin(const RRGraphView& rr_graph,
 
 /**
  * @brief Get a side of a given node in a routing resource graph.
- * Note that this function expect one valid side to be got. Otherwise, it will fail!
+ * Note that this function expect one valid side to be got. Otherwise, it will
+ * fail!
  */
 e_side get_rr_graph_single_node_side(const RRGraphView& rr_graph,
                                      const RRNodeId node);

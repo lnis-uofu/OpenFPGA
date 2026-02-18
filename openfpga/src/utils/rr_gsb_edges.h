@@ -38,8 +38,8 @@ class RRGSBEdges {
 
   /* Post-sort overload: return cached edge data for a channel output node.
    * Must only be called AFTER sort_chan_node_in_edges has been run. */
-  const std::vector<RREdgeId>& get_chan_node_in_edges(const e_side& side,
-                                                      const size_t& track_id) const;
+  const std::vector<RREdgeId>& get_chan_node_in_edges(
+    const e_side& side, const size_t& track_id) const;
 
   /* Get the sorted (or unsorted fallback) incoming edges for an IPIN
    * node at the given side and ipin index.
@@ -51,8 +51,8 @@ class RRGSBEdges {
 
   /* Post-sort overload: return cached edge data for an IPIN node.
    * Must only be called AFTER sort_ipin_node_in_edges has been run. */
-  const std::vector<RREdgeId>& get_ipin_node_in_edges(const e_side& side,
-                                                      const size_t& ipin_id) const;
+  const std::vector<RREdgeId>& get_ipin_node_in_edges(
+    const e_side& side, const size_t& ipin_id) const;
 
   /* Check if the switch block physically exists (has routing wires /
    * OPIN nodes and at least one incoming edge).
@@ -61,8 +61,8 @@ class RRGSBEdges {
   bool is_sb_exist(const RRGSB& gsb, const RRGraphInEdges& in_edges) const;
 
   /* Check if the switch block physically exists using only the cached
-   * chan_node_in_edges_ data.  Must only be called AFTER sort_chan_node_in_edges
-   * has been run for this GSB. */
+   * chan_node_in_edges_ data.  Must only be called AFTER
+   * sort_chan_node_in_edges has been run for this GSB. */
   bool is_sb_exist(const RRGSB& gsb) const;
 
   /* Return the number of CB OPIN nodes on a given side */
@@ -70,40 +70,32 @@ class RRGSBEdges {
                                const e_side& side) const;
 
   /* Return a specific CB OPIN node */
-  RRNodeId get_cb_opin_node(const e_rr_type& cb_type,
-                            const e_side& side,
+  RRNodeId get_cb_opin_node(const e_rr_type& cb_type, const e_side& side,
                             const size_t& node_id) const;
 
  public: /* Mutators */
   /* Sort all incoming edges for every channel output node in the GSB */
-  void sort_chan_node_in_edges(const RRGSB& gsb,
-                               const RRGraphView& rr_graph,
+  void sort_chan_node_in_edges(const RRGSB& gsb, const RRGraphView& rr_graph,
                                const RRGraphInEdges& in_edges,
                                const bool reorder_incoming_edges = false);
 
   /* Sort all incoming edges for every IPIN node in the GSB */
-  void sort_ipin_node_in_edges(const RRGSB& gsb,
-                               const RRGraphView& rr_graph,
+  void sort_ipin_node_in_edges(const RRGSB& gsb, const RRGraphView& rr_graph,
                                const RRGraphInEdges& in_edges);
 
   /* Build the list of OPIN nodes that drive IPINs in connection blocks */
-  void build_cb_opin_nodes(const RRGSB& gsb,
-                           const RRGraphView& rr_graph,
+  void build_cb_opin_nodes(const RRGSB& gsb, const RRGraphView& rr_graph,
                            const RRGraphInEdges& in_edges);
 
  private: /* Private sort helpers (per-node) */
-  void sort_chan_node_in_edges(const RRGSB& gsb,
-                               const RRGraphView& rr_graph,
+  void sort_chan_node_in_edges(const RRGSB& gsb, const RRGraphView& rr_graph,
                                const RRGraphInEdges& in_edges,
-                               const e_side& chan_side,
-                               const size_t track_id,
+                               const e_side& chan_side, const size_t track_id,
                                const bool reorder_incoming_edges);
 
-  void sort_ipin_node_in_edges(const RRGSB& gsb,
-                               const RRGraphView& rr_graph,
+  void sort_ipin_node_in_edges(const RRGSB& gsb, const RRGraphView& rr_graph,
                                const RRGraphInEdges& in_edges,
-                               const e_side& ipin_side,
-                               const size_t& ipin_id);
+                               const e_side& ipin_side, const size_t& ipin_id);
 
  private: /* Internal Data (moved from RRGSB) */
   /* Sorted incoming edges for each channel output node.

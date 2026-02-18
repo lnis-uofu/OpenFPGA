@@ -256,10 +256,9 @@ static void print_spice_flatten_connection_block_modules(
  * 1. Connection blocks
  * 2. Switch blocks
  *******************************************************************/
-void print_spice_flatten_routing_modules(NetlistManager& netlist_manager,
-                                         const ModuleManager& module_manager,
-                                         const DeviceRRGSB& device_rr_gsb
-                                         const std::string& subckt_dir) {
+void print_spice_flatten_routing_modules(
+  NetlistManager& netlist_manager, const ModuleManager& module_manager,
+  const DeviceRRGSB& device_rr_gsb const std::string& subckt_dir) {
   /* Create a vector to contain all the Verilog netlist names that have been
    * generated in this function */
   std::vector<std::string> netlist_names;

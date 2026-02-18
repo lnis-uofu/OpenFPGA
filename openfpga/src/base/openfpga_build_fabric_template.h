@@ -11,7 +11,6 @@
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "device_rr_gsb.h"
-#include "rr_graph_in_edges.h"
 #include "device_rr_gsb_utils.h"
 #include "fabric_hierarchy_writer.h"
 #include "fabric_key_writer.h"
@@ -26,6 +25,7 @@
 #include "read_xml_tile_config.h"
 #include "rename_modules.h"
 #include "report_reference.h"
+#include "rr_graph_in_edges.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 #include "write_unique_blocks_bin.h"
@@ -85,20 +85,20 @@ void compress_routing_hierarchy_template(T& openfpga_ctx,
     "rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_sb_unique_module(),
     find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()),
-    100. * ((float)find_device_rr_gsb_num_sb_modules(
-              openfpga_ctx.device_rr_gsb()) /
-              (float)openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() -
-            1.));
+    100. *
+      ((float)find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()) /
+         (float)openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() -
+       1.));
 
   VTR_LOG(
     "Detected %lu unique general switch blocks from a total of %d (compression "
     "rate=%.2f%)\n",
     openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
     find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()),
-    100. * ((float)find_device_rr_gsb_num_gsb_modules(
-              openfpga_ctx.device_rr_gsb()) /
-              (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() -
-            1.));
+    100. *
+      ((float)find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()) /
+         (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() -
+       1.));
 }
 
 /********************************************************************

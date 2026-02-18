@@ -10,9 +10,9 @@
 #include "build_routing_module_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
-#include "side_manager.h"
 #include "openfpga_rr_graph_utils.h"
 #include "rr_gsb_edges.h"
+#include "side_manager.h"
 #include "write_xml_device_rr_gsb.h"
 
 /* begin namespace openfpga */
@@ -87,8 +87,8 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
 static void write_rr_gsb_chan_connection_to_xml(
   std::fstream& fp, const DeviceGrid& vpr_device_grid,
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const enum e_side& gsb_side, const bool& include_rr_info) {
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const enum e_side& gsb_side,
+  const bool& include_rr_info) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -245,10 +245,9 @@ static void write_rr_switch_block_to_xml(
     enum e_side gsb_side = gsb_side_manager.get_side();
 
     /* routing-track and related connections */
-    write_rr_gsb_chan_connection_to_xml(fp, vpr_device_grid,
-                                        vpr_device_annotation, rr_graph, rr_gsb,
-                                        gsb_edges, gsb_side,
-                                        options.include_rr_info());
+    write_rr_gsb_chan_connection_to_xml(
+      fp, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, gsb_edges,
+      gsb_side, options.include_rr_info());
   }
 
   fp << "</rr_sb>" << std::endl;

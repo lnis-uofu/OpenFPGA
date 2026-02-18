@@ -22,10 +22,10 @@
 #include "module_manager_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
-#include "side_manager.h"
+#include "openfpga_rr_graph_utils.h"
 #include "rr_gsb_edges.h"
 #include "rr_gsb_utils.h"
-#include "openfpga_rr_graph_utils.h"
+#include "side_manager.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -276,8 +276,7 @@ static void build_switch_block_mux_module(
 static void build_switch_block_interc_modules(
   ModuleManager& module_manager, const ModuleId& sb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
   const CircuitLibrary& circuit_lib, const e_side& chan_side,
   const size_t& chan_node_id,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
@@ -580,9 +579,9 @@ static void build_switch_block_module(
 static void build_connection_block_module_short_interc(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const e_side& cb_ipin_side, const size_t& ipin_index,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const e_rr_type& cb_type, const e_side& cb_ipin_side,
+  const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
   const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
@@ -650,10 +649,9 @@ static void build_connection_block_module_short_interc(
 static void build_connection_block_mux_module(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
-  const size_t& ipin_index,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const e_rr_type& cb_type, const CircuitLibrary& circuit_lib,
+  const e_side& cb_ipin_side, const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
   const bool& group_config_block) {
   const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
@@ -838,10 +836,9 @@ static void build_connection_block_mux_module(
 static void build_connection_block_interc_modules(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
-  const size_t& ipin_index,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const e_rr_type& cb_type, const CircuitLibrary& circuit_lib,
+  const e_side& cb_ipin_side, const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
   const bool& group_config_block) {
   const std::vector<RREdgeId>& driver_rr_edges =
@@ -1021,7 +1018,8 @@ static void build_connection_block_module(
   for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
     enum e_side cb_opin_side = cb_opin_sides[iside];
     for (size_t inode = 0;
-         inode < gsb_edges.get_num_cb_opin_nodes(cb_type, cb_opin_side); ++inode) {
+         inode < gsb_edges.get_num_cb_opin_nodes(cb_type, cb_opin_side);
+         ++inode) {
       RRNodeId opin_node =
         gsb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode);
       std::string port_name = generate_cb_module_grid_port_name(

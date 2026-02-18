@@ -1,9 +1,9 @@
 #include "route_clock_rr_graph.h"
 
 #include "command_exit_codes.h"
-#include "rr_graph_in_edges.h"
 #include "openfpga_annotate_routing.h"
 #include "openfpga_clustered_netlist_utils.h"
+#include "rr_graph_in_edges.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "vtr_log.h"
@@ -490,9 +490,9 @@ static int rec_expand_and_route_clock_spine(
       curr_stop_usage = true;
       /* Now connect to next spine, internal drivers may join */
       status = route_clock_spine_switch_point(
-        vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup, rr_node_gnets,
-        tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin,
-        switch_point_id, verbose);
+        vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup,
+        rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine,
+        curr_pin, switch_point_id, verbose);
       if (CMD_EXEC_SUCCESS != status) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -516,9 +516,9 @@ static int rec_expand_and_route_clock_spine(
       vtr::Point<int> des_coord = spine_coords[icoord];
 
       int use_int_driver = route_spine_intermediate_drivers(
-        vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup, rr_node_gnets,
-        tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord,
-        verbose);
+        vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup,
+        rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine,
+        curr_pin, des_coord, verbose);
       if (use_int_driver > 1) {
         return CMD_EXEC_FATAL_ERROR;
       }

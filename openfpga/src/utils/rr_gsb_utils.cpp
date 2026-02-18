@@ -7,13 +7,13 @@
  * get_chan_node_in_edges, is_sb_exist, etc.) live in RRGSBEdges
  * (rr_gsb_edges.h / rr_gsb_edges.cpp).
  *******************************************************************/
-#include "vtr_assert.h"
-#include "vtr_log.h"
+#include "rr_gsb_utils.h"
 
-#include "side_manager.h"
 #include "rr_graph_in_edges.h"
 #include "rr_gsb_edges.h"
-#include "rr_gsb_utils.h"
+#include "side_manager.h"
+#include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -47,11 +47,11 @@ bool connection_block_contain_only_routing_tracks(const RRGSB& rr_gsb,
  ***********************************************************************/
 std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
   const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const e_side& chan_side, const size_t& track_id) {
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_side& chan_side,
+  const size_t& track_id) {
   std::vector<RRNodeId> driver_nodes;
-  for (const RREdgeId& edge :
-       gsb_edges.get_chan_node_in_edges(rr_gsb, in_edges, chan_side, track_id)) {
+  for (const RREdgeId& edge : gsb_edges.get_chan_node_in_edges(
+         rr_gsb, in_edges, chan_side, track_id)) {
     if (false == rr_graph.edge_is_configurable(edge)) {
       continue;
     }
@@ -62,9 +62,9 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
 
 /* Post-sort overload: uses cached chan_node_in_edges_ data. */
 std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
-  const RRGraphView& rr_graph,
-  const RRGSB& /*rr_gsb*/, const RRGSBEdges& gsb_edges,
-  const e_side& chan_side, const size_t& track_id) {
+  const RRGraphView& rr_graph, const RRGSB& /*rr_gsb*/,
+  const RRGSBEdges& gsb_edges, const e_side& chan_side,
+  const size_t& track_id) {
   std::vector<RRNodeId> driver_nodes;
   for (const RREdgeId& edge :
        gsb_edges.get_chan_node_in_edges(chan_side, track_id)) {
@@ -170,9 +170,8 @@ static bool is_sb_node_mirror(const RRGraphView& rr_graph,
  * mirror of the current one */
 static bool is_sb_side_segment_mirror(
   const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const VprDeviceAnnotation& device_annotation,
-  const RRGSB& base, const RRGSBEdges& base_edges,
-  const RRGSB& cand, const RRGSBEdges& cand_edges,
+  const VprDeviceAnnotation& device_annotation, const RRGSB& base,
+  const RRGSBEdges& base_edges, const RRGSB& cand, const RRGSBEdges& cand_edges,
   const e_side& side, const RRSegmentId& seg_id) {
   SideManager side_manager(side);
 
@@ -197,9 +196,9 @@ static bool is_sb_side_segment_mirror(
     if (OUT_PORT != base.get_chan_node_direction(side, itrack)) {
       continue;
     }
-    if (false == is_sb_node_mirror(rr_graph, in_edges, device_annotation,
-                                   base, base_edges, cand, cand_edges,
-                                   side, itrack)) {
+    if (false == is_sb_node_mirror(rr_graph, in_edges, device_annotation, base,
+                                   base_edges, cand, cand_edges, side,
+                                   itrack)) {
       return false;
     }
   }
@@ -220,9 +219,9 @@ static bool is_sb_side_mirror(const RRGraphView& rr_graph,
   std::vector<RRSegmentId> seg_ids = base.get_chan_segment_ids(side);
 
   for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
-    if (false == is_sb_side_segment_mirror(rr_graph, in_edges, device_annotation,
-                                           base, base_edges, cand, cand_edges,
-                                           side, seg_ids[iseg])) {
+    if (false == is_sb_side_segment_mirror(
+                   rr_graph, in_edges, device_annotation, base, base_edges,
+                   cand, cand_edges, side, seg_ids[iseg])) {
       return false;
     }
   }
@@ -230,8 +229,7 @@ static bool is_sb_side_mirror(const RRGraphView& rr_graph,
 }
 
 /** @brief Identify if the Switch Block part of two GSBs are mirror */
-bool is_sb_mirror(const RRGraphView& rr_graph,
-                  const RRGraphInEdges& in_edges,
+bool is_sb_mirror(const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base, const RRGSBEdges& base_edges,
                   const RRGSB& cand, const RRGSBEdges& cand_edges) {
@@ -240,8 +238,8 @@ bool is_sb_mirror(const RRGraphView& rr_graph,
   }
   for (size_t side = 0; side < base.get_num_sides(); ++side) {
     SideManager side_manager(side);
-    if (false == is_sb_side_mirror(rr_graph, in_edges, device_annotation,
-                                   base, base_edges, cand, cand_edges,
+    if (false == is_sb_side_mirror(rr_graph, in_edges, device_annotation, base,
+                                   base_edges, cand, cand_edges,
                                    side_manager.get_side())) {
       return false;
     }
@@ -310,8 +308,7 @@ static bool is_cb_node_mirror(const RRGraphView& rr_graph,
 }
 
 /** @brief Check if the candidate CB is a mirror of the current baseline */
-bool is_cb_mirror(const RRGraphView& rr_graph,
-                  const RRGraphInEdges& in_edges,
+bool is_cb_mirror(const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base, const RRGSBEdges& base_edges,
                   const RRGSB& cand, const RRGSBEdges& cand_edges,

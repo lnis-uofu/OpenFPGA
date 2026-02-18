@@ -12,10 +12,10 @@
 
 /* Headers from vpr library */
 #include "annotate_rr_graph.h"
-#include "physical_types.h"
-#include "rr_graph_view_util.h"
 #include "openfpga_rr_graph_utils.h"
+#include "physical_types.h"
 #include "rr_graph_in_edges.h"
+#include "rr_graph_view_util.h"
 #include "rr_gsb_edges.h"
 
 /* begin namespace openfpga */
@@ -398,8 +398,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       /* Do not consider IPINs that are directly connected by an OPIN
        * they are supposed to be handled by direct connection
        */
-      if (true ==
-          is_ipin_direct_connected_opin(vpr_device_ctx.rr_graph, in_edges, inode)) {
+      if (true == is_ipin_direct_connected_opin(vpr_device_ctx.rr_graph,
+                                                in_edges, inode)) {
         continue;
       }
 
@@ -457,8 +457,9 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
 
       /* Build OPIN node lists for connection blocks (uses the stored copy) */
-      device_rr_gsb.get_mutable_gsb_edges(gsb_coordinate).build_cb_opin_nodes(
-        device_rr_gsb.get_gsb(gsb_coordinate), vpr_device_ctx.rr_graph, in_edges);
+      device_rr_gsb.get_mutable_gsb_edges(gsb_coordinate)
+        .build_cb_opin_nodes(device_rr_gsb.get_gsb(gsb_coordinate),
+                             vpr_device_ctx.rr_graph, in_edges);
 
       gsb_cnt++; /* Update counter */
       /* Print info */
