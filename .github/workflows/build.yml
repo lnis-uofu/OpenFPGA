@@ -123,7 +123,7 @@ jobs:
           make checkout
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_DIR=${{ env.TCL_DIR }}
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_DIR=$env:TCL_DIR
 
   # Test the compilation compatibility on Linux
   linux_build:
