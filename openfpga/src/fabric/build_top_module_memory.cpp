@@ -167,7 +167,7 @@ static void organize_top_module_tile_memory_modules(
      * we will update the memory module and instance list
      */
     /* If the CB does not exist, we can skip addition */
-    if (true == rr_gsb.is_sb_exist(rr_graph)) {
+    if (true == device_rr_gsb.is_sb_exist(gsb_coord)) {
       if (0 < find_module_num_config_bits(module_manager, sb_module,
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {

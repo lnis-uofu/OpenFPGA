@@ -5,6 +5,7 @@
  * 1. Connection blocks
  * 2. Switch blocks
  *******************************************************************/
+#include <algorithm>
 #include <vector>
 
 /* Headers from vtrutil library */
@@ -22,8 +23,9 @@
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_side_manager.h"
+#include "rr_gsb_edges.h"
 #include "rr_gsb_utils.h"
-#include "tileable_rr_graph_utils.h"
+#include "openfpga_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -275,6 +277,7 @@ static void build_switch_block_interc_modules(
   ModuleManager& module_manager, const ModuleId& sb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges,
   const CircuitLibrary& circuit_lib, const e_side& chan_side,
   const size_t& chan_node_id,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
@@ -289,7 +292,7 @@ static void build_switch_block_interc_modules(
   if (false ==
       rr_gsb.is_sb_node_passing_wire(rr_graph, chan_side, chan_node_id)) {
     driver_rr_nodes = get_rr_gsb_chan_node_configurable_driver_nodes(
-      rr_graph, rr_gsb, chan_side, chan_node_id);
+      rr_graph, rr_gsb, gsb_edges, chan_side, chan_node_id);
     /* Special: if there are zero-driver nodes. We skip here */
     if (0 == driver_rr_nodes.size()) {
       return;
@@ -308,8 +311,15 @@ static void build_switch_block_interc_modules(
       chan_side, cur_rr_node, driver_rr_nodes[0], input_port_to_module_nets);
   } else if (1 < driver_rr_nodes.size()) {
     /* Print the multiplexer, fan_in >= 2 */
-    std::vector<RRSwitchId> driver_switches =
-      get_rr_graph_driver_switches(rr_graph, cur_rr_node);
+    std::vector<RRSwitchId> driver_switches;
+    for (const RREdgeId& edge :
+         gsb_edges.get_chan_node_in_edges(chan_side, chan_node_id)) {
+      RRSwitchId sw = RRSwitchId(rr_graph.edge_switch(edge));
+      if (driver_switches.end() ==
+          std::find(driver_switches.begin(), driver_switches.end(), sw)) {
+        driver_switches.push_back(sw);
+      }
+    }
     VTR_ASSERT(1 == driver_switches.size());
     build_switch_block_mux_module(
       module_manager, sb_module, device_annotation, grids, rr_graph, rr_gsb,
@@ -486,6 +496,7 @@ static void build_switch_block_module(
   }
 
   /* Add routing multiplexers as child modules */
+  const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coordinate);
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     SideManager side_manager(side);
     for (size_t itrack = 0;
@@ -495,7 +506,7 @@ static void build_switch_block_module(
           rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         build_switch_block_interc_modules(
           module_manager, sb_module, device_annotation, grids, rr_graph, rr_gsb,
-          circuit_lib, side_manager.get_side(), itrack,
+          gsb_edges, circuit_lib, side_manager.get_side(), itrack,
           input_port_to_module_nets, group_config_block);
       }
     }
@@ -569,13 +580,14 @@ static void build_switch_block_module(
 static void build_connection_block_module_short_interc(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
   const e_side& cb_ipin_side, const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
   const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
-  std::vector<RREdgeId> driver_rr_edges =
-    rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  const std::vector<RREdgeId>& driver_rr_edges =
+    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
   std::vector<RRNodeId> driver_rr_nodes;
   for (const RREdgeId curr_edge : driver_rr_edges) {
     driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
@@ -638,7 +650,8 @@ static void build_connection_block_module_short_interc(
 static void build_connection_block_mux_module(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
@@ -648,15 +661,21 @@ static void build_connection_block_mux_module(
   VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(cur_rr_node));
 
   /* Build a vector of driver rr_nodes */
-  std::vector<RREdgeId> driver_rr_edges =
-    rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  const std::vector<RREdgeId>& driver_rr_edges =
+    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
   std::vector<RRNodeId> driver_rr_nodes;
   for (const RREdgeId curr_edge : driver_rr_edges) {
     driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
   }
 
-  std::vector<RRSwitchId> driver_switches =
-    get_rr_graph_driver_switches(rr_graph, cur_rr_node);
+  std::vector<RRSwitchId> driver_switches;
+  for (const RREdgeId& edge : driver_rr_edges) {
+    RRSwitchId sw = RRSwitchId(rr_graph.edge_switch(edge));
+    if (driver_switches.end() ==
+        std::find(driver_switches.begin(), driver_switches.end(), sw)) {
+      driver_switches.push_back(sw);
+    }
+  }
   VTR_ASSERT(1 == driver_switches.size());
 
   /* Get the circuit model id of the routing multiplexer */
@@ -819,13 +838,14 @@ static void build_connection_block_mux_module(
 static void build_connection_block_interc_modules(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const e_rr_type& cb_type,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
   const bool& group_config_block) {
-  std::vector<RREdgeId> driver_rr_edges =
-    rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  const std::vector<RREdgeId>& driver_rr_edges =
+    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
 
   if (1 > driver_rr_edges.size()) {
     return; /* This port has no driver, skip it */
@@ -833,14 +853,14 @@ static void build_connection_block_interc_modules(
     /* Print a direct connection */
     build_connection_block_module_short_interc(
       module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
-      cb_type, cb_ipin_side, ipin_index, input_port_to_module_nets);
+      gsb_edges, cb_type, cb_ipin_side, ipin_index, input_port_to_module_nets);
 
   } else if (1 < driver_rr_edges.size()) {
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(
       module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
-      cb_type, circuit_lib, cb_ipin_side, ipin_index, input_port_to_module_nets,
-      group_config_block);
+      gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
+      input_port_to_module_nets, group_config_block);
   } /*Nothing should be done else*/
 }
 
@@ -910,6 +930,8 @@ static void build_connection_block_module(
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type),
                                     rr_gsb.get_cb_y(cb_type));
+  const RRGSBEdges& gsb_edges =
+    device_rr_gsb.get_gsb_edges(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
@@ -999,9 +1021,9 @@ static void build_connection_block_module(
   for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
     enum e_side cb_opin_side = cb_opin_sides[iside];
     for (size_t inode = 0;
-         inode < rr_gsb.get_num_cb_opin_nodes(cb_type, cb_opin_side); ++inode) {
+         inode < gsb_edges.get_num_cb_opin_nodes(cb_type, cb_opin_side); ++inode) {
       RRNodeId opin_node =
-        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+        gsb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode);
       std::string port_name = generate_cb_module_grid_port_name(
         cb_opin_side, grids, device_annotation, rr_graph, opin_node);
       BasicPort module_port(port_name,
@@ -1070,8 +1092,8 @@ static void build_connection_block_module(
          ++inode) {
       build_connection_block_interc_modules(
         module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
-        cb_type, circuit_lib, cb_ipin_side, inode, input_port_to_module_nets,
-        group_config_block);
+        gsb_edges, cb_type, circuit_lib, cb_ipin_side, inode,
+        input_port_to_module_nets, group_config_block);
     }
   }
 
@@ -1194,7 +1216,7 @@ void build_flatten_routing_modules(
   for (size_t ix = 0; ix < sb_range.x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if (false == rr_gsb.is_sb_exist(device_ctx.rr_graph)) {
+      if (false == device_rr_gsb.get_gsb_edges(ix, iy).is_sb_exist(rr_gsb)) {
         continue;
       }
       build_switch_block_module(

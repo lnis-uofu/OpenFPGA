@@ -204,7 +204,7 @@ static vtr::Matrix<size_t> add_top_module_switch_block_instances(
        * module of SB */
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
 
-      if (false == rr_gsb.is_sb_exist(rr_graph)) {
+      if (false == device_rr_gsb.is_sb_exist(ix, iy)) {
         continue;
       }
 
