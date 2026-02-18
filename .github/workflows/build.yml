@@ -124,7 +124,8 @@ jobs:
           make checkout
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_DIR="D:\a\OpenFPGA\OpenFPGA\third_party_tcltk\tcltk86-8.6.18.14.Win10.nightly.20260214"
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=D:\a\OpenFPGA\OpenFPGA\third_party_tcltk\tcltk86-8.6.18.14.Win10.nightly.20260214\lib\tcl86.lib -DTCL_INCLUDE_DIR=D:\a\OpenFPGA\OpenFPGA\third_party_tcltk\tcltk86-8.6.18.14.Win10.nightly.20260214\include
+
 
   # Test the compilation compatibility on Linux
   linux_build:
