@@ -91,5 +91,5 @@ if ($AddToPath) {
 
 Write-Host "Installation complete!"
 Write-Host "Tclsh path:" (Join-Path $InstallDir "bin\tclsh.exe")
-Write-Host "Tcl directory:" (Get-ChildItem -Path $InstallDir)
+Write-Host "Tcl directory:" (Get-ChildItem -Path $InstallDir -Recurse)
 
