@@ -44,10 +44,11 @@ if (!(Test-Path $InstallDir)) {
 
 # Copy extracted files to target
 Copy-Item -Path (Join-Path $ExtractDir "*") -Destination $InstallDir -Recurse -Force
+$TclHomeDir = Join-Path $InstallDir "tcltk86-8.6.18.14.Win10.nightly.20260214"
 
 # === Optionally add bin to PATH ===
 if ($AddToPath) {
-    $binPath = Join-Path $InstallDir "bin"
+    $binPath = Join-Path $TclHomeDir "bin"
     $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
 
     if ($currentPath -notlike "*$binPath*") {
@@ -60,7 +61,7 @@ if ($AddToPath) {
         Write-Host "PATH updated. Restart your shell to apply."
     }
     # Most binary packages have: InstallDir/lib
-    $tclLibPath = Join-Path $InstallDir "lib"
+    $tclLibPath = Join-Path $TclHomeDir "lib"
     
     if (!(Test-Path $tclLibPath)) {
         Write-Warning "TCL_LIBRARY directory not found at $tclLibPath"
@@ -74,7 +75,7 @@ if ($AddToPath) {
         Write-Host "TCL_LIBRARY set in $EnvScope scope."
     }
     # Most binary packages have: InstallDir/include
-    $tclInclPath = Join-Path $InstallDir "include"
+    $tclInclPath = Join-Path $TclHomeDir "include"
     
     if (!(Test-Path $tclInclPath)) {
         Write-Warning "TCL_INCLUDE_PATH directory not found at $tclInclPath"
@@ -90,6 +91,6 @@ if ($AddToPath) {
 }
 
 Write-Host "Installation complete!"
-Write-Host "Tclsh path:" (Join-Path $InstallDir "bin\tclsh.exe")
-Write-Host "Tcl directory:" (Get-ChildItem -Path $InstallDir -Recurse)
+Write-Host "Tcl directory:" (Get-ChildItem -Path $TclHomeDir)
+Write-Host "Tclsh path:" (Join-Path $TclHomeDir "bin\tclsh.exe")
 
