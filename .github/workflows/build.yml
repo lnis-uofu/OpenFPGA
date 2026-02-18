@@ -113,13 +113,13 @@ jobs:
         shell: powershell
         run: |
           ./.github/workflows/install_dependencies_build_win.ps1
+          echo "$TCL_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Dump tool versions
         shell: powershell
         run: |
           cmake --version
-          write-Host "tcl lib path: $TCL_LIBRARY"
-          write-Host "tcl include path: $TCL_INCLUDE_PATH"
+          write-Host "TCL_DIR path: $TCL_DIR"
 
       - name: Configure and build with CMake
         shell: powershell

@@ -65,32 +65,18 @@ if ($AddToPath) {
         Write-Host "PATH updated. Restart your shell to apply."
     }
     # Most binary packages have: InstallDir/lib
-    $tclLibPath = Join-Path $TclHomeDir "lib"
+    $tclDirPath = $TclHomeDir
     
-    if (!(Test-Path $tclLibPath)) {
-        Write-Warning "TCL_LIBRARY directory not found at $tclLibPath"
+    if (!(Test-Path $tclDirPath)) {
+        Write-Warning "TCL_DIR directory not found at $tclDirPath"
     } else {
-        Write-Host "Setting TCL_LIBRARY to $tclLibPath"
+        Write-Host "Setting TCL_DIR to $tclDirPath"
         [Environment]::SetEnvironmentVariable(
-            "TCL_LIBRARY",
-            $tclLibPath,
+            "TCL_DIR",
+            $tclDirPath,
             $EnvScope
         )
-        Write-Host "TCL_LIBRARY set in $EnvScope scope."
-    }
-    # Most binary packages have: InstallDir/include
-    $tclInclPath = Join-Path $TclHomeDir "include"
-    
-    if (!(Test-Path $tclInclPath)) {
-        Write-Warning "TCL_INCLUDE_PATH directory not found at $tclInclPath"
-    } else {
-        Write-Host "Setting TCL_INCLUDE_PATH to $tclInclPath"
-        [Environment]::SetEnvironmentVariable(
-            "TCL_INCLUDE_PATH",
-            $tclInclPath,
-            $EnvScope
-        )
-        Write-Host "TCL_INCLUDE_PATH set in $EnvScope scope."
+        Write-Host "TCL_DIR set in $EnvScope scope."
     }
 }
 
