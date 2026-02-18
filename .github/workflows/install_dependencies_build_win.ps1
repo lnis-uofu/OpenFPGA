@@ -9,7 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Temporary download path
-$InstallDir = (Get-Location).Path
+$CurrDir = (Get-Location).Path
+$InstallDir = Join-Path $CurrDir "third_party_tcltk"
 $TempArchive = Join-Path $env:TEMP "tcltk.tgz"
 $ExtractDir  = Join-Path $env:TEMP "tcltk_extract"
 
@@ -72,8 +73,23 @@ if ($AddToPath) {
         )
         Write-Host "TCL_LIBRARY set in $EnvScope scope."
     }
+    # Most binary packages have: InstallDir/include
+    $tclInclPath = Join-Path $InstallDir "include"
+    
+    if (!(Test-Path $tclInclPath)) {
+        Write-Warning "TCL_INCLUDE_PATH directory not found at $tclInclPath"
+    } else {
+        Write-Host "Setting TCL_INCLUDE_PATH to $tclInclPath"
+        [Environment]::SetEnvironmentVariable(
+            "TCL_INCLUDE_PATH",
+            $tclInclPath,
+            $EnvScope
+        )
+        Write-Host "TCL_INCLUDE_PATH set in $EnvScope scope."
+    }
 }
 
 Write-Host "Installation complete!"
 Write-Host "Tclsh path:" (Join-Path $InstallDir "bin\tclsh.exe")
+Write-Host "Tcl directory:" (Get-ChildItem -Path $InstallDir)
 
