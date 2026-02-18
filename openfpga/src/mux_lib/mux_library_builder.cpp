@@ -17,7 +17,8 @@
 #include "mux_utils.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
-#include "tileable_rr_graph_utils.h"
+#include "openfpga_rr_graph_utils.h"
+#include "rr_graph_in_edges.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -27,7 +28,8 @@ namespace openfpga {
  * found in the global routing architecture
  *******************************************************************/
 static void build_routing_arch_mux_library(
-  const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, MuxLibrary& mux_lib) {
   /* The routing path is.
    * OPIN ----> CHAN ----> ... ----> CHAN ----> IPIN
@@ -42,13 +44,13 @@ static void build_routing_arch_mux_library(
       case e_rr_type::CHANY: {
         /* Have to consider the fan_in only, it is a connection block
          * (multiplexer)*/
-        if ((0 == rr_graph.node_in_edges(node).size()) ||
-            (1 == rr_graph.node_in_edges(node).size())) {
+        if ((0 == in_edges.node_in_edges(node).size()) ||
+            (1 == in_edges.node_in_edges(node).size())) {
           break;
         }
         /* Find the circuit_model for multiplexers in connection blocks */
         std::vector<RRSwitchId> driver_switches =
-          get_rr_graph_driver_switches(rr_graph, node);
+          get_rr_graph_driver_switches(rr_graph, in_edges, node);
         VTR_ASSERT(1 == driver_switches.size());
         const CircuitModelId& rr_switch_circuit_model =
           vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
@@ -73,7 +75,7 @@ static void build_routing_arch_mux_library(
         VTR_ASSERT(CircuitModelId::INVALID() != rr_switch_circuit_model);
         /* Add the mux to mux_library */
         mux_lib.add_mux(circuit_lib, rr_switch_circuit_model,
-                        rr_graph.node_in_edges(node).size());
+                        in_edges.node_in_edges(node).size());
         break;
       }
       default:
@@ -208,7 +210,8 @@ static void build_lut_mux_library(MuxLibrary& mux_lib,
  * list, as a return value
  */
 MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
-                                    const OpenfpgaContext& openfpga_ctx) {
+                                    const OpenfpgaContext& openfpga_ctx,
+                                    const RRGraphInEdges& in_edges) {
   vtr::ScopedStartFinishTimer timer("Build a library of physical multiplexers");
 
   /* MuxLibrary to store the information of Multiplexers*/
@@ -216,7 +219,7 @@ MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
 
   /* Step 1: We should check the multiplexer spice models defined in routing
    * architecture.*/
-  build_routing_arch_mux_library(vpr_device_ctx.rr_graph,
+  build_routing_arch_mux_library(vpr_device_ctx.rr_graph, in_edges,
                                  openfpga_ctx.arch().circuit_lib,
                                  openfpga_ctx.vpr_device_annotation(), mux_lib);
 

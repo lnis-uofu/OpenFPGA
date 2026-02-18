@@ -39,8 +39,7 @@ size_t find_device_rr_gsb_num_sb_modules(const DeviceRRGSB& device_rr_gsb,
   size_t counter = 0;
   for (size_t x = 0; x < device_rr_gsb.get_gsb_range().x(); ++x) {
     for (size_t y = 0; y < device_rr_gsb.get_gsb_range().y(); ++y) {
-      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(x, y);
-      if (true == rr_gsb.is_sb_exist(rr_graph)) {
+      if (true == device_rr_gsb.is_sb_exist(x, y)) {
         counter++;
       }
     }

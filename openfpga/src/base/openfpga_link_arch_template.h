@@ -130,7 +130,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
 
   /* Build multiplexer library */
   openfpga_ctx.mutable_mux_lib() = build_device_mux_library(
-    g_vpr_ctx.device(), const_cast<const T&>(openfpga_ctx));
+    g_vpr_ctx.device(), const_cast<const T&>(openfpga_ctx), in_edges);
 
   /* Build tile direct annotation */
   openfpga_ctx.mutable_tile_direct() = build_device_tile_direct(

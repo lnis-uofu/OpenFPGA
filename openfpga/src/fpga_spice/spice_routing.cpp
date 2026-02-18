@@ -271,7 +271,7 @@ void print_spice_flatten_routing_modules(NetlistManager& netlist_manager,
   for (size_t ix = 0; ix < sb_range.x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if (true != rr_gsb.is_sb_exist(rr_graph)) {
+      if (true != device_rr_gsb.is_sb_exist(ix, iy)) {
         continue;
       }
       print_spice_routing_switch_box_unique_module(

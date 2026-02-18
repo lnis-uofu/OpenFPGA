@@ -125,7 +125,7 @@ static void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
 
-      if (false == rr_gsb.is_sb_exist(rr_graph)) {
+      if (false == device_rr_gsb.is_sb_exist(ix, iy)) {
         continue;
       }
 
@@ -248,7 +248,7 @@ static void print_pnr_sdc_compact_routing_disable_switch_block_outputs(
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
 
-    if (false == rr_gsb.is_sb_exist(rr_graph)) {
+    if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_sb_x(), rr_gsb.get_sb_y())) {
       continue;
     }
 

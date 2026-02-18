@@ -8,6 +8,8 @@
 #include "openfpga_context.h"
 #include "vpr_context.h"
 
+class RRGraphInEdges;
+
 /********************************************************************
  * Function declaration
  *******************************************************************/
@@ -16,7 +18,8 @@
 namespace openfpga {
 
 MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
-                                    const OpenfpgaContext& openfpga_ctx);
+                                    const OpenfpgaContext& openfpga_ctx,
+                                    const RRGraphInEdges& in_edges);
 
 } /* end namespace openfpga */
 
