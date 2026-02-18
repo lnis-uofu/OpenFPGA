@@ -100,7 +100,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_range,
                           const size_t& layer,
                           const vtr::Point<size_t>& gsb_coord,
-                          const bool& perimeter_cb, const bool& include_clock) {
+                          const bool& perimeter_cb, const bool& include_clock,
+                          const RRGraphInEdges& in_edges) {
   /* Create an object to return */
   RRGSB rr_gsb;
 
@@ -383,8 +384,14 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
        * GSB connection This is for those grid output pins used by direct
        * connections
        */
-      if (0 ==
-          vpr_device_ctx.rr_graph.node_configurable_in_edges(inode).size()) {
+      bool has_configurable_in = false;
+      for (const RREdgeId& e : in_edges.node_in_edges(inode)) {
+        if (vpr_device_ctx.rr_graph.edge_is_configurable(e)) {
+          has_configurable_in = true;
+          break;
+        }
+      }
+      if (!has_configurable_in) {
         continue;
       }
 
@@ -392,7 +399,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
        * they are supposed to be handled by direct connection
        */
       if (true ==
-          is_ipin_direct_connected_opin(vpr_device_ctx.rr_graph, inode)) {
+          is_ipin_direct_connected_opin(vpr_device_ctx.rr_graph, in_edges, inode)) {
         continue;
       }
 
@@ -444,7 +451,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                                        vpr_device_ctx.grid.height() - 1);
       const RRGSB& rr_gsb = build_rr_gsb(
         vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
-        vpr_device_ctx.arch->perimeter_cb, include_clock);
+        vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

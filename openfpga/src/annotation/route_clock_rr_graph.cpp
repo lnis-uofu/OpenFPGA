@@ -1,6 +1,7 @@
 #include "route_clock_rr_graph.h"
 
 #include "command_exit_codes.h"
+#include "rr_graph_in_edges.h"
 #include "openfpga_annotate_routing.h"
 #include "openfpga_clustered_netlist_utils.h"
 #include "vtr_assert.h"
@@ -91,7 +92,7 @@ static int build_clock_tree_net_map(
  *******************************************************************/
 static int route_clock_spine_switch_point(
   VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
-  const RRClockSpatialLookup& clk_rr_lookup,
+  const RRGraphInEdges& in_edges, const RRClockSpatialLookup& clk_rr_lookup,
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
@@ -161,7 +162,7 @@ static int route_clock_spine_switch_point(
   if (!clk_ntwk.spine_switch_point_internal_drivers(ispine, switch_point_id)
          .empty() &&
       tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
-    for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
+    for (RREdgeId cand_edge : in_edges.node_in_edges(des_node)) {
       RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
       if (e_rr_type::OPIN != rr_graph.node_type(opin_node)) {
         continue;
@@ -316,7 +317,7 @@ static int route_spine_taps(
  *******************************************************************/
 static int route_spine_intermediate_drivers(
   VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
-  const RRClockSpatialLookup& clk_rr_lookup,
+  const RRGraphInEdges& in_edges, const RRClockSpatialLookup& clk_rr_lookup,
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
@@ -341,7 +342,7 @@ static int route_spine_intermediate_drivers(
     VTR_LOGV(
       verbose, "Finding intermediate drivers at (%d, %d) for spine '%s'\n",
       des_coord.x(), des_coord.y(), clk_ntwk.spine_name(curr_spine).c_str());
-    for (RREdgeId cand_edge : rr_graph.node_in_edges(des_node)) {
+    for (RREdgeId cand_edge : in_edges.node_in_edges(des_node)) {
       RRNodeId opin_node = rr_graph.edge_src_node(cand_edge);
       if (e_rr_type::OPIN != rr_graph.node_type(opin_node)) {
         continue;
@@ -417,7 +418,8 @@ static int route_spine_intermediate_drivers(
  *******************************************************************/
 static int rec_expand_and_route_clock_spine(
   VprRoutingAnnotation& vpr_routing_annotation, bool& spine_usage,
-  const RRGraphView& rr_graph, const RRClockSpatialLookup& clk_rr_lookup,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRClockSpatialLookup& clk_rr_lookup,
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
   const std::map<ClockTreePinId, ClusterNetId>& tree2clk_pin_map,
   const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
@@ -470,9 +472,9 @@ static int rec_expand_and_route_clock_spine(
       /* Go recursively for the destination spine */
       bool curr_branch_usage = false;
       status = rec_expand_and_route_clock_spine(
-        vpr_routing_annotation, curr_branch_usage, rr_graph, clk_rr_lookup,
-        rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, des_spine,
-        curr_pin, disable_unused_spines, force_tap_routing, verbose);
+        vpr_routing_annotation, curr_branch_usage, rr_graph, in_edges,
+        clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree,
+        des_spine, curr_pin, disable_unused_spines, force_tap_routing, verbose);
       if (CMD_EXEC_SUCCESS != status) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -488,7 +490,7 @@ static int rec_expand_and_route_clock_spine(
       curr_stop_usage = true;
       /* Now connect to next spine, internal drivers may join */
       status = route_clock_spine_switch_point(
-        vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets,
+        vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup, rr_node_gnets,
         tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin,
         switch_point_id, verbose);
       if (CMD_EXEC_SUCCESS != status) {
@@ -514,7 +516,7 @@ static int rec_expand_and_route_clock_spine(
       vtr::Point<int> des_coord = spine_coords[icoord];
 
       int use_int_driver = route_spine_intermediate_drivers(
-        vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets,
+        vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup, rr_node_gnets,
         tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord,
         verbose);
       if (use_int_driver > 1) {
@@ -548,7 +550,7 @@ static int rec_expand_and_route_clock_spine(
      * global net is mapped to the internal driver, use it as the previous
      * node  */
     int use_int_driver = route_spine_intermediate_drivers(
-      vpr_routing_annotation, rr_graph, clk_rr_lookup, rr_node_gnets,
+      vpr_routing_annotation, rr_graph, in_edges, clk_rr_lookup, rr_node_gnets,
       tree2clk_pin_map, clk_ntwk, clk_tree, curr_spine, curr_pin, des_coord,
       verbose);
     if (use_int_driver > 1) {
@@ -591,6 +593,7 @@ static int rec_expand_and_route_clock_spine(
  *******************************************************************/
 static int route_clock_tree_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
+  const RRGraphInEdges& in_edges,
   const VprBitstreamAnnotation& vpr_bitstream_annotation,
   const RRClockSpatialLookup& clk_rr_lookup,
   const vtr::vector<RRNodeId, ClusterNetId>& rr_node_gnets,
@@ -617,7 +620,7 @@ static int route_clock_tree_rr_graph(
     bool tree_usage = false;
     for (auto top_spine : clk_ntwk.tree_top_spines(clk_tree)) {
       int status = rec_expand_and_route_clock_spine(
-        vpr_routing_annotation, tree_usage, rr_graph, clk_rr_lookup,
+        vpr_routing_annotation, tree_usage, rr_graph, in_edges, clk_rr_lookup,
         rr_node_gnets, tree2clk_pin_map, clk_ntwk, clk_tree, top_spine, ipin,
         disable_unused_spines, force_tap_routing, verbose);
       if (CMD_EXEC_SUCCESS != status) {
@@ -682,6 +685,10 @@ int route_clock_rr_graph(
     annotate_rr_node_global_net(vpr_device_ctx, cluster_nlist, vpr_place_ctx,
                                 vpr_clustering_annotation, verbose);
 
+  /* Build reverse-edge map once for all clock trees */
+  RRGraphInEdges in_edges;
+  in_edges.init(vpr_device_ctx.rr_graph);
+
   /* Route spines one by one */
   for (auto itree : clk_ntwk.trees()) {
     VTR_LOGV(verbose,
@@ -699,9 +706,9 @@ int route_clock_rr_graph(
     VTR_LOGV(verbose, "Routing clock tree '%s'...\n",
              clk_ntwk.tree_name(itree).c_str());
     status = route_clock_tree_rr_graph(
-      vpr_routing_annotation, vpr_device_ctx.rr_graph, vpr_bitstream_annotation,
-      clk_rr_lookup, rr_node_gnets, tree2clk_pin_map, clk_ntwk, itree,
-      disable_unused_trees, disable_unused_spines, verbose);
+      vpr_routing_annotation, vpr_device_ctx.rr_graph, in_edges,
+      vpr_bitstream_annotation, clk_rr_lookup, rr_node_gnets, tree2clk_pin_map,
+      clk_ntwk, itree, disable_unused_trees, disable_unused_spines, verbose);
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
     }
