@@ -59,7 +59,7 @@ if ($AddToPath) {
         Write-Host "Adding $binPath to system PATH..."
         [Environment]::SetEnvironmentVariable(
             "Path",
-            "$currentPath;$binPath",
+            "$binPath;$currentPath",
             "Machine"
         )
         Write-Host "PATH updated. Restart your shell to apply."

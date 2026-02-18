@@ -111,12 +111,15 @@ jobs:
 
       - name: Install dependencies
         shell: powershell
-        run: ./.github/workflows/install_dependencies_build_win.ps1
-      
+        run: |
+          ./.github/workflows/install_dependencies_build_win.ps1
+
       - name: Dump tool versions
         shell: powershell
         run: |
           cmake --version
+          write-Host "tcl lib path: $TCL_LIBRARY"
+          write-Host "tcl include path: $TCL_INCLUDE_PATH"
 
       - name: Configure and build with CMake
         shell: powershell
