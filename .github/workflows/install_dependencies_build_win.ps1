@@ -44,7 +44,11 @@ if (!(Test-Path $InstallDir)) {
 
 # Copy extracted files to target
 Copy-Item -Path (Join-Path $ExtractDir "*") -Destination $InstallDir -Recurse -Force
+# There is subdir created when extracting the package. Hardcode here but it is dirty. Make it flexible when we can control the hierarchy when extracting
 $TclHomeDir = Join-Path $InstallDir "tcltk86-8.6.18.14.Win10.nightly.20260214"
+
+# EnvScope - Define where the path should be added (Session, User, or Machine)
+$EnvScope = "Machine"  # Change this to "User" or "Session" based on desired scope
 
 # === Optionally add bin to PATH ===
 if ($AddToPath) {
