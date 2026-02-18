@@ -96,7 +96,7 @@ void compress_routing_hierarchy_template(T& openfpga_ctx,
     openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
     find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()),
     100. *
-      ((float)find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()) /
+      ((float)find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb(), g_vpr_ctx.device().rr_graph) /
          (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() -
        1.));
 }
