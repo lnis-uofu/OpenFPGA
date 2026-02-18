@@ -109,12 +109,6 @@ jobs:
           win_flex --version
           win_bison --version
 
-      - name: Install dependencies
-        shell: powershell
-        run: |
-          ./.github/workflows/install_dependencies_build_win.ps1
-          echo "TCL_DIR=$TCL_DIR" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
       - name: Dump tool versions
         shell: powershell
         run: |
@@ -124,6 +118,8 @@ jobs:
       - name: Configure and build with CMake
         shell: powershell
         run: |
+          ./.github/workflows/install_dependencies_build_win.ps1
+          echo "TCL_DIR=$TCL_DIR" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           make checkout
           mkdir build
           cd build
