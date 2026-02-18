@@ -87,8 +87,7 @@ static void print_pnr_sdc_constrain_configurable_memory_outputs(
 static void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
   const std::string& sdc_dir, const bool& flatten_names,
   const bool& include_time_stamp, const ModuleManager& module_manager,
-  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb,
-  const RRGraphView& rr_graph) {
+  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb) {
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir +
                         std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
@@ -213,8 +212,7 @@ static void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
 static void print_pnr_sdc_compact_routing_disable_switch_block_outputs(
   const std::string& sdc_dir, const bool& flatten_names,
   const bool& include_time_stamp, const ModuleManager& module_manager,
-  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb,
-  const RRGraphView& rr_graph) {
+  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb) {
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir +
                         std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
@@ -393,14 +391,12 @@ int print_pnr_sdc(
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_disable_switch_block_outputs(
         sdc_options.sdc_dir(), sdc_options.flatten_names(),
-        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb,
-        device_ctx.rr_graph);
+        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE(false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
         sdc_options.sdc_dir(), sdc_options.flatten_names(),
-        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb,
-        device_ctx.rr_graph);
+        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb);
     }
   }
 

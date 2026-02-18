@@ -292,7 +292,7 @@ static void print_verilog_flatten_connection_block_modules(
 void print_verilog_flatten_routing_modules(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map, const DeviceRRGSB& device_rr_gsb,
-  const RRGraphView& rr_graph, const std::string& subckt_dir,
+  const std::string& subckt_dir,
   const std::string& subckt_dir_name, const FabricVerilogOption& options) {
   /* Create a vector to contain all the Verilog netlist names that have been
    * generated in this function */

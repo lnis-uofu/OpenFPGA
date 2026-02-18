@@ -1,3 +1,5 @@
+#include "openfpga_rr_graph_utils.h"
+
 #include <algorithm>
 
 #include "vtr_assert.h"
