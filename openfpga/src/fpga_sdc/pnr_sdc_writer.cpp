@@ -420,8 +420,7 @@ int print_pnr_sdc(
       (true == sdc_options.output_hierarchy()) &&
       (true == compact_routing_hierarchy)) {
     print_pnr_sdc_routing_sb_hierarchy(sdc_options.sdc_dir(), module_manager,
-                                       top_module, device_rr_gsb,
-                                       device_ctx.rr_graph);
+                                       top_module, device_rr_gsb);
   }
 
   /* Output routing constraints for Connection Blocks */
