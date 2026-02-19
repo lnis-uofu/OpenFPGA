@@ -57,7 +57,7 @@ if ($AddToPath) {
 
     if ($currentPath -notlike "*$binPath*") {
         Write-Host "Adding $binPath to system PATH..."
-        [Environment]::SetEnvironmentVariable(
+        [System.Environment]::SetEnvironmentVariable(
             "Path",
             "$binPath;$currentPath",
             "Machine"
@@ -71,12 +71,12 @@ if ($AddToPath) {
         Write-Warning "TCL_DIR directory not found at $tclDirPath"
     } else {
         Write-Host "Setting TCL_DIR to $tclDirPath"
-        [Environment]::SetEnvironmentVariable(
+        [System.Environment]::SetEnvironmentVariable(
             "TCL_DIR",
             $tclDirPath,
             $EnvScope
         )
-        Write-Host "TCL_DIR set in $EnvScope scope."
+        Write-Host "TCL_DIR=${env:TCL_DIR} set in $EnvScope scope."
     }
 }
 
