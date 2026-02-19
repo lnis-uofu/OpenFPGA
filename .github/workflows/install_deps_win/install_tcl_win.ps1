@@ -48,7 +48,7 @@ Copy-Item -Path (Join-Path $ExtractDir "*") -Destination $InstallDir -Recurse -F
 $TclHomeDir = Join-Path $InstallDir "tcltk86-8.6.18.14.Win10.nightly.20260214"
 
 # EnvScope - Define where the path should be added (Session, User, or Machine)
-$EnvScope = "Machine"  # Change this to "User" or "Session" based on desired scope
+$EnvScope = "User"  # Change this to "User" or "Session" based on desired scope
 
 # === Optionally add bin to PATH ===
 if ($AddToPath) {
@@ -60,7 +60,7 @@ if ($AddToPath) {
         [System.Environment]::SetEnvironmentVariable(
             "Path",
             "$binPath;$currentPath",
-            "Machine"
+            $EnvScope
         )
         Write-Host "PATH updated. Restart your shell to apply."
     }
