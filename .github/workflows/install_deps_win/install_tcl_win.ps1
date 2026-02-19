@@ -80,6 +80,7 @@ if ($AddToPath) {
         $TCL_DIR = [System.Environment]::GetEnvironmentVariable("TCL_DIR", $EnvScope)
         Write-Host "TCL_DIR=${TCL_DIR} set in $EnvScope scope."
         if ($AddToGithubEnv) {
+            Write-Host "User chooses to add TCL_DIR=${TCL_DIR} to github env"
             echo "TCL_DIR=${TCL_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         }
     }

@@ -110,15 +110,18 @@ jobs:
           win_bison --version
 
       - name: Install Tcl
+        id: setup_tcl 
         shell: powershell
         run: |
           ./.github/workflows/install_deps_win/install_tcl_win.ps1
           echo "TCL_DIR path: $env:TCL_DIR"
+          "TCL_DIR=${TCL_DIR}" >> $env:GITHUB_OUTPUT
 
       - name: Dump tool versions
         shell: powershell
         run: |
           cmake --version
+          echo "TCL_DIR=${{ step.setup_tcl.outputs.TCL_DIR }}"
 
       - name: Configure and build with CMake
         shell: powershell
