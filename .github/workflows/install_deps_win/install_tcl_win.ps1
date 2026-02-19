@@ -4,6 +4,7 @@
 param(
     [string]$DownloadUrl = "https://github.com/teclabat/tcltk-binaries/releases/download/version-8.6.18.14/tcltk86-8.6.18.14.Win10.nightly.20260214.tgz",
     [switch]$AddToPath = $true
+    [switch]$AddToGithubEnv = $true
 )
 
 $ErrorActionPreference = "Stop"
@@ -78,6 +79,9 @@ if ($AddToPath) {
         )
         $TCL_DIR = [System.Environment]::GetEnvironmentVariable("TCL_DIR", $EnvScope)
         Write-Host "TCL_DIR=${TCL_DIR} set in $EnvScope scope."
+        if ($AddToGithubEnv) {
+            echo "TCL_DIR=${TCL_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        }
     }
 }
 

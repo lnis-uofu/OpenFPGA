@@ -118,8 +118,7 @@ jobs:
       - name: Configure and build with CMake
         shell: powershell
         run: |
-          ./.github/workflows/install_deps_win/install_tcl_win.ps1; write-Host "TCL_DIR path: $TCL_DIR"; echo "TCL_DIR=${TCL_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          write-Host "TCL_DIR path: ${{ env.TCL_DIR }}"
+          ./.github/workflows/install_deps_win/install_tcl_win.ps1; write-Host "TCL_DIR path: ${{ env.TCL_DIR }}"
           make checkout
           mkdir build
           cd build
