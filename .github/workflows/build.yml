@@ -113,7 +113,7 @@ jobs:
         shell: powershell
         run: |
           ./.github/workflows/install_deps_win/install_tcl_win.ps1
-          Write-Output "TCL_DIR path: ${{ env:TCL_DIR }}"
+          echo "TCL_DIR path: $env:TCL_DIR"
 
       - name: Dump tool versions
         shell: powershell
