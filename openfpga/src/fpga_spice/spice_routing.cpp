@@ -224,10 +224,11 @@ static void print_spice_routing_switch_box_unique_module(
  * Iterate over all the connection blocks in a device
  * and build a module for each of them
  *******************************************************************/
-static void print_spice_flatten_connection_block_modules(
-  NetlistManager& netlist_manager, const ModuleManager& module_manager,
-  const DeviceRRGSB& device_rr_gsb, const std::string& subckt_dir,
-  const e_rr_type& cb_type) {
+static void print_spice_flatten_connection_block_modules(NetlistManager& netlist_manager,
+                                                         const ModuleManager& module_manager,
+                                                         const DeviceRRGSB& device_rr_gsb,
+                                                         const std::string& subckt_dir,
+                                                         const e_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
