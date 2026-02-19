@@ -76,7 +76,8 @@ if ($AddToPath) {
             $tclDirPath,
             $EnvScope
         )
-        Write-Host "TCL_DIR=${env:TCL_DIR} set in $EnvScope scope."
+        $TCL_DIR = [System.Environment]::GetEnvironmentVariable("TCL_DIR", $EnvScope)
+        Write-Host "TCL_DIR=${TCL_DIR} set in $EnvScope scope."
     }
 }
 
