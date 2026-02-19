@@ -68,7 +68,69 @@ jobs:
           fi
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-  # Test the compilation compatibility
+  # Test the compilation compatibility on Windows
+  win_build:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Build Compatibility: MsBuild (Windows-latest)"
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v4
+
+      - name: vcpkg build
+        uses: johnwason/vcpkg-action@v7
+        id: vcpkg
+        with:
+          # vcpkg will automatically find and use the vcpkg.json in your repo root
+          token: ${{ secrets.GITHUB_TOKEN }}
+          manifest-dir: ${{ github.workspace }} # Set to the directory containing your vcpkg.json file
+          triplet: x64-windows-release # This must be set with a valid vcpkg triplet
+
+      - name: Install WinFlexBison
+        shell: powershell
+        run: |
+          choco install winflexbison3 wget
+          # Optional: Verify installation
+          win_flex --version
+          win_bison --version
+
+      - name: Install Tcl
+        id: setup_tcl 
+        shell: powershell
+        run: |
+          ./.github/workflows/install_deps_win/install_tcl_win.ps1; echo "TCL_DIR path: $TCL_DIR"
+
+      - name: Dump tool versions
+        shell: powershell
+        run: |
+          cmake --version
+          echo "TCL_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}"
+
+      - name: Configure and build with CMake
+        shell: powershell
+        run: |
+          make checkout
+          mkdir build
+          cd build
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\lib\tcl86.lib -DTCL_INCLUDE_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}\include
+
+
+  # Test the compilation compatibility on Linux
   linux_build:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
