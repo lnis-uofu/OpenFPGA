@@ -121,7 +121,7 @@ jobs:
         shell: powershell
         run: |
           cmake --version
-          echo "TCL_DIR=${{ step.setup_tcl.outputs.TCL_DIR }}"
+          echo "TCL_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}"
 
       - name: Configure and build with CMake
         shell: powershell
