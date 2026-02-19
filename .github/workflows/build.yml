@@ -109,16 +109,20 @@ jobs:
           win_flex --version
           win_bison --version
 
+      - name: Install Tcl
+        shell: powershell
+        run: |
+          ./.github/workflows/install_deps_win/install_tcl_win.ps1
+          Write-Output "TCL_DIR path: ${{ env:TCL_DIR }}"
+
       - name: Dump tool versions
         shell: powershell
         run: |
           cmake --version
-          write-Host "TCL_DIR path: $TCL_DIR"
 
       - name: Configure and build with CMake
         shell: powershell
         run: |
-          ./.github/workflows/install_deps_win/install_tcl_win.ps1; write-Host "TCL_DIR path: ${{ env.TCL_DIR }}"
           make checkout
           mkdir build
           cd build
