@@ -216,6 +216,15 @@ static bool is_sb_side_mirror(const RRGraphView& rr_graph,
                               const RRGSB& base, const RRGSBEdges& base_edges,
                               const RRGSB& cand, const RRGSBEdges& cand_edges,
                               const e_side& side) {
+  /* Channel widths must match regardless of segment composition.
+   * When base has zero channel width, get_chan_segment_ids() returns an empty
+   * list and the segment loop below never executes, so we would incorrectly
+   * return true for any candidate — including ones with a larger channel width.
+   * Check this explicitly before entering the segment loop. */
+  if (base.get_chan_width(side) != cand.get_chan_width(side)) {
+    return false;
+  }
+
   std::vector<RRSegmentId> seg_ids = base.get_chan_segment_ids(side);
 
   for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
