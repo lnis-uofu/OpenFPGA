@@ -114,8 +114,8 @@ jobs:
         shell: powershell
         run: |
           ./.github/workflows/install_deps_win/install_tcl_win.ps1
-          echo "TCL_DIR path: $env:TCL_DIR"
-          "TCL_DIR=${TCL_DIR}" >> $env:GITHUB_OUTPUT
+          echo "TCL_DIR path: $TCL_DIR"
+#          "TCL_DIR=${TCL_DIR}" >> $env:GITHUB_OUTPUT
 
       - name: Dump tool versions
         shell: powershell
