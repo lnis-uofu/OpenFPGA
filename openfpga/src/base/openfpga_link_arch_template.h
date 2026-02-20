@@ -151,7 +151,8 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   /* Annotate placement results */
   annotate_mapped_blocks(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
                          g_vpr_ctx.placement(),
-                         openfpga_ctx.mutable_vpr_placement_annotation());
+                         openfpga_ctx.mutable_vpr_placement_annotation(),
+                         cmd_context.option_enable(cmd, opt_verbose));
 
   /* Read activity file is manadatory in the following flow-run settings
    * - When users specify that number of clock cycles
