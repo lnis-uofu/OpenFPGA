@@ -101,8 +101,7 @@ int build_device_module_graph(
 
   if (true == compress_routing) {
     build_unique_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
-                                 openfpga_ctx.vpr_device_annotation(),
-                                 in_edges,
+                                 openfpga_ctx.vpr_device_annotation(), in_edges,
                                  openfpga_ctx.device_rr_gsb(),
                                  openfpga_ctx.arch().circuit_lib,
                                  openfpga_ctx.arch().config_protocol.type(),
@@ -111,8 +110,7 @@ int build_device_module_graph(
     VTR_ASSERT_SAFE(false == compress_routing);
     build_flatten_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
                                   openfpga_ctx.vpr_device_annotation(),
-                                  in_edges,
-                                  openfpga_ctx.device_rr_gsb(),
+                                  in_edges, openfpga_ctx.device_rr_gsb(),
                                   openfpga_ctx.arch().circuit_lib,
                                   openfpga_ctx.arch().config_protocol.type(),
                                   sram_model, group_config_block, verbose);

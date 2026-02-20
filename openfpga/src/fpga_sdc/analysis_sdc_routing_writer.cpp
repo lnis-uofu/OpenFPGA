@@ -161,8 +161,8 @@ static void print_analysis_sdc_disable_cb_unused_resources(
       }
 
       bool has_configurable_in = false;
-      for (const RREdgeId& e :
-           gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, inode)) {
+      for (const RREdgeId& e : gsb_edges.get_ipin_node_in_edges(
+             rr_gsb, in_edges, cb_ipin_side, inode)) {
         if (rr_graph.edge_is_configurable(e)) {
           has_configurable_in = true;
           break;
@@ -270,9 +270,8 @@ static void print_analysis_sdc_disable_unused_cb_ports(
       }
 
       print_analysis_sdc_disable_cb_unused_resources(
-        fp, atom_ctx, module_manager, device_annotation, grids,
-        rr_graph, in_edges,
-        routing_annotation, device_rr_gsb, rr_gsb,
+        fp, atom_ctx, module_manager, device_annotation, grids, rr_graph,
+        in_edges, routing_annotation, device_rr_gsb, rr_gsb,
         device_rr_gsb.get_gsb_edges(ix, iy), cb_type,
         compact_routing_hierarchy);
     }
@@ -291,14 +290,12 @@ void print_analysis_sdc_disable_unused_cbs(
   const VprRoutingAnnotation& routing_annotation,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy) {
   print_analysis_sdc_disable_unused_cb_ports(
-    fp, atom_ctx, module_manager, device_annotation, grids,
-    rr_graph, in_edges,
+    fp, atom_ctx, module_manager, device_annotation, grids, rr_graph, in_edges,
     routing_annotation, device_rr_gsb, e_rr_type::CHANX,
     compact_routing_hierarchy);
 
   print_analysis_sdc_disable_unused_cb_ports(
-    fp, atom_ctx, module_manager, device_annotation, grids,
-    rr_graph, in_edges,
+    fp, atom_ctx, module_manager, device_annotation, grids, rr_graph, in_edges,
     routing_annotation, device_rr_gsb, e_rr_type::CHANY,
     compact_routing_hierarchy);
 }

@@ -28,12 +28,12 @@
 #include "pnr_sdc_grid_writer.h"
 #include "pnr_sdc_routing_writer.h"
 #include "pnr_sdc_writer.h"
+#include "rr_graph_in_edges.h"
 #include "sdc_hierarchy_writer.h"
 #include "sdc_memory_utils.h"
 #include "sdc_mux_utils.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
-#include "rr_graph_in_edges.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

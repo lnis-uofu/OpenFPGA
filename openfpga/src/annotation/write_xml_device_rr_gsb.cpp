@@ -11,10 +11,10 @@
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_rr_graph_utils.h"
+#include "rr_graph_in_edges.h"
 #include "rr_gsb_edges.h"
 #include "side_manager.h"
 #include "write_xml_device_rr_gsb.h"
-#include "rr_graph_in_edges.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -23,13 +23,10 @@ namespace openfpga {
  * Output the input pin of Programmable Blocks, e.g., CLBs inside a GSB to XML
  *format
  ***************************************************************************************/
-static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
-                                                const RRGraphView& rr_graph,
-                                                const RRGraphInEdges& in_edges,
-                                                const RRGSB& rr_gsb,
-                                                const RRGSBEdges& gsb_edges,
-                                                const enum e_side& gsb_side,
-                                                const bool& include_rr_info) {
+static void write_rr_gsb_ipin_connection_to_xml(
+  std::fstream& fp, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const enum e_side& gsb_side,
+  const bool& include_rr_info) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -89,8 +86,8 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
 static void write_rr_gsb_chan_connection_to_xml(
   std::fstream& fp, const DeviceGrid& vpr_device_grid,
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const enum e_side& gsb_side,
+  const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const enum e_side& gsb_side,
   const bool& include_rr_info) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -208,9 +205,8 @@ static void write_rr_gsb_chan_connection_to_xml(
 static void write_rr_switch_block_to_xml(
   const std::string fname_prefix, const DeviceGrid& vpr_device_grid,
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const RRGSBWriterOption& options) {
+  const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const RRGSBWriterOption& options) {
   /* Prepare file name */
   std::string fname(fname_prefix);
   vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -250,8 +246,8 @@ static void write_rr_switch_block_to_xml(
 
     /* routing-track and related connections */
     write_rr_gsb_chan_connection_to_xml(
-      fp, vpr_device_grid, vpr_device_annotation, rr_graph, in_edges, rr_gsb, gsb_edges,
-      gsb_side, options.include_rr_info());
+      fp, vpr_device_grid, vpr_device_annotation, rr_graph, in_edges, rr_gsb,
+      gsb_edges, gsb_side, options.include_rr_info());
   }
 
   fp << "</rr_sb>" << std::endl;
@@ -309,7 +305,8 @@ static void write_rr_connection_block_to_xml(const std::string fname_prefix,
   /* Output each side */
   for (e_side side : rr_gsb.get_cb_ipin_sides(cb_type)) {
     /* IPIN nodes and related connections */
-    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, in_edges, rr_gsb, gsb_edges, side,
+    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, in_edges, rr_gsb,
+                                        gsb_edges, side,
                                         options.include_rr_info());
   }
 
@@ -358,8 +355,7 @@ void write_device_rr_gsb_to_xml(
       if (options.include_sb_content()) {
         write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid,
                                      vpr_device_annotation, rr_graph, in_edges,
-                                     rr_gsb,
-                                     gsb_edges, options);
+                                     rr_gsb, gsb_edges, options);
       }
       sb_counter++;
     }
@@ -370,8 +366,8 @@ void write_device_rr_gsb_to_xml(
         vtr::Point<size_t> gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
         const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coord);
         if (options.include_cb_content(cb_type)) {
-          write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges, rr_gsb,
-                                           gsb_edges, cb_type, options);
+          write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
+                                           rr_gsb, gsb_edges, cb_type, options);
           cb_counters[cb_type]++;
         }
       }
@@ -386,14 +382,15 @@ void write_device_rr_gsb_to_xml(
         /* Write CBx, CBy, SB on need */
         if (options.include_sb_content()) {
           write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid,
-                                       vpr_device_annotation, rr_graph, in_edges,
-                                       rr_gsb, gsb_edges, options);
+                                       vpr_device_annotation, rr_graph,
+                                       in_edges, rr_gsb, gsb_edges, options);
           sb_counter++;
         }
         for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
           if (options.include_cb_content(cb_type)) {
             write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
-                                             rr_gsb, gsb_edges, cb_type, options);
+                                             rr_gsb, gsb_edges, cb_type,
+                                             options);
             cb_counters[cb_type]++;
           }
         }
