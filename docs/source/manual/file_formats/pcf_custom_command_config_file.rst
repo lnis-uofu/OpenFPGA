@@ -110,7 +110,9 @@ The following syntax are applicable to the XML definition under the root node ``
 
 .. option:: pb_type name="<string>"
 
-  Specifies the programmable block associated with this command, whose configuration bits will be modified.
+  Specify the programmable block associated with this command, whose configuration bits will be modified.
+
+.. note:: Please provide the full path of the ``pb_type`` in the VPR hierarchy. It must be a pb_type in a mappable mode which is not disabled during packing.
 
 .. option:: mode name="<string>" value="<bit pattern>"
 
