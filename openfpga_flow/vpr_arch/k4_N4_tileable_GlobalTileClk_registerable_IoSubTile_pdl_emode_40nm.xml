@@ -347,8 +347,8 @@
           <direct name="inpad" input="inpad.inpad" output="ff.D">
             <pack_pattern name="registered_inpad" in_port="inpad.inpad" out_port="ff.D"/>
           </direct>
-          <mux name="mux1" input="iopad.inpad ff.Q" output="io_input_pdl.inpad">
-            <delay_constant max="4.5e-11" in_port="iopad.inpad" out_port="io_input_pdl.inpad"/>
+          <mux name="mux1" input="inpad.inpad ff.Q" output="io_input_pdl.inpad">
+            <delay_constant max="4.5e-11" in_port="inpad.inpad" out_port="io_input_pdl.inpad"/>
             <delay_constant max="4.243e-11" in_port="ff.Q" out_port="io_input_pdl.inpad"/>
           </mux>
         </interconnect>
@@ -397,8 +397,8 @@
           <direct name="inpad" input="inpad.inpad" output="ff.D">
             <pack_pattern name="registered_inpad" in_port="inpad.inpad" out_port="ff.D"/>
           </direct>
-          <mux name="mux1" input="iopad.inpad ff.Q" output="io_input.inpad">
-            <delay_constant max="4.5e-11" in_port="iopad.inpad" out_port="io_input.inpad"/>
+          <mux name="mux1" input="inpad.inpad ff.Q" output="io_input.inpad">
+            <delay_constant max="4.5e-11" in_port="inpad.inpad" out_port="io_input.inpad"/>
             <delay_constant max="4.243e-11" in_port="ff.Q" out_port="io_input.inpad"/>
           </mux>
         </interconnect>
