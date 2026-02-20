@@ -276,7 +276,8 @@ static void build_switch_block_mux_module(
 static void build_switch_block_interc_modules(
   ModuleManager& module_manager, const ModuleId& sb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
   const CircuitLibrary& circuit_lib, const e_side& chan_side,
   const size_t& chan_node_id,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
@@ -291,7 +292,7 @@ static void build_switch_block_interc_modules(
   if (false ==
       rr_gsb.is_sb_node_passing_wire(rr_graph, chan_side, chan_node_id)) {
     driver_rr_nodes = get_rr_gsb_chan_node_configurable_driver_nodes(
-      rr_graph, rr_gsb, gsb_edges, chan_side, chan_node_id);
+      rr_graph, in_edges, rr_gsb, gsb_edges, chan_side, chan_node_id);
     /* Special: if there are zero-driver nodes. We skip here */
     if (0 == driver_rr_nodes.size()) {
       return;
@@ -312,7 +313,7 @@ static void build_switch_block_interc_modules(
     /* Print the multiplexer, fan_in >= 2 */
     std::vector<RRSwitchId> driver_switches;
     for (const RREdgeId& edge :
-         gsb_edges.get_chan_node_in_edges(chan_side, chan_node_id)) {
+         gsb_edges.get_chan_node_in_edges(rr_gsb, in_edges, chan_side, chan_node_id)) {
       RRSwitchId sw = RRSwitchId(rr_graph.edge_switch(edge));
       if (driver_switches.end() ==
           std::find(driver_switches.begin(), driver_switches.end(), sw)) {
@@ -391,7 +392,8 @@ static void build_switch_block_interc_modules(
 static void build_switch_block_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const bool& group_config_block, const bool& verbose) {
@@ -504,8 +506,8 @@ static void build_switch_block_module(
       if (OUT_PORT ==
           rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         build_switch_block_interc_modules(
-          module_manager, sb_module, device_annotation, grids, rr_graph, rr_gsb,
-          gsb_edges, circuit_lib, side_manager.get_side(), itrack,
+          module_manager, sb_module, device_annotation, grids, rr_graph, in_edges,
+          rr_gsb, gsb_edges, circuit_lib, side_manager.get_side(), itrack,
           input_port_to_module_nets, group_config_block);
       }
     }
@@ -579,14 +581,14 @@ static void build_switch_block_module(
 static void build_connection_block_module_short_interc(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
-  const e_rr_type& cb_type, const e_side& cb_ipin_side,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
   const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   const std::vector<RREdgeId>& driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, ipin_index);
   std::vector<RRNodeId> driver_rr_nodes;
   for (const RREdgeId curr_edge : driver_rr_edges) {
     driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
@@ -649,7 +651,8 @@ static void build_connection_block_module_short_interc(
 static void build_connection_block_mux_module(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
   const e_rr_type& cb_type, const CircuitLibrary& circuit_lib,
   const e_side& cb_ipin_side, const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
@@ -660,7 +663,7 @@ static void build_connection_block_mux_module(
 
   /* Build a vector of driver rr_nodes */
   const std::vector<RREdgeId>& driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, ipin_index);
   std::vector<RRNodeId> driver_rr_nodes;
   for (const RREdgeId curr_edge : driver_rr_edges) {
     driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
@@ -836,26 +839,27 @@ static void build_connection_block_mux_module(
 static void build_connection_block_interc_modules(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
   const e_rr_type& cb_type, const CircuitLibrary& circuit_lib,
   const e_side& cb_ipin_side, const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
   const bool& group_config_block) {
   const std::vector<RREdgeId>& driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, ipin_index);
 
   if (1 > driver_rr_edges.size()) {
     return; /* This port has no driver, skip it */
   } else if (1 == driver_rr_edges.size()) {
     /* Print a direct connection */
     build_connection_block_module_short_interc(
-      module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
+      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges, rr_gsb,
       gsb_edges, cb_type, cb_ipin_side, ipin_index, input_port_to_module_nets);
 
   } else if (1 < driver_rr_edges.size()) {
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(
-      module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
+      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges, rr_gsb,
       gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
       input_port_to_module_nets, group_config_block);
   } /*Nothing should be done else*/
@@ -919,7 +923,7 @@ static void build_connection_block_interc_modules(
 static void build_connection_block_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const e_rr_type& cb_type, const bool& group_config_block,
@@ -1089,7 +1093,7 @@ static void build_connection_block_module(
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side);
          ++inode) {
       build_connection_block_interc_modules(
-        module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
+        module_manager, cb_module, device_annotation, grids, rr_graph, in_edges, rr_gsb,
         gsb_edges, cb_type, circuit_lib, cb_ipin_side, inode,
         input_port_to_module_nets, group_config_block);
     }
@@ -1164,7 +1168,8 @@ static void build_connection_block_module(
  *******************************************************************/
 static void build_flatten_connection_block_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
-  const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const DeviceContext& device_ctx, const RRGraphInEdges& in_edges,
+  const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const e_rr_type& cb_type,
@@ -1184,7 +1189,7 @@ static void build_flatten_connection_block_modules(
       }
       build_connection_block_module(
         module_manager, decoder_lib, device_annotation, device_ctx.grid,
-        device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
+        device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
         device_rr_gsb, rr_gsb, cb_type, group_config_block, verbose);
     }
   }
@@ -1202,6 +1207,7 @@ static void build_flatten_connection_block_modules(
 void build_flatten_routing_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
@@ -1219,18 +1225,19 @@ void build_flatten_routing_modules(
       }
       build_switch_block_module(
         module_manager, decoder_lib, device_annotation, device_ctx.grid,
-        device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
+        device_ctx.rr_graph, in_edges,
+        circuit_lib, sram_orgz_type, sram_model,
         device_rr_gsb, rr_gsb, group_config_block, verbose);
     }
   }
 
   build_flatten_connection_block_modules(
-    module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
+    module_manager, decoder_lib, device_ctx, in_edges, device_annotation, device_rr_gsb,
     circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX,
     group_config_block, verbose);
 
   build_flatten_connection_block_modules(
-    module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
+    module_manager, decoder_lib, device_ctx, in_edges, device_annotation, device_rr_gsb,
     circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY,
     group_config_block, verbose);
 }
@@ -1249,6 +1256,7 @@ void build_flatten_routing_modules(
 void build_unique_routing_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
@@ -1259,8 +1267,8 @@ void build_unique_routing_modules(
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
     build_switch_block_module(module_manager, decoder_lib, device_annotation,
-                              device_ctx.grid, device_ctx.rr_graph, circuit_lib,
-                              sram_orgz_type, sram_model, device_rr_gsb,
+                              device_ctx.grid, device_ctx.rr_graph, in_edges,
+                              circuit_lib, sram_orgz_type, sram_model, device_rr_gsb,
                               unique_mirror, group_config_block, verbose);
   }
 
@@ -1272,7 +1280,7 @@ void build_unique_routing_modules(
 
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
-      device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
+      device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
       device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block,
       verbose);
   }
@@ -1285,7 +1293,7 @@ void build_unique_routing_modules(
 
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
-      device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
+      device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
       device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block,
       verbose);
   }

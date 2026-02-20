@@ -49,8 +49,8 @@ static void print_pnr_sdc_constrain_sb_mux_timing(
   std::fstream& fp, const float& time_unit, const bool& hierarchical,
   const std::string& module_path, const ModuleManager& module_manager,
   const ModuleId& sb_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_side& output_node_side,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_side& output_node_side,
   const size_t itrack, const RRNodeId& output_rr_node,
   const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
@@ -66,7 +66,7 @@ static void print_pnr_sdc_constrain_sb_mux_timing(
 
   /* Collect configurable driver nodes from cached sorted edges */
   const std::vector<RREdgeId>& chan_in_edges =
-    gsb_edges.get_chan_node_in_edges(output_node_side, itrack);
+    gsb_edges.get_chan_node_in_edges(rr_gsb, in_edges, output_node_side, itrack);
   std::vector<RRNodeId> driver_nodes;
   for (const RREdgeId& edge : chan_in_edges) {
     if (rr_graph.edge_is_configurable(edge)) {
@@ -140,7 +140,8 @@ static void print_pnr_sdc_constrain_sb_timing(
   const PnrSdcOption& options, const std::string& module_path,
   const ModuleManager& module_manager,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
+  const RRGraphView& rr_graph, const RRGraphInEdges in_edges,
+  const RRGSB& rr_gsb,
   const RRGSBEdges& gsb_edges) {
   std::string sdc_dir = options.sdc_dir();
   float time_unit = options.time_unit();
@@ -194,7 +195,7 @@ static void print_pnr_sdc_constrain_sb_timing(
       /* This is a MUX, constrain all the paths from an input to an output */
       print_pnr_sdc_constrain_sb_mux_timing(
         fp, time_unit, hierarchical, module_path, module_manager, sb_module,
-        device_annotation, grids, rr_graph, rr_gsb, gsb_edges,
+        device_annotation, grids, rr_graph, in_edges, rr_gsb, gsb_edges,
         side_manager.get_side(), itrack, chan_rr_node,
         constrain_zero_delay_paths);
     }
@@ -211,7 +212,7 @@ static void print_pnr_sdc_constrain_sb_timing(
 void print_pnr_sdc_flatten_routing_constrain_sb_timing(
   const PnrSdcOption& options, const ModuleManager& module_manager,
   const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(
@@ -240,7 +241,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(
 
       print_pnr_sdc_constrain_sb_timing(
         options, module_path, module_manager, device_annotation, grids,
-        rr_graph, rr_gsb, device_rr_gsb.get_gsb_edges(ix, iy));
+        rr_graph, in_edges, rr_gsb, device_rr_gsb.get_gsb_edges(ix, iy));
     }
   }
 }
@@ -252,7 +253,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(
 void print_pnr_sdc_compact_routing_constrain_sb_timing(
   const PnrSdcOption& options, const ModuleManager& module_manager,
   const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(
@@ -280,7 +281,8 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(
     std::string module_path = format_dir_path(root_path) + sb_module_name;
 
     print_pnr_sdc_constrain_sb_timing(
-      options, module_path, module_manager, device_annotation, grids, rr_graph,
+      options, module_path, module_manager, device_annotation, grids,
+      rr_graph, in_edges,
       rr_gsb, device_rr_gsb.get_gsb_edges(gsb_coordinate));
   }
 }
@@ -293,8 +295,8 @@ static void print_pnr_sdc_constrain_cb_mux_timing(
   std::fstream& fp, const float& time_unit, const bool& hierarchical,
   const std::string& module_path, const ModuleManager& module_manager,
   const ModuleId& cb_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
   const e_side& cb_ipin_side, const size_t inode,
   const RRNodeId& output_rr_node, const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
@@ -305,7 +307,7 @@ static void print_pnr_sdc_constrain_cb_mux_timing(
   /* Use cached ipin in-edges (from CHAN nodes only). If empty, all connections
    * are direct OPIN→IPIN which are handled elsewhere — skip this IPIN. */
   const std::vector<RREdgeId>& ipin_in_edges =
-    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, inode);
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, inode);
   std::vector<RRNodeId> input_rr_nodes;
   for (const RREdgeId& edge : ipin_in_edges) {
     if (rr_graph.edge_is_configurable(edge)) {
@@ -381,7 +383,8 @@ static void print_pnr_sdc_constrain_cb_timing(
   const PnrSdcOption& options, const std::string& module_path,
   const ModuleManager& module_manager,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
+  const RRGraphView& rr_graph, const RRGraphInEdges in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges,
   const e_rr_type& cb_type) {
   std::string sdc_dir = options.sdc_dir();
   float time_unit = options.time_unit();
@@ -485,7 +488,7 @@ static void print_pnr_sdc_constrain_cb_timing(
       const RRNodeId& ipin_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       print_pnr_sdc_constrain_cb_mux_timing(
         fp, time_unit, hierarchical, module_path, module_manager, cb_module,
-        device_annotation, grids, rr_graph, rr_gsb, gsb_edges, cb_type,
+        device_annotation, grids, rr_graph, in_edges, rr_gsb, gsb_edges, cb_type,
         cb_ipin_side, inode, ipin_rr_node, constrain_zero_delay_paths);
     }
   }
@@ -501,7 +504,7 @@ static void print_pnr_sdc_constrain_cb_timing(
 static void print_pnr_sdc_flatten_routing_constrain_cb_timing(
   const PnrSdcOption& options, const ModuleManager& module_manager,
   const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const e_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
@@ -533,7 +536,7 @@ static void print_pnr_sdc_flatten_routing_constrain_cb_timing(
 
       print_pnr_sdc_constrain_cb_timing(
         options, module_path, module_manager, device_annotation, grids,
-        rr_graph, rr_gsb, device_rr_gsb.get_gsb_edges(ix, iy), cb_type);
+        rr_graph, in_edges, rr_gsb, device_rr_gsb.get_gsb_edges(ix, iy), cb_type);
     }
   }
 }
@@ -545,18 +548,18 @@ static void print_pnr_sdc_flatten_routing_constrain_cb_timing(
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(
   const PnrSdcOption& options, const ModuleManager& module_manager,
   const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(
     "Write SDC for constrain Connection Block timing for P&R flow");
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(
-    options, module_manager, top_module, device_annotation, grids, rr_graph,
+    options, module_manager, top_module, device_annotation, grids, rr_graph, in_edges,
     device_rr_gsb, e_rr_type::CHANX);
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(
-    options, module_manager, top_module, device_annotation, grids, rr_graph,
+    options, module_manager, top_module, device_annotation, grids, rr_graph, in_edges,
     device_rr_gsb, e_rr_type::CHANY);
 }
 
@@ -567,7 +570,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(
 void print_pnr_sdc_compact_routing_constrain_cb_timing(
   const PnrSdcOption& options, const ModuleManager& module_manager,
   const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
-  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceGrid& grids, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(
@@ -594,7 +597,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
     std::string module_path = format_dir_path(root_path) + cb_module_name;
 
     print_pnr_sdc_constrain_cb_timing(
-      options, module_path, module_manager, device_annotation, grids, rr_graph,
+      options, module_path, module_manager, device_annotation, grids, rr_graph, in_edges,
       unique_mirror, device_rr_gsb.get_gsb_edges(gsb_coordinate),
       e_rr_type::CHANX);
   }
@@ -618,7 +621,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(
     std::string module_path = format_dir_path(root_path) + cb_module_name;
 
     print_pnr_sdc_constrain_cb_timing(
-      options, module_path, module_manager, device_annotation, grids, rr_graph,
+      options, module_path, module_manager, device_annotation, grids, rr_graph, in_edges,
       unique_mirror, device_rr_gsb.get_gsb_edges(gsb_coordinate),
       e_rr_type::CHANY);
   }

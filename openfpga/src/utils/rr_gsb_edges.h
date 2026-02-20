@@ -36,11 +36,6 @@ class RRGSBEdges {
                                                const e_side& side,
                                                const size_t& track_id) const;
 
-  /* Post-sort overload: return cached edge data for a channel output node.
-   * Must only be called AFTER sort_chan_node_in_edges has been run. */
-  const std::vector<RREdgeId>& get_chan_node_in_edges(
-    const e_side& side, const size_t& track_id) const;
-
   /* Get the sorted (or unsorted fallback) incoming edges for an IPIN
    * node at the given side and ipin index.
    * This overload falls back to in_edges when the cache is empty. */
@@ -48,11 +43,6 @@ class RRGSBEdges {
                                                const RRGraphInEdges& in_edges,
                                                const e_side& side,
                                                const size_t& ipin_id) const;
-
-  /* Post-sort overload: return cached edge data for an IPIN node.
-   * Must only be called AFTER sort_ipin_node_in_edges has been run. */
-  const std::vector<RREdgeId>& get_ipin_node_in_edges(
-    const e_side& side, const size_t& ipin_id) const;
 
   /* Check if the switch block physically exists (has routing wires /
    * OPIN nodes and at least one incoming edge).

@@ -170,7 +170,8 @@ static void build_switch_block_interc_bitstream(
   const ConfigBlockId& sb_configurable_block,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
-  const RRGraphView& rr_graph, const AtomContext& atom_ctx,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGSB& rr_gsb,
   const RRGSBEdges& gsb_edges, const e_side& chan_side,
@@ -185,7 +186,7 @@ static void build_switch_block_interc_bitstream(
   if (false ==
       rr_gsb.is_sb_node_passing_wire(rr_graph, chan_side, chan_node_id)) {
     driver_rr_nodes = get_rr_gsb_chan_node_configurable_driver_nodes(
-      rr_graph, rr_gsb, gsb_edges, chan_side, chan_node_id);
+      rr_graph, in_edges, rr_gsb, gsb_edges, chan_side, chan_node_id);
     /* Special: if there are zero-driver nodes. We skip here */
     if (0 == driver_rr_nodes.size()) {
       return;
@@ -210,7 +211,7 @@ static void build_switch_block_interc_bitstream(
     build_switch_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, module_name_map,
       circuit_lib, mux_lib, rr_graph, cur_rr_node, driver_rr_nodes,
-      gsb_edges.get_chan_node_in_edges(chan_side, chan_node_id), atom_ctx,
+      gsb_edges.get_chan_node_in_edges(rr_gsb, in_edges, chan_side, chan_node_id), atom_ctx,
       device_annotation, routing_annotation, verbose);
   } /*Nothing should be done else*/
 }
@@ -231,7 +232,8 @@ static void build_switch_block_bitstream(
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const bool& verbose) {
   /* Iterate over all the multiplexers */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
@@ -249,7 +251,7 @@ static void build_switch_block_bitstream(
       }
       build_switch_block_interc_bitstream(
         bitstream_manager, sb_config_block, module_manager, module_name_map,
-        circuit_lib, mux_lib, rr_graph, atom_ctx, device_annotation,
+        circuit_lib, mux_lib, rr_graph, in_edges, atom_ctx, device_annotation,
         routing_annotation, rr_gsb, gsb_edges, side_manager.get_side(), itrack,
         verbose);
     }
@@ -268,13 +270,14 @@ static void build_connection_block_mux_bitstream(
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
   const size_t& ipin_index, const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
   std::vector<RREdgeId> driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, ipin_index);
   size_t datapath_mux_size = driver_rr_edges.size();
 
   /* Cache input and output nets */
@@ -398,7 +401,8 @@ static void build_connection_block_interc_bitstream(
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
   const size_t& ipin_index, const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
@@ -408,7 +412,7 @@ static void build_connection_block_interc_bitstream(
 
   /* Consider configurable edges only */
   std::vector<RREdgeId> driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(cb_ipin_side, ipin_index);
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side, ipin_index);
   std::vector<RRNodeId> driver_rr_nodes;
   for (const RREdgeId curr_edge : driver_rr_edges) {
     driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
@@ -432,7 +436,7 @@ static void build_connection_block_interc_bitstream(
     build_connection_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, module_name_map,
       circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
-      rr_graph, rr_gsb, gsb_edges, cb_ipin_side, ipin_index, verbose);
+      rr_graph, in_edges, rr_gsb, gsb_edges, cb_ipin_side, ipin_index, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -453,7 +457,8 @@ static void build_connection_block_bitstream(
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
   const bool& verbose) {
   /* Find routing multiplexers on the sides of a Connection block where IPIN
@@ -470,7 +475,7 @@ static void build_connection_block_bitstream(
       build_connection_block_interc_bitstream(
         bitstream_manager, cb_configurable_block, module_manager,
         module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
-        routing_annotation, rr_graph, rr_gsb, gsb_edges, cb_ipin_side, inode,
+        routing_annotation, rr_graph, in_edges, rr_gsb, gsb_edges, cb_ipin_side, inode,
         verbose);
     }
   }
@@ -486,7 +491,8 @@ static void build_connection_block_bitstreams(
   const FabricTile& fabric_tile, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
   const e_rr_type& cb_type, const bool& verbose) {
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
@@ -612,7 +618,7 @@ static void build_connection_block_bitstreams(
       build_connection_block_bitstream(
         bitstream_manager, cb_configurable_block, module_manager,
         module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
-        routing_annotation, rr_graph, rr_gsb,
+        routing_annotation, rr_graph, in_edges, rr_gsb,
         device_rr_gsb.get_gsb_edges(ix, iy), cb_type, verbose);
 
       VTR_LOGV(verbose, "\tDone\n");
@@ -633,7 +639,8 @@ void build_routing_bitstream(
   const FabricTile& fabric_tile, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
   const bool& verbose) {
   /* Generate bitstream for each switch blocks
@@ -746,7 +753,7 @@ void build_routing_bitstream(
       build_switch_block_bitstream(
         bitstream_manager, sb_configurable_block, module_manager,
         module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
-        routing_annotation, rr_graph, rr_gsb, gsb_edges, verbose);
+        routing_annotation, rr_graph, in_edges, rr_gsb, gsb_edges, verbose);
 
       VTR_LOGV(verbose, "\tDone\n");
     }
@@ -763,7 +770,7 @@ void build_routing_bitstream(
   build_connection_block_bitstreams(
     bitstream_manager, top_configurable_block, module_manager, module_name_map,
     fabric_tile, circuit_lib, mux_lib, atom_ctx, device_annotation,
-    routing_annotation, rr_graph, device_rr_gsb, compact_routing_hierarchy,
+    routing_annotation, rr_graph, in_edges, device_rr_gsb, compact_routing_hierarchy,
     e_rr_type::CHANX, verbose);
   VTR_LOG("Done\n");
 
@@ -772,7 +779,7 @@ void build_routing_bitstream(
   build_connection_block_bitstreams(
     bitstream_manager, top_configurable_block, module_manager, module_name_map,
     fabric_tile, circuit_lib, mux_lib, atom_ctx, device_annotation,
-    routing_annotation, rr_graph, device_rr_gsb, compact_routing_hierarchy,
+    routing_annotation, rr_graph, in_edges, device_rr_gsb, compact_routing_hierarchy,
     e_rr_type::CHANY, verbose);
   VTR_LOG("Done\n");
 }

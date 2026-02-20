@@ -22,6 +22,7 @@
 #include "sdc_memory_utils.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
+#include "rr_graph_in_edges.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -275,6 +276,8 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
    * frequency We need to consider these impacts and constrain different I/Os
    * with different delays!!!
    */
+  RRGraphInEdges in_edges;
+  in_edges.init(vpr_ctx.device().rr_graph);
   print_analysis_sdc_io_delays(
     fp, option.time_unit(), vpr_ctx.atom(), vpr_ctx.placement(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.io_location_map(),
@@ -295,7 +298,8 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   print_analysis_sdc_disable_unused_cbs(
     fp, vpr_ctx.atom(), openfpga_ctx.module_graph(),
     openfpga_ctx.vpr_device_annotation(), vpr_ctx.device().grid,
-    vpr_ctx.device().rr_graph, openfpga_ctx.vpr_routing_annotation(),
+    vpr_ctx.device().rr_graph, in_edges,
+    openfpga_ctx.vpr_routing_annotation(),
     openfpga_ctx.device_rr_gsb(), compact_routing_hierarchy);
 
   /* Disable timing for unused routing resources in switch blocks */

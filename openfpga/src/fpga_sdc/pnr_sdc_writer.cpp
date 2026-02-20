@@ -33,6 +33,7 @@
 #include "sdc_mux_utils.h"
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
+#include "rr_graph_in_edges.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -401,17 +402,20 @@ int print_pnr_sdc(
     }
   }
 
+  RRGraphInEdges in_edges;
+  in_edges.init(device_ctx.rr_graph);
+
   /* Output routing constraints for Switch Blocks */
   if (true == sdc_options.constrain_sb()) {
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_sb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE(false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_sb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     }
   }
 
@@ -428,12 +432,12 @@ int print_pnr_sdc(
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_cb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE(false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_cb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     }
   }
 

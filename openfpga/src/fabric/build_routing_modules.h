@@ -11,6 +11,7 @@
 #include "mux_library.h"
 #include "vpr_context.h"
 #include "vpr_device_annotation.h"
+#include "rr_graph_in_edges.h"
 
 /********************************************************************
  * Function declaration
@@ -22,6 +23,7 @@ namespace openfpga {
 void build_flatten_routing_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
@@ -30,6 +32,7 @@ void build_flatten_routing_modules(
 void build_unique_routing_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const RRGraphInEdges& in_edges,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,

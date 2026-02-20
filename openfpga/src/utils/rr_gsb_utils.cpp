@@ -60,22 +60,6 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
   return driver_nodes;
 }
 
-/* Post-sort overload: uses cached chan_node_in_edges_ data. */
-std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(
-  const RRGraphView& rr_graph, const RRGSB& /*rr_gsb*/,
-  const RRGSBEdges& gsb_edges, const e_side& chan_side,
-  const size_t& track_id) {
-  std::vector<RRNodeId> driver_nodes;
-  for (const RREdgeId& edge :
-       gsb_edges.get_chan_node_in_edges(chan_side, track_id)) {
-    if (false == rr_graph.edge_is_configurable(edge)) {
-      continue;
-    }
-    driver_nodes.push_back(rr_graph.edge_src_node(edge));
-  }
-  return driver_nodes;
-}
-
 /** @brief Evaluate if two routing channels are mirror to each other */
 static bool is_chan_mirror(const RRGraphView& rr_graph,
                            const VprDeviceAnnotation& device_annotation,

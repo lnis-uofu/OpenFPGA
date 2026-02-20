@@ -70,22 +70,6 @@ std::vector<RREdgeId> RRGSBEdges::get_ipin_node_in_edges(
   return ipin_node_in_edges_[side_manager.to_size_t()][ipin_id];
 }
 
-const std::vector<RREdgeId>& RRGSBEdges::get_chan_node_in_edges(
-  const e_side& side, const size_t& track_id) const {
-  SideManager side_manager(side);
-  VTR_ASSERT(side_manager.validate());
-  VTR_ASSERT(!chan_node_in_edges_.empty());
-  return chan_node_in_edges_[side_manager.to_size_t()][track_id];
-}
-
-const std::vector<RREdgeId>& RRGSBEdges::get_ipin_node_in_edges(
-  const e_side& side, const size_t& ipin_id) const {
-  SideManager side_manager(side);
-  VTR_ASSERT(side_manager.validate());
-  VTR_ASSERT(!ipin_node_in_edges_.empty());
-  return ipin_node_in_edges_[side_manager.to_size_t()][ipin_id];
-}
-
 bool RRGSBEdges::is_sb_exist(const RRGSB& gsb,
                              const RRGraphInEdges& in_edges) const {
   size_t num_sides_routing_wires = 0;
