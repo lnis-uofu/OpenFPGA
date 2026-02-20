@@ -18,7 +18,7 @@
   </command>
     <command name="set_watch_dog" type="delay_chain">
     <option name="pad" type="pin"/>
-    <pb_type name="io_output_emode[outpad_registered].outpad" offset="0"/>
+    <pb_type name="io_output_emode[outpad_registered].opad" offset="0"/>
     <option name="mode" type="mode" offset="0">
       <!-- Assume three modes: NORMAL, LOW_SPEED, HIGH_SPEED -->
       <mode name="NORMAL" value = "0001"/>
