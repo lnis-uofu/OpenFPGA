@@ -1,5 +1,4 @@
-#ifndef VPR_CLUSTERING_ANNOTATION_H
-#define VPR_CLUSTERING_ANNOTATION_H
+#pragma once
 
 /********************************************************************
  * Include header files required by the data structure definition
@@ -60,7 +59,7 @@ class VprClusteringAnnotation {
   /* Link clustered blocks to physical pb (mapping results) */
   std::map<ClusterBlockId, PhysicalPb> physical_pbs_;
   /* Map from cluster block to its physical equivalent site (pb_type). This is due to that some cluster block can be mapped to logical equivalent site during packing and then remapped to its physical equivalent site during placement and routing. */
-  std::map<ClusterBlockId, t_logical_block_type_ptr> physical_pbs_;
+  std::map<ClusterBlockId, t_logical_block_type_ptr> phy_equ_sites_;
 };
 
 } /* End namespace openfpga*/
