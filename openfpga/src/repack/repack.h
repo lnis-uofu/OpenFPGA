@@ -19,7 +19,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void pack_physical_pbs(const DeviceContext& device_ctx,
+int pack_physical_pbs(const DeviceContext& device_ctx,
                        const AtomContext& atom_ctx,
                        const ClusteringContext& clustering_ctx,
                        VprDeviceAnnotation& device_annotation,
