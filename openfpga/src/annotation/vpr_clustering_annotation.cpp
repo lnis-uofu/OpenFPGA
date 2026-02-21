@@ -124,7 +124,7 @@ void VprClusteringAnnotation::set_physical_equivalent_site(const ClusterBlockId&
       phy_equ_site->name.c_str(), size_t(block_id), result->second->name.c_str());
   }
 
-  return phy_equ_sites_[block_id] = phy_equ_site;
+  phy_equ_sites_[block_id] = phy_equ_site;
 }
 
 } /* End namespace openfpga*/

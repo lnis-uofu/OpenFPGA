@@ -63,5 +63,3 @@ class VprClusteringAnnotation {
 };
 
 } /* End namespace openfpga*/
-
-#endif

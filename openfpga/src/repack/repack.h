@@ -1,5 +1,4 @@
-#ifndef REPACK_H
-#define REPACK_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -29,5 +28,3 @@ int pack_physical_pbs(const DeviceContext& device_ctx,
                        const RepackOption& options);
 
 } /* end namespace openfpga */
-
-#endif

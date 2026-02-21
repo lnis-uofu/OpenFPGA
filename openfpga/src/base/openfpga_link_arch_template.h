@@ -150,6 +150,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   if (CMD_EXEC_FATAL_ERROR ==
       /* This one must be called after the physical equivalent sites is built by function build_physical_tile_equivalent_sites() */
       annotate_cluster_physical_equivalent_sites(
+        g_vpr_ctx.device().grid,
         g_vpr_ctx.clustering(),
         g_vpr_ctx.placement(),
         openfpga_ctx.vpr_device_annotation(),
