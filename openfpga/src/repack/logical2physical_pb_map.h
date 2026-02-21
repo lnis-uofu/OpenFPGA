@@ -30,9 +30,25 @@ class Logical2PhysicalPbMap {
   bool init(t_logical_block_type_ptr lgk_lb_type, 
             t_logical_block_type_ptr phy_lb_type,
             const bool& verbose);
+  bool clear();
 
  public: /* Public validators/invalidators */
   bool empty() const;
+
+ private: /* Private utilities */
+  bool rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
+                        t_pb_graph_node* phy_pb_graph_node,
+                        const bool& top_node,
+                        const bool& verbose);
+  bool build_pb_graph_input_pin_map(t_pb_graph_node* lgk_pb_graph_node,
+                                    t_pb_graph_node* phy_pb_graph_node,
+                                    const bool& verbose);
+  bool build_pb_graph_output_pin_map(t_pb_graph_node* lgk_pb_graph_node,
+                                    t_pb_graph_node* phy_pb_graph_node,
+                                    const bool& verbose);
+  bool build_pb_graph_clock_pin_map(t_pb_graph_node* lgk_pb_graph_node,
+                                    t_pb_graph_node* phy_pb_graph_node,
+                                    const bool& verbose);
 
  private: /* Internal Data */
   /* logical -> physical  */
