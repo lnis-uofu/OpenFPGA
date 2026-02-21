@@ -1,0 +1,46 @@
+#pragma once
+
+/********************************************************************
+ * Include header files required by the data structure definition
+ *******************************************************************/
+#include <map>
+#include "physical_types.h"
+
+/* Begin namespace openfpga */
+namespace openfpga {
+
+/********************************************************************
+ * This contains multiple map from the following of a logical equivalent site
+ * - pb_type
+ * - pb_graph_node
+ * - pb_graph_pin
+ * to those of its physical equivalent site
+ * Note: 
+ * If the logical equivalent site is known to be the same as the physical equivalent site,
+ * please skip the function init().
+ *******************************************************************/
+class Logical2PhysicalPbMap {
+ public: /* Accessors */
+  const t_pb_type* pb_type(const t_pb_type* lgk_pb_type) const;
+  const t_pb_graph_node* pb_graph_node(const t_pb_graph_node* lgk_pb_graph_node) const;
+  const t_pb_graph_pin* pb_graph_pin(const t_pb_graph_pin* lgk_pb_graph_pin) const;
+
+ public: /* Public mutators */
+  /* Build the 1:1 map on pb_type, pb_graph_node and pb_graph_pin  between the logical and physical pb_graph.  Return false is failed. This requires two pb_graph has exactly the same hierarchy, names and pins unless the top-level pb_type name could be different */
+  bool init(t_logical_block_type_ptr lgk_lb_type, 
+            t_logical_block_type_ptr phy_lb_type,
+            const bool& verbose);
+
+ public: /* Public validators/invalidators */
+  bool empty() const;
+
+ private: /* Internal Data */
+  /* logical -> physical  */
+  std::map<const t_pb_type*, const t_pb_type*> pb_type_map_;
+  std::map<const t_pb_graph_node*, const t_pb_graph_node*> pb_graph_node_map_;
+  std::map<const t_pb_graph_pin*, const t_pb_graph_pin*> pb_graph_pin_map_;
+};
+
+} /* End namespace openfpga*/
+
+#endif
