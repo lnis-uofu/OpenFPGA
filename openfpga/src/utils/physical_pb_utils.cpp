@@ -130,7 +130,9 @@ void alloc_physical_pb_from_pb_graph(
  * physical pb data base
  ***********************************************************************/
 static void update_primitive_physical_pb_pin_atom_net(
-  PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
+  PhysicalPb& phy_pb,
+  const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const PhysicalPbId& primitive_pb,
   const t_pb_graph_pin* pb_graph_pin, const t_pb_routes& pb_route,
   const VprDeviceAnnotation& device_annotation, const AtomNetlist& atom_nlist,
   const bool& verbose) {
@@ -143,7 +145,7 @@ static void update_primitive_physical_pb_pin_atom_net(
 
     /* Find the physical pb_graph_pin */
     t_pb_graph_pin* physical_pb_graph_pin =
-      device_annotation.physical_pb_graph_pin(pb_graph_pin);
+      device_annotation.physical_pb_graph_pin(lgk2phy_pb_map.pb_graph_pin(pb_graph_pin));
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
     if (AtomNetId::INVALID() != atom_net) {
@@ -175,7 +177,9 @@ static void update_primitive_physical_pb_pin_atom_net(
  * Synchronize mapping nets from an operating primitive pb to a physical pb
  ***********************************************************************/
 static void synchronize_primitive_physical_pb_atom_nets(
-  PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
+  PhysicalPb& phy_pb,
+  const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const PhysicalPbId& primitive_pb,
   const t_pb_graph_node* pb_graph_node, const t_pb_routes& pb_route,
   const AtomContext& atom_ctx, const AtomBlockId& atom_blk,
   const VprDeviceAnnotation& device_annotation, const bool& verbose) {
@@ -218,7 +222,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        * default
        */
       update_primitive_physical_pb_pin_atom_net(
-        phy_pb, primitive_pb, &(pb_graph_node->input_pins[iport][ipin]),
+        phy_pb,lgk2phy_pb_map, primitive_pb, &(pb_graph_node->input_pins[iport][ipin]),
         pb_route, device_annotation, atom_ctx.netlist(), verbose);
     }
   }
@@ -257,7 +261,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        * default
        */
       update_primitive_physical_pb_pin_atom_net(
-        phy_pb, primitive_pb, &(pb_graph_node->output_pins[iport][ipin]),
+        phy_pb,lgk2phy_pb_map, primitive_pb, &(pb_graph_node->output_pins[iport][ipin]),
         pb_route, device_annotation, atom_ctx.netlist(), verbose);
     }
   }
@@ -286,7 +290,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        * default
        */
       update_primitive_physical_pb_pin_atom_net(
-        phy_pb, primitive_pb, &(pb_graph_node->clock_pins[iport][ipin]),
+        phy_pb,lgk2phy_pb_map, primitive_pb, &(pb_graph_node->clock_pins[iport][ipin]),
         pb_route, device_annotation, atom_ctx.netlist(), verbose);
     }
   }
@@ -305,7 +309,9 @@ static void synchronize_primitive_physical_pb_atom_nets(
  * as driven by an wired LUT
  ***********************************************************************/
 static void mark_physical_pb_wired_lut_outputs(
-  PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
+  PhysicalPb& phy_pb,
+  const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const PhysicalPbId& primitive_pb,
   const t_pb_graph_node* pb_graph_node,
   const VprDeviceAnnotation& device_annotation, const bool& verbose) {
   for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
@@ -314,7 +320,7 @@ static void mark_physical_pb_wired_lut_outputs(
 
       /* Find the physical pb_graph_pin */
       t_pb_graph_pin* physical_pb_graph_pin =
-        device_annotation.physical_pb_graph_pin(pb_graph_pin);
+        device_annotation.physical_pb_graph_pin(lgk2phy_pb_map.pb_graph_pin(pb_graph_pin));
       VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
       /* Print debug info */
@@ -331,7 +337,9 @@ static void mark_physical_pb_wired_lut_outputs(
  * Synchronize mapping results from an operating pb to a physical pb
  ***********************************************************************/
 void rec_update_physical_pb_from_operating_pb(
-  PhysicalPb& phy_pb, const t_pb* op_pb, const t_pb_routes& pb_route,
+  PhysicalPb& phy_pb, 
+  const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const t_pb* op_pb, const t_pb_routes& pb_route,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
@@ -339,7 +347,7 @@ void rec_update_physical_pb_from_operating_pb(
 
   if (true == is_primitive_pb_type(pb_type)) {
     t_pb_graph_node* physical_pb_graph_node =
-      device_annotation.physical_pb_graph_node(pb_graph_node);
+      device_annotation.physical_pb_graph_node(lgk2phy_pb_map.pb_graph_node(pb_graph_node));
     VTR_ASSERT(nullptr != physical_pb_graph_node);
     /* Find the physical pb */
     const PhysicalPbId& physical_pb = phy_pb.find_pb(physical_pb_graph_node);
@@ -347,7 +355,7 @@ void rec_update_physical_pb_from_operating_pb(
 
     /* Set the mode bits */
     phy_pb.set_mode_bits(physical_pb,
-                         device_annotation.pb_type_mode_bits(pb_type));
+                         device_annotation.pb_type_mode_bits(lgk2phy_pb_map.pb_type(pb_type)));
 
     /* Find mapped atom block and add to this physical pb */
     AtomBlockId atom_blk = atom_ctx.netlist().find_block(op_pb->name);
@@ -362,7 +370,7 @@ void rec_update_physical_pb_from_operating_pb(
      * bind the bitstream value from atom block to the physical pb
      */
     for (const auto& bitstrm_src :
-         bitstream_annotation.pb_type_bitstream_sources(pb_type)) {
+         bitstream_annotation.pb_type_bitstream_sources(lgk2phy_pb_map.pb_type(pb_type))) {
       if (bitstrm_src.type !=
           VprBitstreamAnnotation::e_bitstream_source_type::EBLIF) {
         continue; /* Bypass unmatched sources*/
@@ -406,7 +414,7 @@ void rec_update_physical_pb_from_operating_pb(
      * bind the bitstream value from atom block to the physical pb
      */
     for (const auto& bitstrm_src :
-         bitstream_annotation.pb_type_mode_select_bitstream_sources(pb_type)) {
+         bitstream_annotation.pb_type_mode_select_bitstream_sources(lgk2phy_pb_map.pb_type(pb_type))) {
       if (bitstrm_src.type !=
           VprBitstreamAnnotation::e_bitstream_source_type::EBLIF) {
         continue; /* Bypass unmatched sources*/
@@ -448,7 +456,7 @@ void rec_update_physical_pb_from_operating_pb(
 
     /* Iterate over ports and annotate the atom pins */
     synchronize_primitive_physical_pb_atom_nets(
-      phy_pb, physical_pb, pb_graph_node, pb_route, atom_ctx, atom_blk,
+      phy_pb, lgk2phy_pb_map, physical_pb, pb_graph_node, pb_route, atom_ctx, atom_blk,
       device_annotation, verbose);
     return;
   }
@@ -462,7 +470,7 @@ void rec_update_physical_pb_from_operating_pb(
       if ((nullptr != op_pb->child_pbs[ipb]) &&
           (nullptr != op_pb->child_pbs[ipb][jpb].name)) {
         rec_update_physical_pb_from_operating_pb(
-          phy_pb, &(op_pb->child_pbs[ipb][jpb]), pb_route, atom_ctx,
+          phy_pb, lgk2phy_pb_map, &(op_pb->child_pbs[ipb][jpb]), pb_route, atom_ctx,
           device_annotation, bitstream_annotation, verbose);
       } else {
         /* Some pb may be used just in routing purpose, find out the output nets
@@ -502,7 +510,7 @@ void rec_update_physical_pb_from_operating_pb(
           VTR_ASSERT(LUT_CLASS == child_pb_type->class_type);
 
           t_pb_graph_node* physical_pb_graph_node =
-            device_annotation.physical_pb_graph_node(child_pb_graph_node);
+            device_annotation.physical_pb_graph_node(lgk2phy_pb_map.pb_graph_node(child_pb_graph_node));
           VTR_ASSERT(nullptr != physical_pb_graph_node);
           /* Find the physical pb */
           const PhysicalPbId& physical_pb =
@@ -511,9 +519,9 @@ void rec_update_physical_pb_from_operating_pb(
 
           /* Set the mode bits */
           phy_pb.set_mode_bits(
-            physical_pb, device_annotation.pb_type_mode_bits(child_pb_type));
+            physical_pb, device_annotation.pb_type_mode_bits(lgk2phy_pb_map.pb_type(child_pb_type)));
 
-          mark_physical_pb_wired_lut_outputs(phy_pb, physical_pb,
+          mark_physical_pb_wired_lut_outputs(phy_pb, lgk2phy_pb_map, physical_pb,
                                              child_pb_graph_node,
                                              device_annotation, verbose);
         }

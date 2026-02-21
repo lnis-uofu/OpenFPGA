@@ -49,4 +49,36 @@ bool annotate_post_routing_cluster_sync_results(
   return CMD_EXEC_SUCCESS;
 }
 
+bool annotate_cluster_physical_equivalent_sites(
+  const ClusteringContext& clustering_ctx,
+  const PlacementContext& place_ctx,
+  VprDeviceAnnotation& device_annotation,
+  VprClusteringAnnotation& clustering_annotation) {
+  VTR_LOG(
+    "Building annotation on physical equivalent sites for clustered blocks...");
+
+  for (const ClusterBlockId& cluster_blk_id :
+       clustering_ctx.clb_nlist.blocks()) {
+    /* Skip invalid ids */
+    if (!cluster_blk_id) {
+      continue;
+    }
+    /* Find the pb_type representing the physical site */
+    vtr::Point<size_t> grid_coord(place_ctx.block_locs()[block_id].loc.x,
+                                  place_ctx.block_locs()[block_id].loc.y);
+    int sub_tile_index = place_ctx.block_locs()[block_id].loc.sub_tile;
+    int blk_layer = place_ctx.block_locs()[block_id].loc.layer;
+    t_physical_tile_type_ptr grid_type = grids.get_physical_type(
+      t_physical_tile_loc(grid_coord.x(), grid_coord.y(), blk_layer));
+    t_logical_block_type_ptr phy_lb_type =
+      device_annotation.physical_equivalent_site(
+        grid_type, grid_type->sub_tiles[sub_tile_index].name);
+    clustering_annotation.set_physical_equivalent_site(cluster_blk_id, phy_lb_type);
+  }
+
+  VTR_LOG("Done\n");
+
+  return CMD_EXEC_SUCCESS;
+}
+
 } /* end namespace openfpga */

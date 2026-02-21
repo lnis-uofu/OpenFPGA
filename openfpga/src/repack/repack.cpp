@@ -14,6 +14,7 @@
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
+#include "logical2physical_pb_map.h"
 #include "repack.h"
 #include "vpr_utils.h"
 
@@ -957,15 +958,15 @@ static void repack_cluster(const AtomContext& atom_ctx,
                            const ClusterBlockId& block_id,
                            const RepackOption& options) {
   /* Get the pb graph that current clustered block is mapped to */
-  t_logical_block_type_ptr lb_type =
+  t_logical_block_type_ptr lgk_lb_type =
     clustering_ctx.clb_nlist.block_type(block_id);
-  t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
-  VTR_ASSERT(nullptr != pb_graph_head);
+  t_pb_graph_node* lgk_pb_graph_head = lgk_lb_type->pb_graph_head;
+  VTR_ASSERT(nullptr != lgk_pb_graph_head);
   bool verbose = options.verbose_output();
 
   /* We should get a non-empty graph */
   const LbRRGraph& lb_rr_graph =
-    device_annotation.physical_lb_rr_graph(pb_graph_head);
+    device_annotation.physical_lb_rr_graph(lgk_pb_graph_head);
   VTR_ASSERT(!lb_rr_graph.empty());
 
   VTR_LOG("Repack clustered block '%s'...",
@@ -973,11 +974,11 @@ static void repack_cluster(const AtomContext& atom_ctx,
   VTR_LOGV(verbose, "\n");
 
   /* Initialize the router */
-  LbRouter lb_router(lb_rr_graph, lb_type);
+  LbRouter lb_router(lb_rr_graph, lgk_lb_type);
 
   /* Add nets to be routed with source and terminals */
   add_lb_router_nets(
-    lb_router, lb_type, lb_rr_graph, atom_ctx, device_annotation,
+    lb_router, lgk_lb_type, lb_rr_graph, atom_ctx, device_annotation,
     clustering_ctx,
     const_cast<const VprClusteringAnnotation&>(clustering_annotation), block_id,
     options);
@@ -999,15 +1000,31 @@ static void repack_cluster(const AtomContext& atom_ctx,
   VTR_ASSERT(true == route_success);
   VTR_LOGV(verbose, "Reroute succeed\n");
 
+  /* TODO: Create an API on clustering_annotation */
+  t_logical_block_type_ptr phy_lb_type = clustering_annotation.physical_equivalent_site(block_id);
+  if (phy_lb_type != lgk_lb_type) {
+    VTR_LOG("Will use physical equivalent site '%s' rather than the logical site '%s' for clustered block '%s'\n",
+           phy_lb_type->name.c_str(), lgk_lb_type->name.c_str(),
+           clustering_ctx.clb_nlist.block_name(block_id).c_str());
+  }
+  t_pb_graph_node* phy_pb_graph_head = phy_lb_type->pb_graph_head;
+  VTR_ASSERT(nullptr != phy_pb_graph_head);
+
+  /* TODO: Create 1:1 mapping on pb_type, pb_graph_node and pb_graph_pin if the physical equivalent site is different than the logical site. */
+  Logical2PhysicalPbMap lgk2phy_pb_map;
+  if (phy_lb_type != lgk_lb_type) {
+    lgk2phy_pb_map.init(lgk_lb_type, phy_lb_type);
+  }
+
   /* Annotate routing results to physical pb */
   PhysicalPb phy_pb;
-  alloc_physical_pb_from_pb_graph(phy_pb, pb_graph_head, device_annotation);
+  alloc_physical_pb_from_pb_graph(phy_pb, phy_pb_graph_head, device_annotation);
   rec_update_physical_pb_from_operating_pb(
-    phy_pb, clustering_ctx.clb_nlist.block_pb(block_id),
+    phy_pb, lgk2phy_pb_map, clustering_ctx.clb_nlist.block_pb(block_id),
     clustering_ctx.clb_nlist.block_pb(block_id)->pb_route, atom_ctx,
     device_annotation, bitstream_annotation, verbose);
   /* Save routing results */
-  save_lb_router_results_to_physical_pb(phy_pb, lb_router, lb_rr_graph,
+  save_lb_router_results_to_physical_pb(phy_pb, lgk2phy_pb_map, lb_router, lb_rr_graph,
                                         atom_ctx.netlist(), verbose);
   VTR_LOGV(verbose, "Saved results in physical pb\n");
 
