@@ -24,16 +24,16 @@ class Logical2PhysicalPbMap {
  public: /* Constructor */
   Logical2PhysicalPbMap(const VprDeviceAnnotation& device_annotation);
  public: /* Accessors */
-  t_pb_type* pb_type(const t_pb_type* lgk_pb_type) const;
-  t_pb_graph_node* pb_graph_node(const t_pb_graph_node* lgk_pb_graph_node) const;
-  t_pb_graph_pin* pb_graph_pin(const t_pb_graph_pin* lgk_pb_graph_pin) const;
+  t_pb_type* pb_type(t_pb_type* lgk_pb_type) const;
+  t_pb_graph_node* pb_graph_node(t_pb_graph_node* lgk_pb_graph_node) const;
+  t_pb_graph_pin* pb_graph_pin(t_pb_graph_pin* lgk_pb_graph_pin) const;
 
  public: /* Public mutators */
   /* Build the 1:1 map on pb_type, pb_graph_node and pb_graph_pin  between the logical and physical pb_graph.  Return false is failed. This requires two pb_graph has exactly the same hierarchy, names and pins unless the top-level pb_type name could be different */
   bool init(t_logical_block_type_ptr lgk_lb_type, 
             t_logical_block_type_ptr phy_lb_type,
             const bool& verbose);
-  bool clear();
+  void clear();
 
  public: /* Public validators/invalidators */
   bool empty() const;
@@ -54,9 +54,9 @@ class Logical2PhysicalPbMap {
 
  private: /* Internal Data */
   /* logical -> physical  */
-  std::map<const t_pb_type*, const t_pb_type*> pb_type_map_;
-  std::map<const t_pb_graph_node*, const t_pb_graph_node*> pb_graph_node_map_;
-  std::map<const t_pb_graph_pin*, const t_pb_graph_pin*> pb_graph_pin_map_;
+  std::map<t_pb_type*, t_pb_type*> pb_type_map_;
+  std::map<t_pb_graph_node*, t_pb_graph_node*> pb_graph_node_map_;
+  std::map<t_pb_graph_pin*, t_pb_graph_pin*> pb_graph_pin_map_;
   const VprDeviceAnnotation* device_annotation_;
 };
 

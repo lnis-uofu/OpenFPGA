@@ -145,7 +145,7 @@ static void update_primitive_physical_pb_pin_atom_net(
 
     /* Find the physical pb_graph_pin */
     t_pb_graph_pin* physical_pb_graph_pin =
-      device_annotation.physical_pb_graph_pin(lgk2phy_pb_map.pb_graph_pin(pb_graph_pin));
+      device_annotation.physical_pb_graph_pin(const_cast<t_pb_graph_pin*>(lgk2phy_pb_map.pb_graph_pin(const_cast<t_pb_graph_pin*>(pb_graph_pin))));
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
     if (AtomNetId::INVALID() != atom_net) {

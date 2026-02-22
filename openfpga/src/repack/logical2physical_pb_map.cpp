@@ -20,7 +20,7 @@ Logical2PhysicalPbMap::Logical2PhysicalPbMap(const VprDeviceAnnotation& device_a
 /**************************************************
  * Public Accessors
  *************************************************/
-t_pb_type* Logical2PhysicalPbMap::pb_type(const t_pb_type* lgk_pb_type) const {
+t_pb_type* Logical2PhysicalPbMap::pb_type(t_pb_type* lgk_pb_type) const {
   if (empty()) {
     return lgk_pb_type;
   }
@@ -31,7 +31,7 @@ t_pb_type* Logical2PhysicalPbMap::pb_type(const t_pb_type* lgk_pb_type) const {
   return result->second;
 }
 
-t_pb_graph_node* Logical2PhysicalPbMap::pb_graph_node(const t_pb_graph_node* lgk_pb_graph_node) const {
+t_pb_graph_node* Logical2PhysicalPbMap::pb_graph_node(t_pb_graph_node* lgk_pb_graph_node) const {
   if (empty()) {
     return lgk_pb_graph_node;
   }
@@ -42,7 +42,7 @@ t_pb_graph_node* Logical2PhysicalPbMap::pb_graph_node(const t_pb_graph_node* lgk
   return result->second;
 }
 
-t_pb_graph_pin* Logical2PhysicalPbMap::pb_graph_pin(const t_pb_graph_pin* lgk_pb_graph_pin) const {
+t_pb_graph_pin* Logical2PhysicalPbMap::pb_graph_pin(t_pb_graph_pin* lgk_pb_graph_pin) const {
   if (empty()) {
     return lgk_pb_graph_pin;
   }
@@ -278,10 +278,10 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
       t_pb_graph_node* phy_child_pb_graph_node =
         &(phy_pb_graph_node
             ->child_pb_graph_nodes[phy_pb_mode->index][ipb][jpb]);
-    }
-    status = rec_build_pb_map(lgk_child_pb_graph_node, phy_child_pb_graph_node, verbose);
-    if (!status) {
-      return false;
+      status = rec_build_pb_map(lgk_child_pb_graph_node, phy_child_pb_graph_node, verbose);
+      if (!status) {
+        return false;
+      }
     }
   }
 
@@ -298,11 +298,11 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
 bool Logical2PhysicalPbMap::init(t_logical_block_type_ptr lgk_lb_type, 
                                  t_logical_block_type_ptr phy_lb_type,
                                  const bool& verbose) {
-  if (lgk_lb_type == phy_pb_type) {
+  if (lgk_lb_type == phy_lb_type) {
     VTR_LOGV(verbose, "Logical and physical equivalent sites are the same. Skip to build detailed mapping\n");
     return true;
   }
-  bool status = rec_build_pb_map(lgk_pb_type->pb_graph_head, phy_lb_type->pb_graph_head, verbose);
+  bool status = rec_build_pb_map(lgk_lb_type->pb_graph_head, phy_lb_type->pb_graph_head, verbose);
   if (!status) {
     /* Clean all the mapping as failed */
     clear();
