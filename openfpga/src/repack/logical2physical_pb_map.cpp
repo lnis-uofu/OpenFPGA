@@ -321,7 +321,7 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
       "Logical pb_graph_node '%s' contains a different number of modes '%d' than physical pb_graph_node '%s' "
       "which has %d modes.\n",
       lgk_pb_graph_node->hierarchical_type_name().c_str(),
-      lgk_pb_graph_node->pb_type->num_modes
+      lgk_pb_graph_node->pb_type->num_modes,
       phy_pb_graph_node->hierarchical_type_name().c_str(),
       phy_pb_graph_node->pb_type->num_modes);
     return false;
