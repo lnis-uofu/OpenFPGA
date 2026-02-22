@@ -5,6 +5,7 @@
  *******************************************************************/
 #include <map>
 #include "physical_types.h"
+#include "vpr_device_annotation.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -20,10 +21,12 @@ namespace openfpga {
  * please skip the function init().
  *******************************************************************/
 class Logical2PhysicalPbMap {
+ public: /* Constructor */
+  Logical2PhysicalPbMap(const VprDeviceAnnotation& device_annotation);
  public: /* Accessors */
-  const t_pb_type* pb_type(const t_pb_type* lgk_pb_type) const;
-  const t_pb_graph_node* pb_graph_node(const t_pb_graph_node* lgk_pb_graph_node) const;
-  const t_pb_graph_pin* pb_graph_pin(const t_pb_graph_pin* lgk_pb_graph_pin) const;
+  t_pb_type* pb_type(const t_pb_type* lgk_pb_type) const;
+  t_pb_graph_node* pb_graph_node(const t_pb_graph_node* lgk_pb_graph_node) const;
+  t_pb_graph_pin* pb_graph_pin(const t_pb_graph_pin* lgk_pb_graph_pin) const;
 
  public: /* Public mutators */
   /* Build the 1:1 map on pb_type, pb_graph_node and pb_graph_pin  between the logical and physical pb_graph.  Return false is failed. This requires two pb_graph has exactly the same hierarchy, names and pins unless the top-level pb_type name could be different */
@@ -38,7 +41,6 @@ class Logical2PhysicalPbMap {
  private: /* Private utilities */
   bool rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
                         t_pb_graph_node* phy_pb_graph_node,
-                        const bool& top_node,
                         const bool& verbose);
   bool build_pb_graph_input_pin_map(t_pb_graph_node* lgk_pb_graph_node,
                                     t_pb_graph_node* phy_pb_graph_node,
@@ -55,6 +57,7 @@ class Logical2PhysicalPbMap {
   std::map<const t_pb_type*, const t_pb_type*> pb_type_map_;
   std::map<const t_pb_graph_node*, const t_pb_graph_node*> pb_graph_node_map_;
   std::map<const t_pb_graph_pin*, const t_pb_graph_pin*> pb_graph_pin_map_;
+  const VprDeviceAnnotation* device_annotation_;
 };
 
 } /* End namespace openfpga*/
