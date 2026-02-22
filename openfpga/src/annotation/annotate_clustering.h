@@ -22,6 +22,7 @@ int annotate_cluster_physical_equivalent_sites(
   const DeviceGrid& grids, const ClusteringContext& clustering_ctx,
   const PlacementContext& place_ctx,
   const VprDeviceAnnotation& device_annotation,
-  VprClusteringAnnotation& clustering_annotation);
+  VprClusteringAnnotation& clustering_annotation,
+  const bool& verbose);
 
 } /* end namespace openfpga */

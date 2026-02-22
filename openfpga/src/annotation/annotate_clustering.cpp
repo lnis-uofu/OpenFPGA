@@ -53,9 +53,10 @@ int annotate_cluster_physical_equivalent_sites(
   const DeviceGrid& grids, const ClusteringContext& clustering_ctx,
   const PlacementContext& place_ctx,
   const VprDeviceAnnotation& device_annotation,
-  VprClusteringAnnotation& clustering_annotation) {
+  VprClusteringAnnotation& clustering_annotation,
+  const bool& verbose) {
   VTR_LOG(
-    "Building annotation on physical equivalent sites for clustered blocks...");
+    "Building annotation on physical equivalent sites for clustered blocks...\n");
 
   for (const ClusterBlockId& cluster_blk_id :
        clustering_ctx.clb_nlist.blocks()) {
@@ -66,19 +67,16 @@ int annotate_cluster_physical_equivalent_sites(
     /* Find the pb_type representing the physical site */
     vtr::Point<size_t> grid_coord(place_ctx.block_locs()[cluster_blk_id].loc.x,
                                   place_ctx.block_locs()[cluster_blk_id].loc.y);
-    int sub_tile_index = place_ctx.block_locs()[cluster_blk_id].loc.sub_tile;
+    int sub_tile_z = place_ctx.block_locs()[cluster_blk_id].loc.sub_tile;
     int blk_layer = place_ctx.block_locs()[cluster_blk_id].loc.layer;
     t_physical_tile_type_ptr grid_type = grids.get_physical_type(
       t_physical_tile_loc(grid_coord.x(), grid_coord.y(), blk_layer));
-    //t_logical_block_type_ptr lgk_lb_type = clustering_ctx.clb_nlist.block_type(cluster_blk_id);
+    int sub_tile_index = device_annotation.physical_tile_z_to_subtile_index(grid_type, sub_tile_z);
     t_logical_block_type_ptr phy_lb_type =
       device_annotation.physical_equivalent_site(
         grid_type, grid_type->sub_tiles[sub_tile_index].name);
-    VTR_LOGV("Consider physical equivalent site '%s' for clustered block '%s'\n",
+    VTR_LOGV(verbose, "Consider physical equivalent site '%s' for clustered block '%s'\n",
              phy_lb_type->name.c_str(), clustering_ctx.clb_nlist.block_name(cluster_blk_id).c_str());
-    /* If there are multiple equivalent sites, we */
-    //if (!phy_lb_type) {
-    //}
     clustering_annotation.set_physical_equivalent_site(cluster_blk_id,
                                                        phy_lb_type);
   }

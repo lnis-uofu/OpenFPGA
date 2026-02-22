@@ -152,7 +152,8 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   status = annotate_cluster_physical_equivalent_sites(
     g_vpr_ctx.device().grid, g_vpr_ctx.clustering(), g_vpr_ctx.placement(),
     openfpga_ctx.vpr_device_annotation(),
-    openfpga_ctx.mutable_vpr_clustering_annotation());
+    openfpga_ctx.mutable_vpr_clustering_annotation(),
+    cmd_context.option_enable(cmd, opt_verbose));
   if (status == CMD_EXEC_FATAL_ERROR) {
     return CMD_EXEC_FATAL_ERROR;
   }
