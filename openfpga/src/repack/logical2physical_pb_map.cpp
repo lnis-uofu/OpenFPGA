@@ -304,6 +304,9 @@ bool Logical2PhysicalPbMap::init(t_logical_block_type_ptr lgk_lb_type,
   }
   bool status = rec_build_pb_map(lgk_lb_type->pb_graph_head, phy_lb_type->pb_graph_head, verbose);
   if (!status) {
+    VTR_LOGV(verbose, "Logical pb_graph_node '%s' are not equivalent to physical pb_graph_node '%s'\n",
+      lgk_lb_type->pb_graph_head->hierarchical_type_name().c_str(),
+      phy_lb_type->pb_graph_head->hierarchical_type_name().c_str());
     /* Clean all the mapping as failed */
     clear();
   }
