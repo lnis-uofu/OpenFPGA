@@ -17,12 +17,12 @@ namespace openfpga {
  * This is to ensure that the clustering annotation data structure is always
  * up-to-date
  */
-bool annotate_post_routing_cluster_sync_results(
+int annotate_post_routing_cluster_sync_results(
   const ClusteringContext& clustering_ctx,
   VprClusteringAnnotation& clustering_annotation) {
   VTR_LOG(
     "Building annotation for post-routing and clustering synchornization "
-    "results...");
+    "results...\n");
 
   for (const ClusterBlockId& cluster_blk_id :
        clustering_ctx.clb_nlist.blocks()) {
@@ -49,7 +49,7 @@ bool annotate_post_routing_cluster_sync_results(
   return CMD_EXEC_SUCCESS;
 }
 
-bool annotate_cluster_physical_equivalent_sites(
+int annotate_cluster_physical_equivalent_sites(
   const DeviceGrid& grids, const ClusteringContext& clustering_ctx,
   const PlacementContext& place_ctx,
   const VprDeviceAnnotation& device_annotation,
@@ -70,9 +70,15 @@ bool annotate_cluster_physical_equivalent_sites(
     int blk_layer = place_ctx.block_locs()[cluster_blk_id].loc.layer;
     t_physical_tile_type_ptr grid_type = grids.get_physical_type(
       t_physical_tile_loc(grid_coord.x(), grid_coord.y(), blk_layer));
+    //t_logical_block_type_ptr lgk_lb_type = clustering_ctx.clb_nlist.block_type(cluster_blk_id);
     t_logical_block_type_ptr phy_lb_type =
       device_annotation.physical_equivalent_site(
         grid_type, grid_type->sub_tiles[sub_tile_index].name);
+    VTR_LOGV("Consider physical equivalent site '%s' for clustered block '%s'\n",
+             phy_lb_type->name.c_str(), clustering_ctx.clb_nlist.block_name(cluster_blk_id).c_str());
+    /* If there are multiple equivalent sites, we */
+    //if (!phy_lb_type) {
+    //}
     clustering_annotation.set_physical_equivalent_site(cluster_blk_id,
                                                        phy_lb_type);
   }

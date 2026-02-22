@@ -1,5 +1,4 @@
-#ifndef ANNOTATE_CLUSTERING_H
-#define ANNOTATE_CLUSTERING_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -15,16 +14,14 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-bool annotate_post_routing_cluster_sync_results(
+int annotate_post_routing_cluster_sync_results(
   const ClusteringContext& clustering_ctx,
   VprClusteringAnnotation& clustering_annotation);
 
-bool annotate_cluster_physical_equivalent_sites(
+int annotate_cluster_physical_equivalent_sites(
   const DeviceGrid& grids, const ClusteringContext& clustering_ctx,
   const PlacementContext& place_ctx,
   const VprDeviceAnnotation& device_annotation,
   VprClusteringAnnotation& clustering_annotation);
 
 } /* end namespace openfpga */
-
-#endif
