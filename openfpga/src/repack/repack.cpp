@@ -1001,7 +1001,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
   VTR_ASSERT(true == route_success);
   VTR_LOGV(verbose, "Reroute succeed\n");
 
-  /* TODO: Create an API on clustering_annotation */
+  /* Create an API on clustering_annotation */
   t_logical_block_type_ptr phy_lb_type = clustering_annotation.physical_equivalent_site(block_id);
   if (phy_lb_type != lgk_lb_type) {
     VTR_LOG("Will use physical equivalent site '%s' rather than the logical site '%s' for clustered block '%s'\n",
@@ -1011,7 +1011,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
   t_pb_graph_node* phy_pb_graph_head = phy_lb_type->pb_graph_head;
   VTR_ASSERT(nullptr != phy_pb_graph_head);
 
-  /* TODO: Create 1:1 mapping on pb_type, pb_graph_node and pb_graph_pin if the physical equivalent site is different than the logical site. */
+  /* Create 1:1 mapping on pb_type, pb_graph_node and pb_graph_pin if the physical equivalent site is different than the logical site. */
   Logical2PhysicalPbMap lgk2phy_pb_map(device_annotation);
   bool map_status = lgk2phy_pb_map.init(lgk_lb_type, phy_lb_type, verbose);
   if (!map_status) {

@@ -348,7 +348,7 @@ void rec_update_physical_pb_from_operating_pb(
   if (true == is_primitive_pb_type(pb_type)) {
     VTR_LOGV(verbose, "Update physical pb for '%s'\n", pb_graph_node->hierarchical_type_name().c_str());
     t_pb_graph_node* physical_pb_graph_node =
-      device_annotation.physical_pb_graph_node(lgk2phy_pb_map.pb_graph_node(pb_graph_node));
+      lgk2phy_pb_map.pb_graph_node(device_annotation.physical_pb_graph_node(pb_graph_node));
     VTR_ASSERT(nullptr != physical_pb_graph_node);
     /* Find the physical pb */
     const PhysicalPbId& physical_pb = phy_pb.find_pb(physical_pb_graph_node);
