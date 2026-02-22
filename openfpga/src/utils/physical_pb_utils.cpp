@@ -354,8 +354,9 @@ void rec_update_physical_pb_from_operating_pb(
     VTR_ASSERT(true == phy_pb.valid_pb_id(physical_pb));
 
     /* Set the mode bits */
-    phy_pb.set_mode_bits(physical_pb, device_annotation.pb_type_mode_bits(
-                                        lgk2phy_pb_map.pb_type(pb_graph_node->pb_type)));
+    phy_pb.set_mode_bits(physical_pb,
+                         device_annotation.pb_type_mode_bits(
+                           lgk2phy_pb_map.pb_type(pb_graph_node->pb_type)));
 
     /* Find mapped atom block and add to this physical pb */
     AtomBlockId atom_blk = atom_ctx.netlist().find_block(op_pb->name);

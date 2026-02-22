@@ -316,9 +316,11 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
            lgk_pb_graph_node->hierarchical_type_name().c_str(),
            phy_pb_graph_node->hierarchical_type_name().c_str());
 
-  if (lgk_pb_graph_node->pb_type->num_modes != phy_pb_graph_node->pb_type->num_modes) {
+  if (lgk_pb_graph_node->pb_type->num_modes !=
+      phy_pb_graph_node->pb_type->num_modes) {
     VTR_LOG_ERROR(
-      "Logical pb_graph_node '%s' contains a different number of modes '%d' than physical pb_graph_node '%s' "
+      "Logical pb_graph_node '%s' contains a different number of modes '%d' "
+      "than physical pb_graph_node '%s' "
       "which has %d modes.\n",
       lgk_pb_graph_node->hierarchical_type_name().c_str(),
       lgk_pb_graph_node->pb_type->num_modes,
@@ -331,7 +333,8 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
     t_mode* lgk_pb_mode = &lgk_pb_graph_node->pb_type->modes[imode];
     t_mode* phy_pb_mode = &phy_pb_graph_node->pb_type->modes[imode];
 
-    if (lgk_pb_mode->num_pb_type_children != phy_pb_mode->num_pb_type_children) {
+    if (lgk_pb_mode->num_pb_type_children !=
+        phy_pb_mode->num_pb_type_children) {
       VTR_LOG_ERROR(
         "Logical pb_graph_node '%s' contains a mode '%s' which has a different "
         "number of child pb_graph_nodes (%d) than physical pb_graph_node '%s' "
@@ -347,9 +350,11 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
       if (lgk_pb_mode->pb_type_children[ipb].num_pb !=
           phy_pb_mode->pb_type_children[ipb].num_pb) {
         VTR_LOG_ERROR(
-          "Logical pb_graph_node '%s' contains a child pb_type '%s' whose count "
+          "Logical pb_graph_node '%s' contains a child pb_type '%s' whose "
+          "count "
           "(%d) is different than physical pb_graph_node '%s' who has %d child "
-          "pb_types in the same name. The two cannot be considered as equivalent "
+          "pb_types in the same name. The two cannot be considered as "
+          "equivalent "
           "sites for repacking\n",
           lgk_pb_graph_node->hierarchical_type_name().c_str(),
           lgk_pb_mode->pb_type_children[ipb].name,
@@ -359,11 +364,14 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
           phy_pb_mode->pb_type_children[ipb].num_pb);
         return false;
       }
-      for (int jpb = 0; jpb < lgk_pb_mode->pb_type_children[ipb].num_pb; jpb++) {
-        t_pb_graph_node* lgk_child_pb_graph_node = &(
-          lgk_pb_graph_node->child_pb_graph_nodes[lgk_pb_mode->index][ipb][jpb]);
-        t_pb_graph_node* phy_child_pb_graph_node = &(
-          phy_pb_graph_node->child_pb_graph_nodes[phy_pb_mode->index][ipb][jpb]);
+      for (int jpb = 0; jpb < lgk_pb_mode->pb_type_children[ipb].num_pb;
+           jpb++) {
+        t_pb_graph_node* lgk_child_pb_graph_node =
+          &(lgk_pb_graph_node
+              ->child_pb_graph_nodes[lgk_pb_mode->index][ipb][jpb]);
+        t_pb_graph_node* phy_child_pb_graph_node =
+          &(phy_pb_graph_node
+              ->child_pb_graph_nodes[phy_pb_mode->index][ipb][jpb]);
         status = rec_build_pb_map(lgk_child_pb_graph_node,
                                   phy_child_pb_graph_node, verbose);
         if (!status) {
