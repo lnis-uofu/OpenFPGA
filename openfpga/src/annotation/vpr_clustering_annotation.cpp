@@ -17,9 +17,10 @@ VprClusteringAnnotation::VprClusteringAnnotation() { return; }
 /************************************************************************
  * Public accessors
  ***********************************************************************/
-t_logical_block_type_ptr VprClusteringAnnotation::physical_equivalent_site(const ClusterBlockId& block_id) const {
+t_logical_block_type_ptr VprClusteringAnnotation::physical_equivalent_site(
+  const ClusterBlockId& block_id) const {
   auto result = phy_equ_sites_.find(block_id);
-  if (result == phy_equ_sites_.end()) { 
+  if (result == phy_equ_sites_.end()) {
     return nullptr;
   }
 
@@ -115,13 +116,16 @@ PhysicalPb& VprClusteringAnnotation::mutable_physical_pb(
 
 void VprClusteringAnnotation::clear_net_remapping() { net_names_.clear(); }
 
-void VprClusteringAnnotation::set_physical_equivalent_site(const ClusterBlockId& block_id, t_logical_block_type_ptr phy_equ_site) {
+void VprClusteringAnnotation::set_physical_equivalent_site(
+  const ClusterBlockId& block_id, t_logical_block_type_ptr phy_equ_site) {
   auto result = phy_equ_sites_.find(block_id);
   if (result != phy_equ_sites_.end()) {
     VTR_LOG_WARN(
-      "Override the physical equivalent site '%s' for clustered block %lu in clustering context "
+      "Override the physical equivalent site '%s' for clustered block %lu in "
+      "clustering context "
       "annotation (Was: '%s')!\n",
-      phy_equ_site->name.c_str(), size_t(block_id), result->second->name.c_str());
+      phy_equ_site->name.c_str(), size_t(block_id),
+      result->second->name.c_str());
   }
 
   phy_equ_sites_[block_id] = phy_equ_site;

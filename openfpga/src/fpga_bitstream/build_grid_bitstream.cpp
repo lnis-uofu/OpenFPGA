@@ -1019,9 +1019,10 @@ static void build_physical_block_bitstream(
       const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
         place_annotation.grid_blocks(grid_coord)[z]);
 
-      VTR_LOGV(verbose, "Generating bitstream for block (x=%lu, y=%lu, subtile=%lu)\n",
+      VTR_LOGV(verbose,
+               "Generating bitstream for block (x=%lu, y=%lu, subtile=%lu)\n",
                grid_coord.x(), grid_coord.y(), z);
-               
+
       /* Get the top-level node of the pb_graph */
       t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
       VTR_ASSERT(nullptr != pb_graph_head);

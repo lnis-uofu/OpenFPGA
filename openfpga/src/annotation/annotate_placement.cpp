@@ -31,8 +31,8 @@ void annotate_mapped_blocks(const DeviceContext& device_ctx,
     place_annotation.add_mapped_block(
       grid_coord, place_ctx.block_locs()[blk_id].loc.sub_tile, blk_id);
     VTR_LOGV(verbose, "Mapped block '%s' to (x=%lu, y=%lu, subtile=%lu)\n",
-             cluster_ctx.clb_nlist.block_name(blk_id).c_str(),
-             grid_coord.x(), grid_coord.y(), place_ctx.block_locs()[blk_id].loc.sub_tile);
+             cluster_ctx.clb_nlist.block_name(blk_id).c_str(), grid_coord.x(),
+             grid_coord.y(), place_ctx.block_locs()[blk_id].loc.sub_tile);
   }
   VTR_LOG("Done\n");
 }

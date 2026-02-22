@@ -50,8 +50,7 @@ bool annotate_post_routing_cluster_sync_results(
 }
 
 bool annotate_cluster_physical_equivalent_sites(
-  const DeviceGrid& grids,
-  const ClusteringContext& clustering_ctx,
+  const DeviceGrid& grids, const ClusteringContext& clustering_ctx,
   const PlacementContext& place_ctx,
   const VprDeviceAnnotation& device_annotation,
   VprClusteringAnnotation& clustering_annotation) {
@@ -74,7 +73,8 @@ bool annotate_cluster_physical_equivalent_sites(
     t_logical_block_type_ptr phy_lb_type =
       device_annotation.physical_equivalent_site(
         grid_type, grid_type->sub_tiles[sub_tile_index].name);
-    clustering_annotation.set_physical_equivalent_site(cluster_blk_id, phy_lb_type);
+    clustering_annotation.set_physical_equivalent_site(cluster_blk_id,
+                                                       phy_lb_type);
   }
 
   VTR_LOG("Done\n");
