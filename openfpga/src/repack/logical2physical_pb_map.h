@@ -22,9 +22,6 @@ namespace openfpga {
  *equivalent site, please skip the function init().
  *******************************************************************/
 class Logical2PhysicalPbMap {
- public: /* Constructor */
-  Logical2PhysicalPbMap(const VprDeviceAnnotation& device_annotation);
-
  public: /* Accessors */
   t_pb_type* pb_type(t_pb_type* lgk_pb_type) const;
   t_pb_graph_node* pb_graph_node(t_pb_graph_node* lgk_pb_graph_node) const;
@@ -61,7 +58,6 @@ class Logical2PhysicalPbMap {
   std::map<t_pb_type*, t_pb_type*> pb_type_map_;
   std::map<t_pb_graph_node*, t_pb_graph_node*> pb_graph_node_map_;
   std::map<t_pb_graph_pin*, t_pb_graph_pin*> pb_graph_pin_map_;
-  const VprDeviceAnnotation* device_annotation_;
 };
 
 } /* End namespace openfpga*/
