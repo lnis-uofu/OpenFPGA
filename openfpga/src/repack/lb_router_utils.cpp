@@ -91,7 +91,7 @@ void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
         continue;
       }
       /* Find the pb id */
-      const PhysicalPbId& pb_id = phy_pb.find_pb(lgk2phy_pb_map.pb_graph_node(pb_graph_pin->parent_node));
+      const PhysicalPbId& pb_id = phy_pb.find_pb(pb_graph_pin->parent_node);
       VTR_ASSERT(true == phy_pb.valid_pb_id(pb_id));
 
       const AtomNetId& atom_net = lb_router.net_atom_net_id(net);

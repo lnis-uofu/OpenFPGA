@@ -145,13 +145,13 @@ static void update_primitive_physical_pb_pin_atom_net(
 
     /* Find the physical pb_graph_pin */
     t_pb_graph_pin* physical_pb_graph_pin =
-      device_annotation.physical_pb_graph_pin(const_cast<t_pb_graph_pin*>(lgk2phy_pb_map.pb_graph_pin(const_cast<t_pb_graph_pin*>(pb_graph_pin))));
+      lgk2phy_pb_map.pb_graph_pin(device_annotation.physical_pb_graph_pin(pb_graph_pin));
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
     if (AtomNetId::INVALID() != atom_net) {
       VTR_LOGV(verbose, "Synchronize net '%s' to physical pb_graph_pin '%s'\n",
                atom_nlist.net_name(atom_net).c_str(),
-               pb_graph_pin->to_string().c_str());
+               physical_pb_graph_pin->to_string().c_str());
     }
 
     /* Check if the pin has been mapped to a net.
@@ -167,7 +167,7 @@ static void update_primitive_physical_pb_pin_atom_net(
     }
   } else {
     VTR_LOGV(verbose,
-             "Skip as no valid routing traces if found on physical "
+             "Skip as no valid routing traces if found on "
              "pb_graph_pin '%s'\n",
              pb_graph_pin->to_string().c_str());
   }
@@ -356,7 +356,7 @@ void rec_update_physical_pb_from_operating_pb(
 
     /* Set the mode bits */
     phy_pb.set_mode_bits(physical_pb,
-                         device_annotation.pb_type_mode_bits(lgk2phy_pb_map.pb_type(pb_type)));
+                         device_annotation.pb_type_mode_bits(physical_pb_graph_node->pb_type));
 
     /* Find mapped atom block and add to this physical pb */
     AtomBlockId atom_blk = atom_ctx.netlist().find_block(op_pb->name);
