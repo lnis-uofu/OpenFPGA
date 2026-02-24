@@ -1017,7 +1017,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
   /* Create 1:1 mapping on pb_type, pb_graph_node and pb_graph_pin if the
    * physical equivalent site is different than the logical site. */
   Logical2PhysicalPbMap lgk2phy_pb_map;
-  bool map_status = lgk2phy_pb_map.init(lgk_lb_type, phy_lb_type, verbose);
+  bool map_status = lgk2phy_pb_map.init(lgk_lb_type, phy_lb_type, false, verbose);
   if (!map_status) {
     VTR_LOG_ERROR(
       "Failed in building the map on pb_type, pb_graph, pb_graph_pin between "
