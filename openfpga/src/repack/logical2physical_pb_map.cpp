@@ -218,6 +218,7 @@ bool Logical2PhysicalPbMap::build_pb_graph_clock_pin_map(
 
 bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
                                              t_pb_graph_node* phy_pb_graph_node,
+                                             const bool& force_name_match,
                                              const bool& verbose) {
   /* Only accept both are root node or neither */
   if (lgk_pb_graph_node->is_root() && !phy_pb_graph_node->is_root()) {
@@ -237,15 +238,17 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
   /* Check if the node has the same name and relative index when these not root
    * nodes  */
   if (!lgk_pb_graph_node->is_root() && !phy_pb_graph_node->is_root()) {
-    if (std::string(lgk_pb_graph_node->pb_type->name) !=
-        std::string(phy_pb_graph_node->pb_type->name)) {
-      VTR_LOG_ERROR(
-        "Logical pb_graph_node '%s' is different than physical pb_graph_node "
-        "'%s' in term of name. The two cannot be considered as equivalent "
-        "sites for repacking\n",
-        lgk_pb_graph_node->hierarchical_type_name().c_str(),
-        phy_pb_graph_node->hierarchical_type_name().c_str());
-      return false;
+    if (force_name_match) {
+      if (std::string(lgk_pb_graph_node->pb_type->name) !=
+          std::string(phy_pb_graph_node->pb_type->name)) {
+        VTR_LOG_ERROR(
+          "Logical pb_graph_node '%s' is different than physical pb_graph_node "
+          "'%s' in term of name. The two cannot be considered as equivalent "
+          "sites for repacking\n",
+          lgk_pb_graph_node->hierarchical_type_name().c_str(),
+          phy_pb_graph_node->hierarchical_type_name().c_str());
+        return false;
+      }
     }
   }
   if (lgk_pb_graph_node->placement_index !=
@@ -300,6 +303,19 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
     /* Build the map */
     pb_graph_node_map_[lgk_pb_graph_node] = phy_pb_graph_node;
     pb_type_map_[lgk_pb_graph_node->pb_type] = phy_pb_graph_node->pb_type;
+    /* Double check if the blif models are the same */
+    if (std::string(lgk_pb_graph_node->pb_type->blif_model) !=
+        std::string(phy_pb_graph_node->pb_type->blif_model)) {
+      VTR_LOG_ERROR(
+        "Logical pb_graph_node '%s' has a different blif model '%s' than the "
+        "physical "
+        "pb_graph_node '%s' whose blif model is '%s'\n",
+        lgk_pb_graph_node->hierarchical_type_name().c_str(),
+        lgk_pb_graph_node->pb_type->blif_model,
+        phy_pb_graph_node->hierarchical_type_name().c_str(),
+        phy_pb_graph_node->pb_type->blif_model);
+      return false;
+    }
 
     VTR_LOGV(verbose,
              "Logical pb_graph_node '%s' is equivalent to physical "
@@ -372,8 +388,9 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
         t_pb_graph_node* phy_child_pb_graph_node =
           &(phy_pb_graph_node
               ->child_pb_graph_nodes[phy_pb_mode->index][ipb][jpb]);
-        status = rec_build_pb_map(lgk_child_pb_graph_node,
-                                  phy_child_pb_graph_node, verbose);
+        status =
+          rec_build_pb_map(lgk_child_pb_graph_node, phy_child_pb_graph_node,
+                           force_name_match, verbose);
         if (!status) {
           return false;
         }
@@ -395,6 +412,7 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
 
 bool Logical2PhysicalPbMap::init(t_logical_block_type_ptr lgk_lb_type,
                                  t_logical_block_type_ptr phy_lb_type,
+                                 const bool& force_name_match,
                                  const bool& verbose) {
   if (lgk_lb_type == phy_lb_type) {
     VTR_LOGV(verbose,
@@ -402,8 +420,9 @@ bool Logical2PhysicalPbMap::init(t_logical_block_type_ptr lgk_lb_type,
              "build detailed mapping\n");
     return true;
   }
-  bool status = rec_build_pb_map(lgk_lb_type->pb_graph_head,
-                                 phy_lb_type->pb_graph_head, verbose);
+  bool status =
+    rec_build_pb_map(lgk_lb_type->pb_graph_head, phy_lb_type->pb_graph_head,
+                     force_name_match, verbose);
   if (!status) {
     VTR_LOGV(verbose,
              "Logical pb_graph_node '%s' are not equivalent to physical "

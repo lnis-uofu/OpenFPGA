@@ -31,9 +31,12 @@ class Logical2PhysicalPbMap {
   /* Build the 1:1 map on pb_type, pb_graph_node and pb_graph_pin  between the
    * logical and physical pb_graph.  Return false is failed. This requires two
    * pb_graph has exactly the same hierarchy, names and pins unless the
-   * top-level pb_type name could be different */
+   * top-level pb_type name could be different
+   * Note that the name match is recommended to disabled as it is not necessary.
+   * When blif model matches, the two pb_type has the same mapping rules */
   bool init(t_logical_block_type_ptr lgk_lb_type,
-            t_logical_block_type_ptr phy_lb_type, const bool& verbose);
+            t_logical_block_type_ptr phy_lb_type, const bool& force_name_match,
+            const bool& verbose);
   void clear();
 
  public: /* Public validators/invalidators */
@@ -42,7 +45,7 @@ class Logical2PhysicalPbMap {
  private: /* Private utilities */
   bool rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
                         t_pb_graph_node* phy_pb_graph_node,
-                        const bool& verbose);
+                        const bool& force_name_match, const bool& verbose);
   bool build_pb_graph_input_pin_map(t_pb_graph_node* lgk_pb_graph_node,
                                     t_pb_graph_node* phy_pb_graph_node,
                                     const bool& verbose);
