@@ -304,7 +304,7 @@ bool Logical2PhysicalPbMap::rec_build_pb_map(t_pb_graph_node* lgk_pb_graph_node,
     pb_graph_node_map_[lgk_pb_graph_node] = phy_pb_graph_node;
     pb_type_map_[lgk_pb_graph_node->pb_type] = phy_pb_graph_node->pb_type;
     /* Double check if the blif models are the same */ 
-    if (lgk_pb_graph_node->pb_type->blif_model != phy_pb_graph_node->pb_type->blif_model) {
+    if (std::string(lgk_pb_graph_node->pb_type->blif_model) != std::string(phy_pb_graph_node->pb_type->blif_model)) {
       VTR_LOG_ERROR(
                "Logical pb_graph_node '%s' has a different blif model '%s' than the physical "
                "pb_graph_node '%s' whose blif model is '%s'\n",
