@@ -9,8 +9,10 @@
 
 /* Headers from vpr library */
 #include "build_physical_lb_rr_graph.h"
+#include "command_exit_codes.h"
 #include "lb_router.h"
 #include "lb_router_utils.h"
+#include "logical2physical_pb_map.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
@@ -949,23 +951,23 @@ static void add_lb_router_nets(
  * - Output routing results to data structure PhysicalPb and store it in
  *clustering annotation
  ***************************************************************************************/
-static void repack_cluster(const AtomContext& atom_ctx,
-                           const ClusteringContext& clustering_ctx,
-                           const VprDeviceAnnotation& device_annotation,
-                           VprClusteringAnnotation& clustering_annotation,
-                           const VprBitstreamAnnotation& bitstream_annotation,
-                           const ClusterBlockId& block_id,
-                           const RepackOption& options) {
+static int repack_cluster(const AtomContext& atom_ctx,
+                          const ClusteringContext& clustering_ctx,
+                          const VprDeviceAnnotation& device_annotation,
+                          VprClusteringAnnotation& clustering_annotation,
+                          const VprBitstreamAnnotation& bitstream_annotation,
+                          const ClusterBlockId& block_id,
+                          const RepackOption& options) {
   /* Get the pb graph that current clustered block is mapped to */
-  t_logical_block_type_ptr lb_type =
+  t_logical_block_type_ptr lgk_lb_type =
     clustering_ctx.clb_nlist.block_type(block_id);
-  t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
-  VTR_ASSERT(nullptr != pb_graph_head);
+  t_pb_graph_node* lgk_pb_graph_head = lgk_lb_type->pb_graph_head;
+  VTR_ASSERT(nullptr != lgk_pb_graph_head);
   bool verbose = options.verbose_output();
 
   /* We should get a non-empty graph */
   const LbRRGraph& lb_rr_graph =
-    device_annotation.physical_lb_rr_graph(pb_graph_head);
+    device_annotation.physical_lb_rr_graph(lgk_pb_graph_head);
   VTR_ASSERT(!lb_rr_graph.empty());
 
   VTR_LOG("Repack clustered block '%s'...",
@@ -973,11 +975,11 @@ static void repack_cluster(const AtomContext& atom_ctx,
   VTR_LOGV(verbose, "\n");
 
   /* Initialize the router */
-  LbRouter lb_router(lb_rr_graph, lb_type);
+  LbRouter lb_router(lb_rr_graph, lgk_lb_type);
 
   /* Add nets to be routed with source and terminals */
   add_lb_router_nets(
-    lb_router, lb_type, lb_rr_graph, atom_ctx, device_annotation,
+    lb_router, lgk_lb_type, lb_rr_graph, atom_ctx, device_annotation,
     clustering_ctx,
     const_cast<const VprClusteringAnnotation&>(clustering_annotation), block_id,
     options);
@@ -993,47 +995,80 @@ static void repack_cluster(const AtomContext& atom_ctx,
     lb_router.try_route(lb_rr_graph, atom_ctx.netlist(), verbose);
 
   if (false == route_success) {
-    VTR_LOGV(verbose, "Reroute failed\n");
-    exit(1);
+    VTR_LOG_ERROR("Reroute failed\n");
+    return CMD_EXEC_FATAL_ERROR;
   }
   VTR_ASSERT(true == route_success);
   VTR_LOGV(verbose, "Reroute succeed\n");
 
+  /* Create an API on clustering_annotation */
+  t_logical_block_type_ptr phy_lb_type =
+    clustering_annotation.physical_equivalent_site(block_id);
+  if (phy_lb_type != lgk_lb_type) {
+    VTR_LOG(
+      "Will use physical equivalent site '%s' rather than the logical site "
+      "'%s' for clustered block '%s'\n",
+      phy_lb_type->name.c_str(), lgk_lb_type->name.c_str(),
+      clustering_ctx.clb_nlist.block_name(block_id).c_str());
+  }
+  t_pb_graph_node* phy_pb_graph_head = phy_lb_type->pb_graph_head;
+  VTR_ASSERT(nullptr != phy_pb_graph_head);
+
+  /* Create 1:1 mapping on pb_type, pb_graph_node and pb_graph_pin if the
+   * physical equivalent site is different than the logical site. */
+  Logical2PhysicalPbMap lgk2phy_pb_map;
+  bool map_status =
+    lgk2phy_pb_map.init(lgk_lb_type, phy_lb_type, false, verbose);
+  if (!map_status) {
+    VTR_LOG_ERROR(
+      "Failed in building the map on pb_type, pb_graph, pb_graph_pin between "
+      "logical equivalent site and its physical sites. Please ensure the two "
+      "sites are exactly the same in pb_type definition except the name "
+      "difference at the top-level pb_type.\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
   /* Annotate routing results to physical pb */
   PhysicalPb phy_pb;
-  alloc_physical_pb_from_pb_graph(phy_pb, pb_graph_head, device_annotation);
+  alloc_physical_pb_from_pb_graph(phy_pb, phy_pb_graph_head, device_annotation);
   rec_update_physical_pb_from_operating_pb(
-    phy_pb, clustering_ctx.clb_nlist.block_pb(block_id),
+    phy_pb, lgk2phy_pb_map, clustering_ctx.clb_nlist.block_pb(block_id),
     clustering_ctx.clb_nlist.block_pb(block_id)->pb_route, atom_ctx,
     device_annotation, bitstream_annotation, verbose);
   /* Save routing results */
-  save_lb_router_results_to_physical_pb(phy_pb, lb_router, lb_rr_graph,
-                                        atom_ctx.netlist(), verbose);
+  save_lb_router_results_to_physical_pb(phy_pb, lgk2phy_pb_map, lb_router,
+                                        lb_rr_graph, atom_ctx.netlist(),
+                                        verbose);
   VTR_LOGV(verbose, "Saved results in physical pb\n");
 
   /* Add the pb to clustering context */
   clustering_annotation.add_physical_pb(block_id, phy_pb);
 
   VTR_LOG("Done\n");
+  return CMD_EXEC_SUCCESS;
 }
 
 /***************************************************************************************
  * Repack each clustered blocks in the clustering context
  ***************************************************************************************/
-static void repack_clusters(const AtomContext& atom_ctx,
-                            const ClusteringContext& clustering_ctx,
-                            const VprDeviceAnnotation& device_annotation,
-                            VprClusteringAnnotation& clustering_annotation,
-                            const VprBitstreamAnnotation& bitstream_annotation,
-                            const RepackOption& options) {
+static int repack_clusters(const AtomContext& atom_ctx,
+                           const ClusteringContext& clustering_ctx,
+                           const VprDeviceAnnotation& device_annotation,
+                           VprClusteringAnnotation& clustering_annotation,
+                           const VprBitstreamAnnotation& bitstream_annotation,
+                           const RepackOption& options) {
   vtr::ScopedStartFinishTimer timer(
     "Repack clustered blocks to physical implementation of logical tile");
 
   for (auto blk_id : clustering_ctx.clb_nlist.blocks()) {
-    repack_cluster(atom_ctx, clustering_ctx, device_annotation,
-                   clustering_annotation, bitstream_annotation, blk_id,
-                   options);
+    int status = repack_cluster(atom_ctx, clustering_ctx, device_annotation,
+                                clustering_annotation, bitstream_annotation,
+                                blk_id, options);
+    if (status != CMD_EXEC_SUCCESS) {
+      return status;
+    }
   }
+  return CMD_EXEC_SUCCESS;
 }
 
 /***************************************************************************************
@@ -1083,23 +1118,24 @@ static void identify_physical_pb_wire_lut_created_by_repack(
  *  - rerun the routing for each clustered block
  *  - store the packing results to clustering annotation
  ***************************************************************************************/
-void pack_physical_pbs(const DeviceContext& device_ctx,
-                       const AtomContext& atom_ctx,
-                       const ClusteringContext& clustering_ctx,
-                       VprDeviceAnnotation& device_annotation,
-                       VprClusteringAnnotation& clustering_annotation,
-                       const VprBitstreamAnnotation& bitstream_annotation,
-                       const CircuitLibrary& circuit_lib,
-                       const RepackOption& options) {
+int pack_physical_pbs(const DeviceContext& device_ctx,
+                      const AtomContext& atom_ctx,
+                      const ClusteringContext& clustering_ctx,
+                      VprDeviceAnnotation& device_annotation,
+                      VprClusteringAnnotation& clustering_annotation,
+                      const VprBitstreamAnnotation& bitstream_annotation,
+                      const CircuitLibrary& circuit_lib,
+                      const RepackOption& options) {
   /* build the routing resource graph for each logical tile */
   build_physical_lb_rr_graphs(device_ctx, device_annotation,
                               options.verbose_output());
 
   /* Call the LbRouter to re-pack each clustered block to physical
    * implementation */
-  repack_clusters(atom_ctx, clustering_ctx,
-                  const_cast<const VprDeviceAnnotation&>(device_annotation),
-                  clustering_annotation, bitstream_annotation, options);
+  int status =
+    repack_clusters(atom_ctx, clustering_ctx,
+                    const_cast<const VprDeviceAnnotation&>(device_annotation),
+                    clustering_annotation, bitstream_annotation, options);
 
   /* Annnotate wire LUTs that are ONLY created by repacker!!!
    * This is a MUST RUN!
@@ -1107,6 +1143,8 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
   identify_physical_pb_wire_lut_created_by_repack(
     clustering_annotation, atom_ctx, clustering_ctx, device_annotation,
     circuit_lib, options.verbose_output());
+
+  return status;
 }
 
 } /* end namespace openfpga */

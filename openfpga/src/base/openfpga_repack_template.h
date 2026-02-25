@@ -51,12 +51,15 @@ int repack_template(T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  pack_physical_pbs(g_vpr_ctx.device(), g_vpr_ctx.atom(),
-                    g_vpr_ctx.clustering(),
-                    openfpga_ctx.mutable_vpr_device_annotation(),
-                    openfpga_ctx.mutable_vpr_clustering_annotation(),
-                    openfpga_ctx.vpr_bitstream_annotation(),
-                    openfpga_ctx.arch().circuit_lib, options);
+  int status = pack_physical_pbs(
+    g_vpr_ctx.device(), g_vpr_ctx.atom(), g_vpr_ctx.clustering(),
+    openfpga_ctx.mutable_vpr_device_annotation(),
+    openfpga_ctx.mutable_vpr_clustering_annotation(),
+    openfpga_ctx.vpr_bitstream_annotation(), openfpga_ctx.arch().circuit_lib,
+    options);
+  if (status != CMD_EXEC_SUCCESS) {
+    return status;
+  }
 
   build_physical_lut_truth_tables(
     openfpga_ctx.mutable_vpr_clustering_annotation(), g_vpr_ctx.atom(),

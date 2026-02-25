@@ -141,17 +141,27 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate clustering results */
-  if (CMD_EXEC_FATAL_ERROR ==
-      annotate_post_routing_cluster_sync_results(
-        g_vpr_ctx.clustering(),
-        openfpga_ctx.mutable_vpr_clustering_annotation())) {
+  status = annotate_post_routing_cluster_sync_results(
+    g_vpr_ctx.clustering(), openfpga_ctx.mutable_vpr_clustering_annotation());
+  if (status == CMD_EXEC_FATAL_ERROR) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* This one must be called after the physical equivalent sites is built by
+     function build_physical_tile_equivalent_sites() */
+  status = annotate_cluster_physical_equivalent_sites(
+    g_vpr_ctx.device().grid, g_vpr_ctx.clustering(), g_vpr_ctx.placement(),
+    openfpga_ctx.vpr_device_annotation(),
+    openfpga_ctx.mutable_vpr_clustering_annotation(),
+    cmd_context.option_enable(cmd, opt_verbose));
+  if (status == CMD_EXEC_FATAL_ERROR) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Annotate placement results */
   annotate_mapped_blocks(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
                          g_vpr_ctx.placement(),
-                         openfpga_ctx.mutable_vpr_placement_annotation());
+                         openfpga_ctx.mutable_vpr_placement_annotation(),
+                         cmd_context.option_enable(cmd, opt_verbose));
 
   /* Read activity file is manadatory in the following flow-run settings
    * - When users specify that number of clock cycles
