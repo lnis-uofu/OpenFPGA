@@ -76,16 +76,16 @@ LbRouter::NetId add_lb_router_net_to_route(
  * Load the routing results (routing tree) from lb router to
  * a physical pb data structure
  ***************************************************************************************/
-void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
-                                           const LbRouter& lb_router,
-                                           const LbRRGraph& lb_rr_graph,
-                                           const AtomNetlist& atom_netlist,
-                                           const bool& verbose) {
+void save_lb_router_results_to_physical_pb(
+  PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const LbRouter& lb_router, const LbRRGraph& lb_rr_graph,
+  const AtomNetlist& atom_netlist, const bool& verbose) {
   /* Get mapping routing nodes per net */
   for (const LbRouter::NetId& net : lb_router.nets()) {
     std::vector<LbRRNodeId> routed_nodes = lb_router.net_routed_nodes(net);
     for (const LbRRNodeId& node : routed_nodes) {
-      t_pb_graph_pin* pb_graph_pin = lb_rr_graph.node_pb_graph_pin(node);
+      t_pb_graph_pin* pb_graph_pin =
+        lgk2phy_pb_map.pb_graph_pin(lb_rr_graph.node_pb_graph_pin(node));
       if (nullptr == pb_graph_pin) {
         continue;
       }

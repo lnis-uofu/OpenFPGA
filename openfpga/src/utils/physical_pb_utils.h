@@ -1,8 +1,4 @@
-/********************************************************************
- * Header file for circuit_library_utils.cpp
- *******************************************************************/
-#ifndef PHYSICAL_PB_UTILS_H
-#define PHYSICAL_PB_UTILS_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -10,6 +6,7 @@
 #include <vector>
 
 #include "circuit_library.h"
+#include "logical2physical_pb_map.h"
 #include "physical_pb.h"
 #include "physical_types.h"
 #include "vpr_bitstream_annotation.h"
@@ -29,8 +26,9 @@ void alloc_physical_pb_from_pb_graph(
   const VprDeviceAnnotation& device_annotation);
 
 void rec_update_physical_pb_from_operating_pb(
-  PhysicalPb& phy_pb, const t_pb* op_pb, const t_pb_routes& pb_route,
-  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
+  PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const t_pb* op_pb, const t_pb_routes& pb_route, const AtomContext& atom_ctx,
+  const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose);
 
 int identify_one_physical_pb_wire_lut_created_by_repack(
@@ -39,5 +37,3 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
   const CircuitLibrary& circuit_lib, const bool& verbose);
 
 } /* end namespace openfpga */
-
-#endif

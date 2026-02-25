@@ -196,8 +196,9 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
   if (mode_bits.size() != mode_bits_[pb].size()) {
     VTR_LOG_ERROR(
       "Provided mode bits length (%lu) does not match the size of existing one "
-      "(%lu)!\n",
-      mode_bits.size(), mode_bits_[pb].size());
+      "(%lu) for pb '%s' based on pb_graph_node '%s'\n",
+      mode_bits.size(), mode_bits_[pb].size(), name(pb).c_str(),
+      pb_graph_node(pb)->hierarchical_type_name().c_str());
     exit(openfpga::CMD_EXEC_FATAL_ERROR);
   }
   /* Aggregate on mode bits: 'x' will not overwrite anything */
@@ -205,7 +206,11 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
     if (mode_bits[ibit] == '1' || mode_bits[ibit] == '0') {
       mode_bits_[pb][ibit] = mode_bits[ibit];
     } else if (mode_bits[ibit] != 'x') {
-      VTR_LOG_ERROR("Invalid mode bit '%c'! Expect [1|0|x]\n", mode_bits[ibit]);
+      VTR_LOG_ERROR(
+        "Invalid mode bit '%c' for pb '%s' based on pb_graph_node '%s'! Expect "
+        "[1|0|x]\n",
+        mode_bits[ibit], name(pb).c_str(),
+        pb_graph_node(pb)->hierarchical_type_name().c_str());
       exit(openfpga::CMD_EXEC_FATAL_ERROR);
     }
   }

@@ -1,5 +1,4 @@
-#ifndef VPR_CLUSTERING_ANNOTATION_H
-#define VPR_CLUSTERING_ANNOTATION_H
+#pragma once
 
 /********************************************************************
  * Include header files required by the data structure definition
@@ -38,6 +37,8 @@ class VprClusteringAnnotation {
   bool is_truth_table_adapted(t_pb* pb) const;
   AtomNetlist::TruthTable truth_table(t_pb* pb) const;
   PhysicalPb physical_pb(const ClusterBlockId& block_id) const;
+  t_logical_block_type_ptr physical_equivalent_site(
+    const ClusterBlockId& block_id) const;
 
  public: /* Public mutators */
   void rename_net(const ClusterBlockId& block_id, const int& pin_index,
@@ -46,6 +47,8 @@ class VprClusteringAnnotation {
   void add_physical_pb(const ClusterBlockId& block_id,
                        const PhysicalPb& physical_pb);
   PhysicalPb& mutable_physical_pb(const ClusterBlockId& block_id);
+  void set_physical_equivalent_site(const ClusterBlockId& block_id,
+                                    t_logical_block_type_ptr phy_equ_site);
 
  public: /* Clean-up */
   void clear_net_remapping();
@@ -57,8 +60,11 @@ class VprClusteringAnnotation {
 
   /* Link clustered blocks to physical pb (mapping results) */
   std::map<ClusterBlockId, PhysicalPb> physical_pbs_;
+  /* Map from cluster block to its physical equivalent site (pb_type). This is
+   * due to that some cluster block can be mapped to logical equivalent site
+   * during packing and then remapped to its physical equivalent site during
+   * placement and routing. */
+  std::map<ClusterBlockId, t_logical_block_type_ptr> phy_equ_sites_;
 };
 
 } /* End namespace openfpga*/
-
-#endif

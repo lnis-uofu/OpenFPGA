@@ -1,5 +1,4 @@
-#ifndef REPACK_H
-#define REPACK_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -19,15 +18,13 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void pack_physical_pbs(const DeviceContext& device_ctx,
-                       const AtomContext& atom_ctx,
-                       const ClusteringContext& clustering_ctx,
-                       VprDeviceAnnotation& device_annotation,
-                       VprClusteringAnnotation& clustering_annotation,
-                       const VprBitstreamAnnotation& bitstream_annotation,
-                       const CircuitLibrary& circuit_lib,
-                       const RepackOption& options);
+int pack_physical_pbs(const DeviceContext& device_ctx,
+                      const AtomContext& atom_ctx,
+                      const ClusteringContext& clustering_ctx,
+                      VprDeviceAnnotation& device_annotation,
+                      VprClusteringAnnotation& clustering_annotation,
+                      const VprBitstreamAnnotation& bitstream_annotation,
+                      const CircuitLibrary& circuit_lib,
+                      const RepackOption& options);
 
 } /* end namespace openfpga */
-
-#endif

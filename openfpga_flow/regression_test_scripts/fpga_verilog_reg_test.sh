@@ -88,6 +88,8 @@ run-task fpga_verilog/io/soc_io $@
 
 echo -e "Testing Verilog generation with registerable I/Os for an FPGA ";
 run-task fpga_verilog/io/registerable_io $@
+run-task fpga_verilog/io/registerable_io_equ_site $@
+run-task fpga_verilog/io/registerable_io_equ_site_no_name_match $@
 
 echo -e "Testing Verilog generation with adder chain across an FPGA";
 run-task fpga_verilog/fabric_chain/adder_chain $@

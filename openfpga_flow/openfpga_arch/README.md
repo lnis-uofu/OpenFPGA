@@ -27,7 +27,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - local\_encoder: If local encoders are used in routing multiplexer design
 - spyio/spypad: If spy I/Os are used
 - registerable\_io: If I/Os are registerable (can be either combinational or sequential)
-- IoSubtile: If I/O block contains sub tiles (more compact with a higher density of I/Os)
+- IoSubtileX: If I/O block contains sub tiles (more compact with a higher density of I/Os). The postfix 'X' represents that the equivalent sites will have different names 
 - stdcell: If circuit designs are built with standard cells only
 - stdcell_laststage: If circuit designs are built with standard cells only. And the last stage uses a different standard cell
 - tree\_mux: If routing multiplexers are built with a tree-like structure

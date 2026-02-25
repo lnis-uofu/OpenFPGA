@@ -20,7 +20,8 @@ namespace openfpga {
 void annotate_mapped_blocks(const DeviceContext& device_ctx,
                             const ClusteringContext& cluster_ctx,
                             const PlacementContext& place_ctx,
-                            VprPlacementAnnotation& place_annotation) {
+                            VprPlacementAnnotation& place_annotation,
+                            const bool& verbose) {
   VTR_LOG("Building annotation for mapped blocks on grid locations...");
 
   place_annotation.init_mapped_blocks(device_ctx.grid);
@@ -29,6 +30,9 @@ void annotate_mapped_blocks(const DeviceContext& device_ctx,
                                   place_ctx.block_locs()[blk_id].loc.y);
     place_annotation.add_mapped_block(
       grid_coord, place_ctx.block_locs()[blk_id].loc.sub_tile, blk_id);
+    VTR_LOGV(verbose, "Mapped block '%s' to (x=%lu, y=%lu, subtile=%lu)\n",
+             cluster_ctx.clb_nlist.block_name(blk_id).c_str(), grid_coord.x(),
+             grid_coord.y(), place_ctx.block_locs()[blk_id].loc.sub_tile);
   }
   VTR_LOG("Done\n");
 }

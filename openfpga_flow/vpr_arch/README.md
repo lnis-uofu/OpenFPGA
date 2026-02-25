@@ -22,7 +22,7 @@ Please reveal the following architecture features in the names to help quickly s
 - multi\_io\_capacity: If I/O capacity is different on each side of FPGAs.
 - reduced\_io: If I/Os only appear a certain or multiple sides of FPGAs 
 - registerable\_io: If I/Os are registerable (can be either combinational or sequential)
-- IoSubtile: If I/O block contains sub tiles (more compact with a higher density of I/Os)
+- IoSubtile(X): If I/O block contains sub tiles (more compact with a higher density of I/Os). The postfix 'X' represents that the equivalent sites will have different names
 - PerimeterCb: If connection blocks can occur on perimeter I/Os (I/O tile has more routability)
 - CustomIoLoc: Use OpenFPGA's extended custom I/O location syntax
 - rstOnLut: The reset signal of CLB can feed LUT inputs through a local routing architecture
