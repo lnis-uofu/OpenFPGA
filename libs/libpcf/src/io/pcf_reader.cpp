@@ -106,10 +106,15 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
         int mode_offset =
           get_attribute(xml_child, XML_OPTION_ATTRIBUTE_OFFSET, loc_data)
             .as_int();
+        bool split_reverse = false;
+        split_reverse =
+          get_attribute(xml_child, XML_OPTION_ATTRIBUTE_SPLIT_REVERSE, loc_data,
+                        pugiutil::ReqOpt::OPTIONAL)
+            .as_bool();
 
         pcf_custom_command.create_custom_decimal_mode(
           command_name, option_name, num_bits, max_decimal, little_endian,
-          mode_offset);
+          mode_offset, split_reverse);
 
       } else if (option_type == "mode") {
         status = pcf_custom_command.create_custom_option(
@@ -233,6 +238,8 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                     word, option_name, option_value);
                   pcf_data.set_custom_constraint_pin_mode(constraint_id,
                                                           mode_value);
+                  pcf_data.set_custom_constraint_pin_mode_split_reverse(
+                    constraint_id, false);
                   pcf_data.set_custom_constraint_pin_mode_offset(constraint_id,
                                                                  mode_offset);
                 } else if (option_type == OPTION_TYPE_DECIMAL) {
@@ -251,8 +258,13 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                   int mode_offset =
                     pcf_custom_command.custom_decimal_mode_offset(word,
                                                                   option_name);
+                  bool mode_split_reverse =
+                    pcf_custom_command.custom_decimal_mode_split_reverse(
+                      word, option_name);
                   pcf_data.set_custom_constraint_pin_mode(constraint_id,
                                                           mode_value);
+                  pcf_data.set_custom_constraint_pin_mode_split_reverse(
+                    constraint_id, mode_split_reverse);
                   pcf_data.set_custom_constraint_pin_mode_offset(constraint_id,
                                                                  mode_offset);
                 }

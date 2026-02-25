@@ -129,6 +129,23 @@ int PcfCustomCommand::custom_decimal_mode_offset(
   return custom_decimal_mode_offset_[custom_decimal_mode_id];
 }
 
+bool PcfCustomCommand::custom_decimal_mode_split_reverse(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_split_reverse_[custom_decimal_mode_id];
+}
+
+bool PcfCustomCommand::custom_decimal_mode_split_reverse(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_split_reverse(custom_decimal_mode_id);
+}
+
 int PcfCustomCommand::custom_decimal_mode_num_bits(
   const std::string& command_name, const std::string& option_name) const {
   /* validate the mode_id */
@@ -285,7 +302,7 @@ int PcfCustomCommand::create_custom_mode(const std::string& command_name,
 int PcfCustomCommand::create_custom_decimal_mode(
   const std::string& command_name, const std::string& option_name,
   const int& num_bits, const std::uint64_t& max_val, const bool& little_endian,
-  const int& mode_offset) {
+  const int& mode_offset, const bool& split_reverse) {
   auto option_id = find_option_id(command_name, option_name);
   PcfCustomCommandModeId custom_decimal_mode_id =
     PcfCustomCommandModeId(custom_decimal_mode_ids_.size());
@@ -295,6 +312,7 @@ int PcfCustomCommand::create_custom_decimal_mode(
   custom_decimal_mode_max_values_.emplace_back(max_val);
   custom_decimal_mode_little_endian_.emplace_back(little_endian);
   custom_decimal_mode_offset_.emplace_back(mode_offset);
+  custom_decimal_mode_split_reverse_.emplace_back(split_reverse);
   return CMD_EXEC_SUCCESS;
 }
 
