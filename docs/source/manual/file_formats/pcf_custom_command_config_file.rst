@@ -52,7 +52,10 @@ where ``set_delay_chain`` is defined in the following PCF custom command configu
     <command name="set_watch_dog" type="peripheral">
       <option name="pad" type="pin"/>
       <pb_type name="gp_outpad.outpad"/>
-      <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
+      <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0">
+        <segment range = "[0:0]" offset = "2"/>
+        <segment range = "[1:2]" offset = "0"/>
+      </option>
     </command>
   </pcf_config>
 
@@ -95,6 +98,16 @@ The following syntax are applicable to the XML definition under the root node ``
     - **offset**: Bit offset applied when overwriting the target bitstream. The encoded
       value is written starting at this bit position, and occupies ``num_bits`` consecutive
       bits.
+
+  .. note:: 
+    segment option is optional when the type is set to ``decimal``. It is used to split the mode and rearrange the mode bits:
+    - **range**: The range of mode bits to be extracted.
+    - **offset**: The offset applied during rearrangement.
+  
+    The following diagram illustrates how to rearrange mode bits with segment option:
+    .. figure:: ./figures/_fig_pcf_custom_command_segment.png
+      :width: 100%
+      :alt: An example of rearranging mode bits using segment option
 
   .. note::
     **Example**
