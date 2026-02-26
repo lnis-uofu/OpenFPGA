@@ -1,7 +1,9 @@
 #include "pcf_custom_command.h"
 
 #include <algorithm>
+#include <numeric>
 #include <set>
+#include <string>
 
 #include "command_exit_codes.h"
 #include "openfpga_port_parser.h"
@@ -129,6 +131,72 @@ int PcfCustomCommand::custom_decimal_mode_offset(
   return custom_decimal_mode_offset_[custom_decimal_mode_id];
 }
 
+bool PcfCustomCommand::custom_decimal_mode_has_segment(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_has_segment(custom_decimal_mode_id);
+}
+
+bool PcfCustomCommand::custom_decimal_mode_has_segment(
+  const PcfCustomCommandModeId& custom_decimal_mode_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_id(custom_decimal_mode_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode found! \n");
+    exit(1);
+  }
+  return !custom_decimal_mode_id_to_segment_id_[custom_decimal_mode_id].empty();
+}
+
+vtr::Point<int> PcfCustomCommand::custom_decimal_mode_segments_range_to_int(
+  std::string range) const {
+  vtr::Point<char> bracket = {'[', ']'};
+  char colon = ':';
+  StringToken tokenizer(range);
+
+  std::vector<std::string> range_split = tokenizer.split(colon);
+  tokenizer.set_data(range_split[0]);
+  std::vector<std::string> range_left = tokenizer.split(bracket.x());
+  VTR_ASSERT(range_left.size() == 1);
+  int left_index = std::stoi(range_left[0]);
+  tokenizer.set_data(range_split[1]);
+  std::vector<std::string> range_right = tokenizer.split(bracket.x());
+  VTR_ASSERT(range_right.size() == 1);
+  int right_index = std::stoi(range_right[0]);
+  vtr::Point<int> range_int = {left_index, right_index};
+  return range_int;
+}
+bool PcfCustomCommand::custom_decimal_mode_segments_valid(
+  const std::string& command_name, const std::string& option_name) const
+/* validate the segment range and offset */ {
+  std::vector<PcfCustomCommandModeSegmentId> segment_ids =
+    custom_decimal_mode_segments(command_name, option_name);
+  std::vector<int> bit_num(
+    custom_decimal_mode_num_bits(command_name, option_name));
+  for (auto i : segment_ids) {
+    auto range = custom_decimal_mode_segment_range_[i];
+    auto range_pair = custom_decimal_mode_segments_range_to_int(range);
+    auto offset = custom_decimal_mode_segment_offset_[i];
+    for (auto index = 0; index <= range_pair.y() - range_pair.x(); index++) {
+      if (index + offset > bit_num.size()) {
+        VTR_LOG_ERROR("Index overflow in segment! \n");
+        return false;
+      }
+      if (bit_num[index + offset] != 0) {
+        VTR_LOG_ERROR("conflic value found in segment! \n");
+        return false;
+      }
+      bit_num[index + offset] = 1;
+    }
+  }
+  int sum = std::accumulate(bit_num.begin(), bit_num.end(), 0);
+  if (sum == custom_decimal_mode_num_bits(command_name, option_name)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 int PcfCustomCommand::custom_decimal_mode_num_bits(
   const std::string& command_name, const std::string& option_name) const {
   /* validate the mode_id */
@@ -178,6 +246,35 @@ bool PcfCustomCommand::custom_decimal_mode_little_endian(
     exit(1);
   }
   return custom_decimal_mode_little_endian_[custom_decimal_mode_id];
+}
+
+std::vector<PcfCustomCommandModeSegmentId>
+PcfCustomCommand::custom_decimal_mode_segments(
+  const std::string& command_name, const std::string& option_name) const {
+  /* validate the mode_id */
+  auto custom_decimal_mode_id = find_decimal_mode_id(command_name, option_name);
+  return custom_decimal_mode_id_to_segment_id_[custom_decimal_mode_id];
+}
+
+vtr::Point<int> PcfCustomCommand::custom_decimal_mode_segments_range(
+  const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_segment_id(custom_decimal_mode_segment_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode segment found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_segments_range_to_int(
+    custom_decimal_mode_segment_range_[custom_decimal_mode_segment_id]);
+}
+
+int PcfCustomCommand::custom_decimal_mode_segment_offset(
+  const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const {
+  /* validate the mode_id */
+  if (!valid_custom_decimal_mode_segment_id(custom_decimal_mode_segment_id)) {
+    VTR_LOG_ERROR("Invalid decimal mode segment found! \n");
+    exit(1);
+  }
+  return custom_decimal_mode_segment_offset_[custom_decimal_mode_segment_id];
 }
 
 bool PcfCustomCommand::empty() const { return 0 == custom_command_ids_.size(); }
@@ -295,6 +392,23 @@ int PcfCustomCommand::create_custom_decimal_mode(
   custom_decimal_mode_max_values_.emplace_back(max_val);
   custom_decimal_mode_little_endian_.emplace_back(little_endian);
   custom_decimal_mode_offset_.emplace_back(mode_offset);
+  custom_decimal_mode_id_to_segment_id_.emplace_back();
+  return CMD_EXEC_SUCCESS;
+}
+
+int PcfCustomCommand::create_custom_decimal_mode_segment(
+  const std::string& command_name, const std::string& option_name,
+  const std::string& segment_range, const int& segment_offset) {
+  auto option_id = find_option_id(command_name, option_name);
+  PcfCustomCommandModeId custom_decimal_mode_id =
+    custom_option_id_to_decimal_mode_id_[option_id];
+  PcfCustomCommandModeSegmentId custom_decimal_mode_segment_id =
+    PcfCustomCommandModeSegmentId(custom_decimal_mode_segment_ids_.size());
+  custom_decimal_mode_id_to_segment_id_[custom_decimal_mode_id].push_back(
+    custom_decimal_mode_segment_id);
+  custom_decimal_mode_segment_ids_.push_back(custom_decimal_mode_segment_id);
+  custom_decimal_mode_segment_range_.emplace_back(segment_range);
+  custom_decimal_mode_segment_offset_.emplace_back(segment_offset);
   return CMD_EXEC_SUCCESS;
 }
 
@@ -349,6 +463,14 @@ bool PcfCustomCommand::valid_custom_decimal_mode_id(
   return (size_t(custom_decimal_mode_id) < custom_decimal_mode_ids_.size()) &&
          (custom_decimal_mode_id ==
           custom_decimal_mode_ids_[custom_decimal_mode_id]);
+}
+
+bool PcfCustomCommand::valid_custom_decimal_mode_segment_id(
+  const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const {
+  return (size_t(custom_decimal_mode_segment_id) <
+          custom_decimal_mode_segment_ids_.size()) &&
+         (custom_decimal_mode_segment_id ==
+          custom_decimal_mode_segment_ids_[custom_decimal_mode_segment_id]);
 }
 
 bool PcfCustomCommand::valid_command(const std::string& command_name) const {

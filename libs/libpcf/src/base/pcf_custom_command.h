@@ -77,6 +77,11 @@ class PcfCustomCommand {
                                  const bool& little_endian,
                                  const int& mode_offset);
 
+  int create_custom_decimal_mode_segment(const std::string& command_name,
+                                         const std::string& option_name,
+                                         const std::string& segment_range,
+                                         const int& segment_offset);
+
   std::string custom_mode_value(const std::string& command_name,
                                 const std::string& option_name,
                                 const std::string& mode_name) const;
@@ -97,8 +102,14 @@ class PcfCustomCommand {
   int custom_decimal_mode_offset(const std::string& command_name,
                                  const std::string& option_name) const;
 
+  bool custom_decimal_mode_has_segment(const std::string& command_name,
+                                       const std::string& option_name) const;
+
   int custom_decimal_mode_num_bits(const std::string& command_name,
                                    const std::string& option_name) const;
+
+  bool custom_decimal_mode_segments_valid(const std::string& command_name,
+                                          const std::string& option_name) const;
 
   std::uint64_t custom_decimal_mode_max_val(
     const std::string& command_name, const std::string& option_name) const;
@@ -106,7 +117,18 @@ class PcfCustomCommand {
   bool custom_decimal_mode_little_endian(const std::string& command_name,
                                          const std::string& option_name) const;
 
+  std::vector<PcfCustomCommandModeSegmentId> custom_decimal_mode_segments(
+    const std::string& command_name, const std::string& option_name) const;
+  vtr::Point<int> custom_decimal_mode_segments_range(
+    const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const;
+
+  int custom_decimal_mode_segment_offset(
+    const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const;
+
  private: /* Internal data */
+  vtr::Point<int> custom_decimal_mode_segments_range_to_int(
+    std::string range) const;
+
   std::vector<PcfCustomCommandOptionId> command_options(
     const PcfCustomCommandId& command_id) const;
 
@@ -136,7 +158,10 @@ class PcfCustomCommand {
     const PcfCustomCommandModeId& custom_mode_id) const;
   bool custom_decimal_mode_little_endian(
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
+
   int custom_decimal_mode_offset(
+    const PcfCustomCommandModeId& custom_decimal_mode_id) const;
+  bool custom_decimal_mode_has_segment(
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
   int custom_decimal_mode_num_bits(
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
@@ -161,6 +186,9 @@ class PcfCustomCommand {
   bool valid_custom_decimal_mode_id(
     const PcfCustomCommandModeId& custom_decimal_mode_id) const;
 
+  bool valid_custom_decimal_mode_segment_id(
+    const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const;
+
  private:
   vtr::vector<PcfCustomCommandId, PcfCustomCommandId> custom_command_ids_;
 
@@ -178,6 +206,10 @@ class PcfCustomCommand {
 
   vtr::vector<PcfCustomCommandOptionId, PcfCustomCommandModeId>
     custom_option_id_to_decimal_mode_id_;
+
+  vtr::vector<PcfCustomCommandModeId,
+              std::vector<PcfCustomCommandModeSegmentId>>
+    custom_decimal_mode_id_to_segment_id_;
 
   vtr::vector<PcfCustomCommandOptionId, PcfCustomCommandOptionId>
     custom_option_ids_;
@@ -205,6 +237,15 @@ class PcfCustomCommand {
   vtr::vector<PcfCustomCommandModeId, int> custom_decimal_mode_offset_;
 
   vtr::vector<PcfCustomCommandModeId, bool> custom_decimal_mode_little_endian_;
+
+  vtr::vector<PcfCustomCommandModeSegmentId, PcfCustomCommandModeSegmentId>
+    custom_decimal_mode_segment_ids_;
+
+  vtr::vector<PcfCustomCommandModeSegmentId, std::string>
+    custom_decimal_mode_segment_range_;
+
+  vtr::vector<PcfCustomCommandModeSegmentId, int>
+    custom_decimal_mode_segment_offset_;
 };
 
 } /* End namespace openfpga*/
