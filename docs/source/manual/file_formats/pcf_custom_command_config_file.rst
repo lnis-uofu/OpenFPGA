@@ -111,16 +111,19 @@ The following syntax are applicable to the XML definition under the root node ``
     When a user provides a value greater than ``max``, the parser reports an error and
     aborts bitstream generation, preventing bits overflow.
 
-  .. note:: 
-    Segment option is optional when the type is set to ``decimal``. It is used to split the mode and rearrange the mode bits:
+  .. note::
+
+    Segment option is optional when the type is set to ``decimal``.
+    It is used to split the mode and rearrange the mode bits:
+
     - **range**: The range of mode bits to be extracted.
     - **offset**: The offset applied during rearrangement.
-  
-  The following diagram illustrates how to rearrange mode bits with segment option:
+
+  The following diagram illustrates how to rearrange mode bits with the segment option:
+
   .. figure:: ./figures/_fig_pcf_custom_command_segment.png
     :width: 100%
-    :alt: An example of rearranging mode bits using segment option
-
+    :alt: An example of rearranging mode bits using the segment option
 
 .. option:: pb_type name="<string>"
 
