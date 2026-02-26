@@ -121,7 +121,7 @@ The following syntax are applicable to the XML definition under the root node ``
 
   The following diagram illustrates how to rearrange mode bits with the segment option:
 
-  .. figure:: ./figures/_fig_pcf_custom_command_segment.png
+  .. figure:: ./figures/pcf_custom_command_segment.jpg
     :width: 100%
     :alt: An example of rearranging mode bits using the segment option
 
