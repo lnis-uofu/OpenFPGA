@@ -33,6 +33,11 @@ struct pcf_custom_command_mode_id_tag;
 
 typedef vtr::StrongId<pcf_custom_command_mode_id_tag> PcfCustomCommandModeId;
 
+struct pcf_custom_command_mode_segment_id_tag;
+
+typedef vtr::StrongId<pcf_custom_command_mode_segment_id_tag>
+  PcfCustomCommandModeSegmentId;
+
 /* Short declaration of class */
 class PcfData;
 
