@@ -164,6 +164,7 @@ std::string PcfCustomCommand::custom_decimal_mode_convert_mode_with_segment(
   }
   VTR_LOG("Convert original mode %s to %s \n", mode_value.c_str(),
           mode_value_mod.c_str());
+  return mode_value_mod;
 }
 
 bool PcfCustomCommand::custom_decimal_mode_has_segment(
