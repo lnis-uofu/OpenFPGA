@@ -124,6 +124,9 @@ class PcfCustomCommand {
 
   int custom_decimal_mode_segment_offset(
     const PcfCustomCommandModeSegmentId& custom_decimal_mode_segment_id) const;
+  std::string custom_decimal_mode_convert_mode_with_segment(
+    const std::string& command_name, const std::string& option_name,
+    const std::string& mode_value) const;
 
  private: /* Internal data */
   vtr::Point<int> custom_decimal_mode_segments_range_to_int(
