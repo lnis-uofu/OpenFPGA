@@ -178,20 +178,10 @@ bool PcfCustomCommand::custom_decimal_mode_has_segment(
 
 vtr::Point<int> PcfCustomCommand::custom_decimal_mode_segments_range_to_int(
   std::string range) const {
-  vtr::Point<char> bracket = {'[', ']'};
-  char colon = ':';
-  StringToken tokenizer(range);
-
-  std::vector<std::string> range_split = tokenizer.split(colon);
-  tokenizer.set_data(range_split[0]);
-  std::vector<std::string> range_left = tokenizer.split(bracket.x());
-  VTR_ASSERT(range_left.size() == 1);
-  int left_index = std::stoi(range_left[0]);
-  tokenizer.set_data(range_split[1]);
-  std::vector<std::string> range_right = tokenizer.split(bracket.x());
-  VTR_ASSERT(range_right.size() == 1);
-  int right_index = std::stoi(range_right[0]);
-  vtr::Point<int> range_int = {left_index, right_index};
+  openfpga::PortParser port_parser(
+    range, openfpga::PORT_PARSER_SUPPORT_ALL_FORMAT, true);
+  openfpga::BasicPort pin = port_parser.port();
+  vtr::Point<int> range_int = {pin.get_lsb(), pin.get_msb()};
   return range_int;
 }
 bool PcfCustomCommand::custom_decimal_mode_segments_valid(
