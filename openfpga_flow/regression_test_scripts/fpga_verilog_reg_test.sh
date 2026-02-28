@@ -68,6 +68,7 @@ run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k_supertile_negz_group_tile $@
 
 echo -e "Test specify mode bits from pcf command"
 run-task fpga_verilog/io/io_pdl_emode $@
+run-task fpga_verilog/io/io_pdl_emode_with_pcf_segment $@
 run-task fpga_verilog/io/io_pdl_emode_fix_pins $@
 run-task fpga_verilog/io/io_boundary_timing $@
 run-task fpga_verilog/io/io_boundary_timing_dummy $@
