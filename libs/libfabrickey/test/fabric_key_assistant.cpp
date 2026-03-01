@@ -14,18 +14,7 @@
 #include "command_parser.h"
 #include "read_xml_fabric_key.h"
 #include "write_xml_fabric_key.h"
-
-/** @brief Initialize the options from command-line inputs and organize in the
- * format that is ready for parsing */
-static std::vector<std::string> format_argv(const std::string& cmd_name,
-                                            int argc, const char** argv) {
-  std::vector<std::string> cmd_opts;
-  cmd_opts.push_back(cmd_name);
-  for (int iarg = 1; iarg < argc; ++iarg) {
-    cmd_opts.push_back(std::string(argv[iarg]));
-  }
-  return cmd_opts;
-}
+#include "format_arg.h"
 
 /** @brief Checks to be done:
  * - Each alias of reference key can be found in the input key
@@ -224,7 +213,7 @@ int main(int argc, const char** argv) {
 
   /* Parse the option, to avoid issues, we use the command name to replace the
    * argv[0] */
-  std::vector<std::string> cmd_opts = format_argv(cmd.name(), argc, argv);
+  std::vector<std::string> cmd_opts = openfpga::format_argv(cmd.name(), argc, argv);
 
   openfpga::CommandContext cmd_ctx(cmd);
   if (false == parse_command(cmd_opts, cmd, cmd_ctx) ||
