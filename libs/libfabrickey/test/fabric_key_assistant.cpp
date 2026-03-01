@@ -12,9 +12,9 @@
 #include "command_echo.h"
 #include "command_exit_codes.h"
 #include "command_parser.h"
+#include "format_arg.h"
 #include "read_xml_fabric_key.h"
 #include "write_xml_fabric_key.h"
-#include "format_arg.h"
 
 /** @brief Checks to be done:
  * - Each alias of reference key can be found in the input key
@@ -213,7 +213,8 @@ int main(int argc, const char** argv) {
 
   /* Parse the option, to avoid issues, we use the command name to replace the
    * argv[0] */
-  std::vector<std::string> cmd_opts = openfpga::format_argv(cmd.name(), argc, argv);
+  std::vector<std::string> cmd_opts =
+    openfpga::format_argv(cmd.name(), argc, argv);
 
   openfpga::CommandContext cmd_ctx(cmd);
   if (false == parse_command(cmd_opts, cmd, cmd_ctx) ||
