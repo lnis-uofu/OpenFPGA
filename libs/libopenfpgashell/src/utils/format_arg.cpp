@@ -1,4 +1,4 @@
-#include "format_arg.h "
+#include "format_arg.h"
 
 namespace openfpga { // begin namespace openfpga
 
