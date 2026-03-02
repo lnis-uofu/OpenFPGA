@@ -263,7 +263,8 @@ static void build_physical_block_pin_interc_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation,
   const PhysicalPb& physical_pb, t_pb_graph_pin* des_pb_graph_pin,
-  t_mode* physical_mode, const bool& verbose) {
+  t_mode* physical_mode, const std::string& unused_mux_config,
+  const bool& verbose) {
   /* Identify the number of fan-in (Consider interconnection edges of only
    * selected mode) */
   t_interconnect* cur_interc =
@@ -355,8 +356,9 @@ static void build_physical_block_pin_interc_bitstream(
 
       /* Generate bitstream depend on both technology and structure of this MUX
        */
-      std::vector<bool> mux_bitstream = build_mux_bitstream(
-        circuit_lib, mux_model, mux_lib, datapath_mux_size, mux_input_pin_id);
+      std::vector<bool> mux_bitstream =
+        build_mux_bitstream(circuit_lib, mux_model, mux_lib, datapath_mux_size,
+                            mux_input_pin_id, "auto");
 
       /* Create the block denoting the memory instances that drives this node in
        * physical_block */
@@ -463,7 +465,7 @@ static void build_physical_block_interc_port_bitstream(
   const VprBitstreamAnnotation& bitstream_annotation,
   t_pb_graph_node* physical_pb_graph_node, const PhysicalPb& physical_pb,
   const e_circuit_pb_port_type& pb_port_type, t_mode* physical_mode,
-  const bool& verbose) {
+  const std::string& unused_mux_config, const bool& verbose) {
   switch (pb_port_type) {
     case CIRCUIT_PB_PORT_INPUT:
       for (int iport = 0; iport < physical_pb_graph_node->num_input_ports;
@@ -476,7 +478,7 @@ static void build_physical_block_interc_port_bitstream(
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->input_pins[iport][ipin]), physical_mode,
-            verbose);
+            unused_mux_config, verbose);
         }
       }
       break;
@@ -491,7 +493,7 @@ static void build_physical_block_interc_port_bitstream(
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->output_pins[iport][ipin]), physical_mode,
-            verbose);
+            unused_mux_config, verbose);
         }
       }
       break;
@@ -506,7 +508,7 @@ static void build_physical_block_interc_port_bitstream(
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->clock_pins[iport][ipin]), physical_mode,
-            verbose);
+            unused_mux_config, verbose);
         }
       }
       break;
@@ -529,7 +531,8 @@ static void build_physical_block_interc_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation,
   t_pb_graph_node* physical_pb_graph_node, const PhysicalPb& physical_pb,
-  t_mode* physical_mode, const bool& verbose) {
+  t_mode* physical_mode, const std::string& unused_mux_config,
+  const bool& verbose) {
   /* Check if the pb_graph node is valid or not */
   if (nullptr == physical_pb_graph_node) {
     VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid physical_pb_graph_node.\n");
@@ -550,7 +553,8 @@ static void build_physical_block_interc_bitstream(
     bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block,
     module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
     device_annotation, bitstream_annotation, physical_pb_graph_node,
-    physical_pb, CIRCUIT_PB_PORT_OUTPUT, physical_mode, verbose);
+    physical_pb, CIRCUIT_PB_PORT_OUTPUT, physical_mode, unused_mux_config,
+    verbose);
 
   /* We check input_pins of child_pb_graph_node and its the input_edges
    * Iterate over the interconnections between inputs of physical_pb_graph_node
@@ -574,14 +578,14 @@ static void build_physical_block_interc_bitstream(
         parent_configurable_block, module_manager, module_name_map, circuit_lib,
         mux_lib, atom_ctx, device_annotation, bitstream_annotation,
         child_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_INPUT, physical_mode,
-        verbose);
+        unused_mux_config, verbose);
       /* For clock pins, we should do the same work */
       build_physical_block_interc_port_bitstream(
         bitstream_manager, grouped_mem_inst_scoreboard,
         parent_configurable_block, module_manager, module_name_map, circuit_lib,
         mux_lib, atom_ctx, device_annotation, bitstream_annotation,
         child_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_CLOCK, physical_mode,
-        verbose);
+        unused_mux_config, verbose);
     }
   }
 }
@@ -790,7 +794,8 @@ static void rec_build_physical_block_bitstream(
   const VprBitstreamAnnotation& bitstream_annotation, const e_side& border_side,
   const PhysicalPb& physical_pb, const PhysicalPbId& pb_id,
   t_pb_graph_node* physical_pb_graph_node, const size_t& pb_graph_node_index,
-  const bool& pcf_mode_specified, const bool& verbose) {
+  const bool& pcf_mode_specified, const std::string& unused_mux_config,
+  const bool& verbose) {
   /* Get the physical pb_type that is linked to the pb_graph node */
   t_pb_type* physical_pb_type = physical_pb_graph_node->pb_type;
 
@@ -851,7 +856,7 @@ static void rec_build_physical_block_bitstream(
           child_pb,
           &(physical_pb_graph_node
               ->child_pb_graph_nodes[physical_mode->index][ipb][jpb]),
-          jpb, pcf_mode_specified, verbose);
+          jpb, pcf_mode_specified, unused_mux_config, verbose);
       }
     }
   }
@@ -895,7 +900,7 @@ static void rec_build_physical_block_bitstream(
     bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block,
     module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
     device_annotation, bitstream_annotation, physical_pb_graph_node,
-    physical_pb, physical_mode, verbose);
+    physical_pb, physical_mode, unused_mux_config, verbose);
 }
 
 /********************************************************************
@@ -914,7 +919,8 @@ static void build_physical_block_bitstream(
   const VprPlacementAnnotation& place_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const DeviceGrid& grids,
   const size_t& layer, const vtr::Point<size_t>& grid_coord,
-  const e_side& border_side, const bool& verbose) {
+  const e_side& border_side, const std::string& unused_mux_config,
+  const bool& verbose) {
   /* Create a block for the grid in bitstream manager */
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
@@ -1014,7 +1020,7 @@ static void build_physical_block_bitstream(
         module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
         device_annotation, bitstream_annotation, border_side, PhysicalPb(),
         PhysicalPbId::INVALID(), lb_type->pb_graph_head, z, pcf_mode_specified,
-        verbose);
+        unused_mux_config, verbose);
     } else {
       const PhysicalPb& phy_pb = cluster_annotation.physical_pb(
         place_annotation.grid_blocks(grid_coord)[z]);
@@ -1034,7 +1040,7 @@ static void build_physical_block_bitstream(
         bitstream_manager, grouped_mem_inst_scoreboard, grid_configurable_block,
         module_manager, module_name_map, circuit_lib, mux_lib, atom_ctx,
         device_annotation, bitstream_annotation, border_side, phy_pb, top_pb_id,
-        pb_graph_head, z, pcf_mode_specified, verbose);
+        pb_graph_head, z, pcf_mode_specified, unused_mux_config, verbose);
       VTR_LOGV(verbose, "Done\n");
     }
   }
@@ -1054,7 +1060,8 @@ void build_grid_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const std::string& unused_mux_config, const bool& verbose) {
   VTR_LOGV(verbose, "Generating bitstream for core grids...");
 
   /* Generate bitstream for the core logic block one by one */
@@ -1095,7 +1102,8 @@ void build_grid_bitstream(
         bitstream_manager, parent_block, module_manager, module_name_map,
         fabric_tile, curr_tile, circuit_lib, mux_lib, atom_ctx,
         device_annotation, cluster_annotation, place_annotation,
-        bitstream_annotation, grids, layer, grid_coord, NUM_2D_SIDES, verbose);
+        bitstream_annotation, grids, layer, grid_coord, NUM_2D_SIDES,
+        unused_mux_config, verbose);
     }
   }
   VTR_LOGV(verbose, "Done\n");
@@ -1143,7 +1151,8 @@ void build_grid_bitstream(
         bitstream_manager, parent_block, module_manager, module_name_map,
         fabric_tile, curr_tile, circuit_lib, mux_lib, atom_ctx,
         device_annotation, cluster_annotation, place_annotation,
-        bitstream_annotation, grids, layer, io_coordinate, io_side, verbose);
+        bitstream_annotation, grids, layer, io_coordinate, io_side,
+        unused_mux_config, verbose);
     }
   }
   VTR_LOGV(verbose, "Done\n");

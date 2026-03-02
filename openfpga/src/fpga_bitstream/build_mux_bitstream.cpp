@@ -33,17 +33,31 @@ namespace openfpga {
  *******************************************************************/
 size_t find_mux_default_path_id(const CircuitLibrary& circuit_lib,
                                 const CircuitModelId& mux_model,
-                                const size_t& mux_size) {
+                                const size_t& mux_size,
+                                const std::string& unused_mux_config) {
   size_t default_path_id;
 
-  if (true == circuit_lib.mux_add_const_input(mux_model)) {
-    default_path_id =
-      mux_size - 1; /* When there is a constant input, use the last path */
-  } else {
-    default_path_id = DEFAULT_MUX_PATH_ID; /* When there is no constant input,
-                                              use the default one */
-  }
+  /* Handle unused_mux_config to determine default path selection strategy */
 
+  if (unused_mux_config == "first") {
+    default_path_id = 0;
+  } else if (unused_mux_config == "last") {
+    default_path_id = mux_size - 1;
+  } else if (unused_mux_config == "unused_input") {
+    VTR_ASSERT_MSG(false,
+                   "NotImplemented: 'unused_input' strategy for default path "
+                   "selection is not implemented yet.");
+  } else if (unused_mux_config == "auto") {
+    if (true == circuit_lib.mux_add_const_input(mux_model)) {
+      default_path_id = mux_size - 1;
+    } else {
+      default_path_id = DEFAULT_MUX_PATH_ID;
+    }
+  } else {
+    VTR_ASSERT_MSG(
+      false,
+      ("Invalid unused_mux_config parameter: " + unused_mux_config).c_str());
+  }
   return default_path_id;
 }
 
@@ -59,7 +73,8 @@ size_t find_mux_default_path_id(const CircuitLibrary& circuit_lib,
  *******************************************************************/
 static std::vector<bool> build_cmos_mux_bitstream(
   const CircuitLibrary& circuit_lib, const CircuitModelId& mux_model,
-  const MuxLibrary& mux_lib, const size_t& mux_size, const int& path_id) {
+  const MuxLibrary& mux_lib, const size_t& mux_size, const int& path_id,
+  const std::string& unused_mux_config) {
   /* Note that the size of implemented mux could be different than the mux size
    * we see here, due to the constant inputs We will find the input size of
    * implemented MUX and fetch the graph-based representation in MUX library
@@ -77,8 +92,8 @@ static std::vector<bool> build_cmos_mux_bitstream(
 
   /* Find the path_id related to the implementation */
   if (DEFAULT_PATH_ID == path_id) {
-    datapath_id =
-      find_mux_default_path_id(circuit_lib, mux_model, implemented_mux_size);
+    datapath_id = find_mux_default_path_id(
+      circuit_lib, mux_model, implemented_mux_size, unused_mux_config);
   } else {
     VTR_ASSERT(datapath_id < mux_size);
   }
@@ -162,13 +177,14 @@ std::vector<bool> build_mux_bitstream(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& mux_model,
                                       const MuxLibrary& mux_lib,
                                       const size_t& mux_size,
-                                      const int& path_id) {
+                                      const int& path_id,
+                                      const std::string& unused_mux_config) {
   std::vector<bool> mux_bitstream;
 
   switch (circuit_lib.design_tech_type(mux_model)) {
     case CIRCUIT_MODEL_DESIGN_CMOS:
-      mux_bitstream = build_cmos_mux_bitstream(circuit_lib, mux_model, mux_lib,
-                                               mux_size, path_id);
+      mux_bitstream = build_cmos_mux_bitstream(
+        circuit_lib, mux_model, mux_lib, mux_size, path_id, unused_mux_config);
       break;
     case CIRCUIT_MODEL_DESIGN_RRAM:
       /* TODO: ReRAM MUX needs a different bitstream generation strategy */

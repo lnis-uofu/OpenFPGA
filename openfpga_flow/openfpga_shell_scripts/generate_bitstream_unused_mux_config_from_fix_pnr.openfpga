@@ -1,0 +1,68 @@
+# Run VPR for the 'and' design
+#--write_rr_graph example_rr_graph.xml 1123
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
+    --device ${OPENFPGA_VPR_DEVICE_LAYOUT} \
+    --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} \
+    --clock_modeling ideal --constant_net_method route \
+    --absorb_buffer_luts off \
+    --net_file ${OPENFPGA_NET_FILE} \
+    --place_file ${OPENFPGA_PLACE_FILE} \
+    --route_file ${OPENFPGA_ROUTE_FILE} \
+    ${OPENFPGA_VPR_OPTS}
+
+# Read OpenFPGA architecture definition
+read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
+
+# Read OpenFPGA simulation settings
+read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+
+# Annotate the OpenFPGA architecture to VPR data base
+# to debug use --verbose options
+link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
+
+# Check and correct any naming conflicts in the BLIF netlist
+check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
+
+# Apply fix-up to Look-Up Table truth tables based on packing results
+lut_truth_table_fixup
+
+# Build the module graph
+#  - Enabled compression on routing architecture modules
+#  - Enabled frame view creation to save runtime and memory
+#    Note that this is turned on when bitstream generation
+#    is the ONLY purpose of the flow!!!
+build_fabric --compress_routing --frame_view #--verbose
+# Add a fpga core between fpga top and the underlying modules
+add_fpga_core_to_fabric --instance_name fpga_core_inst --frame_view --verbose
+
+# Repack the netlist to physical pbs
+# This must be done before bitstream generator and testbench generation
+# Strongly recommend it is done after all the fix-up have been applied
+repack
+
+# Build the bitstream
+#  - Output the fabric-independent bitstream to a file
+build_architecture_bitstream --no_time_stamp --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream.xml
+build_architecture_bitstream --no_time_stamp --unused_mux_config auto --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_auto.xml
+build_architecture_bitstream --no_time_stamp --unused_mux_config first --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_first.xml
+build_architecture_bitstream --no_time_stamp --unused_mux_config last --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml
+# build_architecture_bitstream --no_time_stamp --unused_mux_config unused_input --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml
+
+# Build fabric-dependent bitstream
+build_fabric_bitstream
+
+# Write fabric-dependent bitstream
+write_fabric_bitstream --file fabric_bitstream.txt --format plain_text
+write_fabric_bitstream --file fabric_bitstream.xml --format xml
+
+ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} \
+        --default_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream.xml \
+        --auto_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_auto.xml \
+        --first_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_first.xml \
+        --last_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml 2>&1 | tee check_unused_mux_config_bitstream.log"
+
+# Finish and exit OpenFPGA
+exit
+
+# Note :
+# To run verification at the end of the flow maintain source in ./SRC directory
