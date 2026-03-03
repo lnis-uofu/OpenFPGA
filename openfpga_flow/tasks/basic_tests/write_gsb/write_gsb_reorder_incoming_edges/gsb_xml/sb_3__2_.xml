@@ -50,10 +50,10 @@
 		<driver_node type="CHANX" side="left" index="14"/>
 	</CHANY>
 	<CHANX side="right" index="0" mux_size="9">
+		<driver_node type="OPIN" side="right" index="0"/>
 		<driver_node type="CHANY" side="top" index="5"/>
 		<driver_node type="CHANY" side="top" index="13"/>
 		<driver_node type="CHANY" side="top" index="17"/>
-		<driver_node type="OPIN" side="right" index="0"/>
 		<driver_node type="CHANY" side="bottom" index="2"/>
 		<driver_node type="CHANY" side="bottom" index="10"/>
 		<driver_node type="CHANY" side="bottom" index="14"/>
@@ -70,10 +70,10 @@
 		<driver_node type="CHANX" side="left" index="4"/>
 	</CHANX>
 	<CHANX side="right" index="8" mux_size="9">
+		<driver_node type="OPIN" side="right" index="1"/>
 		<driver_node type="CHANY" side="top" index="1"/>
 		<driver_node type="CHANY" side="top" index="7"/>
 		<driver_node type="CHANY" side="top" index="9"/>
-		<driver_node type="OPIN" side="right" index="1"/>
 		<driver_node type="CHANY" side="bottom" index="0"/>
 		<driver_node type="CHANY" side="bottom" index="6"/>
 		<driver_node type="CHANY" side="bottom" index="8"/>
@@ -100,12 +100,12 @@
 		<driver_node type="CHANX" side="left" index="12"/>
 	</CHANX>
 	<CHANY side="bottom" index="1" mux_size="9">
+		<driver_node type="OPIN" side="bottom" index="0"/>
 		<driver_node type="CHANY" side="top" index="1"/>
 		<driver_node type="CHANY" side="top" index="9"/>
 		<driver_node type="CHANX" side="right" index="3"/>
 		<driver_node type="CHANX" side="right" index="11"/>
 		<driver_node type="CHANX" side="right" index="15"/>
-		<driver_node type="OPIN" side="bottom" index="0"/>
 		<driver_node type="CHANX" side="left" index="2"/>
 		<driver_node type="CHANX" side="left" index="10"/>
 		<driver_node type="CHANX" side="left" index="14"/>
@@ -120,12 +120,12 @@
 		<driver_node type="CHANY" side="top" index="5"/>
 	</CHANY>
 	<CHANY side="bottom" index="9" mux_size="9">
+		<driver_node type="OPIN" side="bottom" index="1"/>
 		<driver_node type="CHANY" side="top" index="3"/>
 		<driver_node type="CHANY" side="top" index="11"/>
 		<driver_node type="CHANX" side="right" index="1"/>
 		<driver_node type="CHANX" side="right" index="7"/>
 		<driver_node type="CHANX" side="right" index="9"/>
-		<driver_node type="OPIN" side="bottom" index="1"/>
 		<driver_node type="CHANX" side="left" index="4"/>
 		<driver_node type="CHANX" side="left" index="12"/>
 		<driver_node type="CHANX" side="left" index="16"/>
@@ -150,6 +150,7 @@
 		<driver_node type="CHANX" side="left" index="8"/>
 	</CHANY>
 	<CHANX side="left" index="1" mux_size="9">
+		<driver_node type="OPIN" side="left" index="0"/>
 		<driver_node type="CHANY" side="top" index="1"/>
 		<driver_node type="CHANY" side="top" index="7"/>
 		<driver_node type="CHANY" side="top" index="9"/>
@@ -158,7 +159,6 @@
 		<driver_node type="CHANY" side="bottom" index="4"/>
 		<driver_node type="CHANY" side="bottom" index="12"/>
 		<driver_node type="CHANY" side="bottom" index="16"/>
-		<driver_node type="OPIN" side="left" index="0"/>
 	</CHANX>
 	<CHANX side="left" index="3" mux_size="0">
 		<driver_node type="CHANX" side="right" index="1"/>
@@ -170,6 +170,7 @@
 		<driver_node type="CHANX" side="right" index="5"/>
 	</CHANX>
 	<CHANX side="left" index="9" mux_size="9">
+		<driver_node type="OPIN" side="left" index="1"/>
 		<driver_node type="CHANY" side="top" index="5"/>
 		<driver_node type="CHANY" side="top" index="13"/>
 		<driver_node type="CHANY" side="top" index="17"/>
@@ -178,7 +179,6 @@
 		<driver_node type="CHANY" side="bottom" index="0"/>
 		<driver_node type="CHANY" side="bottom" index="6"/>
 		<driver_node type="CHANY" side="bottom" index="8"/>
-		<driver_node type="OPIN" side="left" index="1"/>
 	</CHANX>
 	<CHANX side="left" index="11" mux_size="0">
 		<driver_node type="CHANX" side="right" index="9"/>

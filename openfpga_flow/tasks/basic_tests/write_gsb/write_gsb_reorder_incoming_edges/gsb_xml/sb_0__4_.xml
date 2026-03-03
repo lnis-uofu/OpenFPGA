@@ -36,39 +36,39 @@
 		<driver_node type="CHANY" side="bottom" index="16"/>
 	</CHANX>
 	<CHANY side="bottom" index="1" mux_size="2">
-		<driver_node type="CHANX" side="right" index="15"/>
 		<driver_node type="OPIN" side="bottom" index="0"/>
+		<driver_node type="CHANX" side="right" index="15"/>
 	</CHANY>
 	<CHANY side="bottom" index="3" mux_size="2">
-		<driver_node type="CHANX" side="right" index="13"/>
 		<driver_node type="OPIN" side="bottom" index="1"/>
+		<driver_node type="CHANX" side="right" index="13"/>
 	</CHANY>
 	<CHANY side="bottom" index="5" mux_size="2">
-		<driver_node type="CHANX" side="right" index="11"/>
 		<driver_node type="OPIN" side="bottom" index="2"/>
+		<driver_node type="CHANX" side="right" index="11"/>
 	</CHANY>
 	<CHANY side="bottom" index="7" mux_size="2">
-		<driver_node type="CHANX" side="right" index="9"/>
 		<driver_node type="OPIN" side="bottom" index="3"/>
+		<driver_node type="CHANX" side="right" index="9"/>
 	</CHANY>
 	<CHANY side="bottom" index="9" mux_size="2">
-		<driver_node type="CHANX" side="right" index="7"/>
 		<driver_node type="OPIN" side="bottom" index="4"/>
+		<driver_node type="CHANX" side="right" index="7"/>
 	</CHANY>
 	<CHANY side="bottom" index="11" mux_size="2">
-		<driver_node type="CHANX" side="right" index="5"/>
 		<driver_node type="OPIN" side="bottom" index="5"/>
+		<driver_node type="CHANX" side="right" index="5"/>
 	</CHANY>
 	<CHANY side="bottom" index="13" mux_size="2">
-		<driver_node type="CHANX" side="right" index="3"/>
 		<driver_node type="OPIN" side="bottom" index="6"/>
+		<driver_node type="CHANX" side="right" index="3"/>
 	</CHANY>
 	<CHANY side="bottom" index="15" mux_size="2">
-		<driver_node type="CHANX" side="right" index="1"/>
 		<driver_node type="OPIN" side="bottom" index="7"/>
+		<driver_node type="CHANX" side="right" index="1"/>
 	</CHANY>
 	<CHANY side="bottom" index="17" mux_size="2">
-		<driver_node type="CHANX" side="right" index="17"/>
 		<driver_node type="OPIN" side="bottom" index="8"/>
+		<driver_node type="CHANX" side="right" index="17"/>
 	</CHANY>
 </rr_sb>
