@@ -59,7 +59,7 @@ ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} \
         --default_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream.xml \
         --auto_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_auto.xml \
         --first_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_first.xml \
-        --last_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml 2>&1 | tee check_unused_mux_config_bitstream.log"
+        --last_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml"
 
 # Finish and exit OpenFPGA
 exit
