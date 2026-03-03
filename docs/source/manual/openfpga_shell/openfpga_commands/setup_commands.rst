@@ -9,8 +9,8 @@ read_openfpga_arch
   Read the XML file about architecture description (see details in :ref:`arch_generality`)
 
   .. option:: --file <string> or -f <string>
-     
-    Specify the file name. For example, ``--file openfpga_arch.xml`` 
+
+    Specify the file name. For example, ``--file openfpga_arch.xml``
 
   .. option:: --verbose
 
@@ -22,8 +22,8 @@ write_openfpga_arch
   Write the OpenFPGA XML architecture file to a file
 
   .. option:: --file <string> or -f <string>
-     
-    Specify the file name. For example, ``--file arch_echo.xml`` 
+
+    Specify the file name. For example, ``--file arch_echo.xml``
 
   .. option:: --verbose
 
@@ -35,8 +35,8 @@ read_openfpga_simulation_setting
   Read the XML file about simulation settings (see details in :ref:`simulation_setting`)
 
   .. option:: --file <string> or -f <string>
-     
-    Specify the file name. For example, ``--file auto_simulation_setting.xml`` 
+
+    Specify the file name. For example, ``--file auto_simulation_setting.xml``
 
   .. option:: --verbose
 
@@ -48,7 +48,7 @@ write_openfpga_simulation_setting
   Write the OpenFPGA XML simulation settings to a file
 
   .. option:: --file <string> or -f <string>
-     
+
     Specify the file name. For example, ``--file auto_simulation_setting_echo.xml``.
     See details about file format at :ref:`simulation_setting`.
 
@@ -62,8 +62,8 @@ read_openfpga_bitstream_setting
   Read the XML file about bitstream settings (see details in :ref:`file_formats_bitstream_setting`)
 
   .. option:: --file <string> or -f <string>
-     
-    Specify the file name. For example, ``--file bitstream_setting.xml`` 
+
+    Specify the file name. For example, ``--file bitstream_setting.xml``
 
   .. option:: --append
 
@@ -79,7 +79,7 @@ write_openfpga_bitstream_setting
   Write the OpenFPGA XML bitstream settings to a file. If multiple files have been read, only 1 file will be written out.
 
   .. option:: --file <string> or -f <string>
-     
+
     Specify the file name. For example, ``--file auto_bitstream_setting_echo.xml``.
     See details about file format at :ref:`file_formats_bitstream_setting`.
 
@@ -95,8 +95,8 @@ read_openfpga_clock_arch
   Read the XML file about programmable clock network (see details in :ref:`file_formats_clock_network`)
 
   .. option:: --file <string> or -f <string>
-     
-    Specify the file name. For example, ``--file clock_network.xml`` 
+
+    Specify the file name. For example, ``--file clock_network.xml``
 
   .. option:: --verbose
 
@@ -108,7 +108,7 @@ write_openfpga_clock_arch
   Write the OpenFPGA programmable clock network to an XML file
 
   .. option:: --file <string> or -f <string>
-     
+
     Specify the file name. For example, ``--file clock_network_echo.xml``.
     See details about file format at :ref:`file_formats_clock_network`.
 
@@ -143,7 +143,7 @@ Clock signals will be auto-detected and routed based on pin constraints which ar
     Disable entire clock trees when they are not used by any clock nets. Useful to reduce clock power
 
   .. option:: --disable_unused_spines
- 
+
     Disable part of the clock tree which are used by clock nets. Useful to reduce clock power
 
   .. option:: --verbose
@@ -163,6 +163,10 @@ link_openfpga_arch
   .. option:: --sort_gsb_chan_node_in_edges
 
     Sort the edges for the routing tracks in General Switch Blocks (GSBs). Strongly recommand to turn this on for uniquifying the routing modules
+
+  .. option:: --reorder_incoming_edges
+
+    Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges
 
   .. option:: --verbose
 
@@ -189,7 +193,7 @@ write_gsb_to_xml
   .. option:: --exclude <string>
 
     Exclude part of the GSB data to be outputted. Can be [``sb``|``cbx``|``cby``]. Users can exclude multiple parts by using a splitter ``,``.
-    For example, 
+    For example,
 
       - ``--exclude sb``
       - ``--exclude sb,cbx``
@@ -200,7 +204,7 @@ write_gsb_to_xml
     When specified, only the GSBs whose names match the list will be outputted to files.
     If not specified, all the GSBs will be outputted.
 
-    .. note:: When option ``--unique`` is enable, the given name of GSBs should match the unique modules! 
+    .. note:: When option ``--unique`` is enable, the given name of GSBs should match the unique modules!
 
     For example,
 
@@ -213,14 +217,14 @@ write_gsb_to_xml
 
   .. note:: This command is used to help users to study the difference between GSBs
 
-check_netlist_naming_conflict 
+check_netlist_naming_conflict
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Check and correct any naming conflicts in the BLIF netlist
   This is strongly recommended. Otherwise, the outputted Verilog netlists may not be compiled successfully.
 
   .. warning:: This command may be deprecated in future when it is merged to VPR upstream
-  
+
   .. option:: --fix
 
     Apply fix-up to the names that violate the syntax
@@ -243,11 +247,11 @@ pb_pin_fixup
   .. option:: --map_global_net_to_msb
 
     If specified, any global net including clock, reset etc, will be mapped to a best-fit Most Significant Bit (MSB) of input ports of programmable blocks. If not specified, a best-fit Least Significant Bit (LSB) will be the default choice. For example, when ``--clock_modeling ideal`` is selected when running VPR, global nets will not be routed and their pin mapping on programmable blocks may be revoked by other nets due to optimization. Therefore, this command will restore the pin mapping for the global nets and pick a spare pin on programmable blocks. This option is to set a preference when mapping the global nets to spare pins.
-  
+
   .. option:: --verbose
 
     Show verbose log
-   
+
 lut_truth_table_fixup
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -260,7 +264,7 @@ lut_truth_table_fixup
     Show verbose log
 
 .. _cmd_build_fabric:
-  
+
 build_fabric
 ~~~~~~~~~~~~
 
@@ -272,10 +276,10 @@ build_fabric
 
   .. option:: --group_tile <string>
 
-    Group fine-grained programmable blocks, connection blocks and switch blocks into tiles. Once enabled, tiles will be added to the top-level module. Otherwise, the top-level module consists of programmable blocks, connection blocks and switch blocks. The tile style can be customized through a file. See details in :ref:`file_formats_tile_config_file`. When enabled, the Verilog netlists will contain additional netlists that model tiles (see details in :ref:`fabric_netlists_tiles`). 
+    Group fine-grained programmable blocks, connection blocks and switch blocks into tiles. Once enabled, tiles will be added to the top-level module. Otherwise, the top-level module consists of programmable blocks, connection blocks and switch blocks. The tile style can be customized through a file. See details in :ref:`file_formats_tile_config_file`. When enabled, the Verilog netlists will contain additional netlists that model tiles (see details in :ref:`fabric_netlists_tiles`).
 
     .. warning:: This option does not support ``--duplicate_grid_pin``!
-   
+
     .. warning:: This option requires ``--compress_routing`` to be enabled!
 
   .. option:: --group_config_block
@@ -283,23 +287,23 @@ build_fabric
     Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks, as depicted in :numref:`fig_group_config_block_overview`. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module. When enabled, as illustrated in :numref:`fig_group_config_block_hierarchy`, the physical memory block locates under a CLB, driving a number of logical memory blocks which are close to the programmable resources. The logical memory blocks contain only pass-through wires which can be optimized out during physical design phase.
 
   .. _fig_group_config_block_overview:
-  
+
   .. figure:: ./figures/group_config_block_overview.png
      :width: 100%
-  
+
      Impact on grouping configuable blocks: before and after
-  
+
   .. _fig_group_config_block_hierarchy:
-  
+
   .. figure:: ./figures/group_config_block_hierarchy.png
      :width: 100%
-  
+
      Netlist hierarchy on grouped configuable blocks
 
   .. option:: --name_module_using_index
 
      Use index in module names, e.g., ``cbx_2_``. This is applied to routing modules, as well as tile modules when option ``--group_tile`` is enabled. If disabled, the module name consist of coordinates, e.g., ``cbx_1__2_``.
- 
+
   .. option:: --duplicate_grid_pin
 
     Enable pin duplication on grid modules. This is optional unless ultra-dense layout generation is needed
@@ -340,7 +344,7 @@ write_fabric_key
   .. note:: This command can output module-level keys while the ``--write_fabric_key`` option in command ``build_fabric`` does NOT support! Strongly recommend to use this command to obtain fabric key.
 
   .. option:: --file <string> or -f <string>
-     
+
     Specify the file name. For example, ``--file fabric_key_echo.xml``.
 
   .. option:: --include_module_keys
@@ -352,7 +356,7 @@ write_fabric_key
     Show verbose log
 
 .. _cmd_add_fpga_core_to_fabric:
-  
+
 add_fpga_core_to_fabric
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -382,14 +386,14 @@ write_fabric_hierarchy
 ~~~~~~~~~~~~~~~~~~~~~~
 
   Write the hierarchy of FPGA fabric graph to a YAML file
-  
+
   .. option:: --file <string> or -f <string>
-  
+
     Specify the file name to write the hierarchy.  See details in :ref:`file_format_fabric_hierarchy_file`.
 
   .. option:: --depth <int>
 
-    Specify at which depth of the fabric module graph should the writer stop outputting. The root module start from depth 0. For example, if you want a two-level hierarchy, you should specify depth as 1. 
+    Specify at which depth of the fabric module graph should the writer stop outputting. The root module start from depth 0. For example, if you want a two-level hierarchy, you should specify depth as 1.
 
   .. option:: --module <regexp>
 
@@ -415,9 +419,9 @@ write_fabric_io_info
 ~~~~~~~~~~~~~~~~~~~~
 
   Write the I/O information of FPGA fabric to an XML file
-  
+
   .. option:: --file <string> or -f <string>
-  
+
     Specify the file name to write the I/O information
 
   .. option:: --no_time_stamp
@@ -436,9 +440,9 @@ pcf2place
 ~~~~~~~~~
 
   Convert a Pin Constraint File (.pcf, see details in :ref:`file_format_pcf_file`) to a `placement file <https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_)
-  
+
   .. option:: --pcf <string>
-  
+
     Specify the path to the users' pin constraint file
 
   .. option:: --blif <string>
@@ -455,7 +459,7 @@ pcf2place
 
   .. option:: --fpga_fix_pins <string>
 
-    Specify the path to the placement file which will be outputted by running this command 
+    Specify the path to the placement file which will be outputted by running this command
 
   .. option:: --pin_table_direction_convention <string>
 
@@ -464,11 +468,11 @@ pcf2place
   .. option:: --no_time_stamp
 
     Do not print time stamp in output files
-  
+
   .. option:: --reduce_error_to_warning
 
     Reduce error to warning while reading commands in pcf file
-  
+
   .. warning:: Exercise extreme caution when adding this option – be sure you completely understand why the issue is being flagged, and why it is OK to treat as a warning instead of an error.
 
   .. option:: --verbose
@@ -481,15 +485,15 @@ pcf2bitstream_setting
 ~~~~~~~~~~~~~~~~~~~~~
 
   Convert custome commands defined in a Pin Constraint File (see details in :ref:`file_format_pcf_file`) to bitstream settings.
-  
+
   .. option:: --pcf <string>
-  
+
     Specify the path to the users' pin constraint file
 
   .. option:: --pin_table <string>
 
     Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
-  
+
    .. note::
       The pin table file and the ``pin_table_direction_convention`` must be
       the same as the one used by the ``pcf2place`` command.
@@ -500,13 +504,13 @@ pcf2bitstream_setting
     Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
 
   .. option:: --config <string>
-    
+
     Specify the file path to the pcf config file which defines custom pcf commands (.xml). See details in :ref:`file_format_pcf_custom_command_config_file`
 
   .. option:: --reduce_error_to_warning
 
     Reduce error to warning while reading commands in pcf file
-  
+
   .. warning:: Exercise extreme caution when adding this option – be sure you completely understand why the issue is being flagged, and why it is OK to treat as a warning instead of an error.
 
   .. option:: --verbose
@@ -519,27 +523,27 @@ pcf2sdc
 ~~~~~~~~~~~~~~~~~~~~~
 
   Generate sdc file according to info in a Pin Constraint File (see details in :ref:`file_format_pcf_file`).
-  
+
   .. option:: --pcf <string>
-  
+
     Specify the path to the users' pin constraint file
-  
+
   .. option:: --blif <string>
-  
+
     Specify the path to the synthesized netlist (.blif)
-  
+
   .. option:: --circuit_format <string>
-  
+
     Specify the circuit format of the blif file. Can be [ ``auto`` | ``blif`` | ``eblif`` ]. By default, it is auto which will detect based on the file extension
 
   .. option:: --boundary_timing <string>
-  
+
     Specify the path to file path to FPGA I/O boundary timing file (.xml)
 
   .. option:: --pin_table <string>
 
     Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
-  
+
    .. note::
       The pin table file and the ``pin_table_direction_convention`` must be
       the same as the one used by the ``pcf2place`` command.
@@ -550,21 +554,21 @@ pcf2sdc
     Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
 
   .. option:: --input_sdc <string>
-  
+
     Specify the path to the input sdc file (.sdc). The generated SDC content will be appended to this file. If not specified, a new file will be created and the SDC will be written to the output_sdc path
-  
+
   .. option:: --output_sdc <string>
-  
+
     Specify the path to the generated sdc file (.sdc)
-  
+
   .. option:: --vpr_arch_file <string>
-  
+
     Specify the path to the vpr arch file (.xml)
 
   .. option:: --reduce_error_to_warning
 
     Reduce error to warning while reading commands in pcf file
-  
+
   .. warning:: Exercise extreme caution when adding this option – be sure you completely understand why the issue is being flagged, and why it is OK to treat as a warning instead of an error.
 
   .. option:: --verbose
@@ -579,8 +583,8 @@ rename_modules
   Rename modules of an FPGA fabric with a given set of naming rules
 
   .. option:: --file <string>
-  
-    Specify the file path which contain the naming rules. See details in :ref:`file_formats_module_naming_file`. 
+
+    Specify the file path which contain the naming rules. See details in :ref:`file_formats_module_naming_file`.
 
   .. option:: --verbose
 
@@ -594,7 +598,7 @@ write_module_naming_rules
   Output the naming rules for each module of an FPGA fabric to a given file
 
   .. option:: --file <string>
-  
+
     Specify the file path to be written to
 
   .. option:: --no_time_stamp
@@ -613,11 +617,11 @@ write_fabric_pin_physical_location
   Output the physical location of each pin for each module of an FPGA fabric to a given file
 
   .. option:: --file <string>
-  
+
     Specify the file path to be written to. See details in :ref:`file_format_fabric_pin_physical_location_file`.
 
   .. option:: --module <string>
-  
+
     Specify the name of modules to be considered. Support regular expression, e.g., ``tile*``. When provided, only pins of selected modules will be outputted. By default, a wildcard ``*`` is considered, which means all the modules will be considered.
 
   .. option:: --show_invalid_side
@@ -640,11 +644,11 @@ write_boundary_timing_template
   Output the FPGA fabric boundary timing information to a specified file, serving as a template for user modification.
 
   .. option:: --file <string>
-  
+
     Specify the file path to be written to. See details in :ref:`file_format_boundary_timing_template_file`
 
   .. option:: --default_timing_value <string>
-  
+
     Specify the default timing value of pin max and min delay. If not specified, the default timing value will be set to 0
 
   .. option:: --pin_table <string>
@@ -691,14 +695,14 @@ read_unique_blocks
 
   Read information of unique blocks from a given file.
 
-  .. option:: --file <string> 
+  .. option:: --file <string>
 
     Specify the file which contains unique block information. See details in :ref:`file_formats_unique_blocks`.
 
   .. option:: --type <string>
 
     Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML.
-  
+
   .. option:: --verbose
 
     Show verbose info
@@ -710,14 +714,14 @@ write_unique_blocks
 
   Write information of unique blocks from internal data structure to a given file.
 
-  .. option:: --file <string> 
+  .. option:: --file <string>
 
     Specify the file which we will write unique block information to. See details in :ref:`file_formats_unique_blocks`.
 
   .. option:: --type <string>
 
     Specify the type of the unique blocks file [xml|bin]. If not specified, by default it is XML.
-  
+
   .. option:: --verbose
 
     Show verbose info
