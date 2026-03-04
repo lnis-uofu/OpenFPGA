@@ -139,7 +139,8 @@ static void organize_top_module_tile_memory_modules(
   const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy, const size_t& layer,
-  const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
+  const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side,
+  const bool& group_routing) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
 
   vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y());
@@ -180,16 +181,19 @@ static void organize_top_module_tile_memory_modules(
       }
     }
 
-    /* Try to find and add CBX and CBY */
-    organize_top_module_tile_cb_modules(
-      module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
-      cb_instance_ids.at(e_rr_type::CHANX), device_rr_gsb, rr_gsb,
-      e_rr_type::CHANX, compact_routing_hierarchy);
+    if ( false == group_routing ) {
+      /* Try to find and add CBX and CBY */
+      organize_top_module_tile_cb_modules(
+        module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
+        cb_instance_ids.at(e_rr_type::CHANX), device_rr_gsb, rr_gsb,
+        e_rr_type::CHANX, compact_routing_hierarchy);
 
-    organize_top_module_tile_cb_modules(
-      module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
-      cb_instance_ids.at(e_rr_type::CHANY), device_rr_gsb, rr_gsb,
-      e_rr_type::CHANY, compact_routing_hierarchy);
+      organize_top_module_tile_cb_modules(
+        module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
+        cb_instance_ids.at(e_rr_type::CHANY), device_rr_gsb, rr_gsb,
+        e_rr_type::CHANY, compact_routing_hierarchy);
+    }
+
   }
 
   /* Find the module name for this type of grid */
@@ -444,7 +448,7 @@ void organize_top_module_memory_modules(
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy) {
+  const bool& compact_routing_hierarchy, const bool& group_routing) {
   /* Ensure clean vectors to return */
   VTR_ASSERT(true ==
              module_manager
@@ -501,7 +505,7 @@ void organize_top_module_memory_modules(
         module_manager, top_module, circuit_lib, config_protocol.type(),
         sram_model, grids, grid_instance_ids, device_rr_gsb, rr_graph,
         sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
-        io_coord, io_side);
+        io_coord, io_side, group_routing);
     }
   }
 
@@ -530,7 +534,7 @@ void organize_top_module_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol.type(),
       sram_model, grids, grid_instance_ids, device_rr_gsb, rr_graph,
       sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
-      core_coord, NUM_2D_SIDES);
+      core_coord, NUM_2D_SIDES, group_routing);
   }
 
   /* Split memory modules into different regions */
