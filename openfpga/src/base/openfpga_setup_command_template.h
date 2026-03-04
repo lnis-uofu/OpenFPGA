@@ -891,13 +891,6 @@ ShellCommandId add_append_clock_rr_graph_command_template(
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("append_clock_rr_graph");
 
-  shell_cmd.add_option(
-    "rr_graph_x_offset", false,
-    "Column offset after which RR Graph routing channels are created");
-  shell_cmd.add_option(
-    "rr_graph_y_offset", false,
-    "Row offset after which RR Graph routing channels are created");
-
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
