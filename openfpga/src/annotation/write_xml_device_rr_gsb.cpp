@@ -50,21 +50,24 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
         continue;
       }
 
-      enum e_side chan_side = rr_gsb.get_cb_chan_side(gsb_side);
+      enum e_rr_type driver_node_type = rr_graph.node_type(driver_node);
+      enum Direction node_direction = rr_graph.node_direction(driver_node);
+      enum e_side chan_side;
+      if (driver_node_type == e_rr_type::CHANX) {
+        chan_side = (node_direction == Direction::INC) ? LEFT : RIGHT;
+      } else if (driver_node_type == e_rr_type::CHANY) {
+        chan_side = (node_direction == Direction::INC) ? BOTTOM : TOP;
+      }
+
       SideManager chan_side_manager(chan_side);
 
-      /* For channel node, we do not know the node direction
-       * But we are pretty sure it is either IN_PORT or OUT_PORT
-       * So we just try and find what is valid
-       */
-      int driver_node_index =
-        rr_gsb.get_chan_node_index(chan_side, driver_node);
-      /* We must have a valide node index */
-      VTR_ASSERT(-1 != driver_node_index);
+      int driver_node_index = -1;
+      driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
+      const RRSegmentId& des_segment_id = rr_graph.node_segment(driver_node);
 
-      const RRSegmentId& des_segment_id =
-        rr_gsb.get_chan_node_segment(chan_side, driver_node_index);
-
+      // Write to a file in the following format:
+      // <driver_node type="CHANX" side="TOP" index="0" node_id="0"
+      // segment_id="0"/>
       fp << "\t\t<driver_node type=\""
          << rr_node_typename[rr_graph.node_type(driver_node)] << "\" side=\""
          << chan_side_manager.to_string();
