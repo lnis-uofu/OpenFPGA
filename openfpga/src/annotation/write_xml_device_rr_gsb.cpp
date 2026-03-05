@@ -52,6 +52,7 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
 
       enum e_rr_type driver_node_type = rr_graph.node_type(driver_node);
       enum Direction node_direction = rr_graph.node_direction(driver_node);
+      int driver_node_index = rr_graph.node_track_num(driver_node);
       enum e_side chan_side;
       if (driver_node_type == e_rr_type::CHANX) {
         chan_side = (node_direction == Direction::INC) ? LEFT : RIGHT;
@@ -61,8 +62,8 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
 
       SideManager chan_side_manager(chan_side);
 
-      int driver_node_index = -1;
-      driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
+      // int driver_node_index = -1;
+      // driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
       const RRSegmentId& des_segment_id = rr_graph.node_segment(driver_node);
 
       // Write to a file in the following format:
