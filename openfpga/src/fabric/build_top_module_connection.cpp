@@ -68,7 +68,7 @@ static void add_top_module_nets_connect_grids_and_sb(
   const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
-  const bool& compact_routing_hierarchy) {
+  const bool& compact_routing_hierarchy, const bool& group_routing) {
   /* Skip those Switch blocks that do not exist */
   if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
@@ -184,6 +184,95 @@ static void add_top_module_nets_connect_grids_and_sb(
         module_manager.add_module_net_sink(top_module, net, sink_sb_module,
                                            sink_sb_instance, sink_sb_port_id,
                                            sink_sb_port.pins()[pin_id]);
+      }
+    }
+  }
+
+  /* Optional direct connection: SB output tracks -> adjacent grid IPINs
+   * This is useful when SB outputs should directly drive grid pins.
+   */
+  if (true == group_routing) {
+    ModuleId src_sb_module = sink_sb_module;
+    size_t src_sb_instance = sink_sb_instance;
+    for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
+      SideManager side_manager(side);
+
+      size_t ipin_node_size =
+        module_sb.get_num_ipin_nodes(side_manager.get_side());
+      for (size_t inode = 0; inode < ipin_node_size; ++inode) {
+        /* Collect source-related information */
+        RRNodeId module_ipin_node =
+          module_sb.get_ipin_node(side_manager.get_side(), inode);
+
+        std::string src_sb_port_name = generate_cb_module_grid_port_name(
+          side_manager.get_side(), grids, vpr_device_annotation, rr_graph,
+          module_ipin_node);
+
+        VTR_LOG_WARN("Grid IPINs %s \n", src_sb_port_name.c_str());
+        ModulePortId src_sb_port_id =
+          module_manager.find_module_port(src_sb_module, src_sb_port_name);
+        VTR_ASSERT(true == module_manager.valid_module_port_id(src_sb_module,
+                                                               src_sb_port_id));
+        BasicPort src_sb_port =
+          module_manager.module_port(src_sb_module, src_sb_port_id);
+
+        /* Collect sink-related information */
+        /* Note that we use the instance cb pin here!!!
+         * because it has the correct coordinator for the grid!!!
+         */
+        RRNodeId instance_ipin_node =
+          rr_gsb.get_ipin_node(side_manager.get_side(), inode);
+        vtr::Point<size_t> grid_coordinate(
+          rr_graph.node_xlow(instance_ipin_node),
+          rr_graph.node_ylow(instance_ipin_node));
+        std::string sink_grid_module_name =
+          generate_grid_block_module_name_in_top_module(
+            std::string(GRID_MODULE_NAME_PREFIX), grids, grid_coordinate);
+        ModuleId sink_grid_module =
+          module_manager.find_module(sink_grid_module_name);
+        VTR_ASSERT(true == module_manager.valid_module_id(sink_grid_module));
+        size_t sink_grid_instance =
+          grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
+        size_t sink_grid_pin_index = rr_graph.node_pin_num(instance_ipin_node);
+
+        t_physical_tile_type_ptr grid_type_descriptor = grids.get_physical_type(
+          t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
+        size_t sink_grid_pin_width =
+          grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
+        size_t sink_grid_pin_height =
+          grid_type_descriptor->pin_height_offset[sink_grid_pin_index];
+        BasicPort sink_grid_pin_info =
+          vpr_device_annotation.physical_tile_pin_port_info(
+            grid_type_descriptor, sink_grid_pin_index);
+        VTR_ASSERT(true == sink_grid_pin_info.is_valid());
+        int subtile_index =
+          vpr_device_annotation.physical_tile_pin_subtile_index(
+            grid_type_descriptor, sink_grid_pin_index);
+        VTR_ASSERT(UNDEFINED != subtile_index &&
+                   subtile_index < grid_type_descriptor->capacity);
+        std::string sink_grid_port_name = generate_grid_port_name(
+          sink_grid_pin_width, sink_grid_pin_height, subtile_index,
+          get_rr_graph_single_node_side(
+            rr_graph, rr_gsb.get_ipin_node(side_manager.get_side(), inode)),
+          sink_grid_pin_info);
+        ModulePortId sink_grid_port_id = module_manager.find_module_port(
+          sink_grid_module, sink_grid_port_name);
+        VTR_ASSERT(true == module_manager.valid_module_port_id(
+                             sink_grid_module, sink_grid_port_id));
+        BasicPort sink_grid_port =
+          module_manager.module_port(sink_grid_module, sink_grid_port_id);
+
+        /* Create a net for each pin. Note that the src/sink tag is reverted in
+         * the following code. */
+        for (size_t pin_id = 0; pin_id < src_sb_port.pins().size(); ++pin_id) {
+          ModuleNetId net = create_module_source_pin_net(
+            module_manager, top_module, sink_grid_module, sink_grid_instance,
+            sink_grid_port_id, sink_grid_port.pins()[pin_id]);
+          /* Configure the net sink */
+          module_manager.add_module_net_sink(top_module, net, src_sb_module,
+                                             src_sb_instance, src_sb_port_id,
+                                             src_sb_port.pins()[pin_id]);
+        }
       }
     }
   }
@@ -905,7 +994,8 @@ void add_top_module_nets_connect_grids_and_gsbs(
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin) {
+  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
+  const bool& group_routing) {
   vtr::ScopedStartFinishTimer timer("Add module nets between grids and GSBs");
 
   vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
@@ -920,7 +1010,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
         add_top_module_nets_connect_grids_and_sb(
           module_manager, top_module, vpr_device_annotation, grids, layer,
           grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, sb_instance_ids,
-          compact_routing_hierarchy);
+          compact_routing_hierarchy, group_routing);
       } else {
         VTR_ASSERT_SAFE(true == duplicate_grid_pin);
         add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
@@ -929,19 +1019,25 @@ void add_top_module_nets_connect_grids_and_gsbs(
           compact_routing_hierarchy);
       }
 
-      add_top_module_nets_connect_grids_and_cb(
-        module_manager, top_module, vpr_device_annotation, grids, layer,
-        grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANX,
-        cb_instance_ids.at(e_rr_type::CHANX), compact_routing_hierarchy);
+      if (false == group_routing) {
+        add_top_module_nets_connect_grids_and_cb(
+          module_manager, top_module, vpr_device_annotation, grids, layer,
+          grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANX,
+          cb_instance_ids.at(e_rr_type::CHANX), compact_routing_hierarchy);
 
-      add_top_module_nets_connect_grids_and_cb(
-        module_manager, top_module, vpr_device_annotation, grids, layer,
-        grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANY,
-        cb_instance_ids.at(e_rr_type::CHANY), compact_routing_hierarchy);
+        add_top_module_nets_connect_grids_and_cb(
+          module_manager, top_module, vpr_device_annotation, grids, layer,
+          grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANY,
+          cb_instance_ids.at(e_rr_type::CHANY), compact_routing_hierarchy);
 
-      add_top_module_nets_connect_sb_and_cb(
-        module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
-        sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);
+        add_top_module_nets_connect_sb_and_cb(
+          module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
+          sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);
+      } else {
+        VTR_LOG(
+          "Skip adding nets between CBs and SBs since group routing is "
+          "enabled.\n");
+      };
     }
   }
 }

@@ -37,7 +37,7 @@ void organize_top_module_memory_modules(
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy);
+  const bool& compact_routing_hierarchy, const bool& group_routing);
 
 void build_top_module_configurable_regions(
   ModuleManager& module_manager, const ModuleId& top_module,

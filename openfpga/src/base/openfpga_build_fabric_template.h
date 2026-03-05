@@ -115,6 +115,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_load_fabric_key = cmd.option("load_fabric_key");
   CommandOptionId opt_group_tile = cmd.option("group_tile");
   CommandOptionId opt_group_config_block = cmd.option("group_config_block");
+  CommandOptionId opt_group_routing = cmd.option("group_routing");
   CommandOptionId opt_name_module_using_index =
     cmd.option("name_module_using_index");
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -208,6 +209,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
     predefined_fabric_key, tile_config,
     cmd_context.option_enable(cmd, opt_group_config_block),
+    cmd_context.option_enable(cmd, opt_group_routing),
     cmd_context.option_enable(cmd, opt_name_module_using_index),
     cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
     cmd_context.option_enable(cmd, opt_verbose));
