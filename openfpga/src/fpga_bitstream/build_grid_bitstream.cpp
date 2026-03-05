@@ -358,7 +358,7 @@ static void build_physical_block_pin_interc_bitstream(
        */
       std::vector<bool> mux_bitstream =
         build_mux_bitstream(circuit_lib, mux_model, mux_lib, datapath_mux_size,
-                            mux_input_pin_id, "auto");
+                            mux_input_pin_id, unused_mux_config);
 
       /* Create the block denoting the memory instances that drives this node in
        * physical_block */
