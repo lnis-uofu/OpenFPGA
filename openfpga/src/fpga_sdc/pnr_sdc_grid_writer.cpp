@@ -24,7 +24,6 @@
 #include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_scale.h"
-#include "openfpga_side_manager.h"
 #include "pb_graph_utils.h"
 #include "pb_type_utils.h"
 #include "physical_types_util.h"

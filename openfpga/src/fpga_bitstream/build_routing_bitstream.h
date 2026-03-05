@@ -35,8 +35,8 @@ void build_routing_bitstream(
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
-  const bool& verbose);
+  const RRGraphInEdges& in_edges, const DeviceRRGSB& device_rr_gsb,
+  const bool& compact_routing_hierarchy, const bool& verbose);
 
 } /* end namespace openfpga */
 
