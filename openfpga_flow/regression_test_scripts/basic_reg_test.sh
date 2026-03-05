@@ -369,7 +369,6 @@ else
   exit 1;
 fi
 cd -
-
 # Repgression test to test multi-user enviroment
 # Note: Keep this task as the last one!!!
 cp -r */*/basic_tests/full_testbench/configuration_chain /tmp/
