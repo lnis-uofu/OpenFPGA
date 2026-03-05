@@ -226,6 +226,9 @@ ShellCommandId add_write_fabric_bitstream_command_template(
     "wl_decremental_order", false,
     "Generate bitstream in WL decremental addressing order if supported");
 
+  shell_cmd.add_option("reorder", false,
+                       "Use reorder fabric bitstream instead of default one");
+
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");
@@ -239,6 +242,46 @@ ShellCommandId add_write_fabric_bitstream_command_template(
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_fabric_bitstream_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: build_reordered_fabric_bitstream
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_build_reordered_fabric_bitstream_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("build_reordered_fabric_bitstream");
+
+  /* Add an option '--reorder_map' in short '-r'*/
+  CommandOptionId opt_reorder_map = shell_cmd.add_option(
+    "reorder_map", true, "Path to the reordering map file");
+  shell_cmd.set_option_short_name(opt_reorder_map, "r");
+  shell_cmd.set_option_require_value(opt_reorder_map, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true,
+    "file path to output the fabric bitstream to plain text file");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'reorder_bitstream' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Reorder the bitstream according to the reordering map", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(
+    shell_cmd_id, build_reorder_fabric_bitstream_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -343,6 +386,18 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell,
     add_build_fabric_bitstream_command_template(
       shell, openfpga_bitstream_cmd_class,
       cmd_dependency_build_fabric_bitstream, hidden);
+
+  /********************************
+   * Command 'build_reordered_fabric_bitstream'
+   */
+  /* The 'build_reordered_fabric_bitstream' command should NOT be executed
+   * before 'build_architecture_bitstream' */
+  std::vector<ShellCommandId> cmd_dependency_build_reordered_fabric_bitstream;
+  cmd_dependency_build_reordered_fabric_bitstream.push_back(
+    shell_cmd_build_arch_bitstream_id);
+  add_build_reordered_fabric_bitstream_command_template(
+    shell, openfpga_bitstream_cmd_class,
+    cmd_dependency_build_reordered_fabric_bitstream, hidden);
 
   /********************************
    * Command 'write_fabric_bitstream'
