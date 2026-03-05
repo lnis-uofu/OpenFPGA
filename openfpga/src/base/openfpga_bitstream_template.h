@@ -178,6 +178,41 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
 }
 
 /********************************************************************
+ * A wrapper function to call the reorder_bitstream() in FPGA bitstream
+ *******************************************************************/
+template <class T>
+int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
+                                            const CommandContext& cmd_context) {
+  CommandOptionId opt_reorder_map = cmd.option("reorder_map");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path =
+    find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path, true,
+                   cmd_context.option_enable(cmd, opt_verbose));
+
+  /* Read the bitstream reorder map */
+  BitstreamReorderMap bitstream_reorder_map(
+    cmd_context.option_value(cmd, opt_reorder_map));
+
+  /* Build fabric bitstream here */
+  openfpga_ctx.mutable_reorder_fabric_bitstream() =
+    build_fabric_dependent_bitstream_with_reorder(
+      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+      openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(),
+      bitstream_reorder_map, cmd_context.option_value(cmd, opt_file),
+      cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * A wrapper function to call the write_io_mapping() in FPGA bitstream
  *******************************************************************/
 template <class T>
