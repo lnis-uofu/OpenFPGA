@@ -7,6 +7,7 @@
 #include "atom_netlist.h"
 #include "lb_router.h"
 #include "lb_rr_graph.h"
+#include "logical2physical_pb_map.h"
 #include "physical_pb.h"
 
 /********************************************************************
@@ -22,11 +23,10 @@ LbRouter::NetId add_lb_router_net_to_route(
   const std::vector<LbRRNodeId>& sink_nodes, const AtomContext& atom_ctx,
   const AtomNetId& atom_net_id);
 
-void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
-                                           const LbRouter& lb_router,
-                                           const LbRRGraph& lb_rr_graph,
-                                           const AtomNetlist& atom_netlist,
-                                           const bool& verbose);
+void save_lb_router_results_to_physical_pb(
+  PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
+  const LbRouter& lb_router, const LbRRGraph& lb_rr_graph,
+  const AtomNetlist& atom_netlist, const bool& verbose);
 
 } /* end namespace openfpga */
 

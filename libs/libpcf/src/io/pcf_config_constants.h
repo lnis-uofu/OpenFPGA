@@ -18,6 +18,9 @@ constexpr const char* XML_OPTION_ATTRIBUTE_NUM_BITS = "num_bits";
 constexpr const char* XML_OPTION_ATTRIBUTE_MAX_DECIMAL = "max";
 constexpr const char* XML_OPTION_ATTRIBUTE_LITTLE_ENDIAN = "little_endian";
 constexpr const char* XML_OPTION_ATTRIBUTE_OFFSET = "offset";
+constexpr const char* XML_OPTION_ATTRIBUTE_SEGMENT = "segment";
+constexpr const char* XML_OPTION_ATTRIBUTE_SEGMENT_RANGE = "range";
+constexpr const char* XML_OPTION_ATTRIBUTE_SEGMENT_OFFSET = "offset";
 
 constexpr const char* XML_MODE_TYPE_NODE_NAME = "mode";
 constexpr const char* XML_MODE_ATTRIBUTE_NAME = "name";

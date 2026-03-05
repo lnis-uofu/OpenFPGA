@@ -80,6 +80,15 @@ For physical equivalent site,
 
 - ``site="<string>"`` is the name of an equivalent site defined under the subtile, that is defined in VPR architecture
 
+:numref:`fig_requirements_on_equ_sites` illustrates an example where two ``pb_type`` tree is considered as equivalent.
+
+.. _fig_requirements_on_equ_sites:
+
+.. figure:: ./figures/requirements_on_equ_sites.png
+   :width: 100%
+   :alt: An illustrative example how OpenFPGA identifies two pb_type tree are equivalent
+
+   An illustrative example how OpenFPGA identifies two pb_type tree are equivalent
 
 For subtile port merge support (see an illustrative example in :numref:`fig_subtile_port_merge`):
 

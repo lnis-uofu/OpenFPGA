@@ -52,7 +52,10 @@ where ``set_delay_chain`` is defined in the following PCF custom command configu
     <command name="set_watch_dog" type="peripheral">
       <option name="pad" type="pin"/>
       <pb_type name="gp_outpad.outpad"/>
-      <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0"/>
+      <option name="mode" type="decimal" num_bits="3" max="6" little_endian="false" offset="0">
+        <segment range = "[0:0]" offset = "2"/>
+        <segment range = "[1:2]" offset = "0"/>
+      </option>
     </command>
   </pcf_config>
 
@@ -108,9 +111,25 @@ The following syntax are applicable to the XML definition under the root node ``
     When a user provides a value greater than ``max``, the parser reports an error and
     aborts bitstream generation, preventing bits overflow.
 
+  .. note::
+
+    Segment option is optional when the type is set to ``decimal``.
+    It is used to split the mode and rearrange the mode bits:
+
+    - **range**: The range of mode bits to be extracted.
+    - **offset**: The offset applied during rearrangement.
+
+  The following diagram illustrates how to rearrange mode bits with the segment option:
+
+  .. figure:: ./figures/pcf_custom_command_segment.jpg
+    :width: 100%
+    :alt: An example of rearranging mode bits using the segment option
+
 .. option:: pb_type name="<string>"
 
-  Specifies the programmable block associated with this command, whose configuration bits will be modified.
+  Specify the programmable block associated with this command, whose configuration bits will be modified.
+
+.. note:: Please provide the full path of the ``pb_type`` in the VPR hierarchy. It must be a pb_type in a mappable mode which is not disabled during packing.
 
 .. option:: mode name="<string>" value="<bit pattern>"
 

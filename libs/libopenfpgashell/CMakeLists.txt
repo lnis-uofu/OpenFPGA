@@ -6,8 +6,8 @@ project("libopenfpgashell")
 find_package(Readline REQUIRED)
 
 file(GLOB_RECURSE EXEC_SOURCES test/*.cpp)
-file(GLOB_RECURSE LIB_SOURCES src/*.cpp)
-file(GLOB_RECURSE LIB_HEADERS src/*.h)
+file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
+file(GLOB_RECURSE LIB_HEADERS src/*/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
 #Remove test executable from library
