@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
-<block name="/localproj/ggore/OpenFPGA-QL/openfpga_flow/tasks/fpga_bitstream/reorder_bitstream/and2.net.post_routing.post_routing" instance="FPGA_packed_netlist[0]" architecture_id="SHA256:fa5bb29876e98eb57444c3358f36497dd4cfed066de06dd08202f84b939785a5" atom_netlist_id="SHA256:2e9b9fe963ef6fc23a8f4ba4a40f1b273b533ef6a062cd9c2ea9cd7e80da4b04">
+<block name="/localproj/ggore/OpenFPGA-QL/openfpga_flow/tasks/fpga_bitstream/reorder_bitstream/and2.net.post_routing.post_routing" instance="FPGA_packed_netlist[0]" architecture_id="SHA256:a989f5a219eb0cb80922d9257abeaeba9c899ce13dedeac41aaf786b1ed24679" atom_netlist_id="SHA256:2e9b9fe963ef6fc23a8f4ba4a40f1b273b533ef6a062cd9c2ea9cd7e80da4b04">
 	<inputs>a b</inputs>
 	<outputs>out:c</outputs>
 	<clocks></clocks>
 	<block name="c" instance="clb[0]" mode="default">
 		<inputs>
-			<port name="I">open open open open open open b open open open open open open open a open open open open open open open open open open open open open open open open open open open open open open open open open</port>
+			<port name="I">open open b open open open open open open open a open</port>
 		</inputs>
 		<outputs>
-			<port name="O">open open open open open open open open open open open open open open open open open open open fle[9].out[1]-&gt;clbouts2</port>
+			<port name="O">open open open open open open open fle[3].out[1]-&gt;clbouts2</port>
 		</outputs>
 		<clocks>
 			<port name="clk">open</port>
@@ -16,57 +16,51 @@
 		<block name="open" instance="fle[0]" />
 		<block name="open" instance="fle[1]" />
 		<block name="open" instance="fle[2]" />
-		<block name="open" instance="fle[3]" />
-		<block name="open" instance="fle[4]" />
-		<block name="open" instance="fle[5]" />
-		<block name="open" instance="fle[6]" />
-		<block name="open" instance="fle[7]" />
-		<block name="open" instance="fle[8]" />
-		<block name="c" instance="fle[9]" mode="n2_lut5">
+		<block name="c" instance="fle[3]" mode="n2_lut3">
 			<inputs>
-				<port name="in">clb.I[6]-&gt;crossbar clb.I[14]-&gt;crossbar open open open open</port>
+				<port name="in">open clb.I[2]-&gt;crossbar clb.I[10]-&gt;crossbar open</port>
 			</inputs>
 			<outputs>
-				<port name="out">open lut5inter[0].out[1]-&gt;direct2</port>
+				<port name="out">open lut3inter[0].out[1]-&gt;direct2</port>
 			</outputs>
 			<clocks>
 				<port name="clk">open</port>
 			</clocks>
-			<block name="c" instance="lut5inter[0]" mode="default">
+			<block name="c" instance="lut3inter[0]" mode="default">
 				<inputs>
-					<port name="in">fle.in[0]-&gt;direct1 fle.in[1]-&gt;direct1 open open open</port>
+					<port name="in">open fle.in[1]-&gt;direct1 fle.in[2]-&gt;direct1</port>
 				</inputs>
 				<outputs>
-					<port name="out">open ble5[1].out[0]-&gt;direct3</port>
+					<port name="out">open ble3[1].out[0]-&gt;direct3</port>
 				</outputs>
 				<clocks>
 					<port name="clk">open</port>
 				</clocks>
-				<block name="open" instance="ble5[0]" />
-				<block name="c" instance="ble5[1]" mode="default">
+				<block name="open" instance="ble3[0]" />
+				<block name="c" instance="ble3[1]" mode="default">
 					<inputs>
-						<port name="in">lut5inter.in[0]-&gt;direct2 lut5inter.in[1]-&gt;direct2 open open open</port>
+						<port name="in">open lut3inter.in[1]-&gt;direct2 lut3inter.in[2]-&gt;direct2</port>
 					</inputs>
 					<outputs>
-						<port name="out">lut5[0].out[0]-&gt;mux1</port>
+						<port name="out">lut3[0].out[0]-&gt;mux1</port>
 					</outputs>
 					<clocks>
 						<port name="clk">open</port>
 					</clocks>
-					<block name="c" instance="lut5[0]" mode="lut5">
+					<block name="c" instance="lut3[0]" mode="lut3">
 						<inputs>
-							<port name="in">ble5.in[0]-&gt;direct1 ble5.in[1]-&gt;direct1 open open open</port>
+							<port name="in">open ble3.in[1]-&gt;direct1 ble3.in[2]-&gt;direct1</port>
 						</inputs>
 						<outputs>
-							<port name="out">lut[0].out[0]-&gt;direct:lut5</port>
+							<port name="out">lut[0].out[0]-&gt;direct:lut3</port>
 						</outputs>
 						<clocks />
 						<block name="c" instance="lut[0]">
 							<attributes />
 							<parameters />
 							<inputs>
-								<port name="in">lut5.in[0]-&gt;direct:lut5 lut5.in[1]-&gt;direct:lut5 open open open</port>
-								<port_rotation_map name="in">1 0 open open open</port_rotation_map>
+								<port name="in">open lut3.in[1]-&gt;direct:lut3 lut3.in[2]-&gt;direct:lut3</port>
+								<port_rotation_map name="in">open 1 0</port_rotation_map>
 							</inputs>
 							<outputs>
 								<port name="out">c</port>

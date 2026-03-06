@@ -1,4 +1,4 @@
-Netlist_File: /localproj/ggore/OpenFPGA-QL/openfpga_flow/tasks/fpga_bitstream/reorder_bitstream/and2.net.post_routing Netlist_ID: SHA256:1d53c117d79d94e203ae341a4a78fe8d8e1492001312ab0383f5ef5fe2d918f2
+Netlist_File: /localproj/ggore/OpenFPGA-QL/openfpga_flow/tasks/fpga_bitstream/reorder_bitstream/and2.net.post_routing Netlist_ID: SHA256:4a842e9545c60bc0d5c3930d92bf44084b154e70bd346c7b3b32db496a630b76
 Array size: 4 x 4 logic blocks
 
 #block name	x	y	subblk	layer	block number

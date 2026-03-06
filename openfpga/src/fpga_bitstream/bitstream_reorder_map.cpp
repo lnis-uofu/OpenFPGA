@@ -47,7 +47,8 @@ static void init_tile_bit_maps(
   std::unordered_map<std::string, tile_bit_map>& tile_bit_maps) {
   for (pugi::xml_node xml_tile_bitmap : xml_root.children("tile_bitmap")) {
     std::string tile_name = xml_tile_bitmap.attribute("name").as_string();
-    VTR_ASSERT(tile_bit_maps.find(tile_name) == tile_bit_maps.end());
+    VTR_ASSERT_MSG(tile_bit_maps.find(tile_name) == tile_bit_maps.end(),
+                   ("Duplicate tile name: " + tile_name).c_str());
 
     tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
 
@@ -66,7 +67,10 @@ static void init_tile_bit_maps(
       BitstreamReorderTileBitId bitstream_reorder_tile_bit_id =
         BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
       // Config bit id should not exceed the number of C bits in the tile
-      VTR_ASSERT(static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits);
+      VTR_ASSERT_MSG(static_cast<size_t>(config_bit_id) <
+             tile_bit_map.num_cbits,
+             ("Config bit id exceeds the number of C bits in the tile: " +
+               tile_name).c_str());
       // The reordered bit id should not exceed the number of bits
       // (intersections of WL and BL) in the tile
       VTR_ASSERT(static_cast<size_t>(bitstream_reorder_tile_bit_id) <
@@ -76,6 +80,18 @@ static void init_tile_bit_maps(
   }
 }
 
+/**
+ * @function init_regions
+ * @brief Initializes bitstream reorder regions from XML configuration
+ *
+ * Parses region and tile XML elements to create region structures with tile
+ * type information, aliases, relative locations, and configuration bit counts.
+ * Handles coordinate compression for tiles within regions.
+ *
+ * @param xml_root Root XML node containing region elements
+ * @param tile_bit_maps Map of tile names to bit mapping information
+ * @param regions Output vector of bitstream reorder region structures
+ */
 static void init_regions(
   const pugi::xml_node& xml_root,
   const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,

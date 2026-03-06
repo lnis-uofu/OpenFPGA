@@ -34,7 +34,7 @@ lut_truth_table_fixup
 build_fabric --compress_routing --frame_view --write_fabric_key fabric_key.xml ${OPENFPGA_FABRIC_BUILD_OPTS}
 
 # Add a fpga core between fpga top and the underlying modules
-add_fpga_core_to_fabric --instance_name fpga_core_inst --frame_view --verbose
+write_gsb_to_xml --exclude_rr_info --unique --file ${OPENFPGA_GSB_DIR} --verbose ${OPENFPGA_WRITE_GSB_OPTION}
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
@@ -49,14 +49,17 @@ build_architecture_bitstream --no_time_stamp  --write_file ${OPENFPGA_INDEPENDEN
 build_fabric_bitstream
 
 # Report bitstream distribution
-report_bitstream_distribution --depth 2 --file bitstream_distribution.txt
+report_bitstream_distribution --depth 1 --file bitstream_distribution.txt
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.txt --format plain_text
 write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
 # Write reordered fabric-dependent bitstream
-# build_reordered_fabric_bitstream --reorder_map ${OPENFPGA_BITSTREAM_REMAP_FILE} --file ${OPENFPGA_REMAP_BITSTREAM_FILE}
+build_reordered_fabric_bitstream \
+     --reorder_map ${OPENFPGA_BITSTREAM_REMAP_FILE} \
+     --file ${OPENFPGA_REMAP_BITSTREAM_FILE} \
+     --verbose
 
 # Finish and exit OpenFPGA
 exit
