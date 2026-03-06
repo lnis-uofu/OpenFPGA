@@ -3,9 +3,9 @@
  *******************************************************************/
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <string>
-#include <filesystem>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"

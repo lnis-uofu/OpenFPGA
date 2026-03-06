@@ -67,10 +67,10 @@ static void init_tile_bit_maps(
       BitstreamReorderTileBitId bitstream_reorder_tile_bit_id =
         BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
       // Config bit id should not exceed the number of C bits in the tile
-      VTR_ASSERT_MSG(static_cast<size_t>(config_bit_id) <
-             tile_bit_map.num_cbits,
-             ("Config bit id exceeds the number of C bits in the tile: " +
-               tile_name).c_str());
+      VTR_ASSERT_MSG(
+        static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits,
+        ("Config bit id exceeds the number of C bits in the tile: " + tile_name)
+          .c_str());
       // The reordered bit id should not exceed the number of bits
       // (intersections of WL and BL) in the tile
       VTR_ASSERT(static_cast<size_t>(bitstream_reorder_tile_bit_id) <
