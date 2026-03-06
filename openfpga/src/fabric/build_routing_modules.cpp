@@ -310,7 +310,20 @@ static void build_switch_block_interc_modules(
     /* Print the multiplexer, fan_in >= 2 */
     std::vector<RRSwitchId> driver_switches =
       get_rr_graph_driver_switches(rr_graph, cur_rr_node);
-    VTR_ASSERT(1 <= driver_switches.size());
+    VTR_ASSERT_MSG(1 <= driver_switches.size(),
+                   ("There should be at least one driver switch for " +
+                    std::to_string(size_t(cur_rr_node)))
+                     .c_str());
+    /* Iterate over driver switches to find a common switch that can be used */
+    CircuitModelId switch_index =
+      device_annotation.rr_switch_circuit_model(driver_switches[0]);
+    for (size_t i = 1; i < driver_switches.size(); ++i) {
+      VTR_ASSERT_MSG(device_annotation.rr_switch_circuit_model(
+                       driver_switches[i]) == switch_index,
+                     ("All driver switches of " +
+                      std::to_string(size_t(cur_rr_node)) + " must be the same")
+                       .c_str());
+    }
     build_switch_block_mux_module(
       module_manager, sb_module, device_annotation, grids, rr_graph, rr_gsb,
       circuit_lib, chan_side, chan_node_id, cur_rr_node, driver_rr_nodes,
@@ -657,7 +670,20 @@ static void build_connection_block_mux_module(
 
   std::vector<RRSwitchId> driver_switches =
     get_rr_graph_driver_switches(rr_graph, cur_rr_node);
-  VTR_ASSERT(1 <= driver_switches.size());
+  VTR_ASSERT_MSG(1 <= driver_switches.size(),
+                 ("There should be at least one driver switch for " +
+                  std::to_string(size_t(cur_rr_node)))
+                   .c_str());
+  /* Iterate over driver switches to find a common switch that can be used */
+  CircuitModelId switch_index =
+    device_annotation.rr_switch_circuit_model(driver_switches[0]);
+  for (size_t i = 1; i < driver_switches.size(); ++i) {
+    VTR_ASSERT_MSG(device_annotation.rr_switch_circuit_model(
+                     driver_switches[i]) == switch_index,
+                   ("All driver switches of " +
+                    std::to_string(size_t(cur_rr_node)) + " must be the same")
+                     .c_str());
+  }
 
   /* Get the circuit model id of the routing multiplexer */
   CircuitModelId mux_model =
