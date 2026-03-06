@@ -8,6 +8,25 @@ The XML-based representation of General Switch Blocks (GSBs) describes the inter
 Connection blocks:
 ``````````````````
 
+An example connection block representation is shown below:
+
+.. code-block:: text
+
+                 ┌─────────────────────────────┐
+                 │   Connection Block (CB)     │
+                 │                             │
+                 │        CHANX/CHANY          │(CHANX Right)
+    <------------│---------●-------------------│------>
+    (CHANX Right)│---------●-------------------│
+                 │         │                   │
+                 │         │ IPIN              │
+                 └─────────●───────────────────┘
+                           │
+                     IPIN_DRIVER_SIDE
+                     IPIN_DRIVER_INDEX
+               (Opposite to grid PIN side)
+
+
 .. code-block:: xml
 
   <rr_cb x="<X_LOC>" y="<Y_LOC>" num_sides="<NUM_SIDES>">
@@ -76,6 +95,23 @@ The attributes of the driver_node tag are as follows:
 
 Switch Block GSB Format
 ```````````````````````
+
+An example switch block representation is shown below:
+
+.. code-block:: text
+
+                 CHANY
+                │BOTTOM
+            ┌───▼──────┐
+      CHANX │          │
+      RIGHT │          │
+     ───────►  Switch  ├────►
+       ┌────►  Block   │ DRIVER_DIRECTION
+       │    │          │ CHANNEL_INDEX
+       │    └────▲─────┘
+       │         │CHANX
+       │OPIN     │TOP
+
 
 .. code-block:: xml
   <rr_sb>
