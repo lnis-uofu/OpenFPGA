@@ -1,60 +1,60 @@
 <rr_cb x="0" y="4" num_sides="4">
 	<IPIN side="right" index="0" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="4"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="3"/>
 	</IPIN>
 	<IPIN side="right" index="1" mux_size="2">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="3"/>
 	</IPIN>
 	<IPIN side="left" index="0" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
 	</IPIN>
 	<IPIN side="left" index="1" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="16" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="19" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="19" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="left" index="2" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="16" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="19" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="19" segment_id="0" tap="0"/>
 	</IPIN>
 	<IPIN side="left" index="3" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="2"/>
 	</IPIN>
 	<IPIN side="left" index="4" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="left" index="5" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
 	</IPIN>
 	<IPIN side="left" index="6" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="0" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="7" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="16" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="19" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="19" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="left" index="7" mux_size="4">
-		<driver_node type="CHANY" side="bottom" index="8" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="15" segment_id="0"/>
-		<driver_node type="CHANY" side="bottom" index="16" segment_id="0"/>
-		<driver_node type="CHANY" side="top" index="19" segment_id="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="19" segment_id="0" tap="0"/>
 	</IPIN>
 </rr_cb>

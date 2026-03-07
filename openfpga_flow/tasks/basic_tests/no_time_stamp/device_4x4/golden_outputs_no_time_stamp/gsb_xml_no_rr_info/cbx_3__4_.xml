@@ -1,66 +1,66 @@
 <rr_cb x="3" y="4" num_sides="4">
 	<IPIN side="top" index="0" mux_size="4">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="5" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="8" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="15" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="5" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="3"/>
 	</IPIN>
 	<IPIN side="top" index="1" mux_size="4">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="7" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="8" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="15" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="2"/>
 	</IPIN>
 	<IPIN side="top" index="2" mux_size="4">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="7" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="10" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="15" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="left" index="10" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="top" index="3" mux_size="4">
-		<driver_node type="CHANX" side="left" index="2" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="7" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="16" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="19" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="2" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="19" segment_id="0" tap="2"/>
 	</IPIN>
 	<IPIN side="top" index="4" mux_size="4">
-		<driver_node type="CHANX" side="left" index="8" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="13" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="16" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="19" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="13" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="19" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="top" index="5" mux_size="4">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="5" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="8" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="15" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="5" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="3"/>
 	</IPIN>
 	<IPIN side="top" index="6" mux_size="4">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="7" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="8" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="15" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="2"/>
 	</IPIN>
 	<IPIN side="top" index="7" mux_size="4">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="7" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="10" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="15" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="left" index="10" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="bottom" index="0" mux_size="4">
-		<driver_node type="CHANX" side="left" index="2" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="7" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="16" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="19" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="2" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="19" segment_id="0" tap="1"/>
 	</IPIN>
 	<IPIN side="bottom" index="1" mux_size="4">
-		<driver_node type="CHANX" side="left" index="8" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="13" segment_id="0"/>
-		<driver_node type="CHANX" side="left" index="16" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="19" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="13" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="19" segment_id="0" tap="0"/>
 	</IPIN>
 	<IPIN side="bottom" index="2" mux_size="2">
-		<driver_node type="CHANX" side="left" index="0" segment_id="0"/>
-		<driver_node type="CHANX" side="right" index="5" segment_id="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="5" segment_id="0" tap="2"/>
 	</IPIN>
 </rr_cb>
