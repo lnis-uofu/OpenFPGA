@@ -87,18 +87,22 @@ static void build_switch_block_mux_bitstream(
         break;
       }
     }
-  } else if ((unused_mux_config == "unused_input") && (false == circuit_lib.mux_add_const_input(mux_model))) {
+  } else if ((unused_mux_config == "unused_input") &&
+             (false == circuit_lib.mux_add_const_input(mux_model))) {
     // If there is no net mapped to this node,
     // we will find the first input that is not connected to any net,
     // and use it as default path
-    VTR_LOG("At RRNodeId = %d: output is unmapped, try to find an unmapped input as default path\n",
-           cur_rr_node);
+    VTR_LOG(
+      "At RRNodeId = %d: output is unmapped, try to find an unmapped input as "
+      "default path\n",
+      cur_rr_node);
     for (int inode = datapath_mux_size - 1; inode >= 0; --inode) {
       if (input_nets[inode] == ClusterNetId::INVALID()) {
         path_id = inode;
-        VTR_LOG("At RRNodeId = %d: output is unmapped, use unmapped input %d "
-                   "as default path\n",
-                   cur_rr_node, inode);
+        VTR_LOG(
+          "At RRNodeId = %d: output is unmapped, use unmapped input %d "
+          "as default path\n",
+          cur_rr_node, inode);
         break;
       }
     }
