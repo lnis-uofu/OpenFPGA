@@ -32,7 +32,7 @@ An example connection block representation is shown below:
   <rr_cb x="<X_LOC>" y="<Y_LOC>" num_sides="<NUM_SIDES>">
     <!-- This is IPIN drivers representation -->
     <IPIN side="<IPIN_DRIVER_SIDE>" index="<IPIN_INDEX>" mux_size="<MUX_SIZE>">
-      <driver_node type="<CHANNEL_TYPE>" side="<DRIVER_SIDE>" index="<DRIVER_INDEX>" segment_id="<SEGMENT_ID>"/>
+      <driver_node type="<CHANNEL_TYPE>" side="<DRIVER_SIDE>" index="<DRIVER_INDEX>" segment_id="<SEGMENT_ID>" tap="<TAP_DISTANCE>"/>
       ....
     </IPIN>
     ....
@@ -92,6 +92,10 @@ The attributes of the driver_node tag are as follows:
 
     The segment ID of the driver channel/routing wire. This is used to identify the length/type of the driver channel/routing wire.
 
+.. option:: tap="<TAP_DISTANCE>"
+
+    The tap distance of the driver channel/routing wire to the current IPIN. This is used to identify the relative position of the driver channel/routing wire to the current IPIN.
+
 
 Switch Block GSB Format
 ```````````````````````
@@ -117,13 +121,13 @@ An example switch block representation is shown below:
   <rr_sb>
     <!-- This is Switch block vertical drivers representation -->
     <CHANY side="<DRIVER_DIRECTION>" index="<CHANNEL_INDEX>" mux_size="<MUX_SIZE>">
-      <driver_node type="<CHANNEL_TYPE>" side="<DRIVER_SIDE>" index="<DRIVER_INDEX>" segment_id="<SEGMENT_ID>"/>
+      <driver_node type="<CHANNEL_TYPE>" side="<DRIVER_SIDE>" index="<DRIVER_INDEX>" segment_id="<SEGMENT_ID>" tap="<TAP_DISTANCE>"/>
       ....
     </CHANY>
     ....
     <!-- This is Switch block horizontal drivers representation -->
     <CHANX side="<DRIVER_DIRECTION>" index="<CHANNEL_INDEX>" mux_size="<MUX_SIZE>">
-      <driver_node type="<CHANNEL_TYPE>" side="<DRIVER_SIDE>" index="<DRIVER_INDEX>" segment_id="<SEGMENT_ID>"/>
+      <driver_node type="<CHANNEL_TYPE>" side="<DRIVER_SIDE>" index="<DRIVER_INDEX>" segment_id="<SEGMENT_ID>" tap="<TAP_DISTANCE>"/>
       ....
     </CHANX>
     ....
@@ -162,3 +166,6 @@ The attributes of the driver_node tag are the same as described in the connectio
     The index/ptc number of the driver channel/routing wire in the current grid location.
     In case of OPIN drivers, the driver index is the same as the OPIN index on the grid.
 
+.. option:: tap="<TAP_DISTANCE>"
+
+    The tap distance of the driver channel/routing wire to the current channel. This is used to identify the relative position of the driver channel/routing wire to the current channel. In case of OPIN drivers, the tap distance is set to 0.
