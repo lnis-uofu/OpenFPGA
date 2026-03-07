@@ -45,11 +45,26 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(
       cmd_context.option_value(cmd, opt_read_file).c_str());
   } else {
-    std::string unused_mux_config =
-      cmd_context.option_value(cmd, opt_unused_mux_config);
-    if (unused_mux_config.empty()) {
-      unused_mux_config = "auto";
+    std::string unused_mux_config;
+    unused_mux_config = cmd_context.option_enable(cmd, opt_unused_mux_config)
+                          ? cmd_context.option_value(cmd, opt_unused_mux_config)
+                          : "auto";
+
+    if (unused_mux_config == "unused_input") {
+      VTR_ASSERT_MSG(false,
+                     "NotImplemented: 'unused_input' strategy for default path "
+                     "selection is not implemented yet.");
+      return CMD_EXEC_FATAL_ERROR;
     }
+
+    if (unused_mux_config != "auto" && unused_mux_config != "first" &&
+        unused_mux_config != "last") {
+      VTR_LOG_ERROR(
+        "Invalid unused_mux_config '%s'. Must be 'auto', 'first', or 'last'!\n",
+        unused_mux_config.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
     openfpga_ctx.mutable_bitstream_manager() =
       build_device_bitstream(g_vpr_ctx, openfpga_ctx, unused_mux_config,
                              cmd_context.option_enable(cmd, opt_verbose));

@@ -43,10 +43,6 @@ size_t find_mux_default_path_id(const CircuitLibrary& circuit_lib,
     default_path_id = 0;
   } else if (unused_mux_config == "last") {
     default_path_id = mux_size - 1;
-  } else if (unused_mux_config == "unused_input") {
-    VTR_ASSERT_MSG(false,
-                   "NotImplemented: 'unused_input' strategy for default path "
-                   "selection is not implemented yet.");
   } else if (unused_mux_config == "auto") {
     if (true == circuit_lib.mux_add_const_input(mux_model)) {
       default_path_id = mux_size - 1;
