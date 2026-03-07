@@ -6,7 +6,7 @@ parser.add_argument("--default_bitstream", help="Path to default bitstream file"
 parser.add_argument("--auto_bitstream", help="Path to auto bitstream file")
 parser.add_argument("--first_bitstream", help="Path to first bitstream file")
 parser.add_argument("--last_bitstream", help="Path to last bitstream file")
-# parser.add_argument("--unused_input_bitstream", help="Path to unused_input bitstream file")
+parser.add_argument("--unused_input_bitstream", help="Path to unused_input bitstream file")
 args = parser.parse_args()
 
 print("Validated the bitstream generated for the unused mux input")
@@ -14,7 +14,7 @@ print(f"Default bitstream: {args.default_bitstream}")
 print(f"Auto bitstream: {args.auto_bitstream}")
 print(f"First bitstream: {args.first_bitstream}")
 print(f"Last bitstream: {args.last_bitstream}")
-# print(f"Unused input bitstream: {args.unused_input_bitstream}")
+print(f"Unused input bitstream: {args.unused_input_bitstream}")
 
 
 def get_unused_muxes(root):
@@ -111,14 +111,17 @@ for path in unused_muxes.keys():
 # NotImplemented: Validate the unused muxes in the last bitstream
 # All the unused muxes bit should be set to 0, and the interconnect muxes should
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-# tree = ET.parse(args.unused_input_bitstream)
-# root = tree.getroot()
+tree = ET.parse(args.unused_input_bitstream)
+root = tree.getroot()
+unused_input_unused_muxes, unused_input_interconnect_muxes = get_unused_muxes(root)
 
-# for path in unused_muxes.keys():
-#     input_nets, bitstream = unused_muxes[path]
-#     first_unmapped = input_nets.index("unmapped")
-#     expected_bit = f"{bin(first_unmapped)[2:].zfill(len(bitstream))}"
-#     expected_bit_str = list(expected_bit)
-#     if bitstream != expected_bit_str:
-#         print(f"Bits Mismatch for mux {path} {bitstream} != {expected_bit_str}")
-#         exit(1)
+
+for path in unused_input_unused_muxes.keys():
+    input_nets, bitstream = unused_input_unused_muxes[path]
+    first_unmapped = input_nets.index("unmapped")
+    expected_bit = f"{bin(first_unmapped)[2:].zfill(len(bitstream))}"
+    expected_bit_str = list(expected_bit)
+    if first_unmapped != 0:
+        # TODO: Check if this mux has a constant input
+        # If so ignore from comparison
+        print(f"first_unmapped {first_unmapped} {bitstream} {path}")

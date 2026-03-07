@@ -55,6 +55,14 @@ static void build_switch_block_mux_bitstream(
   }
   VTR_ASSERT(input_nets.size() == drive_rr_nodes.size());
 
+  /* Find the circuit model id of the mux, we need its design technology which
+   * matters the bitstream generation */
+  std::vector<RRSwitchId> driver_switches =
+    get_rr_graph_driver_switches(rr_graph, cur_rr_node);
+  VTR_ASSERT(1 == driver_switches.size());
+  CircuitModelId mux_model =
+    device_annotation.rr_switch_circuit_model(driver_switches[0]);
+
   /* Find out which routing path is used in this MUX
    * Two conditions to be considered:
    * - There is no net mapped to cur_rr_node: we use default path id
@@ -79,20 +87,33 @@ static void build_switch_block_mux_bitstream(
         break;
       }
     }
+  } else if ((unused_mux_config == "unused_input") && (false == circuit_lib.mux_add_const_input(mux_model))) {
+    // If there is no net mapped to this node,
+    // we will find the first input that is not connected to any net,
+    // and use it as default path
+    VTR_LOG("At RRNodeId = %d: output is unmapped, try to find an unmapped input as default path\n",
+           cur_rr_node);
+    for (int inode = datapath_mux_size - 1; inode >= 0; --inode) {
+      if (input_nets[inode] == ClusterNetId::INVALID()) {
+        path_id = inode;
+        VTR_LOG("At RRNodeId = %d: output is unmapped, use unmapped input %d "
+                   "as default path\n",
+                   cur_rr_node, inode);
+        break;
+      }
+    }
+    if (path_id == DEFAULT_PATH_ID) {
+      VTR_LOGV_WARN(
+        verbose,
+        "At RRNodeId = %d: output is unmapped but all inputs are mapped?",
+        cur_rr_node);
+    }
   }
 
   /* Ensure that our path id makes sense! */
   VTR_ASSERT(
     (DEFAULT_PATH_ID == path_id) ||
     ((DEFAULT_PATH_ID < path_id) && (path_id < (int)datapath_mux_size)));
-
-  /* Find the circuit model id of the mux, we need its design technology which
-   * matters the bitstream generation */
-  std::vector<RRSwitchId> driver_switches =
-    get_rr_graph_driver_switches(rr_graph, cur_rr_node);
-  VTR_ASSERT(1 == driver_switches.size());
-  CircuitModelId mux_model =
-    device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
   /* Generate bitstream depend on both technology and structure of this MUX */
   std::vector<bool> mux_bitstream =

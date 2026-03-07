@@ -134,7 +134,7 @@ write_fabric_bitstream
       - **auto**: Uses OpenFPGA's default strategy (equivalent to current behavior)
       - **first**: Configures the first input of any unused mux
       - **last**: Configures the last input of any unused mux
-      - **unused_input**:(NotImplemented) Selects the lowest unused input for each driver (if available at the mux input)
+      - **unused_input**: If MUX does not have a constant input, selects the lowest unused input for each driver (if available at the mux input). If no unmapped input is available, it will print warning and fallback to the auto strategy.
 
   .. option:: --no_time_stamp
 

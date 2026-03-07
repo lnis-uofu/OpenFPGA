@@ -50,17 +50,12 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
                           ? cmd_context.option_value(cmd, opt_unused_mux_config)
                           : "auto";
 
-    if (unused_mux_config == "unused_input") {
-      VTR_ASSERT_MSG(false,
-                     "NotImplemented: 'unused_input' strategy for default path "
-                     "selection is not implemented yet.");
-      return CMD_EXEC_FATAL_ERROR;
-    }
+
 
     if (unused_mux_config != "auto" && unused_mux_config != "first" &&
-        unused_mux_config != "last") {
+        unused_mux_config != "last" && unused_mux_config != "unused_input") {
       VTR_LOG_ERROR(
-        "Invalid unused_mux_config '%s'. Must be 'auto', 'first', or 'last'!\n",
+        "Invalid unused_mux_config '%s'. Must be 'auto', 'first', 'last', or 'unused_input'!\n",
         unused_mux_config.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }

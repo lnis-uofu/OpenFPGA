@@ -46,7 +46,7 @@ build_architecture_bitstream --no_time_stamp --write_file ${OPENFPGA_INDEPENDENT
 build_architecture_bitstream --no_time_stamp --unused_mux_config auto --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_auto.xml
 build_architecture_bitstream --no_time_stamp --unused_mux_config first --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_first.xml
 build_architecture_bitstream --no_time_stamp --unused_mux_config last --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml
-# build_architecture_bitstream --no_time_stamp --unused_mux_config unused_input --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml
+build_architecture_bitstream --no_time_stamp --unused_mux_config unused_input --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_unused_input.xml
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream
@@ -59,7 +59,8 @@ ext_exec --command "python3 ${OPENFPGA_EXT_EXEC_PYTHON_SCRIPT} \
         --default_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream.xml \
         --auto_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_auto.xml \
         --first_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_first.xml \
-        --last_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml"
+        --last_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_last.xml \
+        --unused_input_bitstream ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream_unused_input.xml"
 
 # Finish and exit OpenFPGA
 exit
