@@ -306,6 +306,7 @@ run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_sb $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing $@
+run-task basic_tests/write_gsb/write_gsb_reorder_incoming_edges $@
 
 echo -e "Testing fabric hierarchy file"
 run-task basic_tests/write_fabric_hierarchy/module_filter $@
