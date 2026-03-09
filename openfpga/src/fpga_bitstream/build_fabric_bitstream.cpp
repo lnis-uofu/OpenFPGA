@@ -3,9 +3,9 @@
  *******************************************************************/
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <string>
-#include <filesystem>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -60,7 +60,8 @@ static void write_fabric_bitstream_to_text_file(
   size_t total = bitstream_reorder_map.get_total_intersections();
   for (size_t ibit = 0; ibit < total; ++ibit) {
     reorder_bit_id_info bit_info =
-      bitstream_reorder_map.get_reorder_bit_id_info(BitstreamReorderBitId(ibit));
+      bitstream_reorder_map.get_reorder_bit_id_info(
+        BitstreamReorderBitId(ibit));
     if (!bit_info.config_bit_id.is_valid()) continue;
     bool val = bitstream_manager.bit_value(original_fabric_bitstream.config_bit(
       FabricBitId(static_cast<size_t>(bit_info.config_bit_id))));

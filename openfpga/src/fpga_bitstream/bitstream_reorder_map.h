@@ -75,7 +75,8 @@
  *   get_bl_from_index                O(1)            — direct table lookup
  *   get_wl_from_index                O(1)            — direct table lookup
  *   region_bl_wl_intersection_range  O(1)            — prefix sum
- *   get_total_intersections          O(n_regions)    — small constant in practice
+ *   get_total_intersections          O(n_regions)    — small constant in
+ *practice
  *
  ******************************************************************************/
 
@@ -169,12 +170,13 @@ struct tile_bit_map {
 // Precomputed per-block offsets for O(1) / O(log n) queries.
 // Populated by BitstreamReorderMap::build_lookup_tables() during init.
 struct block_precomputed_info {
-  size_t intersection_offset;  // global flat intersection index before this block
-  size_t cbit_offset;          // global config-bit index before this block
-  size_t global_wl_base;       // absolute WL index of this block's first row
-  size_t global_bl_base;       // absolute BL index of this block's first column
-  size_t num_bls;              // cached tile_bit_maps[name].num_bls
-  size_t num_wls;              // cached tile_bit_maps[name].num_wls
+  size_t
+    intersection_offset;  // global flat intersection index before this block
+  size_t cbit_offset;     // global config-bit index before this block
+  size_t global_wl_base;  // absolute WL index of this block's first row
+  size_t global_bl_base;  // absolute BL index of this block's first column
+  size_t num_bls;         // cached tile_bit_maps[name].num_bls
+  size_t num_wls;         // cached tile_bit_maps[name].num_wls
 };
 
 // Entry in the globally-sorted block-range table, used for binary search in
@@ -284,8 +286,9 @@ class BitstreamReorderMap {
   // --- Precomputed lookup tables (built by build_lookup_tables()) ---
 
   // Per-block precomputed info, indexed [region_id][block_id].
-  vtr::vector<BitstreamReorderRegionId,
-              vtr::vector<BitstreamReorderRegionBlockId, block_precomputed_info>>
+  vtr::vector<
+    BitstreamReorderRegionId,
+    vtr::vector<BitstreamReorderRegionBlockId, block_precomputed_info>>
     block_info_;
 
   // region_intersection_prefix_[r] = global flat intersection offset for
@@ -296,7 +299,6 @@ class BitstreamReorderMap {
   // Globally sorted list of block start-intersection indices.
   // Used for O(log n) binary search in get_tile_bit_info().
   std::vector<block_range_index> sorted_block_ranges_;
-
 };
 
 }  // namespace openfpga

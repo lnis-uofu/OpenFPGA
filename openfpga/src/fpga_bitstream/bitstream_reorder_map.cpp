@@ -188,11 +188,11 @@ void BitstreamReorderMap::build_lookup_tables() {
 
       auto& bpi = block_info_[region_id][block_id];
       bpi.intersection_offset = global_intersections;
-      bpi.cbit_offset         = global_cbits;
-      bpi.global_bl_base      = col_bl_starts[loc.x].first;
-      bpi.global_wl_base      = global_wl + col_wl_accumulated[loc.x];
-      bpi.num_bls             = tbm.num_bls;
-      bpi.num_wls             = tbm.num_wls;
+      bpi.cbit_offset = global_cbits;
+      bpi.global_bl_base = col_bl_starts[loc.x].first;
+      bpi.global_wl_base = global_wl + col_wl_accumulated[loc.x];
+      bpi.num_bls = tbm.num_bls;
+      bpi.num_wls = tbm.num_wls;
 
       col_wl_accumulated[loc.x] += tbm.num_wls;
 
@@ -200,7 +200,7 @@ void BitstreamReorderMap::build_lookup_tables() {
         {global_intersections, region_id, block_id});
 
       global_intersections += tbm.num_wls * tbm.num_bls;
-      global_cbits         += tbm.num_cbits;
+      global_cbits += tbm.num_cbits;
     }
 
     global_wl += region.num_wls;
@@ -209,11 +209,11 @@ void BitstreamReorderMap::build_lookup_tables() {
   // sorted_block_ranges_ is already in ascending intersection_offset order
   // because we process blocks in the canonical region×block order, but
   // assert it is sorted to catch any future reordering bugs.
-  VTR_ASSERT(std::is_sorted(
-    sorted_block_ranges_.begin(), sorted_block_ranges_.end(),
-    [](const block_range_index& a, const block_range_index& b) {
-      return a.intersection_start < b.intersection_start;
-    }));
+  VTR_ASSERT(
+    std::is_sorted(sorted_block_ranges_.begin(), sorted_block_ranges_.end(),
+                   [](const block_range_index& a, const block_range_index& b) {
+                     return a.intersection_start < b.intersection_start;
+                   }));
 }
 
 BitstreamReorderMap::BitstreamReorderMap() {}
@@ -300,11 +300,11 @@ bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(
 
   // upper_bound gives the first entry with intersection_start > target;
   // stepping back gives the last entry with intersection_start <= target.
-  auto it = std::upper_bound(
-    sorted_block_ranges_.begin(), sorted_block_ranges_.end(), target,
-    [](size_t val, const block_range_index& e) {
-      return val < e.intersection_start;
-    });
+  auto it =
+    std::upper_bound(sorted_block_ranges_.begin(), sorted_block_ranges_.end(),
+                     target, [](size_t val, const block_range_index& e) {
+                       return val < e.intersection_start;
+                     });
   VTR_ASSERT(it != sorted_block_ranges_.begin());
   --it;
 
