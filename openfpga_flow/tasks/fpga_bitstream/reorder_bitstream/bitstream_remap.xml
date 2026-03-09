@@ -156,7 +156,7 @@
     <bit index="118"  bl="118" wl="0">118</bit>
     <bit index="119"  bl="119" wl="0">119</bit>
   </tile_bitmap>
-  <!-- <tile_bitmap name="sb_2__2_" cbits="120" bl="120" wl="1">
+  <tile_bitmap name="sb_2__2_" cbits="120" bl="120" wl="1">
     <bit index="0">0</bit>
     <bit index="1">1</bit>
     <bit index="2">2</bit>
@@ -2030,5 +2030,5 @@
     <bit index="85">85</bit>
     <bit index="86">86</bit>
     <bit index="87">87</bit>
-  </tile_bitmap> -->
+  </tile_bitmap>
 </bitstream_remap>
