@@ -992,18 +992,18 @@ FabricBitstream build_fabric_dependent_bitstream_with_reorder(
   // if we have one config region
   // VTR_ASSERT(module_manager.regions(top_module).size() == 1);
 
-  std::unordered_set<ConfigBitId> seen_config_bits;
-  for (int region_id = 0;
-       region_id < static_cast<int>(module_manager.regions(top_module).size());
-       region_id++) {
-    FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+  // std::unordered_set<ConfigBitId> seen_config_bits;
+  // for (int region_id = 0;
+  //      region_id < static_cast<int>(module_manager.regions(top_module).size());
+  //      region_id++) {
+  //   FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
 
-    build_fabric_dependent_memory_bank_bitstream_with_reorder(
-      bitstream_manager, bitstream_reorder_map, fabric_bitstream,
-      fabric_bitstream_region, seen_config_bits, region_id, num_bits(num_bls),
-      num_bits(num_wls));
-    fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
-  }
+  //   build_fabric_dependent_memory_bank_bitstream_with_reorder(
+  //     bitstream_manager, bitstream_reorder_map, fabric_bitstream,
+  //     fabric_bitstream_region, seen_config_bits, region_id, num_bits(num_bls),
+  //     num_bits(num_wls));
+  //   fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
+  // }
 
   write_fabric_bitstream_to_text_file(bitstream_manager,
                                       original_fabric_bitstream,
