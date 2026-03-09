@@ -6,11 +6,8 @@
 
 /* Headers from standard C++ library */
 #include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <regex>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 #include <utility>
 
 /* Headers from pugi XML library */
@@ -21,77 +18,59 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-// Define a hash function for pair<size_t, size_t>
-struct pair_hash {
-  std::size_t operator()(const std::pair<size_t, size_t>& p) const {
-    // Combine the two hash values
-    return std::hash<size_t>{}(p.first) ^ (std::hash<size_t>{}(p.second) << 1);
-  }
-};
-
-static std::pair<int, int> extract_tile_indices(const std::string& name) {
-  std::regex pattern(R"(tile_(\d+)__(\d+)_?)");
-  std::smatch match;
-
-  if (std::regex_match(name, match, pattern)) {
-    int first = std::stoi(match[1]);
-    int second = std::stoi(match[2]);
-    return {first, second};
-  } else {
-    throw std::invalid_argument("Invalid format: " + name);
-  }
-}
-
+// Parses all <tile_bitmap> tags from the bitstream remap XML and builds a
+// lookup table from tile name → tile_bit_map.
+//
+// Each tile_bitmap defines:
+//   - cbits / bl / wl: dimensions of the tile's config bits and WL×BL grid
+//   - A list of <bit index="I">J</bit> entries, meaning:
+//       config bit index I maps to WL×BL position J
+//     Stored as bit_map[J] = I (i.e., wlbl_index → config_bit_index).
 static void init_tile_bit_maps(
   const pugi::xml_node& xml_root,
   std::unordered_map<std::string, tile_bit_map>& tile_bit_maps) {
   for (pugi::xml_node xml_tile_bitmap : xml_root.children("tile_bitmap")) {
     std::string tile_name = xml_tile_bitmap.attribute("name").as_string();
-    VTR_ASSERT_MSG(tile_bit_maps.find(tile_name) == tile_bit_maps.end(),
-                   ("Duplicate tile name: " + tile_name).c_str());
+    VTR_ASSERT(tile_bit_maps.find(tile_name) == tile_bit_maps.end());
 
     tile_bit_map& tile_bit_map = tile_bit_maps[tile_name];
 
     tile_bit_map.num_cbits = xml_tile_bitmap.attribute("cbits").as_uint();
-    VTR_ASSERT(tile_bit_map.num_cbits >= 0);
     tile_bit_map.num_bls = xml_tile_bitmap.attribute("bl").as_uint();
-    VTR_ASSERT(tile_bit_map.num_bls >= 0);
     tile_bit_map.num_wls = xml_tile_bitmap.attribute("wl").as_uint();
-    VTR_ASSERT(tile_bit_map.num_wls >= 0);
 
+    // Pre-fill with INVALID so positions with no mapping are detected
     tile_bit_map.bit_map.resize(tile_bit_map.num_wls * tile_bit_map.num_bls,
                                 ConfigBitId::INVALID());
     for (pugi::xml_node xml_bit : xml_tile_bitmap.children("bit")) {
+      // index="I" → config bit index within the tile
+      // text J    → flat WL×BL position (wl_row * num_bls + bl_col)
       ConfigBitId config_bit_id =
         ConfigBitId(static_cast<size_t>(xml_bit.attribute("index").as_int()));
-      BitstreamReorderTileBitId bitstream_reorder_tile_bit_id =
+      BitstreamReorderTileBitId wlbl_pos =
         BitstreamReorderTileBitId(static_cast<size_t>(xml_bit.text().as_int()));
-      // Config bit id should not exceed the number of C bits in the tile
-      VTR_ASSERT_MSG(
-        static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits,
-        ("Config bit id exceeds the number of C bits in the tile: " + tile_name)
-          .c_str());
-      // The reordered bit id should not exceed the number of bits
-      // (intersections of WL and BL) in the tile
-      VTR_ASSERT(static_cast<size_t>(bitstream_reorder_tile_bit_id) <
+      VTR_ASSERT(static_cast<size_t>(config_bit_id) < tile_bit_map.num_cbits);
+      VTR_ASSERT(static_cast<size_t>(wlbl_pos) <
                  tile_bit_map.num_wls * tile_bit_map.num_bls);
-      tile_bit_map.bit_map[bitstream_reorder_tile_bit_id] = config_bit_id;
+      tile_bit_map.bit_map[wlbl_pos] = config_bit_id;
     }
   }
 }
 
-/**
- * @function init_regions
- * @brief Initializes bitstream reorder regions from XML configuration
- *
- * Parses region and tile XML elements to create region structures with tile
- * type information, aliases, relative locations, and configuration bit counts.
- * Handles coordinate compression for tiles within regions.
- *
- * @param xml_root Root XML node containing region elements
- * @param tile_bit_maps Map of tile names to bit mapping information
- * @param regions Output vector of bitstream reorder region structures
- */
+// Parses all <region> tags and populates the regions vector.
+//
+// Tiles within a region are grouped into columns by consuming them in XML
+// order and accumulating their WL counts until the total equals region.num_wls.
+// This mirrors the Python algorithm:
+//
+//   while tile is not None:
+//     while len(region_bitstream_block) < region_wl:
+//       process tile; tile = next(tiles)
+//
+// Each column gets a unique column_id (the x coordinate in tile_location).
+// Tiles within a column are numbered by column_y (0 = first/top tile).
+// This layout-agnostic grouping works regardless of how tiles are ordered in
+// the XML (column-by-column or row-by-row).
 static void init_regions(
   const pugi::xml_node& xml_root,
   const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
@@ -102,126 +81,139 @@ static void init_regions(
 
     regions.emplace_back();
     bistream_reorder_region& region = regions.back();
+    region.num_wls = xml_region.attribute("wl").as_uint();
 
     int tile_id = 0;
     size_t num_cbits = 0;
     size_t num_bls = 0;
-    int prev_tile_x = -1;
-    int compressed_tile_x = 0;
-    int compressed_tile_y = 0;
+    int column_id = 0;
+    int column_y = 0;
+    size_t accumulated_wls_in_column = 0;
+
     for (pugi::xml_node xml_tile : xml_region.children("tile")) {
       VTR_ASSERT(xml_tile.attribute("id").as_int() == tile_id);
       std::string tile_name = xml_tile.attribute("name").as_string();
-      std::string tile_alias = xml_tile.attribute("alias").as_string();
-      auto [tile_x, tile_y] = extract_tile_indices(tile_alias);
-
-      if (tile_id == 0) {
-        prev_tile_x = tile_x;
-      } else {
-        if (prev_tile_x != tile_x) {
-          compressed_tile_x += 1;
-          compressed_tile_y = 0;
-        } else {
-          compressed_tile_y += 1;
-        }
-      }
 
       region.tile_types.emplace_back(tile_name);
-      region.tile_aliases.emplace_back(tile_alias);
-      // Block location stored in alias is the blocks absolute location in grid
-      // (across multiple regions) We convert it to relative location in the
-      // current region
-      region.tile_locations.emplace_back(compressed_tile_x, compressed_tile_y);
+      // column_id = which column this tile belongs to (x)
+      // column_y  = position within the column (y), 0 = first tile
+      region.tile_locations.emplace_back(column_id, column_y);
+
       num_cbits += tile_bit_maps.at(tile_name).num_cbits;
 
-      size_t tile_num_bls = tile_bit_maps.at(tile_name).num_bls;
-      // To get the number BLs, we iterate over all tiles in the first row
-      // of the region and sum up the number of BLs in each tile
-      if (compressed_tile_y == 0) {
-        num_bls += tile_num_bls;
+      // BL lines are shared within a column, so count BLs only from the
+      // first tile of each column (column_y == 0)
+      if (column_y == 0) {
+        num_bls += tile_bit_maps.at(tile_name).num_bls;
       }
 
-      prev_tile_x = tile_x;
+      accumulated_wls_in_column += tile_bit_maps.at(tile_name).num_wls;
+      VTR_ASSERT(accumulated_wls_in_column <= region.num_wls);
+      if (accumulated_wls_in_column == region.num_wls) {
+        // This tile completes the column — advance to the next one
+        column_id++;
+        column_y = 0;
+        accumulated_wls_in_column = 0;
+      } else {
+        column_y++;
+      }
+
       tile_id++;
     }
 
     region.num_cbits = num_cbits;
-    region.num_wls = xml_region.attribute("wl").as_uint();
     region.num_bls = num_bls;
     xml_region_id++;
   }
 }
 
-// This function take the region id and the BL index as inputs and return the
-// column index (x coordinate) corresponding to the BL index. Note that each
-// column may have multiple BLs, and this is why this function is required.
-static int get_region_x_from_bl_index(
-  const vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions,
-  const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
-  const BitstreamReorderRegionId& region_id, const size_t bl_index) {
-  size_t num_seen_bls = 0;
-  for (BitstreamReorderRegionBlockId block_id :
-       regions[region_id].tile_types.keys()) {
-    const std::string& tile_name = regions[region_id].tile_types.at(block_id);
-    // We only consider the first row of the region, since the BL lines are
-    // shared across columns
-    if (regions[region_id].tile_locations.at(block_id).y != 0) {
-      continue;
-    }
+// Builds all precomputed lookup tables for O(1)/O(log n) queries.
+//
+// Must be called after init_tile_bit_maps() and init_regions().
+//
+// For each tile (block) we precompute:
+//   - intersection_offset: global flat intersection index before this block
+//   - cbit_offset:         global config-bit index before this block
+//   - global_wl_base:      absolute WL index of this block's first WL row
+//   - global_bl_base:      absolute BL index of this block's first BL column
+//   - num_bls / num_wls:   cached dimensions (avoids repeated unordered_map
+//                          lookups in the hot query paths)
+//
+// We also build:
+//   - sorted_block_ranges_: globally sorted by intersection_offset, for
+//     O(log n) binary search in get_tile_bit_info().
+//   - region_intersection_prefix_: global intersection start per region,
+//     for O(1) in region_bl_wl_intersection_range().
+void BitstreamReorderMap::build_lookup_tables() {
+  const size_t n_regions = regions.size();
 
-    if (bl_index >= num_seen_bls &&
-        bl_index < num_seen_bls + tile_bit_maps.at(tile_name).num_bls) {
-      return regions[region_id].tile_locations.at(block_id).x;
-    }
+  block_info_.resize(n_regions);
+  region_intersection_prefix_.resize(n_regions);
 
-    num_seen_bls += tile_bit_maps.at(tile_name).num_bls;
-  }
-  return -1;
-}
+  size_t global_wl = 0;
+  size_t global_intersections = 0;
+  size_t global_cbits = 0;
 
-// This function take the WL and BL index as inputs and return the block id
-// where bl and wl intersection falls. Note that the BL and WL index are global
-// across all regions.
-static BitstreamReorderRegionBlockId get_block_id_from_wl_bl(
-  const vtr::vector<BitstreamReorderRegionId, bistream_reorder_region>& regions,
-  const std::unordered_map<std::string, tile_bit_map>& tile_bit_maps,
-  const size_t bl, const size_t wl) {
-  // Stores the wl offset for the region where the intersection falls
-  size_t globla_num_seen_wls = 0;
-  BitstreamReorderRegionId found_region_id;
-  // Iterate over all region to find the region where the intersection falls
-  for (BitstreamReorderRegionId region_id : regions.keys()) {
-    if (wl >= globla_num_seen_wls &&
-        wl < globla_num_seen_wls + regions[region_id].num_wls) {
-      found_region_id = region_id;
-      break;
-    }
-    globla_num_seen_wls += regions[region_id].num_wls;
-  }
+  for (auto region_id : regions.keys()) {
+    auto& region = regions[region_id];
+    const size_t n_blocks = region.tile_types.size();
 
-  VTR_ASSERT(found_region_id);
+    region_intersection_prefix_[region_id] = global_intersections;
+    block_info_[region_id].resize(n_blocks);
 
-  // Find the column index (x coordinate) of the BL in the region
-  int block_region_x =
-    get_region_x_from_bl_index(regions, tile_bit_maps, found_region_id, bl);
-  VTR_ASSERT(block_region_x != -1);
-  for (BitstreamReorderRegionBlockId block_id :
-       regions[found_region_id].tile_types.keys()) {
-    // Iterate over the tiles in the column to find the exact tile where the
-    // intersection falls
-    if (regions[found_region_id].tile_locations.at(block_id).x ==
-        block_region_x) {
-      const auto& tile_bit_map =
-        tile_bit_maps.at(regions[found_region_id].tile_types.at(block_id));
-      if (wl >= (globla_num_seen_wls) &&
-          wl < (globla_num_seen_wls + tile_bit_map.num_wls)) {
-        return block_id;
+    // Pass 1 (y==0 tiles only): compute BL base for each column.
+    // Columns are assigned x = 0, 1, 2, ... in XML order, so the first
+    // y==0 tile encountered has x == col_bl_starts.size() each time.
+    std::vector<std::pair<size_t, int>> col_bl_starts;
+    size_t running_bl = 0;
+    for (auto block_id : region.tile_types.keys()) {
+      const auto& loc = region.tile_locations[block_id];
+      if (loc.y == 0) {
+        VTR_ASSERT(size_t(loc.x) == col_bl_starts.size());
+        const auto& tbm = tile_bit_maps.at(region.tile_types[block_id]);
+        col_bl_starts.emplace_back(running_bl, loc.x);
+        running_bl += tbm.num_bls;
       }
-
-      globla_num_seen_wls += tile_bit_map.num_wls;
     }
+
+    // Pass 2: fill per-block info.
+    const size_t n_cols = col_bl_starts.size();
+    // col_wl_accumulated[x] tracks the cumulative WL count within column x
+    // (relative to global_wl, i.e., the region's WL base).
+    std::vector<size_t> col_wl_accumulated(n_cols, 0);
+
+    for (auto block_id : region.tile_types.keys()) {
+      const auto& loc = region.tile_locations[block_id];
+      const auto& tbm = tile_bit_maps.at(region.tile_types[block_id]);
+
+      auto& bpi = block_info_[region_id][block_id];
+      bpi.intersection_offset = global_intersections;
+      bpi.cbit_offset         = global_cbits;
+      bpi.global_bl_base      = col_bl_starts[loc.x].first;
+      bpi.global_wl_base      = global_wl + col_wl_accumulated[loc.x];
+      bpi.num_bls             = tbm.num_bls;
+      bpi.num_wls             = tbm.num_wls;
+
+      col_wl_accumulated[loc.x] += tbm.num_wls;
+
+      sorted_block_ranges_.push_back(
+        {global_intersections, region_id, block_id});
+
+      global_intersections += tbm.num_wls * tbm.num_bls;
+      global_cbits         += tbm.num_cbits;
+    }
+
+    global_wl += region.num_wls;
   }
-  return BitstreamReorderRegionBlockId::INVALID();
+
+  // sorted_block_ranges_ is already in ascending intersection_offset order
+  // because we process blocks in the canonical region×block order, but
+  // assert it is sorted to catch any future reordering bugs.
+  VTR_ASSERT(std::is_sorted(
+    sorted_block_ranges_.begin(), sorted_block_ranges_.end(),
+    [](const block_range_index& a, const block_range_index& b) {
+      return a.intersection_start < b.intersection_start;
+    }));
 }
 
 BitstreamReorderMap::BitstreamReorderMap() {}
@@ -251,21 +243,19 @@ void BitstreamReorderMap::init_from_file(const std::string& reorder_map_file) {
    * Store the information under region tags
    */
   init_regions(xml_root, tile_bit_maps, regions);
+
+  /*
+   * Precompute per-block offset tables for O(1)/O(log n) queries
+   */
+  build_lookup_tables();
 }
 
+// O(1): directly read from the precomputed prefix table.
 std::pair<size_t, size_t> BitstreamReorderMap::region_bl_wl_intersection_range(
   const BitstreamReorderRegionId& region_id) const {
-  size_t starting_id = 0;
-
-  for (const auto& prev_region_id : regions.keys()) {
-    if (prev_region_id < region_id) {
-      starting_id +=
-        regions[prev_region_id].num_bls * regions[prev_region_id].num_wls;
-    }
-  }
-
-  return {starting_id, starting_id + regions[region_id].num_bls *
-                                       regions[region_id].num_wls};
+  size_t start = region_intersection_prefix_[region_id];
+  return {start,
+          start + regions[region_id].num_bls * regions[region_id].num_wls};
 }
 
 size_t BitstreamReorderMap::num_config_bits(
@@ -303,132 +293,45 @@ std::string BitstreamReorderMap::get_block_tile_name(
   return regions[region_id].tile_types[block_id];
 }
 
+// O(log n_blocks): binary search on sorted_block_ranges_.
 bitstream_reorder_tile_bit_info BitstreamReorderMap::get_tile_bit_info(
   const BitstreamReorderBitId& bit_id) const {
-  size_t target_bit_index = static_cast<size_t>(bit_id);
-  size_t num_seen_intersections = 0;
-  size_t num_seen_cbits = 0;
+  size_t target = static_cast<size_t>(bit_id);
 
-  std::string target_tile_name;
-  BitstreamReorderRegionId target_region_id =
-    BitstreamReorderRegionId::INVALID();
-  BitstreamReorderRegionBlockId target_block_id =
-    BitstreamReorderRegionBlockId::INVALID();
+  // upper_bound gives the first entry with intersection_start > target;
+  // stepping back gives the last entry with intersection_start <= target.
+  auto it = std::upper_bound(
+    sorted_block_ranges_.begin(), sorted_block_ranges_.end(), target,
+    [](size_t val, const block_range_index& e) {
+      return val < e.intersection_start;
+    });
+  VTR_ASSERT(it != sorted_block_ranges_.begin());
+  --it;
 
-  for (const auto& region_id : regions.keys()) {
-    for (const auto& block_id : regions[region_id].tile_types.keys()) {
-      std::string tile_name = regions[region_id].tile_types[block_id];
-      const auto& tile_bit_map = tile_bit_maps.at(tile_name);
-      size_t block_num_intersections =
-        tile_bit_map.num_wls * tile_bit_map.num_bls;
-      size_t block_num_cbits = tile_bit_map.num_cbits;
-      if (target_bit_index >= num_seen_intersections &&
-          target_bit_index < num_seen_intersections + block_num_intersections) {
-        target_tile_name = tile_name;
-        target_region_id = region_id;
-        target_block_id = block_id;
-        break;
-      }
-      num_seen_intersections += block_num_intersections;
-      num_seen_cbits += block_num_cbits;
-    }
-    if (target_region_id.is_valid()) {
-      break;
-    }
-  }
-
-  VTR_ASSERT(target_tile_name.empty() == false);
-  VTR_ASSERT(target_region_id.is_valid());
-  VTR_ASSERT(target_block_id.is_valid());
-  VTR_ASSERT(target_bit_index >= num_seen_intersections);
-  BitstreamReorderTileBitId tile_bit_id =
-    BitstreamReorderTileBitId(target_bit_index - num_seen_intersections);
-  return {target_region_id, target_block_id, tile_bit_id,
-          num_seen_intersections, num_seen_cbits};
+  const auto& bpi = block_info_[it->region_id][it->block_id];
+  return {it->region_id, it->block_id,
+          BitstreamReorderTileBitId(target - it->intersection_start),
+          it->intersection_start, bpi.cbit_offset};
 }
 
+// O(1): BL base is precomputed; local BL is bit_id % num_bls.
 size_t BitstreamReorderMap::get_bl_from_index(
   const BitstreamReorderRegionId& region_id,
   const BitstreamReorderRegionBlockId& block_id,
   const BitstreamReorderTileBitId& bit_id) const {
-  const auto& region = regions[region_id];
-
-  /*
-   * To find the bitline (BL) corresponding to a given bit_id within a specific
-   * region and block:
-   * 1. Determine how many tiles exist in the same row as the target block, but
-   * appear before it.
-   * 2. Sum the number of BLs in those preceding tiles to compute the BL offset.
-   * 3. Calculate the local BL index within the current tile.
-   * 4. Add the offset to the local BL to obtain the final BL index.
-   */
-  size_t num_seen_bls = 0;
-  auto target_tile_location = region.tile_locations.at(block_id);
-
-  // Calculate the number of BLs in the tiles before the target tile
-  for (const auto& region_tile_id : region.tile_types.keys()) {
-    auto curr_tile_location = region.tile_locations.at(region_tile_id);
-
-    if (curr_tile_location.x < target_tile_location.x &&
-        curr_tile_location.y == 0) {
-      num_seen_bls +=
-        tile_bit_maps.at(region.tile_types[region_tile_id]).num_bls;
-    }
-  }
-
-  // Calculate the local BL index within the current tile
-  size_t tile_bit_index = size_t(bit_id);
-  size_t tile_num_bls =
-    tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
-  size_t tile_bl_num = tile_bit_index % tile_num_bls;
-
-  /* Return the final BL index */
-  return num_seen_bls + tile_bl_num;
+  const auto& bpi = block_info_[region_id][block_id];
+  size_t tile_bl = static_cast<size_t>(bit_id) % bpi.num_bls;
+  return bpi.global_bl_base + tile_bl;
 }
 
+// O(1): WL base is precomputed; local WL is bit_id / num_bls.
 size_t BitstreamReorderMap::get_wl_from_index(
   const BitstreamReorderRegionId& region_id,
   const BitstreamReorderRegionBlockId& block_id,
   const BitstreamReorderTileBitId& bit_id) const {
-  const auto& target_region = regions[region_id];
-
-  /*
-   * To find the wordline (WL) corresponding to a given bit_id within a specific
-   * region and block:
-   * 1. Calculate the local WL index within the current tile.
-   * 2. Calculate the number of WLs in the tiles before the target tile (in the
-   * same column as the target tile)
-   * 3. Add the offset to the local WL to obtain the final WL index.
-   */
-  size_t num_seen_wls = 0;
-  auto target_tile_location = target_region.tile_locations.at(block_id);
-
-  for (const auto& region_tile_id : regions.keys()) {
-    if (region_id == region_tile_id) {
-      break;
-    }
-    num_seen_wls += regions[region_tile_id].num_wls;
-  }
-
-  // Calculate the number of WLs in the tiles before the target tile
-  for (const auto& region_block_id : target_region.tile_types.keys()) {
-    auto curr_tile_location = target_region.tile_locations.at(region_block_id);
-
-    if (curr_tile_location.x == target_tile_location.x &&
-        curr_tile_location.y < target_tile_location.y) {
-      num_seen_wls +=
-        tile_bit_maps.at(target_region.tile_types.at(region_block_id)).num_wls;
-    }
-  }
-
-  // Calculate the local WL index within the current tile
-  size_t tile_bit_index = size_t(bit_id);
-  size_t tile_num_bls =
-    tile_bit_maps.at(get_block_tile_name(region_id, block_id)).num_bls;
-  size_t tile_wl_num = tile_bit_index / tile_num_bls;
-
-  /* Return the final WL index */
-  return num_seen_wls + tile_wl_num;
+  const auto& bpi = block_info_[region_id][block_id];
+  size_t tile_wl = static_cast<size_t>(bit_id) / bpi.num_bls;
+  return bpi.global_wl_base + tile_wl;
 }
 
 reorder_bit_id_info BitstreamReorderMap::get_reorder_bit_id_info(
@@ -457,83 +360,12 @@ reorder_bit_id_info BitstreamReorderMap::get_reorder_bit_id_info(
   return reorder_bit_id_info;
 }
 
-BitstreamReorderBitId BitstreamReorderMap::get_reordered_id_from_wl_bl(
-  const size_t& wl_index, const size_t& bl_index) const {
-  BitstreamReorderRegionId target_region_id =
-    BitstreamReorderRegionId::INVALID();
-
-  size_t num_seen_wls = 0;
-  for (const auto& region_id : regions.keys()) {
-    if (wl_index >= num_seen_wls &&
-        wl_index < num_seen_wls + regions[region_id].num_wls) {
-      target_region_id = region_id;
-      break;
-    }
-    num_seen_wls += regions[region_id].num_wls;
+size_t BitstreamReorderMap::get_total_intersections() const {
+  size_t total = 0;
+  for (const auto& region : regions) {
+    total += region.num_wls * region.num_bls;
   }
-  VTR_ASSERT(target_region_id.is_valid());
-
-  auto target_block_id =
-    get_block_id_from_wl_bl(regions, tile_bit_maps, bl_index, wl_index);
-  VTR_ASSERT(target_block_id.is_valid());
-
-  int target_x = get_region_x_from_bl_index(regions, tile_bit_maps,
-                                            target_region_id, bl_index);
-
-  size_t num_seen_bls = 0;
-  for (const auto& block_id : regions[target_region_id].tile_types.keys()) {
-    if (regions[target_region_id].tile_locations.at(block_id).x == target_x) {
-      break;
-    }
-    const std::string& tile_type =
-      regions[target_region_id].tile_types.at(block_id);
-    if (regions[target_region_id].tile_locations.at(block_id).y == 0) {
-      num_seen_bls += tile_bit_maps.at(tile_type).num_bls;
-    }
-  }
-
-  for (const auto& block_id : regions[target_region_id].tile_types.keys()) {
-    if (regions[target_region_id].tile_locations.at(block_id).x == target_x) {
-      if (block_id == target_block_id) {
-        break;
-      }
-      num_seen_wls +=
-        tile_bit_maps.at(regions[target_region_id].tile_types.at(block_id))
-          .num_wls;
-    }
-  }
-
-  size_t intersection_num_offset = 0;
-  for (const auto& region_id : regions.keys()) {
-    for (const auto& block_region_id :
-         regions.at(region_id).tile_types.keys()) {
-      if (region_id == target_region_id && block_region_id == target_block_id) {
-        break;
-      }
-      const auto& tile_bit_map =
-        tile_bit_maps.at(regions.at(region_id).tile_types.at(block_region_id));
-      size_t block_num_intersections =
-        tile_bit_map.num_wls * tile_bit_map.num_bls;
-      intersection_num_offset += block_num_intersections;
-    }
-    if (region_id == target_region_id) {
-      break;
-    }
-  }
-
-  const std::string& target_tile_type =
-    regions.at(target_region_id).tile_types.at(target_block_id);
-  VTR_ASSERT(bl_index >= num_seen_bls);
-  VTR_ASSERT(wl_index >= num_seen_wls);
-  size_t region_bl_index = bl_index - num_seen_bls;
-  size_t region_wl_index = wl_index - num_seen_wls;
-  VTR_ASSERT(region_wl_index < tile_bit_maps.at(target_tile_type).num_wls);
-  VTR_ASSERT(region_bl_index < tile_bit_maps.at(target_tile_type).num_bls);
-
-  return BitstreamReorderBitId(intersection_num_offset +
-                               region_wl_index *
-                                 tile_bit_maps.at(target_tile_type).num_bls +
-                               region_bl_index);
+  return total;
 }
 
 } /* end namespace openfpga */

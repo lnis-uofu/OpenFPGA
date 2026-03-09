@@ -3,9 +3,9 @@
  *******************************************************************/
 #include <algorithm>
 #include <cmath>
-#include <filesystem>
 #include <fstream>
 #include <string>
+#include <filesystem>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -51,22 +51,24 @@ static void write_fabric_bitstream_to_text_file(
   size_t num_wls = bitstream_reorder_map.get_wl_address_size();
   size_t num_bls = bitstream_reorder_map.get_bl_address_size();
 
-  for (size_t wl_index = 0; wl_index < num_wls; wl_index++) {
-    for (size_t bl_index = 0; bl_index < num_bls; bl_index++) {
-      BitstreamReorderBitId reordered_bit_id =
-        bitstream_reorder_map.get_reordered_id_from_wl_bl(wl_index, bl_index);
-      VTR_ASSERT(reordered_bit_id.is_valid());
-      reorder_bit_id_info bit_info =
-        bitstream_reorder_map.get_reorder_bit_id_info(reordered_bit_id);
-      ConfigBitId config_bit_id = bit_info.config_bit_id;
-      if (config_bit_id == ConfigBitId::INVALID()) {
-        fp << '0';
-      } else {
-        fp << bitstream_manager.bit_value(original_fabric_bitstream.config_bit(
-          FabricBitId(static_cast<size_t>(config_bit_id))));
-      }
-    }
-    fp << std::endl;
+  // Allocate a WL×BL grid pre-filled with '0'.
+  // Then iterate all intersection indices in tile order (forward direction),
+  // filling in '1'/'0' for positions that carry config bits.
+  // Finally write each WL row as a single line.
+  std::vector<std::string> wl_rows(num_wls, std::string(num_bls, '0'));
+
+  size_t total = bitstream_reorder_map.get_total_intersections();
+  for (size_t ibit = 0; ibit < total; ++ibit) {
+    reorder_bit_id_info bit_info =
+      bitstream_reorder_map.get_reorder_bit_id_info(BitstreamReorderBitId(ibit));
+    if (!bit_info.config_bit_id.is_valid()) continue;
+    bool val = bitstream_manager.bit_value(original_fabric_bitstream.config_bit(
+      FabricBitId(static_cast<size_t>(bit_info.config_bit_id))));
+    wl_rows[bit_info.wl_index][bit_info.bl_index] = val ? '1' : '0';
+  }
+
+  for (const auto& row : wl_rows) {
+    fp << row << '\n';
   }
 }
 
