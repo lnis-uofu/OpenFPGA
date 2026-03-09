@@ -140,7 +140,7 @@ struct bitstream_reorder_tile_bit_info {
 // combined WL count equals the region's num_wls.
 struct tile_location {
   tile_location() : x(-1), y(-1) {}
-  tile_location(int x_, int y_) : x(x_), y(y_) {}
+  tile_location(int x_, int y_) noexcept : x(x_), y(y_) {}
   int x;  // column_id
   int y;  // position within the column
 };
