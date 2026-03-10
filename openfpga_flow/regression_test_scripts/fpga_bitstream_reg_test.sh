@@ -70,4 +70,4 @@ echo -e "Testing extracting mode bits for DSP blocks when generating bitstream";
 run-task fpga_bitstream/extract_dsp_mode_bit $@
 
 echo -e "Testing reordering bitstream"
-run-taks fpga_bitstream/reorder_bitstream $@
+run-task fpga_bitstream/reorder_bitstream $@
