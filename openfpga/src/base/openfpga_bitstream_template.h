@@ -201,12 +201,10 @@ int build_reorder_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
     cmd_context.option_value(cmd, opt_reorder_map));
 
   /* Build fabric bitstream here */
-  openfpga_ctx.mutable_reorder_fabric_bitstream() =
-    build_fabric_dependent_bitstream_with_reorder(
-      openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
-      openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(),
-      bitstream_reorder_map, cmd_context.option_value(cmd, opt_file),
-      cmd_context.option_enable(cmd, opt_verbose));
+  build_fabric_dependent_bitstream_with_reorder(
+    openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
+    bitstream_reorder_map, cmd_context.option_value(cmd, opt_file),
+    cmd_context.option_enable(cmd, opt_verbose));
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
