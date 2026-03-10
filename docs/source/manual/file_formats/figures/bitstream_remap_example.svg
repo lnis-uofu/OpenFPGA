@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="297mm"
+   height="210mm"
+   viewBox="0 0 297 210"
+   version="1.1"
+   id="svg1"
+   inkscape:export-filename="bitstream-reorder.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="7.3267486"
+     inkscape:cx="330.02361"
+     inkscape:cy="189.10162"
+     inkscape:window-width="3840"
+     inkscape:window-height="2089"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:export-bgcolor="#ffffffff" />
+  <defs
+     id="defs1">
+    <marker
+       style="overflow:visible"
+       id="ArrowWideHeavy"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Wide, heavy arrow"
+       markerWidth="0.75"
+       markerHeight="0.75"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         d="m 1,0 -3,3 h -2 l 3,-3 -3,-3 h 2 z"
+         id="path3" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="ArrowWideHeavy-8"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Wide, heavy arrow"
+       markerWidth="0.75"
+       markerHeight="0.75"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         d="m 1,0 -3,3 h -2 l 3,-3 -3,-3 h 2 z"
+         id="path3-8" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#ffffff;stroke:#000000;stroke-width:0.1;stroke-linecap:square;stroke-dasharray:none"
+       id="rect14"
+       width="109.85262"
+       height="42.323227"
+       x="6.500155"
+       y="42.756577" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#000000;stroke-width:0.4;stroke-linecap:square"
+       x="43.088402"
+       y="58.684155"
+       id="text10"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="58.684155">101011010101001110001101010010011</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#000080;stroke-width:0.4;stroke-linecap:square"
+       x="19.394814"
+       y="58.164635"
+       id="text9-6"><tspan
+         sodipodi:role="line"
+         id="tspan9-8"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';fill:#000080;stroke-width:0.4"
+         x="19.394814"
+         y="58.164635">Original Bitstream</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#000000;stroke-width:0.4;stroke-linecap:square"
+       x="43.088402"
+       y="50.706127"
+       id="text10-9"><tspan
+         sodipodi:role="line"
+         id="tspan10-5"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="50.706127">011011010101001110001101010010011</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#000080;stroke-width:0.4;stroke-linecap:square"
+       x="11.192736"
+       y="50.222328"
+       id="text9-6-8"><tspan
+         sodipodi:role="line"
+         id="tspan9-8-7"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';fill:#000080;stroke-width:0.4"
+         x="11.192736"
+         y="50.222328">Reordered Bitstream (1D)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#000080;stroke-width:0.4;stroke-linecap:square"
+       x="11.192736"
+       y="63.619324"
+       id="text9-6-8-3"><tspan
+         sodipodi:role="line"
+         id="tspan9-8-7-5"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';fill:#000080;stroke-width:0.4"
+         x="11.192736"
+         y="63.619324">Reordered Bitstream (2D)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#000000;stroke-width:0.4;stroke-linecap:square"
+       x="43.088402"
+       y="63.74651"
+       id="text10-7"><tspan
+         sodipodi:role="line"
+         id="tspan10-8"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="63.74651">10101101</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="67.62706"
+         id="tspan11">01010011</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="71.507607"
+         id="tspan12">10001101</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="75.388153"
+         id="tspan13">01001001</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.4"
+         x="43.088402"
+         y="79.2687"
+         id="tspan14">10000000</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#aa4400;stroke-width:0.4;stroke-linecap:square"
+       x="102.07721"
+       y="58.164635"
+       id="text9-6-3"><tspan
+         sodipodi:role="line"
+         id="tspan9-8-5"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';fill:#aa4400;stroke-width:0.4"
+         x="102.07721"
+         y="58.164635">[33bits]</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#aa4400;stroke-width:0.4;stroke-linecap:square"
+       x="102.07721"
+       y="50.230705"
+       id="text9-6-3-9"><tspan
+         sodipodi:role="line"
+         id="tspan9-8-5-8"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';fill:#aa4400;stroke-width:0.4"
+         x="102.07721"
+         y="50.230705">[33bits]</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;line-height:1.1;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';font-variant-position:sub;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;fill:#aa4400;stroke-width:0.4;stroke-linecap:square"
+       x="58.959515"
+       y="78.815758"
+       id="text9-6-3-4"><tspan
+         sodipodi:role="line"
+         id="tspan9-8-5-83"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold Italic';fill:#aa4400;stroke-width:0.4"
+         x="58.959515"
+         y="78.815758">[40bits]</tspan></text>
+    <path
+       style="fill:#aa4400;stroke:#aa0000;stroke-width:0.2;stroke-linecap:square;stroke-dasharray:none;marker-end:url(#ArrowWideHeavy)"
+       d="m 43.951167,55.747738 c 0.02553,-0.09363 1.71784,-4.254321 1.74338,-4.347949"
+       id="path14"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#aa4400;stroke:#aa0000;stroke-width:0.2;stroke-linecap:square;stroke-dasharray:none;marker-end:url(#ArrowWideHeavy-8)"
+       d="m 45.728335,55.747738 c -0.02553,-0.09363 -1.71784,-4.254321 -1.74338,-4.347949"
+       id="path14-2"
+       sodipodi:nodetypes="cc" />
+  </g>
+</svg>

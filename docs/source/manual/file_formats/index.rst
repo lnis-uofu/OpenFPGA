@@ -6,7 +6,7 @@ OpenFPGA widely uses XML format for interchangeable files
 
 .. _file_formats:
    File formats
- 
+
 .. toctree::
    :maxdepth: 2
 
@@ -19,6 +19,8 @@ OpenFPGA widely uses XML format for interchangeable files
    fabric_bitstream
 
    bitstream_setting
+
+   bitstream_remap
 
    fabric_key
 
