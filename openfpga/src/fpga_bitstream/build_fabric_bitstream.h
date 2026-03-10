@@ -27,10 +27,9 @@ FabricBitstream build_fabric_dependent_bitstream(
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const bool& verbose);
 
-FabricBitstream build_fabric_dependent_bitstream_with_reorder(
+void build_fabric_dependent_bitstream_with_reorder(
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& original_fabric_bitstream,
-  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const BitstreamReorderMap& bitstream_reorder_map,
   const std::string& output_file_name, const bool& verbose);
 
