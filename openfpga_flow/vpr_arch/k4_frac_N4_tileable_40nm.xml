@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Flagship Heterogeneous Architecture (No Carry Chains) for VTR 7.0.
 
   - 40 nm technology
-  - General purpose logic block: 
-    K = 4, N = 4, fracturable 4 LUTs (can operate as one 4-LUT or two 3-LUTs with all 3 inputs shared) 
+  - General purpose logic block:
+    K = 4, N = 4, fracturable 4 LUTs (can operate as one 4-LUT or two 3-LUTs with all 3 inputs shared)
     with optionally registered outputs
   - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
 
@@ -15,13 +15,13 @@
   Authors: Jason Luu, Jeff Goeders, Vaughn Betz
 -->
 <architecture>
-  <!-- 
-       ODIN II specific config begins 
-       Describes the types of user-specified netlist blocks (in blif, this corresponds to 
+  <!--
+       ODIN II specific config begins
+       Describes the types of user-specified netlist blocks (in blif, this corresponds to
        ".model [type_of_block]") that this architecture supports.
 
-       Note: Basic LUTs, I/Os, and flip-flops are not included here as there are 
-       already special structures in blif (.names, .input, .output, and .latch) 
+       Note: Basic LUTs, I/Os, and flip-flops are not included here as there are
+       already special structures in blif (.names, .input, .output, and .latch)
        that describe them.
   -->
   <models>
@@ -78,6 +78,74 @@
         <pinlocations pattern="spread"/>
       </sub_tile>
     </tile>
+    <tile name="clb_tile" area="53894">
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="12" equivalent="full"/>
+        <output name="O" num_pins="8" equivalent="none"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="top">clb.I clb.clk</loc>
+          <loc side="right">clb.O</loc>
+          <loc side="bottom"/>
+        </pinlocations>
+      </sub_tile>
+    </tile>
+    <tile name="io_left_tile" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="right">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
+    </tile>
+    <tile name="io_right_tile" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="top">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
+    </tile>
+    <tile name="io_top_tile" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="right">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
+    </tile>
+    <tile name="io_bottom_tile" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="top">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
+    </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
@@ -103,21 +171,41 @@
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
+    <fixed_layout name="FPGA44_CUSTOM_GRAPH" width="8" height="8">
+      <!--Default perimeter to 'io' blocks (then add 'EMPTY' blocks at corners)-->
+      <row type="io_top_tile" starty="H-2" priority="100"/>
+      <row type="io_bottom_tile" starty="1" priority="100"/>
+      <col type="io_left_tile" startx="1" priority="100"/>
+      <col type="io_right_tile" startx="W-2" priority="100"/>
+      <!-- Corner IOs -->
+      <single type="EMPTY" x="1" y="1" priority="110"/>
+      <single type="EMPTY" x="1" y="H-2" priority="110"/>
+      <single type="EMPTY" x="W-2" y="1" priority="110"/>
+      <single type="EMPTY" x="W-2" y="H-2" priority="110"/>
+      <!-- Empty -->
+      <row type="EMPTY" starty="H-1" priority="110"/>
+      <row type="EMPTY" starty="0" priority="110"/>
+      <col type="EMPTY" startx="0" priority="110"/>
+      <col type="EMPTY" startx="W-1" priority="110"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb_tile" priority="10"/>
+    </fixed_layout>
   </layout>
   <device>
-    <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 
+    <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM
 			     models. We are modifying the delay values however, to include metal C and R, which allows more architecture
 			     experimentation. We are also modifying the relative resistance of PMOS to be 1.8x that of NMOS
-			     (vs. Ian's 3x) as 1.8x lines up with Jeff G's data from a 45 nm process (and is more typical of 
-			     45 nm in general). I'm upping the Rmin_nmos from Ian's just over 6k to nearly 9k, and dropping 
+			     (vs. Ian's 3x) as 1.8x lines up with Jeff G's data from a 45 nm process (and is more typical of
+			     45 nm in general). I'm upping the Rmin_nmos from Ian's just over 6k to nearly 9k, and dropping
 			     RminW_pmos from 18k to 16k to hit this 1.8x ratio, while keeping the delays of buffers approximately
-			     lined up with Stratix IV. 
+			     lined up with Stratix IV.
 			     We are using Jeff G.'s capacitance data for 45 nm (in tech/ptm_45nm).
 			     Jeff's tables list C in for transistors with widths in multiples of the minimum feature size (45 nm).
 			     The minimum contactable transistor is 2.5 * 45 nm, so I need to multiply drive strength sizes in this file
 	                     by 2.5x when looking up in Jeff's tables.
 			     The delay values are lined up with Stratix IV, which has an architecture similar to this
-			     proposed FPGA, and which is also 40 nm 
+			     proposed FPGA, and which is also 40 nm
 			     C_ipin_cblock: input capacitance of a track buffer, which VPR assumes is a single-stage
 			     4x minimum drive strength buffer. -->
     <sizing R_minW_nmos="8926" R_minW_pmos="16067"/>
@@ -135,14 +223,14 @@
   <switchlist>
     <!-- VB: the mux_trans_size and buf_size data below is in minimum width transistor *areas*, assuming the purple
 	       book area formula. This means the mux transistors are about 5x minimum drive strength.
-	       We assume the first stage of the buffer is 3x min drive strength to be reasonable given the large 
+	       We assume the first stage of the buffer is 3x min drive strength to be reasonable given the large
 	       mux transistors, and this gives a reasonable stage ratio of a bit over 5x to the second stage. We assume
 	       the n and p transistors in the first stage are equal-sized to lower the buffer trip point, since it's fed
-	       by a pass transistor mux. We can then reverse engineer the buffer second stage to hit the specified 
+	       by a pass transistor mux. We can then reverse engineer the buffer second stage to hit the specified
 	       buf_size (really buffer area) - 16.2x minimum drive nmos and 1.8*16.2 = 29.2x minimum drive.
-	       I then took the data from Jeff G.'s PTM modeling of 45 nm to get the Cin (gate of first stage) and Cout 
+	       I then took the data from Jeff G.'s PTM modeling of 45 nm to get the Cin (gate of first stage) and Cout
 	       (diff of second stage) listed below.  Jeff's models are in tech/ptm_45nm, and are in min feature multiples.
-	       The minimum contactable transistor is 2.5 * 45 nm, so I need to multiply the drive strength sizes above by 
+	       The minimum contactable transistor is 2.5 * 45 nm, so I need to multiply the drive strength sizes above by
 	       2.5x when looking up in Jeff's tables.
 	       Finally, we choose a switch delay (58 ps) that leads to length 4 wires having a delay equal to that of SIV of 126 ps.
 	       This also leads to the switch being 46% of the total wire delay, which is reasonable. -->
@@ -151,7 +239,7 @@
     <switch type="mux" name="ipin_cblock" R="2231.5" Cout="0." Cin="1.47e-15" Tdel="7.247000e-11" mux_trans_size="1.222260" buf_size="auto"/>
   </switchlist>
   <segmentlist>
-    <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.  
+    <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
     <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
@@ -172,8 +260,8 @@
            If you need to register the I/O, define clocks in the circuit models
            These clocks can be handled in back-end
        -->
-      <!-- A mode denotes the physical implementation of an I/O 
-           This mode will be not packable but is mainly used for fabric verilog generation   
+      <!-- A mode denotes the physical implementation of an I/O
+           This mode will be not packable but is mainly used for fabric verilog generation
         -->
       <mode name="physical" disable_packing="true">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
@@ -191,7 +279,7 @@
       </mode>
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
-	     the delays to and from registers in the I/O (and generally I/Os are registered 
+	     the delays to and from registers in the I/O (and generally I/Os are registered
 	     today and that is when you timing analyze them.
 	     -->
       <mode name="inpad">
@@ -215,7 +303,7 @@
         </interconnect>
       </mode>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
-      <!-- IOs go on the periphery of the FPGA, for consistency, 
+      <!-- IOs go on the periphery of the FPGA, for consistency,
           make it physically equivalent on all sides so that only one definition of I/Os is needed.
           If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
         -->
@@ -224,21 +312,21 @@
     </pb_type>
     <!-- Define I/O pads ends -->
     <!-- Define general purpose logic block (CLB) begin -->
-    <!--- Area calculation: Total Stratix IV tile area is about 8100 um^2, and a minimum width transistor 
+    <!--- Area calculation: Total Stratix IV tile area is about 8100 um^2, and a minimum width transistor
 	   area is 60 L^2 yields a tile area of 84375 MWTAs.
-	   Routing at W=300 is 30481 MWTAs, leaving us with a total of 53000 MWTAs for logic block area 
+	   Routing at W=300 is 30481 MWTAs, leaving us with a total of 53000 MWTAs for logic block area
 	   This means that only 37% of our area is in the general routing, and 63% is inside the logic
 	   block. Note that the crossbar / local interconnect is considered part of the logic block
 	   area in this analysis. That is a lower proportion of of routing area than most academics
 	   assume, but note that the total routing area really includes the crossbar, which would push
-	   routing area up significantly, we estimate into the ~70% range. 
+	   routing area up significantly, we estimate into the ~70% range.
 	   -->
     <pb_type name="clb">
       <input name="I" num_pins="12" equivalent="full"/>
       <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
-      <!-- Describe fracturable logic element.  
-             Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
+      <!-- Describe fracturable logic element.
+             Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs.
              The outputs of the fracturable logic element can be optionally registered
         -->
       <pb_type name="fle" num_pb="4">
@@ -422,13 +510,13 @@
         <!-- 6-LUT mode definition end -->
       </pb_type>
       <interconnect>
-        <!-- We use a full crossbar to get logical equivalence at inputs of CLB 
+        <!-- We use a full crossbar to get logical equivalence at inputs of CLB
 		     The delays below come from Stratix IV. the delay through a connection block
-		     input mux + the crossbar in Stratix IV is 167 ps. We already have a 72 ps 
+		     input mux + the crossbar in Stratix IV is 167 ps. We already have a 72 ps
 		     delay on the connection block input mux (modeled by Ian Kuon), so the remaining
-		     delay within the crossbar is 95 ps. 
+		     delay within the crossbar is 95 ps.
 		     The delays of cluster feedbacks in Stratix IV is 100 ps, when driven by a LUT.
-		     Since all our outputs LUT outputs go to a BLE output, and have a delay of 
+		     Since all our outputs LUT outputs go to a BLE output, and have a delay of
 		     25 ps to do so, we subtract 25 ps from the 100 ps delay of a feedback
 		     to get the part that should be marked on the crossbar.	 -->
         <complete name="crossbar" input="clb.I fle[3:0].out" output="fle[3:0].in">
@@ -437,8 +525,8 @@
         </complete>
         <complete name="clks" input="clb.clk" output="fle[3:0].clk">
         </complete>
-        <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
-               By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs, 
+        <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.
+               By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs,
                then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                naive specification).
           -->

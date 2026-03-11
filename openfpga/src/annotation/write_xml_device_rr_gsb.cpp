@@ -50,21 +50,34 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
         continue;
       }
 
-      enum e_side chan_side = rr_gsb.get_cb_chan_side(gsb_side);
+      enum e_rr_type driver_node_type = rr_graph.node_type(driver_node);
+
+      int distance_x =
+        std::abs(static_cast<int>(rr_graph.node_xlow(driver_node)) -
+                 static_cast<int>(rr_graph.node_xlow(cur_rr_node)));
+      int distance_y =
+        std::abs(static_cast<int>(rr_graph.node_ylow(driver_node)) -
+                 static_cast<int>(rr_graph.node_ylow(cur_rr_node)));
+      int manhattan_distance = distance_x + distance_y;
+
+      enum Direction node_direction = rr_graph.node_direction(driver_node);
+      int driver_node_index = rr_graph.node_track_num(driver_node);
+      enum e_side chan_side;
+      if (driver_node_type == e_rr_type::CHANX) {
+        chan_side = (node_direction == Direction::INC) ? LEFT : RIGHT;
+      } else if (driver_node_type == e_rr_type::CHANY) {
+        chan_side = (node_direction == Direction::INC) ? BOTTOM : TOP;
+      }
+
       SideManager chan_side_manager(chan_side);
 
-      /* For channel node, we do not know the node direction
-       * But we are pretty sure it is either IN_PORT or OUT_PORT
-       * So we just try and find what is valid
-       */
-      int driver_node_index =
-        rr_gsb.get_chan_node_index(chan_side, driver_node);
-      /* We must have a valide node index */
-      VTR_ASSERT(-1 != driver_node_index);
+      // int driver_node_index = -1;
+      // driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
+      const RRSegmentId& des_segment_id = rr_graph.node_segment(driver_node);
 
-      const RRSegmentId& des_segment_id =
-        rr_gsb.get_chan_node_segment(chan_side, driver_node_index);
-
+      // Write to a file in the following format:
+      // <driver_node type="CHANX" side="TOP" index="0" node_id="0"
+      // segment_id="0"/>
       fp << "\t\t<driver_node type=\""
          << rr_node_typename[rr_graph.node_type(driver_node)] << "\" side=\""
          << chan_side_manager.to_string();
@@ -72,7 +85,8 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
         fp << "\" node_id=\"" << size_t(driver_node);
       }
       fp << "\" index=\"" << driver_node_index << "\" segment_id=\""
-         << size_t(des_segment_id) << "\"/>" << std::endl;
+         << size_t(des_segment_id) << "\" tap=\"" << manhattan_distance
+         << "\"/>" << std::endl;
     }
     fp << "\t</" << rr_node_typename[rr_graph.node_type(cur_rr_node)] << ">"
        << std::endl;
@@ -156,12 +170,20 @@ static void write_rr_gsb_chan_connection_to_xml(
         VTR_ASSERT(-1 != driver_node_index);
         SideManager driver_side(driver_node_side);
 
+        int distance_x =
+          std::abs(static_cast<int>(rr_graph.node_xlow(driver_rr_node)) -
+                   static_cast<int>(rr_graph.node_xlow(cur_rr_node)));
+        int distance_y =
+          std::abs(static_cast<int>(rr_graph.node_ylow(driver_rr_node)) -
+                   static_cast<int>(rr_graph.node_ylow(cur_rr_node)));
+        int manhattan_distance = distance_x + distance_y;
+
         if (e_rr_type::OPIN == rr_graph.node_type(driver_rr_node)) {
           SideManager grid_side(
             get_rr_graph_single_node_side(rr_graph, driver_rr_node));
           fp << "\t\t<driver_node type=\"" << rr_node_typename[e_rr_type::OPIN]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
-             << driver_node_index;
+             << driver_node_index << "\" tap=\"" << manhattan_distance;
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node) << "\" grid_side=\""
                << grid_side.to_string() << "\" sb_module_pin_name=\""
@@ -176,7 +198,7 @@ static void write_rr_gsb_chan_connection_to_xml(
           fp << "\t\t<driver_node type=\""
              << rr_node_typename[rr_graph.node_type(driver_rr_node)]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
-             << driver_node_index;
+             << driver_node_index << "\" tap=\"" << manhattan_distance;
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" segment_id=\"" << size_t(des_segment_id)
