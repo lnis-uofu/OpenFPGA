@@ -1,7 +1,8 @@
 # !!! IMPRORTANT
 # This script is designed to test the option --no_time_stamp in related commands
 # It can NOT be used an example script to achieve other objectives
-#--write_rr_graph example_rr_graph.xml
+ext_exec --command "rm -rf ${OPENFPGA_OUTPUT_DIR}/*"
+
 vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling route
 
 # Read OpenFPGA architecture definition
@@ -48,7 +49,7 @@ repack #--verbose
 build_architecture_bitstream --verbose --write_file ${OPENFPGA_OUTPUT_DIR}/fabric_independent_bitstream.xml --no_time_stamp
 
 # Build fabric-dependent bitstream
-build_fabric_bitstream --verbose 
+build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml --format xml --no_time_stamp
