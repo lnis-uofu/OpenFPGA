@@ -18,13 +18,15 @@ namespace openfpga {
 
 size_t find_mux_default_path_id(const CircuitLibrary& circuit_lib,
                                 const CircuitModelId& mux_model,
-                                const size_t& mux_size);
+                                const size_t& mux_size,
+                                const std::string& unused_mux_config);
 
 std::vector<bool> build_mux_bitstream(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& mux_model,
                                       const MuxLibrary& mux_lib,
                                       const size_t& mux_size,
-                                      const int& path_id);
+                                      const int& path_id,
+                                      const std::string& unused_mux_config);
 
 } /* end namespace openfpga */
 
