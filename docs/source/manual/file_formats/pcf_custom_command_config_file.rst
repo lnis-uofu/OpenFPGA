@@ -113,11 +113,26 @@ The following syntax are applicable to the XML definition under the root node ``
 
   .. note::
 
-    Segment option is optional when the type is set to ``decimal``.
-    It is used to split the mode and rearrange the mode bits:
+   The ``segment`` option is optional when the type is set to ``decimal``.
+   It is used to split the mode and rearrange the mode bits:
 
-    - **range**: The range of mode bits to be extracted.
-    - **offset**: The offset applied during rearrangement.
+   - **range**: The range of mode bits to be extracted. The range must be
+     valid within ``num_bits``. For example, if ``num_bits = 16``, the
+     acceptable range is ``[0:15]``.
+
+   - **offset**: The offset index applied to the resulting data. The offset
+     must indicate a valid starting index within ``num_bits`` and a valid
+     ending index within the total width of the specified range. For example,
+     in the following context, when the input data is ``111100``, the
+     resulting data will be ``100111``.
+
+     .. code-block:: xml
+
+        <option name="delay" type="decimal" num_bits="6" max="32" little_endian="false" offset="0">
+          <segment range="[0:1]" offset="4"/>
+          <segment range="[2:2]" offset="3"/>
+          <segment range="[3:5]" offset="0"/>
+        </option>
 
   The following diagram illustrates how to rearrange mode bits with the segment option:
 
