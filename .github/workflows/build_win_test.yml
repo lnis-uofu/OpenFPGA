@@ -1,0 +1,130 @@
+name: 'build-win'
+
+on:
+  push:
+
+jobs:
+  
+  build-msys2:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - msystem: mingw64
+            env: x86_64
+            runner: windows-2022
+          - msystem: ucrt64
+            env: ucrt-x86_64
+            runner: windows-2022
+          # clang version 17.0.6
+          # Target: x86_64-w64-windows-gnu
+          # Thread model: posix
+          # D:/a/OpenFPGA/OpenFPGA/vtr-verilog-to-routing/libs/librrgraph/src/base/rr_graph_storage.cpp:425:10: note: in instantiation of function template specialization 'std::sort<edge_sort_iterator, edge_compare_dest_node>' requested here std::sort(
+          # C:/msys64/clang64/include/c++/v1/__algorithm/sort.h:647:5: error: indirection requires pointer operand ('const edge_sort_iterator' invalid)*__begin = _Ops::__iter_move(__pivot_pos);
+          # - msystem: clang64
+          #   env: clang-x86_64
+          #   runner: windows-2022
+
+    runs-on: ${{ matrix.runner }}
+
+    defaults:
+      run:
+        shell: msys2 {0}
+        #shell: C:\msys64\msys2_shell.cmd -mingw64 -defterm -here -no-start {0}
+
+    steps:
+
+    - name: Cancel Previous
+      uses: styfle/cancel-workflow-action@0.12.1
+      with:
+        access_token: ${{ github.token }}
+
+    - name: Checkout Repo
+      uses: actions/checkout@v4.1.1
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        path-type: minimal
+        update: true
+        release: false
+        install: >-
+          base-devel
+          git
+          wget
+          mingw-w64-${{ matrix.env }}-toolchain
+          mingw-w64-${{ matrix.env }}-cmake
+          mingw-w64-${{ matrix.env }}-tcl
+          mingw-w64-${{ matrix.env }}-zlib
+          mingw-w64-${{ matrix.env }}-swig
+          mingw-w64-${{ matrix.env }}-python
+
+    - name: Show Shell Configuration
+      run: |
+        which git && git --version || true
+        which cmake && cmake --version || true
+        which make && make --version || true
+        which python && python --version || true
+        which ninja && ninja --version || true
+        which tclsh && echo 'puts [info patchlevel];exit 0' | tclsh || true
+
+    - name: Print Compiler Info
+      run: |
+        printf "\n"
+        printf "$(which gcc)\n"
+        printf "$(gcc -v)\n"
+        printf "\n"
+        printf "$(which g++)\n"
+        printf "$(g++ -v)\n"
+        printf "\n"
+        printf "$(which ld)\n"
+        printf "$(ld -v)\n"
+
+    - name: Dump GitHub Context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+    - name: Print Repo HEAD
+      run: |
+        echo && echo "git last log" && git log -1
+
+    # https://sourceforge.net/p/mingw/mailman/message/5690922/
+    # https://github.com/capnproto/capnproto/issues/1458
+    - name: Build
+      run: |
+        export COMMIT_SHA1=$(git rev-parse --short HEAD)
+        echo "COMMIT_SHA1=${COMMIT_SHA1}" >> $GITHUB_ENV
+        printf "COMMIT_SHA1=${COMMIT_SHA1}"
+        #
+        export SOURCE_DIR=${PWD}
+        echo "SOURCE_DIR=${SOURCE_DIR}" >> $GITHUB_ENV
+        #
+        export BUILD_DIR=${PWD}/build
+        echo "BUILD_DIR=${BUILD_DIR}" >> $GITHUB_ENV
+        #
+        export INSTALL_DIR=${SOURCE_DIR}/install
+        echo "INSTALL_DIR=${INSTALL_DIR}" >> $GITHUB_ENV
+        #
+        mkdir -p ${SOURCE_DIR}/build
+        #
+        printf "\n\n >>> hotfixes <<<\n"
+        find ./vtr-verilog-to-routing/libs/libvtrutil/src/vtr_util.cpp -type f -exec sed -i 's-getdelim(-0;//-g' {} \;
+        find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/canonical/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/c++header/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        export CMAKE_SOURCE_DIR_PATH_W=$(cygpath -w "${PWD}" | sed 's;\\;/;g')
+        echo "${CMAKE_SOURCE_DIR_PATH_W}"
+        export MSYS2_ARG_CONV_EXCL="../EXTERNAL/capnproto/c++/src/capnp/capnp.exe;${CMAKE_SOURCE_DIR_PATH_W}/build/vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/capnp/capnpc-c++.exe:."
+        echo "${MSYS2_ARG_CONV_EXCL}"
+        #
+        printf "\n\n >>> cmake configure <<<\n"
+        cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DOPENFPGA_IPO_BUILD=off -DOPENFPGA_WITH_YOSYS=OFF -DOPENFPGA_WITH_YOSYS_PLUGIN=OFF -DOPENFPGA_WITH_TEST=OFF -DOPENFPGA_WITH_VERSION=OFF -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DVTR_IPO_BUILD=off -DHAVE_STRUCT_TIMESPEC=1 -DABC_USE_STDINT_H=1 -S ${SOURCE_DIR} -B ${BUILD_DIR}
+        #
+        printf "\n\n >>> build and install <<<\n"
+        make install -C ${BUILD_DIR} -j$(nproc)
