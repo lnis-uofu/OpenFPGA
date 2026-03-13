@@ -118,6 +118,7 @@ jobs:
         find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
         find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/canonical/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
         find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/c++header/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        find ./vtr-verilog-to-routing/libs/EXTERNAL/CMakeLists.txt -type f -exec sed -i 's-add_subdirectory(libsdcparse)-#add_subdirectory(libsdcparse)-g' {} \;
         export CMAKE_SOURCE_DIR_PATH_W=$(cygpath -w "${PWD}" | sed 's;\\;/;g')
         echo "${CMAKE_SOURCE_DIR_PATH_W}"
         export MSYS2_ARG_CONV_EXCL="../EXTERNAL/capnproto/c++/src/capnp/capnp.exe;${CMAKE_SOURCE_DIR_PATH_W}/build/vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/capnp/capnpc-c++.exe:."
