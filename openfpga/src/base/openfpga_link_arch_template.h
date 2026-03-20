@@ -117,7 +117,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    cmd_context.option_enable(cmd, opt_verbose), in_edges);
+    in_edges, cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
@@ -125,7 +125,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
       cmd_context.option_enable(cmd, opt_verbose), in_edges);
     sort_device_rr_gsb_ipin_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
-      cmd_context.option_enable(cmd, opt_verbose), in_edges);
+      in_edges, cmd_context.option_enable(cmd, opt_verbose));
   }
 
   /* Build multiplexer library */

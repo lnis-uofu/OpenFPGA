@@ -107,6 +107,10 @@ static bool is_sb_node_mirror(const RRGraphView& rr_graph,
     return false;
   }
   if (true == is_short_conkt) {
+    /* Since, both are pass wires,
+     * The two node should be equivalent
+     * we can return here
+     */
     return true;
   }
 

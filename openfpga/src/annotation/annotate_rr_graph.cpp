@@ -419,8 +419,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
                             const bool& include_clock,
-                            const bool& verbose_output,
-                            const RRGraphInEdges& in_edges) {
+                            const RRGraphInEdges& in_edges,
+                            const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
     "graph");
@@ -478,8 +478,8 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
-                                           const bool& verbose_output,
-                                           const RRGraphInEdges& in_edges) {
+                                           const RRGraphInEdges& in_edges,
+                                           const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Sort incoming edges for each routing track output node of General Switch "
     "Block(GSB)");
@@ -524,8 +524,8 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
  *******************************************************************/
 void sort_device_rr_gsb_ipin_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
-                                           const bool& verbose_output,
-                                           const RRGraphInEdges& in_edges) {
+                                           const RRGraphInEdges& in_edges,
+                                           const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Sort incoming edges for each input pin node of General Switch Block(GSB)");
 
