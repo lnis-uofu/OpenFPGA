@@ -37,7 +37,8 @@ static void build_switch_block_mux_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& mux_mem_block,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
-  const RRGraphView& rr_graph, const RRNodeId& cur_rr_node,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRNodeId& cur_rr_node,
   const std::vector<RRNodeId>& drive_rr_nodes,
   const std::vector<RREdgeId>& driver_rr_edges, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
@@ -61,7 +62,7 @@ static void build_switch_block_mux_bitstream(
   /* Find the circuit model id of the mux, we need its design technology which
    * matters the bitstream generation */
   std::vector<RRSwitchId> driver_switches =
-    get_rr_graph_driver_switches(rr_graph, cur_rr_node);
+    get_rr_graph_driver_switches(rr_graph, in_edges, cur_rr_node);
   VTR_ASSERT_MSG(1 <= driver_switches.size(),
                  ("There should be at least one driver switch for " +
                   std::to_string(size_t(cur_rr_node)))
@@ -134,20 +135,6 @@ static void build_switch_block_mux_bitstream(
   VTR_ASSERT(
     (DEFAULT_PATH_ID == path_id) ||
     ((DEFAULT_PATH_ID < path_id) && (path_id < (int)datapath_mux_size)));
-
-  /* Find the circuit model id of the mux, we need its design technology which
-   * matters the bitstream generation */
-  std::vector<RRSwitchId> driver_switches;
-  for (const RREdgeId& edge : driver_rr_edges) {
-    RRSwitchId sw = RRSwitchId(rr_graph.edge_switch(edge));
-    if (driver_switches.end() ==
-        std::find(driver_switches.begin(), driver_switches.end(), sw)) {
-      driver_switches.push_back(sw);
-    }
-  }
-  VTR_ASSERT(1 == driver_switches.size());
-  CircuitModelId mux_model =
-    device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
   /* Generate bitstream depend on both technology and structure of this MUX */
   std::vector<bool> mux_bitstream =
@@ -258,10 +245,11 @@ static void build_switch_block_interc_bitstream(
     /* This is a routing multiplexer! Generate bitstream */
     build_switch_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, module_name_map,
-      circuit_lib, mux_lib, rr_graph, cur_rr_node, driver_rr_nodes,
+      circuit_lib, mux_lib, rr_graph, in_edges, cur_rr_node, driver_rr_nodes,
       gsb_edges.get_chan_node_in_edges(rr_gsb, in_edges, chan_side,
                                        chan_node_id),
-      atom_ctx, device_annotation, routing_annotation, unused_mux_config, verbose);
+      atom_ctx, device_annotation, routing_annotation, unused_mux_config,
+      verbose);
   } /*Nothing should be done else*/
 }
 
@@ -323,7 +311,8 @@ static void build_connection_block_mux_bitstream(
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
   const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
-  const size_t& ipin_index, const std::string& unused_mux_config, const bool& verbose) {
+  const size_t& ipin_index, const std::string& unused_mux_config,
+  const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
   std::vector<RREdgeId> driver_rr_edges = gsb_edges.get_ipin_node_in_edges(
@@ -468,7 +457,8 @@ static void build_connection_block_interc_bitstream(
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
   const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
-  const size_t& ipin_index, const std::string& unused_mux_config, const bool& verbose) {
+  const size_t& ipin_index, const std::string& unused_mux_config,
+  const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
 
   VTR_LOGV(verbose, "\tGenerating bitstream for IPIN '%lu'. Details: %s\n",
@@ -500,7 +490,8 @@ static void build_connection_block_interc_bitstream(
     build_connection_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, module_name_map,
       circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
-      rr_graph, in_edges, rr_gsb, gsb_edges, cb_ipin_side, ipin_index, unused_mux_config, verbose);
+      rr_graph, in_edges, rr_gsb, gsb_edges, cb_ipin_side, ipin_index,
+      unused_mux_config, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -523,8 +514,8 @@ static void build_connection_block_bitstream(
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type, const std::string& unused_mux_config,
-  const bool& verbose) {
+  const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const std::string& unused_mux_config, const bool& verbose) {
   /* Find routing multiplexers on the sides of a Connection block where IPIN
    * nodes locate */
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
@@ -683,7 +674,8 @@ static void build_connection_block_bitstreams(
         bitstream_manager, cb_configurable_block, module_manager,
         module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
         routing_annotation, rr_graph, in_edges, rr_gsb,
-        device_rr_gsb.get_gsb_edges(ix, iy), cb_type, unused_mux_config, verbose);
+        device_rr_gsb.get_gsb_edges(ix, iy), cb_type, unused_mux_config,
+        verbose);
 
       VTR_LOGV(verbose, "\tDone\n");
     }
@@ -705,8 +697,8 @@ void build_routing_bitstream(
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGraphInEdges& in_edges, const DeviceRRGSB& device_rr_gsb,
-  const bool& compact_routing_hierarchy,
-  const std::string& unused_mux_config, const bool& verbose) {
+  const bool& compact_routing_hierarchy, const std::string& unused_mux_config,
+  const bool& verbose) {
   /* Generate bitstream for each switch blocks
    * To organize the bitstream in blocks, we create a block for each switch
    * block and give names which are same as they are in top-level module
