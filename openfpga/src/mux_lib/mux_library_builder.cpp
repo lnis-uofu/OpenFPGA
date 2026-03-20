@@ -51,7 +51,21 @@ static void build_routing_arch_mux_library(
         /* Find the circuit_model for multiplexers in connection blocks */
         std::vector<RRSwitchId> driver_switches =
           get_rr_graph_driver_switches(rr_graph, in_edges, node);
-        VTR_ASSERT(1 == driver_switches.size());
+        VTR_ASSERT_MSG(1 <= driver_switches.size(),
+                       ("There should be at least one driver switch for " +
+                        std::to_string(size_t(node)))
+                         .c_str());
+        /* Iterate over driver switches to find a common switch that can be used
+         */
+        CircuitModelId switch_index =
+          vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
+        for (size_t i = 1; i < driver_switches.size(); ++i) {
+          VTR_ASSERT_MSG(vpr_device_annotation.rr_switch_circuit_model(
+                           driver_switches[i]) == switch_index,
+                         ("All driver switches of " +
+                          std::to_string(size_t(node)) + " must be the same")
+                           .c_str());
+        }
         const CircuitModelId& rr_switch_circuit_model =
           vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
 
