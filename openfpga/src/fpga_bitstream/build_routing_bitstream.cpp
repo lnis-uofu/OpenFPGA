@@ -39,7 +39,7 @@ static void build_switch_block_mux_bitstream(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
   const RRNodeId& cur_rr_node, const std::vector<RRNodeId>& drive_rr_nodes,
-  const std::vector<RREdgeId>& driver_rr_edges, const AtomContext& atom_ctx,
+  const std::vector<RREdgeId>& /*driver_rr_edges*/, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation,
   const std::string& unused_mux_config, const bool& verbose) {
