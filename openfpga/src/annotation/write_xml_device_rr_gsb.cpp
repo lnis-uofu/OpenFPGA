@@ -18,8 +18,21 @@
 namespace openfpga {
 
 /***************************************************************************************
+ * Calculate the Manhattan distance between two rr_nodes
+ ***************************************************************************************/
+static int calculate_manhattan_distance(const RRGraphView& rr_graph,
+                                        const RRNodeId& node1,
+                                        const RRNodeId& node2) {
+  int distance_x = std::abs(static_cast<int>(rr_graph.node_xlow(node1)) -
+                            static_cast<int>(rr_graph.node_xlow(node2)));
+  int distance_y = std::abs(static_cast<int>(rr_graph.node_ylow(node1)) -
+                            static_cast<int>(rr_graph.node_ylow(node2)));
+  return distance_x + distance_y;
+}
+
+/***************************************************************************************
  * Output the input pin of Programmable Blocks, e.g., CLBs inside a GSB to XML
- *format
+ * format
  ***************************************************************************************/
 static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
                                                 const RRGraphView& rr_graph,
@@ -52,13 +65,8 @@ static void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
 
       enum e_rr_type driver_node_type = rr_graph.node_type(driver_node);
 
-      int distance_x =
-        std::abs(static_cast<int>(rr_graph.node_xlow(driver_node)) -
-                 static_cast<int>(rr_graph.node_xlow(cur_rr_node)));
-      int distance_y =
-        std::abs(static_cast<int>(rr_graph.node_ylow(driver_node)) -
-                 static_cast<int>(rr_graph.node_ylow(cur_rr_node)));
-      int manhattan_distance = distance_x + distance_y;
+      int manhattan_distance =
+        calculate_manhattan_distance(rr_graph, driver_node, cur_rr_node);
 
       enum Direction node_direction = rr_graph.node_direction(driver_node);
       int driver_node_index = rr_graph.node_track_num(driver_node);
