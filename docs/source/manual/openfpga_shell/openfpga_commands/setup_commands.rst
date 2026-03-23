@@ -282,6 +282,10 @@ build_fabric
 
     Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks, as depicted in :numref:`fig_group_config_block_overview`. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module. When enabled, as illustrated in :numref:`fig_group_config_block_hierarchy`, the physical memory block locates under a CLB, driving a number of logical memory blocks which are close to the programmable resources. The logical memory blocks contain only pass-through wires which can be optimized out during physical design phase.
 
+  .. option:: --group_routing
+
+    Adding this option will combine connection block and switch block into a single module (Currently named as `SB_*__*_`). The IPIN and OPIN of the grid makes connection to SB directly instead of going through a connection block. This is helpful, when IPIN is connected to CHANX and CHANY together.
+
   .. _fig_group_config_block_overview:
 
   .. figure:: ./figures/group_config_block_overview.png
