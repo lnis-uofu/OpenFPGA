@@ -181,7 +181,7 @@ static void organize_top_module_tile_memory_modules(
       }
     }
 
-    if ( false == group_routing ) {
+    if (false == group_routing) {
       /* Try to find and add CBX and CBY */
       organize_top_module_tile_cb_modules(
         module_manager, top_module, circuit_lib, sram_orgz_type, sram_model,
@@ -193,7 +193,6 @@ static void organize_top_module_tile_memory_modules(
         cb_instance_ids.at(e_rr_type::CHANY), device_rr_gsb, rr_gsb,
         e_rr_type::CHANY, compact_routing_hierarchy);
     }
-
   }
 
   /* Find the module name for this type of grid */

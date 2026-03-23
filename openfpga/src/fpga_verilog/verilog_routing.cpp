@@ -94,13 +94,15 @@ static void print_verilog_routing_connection_box_unique_module(
   }
 
   /* Create a Verilog Module based on the circuit model, and add to module
-  * manager */
- std::string cb_module_name = module_name_map.name(orig_module_name);
- ModuleId cb_module = module_manager.find_module(cb_module_name);
- // VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
- if ( false == module_manager.valid_module_id(cb_module) ) {
-   VTR_LOG("Skip generating Verilog module for connection block [%d][%d] due to invalid module id!\n",
-    rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+   * manager */
+  std::string cb_module_name = module_name_map.name(orig_module_name);
+  ModuleId cb_module = module_manager.find_module(cb_module_name);
+  // VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+  if (false == module_manager.valid_module_id(cb_module)) {
+    VTR_LOG(
+      "Skip generating Verilog module for connection block [%d][%d] due to "
+      "invalid module id!\n",
+      rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
     return;
   }
 
