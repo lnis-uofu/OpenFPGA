@@ -292,7 +292,19 @@ static void build_switch_block_bitstream(
         routing_annotation, rr_gsb, gsb_edges, side_manager.get_side(), itrack,
         unused_mux_config, verbose);
     }
-  }
+    if (true == module_manager.group_routing()) {
+      for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side()); ++inode) {
+        VTR_LOGV(verbose, "\tGenerating bitstream for IPIN at '%s' side\n",
+                side_manager.to_string().c_str());
+
+        build_connection_block_interc_bitstream(
+          bitstream_manager, sb_config_block, module_manager, module_name_map,
+          circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
+          rr_graph, in_edges, rr_gsb, gsb_edges, side_manager.get_side(), inode,
+          unused_mux_config, verbose);
+        }
+      }
+    }
 }
 
 /********************************************************************

@@ -76,7 +76,7 @@ module and2_top_formal_verification_random_tb;
 	always@(negedge clk[0]) begin
 		if (1'b1 == sim_start[0]) begin
 			sim_start[0] <= ~sim_start[0];
-		end else
+		end else 
 begin
 			if(!(c_gfpga === c_bench) && !(c_bench === 1'bx)) begin
 				c_flag <= 1'b1;
@@ -97,7 +97,7 @@ begin
 // ----- Begin output waveform to VCD file-------
 	initial begin
 		$dumpfile("and2_formal.vcd");
-		$dumpvars(0, and2_top_formal_verification_random_tb);
+		$dumpvars(1, and2_top_formal_verification_random_tb);
 	end
 // ----- END output waveform to VCD file -------
 

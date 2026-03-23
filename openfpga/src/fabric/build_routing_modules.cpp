@@ -993,7 +993,7 @@ static void build_connection_block_interc_modules(
     build_connection_block_mux_module(
       module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
       rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
-      input_port_to_module_nets, group_config_block, false);
+      input_port_to_module_nets, group_config_block, module_manager.group_routing());
   } /*Nothing should be done else*/
 }
 
