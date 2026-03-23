@@ -63,7 +63,7 @@ The attributes of the IPIN tag are as follows:
 
 .. option:: index="<IPIN_INDEX>"
 
-   The index of the IPIN on the grid. This is similar to the ptc number of the IPIN.
+   The index of the IPIN in the RRGSB datastrcuture.
 
 
 .. option:: mux_size="<MUX_SIZE>"
@@ -95,6 +95,15 @@ The attributes of the driver_node tag are as follows:
 .. option:: tap="<TAP_DISTANCE>"
 
     The tap distance of the driver channel/routing wire to the current IPIN. This is used to identify the relative position of the driver channel/routing wire to the current IPIN.
+    tap = abs(x1-x2) + abs(y1-y2), where (x1,y1) and (x2,y2) are the coordinates of the driver channel/routing wire and the current IPIN respectively.
+
+.. code-block:: text
+
+    Driver
+    (x1,y1)
+      ●---------------●--------
+                      | Destination
+                        (x2,y2)
 
 
 Switch Block GSB Format
@@ -113,7 +122,7 @@ An example switch block representation is shown below:
        ┌────►  Block   │ DRIVER_DIRECTION
        │    │          │ CHANNEL_INDEX
        │    └────▲─────┘
-       │         │CHANX
+       │         │CHANY
        │OPIN     │TOP
 
 
@@ -143,9 +152,10 @@ The attributes of the CHANX and CHANY tags are as follows:
 
 .. option:: index="<CHANNEL_INDEX>"
 
-    The starting index/ptc number of the driver channel/routing wire.
+    The starting index of the driver channel/routing wire from RRGSB datastructure.
 
 .. option:: mux_size="<MUX_SIZE>"
+
     The size of the multiplexer for the channel. Count of number of drivers connected to this channel/routing wire.
 
 
@@ -168,4 +178,13 @@ The attributes of the driver_node tag are the same as described in the connectio
 
 .. option:: tap="<TAP_DISTANCE>"
 
-    The tap distance of the driver channel/routing wire to the current channel. This is used to identify the relative position of the driver channel/routing wire to the current channel. In case of OPIN drivers, the tap distance is set to 0.
+    The tap distance of the driver channel/routing wire to the current channel. This is used to identify the relative position of the driver channel/routing wire to the current channel. In case of OPIN drivers, the tap distance is set to 0. This is used to identify the relative position of the driver channel/routing wire to the current IPIN.
+    tap = abs(x1-x2) + abs(y1-y2), where (x1,y1) and (x2,y2) are the coordinates of the driver channel/routing wire and the current IPIN respectively.
+
+.. code-block:: text
+
+    Driver
+    (x1,y1)
+      ●---------------●--------
+                      | Destination
+                        (x2,y2)
