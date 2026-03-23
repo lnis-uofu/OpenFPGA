@@ -18,6 +18,7 @@ namespace openfpga {
 
 BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
                                         const OpenfpgaContext& openfpga_ctx,
+                                        const std::string& unused_mux_config,
                                         const bool& verbose);
 
 } /* end namespace openfpga */
