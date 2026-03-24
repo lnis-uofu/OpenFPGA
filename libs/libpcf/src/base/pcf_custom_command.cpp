@@ -138,6 +138,35 @@ bool PcfCustomCommand::custom_decimal_mode_has_segment(
   return custom_decimal_mode_has_segment(custom_decimal_mode_id);
 }
 
+std::string PcfCustomCommand::custom_decimal_mode_convert_mode_with_segment(
+  const std::string& command_name, const std::string& option_name,
+  const std::string& mode_value) const {
+  /*split and rearrange according to segment*/
+  std::vector<std::string> mode_parsed;
+  std::vector<int> mode_parsed_offset;
+  for (auto segment_id :
+       custom_decimal_mode_segments(command_name, option_name)) {
+    vtr::Point<int> range = custom_decimal_mode_segments_range(segment_id);
+    std::string sub_mode =
+      mode_value.substr(range.x(), range.y() - range.x() + 1);
+    int sub_mode_offset = custom_decimal_mode_segment_offset(segment_id);
+    mode_parsed.push_back(sub_mode);
+    mode_parsed_offset.push_back(sub_mode_offset);
+  }
+  std::vector<int> idx(mode_parsed_offset.size());
+  std::iota(idx.begin(), idx.end(), 0);
+  std::sort(idx.begin(), idx.end(), [&mode_parsed_offset](int i1, int i2) {
+    return mode_parsed_offset[i1] < mode_parsed_offset[i2];
+  });
+  std::string mode_value_mod = "";
+  for (auto sorted_index : idx) {
+    mode_value_mod += mode_parsed[sorted_index];
+  }
+  VTR_LOG("Convert original mode %s to %s \n", mode_value.c_str(),
+          mode_value_mod.c_str());
+  return mode_value_mod;
+}
+
 bool PcfCustomCommand::custom_decimal_mode_has_segment(
   const PcfCustomCommandModeId& custom_decimal_mode_id) const {
   /* validate the mode_id */
@@ -150,20 +179,10 @@ bool PcfCustomCommand::custom_decimal_mode_has_segment(
 
 vtr::Point<int> PcfCustomCommand::custom_decimal_mode_segments_range_to_int(
   std::string range) const {
-  vtr::Point<char> bracket = {'[', ']'};
-  char colon = ':';
-  StringToken tokenizer(range);
-
-  std::vector<std::string> range_split = tokenizer.split(colon);
-  tokenizer.set_data(range_split[0]);
-  std::vector<std::string> range_left = tokenizer.split(bracket.x());
-  VTR_ASSERT(range_left.size() == 1);
-  int left_index = std::stoi(range_left[0]);
-  tokenizer.set_data(range_split[1]);
-  std::vector<std::string> range_right = tokenizer.split(bracket.x());
-  VTR_ASSERT(range_right.size() == 1);
-  int right_index = std::stoi(range_right[0]);
-  vtr::Point<int> range_int = {left_index, right_index};
+  openfpga::PortParser port_parser(
+    range, openfpga::PORT_PARSER_SUPPORT_ALL_FORMAT, true);
+  openfpga::BasicPort pin = port_parser.port();
+  vtr::Point<int> range_int = {pin.get_lsb(), pin.get_msb()};
   return range_int;
 }
 bool PcfCustomCommand::custom_decimal_mode_segments_valid(
