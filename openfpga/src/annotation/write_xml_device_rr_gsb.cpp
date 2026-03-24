@@ -20,8 +20,21 @@
 namespace openfpga {
 
 /***************************************************************************************
+ * Calculate the Manhattan distance between two rr_nodes
+ ***************************************************************************************/
+static int calculate_manhattan_distance(const RRGraphView& rr_graph,
+                                        const RRNodeId& node1,
+                                        const RRNodeId& node2) {
+  int distance_x = std::abs(static_cast<int>(rr_graph.node_xlow(node1)) -
+                            static_cast<int>(rr_graph.node_xlow(node2)));
+  int distance_y = std::abs(static_cast<int>(rr_graph.node_ylow(node1)) -
+                            static_cast<int>(rr_graph.node_ylow(node2)));
+  return distance_x + distance_y;
+}
+
+/***************************************************************************************
  * Output the input pin of Programmable Blocks, e.g., CLBs inside a GSB to XML
- *format
+ * format
  ***************************************************************************************/
 static void write_rr_gsb_ipin_connection_to_xml(
   std::fstream& fp, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
@@ -51,21 +64,29 @@ static void write_rr_gsb_ipin_connection_to_xml(
         continue;
       }
 
-      enum e_side chan_side = rr_gsb.get_cb_chan_side(gsb_side);
+      enum e_rr_type driver_node_type = rr_graph.node_type(driver_node);
+
+      int manhattan_distance =
+        calculate_manhattan_distance(rr_graph, driver_node, cur_rr_node);
+
+      enum Direction node_direction = rr_graph.node_direction(driver_node);
+      int driver_node_index = rr_graph.node_track_num(driver_node);
+      enum e_side chan_side;
+      if (driver_node_type == e_rr_type::CHANX) {
+        chan_side = (node_direction == Direction::INC) ? LEFT : RIGHT;
+      } else if (driver_node_type == e_rr_type::CHANY) {
+        chan_side = (node_direction == Direction::INC) ? BOTTOM : TOP;
+      }
+
       SideManager chan_side_manager(chan_side);
 
-      /* For channel node, we do not know the node direction
-       * But we are pretty sure it is either IN_PORT or OUT_PORT
-       * So we just try and find what is valid
-       */
-      int driver_node_index =
-        rr_gsb.get_chan_node_index(chan_side, driver_node);
-      /* We must have a valide node index */
-      VTR_ASSERT(-1 != driver_node_index);
+      // int driver_node_index = -1;
+      // driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
+      const RRSegmentId& des_segment_id = rr_graph.node_segment(driver_node);
 
-      const RRSegmentId& des_segment_id =
-        rr_gsb.get_chan_node_segment(chan_side, driver_node_index);
-
+      // Write to a file in the following format:
+      // <driver_node type="CHANX" side="TOP" index="0" node_id="0"
+      // segment_id="0"/>
       fp << "\t\t<driver_node type=\""
          << rr_node_typename[rr_graph.node_type(driver_node)] << "\" side=\""
          << chan_side_manager.to_string();
@@ -73,7 +94,8 @@ static void write_rr_gsb_ipin_connection_to_xml(
         fp << "\" node_id=\"" << size_t(driver_node);
       }
       fp << "\" index=\"" << driver_node_index << "\" segment_id=\""
-         << size_t(des_segment_id) << "\"/>" << std::endl;
+         << size_t(des_segment_id) << "\" tap=\"" << manhattan_distance
+         << "\"/>" << std::endl;
     }
     fp << "\t</" << rr_node_typename[rr_graph.node_type(cur_rr_node)] << ">"
        << std::endl;
@@ -137,8 +159,7 @@ static void write_rr_gsb_chan_connection_to_xml(
       SideManager oppo_side = gsb_side_manager.get_opposite();
       fp << "\t\t<driver_node type=\"" << rr_node_typename[cur_node_type]
          << "\" side=\"" << oppo_side.to_string() << "\" index=\""
-         << rr_gsb.get_node_index(rr_graph, cur_rr_node, oppo_side.get_side(),
-                                  IN_PORT);
+         << rr_graph.node_track_num(cur_rr_node);
       if (include_rr_info) {
         fp << "\" node_id=\"" << size_t(cur_rr_node) << "\" segment_id=\""
            << size_t(src_segment_id) << "\" segment_name=\""
@@ -155,15 +176,18 @@ static void write_rr_gsb_chan_connection_to_xml(
         int driver_node_index = -1;
         rr_gsb.get_node_side_and_index(rr_graph, driver_rr_node, IN_PORT,
                                        driver_node_side, driver_node_index);
-        VTR_ASSERT(-1 != driver_node_index);
         SideManager driver_side(driver_node_side);
+
+        int manhattan_distance =
+          calculate_manhattan_distance(rr_graph, driver_rr_node, cur_rr_node);
 
         if (e_rr_type::OPIN == rr_graph.node_type(driver_rr_node)) {
           SideManager grid_side(
             get_rr_graph_single_node_side(rr_graph, driver_rr_node));
           fp << "\t\t<driver_node type=\"" << rr_node_typename[e_rr_type::OPIN]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
-             << driver_node_index;
+             << rr_graph.node_track_num(cur_rr_node) << "\" tap=\""
+             << manhattan_distance;
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node) << "\" grid_side=\""
                << grid_side.to_string() << "\" sb_module_pin_name=\""
@@ -174,11 +198,12 @@ static void write_rr_gsb_chan_connection_to_xml(
           fp << "\"/>" << std::endl;
         } else {
           const RRSegmentId& des_segment_id =
-            rr_gsb.get_chan_node_segment(driver_node_side, driver_node_index);
+            rr_graph.node_segment(driver_rr_node);
           fp << "\t\t<driver_node type=\""
              << rr_node_typename[rr_graph.node_type(driver_rr_node)]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
-             << driver_node_index;
+             << rr_graph.node_track_num(cur_rr_node) << "\" tap=\""
+             << manhattan_distance;
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" segment_id=\"" << size_t(des_segment_id)
