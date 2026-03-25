@@ -351,13 +351,13 @@ endmodule
 //----- Default net type -----
 `default_nettype none
 
-// ----- Verilog module for mux_2level_tapbuf_size64 -----
-module mux_2level_tapbuf_size64(in,
+// ----- Verilog module for mux_2level_tapbuf_size80 -----
+module mux_2level_tapbuf_size80(in,
                                 sram,
                                 sram_inv,
                                 out);
 //----- INPUT PORTS -----
-input [63:0] in;
+input [79:0] in;
 //----- INPUT PORTS -----
 input [17:0] sram;
 //----- INPUT PORTS -----
@@ -433,7 +433,23 @@ wire [0:0] INVTX1_60_out;
 wire [0:0] INVTX1_61_out;
 wire [0:0] INVTX1_62_out;
 wire [0:0] INVTX1_63_out;
+wire [0:0] INVTX1_64_out;
+wire [0:0] INVTX1_65_out;
+wire [0:0] INVTX1_66_out;
+wire [0:0] INVTX1_67_out;
+wire [0:0] INVTX1_68_out;
+wire [0:0] INVTX1_69_out;
 wire [0:0] INVTX1_6_out;
+wire [0:0] INVTX1_70_out;
+wire [0:0] INVTX1_71_out;
+wire [0:0] INVTX1_72_out;
+wire [0:0] INVTX1_73_out;
+wire [0:0] INVTX1_74_out;
+wire [0:0] INVTX1_75_out;
+wire [0:0] INVTX1_76_out;
+wire [0:0] INVTX1_77_out;
+wire [0:0] INVTX1_78_out;
+wire [0:0] INVTX1_79_out;
 wire [0:0] INVTX1_7_out;
 wire [0:0] INVTX1_8_out;
 wire [0:0] INVTX1_9_out;
@@ -446,6 +462,8 @@ wire [0:0] mux_2level_tapbuf_basis_input9_mem9_4_out;
 wire [0:0] mux_2level_tapbuf_basis_input9_mem9_5_out;
 wire [0:0] mux_2level_tapbuf_basis_input9_mem9_6_out;
 wire [0:0] mux_2level_tapbuf_basis_input9_mem9_7_out;
+wire [0:0] mux_2level_tapbuf_basis_input9_mem9_8_out;
+wire [0:0] mux_2level_tapbuf_basis_input9_mem9_9_out;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -708,11 +726,75 @@ wire [0:0] mux_2level_tapbuf_basis_input9_mem9_7_out;
 		.in(in[63]),
 		.out(INVTX1_63_out));
 
+	INVTX1 INVTX1_64_ (
+		.in(in[64]),
+		.out(INVTX1_64_out));
+
+	INVTX1 INVTX1_65_ (
+		.in(in[65]),
+		.out(INVTX1_65_out));
+
+	INVTX1 INVTX1_66_ (
+		.in(in[66]),
+		.out(INVTX1_66_out));
+
+	INVTX1 INVTX1_67_ (
+		.in(in[67]),
+		.out(INVTX1_67_out));
+
+	INVTX1 INVTX1_68_ (
+		.in(in[68]),
+		.out(INVTX1_68_out));
+
+	INVTX1 INVTX1_69_ (
+		.in(in[69]),
+		.out(INVTX1_69_out));
+
+	INVTX1 INVTX1_70_ (
+		.in(in[70]),
+		.out(INVTX1_70_out));
+
+	INVTX1 INVTX1_71_ (
+		.in(in[71]),
+		.out(INVTX1_71_out));
+
+	INVTX1 INVTX1_72_ (
+		.in(in[72]),
+		.out(INVTX1_72_out));
+
+	INVTX1 INVTX1_73_ (
+		.in(in[73]),
+		.out(INVTX1_73_out));
+
+	INVTX1 INVTX1_74_ (
+		.in(in[74]),
+		.out(INVTX1_74_out));
+
+	INVTX1 INVTX1_75_ (
+		.in(in[75]),
+		.out(INVTX1_75_out));
+
+	INVTX1 INVTX1_76_ (
+		.in(in[76]),
+		.out(INVTX1_76_out));
+
+	INVTX1 INVTX1_77_ (
+		.in(in[77]),
+		.out(INVTX1_77_out));
+
+	INVTX1 INVTX1_78_ (
+		.in(in[78]),
+		.out(INVTX1_78_out));
+
+	INVTX1 INVTX1_79_ (
+		.in(in[79]),
+		.out(INVTX1_79_out));
+
 	const1 const1_0_ (
 		.const1(const1_0_const1));
 
 	tap_buf4 tap_buf4_0_ (
-		.in(mux_2level_tapbuf_basis_input9_mem9_7_out),
+		.in(mux_2level_tapbuf_basis_input9_mem9_9_out),
 		.out(out));
 
 	mux_2level_tapbuf_basis_input9_mem9 mux_l1_in_0_ (
@@ -757,14 +839,26 @@ wire [0:0] mux_2level_tapbuf_basis_input9_mem9_7_out;
 		.mem_inv({sram_inv[8], sram_inv[7], sram_inv[6], sram_inv[5], sram_inv[4], sram_inv[3], sram_inv[2], sram_inv[1], sram_inv[0]}),
 		.out(mux_2level_tapbuf_basis_input9_mem9_6_out));
 
-	mux_2level_tapbuf_basis_input9_mem9 mux_l2_in_0_ (
-		.in({const1_0_const1, INVTX1_63_out, mux_2level_tapbuf_basis_input9_mem9_6_out, mux_2level_tapbuf_basis_input9_mem9_5_out, mux_2level_tapbuf_basis_input9_mem9_4_out, mux_2level_tapbuf_basis_input9_mem9_3_out, mux_2level_tapbuf_basis_input9_mem9_2_out, mux_2level_tapbuf_basis_input9_mem9_1_out, mux_2level_tapbuf_basis_input9_mem9_0_out}),
-		.mem({sram[17], sram[16], sram[15], sram[14], sram[13], sram[12], sram[11], sram[10], sram[9]}),
-		.mem_inv({sram_inv[17], sram_inv[16], sram_inv[15], sram_inv[14], sram_inv[13], sram_inv[12], sram_inv[11], sram_inv[10], sram_inv[9]}),
+	mux_2level_tapbuf_basis_input9_mem9 mux_l1_in_7_ (
+		.in({INVTX1_71_out, INVTX1_70_out, INVTX1_69_out, INVTX1_68_out, INVTX1_67_out, INVTX1_66_out, INVTX1_65_out, INVTX1_64_out, INVTX1_63_out}),
+		.mem({sram[8], sram[7], sram[6], sram[5], sram[4], sram[3], sram[2], sram[1], sram[0]}),
+		.mem_inv({sram_inv[8], sram_inv[7], sram_inv[6], sram_inv[5], sram_inv[4], sram_inv[3], sram_inv[2], sram_inv[1], sram_inv[0]}),
 		.out(mux_2level_tapbuf_basis_input9_mem9_7_out));
 
+	mux_2level_tapbuf_basis_input9_mem9 mux_l1_in_8_ (
+		.in({const1_0_const1, INVTX1_79_out, INVTX1_78_out, INVTX1_77_out, INVTX1_76_out, INVTX1_75_out, INVTX1_74_out, INVTX1_73_out, INVTX1_72_out}),
+		.mem({sram[8], sram[7], sram[6], sram[5], sram[4], sram[3], sram[2], sram[1], sram[0]}),
+		.mem_inv({sram_inv[8], sram_inv[7], sram_inv[6], sram_inv[5], sram_inv[4], sram_inv[3], sram_inv[2], sram_inv[1], sram_inv[0]}),
+		.out(mux_2level_tapbuf_basis_input9_mem9_8_out));
+
+	mux_2level_tapbuf_basis_input9_mem9 mux_l2_in_0_ (
+		.in({mux_2level_tapbuf_basis_input9_mem9_8_out, mux_2level_tapbuf_basis_input9_mem9_7_out, mux_2level_tapbuf_basis_input9_mem9_6_out, mux_2level_tapbuf_basis_input9_mem9_5_out, mux_2level_tapbuf_basis_input9_mem9_4_out, mux_2level_tapbuf_basis_input9_mem9_3_out, mux_2level_tapbuf_basis_input9_mem9_2_out, mux_2level_tapbuf_basis_input9_mem9_1_out, mux_2level_tapbuf_basis_input9_mem9_0_out}),
+		.mem({sram[17], sram[16], sram[15], sram[14], sram[13], sram[12], sram[11], sram[10], sram[9]}),
+		.mem_inv({sram_inv[17], sram_inv[16], sram_inv[15], sram_inv[14], sram_inv[13], sram_inv[12], sram_inv[11], sram_inv[10], sram_inv[9]}),
+		.out(mux_2level_tapbuf_basis_input9_mem9_9_out));
+
 endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size64 -----
+// ----- END Verilog module for mux_2level_tapbuf_size80 -----
 
 //----- Default net type -----
 `default_nettype wire

@@ -304,8 +304,8 @@ endmodule
 //----- Default net type -----
 `default_nettype none
 
-// ----- Verilog module for mux_2level_tapbuf_size64_mem -----
-module mux_2level_tapbuf_size64_mem(pReset,
+// ----- Verilog module for mux_2level_tapbuf_size80_mem -----
+module mux_2level_tapbuf_size80_mem(pReset,
                                     prog_clk,
                                     ccff_head,
                                     ccff_tail,
@@ -466,7 +466,7 @@ output [17:0] mem_outb;
 		.QN(mem_outb[17]));
 
 endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size64_mem -----
+// ----- END Verilog module for mux_2level_tapbuf_size80_mem -----
 
 //----- Default net type -----
 `default_nettype wire
@@ -477,8 +477,8 @@ endmodule
 //----- Default net type -----
 `default_nettype none
 
-// ----- Verilog module for mux_2level_tapbuf_size64_feedthrough_mem -----
-module mux_2level_tapbuf_size64_feedthrough_mem(feedthrough_mem_in,
+// ----- Verilog module for mux_2level_tapbuf_size80_feedthrough_mem -----
+module mux_2level_tapbuf_size80_feedthrough_mem(feedthrough_mem_in,
                                                 feedthrough_mem_inb,
                                                 mem_out,
                                                 mem_outb);
@@ -650,7 +650,7 @@ output [17:0] mem_outb;
 // ----- END Local output short connections -----
 
 endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size64_feedthrough_mem -----
+// ----- END Verilog module for mux_2level_tapbuf_size80_feedthrough_mem -----
 
 //----- Default net type -----
 `default_nettype wire
@@ -3951,17 +3951,17 @@ wire [0:0] mux_2level_tapbuf_size56_mem_0_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_1_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_2_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_0_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_10_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_1_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_2_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_4_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_5_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_6_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_7_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_8_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_0_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_10_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_1_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_2_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_3_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_4_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_5_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_6_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_7_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_8_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_9_ccff_tail;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -4096,98 +4096,98 @@ wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
 		.mem_out({mem_out[175], mem_out[174], mem_out[173], mem_out[172], mem_out[171], mem_out[170], mem_out[169], mem_out[168], mem_out[167], mem_out[166], mem_out[165], mem_out[164], mem_out[163], mem_out[162], mem_out[161], mem_out[160]}),
 		.mem_outb({mem_outb[175], mem_outb[174], mem_outb[173], mem_outb[172], mem_outb[171], mem_outb[170], mem_outb[169], mem_outb[168], mem_outb[167], mem_outb[166], mem_outb[165], mem_outb[164], mem_outb[163], mem_outb[162], mem_outb[161], mem_outb[160]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_0 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
 		.ccff_head(mux_2level_tapbuf_size48_mem_11_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_0_ccff_tail),
 		.mem_out({mem_out[249], mem_out[248], mem_out[247], mem_out[246], mem_out[245], mem_out[244], mem_out[243], mem_out[242], mem_out[241], mem_out[240], mem_out[239], mem_out[238], mem_out[237], mem_out[236], mem_out[235], mem_out[234], mem_out[233], mem_out[232]}),
 		.mem_outb({mem_outb[249], mem_outb[248], mem_outb[247], mem_outb[246], mem_outb[245], mem_outb[244], mem_outb[243], mem_outb[242], mem_outb[241], mem_outb[240], mem_outb[239], mem_outb[238], mem_outb[237], mem_outb[236], mem_outb[235], mem_outb[234], mem_outb[233], mem_outb[232]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_1 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_1_ccff_tail),
 		.mem_out({mem_out[267], mem_out[266], mem_out[265], mem_out[264], mem_out[263], mem_out[262], mem_out[261], mem_out[260], mem_out[259], mem_out[258], mem_out[257], mem_out[256], mem_out[255], mem_out[254], mem_out[253], mem_out[252], mem_out[251], mem_out[250]}),
 		.mem_outb({mem_outb[267], mem_outb[266], mem_outb[265], mem_outb[264], mem_outb[263], mem_outb[262], mem_outb[261], mem_outb[260], mem_outb[259], mem_outb[258], mem_outb[257], mem_outb[256], mem_outb[255], mem_outb[254], mem_outb[253], mem_outb[252], mem_outb[251], mem_outb[250]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_2 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_2 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_2_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_2_ccff_tail),
 		.mem_out({mem_out[285], mem_out[284], mem_out[283], mem_out[282], mem_out[281], mem_out[280], mem_out[279], mem_out[278], mem_out[277], mem_out[276], mem_out[275], mem_out[274], mem_out[273], mem_out[272], mem_out[271], mem_out[270], mem_out[269], mem_out[268]}),
 		.mem_outb({mem_outb[285], mem_outb[284], mem_outb[283], mem_outb[282], mem_outb[281], mem_outb[280], mem_outb[279], mem_outb[278], mem_outb[277], mem_outb[276], mem_outb[275], mem_outb[274], mem_outb[273], mem_outb[272], mem_outb[271], mem_outb[270], mem_outb[269], mem_outb[268]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_3 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_3 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_3_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_3_ccff_tail),
 		.mem_out({mem_out[303], mem_out[302], mem_out[301], mem_out[300], mem_out[299], mem_out[298], mem_out[297], mem_out[296], mem_out[295], mem_out[294], mem_out[293], mem_out[292], mem_out[291], mem_out[290], mem_out[289], mem_out[288], mem_out[287], mem_out[286]}),
 		.mem_outb({mem_outb[303], mem_outb[302], mem_outb[301], mem_outb[300], mem_outb[299], mem_outb[298], mem_outb[297], mem_outb[296], mem_outb[295], mem_outb[294], mem_outb[293], mem_outb[292], mem_outb[291], mem_outb[290], mem_outb[289], mem_outb[288], mem_outb[287], mem_outb[286]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_4 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_4 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_4_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_4_ccff_tail),
 		.mem_out({mem_out[321], mem_out[320], mem_out[319], mem_out[318], mem_out[317], mem_out[316], mem_out[315], mem_out[314], mem_out[313], mem_out[312], mem_out[311], mem_out[310], mem_out[309], mem_out[308], mem_out[307], mem_out[306], mem_out[305], mem_out[304]}),
 		.mem_outb({mem_outb[321], mem_outb[320], mem_outb[319], mem_outb[318], mem_outb[317], mem_outb[316], mem_outb[315], mem_outb[314], mem_outb[313], mem_outb[312], mem_outb[311], mem_outb[310], mem_outb[309], mem_outb[308], mem_outb[307], mem_outb[306], mem_outb[305], mem_outb[304]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_5 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_5 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_4_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_5_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_5_ccff_tail),
 		.mem_out({mem_out[339], mem_out[338], mem_out[337], mem_out[336], mem_out[335], mem_out[334], mem_out[333], mem_out[332], mem_out[331], mem_out[330], mem_out[329], mem_out[328], mem_out[327], mem_out[326], mem_out[325], mem_out[324], mem_out[323], mem_out[322]}),
 		.mem_outb({mem_outb[339], mem_outb[338], mem_outb[337], mem_outb[336], mem_outb[335], mem_outb[334], mem_outb[333], mem_outb[332], mem_outb[331], mem_outb[330], mem_outb[329], mem_outb[328], mem_outb[327], mem_outb[326], mem_outb[325], mem_outb[324], mem_outb[323], mem_outb[322]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_6 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_6 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_5_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_6_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_5_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_6_ccff_tail),
 		.mem_out({mem_out[357], mem_out[356], mem_out[355], mem_out[354], mem_out[353], mem_out[352], mem_out[351], mem_out[350], mem_out[349], mem_out[348], mem_out[347], mem_out[346], mem_out[345], mem_out[344], mem_out[343], mem_out[342], mem_out[341], mem_out[340]}),
 		.mem_outb({mem_outb[357], mem_outb[356], mem_outb[355], mem_outb[354], mem_outb[353], mem_outb[352], mem_outb[351], mem_outb[350], mem_outb[349], mem_outb[348], mem_outb[347], mem_outb[346], mem_outb[345], mem_outb[344], mem_outb[343], mem_outb[342], mem_outb[341], mem_outb[340]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_7 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_7 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_6_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_7_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_6_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_7_ccff_tail),
 		.mem_out({mem_out[375], mem_out[374], mem_out[373], mem_out[372], mem_out[371], mem_out[370], mem_out[369], mem_out[368], mem_out[367], mem_out[366], mem_out[365], mem_out[364], mem_out[363], mem_out[362], mem_out[361], mem_out[360], mem_out[359], mem_out[358]}),
 		.mem_outb({mem_outb[375], mem_outb[374], mem_outb[373], mem_outb[372], mem_outb[371], mem_outb[370], mem_outb[369], mem_outb[368], mem_outb[367], mem_outb[366], mem_outb[365], mem_outb[364], mem_outb[363], mem_outb[362], mem_outb[361], mem_outb[360], mem_outb[359], mem_outb[358]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_8 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_8 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_7_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_8_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_7_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_8_ccff_tail),
 		.mem_out({mem_out[393], mem_out[392], mem_out[391], mem_out[390], mem_out[389], mem_out[388], mem_out[387], mem_out[386], mem_out[385], mem_out[384], mem_out[383], mem_out[382], mem_out[381], mem_out[380], mem_out[379], mem_out[378], mem_out[377], mem_out[376]}),
 		.mem_outb({mem_outb[393], mem_outb[392], mem_outb[391], mem_outb[390], mem_outb[389], mem_outb[388], mem_outb[387], mem_outb[386], mem_outb[385], mem_outb[384], mem_outb[383], mem_outb[382], mem_outb[381], mem_outb[380], mem_outb[379], mem_outb[378], mem_outb[377], mem_outb[376]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_9 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_9 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_8_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_9_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_8_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_9_ccff_tail),
 		.mem_out({mem_out[411], mem_out[410], mem_out[409], mem_out[408], mem_out[407], mem_out[406], mem_out[405], mem_out[404], mem_out[403], mem_out[402], mem_out[401], mem_out[400], mem_out[399], mem_out[398], mem_out[397], mem_out[396], mem_out[395], mem_out[394]}),
 		.mem_outb({mem_outb[411], mem_outb[410], mem_outb[409], mem_outb[408], mem_outb[407], mem_outb[406], mem_outb[405], mem_outb[404], mem_outb[403], mem_outb[402], mem_outb[401], mem_outb[400], mem_outb[399], mem_outb[398], mem_outb[397], mem_outb[396], mem_outb[395], mem_outb[394]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_10 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_10 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_9_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_9_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.mem_out({mem_out[429], mem_out[428], mem_out[427], mem_out[426], mem_out[425], mem_out[424], mem_out[423], mem_out[422], mem_out[421], mem_out[420], mem_out[419], mem_out[418], mem_out[417], mem_out[416], mem_out[415], mem_out[414], mem_out[413], mem_out[412]}),
 		.mem_outb({mem_outb[429], mem_outb[428], mem_outb[427], mem_outb[426], mem_outb[425], mem_outb[424], mem_outb[423], mem_outb[422], mem_outb[421], mem_outb[420], mem_outb[419], mem_outb[418], mem_outb[417], mem_outb[416], mem_outb[415], mem_outb[414], mem_outb[413], mem_outb[412]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_11 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_11 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.ccff_tail(ccff_tail),
 		.mem_out({mem_out[447], mem_out[446], mem_out[445], mem_out[444], mem_out[443], mem_out[442], mem_out[441], mem_out[440], mem_out[439], mem_out[438], mem_out[437], mem_out[436], mem_out[435], mem_out[434], mem_out[433], mem_out[432], mem_out[431], mem_out[430]}),
 		.mem_outb({mem_outb[447], mem_outb[446], mem_outb[445], mem_outb[444], mem_outb[443], mem_outb[442], mem_outb[441], mem_outb[440], mem_outb[439], mem_outb[438], mem_outb[437], mem_outb[436], mem_outb[435], mem_outb[434], mem_outb[433], mem_outb[432], mem_outb[431], mem_outb[430]}));
@@ -4248,17 +4248,17 @@ wire [0:0] mux_2level_tapbuf_size56_mem_0_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_1_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_2_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_0_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_10_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_1_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_2_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_4_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_5_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_6_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_7_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_8_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_0_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_10_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_1_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_2_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_3_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_4_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_5_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_6_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_7_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_8_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_9_ccff_tail;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -4393,98 +4393,98 @@ wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
 		.mem_out({mem_out[175], mem_out[174], mem_out[173], mem_out[172], mem_out[171], mem_out[170], mem_out[169], mem_out[168], mem_out[167], mem_out[166], mem_out[165], mem_out[164], mem_out[163], mem_out[162], mem_out[161], mem_out[160]}),
 		.mem_outb({mem_outb[175], mem_outb[174], mem_outb[173], mem_outb[172], mem_outb[171], mem_outb[170], mem_outb[169], mem_outb[168], mem_outb[167], mem_outb[166], mem_outb[165], mem_outb[164], mem_outb[163], mem_outb[162], mem_outb[161], mem_outb[160]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_0 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
 		.ccff_head(mux_2level_tapbuf_size48_mem_11_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_0_ccff_tail),
 		.mem_out({mem_out[249], mem_out[248], mem_out[247], mem_out[246], mem_out[245], mem_out[244], mem_out[243], mem_out[242], mem_out[241], mem_out[240], mem_out[239], mem_out[238], mem_out[237], mem_out[236], mem_out[235], mem_out[234], mem_out[233], mem_out[232]}),
 		.mem_outb({mem_outb[249], mem_outb[248], mem_outb[247], mem_outb[246], mem_outb[245], mem_outb[244], mem_outb[243], mem_outb[242], mem_outb[241], mem_outb[240], mem_outb[239], mem_outb[238], mem_outb[237], mem_outb[236], mem_outb[235], mem_outb[234], mem_outb[233], mem_outb[232]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_1 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_1_ccff_tail),
 		.mem_out({mem_out[267], mem_out[266], mem_out[265], mem_out[264], mem_out[263], mem_out[262], mem_out[261], mem_out[260], mem_out[259], mem_out[258], mem_out[257], mem_out[256], mem_out[255], mem_out[254], mem_out[253], mem_out[252], mem_out[251], mem_out[250]}),
 		.mem_outb({mem_outb[267], mem_outb[266], mem_outb[265], mem_outb[264], mem_outb[263], mem_outb[262], mem_outb[261], mem_outb[260], mem_outb[259], mem_outb[258], mem_outb[257], mem_outb[256], mem_outb[255], mem_outb[254], mem_outb[253], mem_outb[252], mem_outb[251], mem_outb[250]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_2 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_2 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_2_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_2_ccff_tail),
 		.mem_out({mem_out[285], mem_out[284], mem_out[283], mem_out[282], mem_out[281], mem_out[280], mem_out[279], mem_out[278], mem_out[277], mem_out[276], mem_out[275], mem_out[274], mem_out[273], mem_out[272], mem_out[271], mem_out[270], mem_out[269], mem_out[268]}),
 		.mem_outb({mem_outb[285], mem_outb[284], mem_outb[283], mem_outb[282], mem_outb[281], mem_outb[280], mem_outb[279], mem_outb[278], mem_outb[277], mem_outb[276], mem_outb[275], mem_outb[274], mem_outb[273], mem_outb[272], mem_outb[271], mem_outb[270], mem_outb[269], mem_outb[268]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_3 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_3 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_3_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_3_ccff_tail),
 		.mem_out({mem_out[303], mem_out[302], mem_out[301], mem_out[300], mem_out[299], mem_out[298], mem_out[297], mem_out[296], mem_out[295], mem_out[294], mem_out[293], mem_out[292], mem_out[291], mem_out[290], mem_out[289], mem_out[288], mem_out[287], mem_out[286]}),
 		.mem_outb({mem_outb[303], mem_outb[302], mem_outb[301], mem_outb[300], mem_outb[299], mem_outb[298], mem_outb[297], mem_outb[296], mem_outb[295], mem_outb[294], mem_outb[293], mem_outb[292], mem_outb[291], mem_outb[290], mem_outb[289], mem_outb[288], mem_outb[287], mem_outb[286]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_4 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_4 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_4_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_4_ccff_tail),
 		.mem_out({mem_out[321], mem_out[320], mem_out[319], mem_out[318], mem_out[317], mem_out[316], mem_out[315], mem_out[314], mem_out[313], mem_out[312], mem_out[311], mem_out[310], mem_out[309], mem_out[308], mem_out[307], mem_out[306], mem_out[305], mem_out[304]}),
 		.mem_outb({mem_outb[321], mem_outb[320], mem_outb[319], mem_outb[318], mem_outb[317], mem_outb[316], mem_outb[315], mem_outb[314], mem_outb[313], mem_outb[312], mem_outb[311], mem_outb[310], mem_outb[309], mem_outb[308], mem_outb[307], mem_outb[306], mem_outb[305], mem_outb[304]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_5 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_5 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_4_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_5_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_5_ccff_tail),
 		.mem_out({mem_out[339], mem_out[338], mem_out[337], mem_out[336], mem_out[335], mem_out[334], mem_out[333], mem_out[332], mem_out[331], mem_out[330], mem_out[329], mem_out[328], mem_out[327], mem_out[326], mem_out[325], mem_out[324], mem_out[323], mem_out[322]}),
 		.mem_outb({mem_outb[339], mem_outb[338], mem_outb[337], mem_outb[336], mem_outb[335], mem_outb[334], mem_outb[333], mem_outb[332], mem_outb[331], mem_outb[330], mem_outb[329], mem_outb[328], mem_outb[327], mem_outb[326], mem_outb[325], mem_outb[324], mem_outb[323], mem_outb[322]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_6 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_6 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_5_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_6_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_5_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_6_ccff_tail),
 		.mem_out({mem_out[357], mem_out[356], mem_out[355], mem_out[354], mem_out[353], mem_out[352], mem_out[351], mem_out[350], mem_out[349], mem_out[348], mem_out[347], mem_out[346], mem_out[345], mem_out[344], mem_out[343], mem_out[342], mem_out[341], mem_out[340]}),
 		.mem_outb({mem_outb[357], mem_outb[356], mem_outb[355], mem_outb[354], mem_outb[353], mem_outb[352], mem_outb[351], mem_outb[350], mem_outb[349], mem_outb[348], mem_outb[347], mem_outb[346], mem_outb[345], mem_outb[344], mem_outb[343], mem_outb[342], mem_outb[341], mem_outb[340]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_7 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_7 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_6_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_7_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_6_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_7_ccff_tail),
 		.mem_out({mem_out[375], mem_out[374], mem_out[373], mem_out[372], mem_out[371], mem_out[370], mem_out[369], mem_out[368], mem_out[367], mem_out[366], mem_out[365], mem_out[364], mem_out[363], mem_out[362], mem_out[361], mem_out[360], mem_out[359], mem_out[358]}),
 		.mem_outb({mem_outb[375], mem_outb[374], mem_outb[373], mem_outb[372], mem_outb[371], mem_outb[370], mem_outb[369], mem_outb[368], mem_outb[367], mem_outb[366], mem_outb[365], mem_outb[364], mem_outb[363], mem_outb[362], mem_outb[361], mem_outb[360], mem_outb[359], mem_outb[358]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_8 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_8 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_7_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_8_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_7_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_8_ccff_tail),
 		.mem_out({mem_out[393], mem_out[392], mem_out[391], mem_out[390], mem_out[389], mem_out[388], mem_out[387], mem_out[386], mem_out[385], mem_out[384], mem_out[383], mem_out[382], mem_out[381], mem_out[380], mem_out[379], mem_out[378], mem_out[377], mem_out[376]}),
 		.mem_outb({mem_outb[393], mem_outb[392], mem_outb[391], mem_outb[390], mem_outb[389], mem_outb[388], mem_outb[387], mem_outb[386], mem_outb[385], mem_outb[384], mem_outb[383], mem_outb[382], mem_outb[381], mem_outb[380], mem_outb[379], mem_outb[378], mem_outb[377], mem_outb[376]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_9 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_9 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_8_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_9_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_8_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_9_ccff_tail),
 		.mem_out({mem_out[411], mem_out[410], mem_out[409], mem_out[408], mem_out[407], mem_out[406], mem_out[405], mem_out[404], mem_out[403], mem_out[402], mem_out[401], mem_out[400], mem_out[399], mem_out[398], mem_out[397], mem_out[396], mem_out[395], mem_out[394]}),
 		.mem_outb({mem_outb[411], mem_outb[410], mem_outb[409], mem_outb[408], mem_outb[407], mem_outb[406], mem_outb[405], mem_outb[404], mem_outb[403], mem_outb[402], mem_outb[401], mem_outb[400], mem_outb[399], mem_outb[398], mem_outb[397], mem_outb[396], mem_outb[395], mem_outb[394]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_10 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_10 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_9_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_9_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.mem_out({mem_out[429], mem_out[428], mem_out[427], mem_out[426], mem_out[425], mem_out[424], mem_out[423], mem_out[422], mem_out[421], mem_out[420], mem_out[419], mem_out[418], mem_out[417], mem_out[416], mem_out[415], mem_out[414], mem_out[413], mem_out[412]}),
 		.mem_outb({mem_outb[429], mem_outb[428], mem_outb[427], mem_outb[426], mem_outb[425], mem_outb[424], mem_outb[423], mem_outb[422], mem_outb[421], mem_outb[420], mem_outb[419], mem_outb[418], mem_outb[417], mem_outb[416], mem_outb[415], mem_outb[414], mem_outb[413], mem_outb[412]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_11 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_11 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.ccff_tail(ccff_tail),
 		.mem_out({mem_out[447], mem_out[446], mem_out[445], mem_out[444], mem_out[443], mem_out[442], mem_out[441], mem_out[440], mem_out[439], mem_out[438], mem_out[437], mem_out[436], mem_out[435], mem_out[434], mem_out[433], mem_out[432], mem_out[431], mem_out[430]}),
 		.mem_outb({mem_outb[447], mem_outb[446], mem_outb[445], mem_outb[444], mem_outb[443], mem_outb[442], mem_outb[441], mem_outb[440], mem_outb[439], mem_outb[438], mem_outb[437], mem_outb[436], mem_outb[435], mem_outb[434], mem_outb[433], mem_outb[432], mem_outb[431], mem_outb[430]}));
@@ -5103,17 +5103,17 @@ wire [0:0] mux_2level_tapbuf_size56_mem_0_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_1_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_2_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_0_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_10_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_1_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_2_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_4_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_5_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_6_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_7_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_8_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_0_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_10_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_1_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_2_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_3_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_4_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_5_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_6_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_7_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_8_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_9_ccff_tail;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -5248,98 +5248,98 @@ wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
 		.mem_out({mem_out[175], mem_out[174], mem_out[173], mem_out[172], mem_out[171], mem_out[170], mem_out[169], mem_out[168], mem_out[167], mem_out[166], mem_out[165], mem_out[164], mem_out[163], mem_out[162], mem_out[161], mem_out[160]}),
 		.mem_outb({mem_outb[175], mem_outb[174], mem_outb[173], mem_outb[172], mem_outb[171], mem_outb[170], mem_outb[169], mem_outb[168], mem_outb[167], mem_outb[166], mem_outb[165], mem_outb[164], mem_outb[163], mem_outb[162], mem_outb[161], mem_outb[160]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_0 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
 		.ccff_head(mux_2level_tapbuf_size48_mem_11_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_0_ccff_tail),
 		.mem_out({mem_out[249], mem_out[248], mem_out[247], mem_out[246], mem_out[245], mem_out[244], mem_out[243], mem_out[242], mem_out[241], mem_out[240], mem_out[239], mem_out[238], mem_out[237], mem_out[236], mem_out[235], mem_out[234], mem_out[233], mem_out[232]}),
 		.mem_outb({mem_outb[249], mem_outb[248], mem_outb[247], mem_outb[246], mem_outb[245], mem_outb[244], mem_outb[243], mem_outb[242], mem_outb[241], mem_outb[240], mem_outb[239], mem_outb[238], mem_outb[237], mem_outb[236], mem_outb[235], mem_outb[234], mem_outb[233], mem_outb[232]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_1 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_1_ccff_tail),
 		.mem_out({mem_out[267], mem_out[266], mem_out[265], mem_out[264], mem_out[263], mem_out[262], mem_out[261], mem_out[260], mem_out[259], mem_out[258], mem_out[257], mem_out[256], mem_out[255], mem_out[254], mem_out[253], mem_out[252], mem_out[251], mem_out[250]}),
 		.mem_outb({mem_outb[267], mem_outb[266], mem_outb[265], mem_outb[264], mem_outb[263], mem_outb[262], mem_outb[261], mem_outb[260], mem_outb[259], mem_outb[258], mem_outb[257], mem_outb[256], mem_outb[255], mem_outb[254], mem_outb[253], mem_outb[252], mem_outb[251], mem_outb[250]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_2 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_2 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_2_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_2_ccff_tail),
 		.mem_out({mem_out[285], mem_out[284], mem_out[283], mem_out[282], mem_out[281], mem_out[280], mem_out[279], mem_out[278], mem_out[277], mem_out[276], mem_out[275], mem_out[274], mem_out[273], mem_out[272], mem_out[271], mem_out[270], mem_out[269], mem_out[268]}),
 		.mem_outb({mem_outb[285], mem_outb[284], mem_outb[283], mem_outb[282], mem_outb[281], mem_outb[280], mem_outb[279], mem_outb[278], mem_outb[277], mem_outb[276], mem_outb[275], mem_outb[274], mem_outb[273], mem_outb[272], mem_outb[271], mem_outb[270], mem_outb[269], mem_outb[268]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_3 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_3 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_3_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_3_ccff_tail),
 		.mem_out({mem_out[303], mem_out[302], mem_out[301], mem_out[300], mem_out[299], mem_out[298], mem_out[297], mem_out[296], mem_out[295], mem_out[294], mem_out[293], mem_out[292], mem_out[291], mem_out[290], mem_out[289], mem_out[288], mem_out[287], mem_out[286]}),
 		.mem_outb({mem_outb[303], mem_outb[302], mem_outb[301], mem_outb[300], mem_outb[299], mem_outb[298], mem_outb[297], mem_outb[296], mem_outb[295], mem_outb[294], mem_outb[293], mem_outb[292], mem_outb[291], mem_outb[290], mem_outb[289], mem_outb[288], mem_outb[287], mem_outb[286]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_4 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_4 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_4_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_4_ccff_tail),
 		.mem_out({mem_out[321], mem_out[320], mem_out[319], mem_out[318], mem_out[317], mem_out[316], mem_out[315], mem_out[314], mem_out[313], mem_out[312], mem_out[311], mem_out[310], mem_out[309], mem_out[308], mem_out[307], mem_out[306], mem_out[305], mem_out[304]}),
 		.mem_outb({mem_outb[321], mem_outb[320], mem_outb[319], mem_outb[318], mem_outb[317], mem_outb[316], mem_outb[315], mem_outb[314], mem_outb[313], mem_outb[312], mem_outb[311], mem_outb[310], mem_outb[309], mem_outb[308], mem_outb[307], mem_outb[306], mem_outb[305], mem_outb[304]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_5 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_5 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_4_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_5_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_5_ccff_tail),
 		.mem_out({mem_out[339], mem_out[338], mem_out[337], mem_out[336], mem_out[335], mem_out[334], mem_out[333], mem_out[332], mem_out[331], mem_out[330], mem_out[329], mem_out[328], mem_out[327], mem_out[326], mem_out[325], mem_out[324], mem_out[323], mem_out[322]}),
 		.mem_outb({mem_outb[339], mem_outb[338], mem_outb[337], mem_outb[336], mem_outb[335], mem_outb[334], mem_outb[333], mem_outb[332], mem_outb[331], mem_outb[330], mem_outb[329], mem_outb[328], mem_outb[327], mem_outb[326], mem_outb[325], mem_outb[324], mem_outb[323], mem_outb[322]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_6 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_6 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_5_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_6_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_5_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_6_ccff_tail),
 		.mem_out({mem_out[357], mem_out[356], mem_out[355], mem_out[354], mem_out[353], mem_out[352], mem_out[351], mem_out[350], mem_out[349], mem_out[348], mem_out[347], mem_out[346], mem_out[345], mem_out[344], mem_out[343], mem_out[342], mem_out[341], mem_out[340]}),
 		.mem_outb({mem_outb[357], mem_outb[356], mem_outb[355], mem_outb[354], mem_outb[353], mem_outb[352], mem_outb[351], mem_outb[350], mem_outb[349], mem_outb[348], mem_outb[347], mem_outb[346], mem_outb[345], mem_outb[344], mem_outb[343], mem_outb[342], mem_outb[341], mem_outb[340]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_7 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_7 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_6_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_7_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_6_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_7_ccff_tail),
 		.mem_out({mem_out[375], mem_out[374], mem_out[373], mem_out[372], mem_out[371], mem_out[370], mem_out[369], mem_out[368], mem_out[367], mem_out[366], mem_out[365], mem_out[364], mem_out[363], mem_out[362], mem_out[361], mem_out[360], mem_out[359], mem_out[358]}),
 		.mem_outb({mem_outb[375], mem_outb[374], mem_outb[373], mem_outb[372], mem_outb[371], mem_outb[370], mem_outb[369], mem_outb[368], mem_outb[367], mem_outb[366], mem_outb[365], mem_outb[364], mem_outb[363], mem_outb[362], mem_outb[361], mem_outb[360], mem_outb[359], mem_outb[358]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_8 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_8 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_7_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_8_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_7_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_8_ccff_tail),
 		.mem_out({mem_out[393], mem_out[392], mem_out[391], mem_out[390], mem_out[389], mem_out[388], mem_out[387], mem_out[386], mem_out[385], mem_out[384], mem_out[383], mem_out[382], mem_out[381], mem_out[380], mem_out[379], mem_out[378], mem_out[377], mem_out[376]}),
 		.mem_outb({mem_outb[393], mem_outb[392], mem_outb[391], mem_outb[390], mem_outb[389], mem_outb[388], mem_outb[387], mem_outb[386], mem_outb[385], mem_outb[384], mem_outb[383], mem_outb[382], mem_outb[381], mem_outb[380], mem_outb[379], mem_outb[378], mem_outb[377], mem_outb[376]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_9 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_9 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_8_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_9_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_8_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_9_ccff_tail),
 		.mem_out({mem_out[411], mem_out[410], mem_out[409], mem_out[408], mem_out[407], mem_out[406], mem_out[405], mem_out[404], mem_out[403], mem_out[402], mem_out[401], mem_out[400], mem_out[399], mem_out[398], mem_out[397], mem_out[396], mem_out[395], mem_out[394]}),
 		.mem_outb({mem_outb[411], mem_outb[410], mem_outb[409], mem_outb[408], mem_outb[407], mem_outb[406], mem_outb[405], mem_outb[404], mem_outb[403], mem_outb[402], mem_outb[401], mem_outb[400], mem_outb[399], mem_outb[398], mem_outb[397], mem_outb[396], mem_outb[395], mem_outb[394]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_10 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_10 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_9_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_9_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.mem_out({mem_out[429], mem_out[428], mem_out[427], mem_out[426], mem_out[425], mem_out[424], mem_out[423], mem_out[422], mem_out[421], mem_out[420], mem_out[419], mem_out[418], mem_out[417], mem_out[416], mem_out[415], mem_out[414], mem_out[413], mem_out[412]}),
 		.mem_outb({mem_outb[429], mem_outb[428], mem_outb[427], mem_outb[426], mem_outb[425], mem_outb[424], mem_outb[423], mem_outb[422], mem_outb[421], mem_outb[420], mem_outb[419], mem_outb[418], mem_outb[417], mem_outb[416], mem_outb[415], mem_outb[414], mem_outb[413], mem_outb[412]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_11 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_11 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.ccff_tail(ccff_tail),
 		.mem_out({mem_out[447], mem_out[446], mem_out[445], mem_out[444], mem_out[443], mem_out[442], mem_out[441], mem_out[440], mem_out[439], mem_out[438], mem_out[437], mem_out[436], mem_out[435], mem_out[434], mem_out[433], mem_out[432], mem_out[431], mem_out[430]}),
 		.mem_outb({mem_outb[447], mem_outb[446], mem_outb[445], mem_outb[444], mem_outb[443], mem_outb[442], mem_outb[441], mem_outb[440], mem_outb[439], mem_outb[438], mem_outb[437], mem_outb[436], mem_outb[435], mem_outb[434], mem_outb[433], mem_outb[432], mem_outb[431], mem_outb[430]}));
@@ -5400,17 +5400,17 @@ wire [0:0] mux_2level_tapbuf_size56_mem_0_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_1_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_2_ccff_tail;
 wire [0:0] mux_2level_tapbuf_size56_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_0_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_10_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_1_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_2_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_3_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_4_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_5_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_6_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_7_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_8_ccff_tail;
-wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_0_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_10_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_1_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_2_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_3_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_4_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_5_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_6_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_7_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_8_ccff_tail;
+wire [0:0] mux_2level_tapbuf_size80_mem_9_ccff_tail;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -5545,98 +5545,98 @@ wire [0:0] mux_2level_tapbuf_size64_mem_9_ccff_tail;
 		.mem_out({mem_out[175], mem_out[174], mem_out[173], mem_out[172], mem_out[171], mem_out[170], mem_out[169], mem_out[168], mem_out[167], mem_out[166], mem_out[165], mem_out[164], mem_out[163], mem_out[162], mem_out[161], mem_out[160]}),
 		.mem_outb({mem_outb[175], mem_outb[174], mem_outb[173], mem_outb[172], mem_outb[171], mem_outb[170], mem_outb[169], mem_outb[168], mem_outb[167], mem_outb[166], mem_outb[165], mem_outb[164], mem_outb[163], mem_outb[162], mem_outb[161], mem_outb[160]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_0 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
 		.ccff_head(mux_2level_tapbuf_size48_mem_11_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_0_ccff_tail),
 		.mem_out({mem_out[249], mem_out[248], mem_out[247], mem_out[246], mem_out[245], mem_out[244], mem_out[243], mem_out[242], mem_out[241], mem_out[240], mem_out[239], mem_out[238], mem_out[237], mem_out[236], mem_out[235], mem_out[234], mem_out[233], mem_out[232]}),
 		.mem_outb({mem_outb[249], mem_outb[248], mem_outb[247], mem_outb[246], mem_outb[245], mem_outb[244], mem_outb[243], mem_outb[242], mem_outb[241], mem_outb[240], mem_outb[239], mem_outb[238], mem_outb[237], mem_outb[236], mem_outb[235], mem_outb[234], mem_outb[233], mem_outb[232]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_1 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_1_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_1_ccff_tail),
 		.mem_out({mem_out[267], mem_out[266], mem_out[265], mem_out[264], mem_out[263], mem_out[262], mem_out[261], mem_out[260], mem_out[259], mem_out[258], mem_out[257], mem_out[256], mem_out[255], mem_out[254], mem_out[253], mem_out[252], mem_out[251], mem_out[250]}),
 		.mem_outb({mem_outb[267], mem_outb[266], mem_outb[265], mem_outb[264], mem_outb[263], mem_outb[262], mem_outb[261], mem_outb[260], mem_outb[259], mem_outb[258], mem_outb[257], mem_outb[256], mem_outb[255], mem_outb[254], mem_outb[253], mem_outb[252], mem_outb[251], mem_outb[250]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_2 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_2 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_2_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_2_ccff_tail),
 		.mem_out({mem_out[285], mem_out[284], mem_out[283], mem_out[282], mem_out[281], mem_out[280], mem_out[279], mem_out[278], mem_out[277], mem_out[276], mem_out[275], mem_out[274], mem_out[273], mem_out[272], mem_out[271], mem_out[270], mem_out[269], mem_out[268]}),
 		.mem_outb({mem_outb[285], mem_outb[284], mem_outb[283], mem_outb[282], mem_outb[281], mem_outb[280], mem_outb[279], mem_outb[278], mem_outb[277], mem_outb[276], mem_outb[275], mem_outb[274], mem_outb[273], mem_outb[272], mem_outb[271], mem_outb[270], mem_outb[269], mem_outb[268]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_3 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_3 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_3_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_3_ccff_tail),
 		.mem_out({mem_out[303], mem_out[302], mem_out[301], mem_out[300], mem_out[299], mem_out[298], mem_out[297], mem_out[296], mem_out[295], mem_out[294], mem_out[293], mem_out[292], mem_out[291], mem_out[290], mem_out[289], mem_out[288], mem_out[287], mem_out[286]}),
 		.mem_outb({mem_outb[303], mem_outb[302], mem_outb[301], mem_outb[300], mem_outb[299], mem_outb[298], mem_outb[297], mem_outb[296], mem_outb[295], mem_outb[294], mem_outb[293], mem_outb[292], mem_outb[291], mem_outb[290], mem_outb[289], mem_outb[288], mem_outb[287], mem_outb[286]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_4 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_4 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_4_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_4_ccff_tail),
 		.mem_out({mem_out[321], mem_out[320], mem_out[319], mem_out[318], mem_out[317], mem_out[316], mem_out[315], mem_out[314], mem_out[313], mem_out[312], mem_out[311], mem_out[310], mem_out[309], mem_out[308], mem_out[307], mem_out[306], mem_out[305], mem_out[304]}),
 		.mem_outb({mem_outb[321], mem_outb[320], mem_outb[319], mem_outb[318], mem_outb[317], mem_outb[316], mem_outb[315], mem_outb[314], mem_outb[313], mem_outb[312], mem_outb[311], mem_outb[310], mem_outb[309], mem_outb[308], mem_outb[307], mem_outb[306], mem_outb[305], mem_outb[304]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_5 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_5 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_4_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_5_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_5_ccff_tail),
 		.mem_out({mem_out[339], mem_out[338], mem_out[337], mem_out[336], mem_out[335], mem_out[334], mem_out[333], mem_out[332], mem_out[331], mem_out[330], mem_out[329], mem_out[328], mem_out[327], mem_out[326], mem_out[325], mem_out[324], mem_out[323], mem_out[322]}),
 		.mem_outb({mem_outb[339], mem_outb[338], mem_outb[337], mem_outb[336], mem_outb[335], mem_outb[334], mem_outb[333], mem_outb[332], mem_outb[331], mem_outb[330], mem_outb[329], mem_outb[328], mem_outb[327], mem_outb[326], mem_outb[325], mem_outb[324], mem_outb[323], mem_outb[322]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_6 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_6 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_5_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_6_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_5_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_6_ccff_tail),
 		.mem_out({mem_out[357], mem_out[356], mem_out[355], mem_out[354], mem_out[353], mem_out[352], mem_out[351], mem_out[350], mem_out[349], mem_out[348], mem_out[347], mem_out[346], mem_out[345], mem_out[344], mem_out[343], mem_out[342], mem_out[341], mem_out[340]}),
 		.mem_outb({mem_outb[357], mem_outb[356], mem_outb[355], mem_outb[354], mem_outb[353], mem_outb[352], mem_outb[351], mem_outb[350], mem_outb[349], mem_outb[348], mem_outb[347], mem_outb[346], mem_outb[345], mem_outb[344], mem_outb[343], mem_outb[342], mem_outb[341], mem_outb[340]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_7 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_7 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_6_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_7_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_6_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_7_ccff_tail),
 		.mem_out({mem_out[375], mem_out[374], mem_out[373], mem_out[372], mem_out[371], mem_out[370], mem_out[369], mem_out[368], mem_out[367], mem_out[366], mem_out[365], mem_out[364], mem_out[363], mem_out[362], mem_out[361], mem_out[360], mem_out[359], mem_out[358]}),
 		.mem_outb({mem_outb[375], mem_outb[374], mem_outb[373], mem_outb[372], mem_outb[371], mem_outb[370], mem_outb[369], mem_outb[368], mem_outb[367], mem_outb[366], mem_outb[365], mem_outb[364], mem_outb[363], mem_outb[362], mem_outb[361], mem_outb[360], mem_outb[359], mem_outb[358]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_8 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_8 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_7_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_8_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_7_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_8_ccff_tail),
 		.mem_out({mem_out[393], mem_out[392], mem_out[391], mem_out[390], mem_out[389], mem_out[388], mem_out[387], mem_out[386], mem_out[385], mem_out[384], mem_out[383], mem_out[382], mem_out[381], mem_out[380], mem_out[379], mem_out[378], mem_out[377], mem_out[376]}),
 		.mem_outb({mem_outb[393], mem_outb[392], mem_outb[391], mem_outb[390], mem_outb[389], mem_outb[388], mem_outb[387], mem_outb[386], mem_outb[385], mem_outb[384], mem_outb[383], mem_outb[382], mem_outb[381], mem_outb[380], mem_outb[379], mem_outb[378], mem_outb[377], mem_outb[376]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_9 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_9 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_8_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_9_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_8_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_9_ccff_tail),
 		.mem_out({mem_out[411], mem_out[410], mem_out[409], mem_out[408], mem_out[407], mem_out[406], mem_out[405], mem_out[404], mem_out[403], mem_out[402], mem_out[401], mem_out[400], mem_out[399], mem_out[398], mem_out[397], mem_out[396], mem_out[395], mem_out[394]}),
 		.mem_outb({mem_outb[411], mem_outb[410], mem_outb[409], mem_outb[408], mem_outb[407], mem_outb[406], mem_outb[405], mem_outb[404], mem_outb[403], mem_outb[402], mem_outb[401], mem_outb[400], mem_outb[399], mem_outb[398], mem_outb[397], mem_outb[396], mem_outb[395], mem_outb[394]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_10 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_10 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_9_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_9_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.mem_out({mem_out[429], mem_out[428], mem_out[427], mem_out[426], mem_out[425], mem_out[424], mem_out[423], mem_out[422], mem_out[421], mem_out[420], mem_out[419], mem_out[418], mem_out[417], mem_out[416], mem_out[415], mem_out[414], mem_out[413], mem_out[412]}),
 		.mem_outb({mem_outb[429], mem_outb[428], mem_outb[427], mem_outb[426], mem_outb[425], mem_outb[424], mem_outb[423], mem_outb[422], mem_outb[421], mem_outb[420], mem_outb[419], mem_outb[418], mem_outb[417], mem_outb[416], mem_outb[415], mem_outb[414], mem_outb[413], mem_outb[412]}));
 
-	mux_2level_tapbuf_size64_mem mem_top_ipin_11 (
+	mux_2level_tapbuf_size80_mem mem_top_ipin_11 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size64_mem_10_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size80_mem_10_ccff_tail),
 		.ccff_tail(ccff_tail),
 		.mem_out({mem_out[447], mem_out[446], mem_out[445], mem_out[444], mem_out[443], mem_out[442], mem_out[441], mem_out[440], mem_out[439], mem_out[438], mem_out[437], mem_out[436], mem_out[435], mem_out[434], mem_out[433], mem_out[432], mem_out[431], mem_out[430]}),
 		.mem_outb({mem_outb[447], mem_outb[446], mem_outb[445], mem_outb[444], mem_outb[443], mem_outb[442], mem_outb[441], mem_outb[440], mem_outb[439], mem_outb[438], mem_outb[437], mem_outb[436], mem_outb[435], mem_outb[434], mem_outb[433], mem_outb[432], mem_outb[431], mem_outb[430]}));

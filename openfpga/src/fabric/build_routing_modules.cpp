@@ -517,6 +517,24 @@ static void build_switch_block_module(
   }
 
   if (true == group_routing) {
+    // Cache the switch block output port nets for later use in connection block building
+    for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+      SideManager side_manager(side);
+      for (size_t itrack = 0;
+         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      if (OUT_PORT ==
+        rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        RRNodeId out_rr_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
+        ModulePinInfo output_port_info = find_switch_block_module_chan_port(
+        module_manager, sb_module, rr_graph, rr_gsb, side_manager.get_side(),
+        out_rr_node, OUT_PORT);
+        ModuleNetId net = create_module_source_pin_net(
+        module_manager, sb_module, sb_module, 0, output_port_info.first,
+        output_port_info.second);
+        input_port_to_module_nets[output_port_info] = net;
+      }
+      }
+    }
     // Create IPIN Ports if IPIN exist in the current GSB
     for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
       SideManager side_manager(side);
@@ -775,7 +793,7 @@ static void build_connection_block_mux_module(
   } else {
     cb_input_port_ids = find_switch_block_module_input_ports(
       module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
-      driver_rr_nodes);
+      driver_rr_nodes, group_routing);
   }
 
   /* Link input bus port to Switch Block inputs */
