@@ -142,25 +142,15 @@ std::string PcfCustomCommand::custom_decimal_mode_convert_mode_with_segment(
   const std::string& command_name, const std::string& option_name,
   const std::string& mode_value) const {
   /*split and rearrange according to segment*/
-  std::vector<std::string> mode_parsed;
-  std::vector<int> mode_parsed_offset;
+
+  std::string mode_value_mod = mode_value;
   for (auto segment_id :
        custom_decimal_mode_segments(command_name, option_name)) {
     vtr::Point<int> range = custom_decimal_mode_segments_range(segment_id);
     std::string sub_mode =
       mode_value.substr(range.x(), range.y() - range.x() + 1);
     int sub_mode_offset = custom_decimal_mode_segment_offset(segment_id);
-    mode_parsed.push_back(sub_mode);
-    mode_parsed_offset.push_back(sub_mode_offset);
-  }
-  std::vector<int> idx(mode_parsed_offset.size());
-  std::iota(idx.begin(), idx.end(), 0);
-  std::sort(idx.begin(), idx.end(), [&mode_parsed_offset](int i1, int i2) {
-    return mode_parsed_offset[i1] < mode_parsed_offset[i2];
-  });
-  std::string mode_value_mod = "";
-  for (auto sorted_index : idx) {
-    mode_value_mod += mode_parsed[sorted_index];
+    mode_value_mod.replace(sub_mode_offset, sub_mode.length(), sub_mode);
   }
   VTR_LOG("Convert original mode %s to %s \n", mode_value.c_str(),
           mode_value_mod.c_str());
