@@ -303,40 +303,29 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           /* Check if the to_node is a channel node */
           if (vpr_device_ctx.rr_graph.node_type(to_node) == e_rr_type::CHANX ||
               vpr_device_ctx.rr_graph.node_type(to_node) == e_rr_type::CHANY) {
-            int to_xlow = vpr_device_ctx.rr_graph.node_xlow(to_node);
-            int to_ylow = vpr_device_ctx.rr_graph.node_ylow(to_node);
-            int to_xhigh = vpr_device_ctx.rr_graph.node_xhigh(to_node);
-            int to_yhigh = vpr_device_ctx.rr_graph.node_yhigh(to_node);
 
             /* Pick the driver location based on direction */
-            size_t driver_x =
-              static_cast<size_t>((vpr_device_ctx.rr_graph.node_direction(
-                                     to_node) == Direction::INC)
-                                    ? to_xlow
-                                    : to_xhigh);
-            size_t driver_y =
-              static_cast<size_t>((vpr_device_ctx.rr_graph.node_direction(
-                                     to_node) == Direction::INC)
-                                    ? to_ylow
-                                    : to_yhigh);
+            vtr::Point<size_t> track_start =
+              get_track_rr_node_start_coordinate(vpr_device_ctx.rr_graph,
+                                                 to_node);
             Direction driver_dir =
               vpr_device_ctx.rr_graph.node_direction(to_node);
 
             /* Check if the channel node is in the current SB */
             // [x][y] for Decremental wires
-            if (driver_x == gsb_coord.x() && driver_y == gsb_coord.y() &&
+            if (track_start.x() == gsb_coord.x() && track_start.y() == gsb_coord.y() &&
                 driver_dir == Direction::DEC) {
               connected_opin_in_curr_sb = true;
               break;
             }
             // [x+1][y] for Incremental wires
-            if (driver_x == gsb_coord.x() + 1 && driver_y == gsb_coord.y() &&
+            if (track_start.x() == gsb_coord.x() + 1 && track_start.y() == gsb_coord.y() &&
                 driver_dir == Direction::INC) {
               connected_opin_in_curr_sb = true;
               break;
             }
             // [x][y+1] for Incremental wires
-            if (driver_x == gsb_coord.x() && driver_y == gsb_coord.y() + 1 &&
+            if (track_start.x() == gsb_coord.x() && track_start.y() == gsb_coord.y() + 1 &&
                 driver_dir == Direction::INC) {
               connected_opin_in_curr_sb = true;
               break;
