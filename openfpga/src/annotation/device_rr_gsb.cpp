@@ -375,7 +375,11 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph,
       const RRGSBEdges& cand_edges = rr_gsb_edges_[ix][iy];
       for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
         const RRGSB& unique_module = get_cb_unique_module(cb_type, id);
-        const RRGSBEdges& base_edges = rr_gsb_edges_[ix][iy];
+        const vtr::Point<size_t>& base_coord =
+          (cb_type == e_rr_type::CHANX) ? cbx_unique_module_[id]
+                                        : cby_unique_module_[id];
+        const RRGSBEdges& base_edges =
+          rr_gsb_edges_[base_coord.x()][base_coord.y()];
         if (true == is_cb_mirror(rr_graph, in_edges, device_annotation_,
                                  unique_module, base_edges, rr_gsb_[ix][iy],
                                  cand_edges, cb_type)) {
