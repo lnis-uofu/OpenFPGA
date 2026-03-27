@@ -5,7 +5,6 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include "module_manager.h"
-#include "openfpga_side_manager.h"
 #include "physical_types.h"
 #include "tile_annotation.h"
 #include "vpr_device_annotation.h"
