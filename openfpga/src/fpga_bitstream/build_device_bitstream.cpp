@@ -211,6 +211,8 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
 
   /* Create bitstream from grids */
   VTR_LOGV(verbose, "Building grid bitstream...\n");
+  RRGraphInEdges in_edges;
+  in_edges.init(vpr_ctx.device().rr_graph);
 
   build_grid_bitstream(
     bitstream_manager, top_block, openfpga_ctx.module_graph(),
@@ -230,7 +232,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
     openfpga_ctx.module_name_map(), openfpga_ctx.fabric_tile(),
     openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(), vpr_ctx.atom(),
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.vpr_routing_annotation(),
-    vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(),
+    vpr_ctx.device().rr_graph, in_edges, openfpga_ctx.device_rr_gsb(),
     openfpga_ctx.flow_manager().compress_routing(), unused_mux_config, verbose);
 
   VTR_LOGV(verbose, "Done\n");

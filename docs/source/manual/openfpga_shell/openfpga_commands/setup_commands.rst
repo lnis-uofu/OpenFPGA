@@ -175,7 +175,7 @@ link_openfpga_arch
 write_gsb_to_xml
 ~~~~~~~~~~~~~~~~
 
-  Write the internal structure of General Switch Blocks (GSBs) across a FPGA fabric, including the interconnection between the nodes and node-level details, to XML files
+  Write the internal structure of General Switch Blocks (GSBs) across a FPGA fabric, including the interconnection between the nodes and node-level details, to XML files. Please refer :ref:`file_formats_gsb_xml` for details about the file format.
 
   .. option:: --file <string> or -f <string>
 

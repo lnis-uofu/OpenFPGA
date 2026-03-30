@@ -163,7 +163,7 @@ static int build_fabric_tile_style_bottom_left(FabricTile& fabric_tile,
                    ix, iy);
         }
       }
-      if (curr_rr_gsb.is_sb_exist(rr_graph)) {
+      if (device_rr_gsb.is_sb_exist(curr_gsb_coord)) {
         fabric_tile.add_sb_coordinate(curr_tile_id,
                                       curr_rr_gsb.get_sb_coordinate());
         VTR_LOGV(verbose, "Added switch block [%lu][%lu] to tile[%lu][%lu]\n",
@@ -229,7 +229,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
           const RRGSB& routing_rr_gsb =
             device_rr_gsb.get_gsb(neighbor_gsb_coord);
           if (routing_rr_gsb.is_cb_exist(e_rr_type::CHANX) ||
-              routing_rr_gsb.is_sb_exist(rr_graph)) {
+              device_rr_gsb.is_sb_exist(neighbor_gsb_coord)) {
             routing_exist = true;
           }
         }
@@ -270,7 +270,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
                    neighbor_rr_gsb.get_cb_x(e_rr_type::CHANX),
                    neighbor_rr_gsb.get_cb_y(e_rr_type::CHANX), ix, iy);
         }
-        if (neighbor_rr_gsb.is_sb_exist(rr_graph)) {
+        if (device_rr_gsb.is_sb_exist(neighbor_gsb_coord)) {
           fabric_tile.add_sb_coordinate(curr_tile_id,
                                         neighbor_rr_gsb.get_sb_coordinate());
           VTR_LOGV(verbose, "Added switch block [%lu][%lu] to tile[%lu][%lu]\n",

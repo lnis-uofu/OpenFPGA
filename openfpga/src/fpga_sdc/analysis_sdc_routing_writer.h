@@ -24,7 +24,8 @@ void print_analysis_sdc_disable_unused_cbs(
   std::fstream& fp, const AtomContext& atom_ctx,
   const ModuleManager& module_manager,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const VprRoutingAnnotation& routing_annotation,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const VprRoutingAnnotation& routing_annotation,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy);
 
 void print_analysis_sdc_disable_unused_sbs(
