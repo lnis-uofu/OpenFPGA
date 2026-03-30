@@ -166,7 +166,7 @@ link_openfpga_arch
 
   .. option:: --reorder_incoming_edges
 
-    Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges
+    Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges, this is performed after executing `--sort_gsb_chan_node_in_edges` option.
 
   .. option:: --verbose
 
