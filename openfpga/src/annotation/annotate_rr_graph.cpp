@@ -13,11 +13,11 @@
 /* Headers from vpr library */
 #include "annotate_rr_graph.h"
 #include "openfpga_rr_graph_utils.h"
-#include "tileable_rr_graph_utils.h"
 #include "physical_types.h"
 #include "rr_graph_in_edges.h"
 #include "rr_graph_view_util.h"
 #include "rr_gsb_edges.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -296,49 +296,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
          */
         if (true ==
             is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) {
-          continue;
-        }
-
-        /* Add the OPIN node to the GSB only if they drive a CHANX/Y in the
-         * current SB*/
-        bool connected_opin_in_curr_sb = false;
-        for (RREdgeId edge : vpr_device_ctx.rr_graph.edge_range(inode)) {
-          RRNodeId to_node = vpr_device_ctx.rr_graph.edge_sink_node(edge);
-          /* Check if the to_node is a channel node */
-          if (vpr_device_ctx.rr_graph.node_type(to_node) == e_rr_type::CHANX ||
-              vpr_device_ctx.rr_graph.node_type(to_node) == e_rr_type::CHANY) {
-            /* Pick the driver location based on direction */
-            vtr::Point<size_t> track_start = get_track_rr_node_start_coordinate(
-              vpr_device_ctx.rr_graph, to_node);
-            Direction driver_dir =
-              vpr_device_ctx.rr_graph.node_direction(to_node);
-
-            /* Check if the channel node is in the current SB */
-            // [x][y] for Decremental wires
-            if (track_start.x() == gsb_coord.x() &&
-                track_start.y() == gsb_coord.y() &&
-                driver_dir == Direction::DEC) {
-              connected_opin_in_curr_sb = true;
-              break;
-            }
-            // [x+1][y] for Incremental wires
-            if (track_start.x() == gsb_coord.x() + 1 &&
-                track_start.y() == gsb_coord.y() &&
-                driver_dir == Direction::INC) {
-              connected_opin_in_curr_sb = true;
-              break;
-            }
-            // [x][y+1] for Incremental wires
-            if (track_start.x() == gsb_coord.x() &&
-                track_start.y() == gsb_coord.y() + 1 &&
-                driver_dir == Direction::INC) {
-              connected_opin_in_curr_sb = true;
-              break;
-            }
-          }
-        }
-        /* If the OPIN does not drive a channel in the current SB, skip it */
-        if (!connected_opin_in_curr_sb) {
           continue;
         }
 
