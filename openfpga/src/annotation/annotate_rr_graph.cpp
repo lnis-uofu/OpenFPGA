@@ -98,7 +98,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_range,
                           const size_t& layer,
                           const vtr::Point<size_t>& gsb_coord,
-                          const bool& perimeter_cb, const bool& include_clock) {
+                          const bool& perimeter_cb, const bool& include_clock,
+                          const u_int& gsb_version) {
   /* Create an object to return */
   RRGSB rr_gsb;
 
@@ -107,6 +108,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
   /* Coordinator initialization */
   rr_gsb.set_coordinate(gsb_coord.x(), gsb_coord.y());
+  rr_gsb.set_gsb_version(gsb_version);
 
   /* Basic information*/
   rr_gsb.init_num_sides(4); /* Fixed number of sides */
@@ -116,8 +118,10 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     /* Local variables inside this for loop */
     SideManager side_manager(side);
-    vtr::Point<size_t> coordinate =
-      rr_gsb.get_side_block_coordinate(side_manager.get_side());
+    vtr::Point<size_t> coordinate(gsb_coord.x(), gsb_coord.y());
+    if (gsb_version == 1) {
+      coordinate = rr_gsb.get_side_block_coordinate(side_manager.get_side());
+    }
     RRChan rr_chan;
     std::vector<std::vector<RRNodeId>> temp_opin_rr_nodes(2);
     enum e_side opin_grid_side[2] = {NUM_2D_SIDES, NUM_2D_SIDES};
@@ -412,7 +416,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
-                            const bool& include_clock,
+                            const bool& include_clock, const u_int& gsb_version,
                             const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
@@ -426,6 +430,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
     gsb_range.set(vpr_device_ctx.grid.width(), vpr_device_ctx.grid.height());
   }
   device_rr_gsb.reserve(gsb_range);
+  device_rr_gsb.set_gsb_version(gsb_version);
 
   VTR_LOGV(verbose_output, "Start annotation GSB up to [%lu][%lu]\n",
            gsb_range.x(), gsb_range.y());
@@ -443,7 +448,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                                        vpr_device_ctx.grid.height() - 1);
       const RRGSB& rr_gsb = build_rr_gsb(
         vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
-        vpr_device_ctx.arch->perimeter_cb, include_clock);
+        vpr_device_ctx.arch->perimeter_cb, include_clock, gsb_version);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

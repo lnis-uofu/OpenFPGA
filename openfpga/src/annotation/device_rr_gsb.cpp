@@ -752,4 +752,13 @@ void DeviceRRGSB::preload_unique_sb_module(
       sb_unique_module_id_[block_coordinate.x()][block_coordinate.y()];
   }
 }
+
+/* Get the version of a GSB */
+u_int DeviceRRGSB::get_gsb_version() const { return DeviceRRGSB::gsb_version_; }
+
+/* Set the version of a GSB */
+void DeviceRRGSB::set_gsb_version(const u_int& version) {
+  DeviceRRGSB::gsb_version_ = version;
+}
+
 } /* End namespace openfpga*/

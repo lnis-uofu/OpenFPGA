@@ -790,6 +790,8 @@ static void add_top_module_nets_connect_sb_and_cb(
                                             rr_gsb.get_sb_y());
   vtr::Point<size_t> module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
+  u_int gsb_version = device_rr_gsb.get_gsb_version();
+
   /* Skip those Switch blocks that do not exist */
   if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
@@ -857,8 +859,16 @@ static void add_top_module_nets_connect_sb_and_cb(
           instance_sb_coordinate.y() == device_rr_gsb.get_gsb_range().y()) {
         continue;
       }
+      if (TOP == side_manager.get_side() && gsb_version == 2 &&
+          instance_sb_coordinate.y() == device_rr_gsb.get_gsb_range().y() - 1) {
+        continue;
+      }
       if (RIGHT == side_manager.get_side() &&
           instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x()) {
+        continue;
+      }
+      if (RIGHT == side_manager.get_side() && gsb_version == 2 &&
+          instance_sb_coordinate.x() == device_rr_gsb.get_gsb_range().x() - 1) {
         continue;
       }
       const RRGSB& adjacent_gsb =
@@ -1000,8 +1010,10 @@ void add_top_module_nets_connect_grids_and_gsbs(
 
   vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
 
-  for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
-    for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
+  // GSB version 2 has the same number of GSBs as grids
+  size_t offset = device_rr_gsb.get_gsb_version() == 2 ? 0 : 0;
+  for (size_t ix = 0; ix < gsb_range.x() - offset; ++ix) {
+    for (size_t iy = 0; iy < gsb_range.y() - offset; ++iy) {
       vtr::Point<size_t> gsb_coordinate(ix, iy);
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
 

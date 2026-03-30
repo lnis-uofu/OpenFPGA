@@ -87,6 +87,7 @@ class DeviceRRGSB {
    * coordinate. Note: Do NOT use sb coordinate!!! */
   size_t get_cb_unique_module_index(const e_rr_type& cb_type,
                                     const vtr::Point<size_t>& coordinate) const;
+  u_int get_gsb_version() const;
 
  public: /* Mutators */
   bool is_compressed() const;
@@ -135,6 +136,7 @@ when read_unique_blocks command invoked */
                    and their corresponding instance information. This function
                    will be called when read_unique_blocks command invoked */
   void clear_unique_modules(); /* clean the content of unique blocks*/
+  void set_gsb_version(const u_int& version);
 
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
@@ -204,6 +206,7 @@ when read_unique_blocks command invoked */
 
   /* Cached data */
   const VprDeviceAnnotation& device_annotation_;
+  int gsb_version_ = 1; /* The version of GSB to be used. Default value is 1 */
 };
 
 } /* End namespace openfpga*/

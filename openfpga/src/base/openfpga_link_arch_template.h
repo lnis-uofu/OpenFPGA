@@ -49,7 +49,20 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
 
   CommandOptionId opt_activity_file = cmd.option("activity_file");
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
+  CommandOptionId opt_gsb_version = cmd.option("gsb_version");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+  u_int gsb_version = 1; /* Default GSB version is 1 */
+  if (cmd_context.option_enable(cmd, opt_gsb_version)) {
+    gsb_version = std::stoi(cmd_context.option_value(cmd, opt_gsb_version));
+  }
+
+  /* Validate gsb_version is either 1 or 2 */
+  if (gsb_version != 1 && gsb_version != 2) {
+    VTR_LOG_ERROR("Invalid GSB version %d. Supported versions are 1 and 2.\n",
+                  gsb_version);
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
@@ -120,7 +133,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    cmd_context.option_enable(cmd, opt_verbose));
+    gsb_version, cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
