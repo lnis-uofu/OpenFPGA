@@ -296,11 +296,13 @@ static void print_verilog_flatten_connection_block_modules(
  * 1. Connection blocks
  * 2. Switch blocks
  *******************************************************************/
-void print_verilog_flatten_routing_modules(
-  NetlistManager& netlist_manager, const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map, const DeviceRRGSB& device_rr_gsb,
-  const RRGraphView& rr_graph, const std::string& subckt_dir,
-  const std::string& subckt_dir_name, const FabricVerilogOption& options) {
+void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
+                                           const ModuleManager& module_manager,
+                                           const ModuleNameMap& module_name_map,
+                                           const DeviceRRGSB& device_rr_gsb,
+                                           const std::string& subckt_dir,
+                                           const std::string& subckt_dir_name,
+                                           const FabricVerilogOption& options) {
   /* Create a vector to contain all the Verilog netlist names that have been
    * generated in this function */
   std::vector<std::string> netlist_names;
@@ -311,7 +313,7 @@ void print_verilog_flatten_routing_modules(
   for (size_t ix = 0; ix < sb_range.x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if (true != rr_gsb.is_sb_exist(rr_graph)) {
+      if (true != device_rr_gsb.is_sb_exist(ix, iy)) {
         continue;
       }
       print_verilog_routing_switch_box_unique_module(

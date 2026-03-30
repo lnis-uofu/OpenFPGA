@@ -42,7 +42,8 @@ constexpr int PORT_PARSER_SUPPORT_ALL_FORMAT = ((1 << 3) - 1);
 class PortParser {
  public: /* Constructors*/
   PortParser(const std::string& data,
-             const int support_format = PORT_PARSER_SUPPORT_ALL_FORMAT);
+             const int support_format = PORT_PARSER_SUPPORT_ALL_FORMAT,
+             const bool& only_range = false);
 
  public: /* Public Accessors */
   std::string data() const;
@@ -51,10 +52,10 @@ class PortParser {
 
  public: /* Public Mutators */
   void set_support_format(const int support_format);
-  void set_data(const std::string& data);
+  void set_data(const std::string& data, const bool& only_range = false);
 
  private: /* Private Mutators */
-  void parse();
+  void parse(const bool& only_range = false);
   void set_default_bracket();
   void set_default_delim();
   size_t string_to_number(const std::string& str);

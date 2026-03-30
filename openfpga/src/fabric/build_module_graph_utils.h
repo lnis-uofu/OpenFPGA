@@ -9,7 +9,6 @@
 
 #include "circuit_library.h"
 #include "module_manager.h"
-#include "openfpga_side_manager.h"
 #include "vpr_types.h"
 #include "vtr_geometry.h"
 

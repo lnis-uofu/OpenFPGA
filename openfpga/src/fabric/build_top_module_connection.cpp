@@ -10,7 +10,7 @@
 #include "command_exit_codes.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 
 /* Headers from vpr library */
 #include "build_routing_module_utils.h"
@@ -21,10 +21,11 @@
 #include "openfpga_naming.h"
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_reserved_words.h"
+#include "openfpga_rr_graph_utils.h"
 #include "pb_type_utils.h"
 #include "physical_types_util.h"
+#include "rr_gsb_edges.h"
 #include "rr_gsb_utils.h"
-#include "tileable_rr_graph_utils.h"
 #include "vpr_utils.h"
 
 /* begin namespace openfpga */
@@ -70,7 +71,7 @@ static void add_top_module_nets_connect_grids_and_sb(
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const bool& compact_routing_hierarchy, const bool& group_routing) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist(rr_graph)) {
+  if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
     return;
   }
 
@@ -322,7 +323,7 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist(rr_graph)) {
+  if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
     return;
   }
 
@@ -562,6 +563,10 @@ static void add_top_module_nets_connect_grids_and_cb(
 
   /* This is the source cb that is added to the top module */
   const RRGSB& module_cb = device_rr_gsb.get_gsb(module_gsb_coordinate);
+  const RRGSBEdges& module_cb_edges =
+    device_rr_gsb.get_gsb_edges(module_gsb_coordinate);
+  const RRGSBEdges& rr_gsb_edges =
+    device_rr_gsb.get_gsb_edges(rr_gsb.get_x(), rr_gsb.get_y());
   vtr::Point<size_t> module_cb_coordinate(module_cb.get_cb_x(cb_type),
                                           module_cb.get_cb_y(cb_type));
 
@@ -659,11 +664,11 @@ static void add_top_module_nets_connect_grids_and_cb(
   for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
     enum e_side cb_opin_side = cb_opin_sides[iside];
     for (size_t inode = 0;
-         inode < module_cb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
+         inode < module_cb_edges.get_num_cb_opin_nodes(cb_type, cb_opin_side);
          ++inode) {
       /* Collect source-related information */
       RRNodeId module_opin_node =
-        module_cb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+        module_cb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode);
       vtr::Point<size_t> cb_src_port_coord(
         rr_graph.node_xlow(module_opin_node),
         rr_graph.node_ylow(module_opin_node));
@@ -681,7 +686,7 @@ static void add_top_module_nets_connect_grids_and_cb(
        * because it has the correct coordinator for the grid!!!
        */
       RRNodeId instance_opin_node =
-        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+        rr_gsb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode);
       vtr::Point<size_t> grid_coordinate(
         rr_graph.node_xlow(instance_opin_node),
         rr_graph.node_ylow(instance_opin_node));
@@ -712,7 +717,8 @@ static void add_top_module_nets_connect_grids_and_cb(
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
         get_rr_graph_single_node_side(
-          rr_graph, rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode)),
+          rr_graph,
+          rr_gsb_edges.get_cb_opin_node(cb_type, cb_opin_side, inode)),
         sink_grid_pin_info);
       ModulePortId sink_grid_port_id =
         module_manager.find_module_port(sink_grid_module, sink_grid_port_name);
@@ -791,7 +797,7 @@ static void add_top_module_nets_connect_sb_and_cb(
   vtr::Point<size_t> module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist(rr_graph)) {
+  if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
     return;
   }
 
