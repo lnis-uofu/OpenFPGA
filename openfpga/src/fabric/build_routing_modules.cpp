@@ -402,7 +402,8 @@ static void build_switch_block_interc_modules(
  *
  *
  ********************************************************************/
-/* Forward declarations for connection block helpers defined later in this file */
+/* Forward declarations for connection block helpers defined later in this file
+ */
 static void build_connection_block_module_short_interc(
   ModuleManager& module_manager, const ModuleId& cb_module,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
@@ -990,9 +991,9 @@ static void build_connection_block_interc_modules(
   } else if (1 < driver_rr_edges.size()) {
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(
-      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges, rr_gsb,
-      gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index, input_port_to_module_nets,
-      group_config_block, false);
+      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
+      rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
+      input_port_to_module_nets, group_config_block, false);
   } /*Nothing should be done else*/
 }
 

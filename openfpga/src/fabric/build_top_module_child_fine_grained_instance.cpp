@@ -466,8 +466,7 @@ int build_top_module_fine_grained_child_instances(
     add_top_module_grid_instances(module_manager, top_module, grids, layer);
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(
-    module_manager, top_module, device_rr_gsb,
-    compact_routing_hierarchy);
+    module_manager, top_module, device_rr_gsb, compact_routing_hierarchy);
 
   if (false == group_routing) {
     /* Add all the CBX and CBYs across the fabric */

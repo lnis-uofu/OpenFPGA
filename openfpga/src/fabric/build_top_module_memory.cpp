@@ -500,9 +500,9 @@ void organize_top_module_memory_modules(
       /* Identify the GSB that surrounds the grid */
       organize_top_module_tile_memory_modules(
         module_manager, top_module, circuit_lib, config_protocol.type(),
-        sram_model, grids, grid_instance_ids, device_rr_gsb,
-        sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
-        io_coord, io_side, group_routing);
+        sram_model, grids, grid_instance_ids, device_rr_gsb, sb_instance_ids,
+        cb_instance_ids, compact_routing_hierarchy, layer, io_coord, io_side,
+        group_routing);
     }
   }
 
@@ -529,9 +529,9 @@ void organize_top_module_memory_modules(
   for (const vtr::Point<size_t>& core_coord : core_coords) {
     organize_top_module_tile_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol.type(),
-      sram_model, grids, grid_instance_ids, device_rr_gsb,
-      sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
-      core_coord, NUM_2D_SIDES, group_routing);
+      sram_model, grids, grid_instance_ids, device_rr_gsb, sb_instance_ids,
+      cb_instance_ids, compact_routing_hierarchy, layer, core_coord,
+      NUM_2D_SIDES, group_routing);
   }
 
   /* Split memory modules into different regions */
