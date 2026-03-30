@@ -86,7 +86,9 @@
         <input name="I" num_pins="12" equivalent="full"/>
         <output name="O" num_pins="8" equivalent="none"/>
         <clock name="clk" num_pins="1"/>
-        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+        </fc>
         <pinlocations pattern="custom">
           <loc side="top">clb.I clb.clk</loc>
           <loc side="right">clb.O</loc>

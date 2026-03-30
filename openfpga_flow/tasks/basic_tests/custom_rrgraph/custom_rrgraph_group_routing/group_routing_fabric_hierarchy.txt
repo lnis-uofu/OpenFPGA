@@ -4,7 +4,6 @@ fpga_top:
   - grid_clb_tile
   - grid_io_top_tile
   - grid_io_right_tile
-  - sb_0__0_
   - sb_0__1_
   - sb_0__6_
   - sb_1__0_
