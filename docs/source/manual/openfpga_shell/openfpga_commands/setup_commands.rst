@@ -164,6 +164,10 @@ link_openfpga_arch
 
     Sort the edges for the routing tracks in General Switch Blocks (GSBs). Strongly recommand to turn this on for uniquifying the routing modules
 
+  .. option:: --reorder_incoming_edges
+
+    Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges, this is performed after executing `--sort_gsb_chan_node_in_edges` option.
+
   .. option:: --verbose
 
     Show verbose log
