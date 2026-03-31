@@ -24,6 +24,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
 
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
+                                           const bool reorder_incoming_edges,
                                            const RRGraphInEdges& in_edges,
                                            const bool& verbose_output);
 

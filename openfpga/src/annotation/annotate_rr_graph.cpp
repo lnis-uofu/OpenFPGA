@@ -17,6 +17,7 @@
 #include "rr_graph_in_edges.h"
 #include "rr_graph_view_util.h"
 #include "rr_gsb_edges.h"
+#include "tileable_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -478,6 +479,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
+                                           const bool reorder_incoming_edges,
                                            const RRGraphInEdges& in_edges,
                                            const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
@@ -499,7 +501,8 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
       vtr::Point<size_t> gsb_coordinate(ix, iy);
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(gsb_coordinate);
       device_rr_gsb.get_mutable_gsb_edges(gsb_coordinate)
-        .sort_chan_node_in_edges(rr_gsb, rr_graph, in_edges);
+        .sort_chan_node_in_edges(rr_gsb, rr_graph, in_edges,
+                                 reorder_incoming_edges);
 
       gsb_cnt++; /* Update counter */
 
