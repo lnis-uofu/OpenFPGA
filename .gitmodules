@@ -3,7 +3,7 @@
 	url = https://github.com/YosysHQ/yosys
 [submodule "vtr-verilog-to-routing"]
 	path = vtr-verilog-to-routing
-	url = https://github.com/verilog-to-routing/vtr-verilog-to-routing.git
+	url = https://github.com/coolbreeze413/vtr-verilog-to-routing
 [submodule "yosys-slang"]
 	path = yosys-slang
 	url = https://github.com/povik/yosys-slang.git
