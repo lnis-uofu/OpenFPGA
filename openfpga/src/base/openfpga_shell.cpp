@@ -11,6 +11,7 @@
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
 #include "vpr_command.h"
+#include "yosys_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
   shell_.set_name("OpenFPGA");
@@ -18,6 +19,9 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add vpr commands */
   openfpga::add_vpr_commands(shell_);
+
+  /* Add yosys commands */
+  openfpga::add_yosys_commands(shell_);
 
   /* Add openfpga setup commands */
   openfpga::add_openfpga_setup_commands(shell_);
