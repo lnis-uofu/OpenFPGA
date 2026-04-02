@@ -297,42 +297,6 @@ static void synchronize_primitive_physical_pb_atom_nets(
 }
 
 /************************************************************************
- * Reach this function, the primitive pb should be
- * - linked to a LUT pb_type
- * - operating in the wire mode of a LUT
- *
- * Note: this function will not check the prequistics here
- *       Users must be responsible for this!!!
- *
- * This function will find the physical pb_graph_pin for each output
- * of the pb_graph node and mark in the physical_pb database
- * as driven by an wired LUT
- ***********************************************************************/
-static void mark_physical_pb_wired_lut_outputs(
-  PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
-  const PhysicalPbId& primitive_pb, const t_pb_graph_node* pb_graph_node,
-  const VprDeviceAnnotation& device_annotation, const bool& verbose) {
-  for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
-    for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
-      t_pb_graph_pin* pb_graph_pin = &(pb_graph_node->output_pins[iport][ipin]);
-
-      /* Find the physical pb_graph_pin */
-      t_pb_graph_pin* physical_pb_graph_pin =
-        device_annotation.physical_pb_graph_pin(
-          lgk2phy_pb_map.pb_graph_pin(pb_graph_pin));
-      VTR_ASSERT(nullptr != physical_pb_graph_pin);
-
-      /* Print debug info */
-      VTR_LOGV(verbose, "Mark physical pb_graph pin '%s' as wire LUT output\n",
-               physical_pb_graph_pin->to_string().c_str());
-
-      /* Label the pins in physical_pb as driven by wired LUT*/
-      phy_pb.set_wire_lut_output(primitive_pb, physical_pb_graph_pin, true);
-    }
-  }
-}
-
-/************************************************************************
  * Synchronize mapping results from an operating pb to a physical pb
  ***********************************************************************/
 void rec_update_physical_pb_from_operating_pb(
@@ -505,9 +469,9 @@ void rec_update_physical_pb_from_operating_pb(
             port_index++;
           }
         }
-        /* Identify output pb_graph_pin that is driven by a wired LUT
-         * Without this function, physical Look-Up Table build-up will cause
-         * errors and bitstream will be incorrect!!!
+        /* Set the mode bits for routing-only LUTs.
+         * Actual wire-LUT outputs are identified later from the routed
+         * physical net mapping, which avoids over-marking fractured LUTs.
          */
         if (true == is_used) {
           VTR_ASSERT(LUT_CLASS == child_pb_type->class_type);
@@ -525,10 +489,6 @@ void rec_update_physical_pb_from_operating_pb(
           phy_pb.set_mode_bits(physical_pb,
                                device_annotation.pb_type_mode_bits(
                                  lgk2phy_pb_map.pb_type(child_pb_type)));
-
-          mark_physical_pb_wired_lut_outputs(phy_pb, lgk2phy_pb_map,
-                                             physical_pb, child_pb_graph_node,
-                                             device_annotation, verbose);
         }
       }
     }
@@ -536,8 +496,7 @@ void rec_update_physical_pb_from_operating_pb(
 }
 
 /***************************************************************************************
- * This function will identify all the wire LUTs that is created by repacker
- *only under a physical pb
+ * This function will identify all the wire LUT outputs under a physical pb
  *
  * A practical example of wire LUT that is created by VPR packer:
  *
@@ -583,12 +542,13 @@ void rec_update_physical_pb_from_operating_pb(
  *    netD is driven by another atom block atomB which is not mapped to the LUT
  *    Such wire LUT is created by repacker
  *
- * Return the number of wire LUTs that are found
+ * Return the number of wire LUT outputs that are found
  ***************************************************************************************/
 int identify_one_physical_pb_wire_lut_created_by_repack(
   PhysicalPb& physical_pb, const PhysicalPbId& lut_pb_id,
   const VprDeviceAnnotation& device_annotation, const AtomContext& atom_ctx,
   const CircuitLibrary& circuit_lib, const bool& verbose) {
+  (void)atom_ctx;
   int wire_lut_counter = 0;
   const t_pb_graph_node* pb_graph_node = physical_pb.pb_graph_node(lut_pb_id);
 
@@ -629,22 +589,8 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
       if (AtomNetId::INVALID() == output_net) {
         continue;
       }
-      /* Exclude all the LUTs that
-       * - have been used as wires
-       * - the driver atom block of the output_net is part of the atom blocks
-       *   If so, the driver atom block is already mapped to this pb
-       *   and the LUT is not used for wiring
-       */
+      /* Skip outputs that have already been annotated. */
       if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
-        continue;
-      }
-
-      std::vector<AtomBlockId> pb_atom_blocks =
-        physical_pb.atom_blocks(lut_pb_id);
-
-      if (pb_atom_blocks.end() !=
-          std::find(pb_atom_blocks.begin(), pb_atom_blocks.end(),
-                    atom_ctx.netlist().net_driver_block(output_net))) {
         continue;
       }
 
@@ -655,8 +601,7 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
 
       /* Print debug info */
       VTR_LOGV(verbose,
-               "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output "
-               "created by repacker\n",
+               "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output\n",
                output_pin->parent_node->pb_type->name, output_pin->port->name,
                output_pin->pin_number);
 
