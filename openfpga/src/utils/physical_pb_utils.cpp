@@ -600,10 +600,11 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
       }
 
       /* Print debug info */
-      VTR_LOGV(verbose,
-               "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output\n",
-               output_pin->parent_node->pb_type->name, output_pin->port->name,
-               output_pin->pin_number);
+      VTR_LOGV(
+        verbose,
+        "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output\n",
+        output_pin->parent_node->pb_type->name, output_pin->port->name,
+        output_pin->pin_number);
 
       /* Label the pins in physical_pb as driven by wired LUT*/
       physical_pb.set_wire_lut_output(lut_pb_id, output_pin, true);
