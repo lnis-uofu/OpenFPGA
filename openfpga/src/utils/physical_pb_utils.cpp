@@ -548,7 +548,6 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
   PhysicalPb& physical_pb, const PhysicalPbId& lut_pb_id,
   const VprDeviceAnnotation& device_annotation, const AtomContext& atom_ctx,
   const CircuitLibrary& circuit_lib, const bool& verbose) {
-  (void)atom_ctx;
   int wire_lut_counter = 0;
   const t_pb_graph_node* pb_graph_node = physical_pb.pb_graph_node(lut_pb_id);
 
@@ -591,6 +590,18 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
       }
       /* Skip outputs that have already been annotated. */
       if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
+        continue;
+      }
+      /* Exclude LUT outputs that are driven by atom blocks already mapped
+       * inside this physical LUT pb. Those correspond to normal logic outputs,
+       * not repacker-created wire-LUT outputs.
+       */
+      std::vector<AtomBlockId> pb_atom_blocks = physical_pb.atom_blocks(lut_pb_id);
+      const AtomBlockId output_driver_blk =
+        atom_ctx.netlist().net_driver_block(output_net);
+      if (pb_atom_blocks.end() !=
+          std::find(pb_atom_blocks.begin(), pb_atom_blocks.end(),
+                    output_driver_blk)) {
         continue;
       }
 
