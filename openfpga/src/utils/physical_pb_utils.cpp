@@ -369,7 +369,8 @@ static void mark_physical_pb_wired_lut_outputs(
 
       /* Find the physical pb_graph_pin */
       t_pb_graph_pin* physical_pb_graph_pin =
-        device_annotation.physical_pb_graph_pin(pb_graph_pin);
+        device_annotation.physical_pb_graph_pin(
+          lgk2phy_pb_map.pb_graph_pin(pb_graph_pin));
       VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
       /* Print debug info */
