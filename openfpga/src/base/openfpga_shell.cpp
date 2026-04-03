@@ -68,9 +68,8 @@ int OpenfpgaShell::start(int argc, char** argv) {
   start_cmd.set_option_short_name(opt_script_mode, "f");
 
   /* '--execute', -x': execute command line(s), separated by ';' */
-  openfpga::CommandOptionId opt_exec_mode =
-    start_cmd.add_option("execute", false,
-                         "Execute OpenFPGA command line(s), separated by ';'");
+  openfpga::CommandOptionId opt_exec_mode = start_cmd.add_option(
+    "execute", false, "Execute OpenFPGA command line(s), separated by ';'");
   start_cmd.set_option_require_value(opt_exec_mode, openfpga::OPT_STRING);
   start_cmd.set_option_short_name(opt_exec_mode, "x");
 
