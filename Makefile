@@ -1,11 +1,11 @@
-# 
+#
 # Top Makefile
 # ------------
 #
 # Top-level makefile to compile the codebase
 #
 # Following options are available
-# 
+#
 # .. option:: BUILD_TYPE=<string>
 #
 #  Pick the type of compilation. Can be either ``release`` or ``debug``. By default, release mode is selected (full optimization on runtime).
@@ -66,7 +66,7 @@ help:
 
 .PHONY: help
 
-checkout: 
+checkout:
 # Update all the submodules
 	git submodule init
 	git submodule update --init --recursive
@@ -82,7 +82,7 @@ compile: | prebuild
 # Following options are available
 # .. option:: CMAKE_GOALS
 #
-#   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled 
+#   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled
 	echo "Building target(s): ${CMAKE_GOALS}"
 	@+${MAKE} -C ${BUILD_DIR} ${CMAKE_GOALS}
 
@@ -105,7 +105,7 @@ installer:
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules
-	for f in `find libs openfpga -iname *.cpp -o -iname *.hpp -o -iname *.c -o -iname *.h`; \
+	for f in `find libs openfpga -iname *.cpp -o -iname *.hpp -o -iname *.c -o -iname *.h -o -iname *.tpp`; \
 	do \
 	${CLANG_FORMAT_EXEC} --style=file -i $${f} || exit 1; \
 	done
