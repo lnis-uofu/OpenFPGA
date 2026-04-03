@@ -311,15 +311,65 @@ static void synchronize_primitive_physical_pb_atom_nets(
 static void mark_physical_pb_wired_lut_outputs(
   PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
   const PhysicalPbId& primitive_pb, const t_pb_graph_node* pb_graph_node,
-  const VprDeviceAnnotation& device_annotation, const bool& verbose) {
+  const t_pb_routes& pb_route, const VprDeviceAnnotation& device_annotation,
+  const CircuitLibrary& circuit_lib, const bool& verbose) {
+  std::vector<AtomNetId> input_nets;
+  for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(
+        pb_graph_node->input_pins[iport][ipin].port);
+      /* Keep the wire-LUT classification aligned with truth-table generation:
+       * ignore any LUT pins that are not backed by a programmable LUT port.
+       */
+      if (!circuit_lib.valid_circuit_port_id(circuit_port)) {
+        continue;
+      }
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+
+      int node_index =
+        pb_graph_node->input_pins[iport][ipin].pin_count_in_cluster;
+      if (pb_route.count(node_index) && pb_route[node_index].atom_net_id) {
+        input_nets.push_back(pb_route[node_index].atom_net_id);
+      }
+    }
+  }
+
   for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(
+        pb_graph_node->output_pins[iport][ipin].port);
+      if (!circuit_lib.valid_circuit_port_id(circuit_port)) {
+        continue;
+      }
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+
+      int node_index =
+        pb_graph_node->output_pins[iport][ipin].pin_count_in_cluster;
+      if (!pb_route.count(node_index) || !pb_route[node_index].atom_net_id) {
+        continue;
+      }
+
+      AtomNetId output_net = pb_route[node_index].atom_net_id;
+      /* A routed output alone does not prove this LUT is acting as a wire.
+       * Only mark it when the same net also appears on a LUT data input.
+       */
+      if (!is_wired_lut(input_nets, output_net)) {
+        VTR_LOGV(verbose,
+                 "Skip marking pb_graph pin '%s' as wire LUT output because "
+                 "its output net is not driven through any LUT input\n",
+                 pb_graph_node->output_pins[iport][ipin].to_string().c_str());
+        continue;
+      }
+
       t_pb_graph_pin* pb_graph_pin = &(pb_graph_node->output_pins[iport][ipin]);
 
       /* Find the physical pb_graph_pin */
       t_pb_graph_pin* physical_pb_graph_pin =
-        device_annotation.physical_pb_graph_pin(
-          lgk2phy_pb_map.pb_graph_pin(pb_graph_pin));
+        device_annotation.physical_pb_graph_pin(pb_graph_pin);
       VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
       /* Print debug info */
@@ -339,7 +389,8 @@ void rec_update_physical_pb_from_operating_pb(
   PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
   const t_pb* op_pb, const t_pb_routes& pb_route, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const CircuitLibrary& circuit_lib, const bool& verbose) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
   t_pb_type* pb_type = pb_graph_node->pb_type;
 
@@ -474,7 +525,8 @@ void rec_update_physical_pb_from_operating_pb(
           (nullptr != op_pb->child_pbs[ipb][jpb].name)) {
         rec_update_physical_pb_from_operating_pb(
           phy_pb, lgk2phy_pb_map, &(op_pb->child_pbs[ipb][jpb]), pb_route,
-          atom_ctx, device_annotation, bitstream_annotation, verbose);
+          atom_ctx, device_annotation, bitstream_annotation, circuit_lib,
+          verbose);
       } else {
         /* Some pb may be used just in routing purpose, find out the output nets
          */
@@ -526,9 +578,9 @@ void rec_update_physical_pb_from_operating_pb(
                                device_annotation.pb_type_mode_bits(
                                  lgk2phy_pb_map.pb_type(child_pb_type)));
 
-          mark_physical_pb_wired_lut_outputs(phy_pb, lgk2phy_pb_map,
-                                             physical_pb, child_pb_graph_node,
-                                             device_annotation, verbose);
+          mark_physical_pb_wired_lut_outputs(
+            phy_pb, lgk2phy_pb_map, physical_pb, child_pb_graph_node, pb_route,
+            device_annotation, circuit_lib, verbose);
         }
       }
     }

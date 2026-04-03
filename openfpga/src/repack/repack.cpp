@@ -956,6 +956,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
                           const VprDeviceAnnotation& device_annotation,
                           VprClusteringAnnotation& clustering_annotation,
                           const VprBitstreamAnnotation& bitstream_annotation,
+                          const CircuitLibrary& circuit_lib,
                           const ClusterBlockId& block_id,
                           const RepackOption& options) {
   /* Get the pb graph that current clustered block is mapped to */
@@ -1034,7 +1035,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
   rec_update_physical_pb_from_operating_pb(
     phy_pb, lgk2phy_pb_map, clustering_ctx.clb_nlist.block_pb(block_id),
     clustering_ctx.clb_nlist.block_pb(block_id)->pb_route, atom_ctx,
-    device_annotation, bitstream_annotation, verbose);
+    device_annotation, bitstream_annotation, circuit_lib, verbose);
   /* Save routing results */
   save_lb_router_results_to_physical_pb(phy_pb, lgk2phy_pb_map, lb_router,
                                         lb_rr_graph, atom_ctx.netlist(),
@@ -1056,6 +1057,7 @@ static int repack_clusters(const AtomContext& atom_ctx,
                            const VprDeviceAnnotation& device_annotation,
                            VprClusteringAnnotation& clustering_annotation,
                            const VprBitstreamAnnotation& bitstream_annotation,
+                           const CircuitLibrary& circuit_lib,
                            const RepackOption& options) {
   vtr::ScopedStartFinishTimer timer(
     "Repack clustered blocks to physical implementation of logical tile");
@@ -1063,7 +1065,7 @@ static int repack_clusters(const AtomContext& atom_ctx,
   for (auto blk_id : clustering_ctx.clb_nlist.blocks()) {
     int status = repack_cluster(atom_ctx, clustering_ctx, device_annotation,
                                 clustering_annotation, bitstream_annotation,
-                                blk_id, options);
+                                circuit_lib, blk_id, options);
     if (status != CMD_EXEC_SUCCESS) {
       return status;
     }
@@ -1132,10 +1134,10 @@ int pack_physical_pbs(const DeviceContext& device_ctx,
 
   /* Call the LbRouter to re-pack each clustered block to physical
    * implementation */
-  int status =
-    repack_clusters(atom_ctx, clustering_ctx,
-                    const_cast<const VprDeviceAnnotation&>(device_annotation),
-                    clustering_annotation, bitstream_annotation, options);
+  int status = repack_clusters(
+    atom_ctx, clustering_ctx,
+    const_cast<const VprDeviceAnnotation&>(device_annotation),
+    clustering_annotation, bitstream_annotation, circuit_lib, options);
 
   /* Annnotate wire LUTs that are ONLY created by repacker!!!
    * This is a MUST RUN!
