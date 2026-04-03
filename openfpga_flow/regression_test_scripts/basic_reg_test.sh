@@ -7,6 +7,13 @@ source openfpga.sh
 ##############################################
 echo -e "Basic regression tests";
 
+echo -e "Check if openfpgashell can execute commands with -x option"
+${OPENFPGA_PATH}/build/openfpga/openfpga -x "version; exit;"
+if [ $? -ne 0 ]; then
+  echo "Error: openfpgashell execution with -x option failed"
+  exit 1
+fi
+
 echo -e "Test multiple runs of vpr"
 run-task basic_tests/vpr_standalone $@
 

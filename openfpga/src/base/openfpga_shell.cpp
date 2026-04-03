@@ -67,6 +67,13 @@ int OpenfpgaShell::start(int argc, char** argv) {
   start_cmd.set_option_require_value(opt_script_mode, openfpga::OPT_STRING);
   start_cmd.set_option_short_name(opt_script_mode, "f");
 
+  /* '--execute', -x': execute command line(s), separated by ';' */
+  openfpga::CommandOptionId opt_exec_mode =
+    start_cmd.add_option("execute", false,
+                         "Execute OpenFPGA command line(s), separated by ';'");
+  start_cmd.set_option_require_value(opt_exec_mode, openfpga::OPT_STRING);
+  start_cmd.set_option_short_name(opt_exec_mode, "x");
+
   /* '--batch_execution': execute the script in batch mode.
    * Will exit immediately when fatal errors occurred
    */
@@ -107,6 +114,13 @@ int OpenfpgaShell::start(int argc, char** argv) {
     /* Start a shell */
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
       shell_.run_interactive_mode(openfpga_ctx_);
+      return shell_.exit_code();
+    }
+
+    if (true == start_cmd_context.option_enable(start_cmd, opt_exec_mode)) {
+      shell_.run_execute_mode(
+        start_cmd_context.option_value(start_cmd, opt_exec_mode).c_str(),
+        openfpga_ctx_);
       return shell_.exit_code();
     }
 
