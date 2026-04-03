@@ -70,12 +70,12 @@ module and2_top_formal_verification_random_tb;
 	end
 
 // ----- Begin checking output vectors -------
-// ----- Skip the first falling edge of clock, it is for initialization -------
-	reg [0:0] sim_start;
+// ----- Skip the first two falling edges of clock, they are for initialization -------
+	reg [0:1] sim_start;
 
 	always@(negedge clk[0]) begin
-		if (1'b1 == sim_start[0]) begin
-			sim_start[0] <= ~sim_start[0];
+		if (2'b00 != sim_start[0:1]) begin
+			sim_start[0:1] <= sim_start[0:1] - 1'b1;
 		end else 
 begin
 			if(!(c_gfpga === c_bench) && !(c_bench === 1'bx)) begin
@@ -102,7 +102,7 @@ begin
 // ----- END output waveform to VCD file -------
 
 initial begin
-	sim_start[0] <= 1'b1;
+	sim_start[0:1] <= 2'b11;
 	$timeformat(-9, 2, "ns", 20);
 	$display("Simulation start");
 // ----- Can be changed by the user for his/her need -------
