@@ -114,18 +114,18 @@ jobs:
         mkdir -p ${SOURCE_DIR}/build
         #
         printf "\n\n >>> hotfixes <<<\n"
-        find ./vtr-verilog-to-routing/libs/libvtrutil/src/vtr_util.cpp -type f -exec sed -i 's-getdelim(-0;//-g' {} \;
-        find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
-        find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/canonical/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
-        find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/c++header/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
-        #find ./vtr-verilog-to-routing/libs/EXTERNAL/CMakeLists.txt -type f -exec sed -i 's-add_subdirectory(libsdcparse)-#add_subdirectory(libsdcparse)-g' {} \;
-        find ./vtr-verilog-to-routing/libs/EXTERNAL/libsdcparse/src/tcl/sdc_commands.i -type f -exec sed -i 's-$function;-$action;-g' {} \;
-        find ./vtr-verilog-to-routing/libs/EXTERNAL/libsdcparse/CMakeLists.txt -type f -exec sed -i 's-target_link_libraries(sdcparse_test libsdcparse)-target_link_libraries(sdcparse_test libsdcparse ${TCL_LIBRARY})-g' {} \;
-        find ./vtr-verilog-to-routing/vpr/src/base/vpr_signal_handler.cpp -type f -exec sed -i '/#include "read_route.h"/a #ifdef _WIN32\n#include <unistd.h>\n#endif' {} \;
-        find ./vtr-verilog-to-routing/vpr/src/base/vpr_signal_handler.cpp -type f -exec sed -i 's-#if defined(__unix__)-#if defined(__APPLE__) || defined(__unix__)-g' {} \;
-        find ./vtr-verilog-to-routing/vpr/src/route/multi_queue_d_ary_heap.tpp -type f -exec sed -i 's-for (uint i = 0; i < NUM_QUEUES; i++) {-for (uint64_t i = 0; i < NUM_QUEUES; i++) {-g' {} \;
-        find ./vtr-verilog-to-routing/vpr/src/route/rr_graph_generation/tileable_rr_graph/crr_generator/crr_switch_block_manager.cpp -type f -exec sed -i 's-std::string full_path = std::filesystem::path(sb_templates_dir) / sw_template_file;-std::string full_path = (std::filesystem::path(sb_templates_dir) / sw_template_file).string();-g' {} \;
-        find ./openfpga/src/base/openfpga_basic.cpp -type f -exec sed -i '/#include "openfpga_title.h"/a #if defined(_WIN32)\n#  define WIFEXITED(x) 1\n#  define WEXITSTATUS(x) ((x) & 0xff)\n#endif' {} \;
+        # find ./vtr-verilog-to-routing/libs/libvtrutil/src/vtr_util.cpp -type f -exec sed -i 's-getdelim(-0;//-g' {} \;
+        # find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        # find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/canonical/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        # find ./vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/ekam-provider/c++header/kj/test-helpers.c++ -type f -exec sed -i 's-needle.size()};-needle.end()};-g' {} \;
+        # #find ./vtr-verilog-to-routing/libs/EXTERNAL/CMakeLists.txt -type f -exec sed -i 's-add_subdirectory(libsdcparse)-#add_subdirectory(libsdcparse)-g' {} \;
+        # find ./vtr-verilog-to-routing/libs/EXTERNAL/libsdcparse/src/tcl/sdc_commands.i -type f -exec sed -i 's-$function;-$action;-g' {} \;
+        # find ./vtr-verilog-to-routing/libs/EXTERNAL/libsdcparse/CMakeLists.txt -type f -exec sed -i 's-target_link_libraries(sdcparse_test libsdcparse)-target_link_libraries(sdcparse_test libsdcparse ${TCL_LIBRARY})-g' {} \;
+        # find ./vtr-verilog-to-routing/vpr/src/base/vpr_signal_handler.cpp -type f -exec sed -i '/#include "read_route.h"/a #ifdef _WIN32\n#include <unistd.h>\n#endif' {} \;
+        # find ./vtr-verilog-to-routing/vpr/src/base/vpr_signal_handler.cpp -type f -exec sed -i 's-#if defined(__unix__)-#if defined(__APPLE__) || defined(__unix__)-g' {} \;
+        # find ./vtr-verilog-to-routing/vpr/src/route/multi_queue_d_ary_heap.tpp -type f -exec sed -i 's-for (uint i = 0; i < NUM_QUEUES; i++) {-for (uint64_t i = 0; i < NUM_QUEUES; i++) {-g' {} \;
+        # find ./vtr-verilog-to-routing/vpr/src/route/rr_graph_generation/tileable_rr_graph/crr_generator/crr_switch_block_manager.cpp -type f -exec sed -i 's-std::string full_path = std::filesystem::path(sb_templates_dir) / sw_template_file;-std::string full_path = (std::filesystem::path(sb_templates_dir) / sw_template_file).string();-g' {} \;
+        # find ./openfpga/src/base/openfpga_basic.cpp -type f -exec sed -i '/#include "openfpga_title.h"/a #if defined(_WIN32)\n#  define WIFEXITED(x) 1\n#  define WEXITSTATUS(x) ((x) & 0xff)\n#endif' {} \;
         export CMAKE_SOURCE_DIR_PATH_W=$(cygpath -w "${PWD}" | sed 's;\\;/;g')
         echo "${CMAKE_SOURCE_DIR_PATH_W}"
         export MSYS2_ARG_CONV_EXCL="../EXTERNAL/capnproto/c++/src/capnp/capnp.exe;${CMAKE_SOURCE_DIR_PATH_W}/build/vtr-verilog-to-routing/libs/EXTERNAL/capnproto/c++/src/capnp/capnpc-c++.exe:."
