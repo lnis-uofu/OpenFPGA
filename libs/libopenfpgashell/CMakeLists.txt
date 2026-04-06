@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.9)
 project("libopenfpgashell")
 
 # We need readline to compile
-find_package(Readline REQUIRED)
+# find_package(Readline REQUIRED)
+find_package(unofficial-readline-win32 CONFIG REQUIRED)
 
 file(GLOB_RECURSE EXEC_SOURCES test/*.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
@@ -21,10 +22,14 @@ target_include_directories(libopenfpgashell PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpgashell PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Specify link-time dependancies
+#target_link_libraries(libopenfpgashell
+#                      libopenfpgautil
+#                      libvtrutil
+#                      readline)
 target_link_libraries(libopenfpgashell
                       libopenfpgautil
                       libvtrutil
-                      readline)
+                      unofficial::readline-win32::readline)
 
 # Create the test executable
 foreach(testsourcefile ${EXEC_SOURCES})

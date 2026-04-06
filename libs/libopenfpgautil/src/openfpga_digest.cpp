@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <vector>
 
+#include <direct.h>
+
 /* Headers from vtrutil library */
 #include "vtr_log.h"
 

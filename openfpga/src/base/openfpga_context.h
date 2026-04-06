@@ -14,21 +14,21 @@
 #include "io_location_map.h"
 #include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
-#include "module_manager.h"
-#include "module_name_map.h"
-#include "mux_library.h"
-#include "netlist_manager.h"
-#include "openfpga_arch.h"
-#include "openfpga_flow_manager.h"
-#include "rr_clock_spatial_lookup.h"
-#include "simulation_setting.h"
-#include "tile_direct.h"
-#include "vpr_bitstream_annotation.h"
-#include "vpr_clustering_annotation.h"
-#include "vpr_context.h"
-#include "vpr_device_annotation.h"
-#include "vpr_netlist_annotation.h"
-#include "vpr_placement_annotation.h"
+#include "module_manager.h"  //6
+#include "module_name_map.h" //3
+#include "mux_library.h" // 8
+#include "netlist_manager.h" //3
+#include "openfpga_arch.h" // 6
+#include "openfpga_flow_manager.h" //3
+#include "rr_clock_spatial_lookup.h" //6
+#include "simulation_setting.h" //3
+#include "tile_direct.h" //6
+#include "vpr_bitstream_annotation.h" //3
+#include "vpr_clustering_annotation.h" //6
+#include "vpr_context.h" //3
+#include "vpr_device_annotation.h" //6
+#include "vpr_netlist_annotation.h" //3
+#include "vpr_placement_annotation.h" //6
 #include "vpr_routing_annotation.h"
 
 /********************************************************************

@@ -6,7 +6,15 @@
  * - generate_fabric_verilog_testbench : TODO: generate Verilog testbenches
  *******************************************************************/
 #include "openfpga_verilog_command.h"
+#include <cctype>
 
+#ifdef isdigit
+#undef isdigit
+#endif
+
+#ifdef isxdigit
+#undef isxdigit
+#endif
 #include "openfpga_verilog_command_template.h"
 
 /* begin namespace openfpga */

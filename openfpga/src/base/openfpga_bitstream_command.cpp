@@ -6,6 +6,17 @@
  *******************************************************************/
 #include "openfpga_bitstream_command.h"
 
+#include <cctype>
+
+#ifdef isdigit
+#undef isdigit
+#endif
+
+#ifdef isxdigit
+#undef isxdigit
+#endif
+
+
 #include "openfpga_bitstream_command_template.h"
 
 /* begin namespace openfpga */
