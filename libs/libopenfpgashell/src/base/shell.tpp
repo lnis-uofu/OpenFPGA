@@ -147,7 +147,7 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
   command_name2ids_[cmd.name()] = shell_cmd;
 
   return shell_cmd;
-} 
+}
 
 template<class T>
 void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellCommandClassId& cmd_class_id) {
@@ -163,7 +163,7 @@ void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellComman
 }
 
 template<class T>
-void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id,
                                                   std::function<int(const T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = CONST_STANDARD;
@@ -171,7 +171,7 @@ void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<int(T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = STANDARD;
@@ -179,7 +179,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id,
                                                   std::function<int(const T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = CONST_SHORT;
@@ -187,7 +187,7 @@ void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<int(T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = SHORT;
@@ -195,7 +195,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<void()> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = BUILTIN;
@@ -203,7 +203,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<int(int, char**)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = MACRO;
@@ -211,7 +211,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = PLUGIN;
@@ -219,7 +219,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<int(const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = FLOATING;
@@ -258,7 +258,7 @@ ShellCommandClassId Shell<T>::add_command_class(const char* name) {
   commands_by_classes_.emplace_back();
 
   return cmd_class;
-} 
+}
 
 /************************************************************************
  * Public executors
@@ -283,7 +283,7 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
   while ((cmd_line = readline(std::string(name() + std::string("> ")).c_str())) != nullptr) {
     /* If the line is not empty:
      * Try to execute the command and
-     * Add to history 
+     * Add to history
      */
     if (strlen(cmd_line) > 0) {
       /* Do not allow any hidden command to be directly called by users */
@@ -308,7 +308,7 @@ void Shell<T>::run_script_mode(const char* script_file_name,
   /* Print the title of the shell */
   if (!title().empty()) {
     VTR_LOG("%s\n", title().c_str());
-  } 
+  }
 
   std::string line;
 
@@ -319,11 +319,11 @@ void Shell<T>::run_script_mode(const char* script_file_name,
     /* Fail to open the file, ask user to check */
     VTR_LOG("Fail to open the script file: %s! Please check its location\n",
             script_file_name);
-    return; 
+    return;
   }
 
-  /* Consider that each line may not end due to the continued line charactor 
-   * Use cmd_line to conjunct multiple lines 
+  /* Consider that each line may not end due to the continued line charactor
+   * Use cmd_line to conjunct multiple lines
    */
   std::string cmd_line;
 
@@ -334,7 +334,7 @@ void Shell<T>::run_script_mode(const char* script_file_name,
       continue;
     }
 
-    /* If the line that starts with '#', it is commented, we can skip */ 
+    /* If the line that starts with '#', it is commented, we can skip */
     if ('#' == line.front()) {
       continue;
     }
@@ -347,7 +347,7 @@ void Shell<T>::run_script_mode(const char* script_file_name,
     }
 
     /* Remove the space at the end of the line
-     * So that we can check easily if there is a continued line in the end  
+     * So that we can check easily if there is a continued line in the end
      */
     StringToken cmd_part_tokenizer(cmd_part);
     cmd_part_tokenizer.rtrim(std::string(" "));
@@ -357,16 +357,16 @@ void Shell<T>::run_script_mode(const char* script_file_name,
     if ('\\' == cmd_part.back()) {
       /* Pop up the last charactor and conjunct to cmd_line */
       cmd_part.pop_back();
- 
+
       if (!cmd_part.empty()) {
-        cmd_line += cmd_part; 
+        cmd_line += cmd_part;
       }
       /* Not finished yet. Parse the next line */
       continue;
     } else {
-      /* End of this line, if cmd_line is empty, 
+      /* End of this line, if cmd_line is empty,
        * there is no previous lines, cache the part we have
-       * and then execute the command 
+       * and then execute the command
        */
       cmd_line += cmd_part;
     }
@@ -384,17 +384,17 @@ void Shell<T>::run_script_mode(const char* script_file_name,
       /* Empty the line ready to start a new line */
       cmd_line.clear();
 
-      /* Check the execution status of the command, 
-       * if fatal error happened, we should abort immediately 
+      /* Check the execution status of the command,
+       * if fatal error happened, we should abort immediately
        */
       if (CMD_EXEC_FATAL_ERROR == status) {
         VTR_LOG("Fatal error occurred!\n");
-        /* If in the batch mode, we will exit with errors */ 
+        /* If in the batch mode, we will exit with errors */
         VTR_LOGV(batch_mode, "%s Abort\n", name_.c_str());
         if (batch_mode) {
           exit(CMD_EXEC_FATAL_ERROR);
         }
-        /* If not in the batch mode, we will got to interactive mode */ 
+        /* If not in the batch mode, we will got to interactive mode */
         VTR_LOGV(!batch_mode, "Enter interactive mode\n");
         break;
       }
@@ -404,7 +404,7 @@ void Shell<T>::run_script_mode(const char* script_file_name,
 
   /* If not in batch mode, switch to interactive mode, stay tuned */
   if (!batch_mode) {
-    run_interactive_mode(context, true); 
+    run_interactive_mode(context, true);
   }
 }
 
@@ -462,7 +462,7 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
         break;
       }
     }
-    
+
     /* Print the class name */
     if (!show_hidden && hidden_class) {
       continue;
@@ -494,7 +494,7 @@ int Shell<T>::exit_code() const {
       exit_code = 1;
       break;
     }
-  } 
+  }
 
   return exit_code;
 }
@@ -510,7 +510,7 @@ int Shell<T>::execution_errors() const {
                     commands_[cmd].name().c_str());
       num_err++;
     }
-      
+
     if (command_status_[cmd] == CMD_EXEC_MINOR_ERROR) {
       VTR_LOG_ERROR("Command '%s' execution has minor errors\n",
                     commands_[cmd].name().c_str());
@@ -552,7 +552,7 @@ void Shell<T>::exit(const int& init_err) const {
 template <class T>
 int Shell<T>::execute_command(const char* cmd_line,
                                T& common_context, const bool& allow_hidden_command) {
-  openfpga::StringToken tokenizer(cmd_line);  
+  openfpga::StringToken tokenizer(cmd_line);
   tokenizer.add_delim(' ');
   /* Do not split the string in each quote "", as they should be a piece */
   std::vector<size_t> quote_anchors = tokenizer.find_positions('\"');
@@ -572,7 +572,7 @@ int Shell<T>::execute_command(const char* cmd_line,
     tokens = tokenizer.split(" ");
   } else {
     tokens = tokenizer.split_by_chunks('\"');
-  } 
+  }
 
   /* Find if the command name is valid */
   ShellCommandId cmd_id = command(tokens[0]);
@@ -600,10 +600,10 @@ int Shell<T>::execute_command(const char* cmd_line,
       print_command_options(commands_[cmd_id]);
       command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
       return CMD_EXEC_FATAL_ERROR;
-    } 
+    }
   }
 
-  /* Find the command! Parse the options 
+  /* Find the command! Parse the options
    * Note:
    * Macro command will not be parsed! It will be directly executed
    */
@@ -625,9 +625,9 @@ int Shell<T>::execute_command(const char* cmd_line,
     /* Finish for macro command, return */
     return command_status_[cmd_id];
   }
- 
-  /* Reset the command parse results to initial status 
-   * Avoid conflict when calling the same command in the second time 
+
+  /* Reset the command parse results to initial status
+   * Avoid conflict when calling the same command in the second time
    */
   command_contexts_[cmd_id].reset();
   if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
@@ -636,11 +636,11 @@ int Shell<T>::execute_command(const char* cmd_line,
     command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
     return CMD_EXEC_FATAL_ERROR;
   }
- 
-  /* Parse succeed. Let user to confirm selected options */ 
+
+  /* Parse succeed. Let user to confirm selected options */
   print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
 
-  /* Execute the command depending on the type of function ! */ 
+  /* Execute the command depending on the type of function ! */
   switch (command_execute_function_types_[cmd_id]) {
   case PLUGIN:
     command_status_[cmd_id] = command_plugin_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
@@ -663,7 +663,7 @@ int Shell<T>::execute_command(const char* cmd_line,
   case BUILTIN:
     command_builtin_execute_functions_[cmd_id]();
     /* Built-in execution is always correct */
-    command_status_[cmd_id] = CMD_EXEC_SUCCESS; 
+    command_status_[cmd_id] = CMD_EXEC_SUCCESS;
     break;
   /* MACRO should be executed eariler in this function. It should not appear here */
   default:
@@ -684,16 +684,16 @@ int Shell<T>::execute_command(const char* cmd_line,
 }
 
 /************************************************************************
- * Public invalidators/validators 
+ * Public invalidators/validators
  ***********************************************************************/
 template<class T>
 bool Shell<T>::valid_command_id(const ShellCommandId& cmd_id) const {
-  return ( size_t(cmd_id) < command_ids_.size() ) && ( cmd_id == command_ids_[cmd_id] ); 
+  return ( size_t(cmd_id) < command_ids_.size() ) && ( cmd_id == command_ids_[cmd_id] );
 }
 
 template<class T>
 bool Shell<T>::valid_command_class_id(const ShellCommandClassId& cmd_class_id) const {
-  return ( size_t(cmd_class_id) < command_class_ids_.size() ) && ( cmd_class_id == command_class_ids_[cmd_class_id] ); 
+  return ( size_t(cmd_class_id) < command_class_ids_.size() ) && ( cmd_class_id == command_class_ids_[cmd_class_id] );
 }
 
 } /* End namespace openfpga */
