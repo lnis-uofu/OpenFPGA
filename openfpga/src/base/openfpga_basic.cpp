@@ -10,8 +10,8 @@
 #include "openfpga_title.h"
 
 #if defined(_WIN32)
-#  define WIFEXITED(x) 1
-#  define WEXITSTATUS(x) ((x) & 0xff)
+#define WIFEXITED(x) 1
+#define WEXITSTATUS(x) ((x)&0xff)
 #endif
 
 /* begin namespace openfpga */
