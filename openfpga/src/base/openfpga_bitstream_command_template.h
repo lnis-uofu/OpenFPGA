@@ -77,7 +77,7 @@ ShellCommandId add_build_arch_bitstream_command_template(
   /* Add an option '--unused_mux_config' */
   CommandOptionId opt_unused_mux_config = shell_cmd.add_option(
     "unused_mux_config", false,
-    "Configuration strategy for unused muxes(auto/last/first/unused_input)");
+    "Configuration strategy for unused muxes. Can be [ auto | last | first | unused_input ]. If not specified, the auto strategy will be applied");
   shell_cmd.set_option_require_value(opt_unused_mux_config,
                                      openfpga::OPT_STRING);
 
