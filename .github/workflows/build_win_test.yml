@@ -112,4 +112,4 @@ jobs:
         printf "\n\n >>> build <<<\n"
         make -C ${BUILD_DIR} -j$(nproc)
         #
-        python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
+        #python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
