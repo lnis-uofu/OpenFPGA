@@ -26,17 +26,14 @@ set_target_properties(libopenfpgashell PROPERTIES PREFIX "") #Avoid extra 'lib' 
 
 # Specify link-time dependencies
 target_link_libraries(libopenfpgashell
-                      PRIVATE
                       libopenfpgautil
                       libvtrutil)
 
 if(WIN32)
   target_link_libraries(libopenfpgashell
-                        PRIVATE
                         unofficial::readline-win32::readline)
 else()
   target_link_libraries(libopenfpgashell
-                        PRIVATE
                         readline)
 endif()
 
