@@ -566,12 +566,12 @@ void shuffle_top_module_configurable_children(
     shuffled_keys.push_back(ikey);
   }
 
-  #ifdef _WIN32
-    static std::mt19937 rng(std::random_device{}());
-    std::shuffle(shuffled_keys.begin(), shuffled_keys.end(), rng);
-  #else
-    std::random_shuffle(shuffled_keys.begin(), shuffled_keys.end());
-  #endif
+#ifdef _WIN32
+  static std::mt19937 rng(std::random_device{}());
+  std::shuffle(shuffled_keys.begin(), shuffled_keys.end(), rng);
+#else
+  std::random_shuffle(shuffled_keys.begin(), shuffled_keys.end());
+#endif
 
   /* Cache the configurable children and their instances */
   std::vector<ModuleId> orig_configurable_children =
