@@ -69,3 +69,6 @@ run-task fpga_bitstream/unused_mux_input $@
 
 echo -e "Testing extracting mode bits for DSP blocks when generating bitstream";
 run-task fpga_bitstream/extract_dsp_mode_bit $@
+
+echo -e "Testing reordering bitstream"
+run-task fpga_bitstream/reorder_bitstream $@
