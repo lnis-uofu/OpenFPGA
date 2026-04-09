@@ -16,7 +16,6 @@
 #undef isxdigit
 #endif
 
-
 #include "openfpga_bitstream_command_template.h"
 
 /* begin namespace openfpga */

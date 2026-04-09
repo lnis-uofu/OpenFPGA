@@ -566,7 +566,6 @@ void shuffle_top_module_configurable_children(
     shuffled_keys.push_back(ikey);
   }
 
-  //std::random_shuffle(shuffled_keys.begin(), shuffled_keys.end());
   static std::mt19937 rng(std::random_device{}());
   std::shuffle(shuffled_keys.begin(), shuffled_keys.end(), rng);
 

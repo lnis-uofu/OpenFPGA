@@ -1,4 +1,5 @@
 #include "openfpga_spice_command.h"
+
 #include <cctype>
 
 #ifdef isdigit

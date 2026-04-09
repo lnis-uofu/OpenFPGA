@@ -2,12 +2,11 @@
  * This file includes functions that handles the file outputting
  * in OpenFPGA framework
  *******************************************************************/
+#include <direct.h>
 #include <sys/stat.h>
 
 #include <algorithm>
 #include <vector>
-
-#include <direct.h>
 
 /* Headers from vtrutil library */
 #include "vtr_log.h"
