@@ -1,23 +1,23 @@
 /*********************************************************************
  * Member functions for class Shell
  ********************************************************************/
-#include <fstream>
 #include <algorithm>
+#include <fstream>
 
 /* Headers from vtrutil library */
-#include "vtr_log.h"
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_tokenizer.h"
 
 /* Headers from readline library */
-#include <readline/readline.h>
 #include <readline/history.h>
+#include <readline/readline.h>
 
 /* Headers from openfpgashell library */
-#include "command_parser.h"
 #include "command_echo.h"
+#include "command_parser.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -25,7 +25,7 @@ namespace openfpga {
 /*********************************************************************
  * Public constructors
  ********************************************************************/
-template<class T>
+template <class T>
 Shell<T>::Shell() {
   name_ = std::string("shell_no_name");
   time_start_ = 0;
@@ -34,69 +34,75 @@ Shell<T>::Shell() {
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
-template<class T>
+template <class T>
 std::string Shell<T>::name() const {
   return name_;
 }
 
-template<class T>
+template <class T>
 std::string Shell<T>::title() const {
   return title_;
 }
 
-template<class T>
+template <class T>
 typename Shell<T>::shell_command_range Shell<T>::commands() const {
   return vtr::make_range(command_ids_.begin(), command_ids_.end());
 }
 
-template<class T>
+template <class T>
 ShellCommandId Shell<T>::command(const std::string& name) const {
   /* Ensure that the name is unique in the command list */
-  std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(name);
+  std::map<std::string, ShellCommandId>::const_iterator name_it =
+    command_name2ids_.find(name);
   if (name_it == command_name2ids_.end()) {
     return ShellCommandId::INVALID();
   }
   return command_name2ids_.at(name);
 }
 
-template<class T>
+template <class T>
 std::string Shell<T>::command_description(const ShellCommandId& cmd_id) const {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   return command_description_[cmd_id];
 }
 
-template<class T>
-ShellCommandClassId Shell<T>::command_class(const ShellCommandId& cmd_id) const {
+template <class T>
+ShellCommandClassId Shell<T>::command_class(
+  const ShellCommandId& cmd_id) const {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   return command_classes_[cmd_id];
 }
 
-template<class T>
-std::string Shell<T>::command_class_name(const ShellCommandClassId& cmd_class_id) const {
+template <class T>
+std::string Shell<T>::command_class_name(
+  const ShellCommandClassId& cmd_class_id) const {
   VTR_ASSERT(true == valid_command_class_id(cmd_class_id));
   return command_class_names_[cmd_class_id];
 }
 
-template<class T>
+template <class T>
 const Command& Shell<T>::command(const ShellCommandId& cmd_id) const {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   return commands_[cmd_id];
 }
 
-template<class T>
-const CommandContext& Shell<T>::command_context(const ShellCommandId& cmd_id) const {
+template <class T>
+const CommandContext& Shell<T>::command_context(
+  const ShellCommandId& cmd_id) const {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   return command_contexts_[cmd_id];
 }
 
-template<class T>
-std::vector<ShellCommandId> Shell<T>::command_dependency(const ShellCommandId& cmd_id) const {
+template <class T>
+std::vector<ShellCommandId> Shell<T>::command_dependency(
+  const ShellCommandId& cmd_id) const {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   return command_dependencies_[cmd_id];
 }
 
-template<class T>
-std::vector<ShellCommandId> Shell<T>::commands_by_class(const ShellCommandClassId& cmd_class_id) const {
+template <class T>
+std::vector<ShellCommandId> Shell<T>::commands_by_class(
+  const ShellCommandClassId& cmd_class_id) const {
   VTR_ASSERT(true == valid_command_class_id(cmd_class_id));
   return commands_by_classes_[cmd_class_id];
 }
@@ -104,21 +110,23 @@ std::vector<ShellCommandId> Shell<T>::commands_by_class(const ShellCommandClassI
 /************************************************************************
  * Public mutators
  ***********************************************************************/
-template<class T>
+template <class T>
 void Shell<T>::set_name(const char* name) {
   name_ = std::string(name);
 }
 
-template<class T>
+template <class T>
 void Shell<T>::add_title(const char* title) {
   title_ = std::string(title);
 }
 
 /* Add a command with it description */
-template<class T>
-ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, const bool& hidden) {
+template <class T>
+ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr,
+                                     const bool& hidden) {
   /* Ensure that the name is unique in the command list */
-  std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(std::string(cmd.name()));
+  std::map<std::string, ShellCommandId>::const_iterator name_it =
+    command_name2ids_.find(std::string(cmd.name()));
   if (name_it != command_name2ids_.end()) {
     return ShellCommandId::INVALID();
   }
@@ -140,7 +148,9 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
   command_plugin_execute_functions_.emplace_back();
   command_floating_execute_functions_.emplace_back();
   command_macro_execute_functions_.emplace_back();
-  command_status_.push_back(CMD_EXEC_NONE); /* By default, the command should be marked as fatal error as it has been never executed */
+  command_status_.push_back(
+    CMD_EXEC_NONE); /* By default, the command should be marked as fatal error
+                       as it has been never executed */
   command_dependencies_.emplace_back();
 
   /* Register the name in the name2id map */
@@ -149,44 +159,50 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
   return shell_cmd;
 }
 
-template<class T>
-void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellCommandClassId& cmd_class_id) {
+template <class T>
+void Shell<T>::set_command_class(const ShellCommandId& cmd_id,
+                                 const ShellCommandClassId& cmd_class_id) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   VTR_ASSERT(true == valid_command_class_id(cmd_class_id));
   command_classes_[cmd_id] = cmd_class_id;
   /* Update the fast look-up to spot commands in a class */
-  std::vector<ShellCommandId>::iterator it = std::find(commands_by_classes_[cmd_class_id].begin(), commands_by_classes_[cmd_class_id].end(), cmd_id);
+  std::vector<ShellCommandId>::iterator it =
+    std::find(commands_by_classes_[cmd_class_id].begin(),
+              commands_by_classes_[cmd_class_id].end(), cmd_id);
   /* The command does not exist in the class, add it */
   if (it == commands_by_classes_[cmd_class_id].end()) {
     commands_by_classes_[cmd_class_id].push_back(cmd_id);
   }
 }
 
-template<class T>
-void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id,
-                                                  std::function<int(const T&, const Command&, const CommandContext&)> exec_func) {
+template <class T>
+void Shell<T>::set_command_const_execute_function(
+  const ShellCommandId& cmd_id,
+  std::function<int(const T&, const Command&, const CommandContext&)>
+    exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = CONST_STANDARD;
   command_const_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
-                                            std::function<int(T&, const Command&, const CommandContext&)> exec_func) {
+template <class T>
+void Shell<T>::set_command_execute_function(
+  const ShellCommandId& cmd_id,
+  std::function<int(T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = STANDARD;
   command_standard_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
-void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id,
-                                                  std::function<int(const T&)> exec_func) {
+template <class T>
+void Shell<T>::set_command_const_execute_function(
+  const ShellCommandId& cmd_id, std::function<int(const T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = CONST_SHORT;
   command_short_const_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
+template <class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<int(T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
@@ -194,7 +210,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
   command_short_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
+template <class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
                                             std::function<void()> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
@@ -202,33 +218,37 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
   command_builtin_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
-                                            std::function<int(int, char**)> exec_func) {
+template <class T>
+void Shell<T>::set_command_execute_function(
+  const ShellCommandId& cmd_id, std::function<int(int, char**)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = MACRO;
   command_macro_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
-                                            std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)> exec_func) {
+template <class T>
+void Shell<T>::set_command_execute_function(
+  const ShellCommandId& cmd_id,
+  std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)>
+    exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = PLUGIN;
   command_plugin_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
-                                            std::function<int(const Command&, const CommandContext&)> exec_func) {
+template <class T>
+void Shell<T>::set_command_execute_function(
+  const ShellCommandId& cmd_id,
+  std::function<int(const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = FLOATING;
   command_floating_execute_functions_[cmd_id] = exec_func;
 }
 
-template<class T>
-void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
-                                      const std::vector<ShellCommandId>& dependent_cmds) {
+template <class T>
+void Shell<T>::set_command_dependency(
+  const ShellCommandId& cmd_id,
+  const std::vector<ShellCommandId>& dependent_cmds) {
   /* Validate the command id as well as each of the command dependency */
   VTR_ASSERT(true == valid_command_id(cmd_id));
   for (ShellCommandId dependent_cmd : dependent_cmds) {
@@ -238,16 +258,18 @@ void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
 }
 
 /* Add a command with it description */
-template<class T>
+template <class T>
 ShellCommandClassId Shell<T>::add_command_class(const char* name) {
   /* Ensure that the name is unique in the command list */
-  std::map<std::string, ShellCommandClassId>::const_iterator name_it = command_class2ids_.find(std::string(name));
+  std::map<std::string, ShellCommandClassId>::const_iterator name_it =
+    command_class2ids_.find(std::string(name));
   if (name_it != command_class2ids_.end()) {
     return ShellCommandClassId::INVALID();
   }
 
   /* This is a legal name. we can create a new id */
-  ShellCommandClassId cmd_class = ShellCommandClassId(command_class_ids_.size());
+  ShellCommandClassId cmd_class =
+    ShellCommandClassId(command_class_ids_.size());
   command_class_ids_.push_back(cmd_class);
   command_class_names_.push_back(std::string(name));
 
@@ -269,8 +291,7 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
     /* Reset timer since it does not come from another mode */
     time_start_ = std::clock();
 
-    VTR_LOG("Start interactive mode of %s...\n",
-            name().c_str());
+    VTR_LOG("Start interactive mode of %s...\n", name().c_str());
 
     /* Print the title of the shell */
     if (!title().empty()) {
@@ -280,7 +301,8 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
 
   /* Wait for users input and execute the command */
   char* cmd_line;
-  while ((cmd_line = readline(std::string(name() + std::string("> ")).c_str())) != nullptr) {
+  while ((cmd_line = readline(
+            std::string(name() + std::string("> ")).c_str())) != nullptr) {
     /* If the line is not empty:
      * Try to execute the command and
      * Add to history
@@ -297,10 +319,8 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
 }
 
 template <class T>
-void Shell<T>::run_script_mode(const char* script_file_name,
-                               T& context,
+void Shell<T>::run_script_mode(const char* script_file_name, T& context,
                                const bool& batch_mode) {
-
   time_start_ = std::clock();
 
   VTR_LOG("Reading script file %s...\n", script_file_name);
@@ -338,7 +358,8 @@ void Shell<T>::run_script_mode(const char* script_file_name,
     if ('#' == line.front()) {
       continue;
     }
-    /* Try to split the line with '#', the string before '#' is the read command we want */
+    /* Try to split the line with '#', the string before '#' is the read command
+     * we want */
     std::string cmd_part = line;
     std::size_t cmd_end_pos = line.find_first_of('#');
     /* If the full line has '#', we need the part before it */
@@ -353,7 +374,8 @@ void Shell<T>::run_script_mode(const char* script_file_name,
     cmd_part_tokenizer.rtrim(std::string(" "));
     cmd_part = cmd_part_tokenizer.data();
 
-    /* If the line ends with '\', this is a continued line, parse the next until it ends */
+    /* If the line ends with '\', this is a continued line, parse the next until
+     * it ends */
     if ('\\' == cmd_part.back()) {
       /* Pop up the last charactor and conjunct to cmd_line */
       cmd_part.pop_back();
@@ -454,7 +476,8 @@ template <class T>
 void Shell<T>::print_commands(const bool& show_hidden) const {
   /* Print the commands by their classes */
   for (const ShellCommandClassId& cmd_class : command_class_ids_) {
-    /* If there are only hidden commands inside, do not even need to show the class name here */
+    /* If there are only hidden commands inside, do not even need to show the
+     * class name here */
     bool hidden_class = true;
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
       if (!command_hidden_[cmd]) {
@@ -486,11 +509,11 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
 
 template <class T>
 int Shell<T>::exit_code() const {
-  /* Check all the command status, if we see fatal errors or minor errors, we drop an error code */
+  /* Check all the command status, if we see fatal errors or minor errors, we
+   * drop an error code */
   int exit_code = 0;
   for (const int& status : command_status_) {
-    if ( (status == CMD_EXEC_FATAL_ERROR)
-      || (status == CMD_EXEC_MINOR_ERROR) ) {
+    if ((status == CMD_EXEC_FATAL_ERROR) || (status == CMD_EXEC_MINOR_ERROR)) {
       exit_code = 1;
       break;
     }
@@ -523,7 +546,8 @@ int Shell<T>::execution_errors() const {
 
 template <class T>
 void Shell<T>::exit(const int& init_err) const {
-  /* Check all the command status, if we see fatal errors or minor errors, we drop an error code */
+  /* Check all the command status, if we see fatal errors or minor errors, we
+   * drop an error code */
   int shell_exit_code = exit_code() | init_err;
 
   /* Show error message if we detect any errors */
@@ -533,15 +557,12 @@ void Shell<T>::exit(const int& init_err) const {
     num_err += execution_errors();
   }
 
-  VTR_LOG("\nFinish execution with %d errors\n",
-            num_err);
+  VTR_LOG("\nFinish execution with %d errors\n", num_err);
 
-  VTR_LOG("\nThe entire %s flow took %g seconds\n",
-          name_.c_str(),
+  VTR_LOG("\nThe entire %s flow took %g seconds\n", name_.c_str(),
           (double)(std::clock() - time_start_) / (double)CLOCKS_PER_SEC);
 
-  VTR_LOG("\nThank you for using %s!\n",
-          name().c_str());
+  VTR_LOG("\nThank you for using %s!\n", name().c_str());
 
   std::exit(shell_exit_code);
 }
@@ -550,15 +571,17 @@ void Shell<T>::exit(const int& init_err) const {
  * Private executors
  ***********************************************************************/
 template <class T>
-int Shell<T>::execute_command(const char* cmd_line,
-                               T& common_context, const bool& allow_hidden_command) {
+int Shell<T>::execute_command(const char* cmd_line, T& common_context,
+                              const bool& allow_hidden_command) {
   openfpga::StringToken tokenizer(cmd_line);
   tokenizer.add_delim(' ');
   /* Do not split the string in each quote "", as they should be a piece */
   std::vector<size_t> quote_anchors = tokenizer.find_positions('\"');
   /* Quote should be not be started with! */
   if (!quote_anchors.empty() && quote_anchors.front() == 0) {
-    VTR_LOG("Quotes (\") should NOT be the first charactor in command line: '%s'\n", cmd_line);
+    VTR_LOG(
+      "Quotes (\") should NOT be the first charactor in command line: '%s'\n",
+      cmd_line);
     return CMD_EXEC_FATAL_ERROR;
   }
   /* Quotes must be in pairs! */
@@ -592,10 +615,11 @@ int Shell<T>::execute_command(const char* cmd_line,
 
   /* Check the dependency graph to see if all the prequistics have been met */
   for (const ShellCommandId& dep_cmd : command_dependencies_[cmd_id]) {
-    if ( (CMD_EXEC_NONE == command_status_[dep_cmd])
-      || (CMD_EXEC_FATAL_ERROR == command_status_[dep_cmd]) ) {
+    if ((CMD_EXEC_NONE == command_status_[dep_cmd]) ||
+        (CMD_EXEC_FATAL_ERROR == command_status_[dep_cmd])) {
       VTR_LOG("Command '%s' is required to be executed before command '%s'!\n",
-              commands_[dep_cmd].name().c_str(), commands_[cmd_id].name().c_str());
+              commands_[dep_cmd].name().c_str(),
+              commands_[cmd_id].name().c_str());
       /* Echo the command help desk */
       print_command_options(commands_[cmd_id]);
       command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
@@ -615,7 +639,8 @@ int Shell<T>::execute_command(const char* cmd_line,
       strcpy(argv[itok], tokens[itok].c_str());
     }
     /* Execute the marco function and record the execution status */
-    command_status_[cmd_id] = command_macro_execute_functions_[cmd_id](tokens.size(), argv);
+    command_status_[cmd_id] =
+      command_macro_execute_functions_[cmd_id](tokens.size(), argv);
     /* Free the argv */
     for (size_t itok = 0; itok < tokens.size(); ++itok) {
       free(argv[itok]);
@@ -630,7 +655,8 @@ int Shell<T>::execute_command(const char* cmd_line,
    * Avoid conflict when calling the same command in the second time
    */
   command_contexts_[cmd_id].reset();
-  if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
+  if (false ==
+      parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
     /* Echo the command */
     print_command_options(commands_[cmd_id]);
     command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
@@ -642,41 +668,50 @@ int Shell<T>::execute_command(const char* cmd_line,
 
   /* Execute the command depending on the type of function ! */
   switch (command_execute_function_types_[cmd_id]) {
-  case PLUGIN:
-    command_status_[cmd_id] = command_plugin_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
-    break;
-  case CONST_STANDARD:
-    command_status_[cmd_id] = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
-    break;
-  case STANDARD:
-    command_status_[cmd_id] = command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
-    break;
-  case FLOATING:
-    command_status_[cmd_id] = command_floating_execute_functions_[cmd_id](commands_[cmd_id], command_contexts_[cmd_id]);
-    break;
-  case CONST_SHORT:
-    command_status_[cmd_id] = command_short_const_execute_functions_[cmd_id](common_context);
-    break;
-  case SHORT:
-    command_status_[cmd_id] = command_short_execute_functions_[cmd_id](common_context);
-    break;
-  case BUILTIN:
-    command_builtin_execute_functions_[cmd_id]();
-    /* Built-in execution is always correct */
-    command_status_[cmd_id] = CMD_EXEC_SUCCESS;
-    break;
-  /* MACRO should be executed eariler in this function. It should not appear here */
-  default:
-    /* This is not allowed! Error out */
-    VTR_LOG_ERROR("Invalid type of execute function for command '%s'!\n",
-                  commands_[cmd_id].name().c_str());
-    /* Exit the shell using the exit() function inside this class! */
-    return CMD_EXEC_FATAL_ERROR;
+    case PLUGIN:
+      command_status_[cmd_id] = command_plugin_execute_functions_[cmd_id](
+        this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+      break;
+    case CONST_STANDARD:
+      command_status_[cmd_id] = command_const_execute_functions_[cmd_id](
+        common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+      break;
+    case STANDARD:
+      command_status_[cmd_id] = command_standard_execute_functions_[cmd_id](
+        common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+      break;
+    case FLOATING:
+      command_status_[cmd_id] = command_floating_execute_functions_[cmd_id](
+        commands_[cmd_id], command_contexts_[cmd_id]);
+      break;
+    case CONST_SHORT:
+      command_status_[cmd_id] =
+        command_short_const_execute_functions_[cmd_id](common_context);
+      break;
+    case SHORT:
+      command_status_[cmd_id] =
+        command_short_execute_functions_[cmd_id](common_context);
+      break;
+    case BUILTIN:
+      command_builtin_execute_functions_[cmd_id]();
+      /* Built-in execution is always correct */
+      command_status_[cmd_id] = CMD_EXEC_SUCCESS;
+      break;
+    /* MACRO should be executed eariler in this function. It should not appear
+     * here */
+    default:
+      /* This is not allowed! Error out */
+      VTR_LOG_ERROR("Invalid type of execute function for command '%s'!\n",
+                    commands_[cmd_id].name().c_str());
+      /* Exit the shell using the exit() function inside this class! */
+      return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Forbid users to return the status CMD_EXEC_NONE */
   if (CMD_EXEC_NONE == command_status_[cmd_id]) {
-    VTR_LOG_ERROR("It is illegal to return never-executed status for an executed command!\n");
+    VTR_LOG_ERROR(
+      "It is illegal to return never-executed status for an executed "
+      "command!\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 
@@ -686,14 +721,17 @@ int Shell<T>::execute_command(const char* cmd_line,
 /************************************************************************
  * Public invalidators/validators
  ***********************************************************************/
-template<class T>
+template <class T>
 bool Shell<T>::valid_command_id(const ShellCommandId& cmd_id) const {
-  return ( size_t(cmd_id) < command_ids_.size() ) && ( cmd_id == command_ids_[cmd_id] );
+  return (size_t(cmd_id) < command_ids_.size()) &&
+         (cmd_id == command_ids_[cmd_id]);
 }
 
-template<class T>
-bool Shell<T>::valid_command_class_id(const ShellCommandClassId& cmd_class_id) const {
-  return ( size_t(cmd_class_id) < command_class_ids_.size() ) && ( cmd_class_id == command_class_ids_[cmd_class_id] );
+template <class T>
+bool Shell<T>::valid_command_class_id(
+  const ShellCommandClassId& cmd_class_id) const {
+  return (size_t(cmd_class_id) < command_class_ids_.size()) &&
+         (cmd_class_id == command_class_ids_[cmd_class_id]);
 }
 
 } /* End namespace openfpga */
