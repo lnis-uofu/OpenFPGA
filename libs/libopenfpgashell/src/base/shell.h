@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "app_options.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
@@ -105,10 +106,26 @@ class Shell {
     const ShellCommandId& cmd_id) const;
   std::vector<ShellCommandId> commands_by_class(
     const ShellCommandClassId& cmd_class_id) const;
+  // Check if an application option exists in the shell
+  bool has_app_option(const std::string& option_name) const;
+
+  // Return a AppOptionValue object of an application option in the shell
+  AppOptionValue get_app_option(const std::string& option_name) const;
+  // Return all the application options in the shell as a string map
+  std::map<std::string, AppOptionValue> app_options() const;
 
  public: /* Public mutators */
   void set_name(const char* name);
   void add_title(const char* title);
+  // Methods to set application options
+  // For string and selection application options
+  void set_app_option(const std::string& option_name,
+                      const std::string& option_value);
+  void set_app_option(const std::string& option_name, const int& option_value);
+  void set_app_option(const std::string& option_name, const bool& option_value);
+  void set_app_option(const std::string& option_name,
+                      const float& option_value);
+
   ShellCommandId add_command(const Command& cmd, const char* descr,
                              const bool& hidden = false);
   void set_command_class(const ShellCommandId& cmd_id,
@@ -215,6 +232,10 @@ class Shell {
   int execute_command(const char* cmd_line, T& common_context,
                       const bool& allow_hidden_command = true);
 
+ public: /* public data */
+  /* Application options for command behaviors */
+  application_options app_options_;
+
  private: /* Internal data */
   /* Name of the shell, this will appear in the interactive mode */
   std::string name_;
@@ -297,6 +318,60 @@ class Shell {
   std::map<std::string, ShellCommandClassId> command_class2ids_;
   vtr::vector<ShellCommandClassId, std::vector<ShellCommandId>>
     commands_by_classes_;
+
+#define STRING_APP_OPTION(name, value, help_message) \
+  APP_OPTION(name, value, help_message)
+#define INT_APP_OPTION(name, value, help_message) \
+  APP_OPTION(name, value, help_message)
+#define FLOAT_APP_OPTION(name, value, help_message) \
+  APP_OPTION(name, value, help_message)
+#define BOOLEAN_APP_OPTION(name, value, help_message) \
+  APP_OPTION(name, value, help_message)
+#define SELECTION_APP_OPTION(name, value, selection_values, help_message) \
+  APP_OPTION(name, value, help_message)
+
+  std::map<std::string_view, AppOptionValue*> app_option_fields_ = {
+#define APP_OPTION(name, value, help_message) \
+  {"atom." #name, &app_options_.atom_netlist.name},
+    DEFINE_ATOM_NETLIST_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"aplace." #name, &app_options_.analytical_placement.name},
+      DEFINE_ANALYTICAL_PLACEMENT_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"cluster." #name, &app_options_.clustering.name},
+        DEFINE_CLUSTERING_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"place." #name, &app_options_.placement.name},
+          DEFINE_PLACEMENT_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"tplace." #name, &app_options_.timing_placement.name},
+            DEFINE_TIMING_PLACEMENT_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"router." #name, &app_options_.router.name},
+              DEFINE_ROUTER_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"trouter." #name, &app_options_.timing_router.name},
+                DEFINE_TIMING_ROUTER_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"analysis." #name, &app_options_.analysis.name},
+                  DEFINE_ANALYSIS_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"general." #name, &app_options_.general.name},
+                    DEFINE_GENERAL_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
+  {"build_fabric." #name, &app_options_.build_fabric.name},
+                      DEFINE_BUILD_FABRIC_OPTIONS_FIELDS
+#undef APP_OPTION
+  };
 
   /* Timer */
   std::clock_t time_start_;
