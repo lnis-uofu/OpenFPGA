@@ -23,19 +23,15 @@
 
 namespace vpr {
 
-/**
- * VPR program without clean up
- * VPR program
- * Generate FPGA architecture given architecture description
- * Pack, place, and route circuit into FPGA architecture
- * Electrical timing analysis on results
- *
- * Overall steps
- * 1.  Initialization
- * 2.  Pack
- * 3.  Place-and-route and timing analysis
- * 4.  Clean up
- */
+static int pack(t_vpr_setup vpr_setup, t_arch& arch) {
+  bool pack_success = vpr_pack_flow(vpr_setup, arch);
+
+  if (!pack_success) {
+    return false;
+  }
+  return true;
+}
+
 static int vpr(int argc, char** argv) {
   vtr::ScopedFinishTimer t("The entire flow of VPR");
 

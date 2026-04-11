@@ -43,6 +43,7 @@ if(WIN32)
   endif()
 else()
   target_link_libraries(libopenfpgashell
+                        libvpr
                         readline)
 endif()
 

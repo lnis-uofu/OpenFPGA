@@ -1,5 +1,9 @@
 #include "openfpga_shell.h"
 
+#include <map>
+
+#include "ShowSetup.h"
+#include "app_options_commands.h"
 #include "basic_command.h"
 #include "command_echo.h"
 #include "command_parser.h"
@@ -14,6 +18,9 @@
 #include "yosys_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
+  sync_vpr_setup_to_app_options(&vpr_setup, shell_);
+  ShowSetup(*(&vpr_setup));
+
   shell_.set_name("OpenFPGA");
   shell_.add_title(create_openfpga_title().c_str());
 
@@ -38,11 +45,134 @@ OpenfpgaShell::OpenfpgaShell() {
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell_);
 
+  // Add app options commands
+  openfpga::add_app_options_commands(shell_);
+
   /* Add basic commands: exit, help, etc.
    * Note:
    * This MUST be the last command group to be added!
    */
   openfpga::add_basic_commands(shell_);
+}
+
+void OpenfpgaShell::sync_vpr_setup_to_app_options(
+  t_vpr_setup* vpr_setup, openfpga::Shell<OpenfpgaContext>& shell) {
+  vpr_setup->TimingEnabled =
+    shell.app_options_.general.timing_analysis.bool_value;
+  vpr_setup->device_layout =
+    shell.app_options_.general.device_layout.string_value;
+  vpr_setup->constant_net_method = static_cast<e_constant_net_method>(
+    shell.app_options_.general.constant_net_method.to_enum());
+  vpr_setup->clock_modeling = static_cast<e_clock_modeling>(
+    shell.app_options_.general.clock_modeling.to_enum());
+  vpr_setup->two_stage_clock_routing =
+    shell.app_options_.general.two_stage_clock_routing.bool_value;
+  vpr_setup->exit_before_pack = false;
+  vpr_setup->num_workers = shell.app_options_.general.num_workers.int_value;
+
+  /* = = = = = = = = = = = = = = = = = =
+   * TODO: Separate supress warning and errors to different options, and support
+   * more flexible configuration (e.g. specify a log file to output the
+   * supressed warnings/errors)
+   * = = = = = = = = = = = = = = = = = = */
+  /*
+   * Initialize the functions names for which VPR_ERRORs
+   * are demoted to VTR_LOG_WARNs
+   */
+  for (const std::string& func_name :
+       vtr::StringToken(shell.app_options_.general.disable_errors.string_value)
+         .split(":")) {
+    map_error_activation_status(func_name);
+  }
+
+  /*
+   * Initialize the functions names for which
+   * warnings are being suppressed
+   */
+  std::vector<std::string> split_warning_option =
+    vtr::StringToken(shell.app_options_.general.suppress_warnings.string_value)
+      .split(",");
+  std::string warn_log_file;
+  std::string warn_functions;
+  // If no log file name is provided, the specified warning
+  // to suppress are not output anywhere.
+  if (split_warning_option.size() == 1) {
+    warn_functions = split_warning_option[0];
+  } else if (split_warning_option.size() == 2) {
+    warn_log_file = split_warning_option[0];
+    warn_functions = split_warning_option[1];
+  }
+  /* = = = = = = = = = = = = = = = = = = */
+  setupvpr_from_ofshell();
+}
+
+void OpenfpgaShell::setupvpr_from_ofshell() {
+  // Sync the options in VPR setup to the app options in the shell
+
+  // Setup netlist options
+  auto NetlistOpts = this->vpr_setup.NetlistOpts;
+  auto ShellNetlistOpts = this->shell_.app_options_.atom_netlist;
+  auto PackerOpts = this->vpr_setup.PackerOpts;
+  auto ShellPackerOpts = this->shell_.app_options_.clustering;
+  auto ShellGeneralOpts = this->shell_.app_options_.general;
+
+  NetlistOpts.const_gen_inference = static_cast<e_const_gen_inference>(
+    ShellNetlistOpts.const_gen_inference.to_enum());
+  NetlistOpts.absorb_buffer_luts =
+    ShellNetlistOpts.absorb_buffer_luts.bool_value;
+  NetlistOpts.sweep_dangling_primary_ios =
+    ShellNetlistOpts.sweep_dangling_primary_ios.bool_value;
+  NetlistOpts.sweep_dangling_nets =
+    ShellNetlistOpts.sweep_dangling_nets.bool_value;
+  NetlistOpts.sweep_dangling_blocks =
+    ShellNetlistOpts.sweep_dangling_blocks.bool_value;
+  NetlistOpts.sweep_constant_primary_outputs =
+    ShellNetlistOpts.sweep_constant_primary_outputs.bool_value;
+
+  // Setup packer options
+  PackerOpts.output_file = ShellPackerOpts.net_file.string_value;
+  PackerOpts.circuit_file_name = ShellPackerOpts.circuit_file.string_value;
+  PackerOpts.doPacking = e_stage_action::DO;
+
+  PackerOpts.allow_unrelated_clustering = static_cast<e_unrelated_clustering>(
+    ShellPackerOpts.allow_unrelated_clustering.to_enum());
+  PackerOpts.connection_driven =
+    ShellPackerOpts.connection_driven_clustering.bool_value;
+  PackerOpts.timing_driven =
+    ShellPackerOpts.timing_driven_clustering.bool_value;
+  PackerOpts.cluster_seed_type =
+    static_cast<e_cluster_seed>(ShellPackerOpts.cluster_seed_type.to_enum());
+  PackerOpts.timing_gain_weight =
+    ShellPackerOpts.timing_gain_weight.float_value;
+  PackerOpts.connection_gain_weight =
+    ShellPackerOpts.connection_gain_weight.float_value;
+  PackerOpts.pack_verbosity = ShellPackerOpts.pack_verbosity.int_value;
+  PackerOpts.memoize_cluster_packings =
+    ShellPackerOpts.memoize_cluster_packings.bool_value;
+  PackerOpts.enable_pin_feasibility_filter =
+    ShellPackerOpts.enable_clustering_pin_feasibility_filter.bool_value;
+  PackerOpts.balance_block_type_utilization =
+    static_cast<e_balance_block_type_util>(
+      ShellPackerOpts.balance_block_type_utilization.to_enum());
+  PackerOpts.target_external_pin_util =
+    vtr::StringToken(ShellPackerOpts.target_external_pin_util.string_value)
+      .split(" ");
+  PackerOpts.target_device_utilization =
+    ShellGeneralOpts.target_device_utilization.float_value;
+  PackerOpts.prioritize_transitive_connectivity =
+    ShellPackerOpts.pack_prioritize_transitive_connectivity.bool_value;
+  PackerOpts.high_fanout_threshold =
+    vtr::StringToken(ShellPackerOpts.pack_high_fanout_threshold.string_value)
+      .split(" ");
+  PackerOpts.transitive_fanout_threshold =
+    ShellPackerOpts.pack_transitive_fanout_threshold.int_value;
+  PackerOpts.feasible_block_array_size =
+    ShellPackerOpts.pack_feasible_block_array_size.int_value;
+
+  PackerOpts.device_layout = ShellGeneralOpts.device_layout.string_value;
+
+  PackerOpts.timing_update_type = static_cast<e_timing_update_type>(
+    ShellGeneralOpts.timing_update_type.to_enum());
 }
 
 int OpenfpgaShell::run_command(const char* cmd_line) {

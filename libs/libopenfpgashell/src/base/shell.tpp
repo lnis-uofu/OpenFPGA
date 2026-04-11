@@ -2,7 +2,10 @@
  * Member functions for class Shell
  ********************************************************************/
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <fstream>
+#include <limits>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -16,6 +19,7 @@
 #include <readline/readline.h>
 
 /* Headers from openfpgashell library */
+#include "app_options.h"
 #include "command_echo.h"
 #include "command_parser.h"
 
@@ -107,6 +111,50 @@ std::vector<ShellCommandId> Shell<T>::commands_by_class(
   return commands_by_classes_[cmd_class_id];
 }
 
+// Check if an application option exists in the shell
+template <class T>
+bool Shell<T>::has_app_option(const std::string& option_name) const {
+  return app_option_fields_.end() != app_option_fields_.find(option_name);
+}
+
+// // Return a AppOptionValue object of an application option in the shell
+// template <class T>
+// typename Shell<T>::AppOptionValue Shell<T>::app_option(
+//   const std::string& option_name) const {
+//   if (!has_app_option(option_name)) {
+//     VTR_LOG_ERROR("Application option '%s' does not exist\n",
+//                   option_name.c_str());
+//     return AppOptionValue();
+//   }
+
+//   return app_options_.at(option_name);
+// }
+
+// Return a AppOptionValue object of an application option in the shell
+template <class T>
+AppOptionValue Shell<T>::get_app_option(const std::string& option_name) const {
+  const auto option_it = app_option_fields_.find(option_name);
+  if (option_it == app_option_fields_.end() || option_it->second == nullptr) {
+    VTR_LOG_ERROR("Application option '%s' does not exist\n",
+                  option_name.c_str());
+    return AppOptionValue::make_empty();
+  }
+
+  return *(option_it->second);
+}
+
+// Return all the application options in the shell
+template <class T>
+std::map<std::string, AppOptionValue> Shell<T>::app_options() const {
+  std::map<std::string, AppOptionValue> options;
+  for (const auto& option_field : app_option_fields_) {
+    if (option_field.second != nullptr) {
+      options[std::string(option_field.first)] = *(option_field.second);
+    }
+  }
+  return options;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -118,6 +166,71 @@ void Shell<T>::set_name(const char* name) {
 template <class T>
 void Shell<T>::add_title(const char* title) {
   title_ = std::string(title);
+}
+
+template <class T>
+void Shell<T>::set_app_option(const std::string& option_name,
+                              const std::string& option_value) {
+  if (!has_app_option(option_name)) {
+    VTR_LOG_ERROR("Application option '%s' does not exist\n",
+                  option_name.c_str());
+    return;
+  }
+
+  auto it = app_option_fields_.find(option_name);
+  switch (it->second->type) {
+    case AppOptionValue::SELECTION: {
+      const auto& selection_enums = it->second->selection_values;
+      const auto selected_it = selection_enums.find(option_value);
+      if (selection_enums.end() == selected_it) {
+        VTR_LOG_ERROR(
+          "Application option '%s' has invalid selection value '%s'\n",
+          option_name.c_str(), option_value.c_str());
+        return;
+      }
+      it->second->update(option_value);
+      return;
+    }
+    default:
+      it->second->update(option_value);
+      return;
+  }
+}
+
+template <class T>
+void Shell<T>::set_app_option(const std::string& option_name,
+                              const int& option_value) {
+  if (!has_app_option(option_name)) {
+    VTR_LOG_ERROR("Application option '%s' does not exist\n",
+                  option_name.c_str());
+    return;
+  }
+
+  app_option_fields_.find(option_name)->second->update(option_value);
+}
+
+template <class T>
+void Shell<T>::set_app_option(const std::string& option_name,
+                              const bool& option_value) {
+  if (!has_app_option(option_name)) {
+    VTR_LOG_ERROR("Application option '%s' does not exist\n",
+                  option_name.c_str());
+    return;
+  }
+
+  app_option_fields_.find(option_name)->second->update(option_value);
+}
+
+template <class T>
+void Shell<T>::set_app_option(const std::string& option_name,
+                              const float& option_value) {
+  if (!has_app_option(option_name)) {
+    VTR_LOG_ERROR("Application option '%s' does not exist\n",
+                  option_name.c_str());
+    return;
+  }
+
+  app_option_fields_.find(option_name)->second->update(option_value);
 }
 
 /* Add a command with it description */

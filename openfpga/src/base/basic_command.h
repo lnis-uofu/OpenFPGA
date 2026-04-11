@@ -14,6 +14,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell);
 void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell);
 
 } /* end namespace openfpga */

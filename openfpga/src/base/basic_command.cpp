@@ -6,6 +6,7 @@
  *******************************************************************/
 #include "basic_command.h"
 
+#include "app_options_commands.h"
 #include "command_exit_codes.h"
 #include "openfpga_basic.h"
 #include "openfpga_title.h"
@@ -78,6 +79,47 @@ static ShellCommandId add_openfpga_source_command(
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
+}
+
+void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell) {
+  ShellCommandClassId basic_cmd_class = shell.add_command_class("app_options");
+  /* ========================================================= */
+  /* Add set_app_option command to configure shell app options */
+  /* ========================================================= */
+  Command shell_cmd_set_app_option("set_app_option");
+  CommandOptionId set_opt_name = shell_cmd_set_app_option.add_option(
+    "name", true, "Name of an application option");
+  shell_cmd_set_app_option.set_option_short_name(set_opt_name, "n");
+  shell_cmd_set_app_option.set_option_require_value(set_opt_name,
+                                                    openfpga::OPT_STRING);
+  CommandOptionId set_opt_value = shell_cmd_set_app_option.add_option(
+    "value", true, "Value of an application option");
+  shell_cmd_set_app_option.set_option_short_name(set_opt_value, "v");
+  shell_cmd_set_app_option.set_option_require_value(set_opt_value,
+                                                    openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_set_app_option_id = shell.add_command(
+    shell_cmd_set_app_option, "Set an application option in shell runtime");
+  shell.set_command_class(shell_cmd_set_app_option_id, basic_cmd_class);
+  shell.set_command_execute_function(shell_cmd_set_app_option_id,
+                                     set_app_option_command);
+
+  /* ========================================================= */
+  /* Add report_app_option command to print configured options */
+  /* ========================================================= */
+  Command shell_cmd_report_app_option("report_app_option");
+  CommandOptionId report_opt_name = shell_cmd_report_app_option.add_option(
+    "name", false, "Name of an application option");
+  shell_cmd_report_app_option.set_option_short_name(report_opt_name, "n");
+  shell_cmd_report_app_option.set_option_require_value(report_opt_name,
+                                                       openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_report_app_option_id =
+    shell.add_command(shell_cmd_report_app_option,
+                      "Report one or all application options in shell runtime");
+  shell.set_command_class(shell_cmd_report_app_option_id, basic_cmd_class);
+  shell.set_command_execute_function(shell_cmd_report_app_option_id,
+                                     report_app_option_command);
 }
 
 void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
