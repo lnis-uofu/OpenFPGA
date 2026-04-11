@@ -23,6 +23,7 @@ set_target_properties(libopenfpgashell PROPERTIES PREFIX "") #Avoid extra 'lib' 
 #Specify link-time dependancies
 target_link_libraries(libopenfpgashell
                       libopenfpgautil
+                      libvpr
                       libvtrutil
                       readline)
 
