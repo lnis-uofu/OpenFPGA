@@ -8,8 +8,12 @@
 #include <cstring>
 #include <ctime>
 
+#include "arch_util.h"
+#include "command.h"
+#include "command_context.h"
 #include "command_exit_codes.h"
 #include "globals.h"
+#include "read_xml_arch_file.h"
 #include "tatum/error.hpp"
 #include "vpr_api.h"
 #include "vpr_error.h"
@@ -23,14 +27,50 @@
 
 namespace vpr {
 
-static int pack(t_vpr_setup vpr_setup, t_arch& arch) {
-  bool pack_success = vpr_pack_flow(vpr_setup, arch);
 
-  if (!pack_success) {
-    return false;
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Read and validate a VPR architecture XML file
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int read_vpr_arch_template(const openfpga::Command& cmd,
+                           const openfpga::CommandContext& cmd_context) {
+  openfpga::CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
+
+  VTR_LOG("Reading VPR XML architecture '%s'...\n", arch_file_name.c_str());
+
+  t_arch arch = t_arch();
+  DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
+  device_ctx.arch = &arch;
+
+  try {
+    xml_read_arch(arch_file_name, true, &arch, device_ctx.physical_tile_types,
+                  device_ctx.logical_block_types);
+  } catch (const std::exception& e) {
+    free_arch(&arch);
+    VTR_LOG_ERROR("Failed to read VPR XML architecture '%s': %s\n",
+                  arch_file_name.c_str(), e.what());
+    return openfpga::CMD_EXEC_FATAL_ERROR;
   }
-  return true;
+
+  VTR_LOG("Read VPR XML architecture '%s' successfully.\n",
+          arch_file_name.c_str());
+  return openfpga::CMD_EXEC_SUCCESS;
 }
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Starting VPR packing stage
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// static int pack(t_vpr_setup vpr_setup, t_arch& arch) {
+//   bool pack_success = vpr_pack_flow(vpr_setup, arch);
+
+//   if (!pack_success) {
+//     return false;
+//   }
+//   return true;
+// }
 
 static int vpr(int argc, char** argv) {
   vtr::ScopedFinishTimer t("The entire flow of VPR");
