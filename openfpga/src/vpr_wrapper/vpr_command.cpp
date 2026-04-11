@@ -35,6 +35,22 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_vpr_stdalone_id, vpr_cmd_class);
   shell.set_command_execute_function(shell_cmd_vpr_stdalone_id,
                                      vpr::vpr_standalone_wrapper);
-}
+
+  // Add a command to read and validate VPR architecture file
+  Command shell_cmd("read_vpr_arch");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_arch_file = shell_cmd.add_option(
+    "file", true, "file path to the VPR architecture XML");
+  shell_cmd.set_option_short_name(opt_arch_file, "f");
+  shell_cmd.set_option_require_value(opt_arch_file, openfpga::OPT_STRING);
+
+  /* Add command 'read_vpr_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "read and validate VPR architecture file");
+  shell.set_command_class(shell_cmd_id, vpr_cmd_class);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     vpr::read_vpr_arch_template);
+  }
 
 } /* end namespace openfpga */
