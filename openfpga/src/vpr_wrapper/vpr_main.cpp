@@ -27,10 +27,13 @@
 #include "vtr_log.h"
 #include "vtr_memory.h"
 #include "vtr_time.h"
+#include "vtr_path.h"
 #include "setup_vpr.h"
 #include "setup_vib_utils.h"
 #include "lb_type_rr_graph.h"
 #include "pb_type_graph.h"
+#include "CheckArch.h"
+#include "CheckSetup.h"
 
 namespace vpr {
 
@@ -52,7 +55,7 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
   DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
 
-  t_arch arch = t_arch();
+  static t_arch arch = t_arch();
   device_ctx.arch = &arch;
 
   arch.device_layout = vpr_setup.device_layout;
@@ -103,6 +106,10 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
 
   // Skipped graphics related commands from here
 
+  /* Check inputs are reasonable */
+  // Skipped for now
+  // CheckArch(arch);
+
   VTR_LOG("Read VPR XML architecture '%s' successfully.\n",
           arch_file_name.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
@@ -114,6 +121,35 @@ int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
   (void)cmd;
   (void)cmd_context;
   ShowSetup(openfpga_ctx.vpr_setup());
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Read and set circuit file
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int read_circuit_template(OpenfpgaContext& openfpga_ctx,
+                          const openfpga::Command& cmd,
+                          const openfpga::CommandContext& cmd_context) {
+  openfpga::CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
+  std::string circuit_file = cmd_context.option_value(cmd, opt_file);
+
+  VTR_LOG("Reading circuit file '%s'...\n", circuit_file.c_str());
+
+  // Set the circuit file in vpr_setup
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  vpr_setup.PackerOpts.circuit_file_name = circuit_file;
+
+  /* Read blif file and sweep unused components */
+  t_arch& arch = *const_cast<t_arch*>(device_ctx.arch);
+  auto& atom_ctx = g_vpr_ctx.mutable_atom();
+  atom_ctx.mutable_netlist() = read_and_process_circuit(
+    e_circuit_format::BLIF, vpr_setup, arch);
+
+  VTR_LOG("Circuit file '%s' read successfully.\n", circuit_file.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
 }
 

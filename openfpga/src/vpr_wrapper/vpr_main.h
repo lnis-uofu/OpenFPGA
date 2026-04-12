@@ -20,6 +20,10 @@ int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
                             const openfpga::Command& cmd,
                             const openfpga::CommandContext& cmd_context);
 
+int read_circuit_template(OpenfpgaContext& openfpga_ctx,
+                          const openfpga::Command& cmd,
+                          const openfpga::CommandContext& cmd_context);
+
 } /* End namespace vpr */
 
 #endif

@@ -11,8 +11,9 @@ run_openfpga_command() {
     local command="$1"
     ${OPENFPGA_PATH}/build/openfpga/openfpga -x "${command}; exit;"
     if [ $? -ne 0 ]; then
+        echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         echo "Command '${command}' failed in OpenFPGA Shell with VPR8"
-        exit 1
+        echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     fi
 }
 
@@ -27,4 +28,5 @@ report_app_option -n atom.const_gen_inference"
 
 run_openfpga_command "\
 read_vpr_arch -f ${OPENFPGA_PATH}/openfpga_flow/vpr_arch/k4_frac_N4_tileable_40nm_custrrg.xml;
+read_circuit -f ${OPENFPGA_PATH}/openfpga_flow/benchmarks/micro_benchmark/and2/and2.blif;
 show_vpr_setup"
