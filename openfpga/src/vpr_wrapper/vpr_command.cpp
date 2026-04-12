@@ -45,6 +45,12 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell_cmd.set_option_short_name(opt_arch_file, "f");
   shell_cmd.set_option_require_value(opt_arch_file, openfpga::OPT_STRING);
 
+  /* Add an option '--layout' in short '-l'*/
+  CommandOptionId opt_layout = shell_cmd.add_option(
+    "layout", true, "device name");
+  shell_cmd.set_option_short_name(opt_layout, "l");
+  shell_cmd.set_option_require_value(opt_layout, openfpga::OPT_STRING);
+
   /* Add command 'read_vpr_arch' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "read and validate VPR architecture file");
@@ -76,6 +82,21 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_read_circuit_id, vpr_cmd_class);
   shell.set_command_execute_function(shell_cmd_read_circuit_id,
                                      vpr::read_circuit_template);
+
+  /* Add command 'pack' to the Shell */
+  Command shell_cmd_pack("pack");
+  CommandOptionId opt_pack_device = shell_cmd_pack.add_option(
+    "device", false,
+    "optional device layout override for pack stage");
+  shell_cmd_pack.set_option_short_name(opt_pack_device, "d");
+  shell_cmd_pack.set_option_require_value(opt_pack_device,
+                                          openfpga::OPT_STRING);
+  ShellCommandId shell_cmd_pack_id = shell.add_command(
+    shell_cmd_pack,
+    "Run VPR pack flow using the currently loaded architecture and circuit");
+  shell.set_command_class(shell_cmd_pack_id, vpr_cmd_class);
+  shell.set_command_execute_function(shell_cmd_pack_id,
+                                     vpr::pack_template);
   }
 
 } /* end namespace openfpga */
