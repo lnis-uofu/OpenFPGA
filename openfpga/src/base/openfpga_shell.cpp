@@ -19,7 +19,6 @@
 
 OpenfpgaShell::OpenfpgaShell() {
   sync_vpr_setup_to_app_options(openfpga_ctx_.mutable_vpr_setup(), shell_);
-  ShowSetup(openfpga_ctx_.mutable_vpr_setup());
 
   shell_.set_name("OpenFPGA");
   shell_.add_title(create_openfpga_title().c_str());
@@ -105,6 +104,7 @@ void OpenfpgaShell::sync_vpr_setup_to_app_options(
   }
   /* = = = = = = = = = = = = = = = = = = */
   setupvpr_from_ofshell(&vpr_setup);
+  ShowSetup(vpr_setup);
 }
 
 void OpenfpgaShell::setupvpr_from_ofshell(t_vpr_setup* vpr_setup) {
@@ -116,6 +116,15 @@ void OpenfpgaShell::setupvpr_from_ofshell(t_vpr_setup* vpr_setup) {
   auto PackerOpts = vpr_setup->PackerOpts;
   auto ShellPackerOpts = shell_.app_options_.clustering;
   auto ShellGeneralOpts = shell_.app_options_.general;
+
+  // Filenames
+  vpr_setup->RoutingArch.write_rr_graph_filename =
+    ShellGeneralOpts.write_rr_graph_file.string_value;
+  vpr_setup->RoutingArch.read_rr_graph_filename = ShellGeneralOpts.read_rr_graph_file.string_value;
+  vpr_setup->RoutingArch.read_rr_edge_override_filename =
+    ShellGeneralOpts.read_rr_edge_override_file.string_value;
+
+  // init global variables
 
   NetlistOpts.const_gen_inference = static_cast<e_const_gen_inference>(
     ShellNetlistOpts.const_gen_inference.to_enum());

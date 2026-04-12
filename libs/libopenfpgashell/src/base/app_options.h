@@ -370,15 +370,18 @@ struct AppOptionValue {
   STRING_APP_OPTION(disable_errors, "", "Colon-separated list of errors to disable") \
   STRING_APP_OPTION(suppress_warnings, "", "Warnings to suppress") \
   BOOLEAN_APP_OPTION(allow_dangling_combinational_nodes, false, "Allow dangling combinational nodes") \
-  BOOLEAN_APP_OPTION(terminate_if_timing_fails, false, "Terminate if timing analysis fails")
+  BOOLEAN_APP_OPTION(terminate_if_timing_fails, false, "Terminate if timing analysis fails") \
+  STRING_APP_OPTION(write_rr_graph_file, "rr_graph.out.xml", "RR graph output file") \
+  STRING_APP_OPTION(read_rr_graph_file, "rr_graph.in.xml", "RR graph input file") \
+  STRING_APP_OPTION(read_rr_edge_override_file, "rr_graph.edge.xml", "RR edge override input file")
 
 #define DEFINE_BUILD_FABRIC_OPTIONS_FIELDS \
   INT_APP_OPTION(gsb_version, 0, "GSB version") \
   BOOLEAN_APP_OPTION(reorder_incoming_edges, true, "Reorder incoming edges") \
   BOOLEAN_APP_OPTION(sort_gsb_chan_node_in_edges, true, "Sort GSB channel-node incoming edges")
-// clang-format on
+  // clang-format on
 
-struct atom_netlist_opts {
+  struct atom_netlist_opts {
   DEFINE_ATOM_NETLIST_OPTIONS_FIELDS;
 };
 

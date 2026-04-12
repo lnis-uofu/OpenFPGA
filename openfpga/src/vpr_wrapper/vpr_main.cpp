@@ -26,6 +26,10 @@
 #include "vtr_log.h"
 #include "vtr_memory.h"
 #include "vtr_time.h"
+#include "setup_vpr.h"
+#include "setup_vib_utils.h"
+#include "lb_type_rr_graph.h"
+#include "pb_type_graph.h"
 
 namespace vpr {
 
@@ -44,9 +48,12 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
 
   VTR_LOG("Reading VPR XML architecture '%s'...\n", arch_file_name.c_str());
 
-  const t_vpr_setup& vpr_setup = openfpga_ctx.vpr_setup();
+  DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
 
   t_arch arch = t_arch();
+  device_ctx.arch = &arch;
+
   arch.device_layout = vpr_setup.device_layout;
   std::vector<t_physical_tile_type> physical_tile_types;
   std::vector<t_logical_block_type> logical_block_types;
@@ -69,7 +76,31 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
 
-  free_arch(&arch);
+  vpr_setup.Segments.swap(arch.Segments);
+
+  if (!arch.vib_infs.empty()) {
+    setup_vib_inf(device_ctx.physical_tile_types, arch.switches,
+                  arch.Segments, arch.vib_infs);
+  }
+
+  for (bool has_global_routing : arch.layer_global_routing) {
+    device_ctx.inter_cluster_prog_routing_resources.emplace_back(
+      has_global_routing);
+  }
+
+  {
+    vtr::ScopedStartFinishTimer t("Building complex block graph");
+    alloc_and_load_all_pb_graphs(vpr_setup.PowerOpts.do_power,
+                                 vpr_setup.RouterOpts.flat_routing);
+    vpr_setup.PackerRRGraph = alloc_and_load_all_lb_type_rr_graph();
+  }
+
+  if ((vpr_setup.clock_modeling == ROUTED_CLOCK) ||
+      (vpr_setup.clock_modeling == DEDICATED_NETWORK)) {
+    ClockModeling::treat_clock_pins_as_non_globals();
+  }
+
+  // Skipped graphics related commands from here
 
   VTR_LOG("Read VPR XML architecture '%s' successfully.\n",
           arch_file_name.c_str());
