@@ -28,7 +28,7 @@
 #include "vtr_memory.h"
 #include "vtr_time.h"
 #include "vtr_path.h"
-#include "setup_vpr.h"
+#include "setup_vpr.cpp"
 #include "setup_vib_utils.h"
 #include "lb_type_rr_graph.h"
 #include "pb_type_graph.h"
@@ -44,31 +44,53 @@ namespace vpr {
 int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
                            const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context) {
+
   openfpga::CommandOptionId opt_file = cmd.option("file");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
   std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
 
-  VTR_LOG("Reading VPR XML architecture '%s'...\n", arch_file_name.c_str());
+  openfpga::CommandOptionId opt_layout = cmd.option("layout");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_layout));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_layout).empty());
+
+  std::string layout = cmd_context.option_value(cmd, opt_layout);
+
+  VTR_LOG("Reading VPR XML architecture '%s' with layout '%s'...\n",
+          arch_file_name.c_str(), layout.c_str());
 
   DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
 
+  // Check that no architecture has already been loaded -- only one arch can be
+  // loaded at a time
+  if (nullptr != device_ctx.arch) {
+    VTR_LOG_ERROR(
+      "Cannot read VPR architecture: an architecture has already been "
+      "loaded. Only one architecture can be loaded at a time.\n");
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+
   static t_arch arch = t_arch();
   device_ctx.arch = &arch;
 
-  arch.device_layout = vpr_setup.device_layout;
-  std::vector<t_physical_tile_type> physical_tile_types;
-  std::vector<t_logical_block_type> logical_block_types;
+  // Set device layout from the mandatory argument
+  vpr_setup.device_layout = layout;
+  arch.device_layout = layout;
+  vpr_setup.PackerOpts.device_layout = layout;
+
+  device_ctx.physical_tile_types.clear();
+  device_ctx.logical_block_types.clear();
 
   try {
     xml_read_arch(arch_file_name, vpr_setup.TimingEnabled, &arch,
-                  physical_tile_types,
-                  logical_block_types);
+                  device_ctx.physical_tile_types,
+                  device_ctx.logical_block_types);
 
-    const int status =
-      validate_vpr_arch_types(arch_file_name, physical_tile_types, logical_block_types);
+    const int status = validate_vpr_arch_types(
+      arch_file_name, device_ctx.physical_tile_types,
+      device_ctx.logical_block_types);
     if (status != openfpga::CMD_EXEC_SUCCESS) {
       free_arch(&arch);
       return status;
@@ -80,8 +102,34 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
 
-  vpr_setup.Segments.swap(arch.Segments);
+  // Find the empty physical tile types from the arch
+  device_ctx.EMPTY_PHYSICAL_TILE_TYPE = nullptr;
+  for (t_physical_tile_type& type : device_ctx.physical_tile_types) {
+    if (type.is_empty()) {
+      device_ctx.EMPTY_PHYSICAL_TILE_TYPE = &type;
+      break;
+    }
+  }
 
+  // Find the empty logical block type from the arch
+  device_ctx.EMPTY_LOGICAL_BLOCK_TYPE = nullptr;
+  int max_equivalent_tiles = 0;
+  for (const t_logical_block_type& type : device_ctx.logical_block_types) {
+    if (type.is_empty()) {
+      device_ctx.EMPTY_LOGICAL_BLOCK_TYPE = &type;
+    }
+
+    max_equivalent_tiles =
+      std::max(max_equivalent_tiles, (int)type.equivalent_tiles.size());
+  }
+  device_ctx.has_multiple_equivalent_tiles = max_equivalent_tiles > 1;
+
+  // Setup the routing architecture from the arch
+  vpr_setup.Segments.swap(arch.Segments);
+  setup_switches(arch, vpr_setup.RoutingArch, arch.switches);
+  setup_routing_arch(arch, vpr_setup.RoutingArch);
+
+  // Setup the VIB (Virtual Interconnect Block) information from the arch
   if (!arch.vib_infs.empty()) {
     setup_vib_inf(device_ctx.physical_tile_types, arch.switches,
                   arch.Segments, arch.vib_infs);
@@ -115,6 +163,9 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Show the VPR setup
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
                             const openfpga::Command& cmd,
                             const openfpga::CommandContext& cmd_context) {
@@ -143,6 +194,14 @@ int read_circuit_template(OpenfpgaContext& openfpga_ctx,
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
   vpr_setup.PackerOpts.circuit_file_name = circuit_file;
 
+  // Check that an architecture has been loaded before trying to read the circuit
+  if (nullptr == device_ctx.arch) {
+    VTR_LOG_ERROR(
+      "Cannot run packing: no architecture is loaded. Run 'read_vpr_arch' "
+      "first.\n");
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+
   /* Read blif file and sweep unused components */
   t_arch& arch = *const_cast<t_arch*>(device_ctx.arch);
   auto& atom_ctx = g_vpr_ctx.mutable_atom();
@@ -154,16 +213,42 @@ int read_circuit_template(OpenfpgaContext& openfpga_ctx,
 }
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Starting VPR packing stage
+// Run VPR packing flow only
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// static int pack(t_vpr_setup vpr_setup, t_arch& arch) {
-//   bool pack_success = vpr_pack_flow(vpr_setup, arch);
+int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
+                  OpenfpgaContext& openfpga_ctx,
+                  const openfpga::Command& cmd,
+                  const openfpga::CommandContext& cmd_context) {
+  (void)shell;
 
-//   if (!pack_success) {
-//     return false;
-//   }
-//   return true;
-// }
+  const DeviceContext& device_ctx = g_vpr_ctx.device();
+  if (nullptr == device_ctx.arch) {
+    VTR_LOG_ERROR("Cannot run packing: no architecture is loaded. Run 'read_vpr_arch' first.\n");
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+  VTR_LOG("Running VPR pack flow...\n");
+
+  // Force packing to be run
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
+
+  std::string pack_device_layout = vpr_setup.PackerOpts.device_layout;
+  openfpga::CommandOptionId opt_device = cmd.option("device");
+  if (cmd_context.option_enable(cmd, opt_device)) {
+    VTR_ASSERT(false == cmd_context.option_value(cmd, opt_device).empty());
+    pack_device_layout = cmd_context.option_value(cmd, opt_device);
+  }
+  vpr_setup.PackerOpts.device_layout = pack_device_layout;
+
+  bool pack_success = vpr_pack_flow(vpr_setup, *device_ctx.arch);
+  if (!pack_success) {
+    VTR_LOG_ERROR("VPR packing failed.\n");
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+
+  VTR_LOG("VPR packing completed successfully.\n");
+  return openfpga::CMD_EXEC_SUCCESS;
+}
 
 static int vpr(int argc, char** argv) {
   vtr::ScopedFinishTimer t("The entire flow of VPR");
