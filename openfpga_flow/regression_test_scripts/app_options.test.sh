@@ -26,4 +26,5 @@ report_app_option -n atom.const_gen_inference"
 
 
 run_openfpga_command "\
-read_vpr_arch -f ${OPENFPGA_PATH}/openfpga_flow/vpr_arch/k4_frac_N4_tileable_40nm_custrrg.xml"
+read_vpr_arch -f ${OPENFPGA_PATH}/openfpga_flow/vpr_arch/k4_frac_N4_tileable_40nm_custrrg.xml;
+show_vpr_setup"
