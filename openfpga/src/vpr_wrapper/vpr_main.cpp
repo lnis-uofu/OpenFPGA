@@ -3,10 +3,12 @@
  */
 
 #include "vpr_main.h"
+#include "vpr_shell_utils.h"
 
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <vector>
 
 #include "arch_util.h"
 #include "command.h"
@@ -31,7 +33,8 @@ namespace vpr {
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Read and validate a VPR architecture XML file
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int read_vpr_arch_template(const openfpga::Command& cmd,
+int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
+                           const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context) {
   openfpga::CommandOptionId opt_file = cmd.option("file");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
@@ -41,19 +44,32 @@ int read_vpr_arch_template(const openfpga::Command& cmd,
 
   VTR_LOG("Reading VPR XML architecture '%s'...\n", arch_file_name.c_str());
 
+  const t_vpr_setup& vpr_setup = openfpga_ctx.vpr_setup();
+
   t_arch arch = t_arch();
-  DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
-  device_ctx.arch = &arch;
+  arch.device_layout = vpr_setup.device_layout;
+  std::vector<t_physical_tile_type> physical_tile_types;
+  std::vector<t_logical_block_type> logical_block_types;
 
   try {
-    xml_read_arch(arch_file_name, true, &arch, device_ctx.physical_tile_types,
-                  device_ctx.logical_block_types);
+    xml_read_arch(arch_file_name, vpr_setup.TimingEnabled, &arch,
+                  physical_tile_types,
+                  logical_block_types);
+
+    const int status =
+      validate_vpr_arch_types(arch_file_name, physical_tile_types, logical_block_types);
+    if (status != openfpga::CMD_EXEC_SUCCESS) {
+      free_arch(&arch);
+      return status;
+    }
   } catch (const std::exception& e) {
     free_arch(&arch);
     VTR_LOG_ERROR("Failed to read VPR XML architecture '%s': %s\n",
                   arch_file_name.c_str(), e.what());
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
+
+  free_arch(&arch);
 
   VTR_LOG("Read VPR XML architecture '%s' successfully.\n",
           arch_file_name.c_str());

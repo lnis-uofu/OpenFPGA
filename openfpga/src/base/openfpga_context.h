@@ -30,6 +30,7 @@
 #include "vpr_netlist_annotation.h"
 #include "vpr_placement_annotation.h"
 #include "vpr_routing_annotation.h"
+#include "vpr_types.h"
 
 /********************************************************************
  * This file includes the declaration of the date structure
@@ -121,6 +122,7 @@ class OpenfpgaContext : public Context {
   const openfpga::NetlistManager& spice_netlists() const {
     return spice_netlists_;
   }
+  const t_vpr_setup& vpr_setup() const { return vpr_setup_; }
 
  public: /* Public mutators */
   openfpga::Arch& mutable_arch() { return arch_; }
@@ -182,6 +184,7 @@ class OpenfpgaContext : public Context {
     return verilog_netlists_;
   }
   openfpga::NetlistManager& mutable_spice_netlists() { return spice_netlists_; }
+  t_vpr_setup& mutable_vpr_setup() { return vpr_setup_; }
 
  private: /* Internal data */
   /* Data structure to store information from read_openfpga_arch library */
@@ -246,6 +249,9 @@ class OpenfpgaContext : public Context {
 
   /* Flow status */
   openfpga::FlowManager flow_manager_;
+
+  /* VPR setup synced from OpenfpgaShell */
+  t_vpr_setup vpr_setup_ = t_vpr_setup();
 };
 
 #endif
