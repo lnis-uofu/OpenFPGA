@@ -3,6 +3,7 @@
 
 #include "command.h"
 #include "command_context.h"
+#include "openfpga_context.h"
 
 /* Begin namespace vpr */
 namespace vpr {
@@ -11,7 +12,8 @@ int vpr_wrapper(int argc, char** argv);
 
 int vpr_standalone_wrapper(int argc, char** argv);
 
-int read_vpr_arch_template(const openfpga::Command& cmd,
+int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
+                           const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context);
 
 } /* End namespace vpr */
