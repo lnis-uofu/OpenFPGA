@@ -18,8 +18,8 @@
 #include "yosys_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
-  sync_vpr_setup_to_app_options(&vpr_setup, shell_);
-  ShowSetup(*(&vpr_setup));
+  sync_vpr_setup_to_app_options(openfpga_ctx_.mutable_vpr_setup(), shell_);
+  ShowSetup(openfpga_ctx_.mutable_vpr_setup());
 
   shell_.set_name("OpenFPGA");
   shell_.add_title(create_openfpga_title().c_str());
@@ -56,19 +56,20 @@ OpenfpgaShell::OpenfpgaShell() {
 }
 
 void OpenfpgaShell::sync_vpr_setup_to_app_options(
-  t_vpr_setup* vpr_setup, openfpga::Shell<OpenfpgaContext>& shell) {
-  vpr_setup->TimingEnabled =
+  t_vpr_setup vpr_setup, openfpga::Shell<OpenfpgaContext>& shell) {
+
+  vpr_setup.TimingEnabled =
     shell.app_options_.general.timing_analysis.bool_value;
-  vpr_setup->device_layout =
+  vpr_setup.device_layout =
     shell.app_options_.general.device_layout.string_value;
-  vpr_setup->constant_net_method = static_cast<e_constant_net_method>(
+  vpr_setup.constant_net_method = static_cast<e_constant_net_method>(
     shell.app_options_.general.constant_net_method.to_enum());
-  vpr_setup->clock_modeling = static_cast<e_clock_modeling>(
+  vpr_setup.clock_modeling = static_cast<e_clock_modeling>(
     shell.app_options_.general.clock_modeling.to_enum());
-  vpr_setup->two_stage_clock_routing =
+  vpr_setup.two_stage_clock_routing =
     shell.app_options_.general.two_stage_clock_routing.bool_value;
-  vpr_setup->exit_before_pack = false;
-  vpr_setup->num_workers = shell.app_options_.general.num_workers.int_value;
+  vpr_setup.exit_before_pack = false;
+  vpr_setup.num_workers = shell.app_options_.general.num_workers.int_value;
 
   /* = = = = = = = = = = = = = = = = = =
    * TODO: Separate supress warning and errors to different options, and support
@@ -103,18 +104,18 @@ void OpenfpgaShell::sync_vpr_setup_to_app_options(
     warn_functions = split_warning_option[1];
   }
   /* = = = = = = = = = = = = = = = = = = */
-  setupvpr_from_ofshell();
+  setupvpr_from_ofshell(&vpr_setup);
 }
 
-void OpenfpgaShell::setupvpr_from_ofshell() {
+void OpenfpgaShell::setupvpr_from_ofshell(t_vpr_setup* vpr_setup) {
   // Sync the options in VPR setup to the app options in the shell
 
   // Setup netlist options
-  auto NetlistOpts = this->vpr_setup.NetlistOpts;
-  auto ShellNetlistOpts = this->shell_.app_options_.atom_netlist;
-  auto PackerOpts = this->vpr_setup.PackerOpts;
-  auto ShellPackerOpts = this->shell_.app_options_.clustering;
-  auto ShellGeneralOpts = this->shell_.app_options_.general;
+  auto NetlistOpts = vpr_setup->NetlistOpts;
+  auto ShellNetlistOpts = shell_.app_options_.atom_netlist;
+  auto PackerOpts = vpr_setup->PackerOpts;
+  auto ShellPackerOpts = shell_.app_options_.clustering;
+  auto ShellGeneralOpts = shell_.app_options_.general;
 
   NetlistOpts.const_gen_inference = static_cast<e_const_gen_inference>(
     ShellNetlistOpts.const_gen_inference.to_enum());
