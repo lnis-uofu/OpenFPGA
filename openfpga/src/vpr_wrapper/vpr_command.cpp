@@ -51,6 +51,15 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_id, vpr_cmd_class);
   shell.set_command_execute_function(shell_cmd_id,
                                      vpr::read_vpr_arch_template);
+
+  /* Add command 'show_vpr_setup' to the Shell */
+  Command shell_cmd_show_vpr_setup("show_vpr_setup");
+  ShellCommandId shell_cmd_show_vpr_setup_id = shell.add_command(
+    shell_cmd_show_vpr_setup,
+    "Show the current VPR setup synchronized from OpenFPGA shell options");
+  shell.set_command_class(shell_cmd_show_vpr_setup_id, vpr_cmd_class);
+  shell.set_command_execute_function(shell_cmd_show_vpr_setup_id,
+                                     vpr::show_vpr_setup_template);
   }
 
 } /* end namespace openfpga */

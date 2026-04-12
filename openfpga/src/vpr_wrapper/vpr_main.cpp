@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "arch_util.h"
+#include "ShowSetup.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
@@ -104,6 +105,15 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
 
   VTR_LOG("Read VPR XML architecture '%s' successfully.\n",
           arch_file_name.c_str());
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
+                            const openfpga::Command& cmd,
+                            const openfpga::CommandContext& cmd_context) {
+  (void)cmd;
+  (void)cmd_context;
+  ShowSetup(openfpga_ctx.vpr_setup());
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
