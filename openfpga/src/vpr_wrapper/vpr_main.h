@@ -4,6 +4,7 @@
 #include "command.h"
 #include "command_context.h"
 #include "openfpga_context.h"
+#include "shell.h"
 
 /* Begin namespace vpr */
 namespace vpr {
@@ -23,6 +24,11 @@ int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
 int read_circuit_template(OpenfpgaContext& openfpga_ctx,
                           const openfpga::Command& cmd,
                           const openfpga::CommandContext& cmd_context);
+
+int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
+                  OpenfpgaContext& openfpga_ctx,
+                  const openfpga::Command& cmd,
+                  const openfpga::CommandContext& cmd_context);
 
 } /* End namespace vpr */
 
