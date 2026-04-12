@@ -25,9 +25,9 @@ class OpenfpgaShell {
  public: /* Mutators */
   // Sync the options in VPR setup to the app options in the shell, so that they
   // can be used by commands in the shell
-  void sync_vpr_setup_to_app_options(t_vpr_setup* vpr_setup,
+  void sync_vpr_setup_to_app_options(t_vpr_setup vpr_setup,
                                      openfpga::Shell<OpenfpgaContext>& shell);
-  void setupvpr_from_ofshell();
+  void setupvpr_from_ofshell(t_vpr_setup* vpr_setup);
 
   /* Execute a specific command with options in a line, which is available in
    * the shell Note that running a command will be based on the current status
@@ -54,7 +54,6 @@ class OpenfpgaShell {
  private: /* Internal data */
   openfpga::Shell<OpenfpgaContext> shell_;
   OpenfpgaContext openfpga_ctx_;
-  t_vpr_setup vpr_setup = t_vpr_setup();
 };
 
 #endif
