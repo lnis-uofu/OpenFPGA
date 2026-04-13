@@ -178,7 +178,8 @@ int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Read and set circuit file
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int read_circuit_template(OpenfpgaContext& openfpga_ctx,
+int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
+                          OpenfpgaContext& openfpga_ctx,
                           const openfpga::Command& cmd,
                           const openfpga::CommandContext& cmd_context) {
   openfpga::CommandOptionId opt_file = cmd.option("file");
@@ -208,7 +209,17 @@ int read_circuit_template(OpenfpgaContext& openfpga_ctx,
   atom_ctx.mutable_netlist() = read_and_process_circuit(
     e_circuit_format::BLIF, vpr_setup, arch);
 
-  VTR_LOG("Circuit file '%s' read successfully.\n", circuit_file.c_str());
+  /* Keep shell app option net_file in sync with the loaded circuit name. */
+  std::string net_file = circuit_file;
+  const size_t ext_pos = net_file.find_last_of('.');
+  if (std::string::npos != ext_pos) {
+    net_file = net_file.substr(0, ext_pos);
+  }
+  shell->app_options_.filename.net_file.update(net_file + ".net");
+  shell->app_options_.filename.circuit_file.update(circuit_file);
+
+  VTR_LOG(
+    "Circuit file '%s' read successfully.\n", circuit_file.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
@@ -228,6 +239,9 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
   VTR_LOG("Running VPR pack flow...\n");
 
+  // Update vtr_options
+  vpr::sync_vpr_setup_to_app_options(openfpga_ctx.mutable_vpr_setup(), *shell);
+
   // Force packing to be run
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
   vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
@@ -239,6 +253,7 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
     pack_device_layout = cmd_context.option_value(cmd, opt_device);
   }
   vpr_setup.PackerOpts.device_layout = pack_device_layout;
+  vpr_setup.PackerOpts.output_file = vpr_setup.FileNameOpts.NetFile;
 
   bool pack_success = vpr_pack_flow(vpr_setup, *device_ctx.arch);
   if (!pack_success) {

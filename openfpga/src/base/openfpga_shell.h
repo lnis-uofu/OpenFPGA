@@ -17,17 +17,9 @@ class OpenfpgaShell {
  public: /* Contructors */
   OpenfpgaShell();
 
- private: /* Mutators */
-  // Add default options for OpenFPGA applications, which will be used in the
-  // command execution
-  void setup_default_app_options();
-
  public: /* Mutators */
   // Sync the options in VPR setup to the app options in the shell, so that they
   // can be used by commands in the shell
-  void sync_vpr_setup_to_app_options(t_vpr_setup vpr_setup,
-                                     openfpga::Shell<OpenfpgaContext>& shell);
-  void setupvpr_from_ofshell(t_vpr_setup* vpr_setup);
 
   /* Execute a specific command with options in a line, which is available in
    * the shell Note that running a command will be based on the current status
