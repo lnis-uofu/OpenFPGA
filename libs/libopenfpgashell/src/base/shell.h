@@ -332,44 +332,48 @@ class Shell {
 
   std::map<std::string_view, AppOptionValue*> app_option_fields_ = {
 #define APP_OPTION(name, value, help_message) \
+  {"filename." #name, &app_options_.filename.name},
+    FILE_NAMES_OPTIONS_FIELDS
+#undef APP_OPTION
+#define APP_OPTION(name, value, help_message) \
   {"atom." #name, &app_options_.atom_netlist.name},
-    DEFINE_ATOM_NETLIST_OPTIONS_FIELDS
+      DEFINE_ATOM_NETLIST_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"aplace." #name, &app_options_.analytical_placement.name},
-      DEFINE_ANALYTICAL_PLACEMENT_OPTIONS_FIELDS
+        DEFINE_ANALYTICAL_PLACEMENT_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"cluster." #name, &app_options_.clustering.name},
-        DEFINE_CLUSTERING_OPTIONS_FIELDS
+          DEFINE_CLUSTERING_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"place." #name, &app_options_.placement.name},
-          DEFINE_PLACEMENT_OPTIONS_FIELDS
+            DEFINE_PLACEMENT_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"tplace." #name, &app_options_.timing_placement.name},
-            DEFINE_TIMING_PLACEMENT_OPTIONS_FIELDS
+              DEFINE_TIMING_PLACEMENT_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"router." #name, &app_options_.router.name},
-              DEFINE_ROUTER_OPTIONS_FIELDS
+                DEFINE_ROUTER_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"trouter." #name, &app_options_.timing_router.name},
-                DEFINE_TIMING_ROUTER_OPTIONS_FIELDS
+                  DEFINE_TIMING_ROUTER_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"analysis." #name, &app_options_.analysis.name},
-                  DEFINE_ANALYSIS_OPTIONS_FIELDS
+                    DEFINE_ANALYSIS_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"general." #name, &app_options_.general.name},
-                    DEFINE_GENERAL_OPTIONS_FIELDS
+                      DEFINE_GENERAL_OPTIONS_FIELDS
 #undef APP_OPTION
 #define APP_OPTION(name, value, help_message) \
   {"build_fabric." #name, &app_options_.build_fabric.name},
-                      DEFINE_BUILD_FABRIC_OPTIONS_FIELDS
+                        DEFINE_BUILD_FABRIC_OPTIONS_FIELDS
 #undef APP_OPTION
   };
 
