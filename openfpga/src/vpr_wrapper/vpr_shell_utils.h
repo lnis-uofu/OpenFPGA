@@ -13,8 +13,8 @@ namespace vpr {
 void sync_vpr_setup_to_app_options(
 	t_vpr_setup& vpr_setup, openfpga::Shell<OpenfpgaContext>& shell);
 
-void setupvpr_from_ofshell(t_vpr_setup* vpr_setup,
-                                  openfpga::Shell<OpenfpgaContext>* shell);
+void shell_setup_packer_opts(t_vpr_setup* vpr_setup,
+                             openfpga::Shell<OpenfpgaContext>* shell);
 
 int validate_vpr_arch_types(
 	const std::string& arch_file_name,

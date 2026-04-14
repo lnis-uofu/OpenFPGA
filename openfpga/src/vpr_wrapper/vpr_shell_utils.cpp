@@ -59,11 +59,11 @@ void sync_vpr_setup_to_app_options(
     warn_functions = split_warning_option[1];
   }
   /* = = = = = = = = = = = = = = = = = = */
-  setupvpr_from_ofshell(&vpr_setup, &shell);
+  shell_setup_packer_opts (&vpr_setup, &shell);
   ShowSetup(vpr_setup);
 }
 
-void setupvpr_from_ofshell(
+void shell_setup_packer_opts (
   t_vpr_setup* vpr_setup, openfpga::Shell<OpenfpgaContext>* shell) {
   // Sync the options in VPR setup to the app options in the shell
 

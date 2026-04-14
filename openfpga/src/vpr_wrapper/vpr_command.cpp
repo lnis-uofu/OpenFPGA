@@ -91,6 +91,20 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell_cmd_pack.set_option_short_name(opt_pack_device, "d");
   shell_cmd_pack.set_option_require_value(opt_pack_device,
                                           openfpga::OPT_STRING);
+
+  // Add optional output_file argument
+  CommandOptionId opt_pack_output_file = shell_cmd_pack.add_option(
+    "output_file", false,
+    "optional output file name for pack stage");
+  shell_cmd_pack.set_option_short_name(opt_pack_output_file, "o");
+  shell_cmd_pack.set_option_require_value(opt_pack_output_file,
+                                          openfpga::OPT_STRING);
+
+  // Add optional verbose argument
+  CommandOptionId opt_pack_verbose = shell_cmd_pack.add_option(
+    "verbose", false,
+    "enable verbose output for pack stage");
+  shell_cmd_pack.set_option_short_name(opt_pack_verbose, "v");
   ShellCommandId shell_cmd_pack_id = shell.add_command(
     shell_cmd_pack,
     "Run VPR pack flow using the currently loaded architecture and circuit");
