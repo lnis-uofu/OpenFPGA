@@ -9,6 +9,19 @@
 /* Begin namespace vpr */
 namespace vpr {
 
+int place_template(openfpga::Shell<OpenfpgaContext>* shell,
+                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
+                   const openfpga::CommandContext& cmd_context);
+
+int route_template(openfpga::Shell<OpenfpgaContext>* shell,
+                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
+                   const openfpga::CommandContext& cmd_context);
+
+int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
+                      OpenfpgaContext& openfpga_ctx,
+                      const openfpga::Command& cmd,
+                      const openfpga::CommandContext& cmd_context);
+
 int vpr_wrapper(int argc, char** argv);
 
 int vpr_standalone_wrapper(int argc, char** argv);
@@ -27,8 +40,7 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
                           const openfpga::CommandContext& cmd_context);
 
 int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
-                  OpenfpgaContext& openfpga_ctx,
-                  const openfpga::Command& cmd,
+                  OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
                   const openfpga::CommandContext& cmd_context);
 
 } /* End namespace vpr */

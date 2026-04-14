@@ -15,8 +15,8 @@
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
 #include "vpr_command.h"
-#include "yosys_command.h"
 #include "vpr_shell_utils.h"
+#include "yosys_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
   vpr::sync_vpr_setup_to_app_options(openfpga_ctx_.mutable_vpr_setup(), shell_);
