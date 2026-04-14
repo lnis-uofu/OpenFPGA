@@ -3,40 +3,91 @@
  */
 
 #include "vpr_main.h"
-#include "vpr_shell_utils.h"
 
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <vector>
 
-#include "arch_util.h"
+#include "CheckArch.h"
+#include "CheckSetup.h"
 #include "ShowSetup.h"
+#include "arch_util.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "globals.h"
+#include "lb_type_rr_graph.h"
+#include "pb_type_graph.h"
 #include "read_xml_arch_file.h"
+#include "setup_vib_utils.h"
+#include "setup_vpr.cpp"
 #include "tatum/error.hpp"
 #include "vpr_api.h"
 #include "vpr_error.h"
 #include "vpr_exit_codes.h"
+#include "vpr_shell_utils.h"
 #include "vpr_signal_handler.h"
 #include "vpr_tatum_error.h"
 #include "vtr_error.h"
 #include "vtr_log.h"
 #include "vtr_memory.h"
-#include "vtr_time.h"
 #include "vtr_path.h"
-#include "setup_vpr.cpp"
-#include "setup_vib_utils.h"
-#include "lb_type_rr_graph.h"
-#include "pb_type_graph.h"
-#include "CheckArch.h"
-#include "CheckSetup.h"
+#include "vtr_time.h"
 
 namespace vpr {
 
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Run VPR placement flow only
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int place_template(openfpga::Shell<OpenfpgaContext>* shell,
+                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
+                   const openfpga::CommandContext& cmd_context) {
+  // Handle optional verbose argument
+  bool verbose = false;
+  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_verbose)) {
+    verbose = true;
+  }
+  VTR_LOG("Running VPR place flow...\n");
+  // TODO: Implement place flow logic here, using verbose if needed
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Run VPR route flow only
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int route_template(openfpga::Shell<OpenfpgaContext>* shell,
+                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
+                   const openfpga::CommandContext& cmd_context) {
+  // Handle optional verbose argument
+  bool verbose = false;
+  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_verbose)) {
+    verbose = true;
+  }
+  VTR_LOG("Running VPR route flow...\n");
+  // TODO: Implement route flow logic here, using verbose if needed
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Run VPR analysis flow only
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
+                      OpenfpgaContext& openfpga_ctx,
+                      const openfpga::Command& cmd,
+                      const openfpga::CommandContext& cmd_context) {
+  // Handle optional verbose argument
+  bool verbose = false;
+  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_verbose)) {
+    verbose = true;
+  }
+  VTR_LOG("Running VPR analysis flow...\n");
+  // TODO: Implement analysis flow logic here, using verbose if needed
+  return openfpga::CMD_EXEC_SUCCESS;
+}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Read and validate a VPR architecture XML file
@@ -44,7 +95,6 @@ namespace vpr {
 int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
                            const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context) {
-
   openfpga::CommandOptionId opt_file = cmd.option("file");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
@@ -88,9 +138,9 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
                   device_ctx.physical_tile_types,
                   device_ctx.logical_block_types);
 
-    const int status = validate_vpr_arch_types(
-      arch_file_name, device_ctx.physical_tile_types,
-      device_ctx.logical_block_types);
+    const int status =
+      validate_vpr_arch_types(arch_file_name, device_ctx.physical_tile_types,
+                              device_ctx.logical_block_types);
     if (status != openfpga::CMD_EXEC_SUCCESS) {
       free_arch(&arch);
       return status;
@@ -131,8 +181,8 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
 
   // Setup the VIB (Virtual Interconnect Block) information from the arch
   if (!arch.vib_infs.empty()) {
-    setup_vib_inf(device_ctx.physical_tile_types, arch.switches,
-                  arch.Segments, arch.vib_infs);
+    setup_vib_inf(device_ctx.physical_tile_types, arch.switches, arch.Segments,
+                  arch.vib_infs);
   }
 
   for (bool has_global_routing : arch.layer_global_routing) {
@@ -195,7 +245,8 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
   vpr_setup.PackerOpts.circuit_file_name = circuit_file;
 
-  // Check that an architecture has been loaded before trying to read the circuit
+  // Check that an architecture has been loaded before trying to read the
+  // circuit
   if (nullptr == device_ctx.arch) {
     VTR_LOG_ERROR(
       "Cannot run packing: no architecture is loaded. Run 'read_vpr_arch' "
@@ -206,8 +257,8 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   /* Read blif file and sweep unused components */
   t_arch& arch = *const_cast<t_arch*>(device_ctx.arch);
   auto& atom_ctx = g_vpr_ctx.mutable_atom();
-  atom_ctx.mutable_netlist() = read_and_process_circuit(
-    e_circuit_format::BLIF, vpr_setup, arch);
+  atom_ctx.mutable_netlist() =
+    read_and_process_circuit(e_circuit_format::BLIF, vpr_setup, arch);
 
   /* Keep shell app option net_file in sync with the loaded circuit name. */
   std::string net_file = circuit_file;

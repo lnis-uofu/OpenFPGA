@@ -12,8 +12,9 @@
 /* Keep these option declarations in sync with
  *
  * OpenFPGA Shell App Options vs VPR `t_options`:
- * This file is not a 1:1 mirror of `vtr-verilog-to-routing/vpr/src/base/read_options.h`.
- * The option surface intentionally differs and uses shell-friendly names in several places.
+ * This file is not a 1:1 mirror of
+ * `vtr-verilog-to-routing/vpr/src/base/read_options.h`. The option surface
+ * intentionally differs and uses shell-friendly names in several places.
  *
  * 1) Renamed options (same intent, different field names)
  *    - CircuitFile -> circuit_file
@@ -22,7 +23,8 @@
  *    - RouteChanWidth -> route_chan_width
  *    - RouterAlgorithm -> router_algorithm
  *    - Generate_Post_Synthesis_Netlist -> generate_post_synthesis_netlist
- *    - Generate_Post_Implementation_Merged_Netlist -> generate_post_implementation_merged_netlist
+ *    - Generate_Post_Implementation_Merged_Netlist ->
+ * generate_post_implementation_merged_netlist
  *
  * 2) Intentionally not represented as app options in this shell layer
  *    - Input file front-end and mode toggles:
@@ -232,8 +234,6 @@ struct AppOptionValue {
 #define SELECTION_APP_OPTION(name, value, selection_values, help_message) \
   AppOptionValue name =                                                   \
     AppOptionValue::make_selection(value, selection_values, help_message);
-
-
 
 // General options
 // Server options
@@ -597,7 +597,7 @@ struct AppOptionValue {
   INT_APP_OPTION(gsb_version, 0, "GSB version") \
   BOOLEAN_APP_OPTION(reorder_incoming_edges, true, "Reorder incoming edges") \
   BOOLEAN_APP_OPTION(sort_gsb_chan_node_in_edges, true, "Sort GSB channel-node incoming edges")
-  // clang-format on
+// clang-format on
 
 struct filename_opts {
   FILE_NAMES_OPTIONS_FIELDS;
