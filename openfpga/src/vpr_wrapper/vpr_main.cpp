@@ -36,59 +36,6 @@
 #include "vtr_time.h"
 
 namespace vpr {
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR placement flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int place_template(openfpga::Shell<OpenfpgaContext>* shell,
-                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
-                   const openfpga::CommandContext& cmd_context) {
-  // Handle optional verbose argument
-  bool verbose = false;
-  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
-  if (cmd_context.option_enable(cmd, opt_verbose)) {
-    verbose = true;
-  }
-  VTR_LOG("Running VPR place flow...\n");
-  // TODO: Implement place flow logic here, using verbose if needed
-  return openfpga::CMD_EXEC_SUCCESS;
-}
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR route flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int route_template(openfpga::Shell<OpenfpgaContext>* shell,
-                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
-                   const openfpga::CommandContext& cmd_context) {
-  // Handle optional verbose argument
-  bool verbose = false;
-  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
-  if (cmd_context.option_enable(cmd, opt_verbose)) {
-    verbose = true;
-  }
-  VTR_LOG("Running VPR route flow...\n");
-  // TODO: Implement route flow logic here, using verbose if needed
-  return openfpga::CMD_EXEC_SUCCESS;
-}
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR analysis flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
-                      OpenfpgaContext& openfpga_ctx,
-                      const openfpga::Command& cmd,
-                      const openfpga::CommandContext& cmd_context) {
-  // Handle optional verbose argument
-  bool verbose = false;
-  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
-  if (cmd_context.option_enable(cmd, opt_verbose)) {
-    verbose = true;
-  }
-  VTR_LOG("Running VPR analysis flow...\n");
-  // TODO: Implement analysis flow logic here, using verbose if needed
-  return openfpga::CMD_EXEC_SUCCESS;
-}
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Read and validate a VPR architecture XML file
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -344,6 +291,103 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
 
   VTR_LOG("VPR packing completed successfully.\n");
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Run VPR placement flow only
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int place_template(openfpga::Shell<OpenfpgaContext>* shell,
+                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
+                   const openfpga::CommandContext& cmd_context) {
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  const DeviceContext& device_ctx = g_vpr_ctx.device();
+
+  // Handle optional verbose argument
+  bool verbose = false;
+  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_verbose)) {
+    verbose = true;
+  }
+
+  vpr_setup.PlacerOpts.do_placement = e_stage_action::DO;
+
+  VTR_LOG("Running VPR place flow...\n");
+  const auto& placement_net_list =
+    (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+  bool place_success =
+    vpr_place_flow(placement_net_list, vpr_setup, *device_ctx.arch);
+
+  if (!place_success) {
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+
+  // TODO: Implement place flow logic here, using verbose if needed
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Run VPR route flow only
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int route_template(openfpga::Shell<OpenfpgaContext>* shell,
+                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
+                   const openfpga::CommandContext& cmd_context) {
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  const DeviceContext& device_ctx = g_vpr_ctx.device();
+
+  // Handle optional verbose argument
+  bool verbose = false;
+  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_verbose)) {
+    verbose = true;
+  }
+
+  VTR_LOG("Running VPR route flow...\n");
+
+  bool is_flat = vpr_setup.RouterOpts.flat_routing;
+  const Netlist<>& router_net_list =
+    is_flat ? (const Netlist<>&)g_vpr_ctx.atom().netlist()
+            : (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+  if (is_flat) {
+    VTR_LOG_WARN(
+      "Disabling port equivalence in the architecture since flat routing is "
+      "enabled.\n");
+    // TODO:Fix this call to unset port equivalences from the device context
+    // unset_port_equivalences(g_vpr_ctx.mutable_device());
+  }
+  RouteStatus route_status;
+  route_status =
+    vpr_route_flow(router_net_list, vpr_setup, *device_ctx.arch, is_flat);
+
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Run VPR analysis flow only
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
+                      OpenfpgaContext& openfpga_ctx,
+                      const openfpga::Command& cmd,
+                      const openfpga::CommandContext& cmd_context) {
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  const DeviceContext& device_ctx = g_vpr_ctx.device();
+  bool is_flat = vpr_setup.RouterOpts.flat_routing;
+  const Netlist<>& router_net_list =
+    is_flat ? (const Netlist<>&)g_vpr_ctx.atom().netlist()
+            : (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+  const t_arch& arch = *device_ctx.arch;
+
+  // Handle optional verbose argument
+  bool verbose = false;
+  openfpga::CommandOptionId opt_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_verbose)) {
+    verbose = true;
+  }
+
+  VTR_LOG("Running VPR analysis flow...\n");
+  RouteStatus route_status;
+  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status, is_flat);
+
   return openfpga::CMD_EXEC_SUCCESS;
 }
 

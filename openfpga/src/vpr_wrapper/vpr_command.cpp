@@ -8,8 +8,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-namespace {
-
 void add_vpr_macro_command(openfpga::Shell<OpenfpgaContext>& shell,
                            ShellCommandClassId vpr_cmd_class) {
   Command shell_cmd_vpr("vpr");
@@ -142,8 +140,6 @@ void add_analysis_command(openfpga::Shell<OpenfpgaContext>& shell,
                                      vpr::analysis_template);
 }
 
-}  // anonymous namespace
-
 void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandClassId vpr_cmd_class = shell.add_command_class("VPR");
   add_vpr_macro_command(shell, vpr_cmd_class);
@@ -155,4 +151,5 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_place_command(shell, vpr_cmd_class);
   add_route_command(shell, vpr_cmd_class);
   add_analysis_command(shell, vpr_cmd_class);
+}
 }
