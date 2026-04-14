@@ -217,9 +217,9 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
   shell->app_options_.filename.net_file.update(net_file + ".net");
   shell->app_options_.filename.circuit_file.update(circuit_file);
+  vpr_setup.FileNameOpts.CircuitFile = circuit_file;
 
-  VTR_LOG(
-    "Circuit file '%s' read successfully.\n", circuit_file.c_str());
+  VTR_LOG("Circuit file '%s' read successfully.\n", circuit_file.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
@@ -227,34 +227,65 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
 // Run VPR packing flow only
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
-                  OpenfpgaContext& openfpga_ctx,
-                  const openfpga::Command& cmd,
+                  OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
                   const openfpga::CommandContext& cmd_context) {
-  (void)shell;
+  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
 
+  // Check if architecture file is loaded
   const DeviceContext& device_ctx = g_vpr_ctx.device();
   if (nullptr == device_ctx.arch) {
-    VTR_LOG_ERROR("Cannot run packing: no architecture is loaded. Run 'read_vpr_arch' first.\n");
+    VTR_LOG_ERROR(
+      "Cannot run packing: no architecture is loaded. Run 'read_vpr_arch' "
+      "first.\n");
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
   VTR_LOG("Running VPR pack flow...\n");
 
-  // Update vtr_options
+  // Check if circuit is loaded, check vpr_setup.FileNameOpts.CircuitFile exist
+  if (vpr_setup.FileNameOpts.CircuitFile.empty()) {
+    VTR_LOG_ERROR(
+      "Cannot run packing: no circuit netlist has been read. Run "
+      "'read_circuit' first.\n");
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+
+  // Update vpr_setup from the openfpga shell options
+  // vpr::sync_vpr_setup_to_app_options(vpr_setup, *shell);
   vpr::sync_vpr_setup_to_app_options(openfpga_ctx.mutable_vpr_setup(), *shell);
 
-  // Force packing to be run
-  t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
-  vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
-
-  std::string pack_device_layout = vpr_setup.PackerOpts.device_layout;
+  // Get the device layout to use for packing from the shell options (if
+  // specified)
+  std::string device_layout = vpr_setup.PackerOpts.device_layout;
   openfpga::CommandOptionId opt_device = cmd.option("device");
   if (cmd_context.option_enable(cmd, opt_device)) {
     VTR_ASSERT(false == cmd_context.option_value(cmd, opt_device).empty());
-    pack_device_layout = cmd_context.option_value(cmd, opt_device);
+    device_layout = cmd_context.option_value(cmd, opt_device);
   }
-  vpr_setup.PackerOpts.device_layout = pack_device_layout;
-  vpr_setup.PackerOpts.output_file = vpr_setup.FileNameOpts.NetFile;
 
+  // Handle optional output_file argument
+  std::string pack_output_file = vpr_setup.FileNameOpts.NetFile;
+  openfpga::CommandOptionId opt_output_file = cmd.option("output_file");
+  if (cmd_context.option_enable(cmd, opt_output_file)) {
+    if (!cmd_context.option_value(cmd, opt_output_file).empty()) {
+      pack_output_file = cmd_context.option_value(cmd, opt_output_file);
+    }
+  }
+
+  // Handle optional packing verbosity argument
+  int pack_verbosity = vpr_setup.PackerOpts.pack_verbosity;
+  openfpga::CommandOptionId opt_packing_verbose = cmd.option("verbose");
+  if (cmd_context.option_enable(cmd, opt_packing_verbose)) {
+    pack_verbosity =
+      std::stoi(cmd_context.option_value(cmd, opt_packing_verbose));
+  }
+
+  // Force packing to be run and update vpr_setup
+  vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
+  // vpr_setup.PackerOpts.device_layout = device_layout;
+  // vpr_setup.PackerOpts.output_file = pack_output_file;
+  // vpr_setup.PackerOpts.pack_verbosity = pack_verbosity;
+
+  // Run the VPR packing flow
   bool pack_success = vpr_pack_flow(vpr_setup, *device_ctx.arch);
   if (!pack_success) {
     VTR_LOG_ERROR("VPR packing failed.\n");
