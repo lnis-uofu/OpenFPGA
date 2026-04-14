@@ -4,6 +4,7 @@
 
 #include "ShowSetup.h"
 #include "command_exit_codes.h"
+#include "echo_files.h"
 #include "openfpga_context.h"
 #include "shell.h"
 #include "vpr_types.h"
@@ -25,6 +26,8 @@ void sync_vpr_setup_to_app_options(t_vpr_setup& vpr_setup,
     shell.app_options_.general.two_stage_clock_routing.bool_value;
   vpr_setup.exit_before_pack = false;
   vpr_setup.num_workers = shell.app_options_.general.num_workers.int_value;
+
+  setEchoEnabled(false);
 
   /* = = = = = = = = = = = = = = = = = =
    * TODO: Separate supress warning and errors to different options, and support
@@ -60,8 +63,69 @@ void sync_vpr_setup_to_app_options(t_vpr_setup& vpr_setup,
   }
   /* = = = = = = = = = = = = = = = = = = */
   shell_setup_packer_opts(&vpr_setup, &shell);
+  shell_setup_placer_opts(&vpr_setup, &shell);
   ShowSetup(vpr_setup);
 }
+
+void shell_setup_placer_opts(t_vpr_setup* vpr_setup,
+                             openfpga::Shell<OpenfpgaContext>* shell) {
+  // Sync the options in VPR setup to the app options in the shell
+
+  // Setup placer options
+  t_placer_opts& PlacerOpts = vpr_setup->PlacerOpts;
+
+  auto ShellPlacerOpts = shell->app_options_.placement;
+  auto ShellTimingPlacementOpts = shell->app_options_.timing_placement;
+  auto ShellGeneralOpts = shell->app_options_.general;
+  auto ShellFilenameOpts = shell->app_options_.filename;
+
+  PlacerOpts.do_placement = e_stage_action::DO;
+
+  PlacerOpts.inner_loop_recompute_divider =
+    ShellTimingPlacementOpts.inner_loop_recompute_divider.int_value;
+  PlacerOpts.quench_recompute_divider =
+    ShellTimingPlacementOpts.quench_recompute_divider.int_value;
+
+  PlacerOpts.place_algorithm =
+    static_cast<e_place_algorithm>(ShellPlacerOpts.place_algorithm.to_enum());
+  PlacerOpts.place_quench_algorithm = static_cast<e_place_algorithm>(ShellPlacerOpts.place_quench_algorithm.to_enum());
+  PlacerOpts.pad_loc_type = static_cast<e_pad_loc_type>(ShellPlacerOpts.pad_loc_type.to_enum());
+  PlacerOpts.place_chan_width = ShellPlacerOpts.place_chan_width.int_value;
+  PlacerOpts.inner_loop_recompute_divider = ShellTimingPlacementOpts.inner_loop_recompute_divider.int_value;
+  PlacerOpts.quench_recompute_divider = ShellTimingPlacementOpts.quench_recompute_divider.int_value;
+  PlacerOpts.td_place_exp_first = ShellTimingPlacementOpts.place_exp_first.float_value;
+  PlacerOpts.td_place_exp_last = ShellTimingPlacementOpts.place_exp_last.float_value;
+  PlacerOpts.constraints_file = ShellFilenameOpts.constraints_file.string_value;
+  PlacerOpts.write_initial_place_file =
+    ShellFilenameOpts.write_initial_place_file.string_value;
+  PlacerOpts.read_initial_place_file =
+    ShellFilenameOpts.read_initial_place_file.string_value;
+  PlacerOpts.recompute_crit_iter = ShellTimingPlacementOpts.recompute_crit_iter.int_value;
+  PlacerOpts.timing_tradeoff =
+    ShellTimingPlacementOpts.place_timing_tradeoff.float_value;
+  PlacerOpts.congestion_factor = ShellTimingPlacementOpts.place_congestion_factor.float_value;
+  PlacerOpts.congestion_rlim_trigger_ratio = ShellTimingPlacementOpts.place_congestion_rlim_trigger_ratio.float_value;
+  PlacerOpts.congestion_chan_util_threshold = ShellTimingPlacementOpts.place_congestion_chan_util_threshold.float_value;
+  PlacerOpts.delay_offset = ShellTimingPlacementOpts.place_delay_offset.float_value;
+  PlacerOpts.delay_ramp_delta_threshold = ShellTimingPlacementOpts.place_delay_ramp_delta_threshold.int_value;
+  PlacerOpts.delay_ramp_slope = ShellTimingPlacementOpts.place_delay_ramp_slope.float_value;
+  PlacerOpts.tsu_rel_margin = ShellTimingPlacementOpts.place_tsu_rel_margin.float_value;
+  PlacerOpts.tsu_abs_margin = ShellTimingPlacementOpts.place_tsu_abs_margin.float_value;
+  PlacerOpts.delay_model_type = static_cast<PlaceDelayModelType>(
+    ShellTimingPlacementOpts.place_delay_model.int_value);
+  PlacerOpts.delay_model_reducer =
+    static_cast<e_reducer>(ShellTimingPlacementOpts.place_delay_model_reducer.int_value);
+  PlacerOpts.place_freq =
+    static_cast<e_place_freq>(ShellPlacerOpts.place_placement_freq.int_value);
+  PlacerOpts.post_place_timing_report_file = ShellTimingPlacementOpts.post_place_timing_report_file.string_value;
+  PlacerOpts.rlim_escape_fraction = ShellPlacerOpts.place_rlim_escape_fraction.float_value;
+  PlacerOpts.move_stats_file =
+    ShellPlacerOpts.place_move_stats_file.string_value;
+  PlacerOpts.placement_saves_per_temperature = ShellPlacerOpts.placement_saves_per_temperature.int_value;
+  PlacerOpts.placer_debug_block = ShellPlacerOpts.placer_debug_block.int_value;
+  PlacerOpts.placer_debug_net = ShellPlacerOpts.placer_debug_net.int_value;
+}
+
 
 void shell_setup_packer_opts(t_vpr_setup* vpr_setup,
                              openfpga::Shell<OpenfpgaContext>* shell) {
