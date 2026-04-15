@@ -574,6 +574,7 @@ void Shell<T>::run_execute_mode(const char* command_lines, T& context) {
       int status = execute_command(cmd_line.c_str(), context, false);
       if (CMD_EXEC_FATAL_ERROR == status) {
         VTR_LOG("Fatal error occurred!\n");
+        exit(CMD_EXEC_FATAL_ERROR);
         break;
       }
     }
