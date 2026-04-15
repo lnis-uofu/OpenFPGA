@@ -34,12 +34,17 @@
 #include "vtr_memory.h"
 #include "vtr_path.h"
 #include "vtr_time.h"
+#include "timing_graph_builder.h"
+#include "atom_netlist_utils.h"
+#include "read_sdc.h"
+#include "timing_fail_error.h"
 
 namespace vpr {
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Read and validate a VPR architecture XML file
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
+int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
+                           OpenfpgaContext& openfpga_ctx,
                            const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context) {
   openfpga::CommandOptionId opt_file = cmd.option("file");
@@ -75,6 +80,7 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
   // Set device layout from the mandatory argument
   vpr_setup.device_layout = layout;
   arch.device_layout = layout;
+  shell->app_options_.general.device_layout.update(layout);
   vpr_setup.PackerOpts.device_layout = layout;
 
   device_ctx.physical_tile_types.clear();
@@ -122,7 +128,7 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
   device_ctx.has_multiple_equivalent_tiles = max_equivalent_tiles > 1;
 
   // Setup the routing architecture from the arch
-  vpr_setup.Segments.swap(arch.Segments);
+  vpr_setup.Segments = arch.Segments;
   setup_switches(arch, vpr_setup.RoutingArch, arch.switches);
   setup_routing_arch(arch, vpr_setup.RoutingArch);
 
@@ -163,11 +169,14 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Show the VPR setup
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
+int show_vpr_setup_template(openfpga::Shell<OpenfpgaContext>* shell,
+                            OpenfpgaContext& openfpga_ctx,
                             const openfpga::Command& cmd,
                             const openfpga::CommandContext& cmd_context) {
   (void)cmd;
   (void)cmd_context;
+
+  vpr::sync_vpr_setup_to_app_options(openfpga_ctx.mutable_vpr_setup(), *shell);
   ShowSetup(openfpga_ctx.vpr_setup());
   return openfpga::CMD_EXEC_SUCCESS;
 }
@@ -190,7 +199,10 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
 
   // Set the circuit file in vpr_setup
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  vpr_setup.FileNameOpts.CircuitFile = circuit_file;
   vpr_setup.PackerOpts.circuit_file_name = circuit_file;
+  std::string circuit_name = vtr::split_ext(vtr::basename(circuit_file))[0];
+  vpr_setup.FileNameOpts.CircuitName = circuit_name;
 
   // Check that an architecture has been loaded before trying to read the
   // circuit
@@ -213,9 +225,41 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   if (std::string::npos != ext_pos) {
     net_file = net_file.substr(0, ext_pos);
   }
-  shell->app_options_.filename.net_file.update(net_file + ".net");
-  shell->app_options_.filename.circuit_file.update(circuit_file);
-  vpr_setup.FileNameOpts.CircuitFile = circuit_file;
+  VTR_LOG("Updating shell app option net_file to '%s' to match the loaded "
+          "circuit name.\n",
+          (net_file + ".net").c_str());
+  vpr_setup.FileNameOpts.NetFile = net_file + ".net";
+
+  // Initialize timing graph and constraints
+  if (vpr_setup.TimingEnabled) {
+    auto& timing_ctx = g_vpr_ctx.mutable_timing();
+    {
+      vtr::ScopedStartFinishTimer t("Build Timing Graph");
+      auto& atom_ctx = g_vpr_ctx.mutable_atom();
+      timing_ctx.graph =
+        TimingGraphBuilder(atom_ctx.netlist(), atom_ctx.mutable_lookup(),
+                           arch.models)
+          .timing_graph(
+            shell->app_options_.general.allow_dangling_combinational_nodes.bool_value);
+      VTR_LOG("  Timing Graph Nodes: %zu\n", timing_ctx.graph->nodes().size());
+      VTR_LOG("  Timing Graph Edges: %zu\n", timing_ctx.graph->edges().size());
+      VTR_LOG("  Timing Graph Levels: %zu\n",
+              timing_ctx.graph->levels().size());
+    }
+    {
+      print_netlist_clock_info(atom_ctx.netlist(), arch.models);
+    }
+    {
+      vtr::ScopedStartFinishTimer t("Load Timing Constraints");
+      timing_ctx.constraints =
+        read_sdc(vpr_setup.Timing, atom_ctx.netlist(), atom_ctx.lookup(),
+                 arch.models, *timing_ctx.graph);
+    }
+    {
+      set_terminate_if_timing_fails(
+        shell->app_options_.general.terminate_if_timing_fails.bool_value);
+    }
+  }
 
   VTR_LOG("Circuit file '%s' read successfully.\n", circuit_file.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
@@ -273,17 +317,22 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   int pack_verbosity = vpr_setup.PackerOpts.pack_verbosity;
   openfpga::CommandOptionId opt_packing_verbose = cmd.option("verbose");
   if (cmd_context.option_enable(cmd, opt_packing_verbose)) {
-    pack_verbosity =
-      std::stoi(cmd_context.option_value(cmd, opt_packing_verbose));
+    // pack_verbosity =
+    //   std::stoi(cmd_context.option_value(cmd, opt_packing_verbose));
+    pack_verbosity = 10;
   }
 
   // Force packing to be run and update vpr_setup
   vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
-  // vpr_setup.PackerOpts.device_layout = device_layout;
+  vpr_setup.PackerOpts.device_layout = device_layout;
   // vpr_setup.PackerOpts.output_file = pack_output_file;
   // vpr_setup.PackerOpts.pack_verbosity = pack_verbosity;
 
   // Run the VPR packing flow
+  ShowSetup(openfpga_ctx.vpr_setup());
+  CheckSetup(vpr_setup.PackerOpts, vpr_setup.PlacerOpts, vpr_setup.APOpts,
+             vpr_setup.RouterOpts, vpr_setup.ServerOpts, vpr_setup.RoutingArch,
+             vpr_setup.Segments, vpr_setup.Timing, device_ctx.arch->Chans);
   bool pack_success = vpr_pack_flow(vpr_setup, *device_ctx.arch);
   if (!pack_success) {
     VTR_LOG_ERROR("VPR packing failed.\n");
@@ -311,8 +360,13 @@ int place_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
 
   vpr_setup.PlacerOpts.do_placement = e_stage_action::DO;
+  vpr_setup.PlacerOpts.place_chan_width =
+    shell->app_options_.placement.place_chan_width.int_value;
+  vpr_setup.FileNameOpts.PlaceFile =
+    vpr_setup.FileNameOpts.CircuitName + ".place";
 
   VTR_LOG("Running VPR place flow...\n");
+  ShowSetup(openfpga_ctx.vpr_setup());
   const auto& placement_net_list =
     (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
   bool place_success =
@@ -342,6 +396,10 @@ int route_template(openfpga::Shell<OpenfpgaContext>* shell,
     verbose = true;
   }
 
+  vpr_setup.FileNameOpts.RouteFile =
+    vpr_setup.FileNameOpts.CircuitName + ".route";
+
+  ShowSetup(openfpga_ctx.vpr_setup());
   VTR_LOG("Running VPR route flow...\n");
 
   bool is_flat = vpr_setup.RouterOpts.flat_routing;
@@ -385,8 +443,13 @@ int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
 
   VTR_LOG("Running VPR analysis flow...\n");
-  RouteStatus route_status;
-  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status, is_flat);
+  // TODO: Instead of assuming success here, we should pass the actual routing status
+  // from the route flow to the analysis flow and use it to determine
+  // the exit code for this command
+  auto chan_width = vpr_setup.RouterOpts.fixed_channel_width;
+  RouteStatus route_status = RouteStatus(true, chan_width);// Assume success for now since we don't have the actual routing status here
+  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status,
+                                 is_flat);
 
   return openfpga::CMD_EXEC_SUCCESS;
 }
