@@ -3,12 +3,17 @@
 #include <algorithm>
 
 #include "ShowSetup.h"
+#include "globals.h"
+#include "vtr_time.h"
+#include "timing_graph_builder.h"
 #include "command_exit_codes.h"
 #include "echo_files.h"
 #include "openfpga_context.h"
 #include "shell.h"
 #include "vpr_types.h"
 #include "vtr_log.h"
+#include "pb_type_graph.h"
+#include "lb_type_rr_graph.h"
 
 namespace vpr {
 
@@ -72,6 +77,19 @@ void sync_vpr_setup_to_app_options(t_vpr_setup& vpr_setup,
   shell_setup_power_opts(vpr_setup, shell);
   shell_setup_noc_opts(vpr_setup, shell);
   shell_setup_server_opts(vpr_setup, shell);
+
+  shell_setup_timing(vpr_setup, shell);
+
+  vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
+  vpr_setup.PlacerOpts.do_placement = e_stage_action::DO;
+  vpr_setup.RouterOpts.doRouting = e_stage_action::DO;
+  vpr_setup.AnalysisOpts.doAnalysis = e_stage_action::SKIP_IF_PRIOR_FAIL;
+
+  // init global variables
+  alloc_and_load_all_pb_graphs(vpr_setup.PowerOpts.do_power,
+                                vpr_setup.RouterOpts.flat_routing);
+  vpr_setup.PackerRRGraph = alloc_and_load_all_lb_type_rr_graph();
+
 }
 
 void shell_setup_netlist_opts(t_vpr_setup& vpr_setup,

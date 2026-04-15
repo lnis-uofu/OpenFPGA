@@ -34,6 +34,10 @@
 #include "vtr_memory.h"
 #include "vtr_path.h"
 #include "vtr_time.h"
+#include "timing_graph_builder.h"
+#include "atom_netlist_utils.h"
+#include "read_sdc.h"
+#include "timing_fail_error.h"
 
 namespace vpr {
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -222,6 +226,37 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
           (net_file + ".net").c_str());
   vpr_setup.FileNameOpts.NetFile = net_file + ".net";
 
+  // Initialize timing graph and constraints
+  if (vpr_setup.TimingEnabled) {
+    auto& timing_ctx = g_vpr_ctx.mutable_timing();
+    {
+      vtr::ScopedStartFinishTimer t("Build Timing Graph");
+      auto& atom_ctx = g_vpr_ctx.mutable_atom();
+      timing_ctx.graph =
+        TimingGraphBuilder(atom_ctx.netlist(), atom_ctx.mutable_lookup(),
+                           arch.models)
+          .timing_graph(
+            shell->app_options_.general.allow_dangling_combinational_nodes.bool_value);
+      VTR_LOG("  Timing Graph Nodes: %zu\n", timing_ctx.graph->nodes().size());
+      VTR_LOG("  Timing Graph Edges: %zu\n", timing_ctx.graph->edges().size());
+      VTR_LOG("  Timing Graph Levels: %zu\n",
+              timing_ctx.graph->levels().size());
+    }
+    {
+      print_netlist_clock_info(atom_ctx.netlist(), arch.models);
+    }
+    {
+      vtr::ScopedStartFinishTimer t("Load Timing Constraints");
+      timing_ctx.constraints =
+        read_sdc(vpr_setup.Timing, atom_ctx.netlist(), atom_ctx.lookup(),
+                 arch.models, *timing_ctx.graph);
+    }
+    {
+      set_terminate_if_timing_fails(
+        shell->app_options_.general.terminate_if_timing_fails.bool_value);
+    }
+  }
+
   VTR_LOG("Circuit file '%s' read successfully.\n", circuit_file.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
 }
@@ -291,6 +326,9 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
 
   // Run the VPR packing flow
   ShowSetup(openfpga_ctx.vpr_setup());
+  CheckSetup(vpr_setup.PackerOpts, vpr_setup.PlacerOpts, vpr_setup.APOpts,
+             vpr_setup.RouterOpts, vpr_setup.ServerOpts, vpr_setup.RoutingArch,
+             vpr_setup.Segments, vpr_setup.Timing, device_ctx.arch->Chans);
   bool pack_success = vpr_pack_flow(vpr_setup, *device_ctx.arch);
   if (!pack_success) {
     VTR_LOG_ERROR("VPR packing failed.\n");
