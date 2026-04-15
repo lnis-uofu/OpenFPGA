@@ -122,7 +122,7 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
   device_ctx.has_multiple_equivalent_tiles = max_equivalent_tiles > 1;
 
   // Setup the routing architecture from the arch
-  vpr_setup.Segments.swap(arch.Segments);
+  vpr_setup.Segments = arch.Segments;
   setup_switches(arch, vpr_setup.RoutingArch, arch.switches);
   setup_routing_arch(arch, vpr_setup.RoutingArch);
 
@@ -163,11 +163,14 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Show the VPR setup
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int show_vpr_setup_template(OpenfpgaContext& openfpga_ctx,
+int show_vpr_setup_template(openfpga::Shell<OpenfpgaContext>* shell,
+                            OpenfpgaContext& openfpga_ctx,
                             const openfpga::Command& cmd,
                             const openfpga::CommandContext& cmd_context) {
   (void)cmd;
   (void)cmd_context;
+
+  vpr::sync_vpr_setup_to_app_options(openfpga_ctx.mutable_vpr_setup(), *shell);
   ShowSetup(openfpga_ctx.vpr_setup());
   return openfpga::CMD_EXEC_SUCCESS;
 }
@@ -190,6 +193,7 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
 
   // Set the circuit file in vpr_setup
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
+  vpr_setup.FileNameOpts.CircuitFile = circuit_file;
   vpr_setup.PackerOpts.circuit_file_name = circuit_file;
 
   // Check that an architecture has been loaded before trying to read the
@@ -213,9 +217,10 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   if (std::string::npos != ext_pos) {
     net_file = net_file.substr(0, ext_pos);
   }
-  shell->app_options_.filename.net_file.update(net_file + ".net");
-  shell->app_options_.filename.circuit_file.update(circuit_file);
-  vpr_setup.FileNameOpts.CircuitFile = circuit_file;
+  VTR_LOG("Updating shell app option net_file to '%s' to match the loaded "
+          "circuit name.\n",
+          (net_file + ".net").c_str());
+  vpr_setup.FileNameOpts.NetFile = net_file + ".net";
 
   VTR_LOG("Circuit file '%s' read successfully.\n", circuit_file.c_str());
   return openfpga::CMD_EXEC_SUCCESS;
@@ -273,17 +278,19 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   int pack_verbosity = vpr_setup.PackerOpts.pack_verbosity;
   openfpga::CommandOptionId opt_packing_verbose = cmd.option("verbose");
   if (cmd_context.option_enable(cmd, opt_packing_verbose)) {
-    pack_verbosity =
-      std::stoi(cmd_context.option_value(cmd, opt_packing_verbose));
+    // pack_verbosity =
+    //   std::stoi(cmd_context.option_value(cmd, opt_packing_verbose));
+    pack_verbosity = 10;
   }
 
   // Force packing to be run and update vpr_setup
   vpr_setup.PackerOpts.doPacking = e_stage_action::DO;
-  // vpr_setup.PackerOpts.device_layout = device_layout;
+  vpr_setup.PackerOpts.device_layout = device_layout;
   // vpr_setup.PackerOpts.output_file = pack_output_file;
   // vpr_setup.PackerOpts.pack_verbosity = pack_verbosity;
 
   // Run the VPR packing flow
+  ShowSetup(openfpga_ctx.vpr_setup());
   bool pack_success = vpr_pack_flow(vpr_setup, *device_ctx.arch);
   if (!pack_success) {
     VTR_LOG_ERROR("VPR packing failed.\n");
@@ -311,8 +318,11 @@ int place_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
 
   vpr_setup.PlacerOpts.do_placement = e_stage_action::DO;
+  vpr_setup.PlacerOpts.place_chan_width =
+    shell->app_options_.placement.place_chan_width.int_value;
 
   VTR_LOG("Running VPR place flow...\n");
+  ShowSetup(openfpga_ctx.vpr_setup());
   const auto& placement_net_list =
     (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
   bool place_success =

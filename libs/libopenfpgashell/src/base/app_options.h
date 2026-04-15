@@ -203,7 +203,7 @@ struct AppOptionValue {
     if (type == SELECTION) {
       const auto it = selection_values.find(new_value);
       if (it == selection_values.end()) {
-        return; /* invalid selection — caller should validate first */
+        return; /* invalid selection - caller should validate first */
       }
       string_value = new_value;
       int_value = it->second;
@@ -235,18 +235,6 @@ struct AppOptionValue {
   AppOptionValue name =                                                   \
     AppOptionValue::make_selection(value, selection_values, help_message);
 
-// General options
-// Server options
-// Atom netlist options
-// Analytical Placement options
-// Clustering options
-// Placement options
-// NoC Options
-// Timing-driven placement options only
-// Router Options
-// Timing-driven router options only
-// Analysis options
-// CRR options
 
 // clang-format off
 
@@ -256,20 +244,20 @@ struct AppOptionValue {
 #define FILE_NAMES_OPTIONS_FIELDS \
   STRING_APP_OPTION(arch_file, "", "Architecture file") \
   STRING_APP_OPTION(circuit_name, "", "Circuit name") \
-  STRING_APP_OPTION(net_file, ".net", "Netlist file") \
-  STRING_APP_OPTION(flat_place_file, ".flat.place", "Flat placement file") \
-  STRING_APP_OPTION(place_file, ".place", "Placement file") \
-  STRING_APP_OPTION(route_file, ".route", "Routing file") \
+  STRING_APP_OPTION(net_file, "", "Netlist file") \
+  STRING_APP_OPTION(flat_place_file, "", "Flat placement file") \
+  STRING_APP_OPTION(place_file, "", "Placement file") \
+  STRING_APP_OPTION(route_file, "", "Routing file") \
   STRING_APP_OPTION(circuit_file, "", "Circuit file") \
-  STRING_APP_OPTION(act_file, ".act", "Activity file") \
+  STRING_APP_OPTION(act_file, "", "Activity file") \
   STRING_APP_OPTION(power_file, "", "Power file") \
   STRING_APP_OPTION(cmos_tech_file, "", "CMOS technology file") \
   STRING_APP_OPTION(sdc_file, ".sdc", "SDC file") \
   STRING_APP_OPTION(out_file_prefix, "", "Output file prefix") \
   STRING_APP_OPTION(constraints_file, "", "Constraints file") \
-  STRING_APP_OPTION(write_rr_graph_file, "rr_graph.out.xml", "RR graph output file") \
-  STRING_APP_OPTION(read_rr_graph_file, "rr_graph.in.xml", "RR graph input file") \
-  STRING_APP_OPTION(read_rr_edge_override_file, "rr_graph.edge.xml", "RR edge override input file") \
+  STRING_APP_OPTION(write_rr_graph_file, "", "RR graph output file") \
+  STRING_APP_OPTION(read_rr_graph_file, "", "RR graph input file") \
+  STRING_APP_OPTION(read_rr_edge_override_file, "", "RR edge override input file") \
   STRING_APP_OPTION(write_initial_place_file, "", "Initial placement output file") \
   STRING_APP_OPTION(read_initial_place_file, "", "Initial placement input file") \
   STRING_APP_OPTION(read_vpr_constraints_file, "", "VPR constraints input file") \
@@ -357,11 +345,11 @@ struct AppOptionValue {
 // Atom netlist options
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 #define DEFINE_ATOM_NETLIST_OPTIONS_FIELDS \
-  BOOLEAN_APP_OPTION(absorb_buffer_luts, false, "Whether to absorb buffer LUTs into their fanout logic") \
-  SELECTION_APP_OPTION(const_gen_inference, "none", const_gen_inference_map, "The level of constant generator inference to perform") \
-  BOOLEAN_APP_OPTION(sweep_dangling_primary_ios, false, "Whether to sweep dangling primary inputs and outputs") \
-  BOOLEAN_APP_OPTION(sweep_dangling_nets, false, "Whether to sweep dangling nets") \
-  BOOLEAN_APP_OPTION(sweep_dangling_blocks, false, "Whether to sweep dangling blocks") \
+  BOOLEAN_APP_OPTION(absorb_buffer_luts, true, "Whether to absorb buffer LUTs into their fanout logic") \
+  SELECTION_APP_OPTION(const_gen_inference, "comb_seq", const_gen_inference_map, "The level of constant generator inference to perform") \
+  BOOLEAN_APP_OPTION(sweep_dangling_primary_ios, true, "Whether to sweep dangling primary inputs and outputs") \
+  BOOLEAN_APP_OPTION(sweep_dangling_nets, true, "Whether to sweep dangling nets") \
+  BOOLEAN_APP_OPTION(sweep_dangling_blocks, true, "Whether to sweep dangling blocks") \
   BOOLEAN_APP_OPTION(sweep_constant_primary_outputs, false, "Whether to sweep constant primary outputs")
 
 // Skipped options
@@ -392,12 +380,12 @@ struct AppOptionValue {
 // Clustering options
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 #define DEFINE_CLUSTERING_OPTIONS_FIELDS \
-  BOOLEAN_APP_OPTION(connection_driven_clustering, false, "Enable connection-driven clustering") \
+  BOOLEAN_APP_OPTION(connection_driven_clustering, true, "Enable connection-driven clustering") \
   SELECTION_APP_OPTION(allow_unrelated_clustering, "auto", clustering_allow_unrelated_clustering_map, "Allow unrelated clustering") \
-  FLOAT_APP_OPTION(timing_gain_weight, 0.0, "Timing gain weight") \
-  FLOAT_APP_OPTION(connection_gain_weight, 0.0, "Connection gain weight") \
-  BOOLEAN_APP_OPTION(timing_driven_clustering, false, "Enable timing-driven clustering") \
-  SELECTION_APP_OPTION(cluster_seed_type, "timing", clustering_cluster_seed_type_map, "Seed type for clustering") \
+  FLOAT_APP_OPTION(timing_gain_weight, 0.75, "Timing gain weight") \
+  FLOAT_APP_OPTION(connection_gain_weight, 0.9, "Connection gain weight") \
+  BOOLEAN_APP_OPTION(timing_driven_clustering, true, "Enable timing-driven clustering") \
+  SELECTION_APP_OPTION(cluster_seed_type, "blend2", clustering_cluster_seed_type_map, "Seed type for clustering") \
   BOOLEAN_APP_OPTION(enable_clustering_pin_feasibility_filter, false, "Enable clustering pin feasibility filter") \
   SELECTION_APP_OPTION(balance_block_type_utilization, "auto", clustering_balance_block_type_utilization_map, "Balance block type utilization") \
   STRING_APP_OPTION(target_external_pin_util, "auto", "Target external input pin utilization") \
@@ -416,7 +404,7 @@ struct AppOptionValue {
 // Placement options
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 #define DEFINE_PLACEMENT_OPTIONS_FIELDS \
-  INT_APP_OPTION(seed, 0, "Placement random seed") \
+  INT_APP_OPTION(seed, 1, "Placement random seed") \
   BOOLEAN_APP_OPTION(show_place_timing, false, "Show placement timing information") \
   FLOAT_APP_OPTION(place_inner_num, 0.5, "Placement inner loop count") \
   FLOAT_APP_OPTION(place_auto_init_t_scale, 0.5, "Auto initial temperature scale") \
@@ -429,7 +417,7 @@ struct AppOptionValue {
   SELECTION_APP_OPTION(place_algorithm, "criticality_timing", place_algorithm_map, "Placement algorithm") \
   SELECTION_APP_OPTION(place_quench_algorithm, "criticality_timing", place_algorithm_map, "Placement quench algorithm") \
   SELECTION_APP_OPTION(pad_loc_type, "free", pad_loc_type_map, "Pad location strategy") \
-  INT_APP_OPTION(place_chan_width, 0, "Channel width hint for placement") \
+  INT_APP_OPTION(place_chan_width, 100, "Channel width hint for placement") \
   FLOAT_APP_OPTION(place_rlim_escape_fraction, 0.0, "RLIM escape fraction") \
   STRING_APP_OPTION(place_move_stats_file, "", "Placement move statistics output file") \
   INT_APP_OPTION(placement_saves_per_temperature, 0, "Number of placement saves per temperature") \
@@ -488,19 +476,19 @@ struct AppOptionValue {
   FLOAT_APP_OPTION(place_congestion_factor, 0, "Placement congestion factor") \
   FLOAT_APP_OPTION(place_congestion_rlim_trigger_ratio, 0, "Congestion RLIM trigger ratio") \
   FLOAT_APP_OPTION(place_congestion_chan_util_threshold, 0, "Congestion channel utilization threshold") \
-  FLOAT_APP_OPTION(place_timing_tradeoff, 0, "Timing tradeoff for placement") \
-  INT_APP_OPTION(recompute_crit_iter, 0, "Criticality recompute interval") \
+  FLOAT_APP_OPTION(place_timing_tradeoff, 0.5, "Timing tradeoff for placement") \
+  INT_APP_OPTION(recompute_crit_iter, 1, "Criticality recompute interval") \
   INT_APP_OPTION(inner_loop_recompute_divider, 0, "Inner-loop recompute divider") \
   INT_APP_OPTION(quench_recompute_divider, 0, "Quench recompute divider") \
-  FLOAT_APP_OPTION(place_exp_first, 0, "Initial exponent for timing placement") \
-  FLOAT_APP_OPTION(place_exp_last, 0, "Final exponent for timing placement") \
+  FLOAT_APP_OPTION(place_exp_first, 1, "Initial exponent for timing placement") \
+  FLOAT_APP_OPTION(place_exp_last, 8, "Final exponent for timing placement") \
   FLOAT_APP_OPTION(place_delay_offset, 0, "Placement delay offset") \
-  INT_APP_OPTION(place_delay_ramp_delta_threshold, 0, "Placement delay ramp delta threshold") \
+  INT_APP_OPTION(place_delay_ramp_delta_threshold, -1, "Placement delay ramp delta threshold") \
   FLOAT_APP_OPTION(place_delay_ramp_slope, 0, "Placement delay ramp slope") \
-  FLOAT_APP_OPTION(place_tsu_rel_margin, 0, "Relative TSU margin") \
+  FLOAT_APP_OPTION(place_tsu_rel_margin, 1, "Relative TSU margin") \
   FLOAT_APP_OPTION(place_tsu_abs_margin, 0, "Absolute TSU margin") \
   STRING_APP_OPTION(post_place_timing_report_file, "", "Post-placement timing report output file") \
-  SELECTION_APP_OPTION(place_delay_model, "delta", timing_place_delay_model_map, "Timing placement delay model") \
+  SELECTION_APP_OPTION(place_delay_model, "simple", timing_place_delay_model_map, "Timing placement delay model") \
   SELECTION_APP_OPTION(place_delay_model_reducer, "min", timing_place_delay_model_reducer_map, "Delay model reducer") \
   STRING_APP_OPTION(allowed_tiles_for_delay_model, "", "Allowed tiles for the delay model")
 
@@ -520,8 +508,8 @@ struct AppOptionValue {
   SELECTION_APP_OPTION(base_cost_type, "delay_normalized", router_base_cost_type_map, "Router base cost type") \
   FLOAT_APP_OPTION(bend_cost, 0, "Routing bend cost") \
   SELECTION_APP_OPTION(route_type, "detailed", router_route_type_map, "Route type") \
-  INT_APP_OPTION(route_chan_width, 0, "Routing channel width") \
-  INT_APP_OPTION(min_route_chan_width_hint, 0, "Minimum route channel width hint") \
+  INT_APP_OPTION(route_chan_width, 100, "Routing channel width") \
+  INT_APP_OPTION(min_route_chan_width_hint, 40, "Minimum route channel width hint") \
   BOOLEAN_APP_OPTION(verify_binary_search, false, "Verify binary search on channel width") \
   SELECTION_APP_OPTION(router_algorithm, "timing_driven", router_algorithm_map, "Router algorithm") \
   INT_APP_OPTION(min_incremental_reroute_fanout, 0, "Minimum fanout for incremental reroute") \
@@ -532,7 +520,7 @@ struct AppOptionValue {
   BOOLEAN_APP_OPTION(generate_rr_node_overuse_report, false, "Generate RR-node overuse report") \
   SELECTION_APP_OPTION(reorder_rr_graph_nodes_algorithm, "none", router_reorder_rr_graph_nodes_algorithm_map, "RR-node reordering algorithm") \
   INT_APP_OPTION(reorder_rr_graph_nodes_threshold, 0, "RR-node reordering threshold") \
-  INT_APP_OPTION(reorder_rr_graph_nodes_seed, 0, "RR-node reordering seed") \
+  INT_APP_OPTION(reorder_rr_graph_nodes_seed, 1, "RR-node reordering seed") \
   BOOLEAN_APP_OPTION(flat_routing, false, "Enable flat routing") \
   BOOLEAN_APP_OPTION(router_opt_choke_points, false, "Enable router choke-point optimization")
 
