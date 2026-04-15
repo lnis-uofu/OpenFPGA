@@ -305,13 +305,12 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
     ShellTimingRouterOpts.multi_queue_direct_draining.bool_value;
   RouterOpts->bb_factor = ShellRouterOpts.bb_factor.int_value;
   RouterOpts->criticality_exp =
-    std::stof(ShellTimingRouterOpts.criticality_exp.string_value);
+    ShellTimingRouterOpts.criticality_exp.float_value;
   RouterOpts->max_criticality =
-    std::stof(ShellTimingRouterOpts.max_criticality.string_value);
+    ShellTimingRouterOpts.max_criticality.float_value;
   RouterOpts->max_router_iterations =
     ShellRouterOpts.max_router_iterations.int_value;
-  RouterOpts->init_wirelength_abort_threshold = std::stof(
-    ShellTimingRouterOpts.router_init_wirelength_abort_threshold.string_value);
+  RouterOpts->init_wirelength_abort_threshold = ShellTimingRouterOpts.router_init_wirelength_abort_threshold.float_value;
   RouterOpts->min_incremental_reroute_fanout =
     ShellRouterOpts.min_incremental_reroute_fanout.int_value;
   RouterOpts->incr_reroute_delay_ripup =
@@ -362,9 +361,8 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
       ShellTimingRouterOpts.routing_budgets_algorithm.to_enum());
   RouterOpts->save_routing_per_iteration =
     ShellTimingRouterOpts.save_routing_per_iteration.bool_value;
-  RouterOpts->congested_routing_iteration_threshold_frac = std::stof(
-    ShellTimingRouterOpts.congested_routing_iteration_threshold_frac
-      .string_value);
+  RouterOpts->congested_routing_iteration_threshold_frac =
+    ShellTimingRouterOpts.congested_routing_iteration_threshold_frac.float_value;
   RouterOpts->route_bb_update = static_cast<e_route_bb_update>(
     ShellTimingRouterOpts.route_bb_update.to_enum());
   RouterOpts->clock_modeling =
@@ -383,16 +381,14 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
     ShellTimingRouterOpts.router_debug_iteration.int_value;
   RouterOpts->lookahead_type = static_cast<e_router_lookahead>(
     ShellTimingRouterOpts.router_lookahead_type.to_enum());
-  RouterOpts->initial_acc_cost_chan_congestion_threshold = std::stod(
-    ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_threshold
-      .string_value);
-  RouterOpts->initial_acc_cost_chan_congestion_weight = std::stod(
-    ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_weight
-      .string_value);
+  RouterOpts->initial_acc_cost_chan_congestion_threshold = ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_threshold
+      .float_value;
+  RouterOpts->initial_acc_cost_chan_congestion_weight = ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_weight
+      .float_value;
   RouterOpts->max_convergence_count =
     ShellTimingRouterOpts.router_max_convergence_count.int_value;
-  RouterOpts->reconvergence_cpd_threshold = std::stof(
-    ShellTimingRouterOpts.router_reconvergence_cpd_threshold.string_value);
+  RouterOpts->reconvergence_cpd_threshold =
+    ShellTimingRouterOpts.router_reconvergence_cpd_threshold.float_value;
   RouterOpts->initial_timing = static_cast<e_router_initial_timing>(
     ShellTimingRouterOpts.router_initial_timing.to_enum());
   RouterOpts->update_lower_bound_delays =
