@@ -304,7 +304,7 @@ void print_verilog_preconfigured_testbench_include_netlists(
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-    print_verilog_include_netlist
+    print_verilog_include_netlist(
       fp, normalize_verilog_include_path(
             std::string(reference_benchmark_file)));
     fp << std::endl;
