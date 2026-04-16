@@ -97,8 +97,12 @@ message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
 message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")
 
 # Options pass on to VTR
-# set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+
+if(MSVC)
 set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+else()
+set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+endif()
 set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
 set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
 set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in Verilog-to-Routing")
