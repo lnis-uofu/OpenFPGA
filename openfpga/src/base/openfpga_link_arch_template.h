@@ -25,6 +25,7 @@
 #include "read_activity.h"
 #include "read_xml_pin_constraints.h"
 #include "route_clock_rr_graph.h"
+#include "rr_graph_in_edges.h"
 #include "vpr_device_annotation.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -49,6 +50,8 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
 
   CommandOptionId opt_activity_file = cmd.option("activity_file");
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
+  CommandOptionId opt_reorder_incoming_edges =
+    cmd.option("reorder_incoming_edges");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Build fast look-up between physical tile pin index and port information */
@@ -93,9 +96,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   openfpga_ctx.mutable_vpr_routing_annotation().init(
     g_vpr_ctx.device().rr_graph);
 
-  // Incase the incoming edges are not built. This may happen when loading
-  // rr_graph from an external file
-  g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
   annotate_vpr_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
                             g_vpr_ctx.atom(),
                             openfpga_ctx.mutable_vpr_routing_annotation(),
@@ -113,27 +113,27 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* Build incoming edges as VPR only builds fan-out edges for each node */
-  VTR_LOG("Built %ld incoming edges for routing resource graph\n",
-          g_vpr_ctx.device().rr_graph.in_edges_count());
-  VTR_ASSERT(g_vpr_ctx.device().rr_graph.validate_in_edges());
+  /* Build OpenFPGA's reverse-edge map (VPR only stores fan-out edges) */
+  RRGraphInEdges in_edges;
+  in_edges.init(g_vpr_ctx.device().rr_graph);
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    cmd_context.option_enable(cmd, opt_verbose));
+    in_edges, cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
+      cmd_context.option_enable(cmd, opt_reorder_incoming_edges), in_edges,
       cmd_context.option_enable(cmd, opt_verbose));
     sort_device_rr_gsb_ipin_node_in_edges(
       g_vpr_ctx.device().rr_graph, openfpga_ctx.mutable_device_rr_gsb(),
-      cmd_context.option_enable(cmd, opt_verbose));
+      in_edges, cmd_context.option_enable(cmd, opt_verbose));
   }
 
   /* Build multiplexer library */
   openfpga_ctx.mutable_mux_lib() = build_device_mux_library(
-    g_vpr_ctx.device(), const_cast<const T&>(openfpga_ctx));
+    g_vpr_ctx.device(), const_cast<const T&>(openfpga_ctx), in_edges);
 
   /* Build tile direct annotation */
   openfpga_ctx.mutable_tile_direct() = build_device_tile_direct(

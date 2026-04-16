@@ -6,6 +6,7 @@
  *******************************************************************/
 #include "device_rr_gsb.h"
 #include "openfpga_context.h"
+#include "rr_graph_in_edges.h"
 #include "vpr_context.h"
 
 /********************************************************************
@@ -18,14 +19,18 @@ namespace openfpga {
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
                             const bool& include_clock,
+                            const RRGraphInEdges& in_edges,
                             const bool& verbose_output);
 
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
+                                           const bool reorder_incoming_edges,
+                                           const RRGraphInEdges& in_edges,
                                            const bool& verbose_output);
 
 void sort_device_rr_gsb_ipin_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
+                                           const RRGraphInEdges& in_edges,
                                            const bool& verbose_output);
 
 void annotate_rr_graph_circuit_models(
