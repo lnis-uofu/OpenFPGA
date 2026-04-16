@@ -252,7 +252,7 @@ struct AppOptionValue {
   STRING_APP_OPTION(act_file, "", "Activity file") \
   STRING_APP_OPTION(power_file, "", "Power file") \
   STRING_APP_OPTION(cmos_tech_file, "", "CMOS technology file") \
-  STRING_APP_OPTION(sdc_file, ".sdc", "SDC file") \
+  STRING_APP_OPTION(sdc_file, "", "SDC file") \
   STRING_APP_OPTION(out_file_prefix, "", "Output file prefix") \
   STRING_APP_OPTION(constraints_file, "", "Constraints file") \
   STRING_APP_OPTION(write_rr_graph_file, "", "RR graph output file") \
@@ -509,7 +509,7 @@ struct AppOptionValue {
   FLOAT_APP_OPTION(bend_cost, 0, "Routing bend cost") \
   SELECTION_APP_OPTION(route_type, "detailed", router_route_type_map, "Route type") \
   INT_APP_OPTION(route_chan_width, 100, "Routing channel width") \
-  INT_APP_OPTION(min_route_chan_width_hint, 40, "Minimum route channel width hint") \
+  INT_APP_OPTION(min_route_chan_width_hint, 0, "Minimum route channel width hint") \
   BOOLEAN_APP_OPTION(verify_binary_search, false, "Verify binary search on channel width") \
   SELECTION_APP_OPTION(router_algorithm, "timing_driven", router_algorithm_map, "Router algorithm") \
   INT_APP_OPTION(min_incremental_reroute_fanout, 16, "Minimum fanout for incremental reroute") \

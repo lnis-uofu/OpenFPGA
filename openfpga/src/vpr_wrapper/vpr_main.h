@@ -26,7 +26,8 @@ int vpr_wrapper(int argc, char** argv);
 
 int vpr_standalone_wrapper(int argc, char** argv);
 
-int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
+int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
+                           OpenfpgaContext& openfpga_ctx,
                            const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context);
 

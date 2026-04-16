@@ -43,7 +43,8 @@ namespace vpr {
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Read and validate a VPR architecture XML file
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
+int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
+                           OpenfpgaContext& openfpga_ctx,
                            const openfpga::Command& cmd,
                            const openfpga::CommandContext& cmd_context) {
   openfpga::CommandOptionId opt_file = cmd.option("file");
@@ -79,6 +80,7 @@ int read_vpr_arch_template(OpenfpgaContext& openfpga_ctx,
   // Set device layout from the mandatory argument
   vpr_setup.device_layout = layout;
   arch.device_layout = layout;
+  shell->app_options_.general.device_layout.update(layout);
   vpr_setup.PackerOpts.device_layout = layout;
 
   device_ctx.physical_tile_types.clear();
@@ -199,6 +201,8 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
   vpr_setup.FileNameOpts.CircuitFile = circuit_file;
   vpr_setup.PackerOpts.circuit_file_name = circuit_file;
+  std::string circuit_name = vtr::split_ext(vtr::basename(circuit_file))[0];
+  vpr_setup.FileNameOpts.CircuitName = circuit_name;
 
   // Check that an architecture has been loaded before trying to read the
   // circuit
@@ -358,6 +362,8 @@ int place_template(openfpga::Shell<OpenfpgaContext>* shell,
   vpr_setup.PlacerOpts.do_placement = e_stage_action::DO;
   vpr_setup.PlacerOpts.place_chan_width =
     shell->app_options_.placement.place_chan_width.int_value;
+  vpr_setup.FileNameOpts.PlaceFile =
+    vpr_setup.FileNameOpts.CircuitName + ".place";
 
   VTR_LOG("Running VPR place flow...\n");
   ShowSetup(openfpga_ctx.vpr_setup());
@@ -390,6 +396,10 @@ int route_template(openfpga::Shell<OpenfpgaContext>* shell,
     verbose = true;
   }
 
+  vpr_setup.FileNameOpts.RouteFile =
+    vpr_setup.FileNameOpts.CircuitName + ".route";
+
+  ShowSetup(openfpga_ctx.vpr_setup());
   VTR_LOG("Running VPR route flow...\n");
 
   bool is_flat = vpr_setup.RouterOpts.flat_routing;
