@@ -110,6 +110,12 @@ parser.add_argument(
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
 parser.add_argument(
+    "--openfpga_sim_setting_file",
+    type=str,
+    help="Openfpga simulation file for shell",
+)
+
+parser.add_argument(
     "--yosys_tmpl",
     type=str,
     default=None,
@@ -509,6 +515,21 @@ def validate_command_line_arguments():
         args.base_verilog = os.path.abspath(args.base_verilog)
 
 
+    # The OpenFPGA shell template expects ${OPENFPGA_SIM_SETTING_FILE}, but this
+    # argument was not previously defined in argparse and relied on being passed
+    # via OpenFPGAArgs (unknown args). This is fragile and can lead to missing
+    # substitutions (e.g., literal ${...} in the generated script), which may
+    # cause OpenFPGA to crash. We explicitly define and propagate this argument
+    # to ensure reliable template substitution.
+    if args.openfpga_sim_setting_file:
+        args.openfpga_sim_setting_file = os.path.abspath(args.openfpga_sim_setting_file)
+    if not os.path.isfile(args.openfpga_sim_setting_file):
+        clean_up_and_exit(
+            "OpenFPGA simulation setting file not found. -%s"
+            % args.openfpga_sim_setting_file
+        )
+
+
 def prepare_run_directory(run_dir):
     """
     Prepares run directory to run
@@ -588,9 +609,27 @@ def create_yosys_params():
     # Yosys script parameter mapping
     ys_params = script_env_vars["PATH"]
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        ys_params[tmpVar] = OpenFPGAArgs[indx + 1]
+    # OpenFPGAArgs may contain both "--KEY value" pairs and standalone flags ("--FLAG").
+    # The original code assumed all args come in pairs, which can cause misalignment
+    # or IndexError when a flag has no value. We iterate sequentially and only treat
+    # an argument as a pair if the next token is not another flag.
+    i = 0
+    while i < len(OpenFPGAArgs):
+        arg = OpenFPGAArgs[i]
+
+        if arg.startswith("--"):
+            key = arg[2:].upper()
+
+            # check if next exists AND is not another flag
+            if i + 1 < len(OpenFPGAArgs) and not OpenFPGAArgs[i + 1].startswith("--"):
+                path_variables[key] = OpenFPGAArgs[i + 1]
+                i += 2
+            else:
+                # boolean flag → ignore or mark True
+                # path_variables[key] = True   # optional
+                i += 1
+        else:
+            i += 1
 
     if not args.verific:
         ys_params["VERILOG_FILES"] = " ".join(
@@ -888,10 +927,29 @@ def run_openfpga_shell():
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module + ".blif"
     path_variables["ACTIVITY_FILE"] = args.top_module + "_ace_out.act"
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + "_output_verilog.v"
+    path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        path_variables[tmpVar] = OpenFPGAArgs[indx + 1]
+    # OpenFPGAArgs may contain both "--KEY value" pairs and standalone flags ("--FLAG").
+    # The original code assumed all args come in pairs, which can cause misalignment
+    # or IndexError when a flag has no value. We iterate sequentially and only treat
+    # an argument as a pair if the next token is not another flag.
+    i = 0
+    while i < len(OpenFPGAArgs):
+        arg = OpenFPGAArgs[i]
+
+        if arg.startswith("--"):
+            key = arg[2:].upper()
+
+            # check if next exists AND is not another flag
+            if i + 1 < len(OpenFPGAArgs) and not OpenFPGAArgs[i + 1].startswith("--"):
+                path_variables[key] = OpenFPGAArgs[i + 1]
+                i += 2
+            else:
+                # boolean flag → ignore or mark True
+                # path_variables[key] = True   # optional
+                i += 1
+        else:
+            i += 1
 
     with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))
@@ -986,18 +1044,40 @@ def run_netlists_verification(exit_if_fail=True):
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
+    cell_lib_dir = os.path.join(
+        openfpga_base_dir,
+        "openfpga_flow",
+        "openfpga_cell_library",
+        "verilog",
+    )
+
+    # Ensure SRC directory exists
+    os.makedirs("./SRC", exist_ok=True)
+
+    # Copy user-defined cell-library netlists into ./SRC so filename-only
+    # `include statements (e.g., `include "dff.v") resolve reliably across
+    # simulators and platforms (Windows/Linux). Some simulators do not
+    # consistently honor external include paths for nested includes.
+    for fname in ["dff.v", "latch.v", "gpio.v"]:
+        src = os.path.join(cell_lib_dir, fname)
+        dst = os.path.join(".", "SRC", fname)
+        if os.path.isfile(src):
+            shutil.copy2(src, dst)
+
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-
-    command += ["./SRC/%s_include_netlists.v" % args.top_module]
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
-    # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
+
     # Add source directory to the include dir
     command += ["-I", "./SRC"]
+
+    # Put source files after options 
+    command += ["./SRC/%s_include_netlists.v" % args.top_module]
+
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]

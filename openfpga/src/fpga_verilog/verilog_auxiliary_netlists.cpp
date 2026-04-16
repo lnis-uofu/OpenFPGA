@@ -3,6 +3,8 @@
  * or code blocks, with a focus on
  * `include user-defined or auto-generated netlists in Verilog format
  *******************************************************************/
+#include <algorithm>  // for std::replace
+#include <filesystem> // for std::filesystem::path to extract filename from full paths (portable includes)
 #include <fstream>
 
 /* Headers from vtrutil library */
@@ -22,6 +24,11 @@ namespace openfpga {
 /********************************************************************
  * Local constant variables
  *******************************************************************/
+
+static std::string normalize_verilog_include_path(std::string path) {
+  std::replace(path.begin(), path.end(), '\\', '/');
+  return path;
+}
 
 /********************************************************************
  * Print a file that includes all the fabric netlists
@@ -57,7 +64,7 @@ void print_verilog_mock_fabric_include_netlist(
     fp, std::string("------ Include fabric top-level netlists -----"));
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::TOP_MODULE_NETLIST)) {
-    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
 
@@ -100,7 +107,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   print_verilog_comment(
     fp, std::string("------ Include defines: preproc flags -----"));
   print_verilog_include_netlist(
-    fp, std::string(src_dir + std::string(DEFINES_VERILOG_FILE_NAME)));
+    fp, normalize_verilog_include_path(src_dir + std::string(DEFINES_VERILOG_FILE_NAME)));
   fp << std::endl;
 
   /* Include all the user-defined netlists */
@@ -108,7 +115,12 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include user-defined netlists -----"));
   for (const std::string& user_defined_netlist :
        find_circuit_library_unique_verilog_netlists(circuit_lib)) {
-    print_verilog_include_netlist(fp, user_defined_netlist);
+    // Use filename-only includes for user-defined netlists so the generated
+    // Verilog remains portable across Windows and Linux. Absolute paths may
+    // introduce platform-specific separators and break simulators such as
+    // Icarus Verilog.
+    std::string netlist_name = "./SRC/" + std::filesystem::path(user_defined_netlist).filename().string();
+    print_verilog_include_netlist(fp, netlist_name);
   }
 
   /* Include all the primitive modules */
@@ -116,7 +128,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include primitive module netlists -----"));
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::SUBMODULE_NETLIST)) {
-    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
 
@@ -125,7 +137,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include logic block netlists -----"));
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::LOGIC_BLOCK_NETLIST)) {
-    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
 
@@ -134,7 +146,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include routing module netlists -----"));
   for (const NetlistId& nlist_id : netlist_manager.netlists_by_type(
          NetlistManager::ROUTING_MODULE_NETLIST)) {
-    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
 
@@ -143,7 +155,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include tile module netlists -----"));
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::TILE_MODULE_NETLIST)) {
-    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
 
@@ -152,7 +164,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include fabric top-level netlists -----"));
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::TOP_MODULE_NETLIST)) {
-    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
 
@@ -200,23 +212,23 @@ void print_verilog_full_testbench_include_netlists(
     fp, std::string("------ Include fabric top-level netlists -----"));
   if (true == fabric_netlist_file.empty()) {
     print_verilog_include_netlist(
-      fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
+      fp, normalize_verilog_include_path(src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME)));
   } else {
     VTR_ASSERT_SAFE(false == fabric_netlist_file.empty());
-    print_verilog_include_netlist(fp, fabric_netlist_file);
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(fabric_netlist_file));
   }
   fp << std::endl;
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-    print_verilog_include_netlist(fp, std::string(reference_benchmark_file));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(std::string(reference_benchmark_file)));
     fp << std::endl;
   }
 
   /* Include top-level testbench only when auto-check flag is enabled */
   print_verilog_include_netlist(
-    fp, src_dir + circuit_name +
-          std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX));
+    fp, normalize_verilog_include_path(src_dir + circuit_name +
+          std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX)));
 
   /* Close the file stream */
   fp.close();
@@ -262,28 +274,28 @@ void print_verilog_preconfigured_testbench_include_netlists(
     fp, std::string("------ Include fabric top-level netlists -----"));
   if (true == fabric_netlist_file.empty()) {
     print_verilog_include_netlist(
-      fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
+      fp, normalize_verilog_include_path(src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME)));
   } else {
     VTR_ASSERT_SAFE(false == fabric_netlist_file.empty());
-    print_verilog_include_netlist(fp, fabric_netlist_file);
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(fabric_netlist_file));
   }
   fp << std::endl;
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-    print_verilog_include_netlist(fp, std::string(reference_benchmark_file));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(std::string(reference_benchmark_file)));
     fp << std::endl;
   }
 
   /* Include formal verification netlists */
   print_verilog_include_netlist(
-    fp, src_dir + circuit_name +
-          std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX));
+    fp, normalize_verilog_include_path(src_dir + circuit_name +
+          std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX)));
 
   /* Include formal verification testbench */
   print_verilog_include_netlist(
-    fp, src_dir + circuit_name +
-          std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX));
+    fp, normalize_verilog_include_path(src_dir + circuit_name +
+          std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX)));
 
   /* Close the file stream */
   fp.close();
