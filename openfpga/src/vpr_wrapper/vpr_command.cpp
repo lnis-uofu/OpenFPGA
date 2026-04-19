@@ -164,7 +164,7 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_show_vpr_setup_command(shell, vpr_cmd_class);
   add_read_circuit_command(shell, vpr_cmd_class);
   ShellCommandId pack_cmd_id = add_pack_command(shell, vpr_cmd_class);
-  std::vector<ShellCommandId> report_cluster_dependencies(1, pack_cmd_id);
+  std::vector<ShellCommandId> report_cluster_dependencies{pack_cmd_id};
   add_report_cluster_command(shell, vpr_cmd_class,
                              report_cluster_dependencies);
   add_place_command(shell, vpr_cmd_class);
