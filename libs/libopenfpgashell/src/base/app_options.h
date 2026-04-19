@@ -235,7 +235,6 @@ struct AppOptionValue {
   AppOptionValue name =                                                   \
     AppOptionValue::make_selection(value, selection_values, help_message);
 
-
 // clang-format off
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = =
