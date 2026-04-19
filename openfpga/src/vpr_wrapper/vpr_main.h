@@ -45,6 +45,11 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
                   const openfpga::CommandContext& cmd_context);
 
+int report_cluster_template(openfpga::Shell<OpenfpgaContext>* shell,
+                            OpenfpgaContext& openfpga_ctx,
+                            const openfpga::Command& cmd,
+                            const openfpga::CommandContext& cmd_context);
+
 } /* End namespace vpr */
 
 #endif

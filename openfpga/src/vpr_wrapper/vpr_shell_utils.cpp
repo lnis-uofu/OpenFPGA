@@ -2,18 +2,18 @@
 
 #include <algorithm>
 
-#include "ShowSetup.h"
-#include "globals.h"
-#include "vtr_time.h"
-#include "timing_graph_builder.h"
 #include "command_exit_codes.h"
 #include "echo_files.h"
+#include "globals.h"
+#include "lb_type_rr_graph.h"
 #include "openfpga_context.h"
+#include "pb_type_graph.h"
 #include "shell.h"
+#include "show_setup.h"
+#include "timing_graph_builder.h"
 #include "vpr_types.h"
 #include "vtr_log.h"
-#include "pb_type_graph.h"
-#include "lb_type_rr_graph.h"
+#include "vtr_time.h"
 
 namespace vpr {
 
@@ -87,32 +87,31 @@ void sync_vpr_setup_to_app_options(t_vpr_setup& vpr_setup,
 
   // init global variables
   alloc_and_load_all_pb_graphs(vpr_setup.PowerOpts.do_power,
-                                vpr_setup.RouterOpts.flat_routing);
+                               vpr_setup.RouterOpts.flat_routing);
   vpr_setup.PackerRRGraph = alloc_and_load_all_lb_type_rr_graph();
-
 }
 
 void shell_setup_netlist_opts(t_vpr_setup& vpr_setup,
                               openfpga::Shell<OpenfpgaContext>& shell) {
-
   auto NetlistOpts = &vpr_setup.NetlistOpts;
   auto& ShellAtomNetlistOpts = shell.app_options_.atom_netlist;
 
-  NetlistOpts->const_gen_inference =
-    static_cast<e_const_gen_inference>(ShellAtomNetlistOpts.const_gen_inference.to_enum());
+  NetlistOpts->const_gen_inference = static_cast<e_const_gen_inference>(
+    ShellAtomNetlistOpts.const_gen_inference.to_enum());
   NetlistOpts->absorb_buffer_luts =
     ShellAtomNetlistOpts.absorb_buffer_luts.bool_value;
-      NetlistOpts->sweep_dangling_primary_ios =
-      ShellAtomNetlistOpts.sweep_dangling_primary_ios.bool_value;
-  NetlistOpts->sweep_dangling_nets = ShellAtomNetlistOpts.sweep_dangling_nets.bool_value;
-  NetlistOpts->sweep_dangling_blocks = ShellAtomNetlistOpts.sweep_dangling_blocks.bool_value;
+  NetlistOpts->sweep_dangling_primary_ios =
+    ShellAtomNetlistOpts.sweep_dangling_primary_ios.bool_value;
+  NetlistOpts->sweep_dangling_nets =
+    ShellAtomNetlistOpts.sweep_dangling_nets.bool_value;
+  NetlistOpts->sweep_dangling_blocks =
+    ShellAtomNetlistOpts.sweep_dangling_blocks.bool_value;
   NetlistOpts->sweep_constant_primary_outputs =
     ShellAtomNetlistOpts.sweep_constant_primary_outputs.bool_value;
 }
 
 void shell_setup_timing(t_vpr_setup& vpr_setup,
                         openfpga::Shell<OpenfpgaContext>& shell) {
-
   auto Timing = &vpr_setup.Timing;
   auto Options = shell.app_options_;
   bool TimingEnabled = Options.general.timing_analysis.bool_value;
@@ -126,8 +125,8 @@ void shell_setup_timing(t_vpr_setup& vpr_setup,
   Timing->SDCFile = Options.filename.sdc_file.string_value;
 }
 
-void shell_setup_placer_opts(
-  t_vpr_setup& vpr_setup, openfpga::Shell<OpenfpgaContext>& shell) {
+void shell_setup_placer_opts(t_vpr_setup& vpr_setup,
+                             openfpga::Shell<OpenfpgaContext>& shell) {
   // Sync the options in VPR setup to the app options in the shell
 
   // Setup placer options
@@ -147,40 +146,59 @@ void shell_setup_placer_opts(
 
   PlacerOpts->place_algorithm =
     static_cast<e_place_algorithm>(ShellPlacerOpts.place_algorithm.to_enum());
-  PlacerOpts->place_quench_algorithm = static_cast<e_place_algorithm>(ShellPlacerOpts.place_quench_algorithm.to_enum());
-  PlacerOpts->pad_loc_type = static_cast<e_pad_loc_type>(ShellPlacerOpts.pad_loc_type.to_enum());
+  PlacerOpts->place_quench_algorithm = static_cast<e_place_algorithm>(
+    ShellPlacerOpts.place_quench_algorithm.to_enum());
+  PlacerOpts->pad_loc_type =
+    static_cast<e_pad_loc_type>(ShellPlacerOpts.pad_loc_type.to_enum());
   PlacerOpts->place_chan_width = ShellPlacerOpts.place_chan_width.int_value;
-  PlacerOpts->inner_loop_recompute_divider = ShellTimingPlacementOpts.inner_loop_recompute_divider.int_value;
-  PlacerOpts->quench_recompute_divider = ShellTimingPlacementOpts.quench_recompute_divider.int_value;
-  PlacerOpts->td_place_exp_first = ShellTimingPlacementOpts.place_exp_first.float_value;
-  PlacerOpts->td_place_exp_last = ShellTimingPlacementOpts.place_exp_last.float_value;
-  PlacerOpts->constraints_file = ShellFilenameOpts.constraints_file.string_value;
+  PlacerOpts->inner_loop_recompute_divider =
+    ShellTimingPlacementOpts.inner_loop_recompute_divider.int_value;
+  PlacerOpts->quench_recompute_divider =
+    ShellTimingPlacementOpts.quench_recompute_divider.int_value;
+  PlacerOpts->td_place_exp_first =
+    ShellTimingPlacementOpts.place_exp_first.float_value;
+  PlacerOpts->td_place_exp_last =
+    ShellTimingPlacementOpts.place_exp_last.float_value;
+  PlacerOpts->constraints_file =
+    ShellFilenameOpts.constraints_file.string_value;
   PlacerOpts->write_initial_place_file =
     ShellFilenameOpts.write_initial_place_file.string_value;
   PlacerOpts->read_initial_place_file =
     ShellFilenameOpts.read_initial_place_file.string_value;
-  PlacerOpts->recompute_crit_iter = ShellTimingPlacementOpts.recompute_crit_iter.int_value;
+  PlacerOpts->recompute_crit_iter =
+    ShellTimingPlacementOpts.recompute_crit_iter.int_value;
   PlacerOpts->timing_tradeoff =
     ShellTimingPlacementOpts.place_timing_tradeoff.float_value;
-  PlacerOpts->congestion_factor = ShellTimingPlacementOpts.place_congestion_factor.float_value;
-  PlacerOpts->congestion_rlim_trigger_ratio = ShellTimingPlacementOpts.place_congestion_rlim_trigger_ratio.float_value;
-  PlacerOpts->congestion_chan_util_threshold = ShellTimingPlacementOpts.place_congestion_chan_util_threshold.float_value;
-  PlacerOpts->delay_offset = ShellTimingPlacementOpts.place_delay_offset.float_value;
-  PlacerOpts->delay_ramp_delta_threshold = ShellTimingPlacementOpts.place_delay_ramp_delta_threshold.int_value;
-  PlacerOpts->delay_ramp_slope = ShellTimingPlacementOpts.place_delay_ramp_slope.float_value;
-  PlacerOpts->tsu_rel_margin = ShellTimingPlacementOpts.place_tsu_rel_margin.float_value;
-  PlacerOpts->tsu_abs_margin = ShellTimingPlacementOpts.place_tsu_abs_margin.float_value;
+  PlacerOpts->congestion_factor =
+    ShellTimingPlacementOpts.place_congestion_factor.float_value;
+  PlacerOpts->congestion_rlim_trigger_ratio =
+    ShellTimingPlacementOpts.place_congestion_rlim_trigger_ratio.float_value;
+  PlacerOpts->congestion_chan_util_threshold =
+    ShellTimingPlacementOpts.place_congestion_chan_util_threshold.float_value;
+  PlacerOpts->delay_offset =
+    ShellTimingPlacementOpts.place_delay_offset.float_value;
+  PlacerOpts->delay_ramp_delta_threshold =
+    ShellTimingPlacementOpts.place_delay_ramp_delta_threshold.int_value;
+  PlacerOpts->delay_ramp_slope =
+    ShellTimingPlacementOpts.place_delay_ramp_slope.float_value;
+  PlacerOpts->tsu_rel_margin =
+    ShellTimingPlacementOpts.place_tsu_rel_margin.float_value;
+  PlacerOpts->tsu_abs_margin =
+    ShellTimingPlacementOpts.place_tsu_abs_margin.float_value;
   PlacerOpts->delay_model_type = static_cast<PlaceDelayModelType>(
     ShellTimingPlacementOpts.place_delay_model.int_value);
-  PlacerOpts->delay_model_reducer =
-    static_cast<e_reducer>(ShellTimingPlacementOpts.place_delay_model_reducer.int_value);
+  PlacerOpts->delay_model_reducer = static_cast<e_reducer>(
+    ShellTimingPlacementOpts.place_delay_model_reducer.int_value);
   PlacerOpts->place_freq =
     static_cast<e_place_freq>(ShellPlacerOpts.place_placement_freq.int_value);
-  PlacerOpts->post_place_timing_report_file = ShellTimingPlacementOpts.post_place_timing_report_file.string_value;
-  PlacerOpts->rlim_escape_fraction = ShellPlacerOpts.place_rlim_escape_fraction.float_value;
+  PlacerOpts->post_place_timing_report_file =
+    ShellTimingPlacementOpts.post_place_timing_report_file.string_value;
+  PlacerOpts->rlim_escape_fraction =
+    ShellPlacerOpts.place_rlim_escape_fraction.float_value;
   PlacerOpts->move_stats_file =
     ShellPlacerOpts.place_move_stats_file.string_value;
-  PlacerOpts->placement_saves_per_temperature = ShellPlacerOpts.placement_saves_per_temperature.int_value;
+  PlacerOpts->placement_saves_per_temperature =
+    ShellPlacerOpts.placement_saves_per_temperature.int_value;
   PlacerOpts->placer_debug_block = ShellPlacerOpts.placer_debug_block.int_value;
   PlacerOpts->placer_debug_net = ShellPlacerOpts.placer_debug_net.int_value;
   PlacerOpts->seed = ShellPlacerOpts.seed.int_value;
@@ -193,7 +211,8 @@ void shell_setup_anneal_sched(t_vpr_setup& vpr_setup,
 
   AnnealSched->alpha_t = ShellPlacerOpts.place_alpha_t.float_value;
   if (AnnealSched->alpha_t >= 1 || AnnealSched->alpha_t <= 0) {
-    VPR_FATAL_ERROR(VPR_ERROR_OTHER, "alpha_t must be between 0 and 1 exclusive.\n");
+    VPR_FATAL_ERROR(VPR_ERROR_OTHER,
+                    "alpha_t must be between 0 and 1 exclusive.\n");
   }
 
   AnnealSched->exit_t = ShellPlacerOpts.place_exit_t.float_value;
@@ -328,7 +347,8 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
     ShellTimingRouterOpts.max_criticality.float_value;
   RouterOpts->max_router_iterations =
     ShellRouterOpts.max_router_iterations.int_value;
-  RouterOpts->init_wirelength_abort_threshold = ShellTimingRouterOpts.router_init_wirelength_abort_threshold.float_value;
+  RouterOpts->init_wirelength_abort_threshold =
+    ShellTimingRouterOpts.router_init_wirelength_abort_threshold.float_value;
   RouterOpts->min_incremental_reroute_fanout =
     ShellRouterOpts.min_incremental_reroute_fanout.int_value;
   RouterOpts->incr_reroute_delay_ripup =
@@ -349,8 +369,8 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
 
   RouterOpts->verify_binary_search =
     ShellRouterOpts.verify_binary_search.bool_value;
-  RouterOpts->router_algorithm = static_cast<e_router_algorithm>(
-    ShellRouterOpts.router_algorithm.to_enum());
+  RouterOpts->router_algorithm =
+    static_cast<e_router_algorithm>(ShellRouterOpts.router_algorithm.to_enum());
   RouterOpts->fixed_channel_width = ShellRouterOpts.route_chan_width.int_value;
   RouterOpts->min_channel_width_hint =
     ShellRouterOpts.min_route_chan_width_hint.int_value;
@@ -380,7 +400,8 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
   RouterOpts->save_routing_per_iteration =
     ShellTimingRouterOpts.save_routing_per_iteration.bool_value;
   RouterOpts->congested_routing_iteration_threshold_frac =
-    ShellTimingRouterOpts.congested_routing_iteration_threshold_frac.float_value;
+    ShellTimingRouterOpts.congested_routing_iteration_threshold_frac
+      .float_value;
   RouterOpts->route_bb_update = static_cast<e_route_bb_update>(
     ShellTimingRouterOpts.route_bb_update.to_enum());
   RouterOpts->clock_modeling =
@@ -389,8 +410,8 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
     ShellGeneralOpts.two_stage_clock_routing.bool_value;
   RouterOpts->high_fanout_threshold =
     ShellTimingRouterOpts.router_high_fanout_threshold.int_value;
-  RouterOpts->high_fanout_max_slope = std::stof(
-    ShellTimingRouterOpts.router_high_fanout_max_slope.string_value);
+  RouterOpts->high_fanout_max_slope =
+    std::stof(ShellTimingRouterOpts.router_high_fanout_max_slope.string_value);
   RouterOpts->router_debug_net =
     ShellTimingRouterOpts.router_debug_net.int_value;
   RouterOpts->router_debug_sink_rr =
@@ -399,9 +420,11 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
     ShellTimingRouterOpts.router_debug_iteration.int_value;
   RouterOpts->lookahead_type = static_cast<e_router_lookahead>(
     ShellTimingRouterOpts.router_lookahead_type.to_enum());
-  RouterOpts->initial_acc_cost_chan_congestion_threshold = ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_threshold
+  RouterOpts->initial_acc_cost_chan_congestion_threshold =
+    ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_threshold
       .float_value;
-  RouterOpts->initial_acc_cost_chan_congestion_weight = ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_weight
+  RouterOpts->initial_acc_cost_chan_congestion_weight =
+    ShellTimingRouterOpts.router_initial_acc_cost_chan_congestion_weight
       .float_value;
   RouterOpts->max_convergence_count =
     ShellTimingRouterOpts.router_max_convergence_count.int_value;
@@ -428,8 +451,8 @@ void shell_setup_router_opts(t_vpr_setup& vpr_setup,
     static_cast<e_heap_type>(ShellTimingRouterOpts.router_heap.to_enum());
   RouterOpts->exit_after_first_routing_iteration =
     ShellRouterOpts.exit_after_first_routing_iteration.bool_value;
-  RouterOpts->check_route = static_cast<e_check_route_option>(
-    ShellRouterOpts.check_route.to_enum());
+  RouterOpts->check_route =
+    static_cast<e_check_route_option>(ShellRouterOpts.check_route.to_enum());
   RouterOpts->timing_update_type = static_cast<e_timing_update_type>(
     ShellGeneralOpts.timing_update_type.to_enum());
   RouterOpts->max_logged_overused_rr_nodes =

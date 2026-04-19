@@ -10,7 +10,6 @@
 
 namespace vpr {
 
-
 void sync_vpr_setup_to_app_options(t_vpr_setup& vpr_setup,
                                    openfpga::Shell<OpenfpgaContext>& shell);
 

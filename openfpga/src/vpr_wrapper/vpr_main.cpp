@@ -11,21 +11,26 @@
 
 #include "CheckArch.h"
 #include "CheckSetup.h"
-#include "ShowSetup.h"
+#include "show_setup.h"
 #include "arch_util.h"
+#include "atom_netlist_utils.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "globals.h"
 #include "lb_type_rr_graph.h"
 #include "pb_type_graph.h"
+#include "read_sdc.h"
 #include "read_xml_arch_file.h"
 #include "setup_vib_utils.h"
 #include "setup_vpr.cpp"
 #include "tatum/error.hpp"
+#include "timing_fail_error.h"
+#include "timing_graph_builder.h"
 #include "vpr_api.h"
 #include "vpr_error.h"
 #include "vpr_exit_codes.h"
+#include "vpr_report_utils.h"
 #include "vpr_shell_utils.h"
 #include "vpr_signal_handler.h"
 #include "vpr_tatum_error.h"
@@ -34,15 +39,11 @@
 #include "vtr_memory.h"
 #include "vtr_path.h"
 #include "vtr_time.h"
-#include "timing_graph_builder.h"
-#include "atom_netlist_utils.h"
-#include "read_sdc.h"
-#include "timing_fail_error.h"
 
 namespace vpr {
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Read and validate a VPR architecture XML file
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Read and validate a VPR architecture XML file = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = =
 int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
                            OpenfpgaContext& openfpga_ctx,
                            const openfpga::Command& cmd,
@@ -65,8 +66,8 @@ int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
   DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
   t_vpr_setup& vpr_setup = openfpga_ctx.mutable_vpr_setup();
 
-  // Check that no architecture has already been loaded -- only one arch can be
-  // loaded at a time
+  // Check that no architecture has already been loaded -- only one arch can
+  // be loaded at a time
   if (nullptr != device_ctx.arch) {
     VTR_LOG_ERROR(
       "Cannot read VPR architecture: an architecture has already been "
@@ -87,9 +88,12 @@ int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
   device_ctx.logical_block_types.clear();
 
   try {
+    // Separate this method into reading XML file and processing XML data,
+    // It will allow read encrypted or compressed file in the future without
+    // changing the processing flow
     xml_read_arch(arch_file_name, vpr_setup.TimingEnabled, &arch,
                   device_ctx.physical_tile_types,
-                  device_ctx.logical_block_types);
+                  device_ctx.logical_block_types, FALSE);
 
     const int status =
       validate_vpr_arch_types(arch_file_name, device_ctx.physical_tile_types,
@@ -166,9 +170,9 @@ int read_vpr_arch_template(openfpga::Shell<OpenfpgaContext>* shell,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Show the VPR setup
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Show the VPR setup = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = =
 int show_vpr_setup_template(openfpga::Shell<OpenfpgaContext>* shell,
                             OpenfpgaContext& openfpga_ctx,
                             const openfpga::Command& cmd,
@@ -177,13 +181,13 @@ int show_vpr_setup_template(openfpga::Shell<OpenfpgaContext>* shell,
   (void)cmd_context;
 
   vpr::sync_vpr_setup_to_app_options(openfpga_ctx.mutable_vpr_setup(), *shell);
-  ShowSetup(openfpga_ctx.vpr_setup());
+  show_setup(openfpga_ctx.vpr_setup());
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Read and set circuit file
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Read and set circuit file = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = =
 int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
                           OpenfpgaContext& openfpga_ctx,
                           const openfpga::Command& cmd,
@@ -225,9 +229,10 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   if (std::string::npos != ext_pos) {
     net_file = net_file.substr(0, ext_pos);
   }
-  VTR_LOG("Updating shell app option net_file to '%s' to match the loaded "
-          "circuit name.\n",
-          (net_file + ".net").c_str());
+  VTR_LOG(
+    "Updating shell app option net_file to '%s' to match the loaded "
+    "circuit name.\n",
+    (net_file + ".net").c_str());
   vpr_setup.FileNameOpts.NetFile = net_file + ".net";
 
   // Initialize timing graph and constraints
@@ -239,8 +244,8 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
       timing_ctx.graph =
         TimingGraphBuilder(atom_ctx.netlist(), atom_ctx.mutable_lookup(),
                            arch.models)
-          .timing_graph(
-            shell->app_options_.general.allow_dangling_combinational_nodes.bool_value);
+          .timing_graph(shell->app_options_.general
+                          .allow_dangling_combinational_nodes.bool_value);
       VTR_LOG("  Timing Graph Nodes: %zu\n", timing_ctx.graph->nodes().size());
       VTR_LOG("  Timing Graph Edges: %zu\n", timing_ctx.graph->edges().size());
       VTR_LOG("  Timing Graph Levels: %zu\n",
@@ -265,9 +270,9 @@ int read_circuit_template(openfpga::Shell<OpenfpgaContext>* shell,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR packing flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Run VPR packing flow only = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = =
 int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
                   OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
                   const openfpga::CommandContext& cmd_context) {
@@ -283,7 +288,8 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
   VTR_LOG("Running VPR pack flow...\n");
 
-  // Check if circuit is loaded, check vpr_setup.FileNameOpts.CircuitFile exist
+  // Check if circuit is loaded, check vpr_setup.FileNameOpts.CircuitFile
+  // exist
   if (vpr_setup.FileNameOpts.CircuitFile.empty()) {
     VTR_LOG_ERROR(
       "Cannot run packing: no circuit netlist has been read. Run "
@@ -329,7 +335,7 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   // vpr_setup.PackerOpts.pack_verbosity = pack_verbosity;
 
   // Run the VPR packing flow
-  ShowSetup(openfpga_ctx.vpr_setup());
+  show_setup(openfpga_ctx.vpr_setup());
   CheckSetup(vpr_setup.PackerOpts, vpr_setup.PlacerOpts, vpr_setup.APOpts,
              vpr_setup.RouterOpts, vpr_setup.ServerOpts, vpr_setup.RoutingArch,
              vpr_setup.Segments, vpr_setup.Timing, device_ctx.arch->Chans);
@@ -343,9 +349,40 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR placement flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Report cluster template = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = =
+int report_cluster_template(openfpga::Shell<OpenfpgaContext>* shell,
+                            OpenfpgaContext& openfpga_ctx,
+                            const openfpga::Command& cmd,
+                            const openfpga::CommandContext& cmd_context) {
+  (void)shell;
+  (void)openfpga_ctx;
+  (void)cmd;
+  (void)cmd_context;
+
+  const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+  std::string query = "*";
+  openfpga::CommandOptionId opt_query = cmd.option("query");
+  if (cmd_context.option_enable(cmd, opt_query)) {
+    query = cmd_context.option_value(cmd, opt_query);
+  }
+
+  cluster_netlist_report clb_rptr(clb_nlist);
+
+  const auto filtered_blocks = clb_rptr.filter_cluster_netlist(query);
+  for (const ClusterBlockId blk_id : filtered_blocks) {
+    VTR_LOG("Cluster: %s [%s]\n", clb_nlist.block_name(blk_id).c_str(),
+            clb_nlist.block_type(blk_id)->pb_type->name);
+  }
+  VTR_LOG("Total clusters: %zu\n", clb_nlist.blocks().size());
+
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Run VPR placement flow only = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = =
 int place_template(openfpga::Shell<OpenfpgaContext>* shell,
                    OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
                    const openfpga::CommandContext& cmd_context) {
@@ -366,7 +403,7 @@ int place_template(openfpga::Shell<OpenfpgaContext>* shell,
     vpr_setup.FileNameOpts.CircuitName + ".place";
 
   VTR_LOG("Running VPR place flow...\n");
-  ShowSetup(openfpga_ctx.vpr_setup());
+  show_setup(openfpga_ctx.vpr_setup());
   const auto& placement_net_list =
     (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
   bool place_success =
@@ -380,9 +417,9 @@ int place_template(openfpga::Shell<OpenfpgaContext>* shell,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR route flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Run VPR route flow only = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = =
 int route_template(openfpga::Shell<OpenfpgaContext>* shell,
                    OpenfpgaContext& openfpga_ctx, const openfpga::Command& cmd,
                    const openfpga::CommandContext& cmd_context) {
@@ -399,7 +436,7 @@ int route_template(openfpga::Shell<OpenfpgaContext>* shell,
   vpr_setup.FileNameOpts.RouteFile =
     vpr_setup.FileNameOpts.CircuitName + ".route";
 
-  ShowSetup(openfpga_ctx.vpr_setup());
+  show_setup(openfpga_ctx.vpr_setup());
   VTR_LOG("Running VPR route flow...\n");
 
   bool is_flat = vpr_setup.RouterOpts.flat_routing;
@@ -420,9 +457,9 @@ int route_template(openfpga::Shell<OpenfpgaContext>* shell,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Run VPR analysis flow only
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// = Run VPR analysis flow only = = = = = = = = = = = = = = = = = = = = = = =
+// = = = = = = = = = = = = = = = =
 int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
                       OpenfpgaContext& openfpga_ctx,
                       const openfpga::Command& cmd,
@@ -443,13 +480,14 @@ int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
 
   VTR_LOG("Running VPR analysis flow...\n");
-  // TODO: Instead of assuming success here, we should pass the actual routing status
-  // from the route flow to the analysis flow and use it to determine
+  // TODO: Instead of assuming success here, we should pass the actual routing
+  // status from the route flow to the analysis flow and use it to determine
   // the exit code for this command
   auto chan_width = vpr_setup.RouterOpts.fixed_channel_width;
-  RouteStatus route_status = RouteStatus(true, chan_width);// Assume success for now since we don't have the actual routing status here
-  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status,
-                                 is_flat);
+  RouteStatus route_status =
+    RouteStatus(true, chan_width);  // Assume success for now since we don't
+                                    // have the actual routing status here
+  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status, is_flat);
 
   return openfpga::CMD_EXEC_SUCCESS;
 }
