@@ -352,8 +352,10 @@ int report_cluster_template(openfpga::Shell<OpenfpgaContext>* shell,
   (void)cmd;
   (void)cmd_context;
 
-  const size_t num_clusters = g_vpr_ctx.clustering().clb_nlist.blocks().size();
-  VTR_LOG("Detected %zu clusters in packing results.\n", num_clusters);
+  const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+  for (const ClusterBlockId blk_id : clb_nlist.blocks()) {
+    VTR_LOG("Cluster: %s\n", clb_nlist.block_name(blk_id).c_str());
+  }
 
   return openfpga::CMD_EXEC_SUCCESS;
 }
