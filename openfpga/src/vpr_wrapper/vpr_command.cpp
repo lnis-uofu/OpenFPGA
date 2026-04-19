@@ -3,6 +3,8 @@
  *******************************************************************/
 #include "vpr_command.h"
 
+#include <vector>
+
 #include "vpr_main.h"
 
 /* begin namespace openfpga */
