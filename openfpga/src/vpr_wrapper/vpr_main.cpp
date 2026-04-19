@@ -343,6 +343,21 @@ int pack_template(openfpga::Shell<OpenfpgaContext>* shell,
   return openfpga::CMD_EXEC_SUCCESS;
 }
 
+int report_cluster_template(openfpga::Shell<OpenfpgaContext>* shell,
+                            OpenfpgaContext& openfpga_ctx,
+                            const openfpga::Command& cmd,
+                            const openfpga::CommandContext& cmd_context) {
+  (void)shell;
+  (void)openfpga_ctx;
+  (void)cmd;
+  (void)cmd_context;
+
+  const size_t num_clusters = g_vpr_ctx.clustering().clb_nlist.blocks().size();
+  VTR_LOG("Detected %zu clusters in packing results.\n", num_clusters);
+
+  return openfpga::CMD_EXEC_SUCCESS;
+}
+
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Run VPR placement flow only
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
