@@ -443,8 +443,13 @@ int analysis_template(openfpga::Shell<OpenfpgaContext>* shell,
   }
 
   VTR_LOG("Running VPR analysis flow...\n");
-  RouteStatus route_status;
-  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status, is_flat);
+  // TODO: Instead of assuming success here, we should pass the actual routing status
+  // from the route flow to the analysis flow and use it to determine
+  // the exit code for this command
+  auto chan_width = vpr_setup.RouterOpts.fixed_channel_width;
+  RouteStatus route_status = RouteStatus(true, chan_width);// Assume success for now since we don't have the actual routing status here
+  vpr_analysis_flow(router_net_list, vpr_setup, arch, route_status,
+                                 is_flat);
 
   return openfpga::CMD_EXEC_SUCCESS;
 }

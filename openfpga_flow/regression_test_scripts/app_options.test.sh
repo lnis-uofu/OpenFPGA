@@ -10,8 +10,8 @@ run_tcl_command() {
     local test_name="$1"
     local command="$2"
     mkdir -p ${OPENFPGA_PATH}/tmp/${test_name}
-    # (cd ${OPENFPGA_PATH}/tmp/${test_name} && ${OPENFPGA_PATH}/build/openfpga/openfpga -batch -x "${command};")
-    (cd ${OPENFPGA_PATH}/tmp/${test_name} && ${OPENFPGA_PATH}/build/openfpga/openfpga -batch -x "${command};" 2>&1 > /dev/null)
+    (cd ${OPENFPGA_PATH}/tmp/${test_name} && ${OPENFPGA_PATH}/build/openfpga/openfpga -batch -x "${command};")
+    # (cd ${OPENFPGA_PATH}/tmp/${test_name} && ${OPENFPGA_PATH}/build/openfpga/openfpga -batch -x "${command};" 2>&1 > /dev/null)
     if [ $? -ne 0 ]; then
         echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         echo "Test '${test_name}' failed"
@@ -48,12 +48,13 @@ run_tcl_command "test4" "
 
 # Test 5: run a complete flow from openfpga shell
 run_tcl_command "test5" "
+    set_app_option -n router.flat_routing -v true;
     read_vpr_arch -f ${OPENFPGA_PATH}/openfpga_flow/vpr_arch/k4_frac_N4_tileable_40nm_custrrg.xml -l FPGA44_CUSTOM_GRAPH;
     read_circuit -f ${OPENFPGA_PATH}/openfpga_flow/benchmarks/micro_benchmark/and2/and2.blif;
     pack;
     place;
-    set_app_option -n router.flat_routing -v true;
-    route;" | tee openfpga_shell_output.log
+    route;
+    analysis;" | tee openfpga_shell_output.log
 
 
 # run_tcl_command "
