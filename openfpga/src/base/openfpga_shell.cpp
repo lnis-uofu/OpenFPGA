@@ -2,7 +2,6 @@
 
 #include <map>
 
-#include "ShowSetup.h"
 #include "app_options_commands.h"
 #include "basic_command.h"
 #include "command_echo.h"
@@ -14,6 +13,7 @@
 #include "openfpga_spice_command.h"
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
+#include "show_setup.h"
 #include "vpr_command.h"
 #include "vpr_shell_utils.h"
 #include "yosys_command.h"
