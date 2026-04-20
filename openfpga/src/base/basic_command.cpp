@@ -120,11 +120,25 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    * do a snapshot on the shell
    */
   Command shell_cmd_help("help");
+  CommandOptionId opt_help_show_dep =
+    shell_cmd_help.add_option("show_dep", false,
+                              "Show dependency list for each command");
+  shell_cmd_help.set_option_short_name(opt_help_show_dep, "d");
+  CommandOptionId opt_help_show_hidden =
+    shell_cmd_help.add_option("hidden", false,
+                              "Also show hidden commands in the help output");
   ShellCommandId shell_cmd_help_id =
     shell.add_command(shell_cmd_help, "Launch help desk");
   shell.set_command_class(shell_cmd_help_id, basic_cmd_class);
-  shell.set_command_execute_function(shell_cmd_help_id,
-                                     [shell]() { shell.print_commands(); });
+  shell.set_command_execute_function(
+    shell_cmd_help_id,
+    [&shell](const Command& cmd, const CommandContext& cmd_context) {
+      bool show_hidden =
+        cmd_context.option_enable(cmd, cmd.option("hidden"));
+      bool show_dep = cmd_context.option_enable(cmd, cmd.option("show_dep"));
+      shell.print_commands(show_hidden, show_dep);
+      return openfpga::CMD_EXEC_SUCCESS;
+    });
 }
 
 } /* end namespace openfpga */
