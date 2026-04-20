@@ -473,7 +473,7 @@ void Shell<T>::run_execute_mode(const char* command_lines, T& context) {
 }
 
 template <class T>
-void Shell<T>::print_commands(const bool& show_hidden) const {
+void Shell<T>::print_commands(const bool& show_hidden, const bool& show_dep) const {
   /* Print the commands by their classes */
   for (const ShellCommandClassId& cmd_class : command_class_ids_) {
     /* If there are only hidden commands inside, do not even need to show the
@@ -497,6 +497,16 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
         continue;
       }
       VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
+      if (show_dep) {
+        std::vector<ShellCommandId> dependencies = command_dependency(cmd);
+        if (!dependencies.empty()) {
+          VTR_LOG("\t\tDepends on: ");
+          for (const ShellCommandId& dep_cmd : dependencies) {
+            VTR_LOG("%s ", commands_[dep_cmd].name().c_str());
+          }
+          VTR_LOG("\n");
+        }
+      }
     }
 
     /* Put a new line in the end as a splitter */

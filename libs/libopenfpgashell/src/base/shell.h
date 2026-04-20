@@ -200,7 +200,7 @@ class Shell {
    * ';' and the shell executes them sequentially */
   void run_execute_mode(const char* command_lines, T& context);
   /* Print all the commands by their classes. This is actually the help desk */
-  void print_commands(const bool& show_hidden = false) const;
+  void print_commands(const bool& show_hidden = false, const bool& show_dep = false) const;
   /* Find the exit code (assume quit shell now) */
   int exit_code() const;
   /* Show statistics of errors during command execution */
