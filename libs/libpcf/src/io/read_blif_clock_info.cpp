@@ -14,12 +14,13 @@
 
 std::vector<std::string> read_blif_clock_info(const char* arch_fname,
                                               const char* blif_fname,
-                                              const std::string& blif_ffmt) {
+                                              const std::string& blif_ffmt,
+                                              const bool& verbose) {
   t_arch arch;
   std::vector<t_physical_tile_type> physical_tile_types;
   std::vector<t_logical_block_type> logical_block_types;
   xml_read_arch(arch_fname, false, &arch, physical_tile_types,
-                logical_block_types);
+                logical_block_types, verbose);
 
   // read netlist and set up atom netlist
   const LogicalModels& logical_models = arch.models;
