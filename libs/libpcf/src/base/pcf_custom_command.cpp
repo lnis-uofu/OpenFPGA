@@ -172,7 +172,8 @@ vtr::Point<int> PcfCustomCommand::custom_decimal_mode_segments_range_to_int(
   openfpga::PortParser port_parser(
     range, openfpga::PORT_PARSER_SUPPORT_ALL_FORMAT, true);
   openfpga::BasicPort pin = port_parser.port();
-  vtr::Point<int> range_int = {pin.get_lsb(), pin.get_msb()};
+  vtr::Point<int> range_int = {static_cast<int>(pin.get_lsb()),
+                               static_cast<int>(pin.get_msb())};
   return range_int;
 }
 bool PcfCustomCommand::custom_decimal_mode_segments_valid(

@@ -44,6 +44,22 @@ set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 #Create the project 
 project("OpenFPGA-tool-suites" C CXX)
 
+# Windows fixes
+if (MSVC)
+    add_compile_options(
+        /Uisdigit
+        /Uisxdigit
+    )
+
+    add_compile_definitions(
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+    )
+else()
+    add_compile_definitions(NOMINMAX)
+endif()
+
+
 # Version number
 file (STRINGS "VERSION.md" VERSION_NUMBER)
 string (REPLACE "." ";" VERSION_LIST ${VERSION_NUMBER})
@@ -81,7 +97,12 @@ message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
 message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")
 
 # Options pass on to VTR
+
+if(MSVC)
+set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+else()
 set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+endif()
 set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
 set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
 set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in Verilog-to-Routing")
