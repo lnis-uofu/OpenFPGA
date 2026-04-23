@@ -3,6 +3,7 @@
  ********************************************************************/
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 
 /* Headers from vtrutil library */
 #include "vtr_log.h"
