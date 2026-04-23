@@ -18,10 +18,10 @@
  */
 #if defined(_WIN32) || defined(WIN32)
 #ifndef WIFEXITED
-#define WIFEXITED(status) (((status) & 0x7f) == 0)
+#define WIFEXITED(status) (((status)&0x7f) == 0)
 #endif
 #ifndef WEXITSTATUS
-#define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
+#define WEXITSTATUS(status) (((status)&0xff00) >> 8)
 #endif
 #endif
 
