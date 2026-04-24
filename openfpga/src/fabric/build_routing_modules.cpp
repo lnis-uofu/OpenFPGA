@@ -402,6 +402,26 @@ static void build_switch_block_interc_modules(
  *
  *
  ********************************************************************/
+/* Forward declarations for connection block helpers defined later in this file
+ */
+static void build_connection_block_module_short_interc(
+  ModuleManager& module_manager, const ModuleId& cb_module,
+  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const e_side& cb_ipin_side, const size_t& ipin_index,
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets);
+
+static void build_connection_block_mux_module(
+  ModuleManager& module_manager, const ModuleId& cb_module,
+  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
+  const size_t& ipin_index,
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block, const bool& group_routing);
+
 static void build_switch_block_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
@@ -409,20 +429,22 @@ static void build_switch_block_module(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb,
-  const RRGSB& rr_gsb, const bool& group_config_block, const bool& verbose) {
+  const RRGSB& rr_gsb, const bool& group_config_block,
+  const bool& group_routing, const bool& verbose) {
   /* Create a Module of Switch Block and add to module manager */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
-  ModuleId sb_module = module_manager.add_module(
-    generate_switch_block_module_name(gsb_coordinate));
+
+  std::string sb_module_name =
+    generate_switch_block_module_name(gsb_coordinate);
+  ModuleId sb_module = module_manager.add_module(sb_module_name);
 
   /* Label module usage */
   module_manager.set_module_usage(sb_module, ModuleManager::MODULE_SB);
 
-  VTR_LOGV(verbose, "Building module '%s'...",
-           generate_switch_block_module_name(gsb_coordinate).c_str());
+  VTR_LOGV(verbose, "Building module '%s'...", sb_module_name.c_str());
 
-  /* Create a cache (fast look up) for module nets whose source are input ports
-   */
+  // Create fast lookup for module nets whose source are input ports
+
   std::map<ModulePinInfo, ModuleNetId> input_port_to_module_nets;
 
   /* Add routing channel ports at each side of the GSB */
@@ -522,6 +544,76 @@ static void build_switch_block_module(
           module_manager, sb_module, device_annotation, grids, rr_graph,
           in_edges, rr_gsb, gsb_edges, circuit_lib, side_manager.get_side(),
           itrack, input_port_to_module_nets, group_config_block);
+      }
+    }
+  }
+
+  if (true == group_routing) {
+    // Cache the switch block output port nets for later use in connection block
+    // building
+    for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+      SideManager side_manager(side);
+      for (size_t itrack = 0;
+           itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+        if (OUT_PORT ==
+            rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+          RRNodeId out_rr_node =
+            rr_gsb.get_chan_node(side_manager.get_side(), itrack);
+          ModulePinInfo output_port_info = find_switch_block_module_chan_port(
+            module_manager, sb_module, rr_graph, rr_gsb,
+            side_manager.get_side(), out_rr_node, OUT_PORT);
+          ModuleNetId net = create_module_source_pin_net(
+            module_manager, sb_module, sb_module, 0, output_port_info.first,
+            output_port_info.second);
+          input_port_to_module_nets[output_port_info] = net;
+        }
+      }
+    }
+    // Create IPIN Ports if IPIN exist in the current GSB
+    for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+      SideManager side_manager(side);
+      for (size_t inode = 0;
+           inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
+           ++inode) {
+        RRNodeId ipin_node =
+          rr_gsb.get_ipin_node(side_manager.get_side(), inode);
+        std::string port_name = generate_cb_module_grid_port_name(
+          side_manager.get_side(), grids, device_annotation, rr_graph,
+          ipin_node);
+        BasicPort module_port(port_name, 1);
+        ModulePortId output_port_id = module_manager.add_port(
+          sb_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
+        module_manager.set_port_side(sb_module, output_port_id,
+                                     side_manager.get_side());
+
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, sb_module, sb_module, 0, output_port_id, 0);
+        input_port_to_module_nets[ModulePinInfo(output_port_id, 0)] = net;
+
+        /* Build a vector of driver rr_nodes */
+        const std::vector<RREdgeId>& driver_rr_edges =
+          in_edges.node_in_edges(ipin_node);
+
+        e_rr_type cb_type = (side_manager.get_side() == e_side::TOP ||
+                             side_manager.get_side() == e_side::BOTTOM)
+                              ? e_rr_type::CHANY
+                              : e_rr_type::CHANX;
+        if (1 > driver_rr_edges.size()) {
+          return; /* This port has no driver, skip it */
+        } else if (1 == driver_rr_edges.size()) {
+          /* Print a direct connection */
+          build_connection_block_module_short_interc(
+            module_manager, sb_module, device_annotation, grids, rr_graph,
+            in_edges, rr_gsb, gsb_edges, cb_type, side_manager.get_side(),
+            inode, input_port_to_module_nets);
+        } else if (1 < driver_rr_edges.size()) {
+          /* Print the multiplexer, fan_in >= 2 */
+          build_connection_block_mux_module(
+            module_manager, sb_module, device_annotation, grids, rr_graph,
+            in_edges, rr_gsb, gsb_edges, cb_type, circuit_lib,
+            side_manager.get_side(), inode, input_port_to_module_nets,
+            group_config_block, group_routing);
+        }
       }
     }
   }
@@ -670,7 +762,7 @@ static void build_connection_block_mux_module(
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block) {
+  const bool& group_config_block, const bool& group_routing) {
   const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Check current rr_node is an input pin of a CLB */
   VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(cur_rr_node));
@@ -737,10 +829,16 @@ static void build_connection_block_mux_module(
 
   /* TODO: Generate input ports that are wired to the input bus of the routing
    * multiplexer */
-  std::vector<ModulePinInfo> cb_input_port_ids =
-    find_connection_block_module_input_ports(module_manager, cb_module, grids,
-                                             device_annotation, rr_graph,
-                                             rr_gsb, cb_type, driver_rr_nodes);
+  std::vector<ModulePinInfo> cb_input_port_ids;
+  if (false == group_routing) {
+    cb_input_port_ids = find_connection_block_module_input_ports(
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+      cb_type, driver_rr_nodes);
+  } else {
+    cb_input_port_ids = find_switch_block_module_input_ports(
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+      driver_rr_nodes, group_routing);
+  }
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports =
@@ -759,6 +857,11 @@ static void build_connection_block_mux_module(
   for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
     /* Use the exising net */
     ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
+    VTR_LOG(
+      "Connecting CB input port %zu (pin %zu) to MUX input port %zu (pin %zu) "
+      "via Net %zu\n",
+      cb_input_port_ids[pin_id].first, cb_input_port_ids[pin_id].second,
+      mux_input_port_id, pin_id, net);
     /* No need to configure the net source since it is already done before */
     /* Configure the net sink */
     module_manager.add_module_net_sink(cb_module, net, mux_module,
@@ -766,7 +869,7 @@ static void build_connection_block_mux_module(
                                        mux_input_port.pins()[pin_id]);
   }
 
-  /* Link output port to Switch Block outputs */
+  /* Link output port to Connection Block outputs */
   std::vector<CircuitPortId> mux_model_output_ports =
     circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
   VTR_ASSERT(1 == mux_model_output_ports.size());
@@ -890,7 +993,7 @@ static void build_connection_block_interc_modules(
     build_connection_block_mux_module(
       module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
       rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
-      input_port_to_module_nets, group_config_block);
+      input_port_to_module_nets, group_config_block, false);
   } /*Nothing should be done else*/
 }
 
@@ -1241,7 +1344,7 @@ void build_flatten_routing_modules(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
-  const bool& verbose) {
+  const bool& group_routing, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build routing modules...");
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
@@ -1256,7 +1359,7 @@ void build_flatten_routing_modules(
       build_switch_block_module(
         module_manager, decoder_lib, device_annotation, device_ctx.grid,
         device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-        device_rr_gsb, rr_gsb, group_config_block, verbose);
+        device_rr_gsb, rr_gsb, group_config_block, group_routing, verbose);
     }
   }
 
@@ -1289,7 +1392,7 @@ void build_unique_routing_modules(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
-  const bool& verbose) {
+  const bool& group_routing, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build unique routing modules...");
 
   /* Build unique switch block modules */
@@ -1298,34 +1401,37 @@ void build_unique_routing_modules(
     build_switch_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, group_config_block, verbose);
+      device_rr_gsb, unique_mirror, group_config_block, group_routing, verbose);
   }
 
-  /* Build unique X-direction connection block modules */
-  for (size_t icb = 0;
-       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
-    const RRGSB& unique_mirror =
-      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
+  if (false == group_routing) {
+    /* Build unique X-direction connection block modules */
+    for (size_t icb = 0;
+         icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
+         ++icb) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
-    build_connection_block_module(
-      module_manager, decoder_lib, device_annotation, device_ctx.grid,
-      device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block,
-      verbose);
-  }
+      build_connection_block_module(
+        module_manager, decoder_lib, device_annotation, device_ctx.grid,
+        device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
+        device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block,
+        verbose);
+    }
 
-  /* Build unique X-direction connection block modules */
-  for (size_t icb = 0;
-       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
-    const RRGSB& unique_mirror =
-      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
+    /* Build unique Y-direction connection block modules */
+    for (size_t icb = 0;
+         icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
+         ++icb) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
-    build_connection_block_module(
-      module_manager, decoder_lib, device_annotation, device_ctx.grid,
-      device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block,
-      verbose);
+      build_connection_block_module(
+        module_manager, decoder_lib, device_annotation, device_ctx.grid,
+        device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
+        device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block,
+        verbose);
+    }
   }
 }
-
 } /* end namespace openfpga */

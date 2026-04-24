@@ -98,6 +98,9 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
                  instance_name.c_str(),
                  bitstream_manager.block_name(parent_block).c_str());
         /* We must have one valid block id! */
+        if (false == bitstream_manager.valid_block_id(child_block)) {
+          return;
+        }
         VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
         /* Go recursively */

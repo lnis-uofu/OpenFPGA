@@ -49,7 +49,8 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(
   const ModuleManager& module_manager, const ModuleId& sb_module,
   const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const std::vector<RRNodeId>& input_rr_nodes);
+  const std::vector<RRNodeId>& input_rr_nodes,
+  const bool& group_routing = false);
 
 ModulePinInfo find_connection_block_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& cb_module,

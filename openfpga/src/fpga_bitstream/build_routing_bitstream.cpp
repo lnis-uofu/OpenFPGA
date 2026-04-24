@@ -594,7 +594,10 @@ static void build_connection_block_bitstreams(
       }
       ModuleId cb_module =
         module_manager.find_module(module_name_map.name(cb_module_name));
-      VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+      if (false == module_manager.valid_module_id(cb_module)) {
+        continue;
+      }
 
       /* Bypass empty blocks which have none configurable children */
       if (0 == count_module_manager_module_configurable_children(
