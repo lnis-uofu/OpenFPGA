@@ -98,11 +98,12 @@ jobs:
           flex --version
           gcc --version
 
+      # Use -j1 to overwrite the default -j8 in this build.yaml. To ensure the verilog_parser.output can be built successfully 
       - name: Build
         run: |
           cd yosys
           ls
-          make vcxsrc YOSYS_COMPILER="Visual Studio" VCX_DIR_NAME=yosys-win32-vcxsrc-latest
+          make vcxsrc YOSYS_COMPILER="Visual Studio" VCX_DIR_NAME=yosys-win32-vcxsrc-latest -j1
 
       - uses: actions/upload-artifact@v7
         with:
