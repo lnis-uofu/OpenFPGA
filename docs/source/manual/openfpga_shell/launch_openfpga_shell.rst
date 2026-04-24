@@ -19,7 +19,7 @@ To launch OpenFPGA shell, users can choose two modes.
   
   Execute OpenFPGA command line(s) from a string. Commands should be separated by ``;``. All the commands will be executed in serial. For example, 
 
-.. code-blcok::
+.. code-block::
 
   openfpga --execute "version;exit;"
 
