@@ -89,7 +89,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dep required by Yosys windows build preparation
-        run: sudo apt-get install libfl-dev bison flex g++
+        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
 
       - name: Build
         run: |
