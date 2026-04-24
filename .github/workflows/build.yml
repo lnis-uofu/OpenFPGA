@@ -91,6 +91,12 @@ jobs:
       - name: Install dep required by Yosys windows build preparation
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
 
+      - name: Check tool version
+        run:
+          bison --version
+          flex --version
+          gcc --version
+
       - name: Build
         run: |
           cd yosys
