@@ -89,7 +89,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dep required by Yosys windows build preparation
-        run: sudo apt-get install libfl-dev bison
+        run: sudo apt-get install libfl-dev bison flex g++
 
       - name: Build
         run: |
@@ -168,7 +168,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: MSBuild for Yosys
-        working-directory: yosys-win32-vcxsrc-latest
+        working-directory: yosys/yosys-win32-vcxsrc-latest
         run: |
           cd yosys
           msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
