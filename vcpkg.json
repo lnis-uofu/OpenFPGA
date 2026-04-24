@@ -6,6 +6,6 @@
     "readline",
     "openssl",
     "pkgconf",
-    "capnp"
+    "capnproto"
   ]
 }
