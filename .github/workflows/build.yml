@@ -81,10 +81,11 @@ jobs:
         with:
           access_token: ${{ github.token }}
           
+      # Force checkout all the submodules recursively as yosys require submodules to be checked out before build MSVC project 
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
           persist-credentials: false
 
       - name: Install dep required by Yosys windows build preparation
