@@ -177,9 +177,9 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: MSBuild for Yosys
-        working-directory: yosys/yosys-win32-vcxsrc-latest
+#        working-directory: yosys/yosys-win32-vcxsrc-latest
         run: |
-          cd yosys
+          cd yosys/yosys-win32-vcxsrc-latest
           msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
 
       - name: Configure and build with CMake
