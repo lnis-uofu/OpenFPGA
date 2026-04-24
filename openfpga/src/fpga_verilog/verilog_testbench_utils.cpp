@@ -588,7 +588,10 @@ void print_verilog_timeout_and_vcd(
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  BasicPort sim_start_port(simulation_start_counter_name, 1);
+  /* Use a small countdown instead of a single-bit flag so the generated
+   * checker can ignore the first couple of compare edges after startup.
+   */
+  BasicPort sim_start_port(simulation_start_counter_name, 2);
 
   fp << "initial begin" << std::endl;
 
@@ -596,7 +599,7 @@ void print_verilog_timeout_and_vcd(
     fp << "\t"
        << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true,
                                 little_endian)
-       << " <= 1'b1;" << std::endl;
+       << " <= 2'b11;" << std::endl;
   }
 
   fp << "\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
@@ -670,11 +673,14 @@ void print_verilog_testbench_check(
   std::vector<BasicPort> clock_ports =
     generate_verilog_testbench_clock_port(clock_port_names, default_clock_name);
 
-  print_verilog_comment(fp,
-                        std::string("----- Skip the first falling edge of "
-                                    "clock, it is for initialization -------"));
+  print_verilog_comment(
+    fp, std::string("----- Skip the first two falling edges of "
+                    "clock, they are for initialization -------"));
 
-  BasicPort sim_start_port(simulation_start_counter_name, 1);
+  /* Some generated wrappers, especially with sequential behavior on outputs,
+   * need more than one edge before benchmark and FPGA outputs can be compared.
+   */
+  BasicPort sim_start_port(simulation_start_counter_name, 2);
 
   fp << "\t"
      << generate_verilog_port(VERILOG_PORT_REG, sim_start_port, true,
@@ -693,13 +699,17 @@ void print_verilog_testbench_check(
      << generate_verilog_port(VERILOG_PORT_CONKT, clock_ports[0], true,
                               little_endian)
      << ") begin" << std::endl;
-  fp << "\t\tif (1'b1 == "
+  fp << "\t\tif (2'b00 != "
      << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true,
                               little_endian)
      << ") begin" << std::endl;
-  fp << "\t\t";
-  print_verilog_register_connection(fp, sim_start_port, sim_start_port,
-                                    little_endian, true);
+  fp << "\t\t\t"
+     << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true,
+                              little_endian)
+     << " <= "
+     << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port, true,
+                              little_endian)
+     << " - 1'b1;" << std::endl;
   fp << "\t\tend else " << std::endl;
   /* If there is a config done signal specified, consider it as a trigger on
    * checking */
