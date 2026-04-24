@@ -16,8 +16,6 @@ if(NOT MSCV)
     endforeach()
 endif()
 
-find_package(CapnProto REQUIRED)
-
 # Create generated headers from capnp schema files
 set(CAPNP_DEFS
     gen/unique_blocks_uxsdcxx.capnp
