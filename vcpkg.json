@@ -5,6 +5,7 @@
     "zlib",
     "readline",
     "openssl",
-    "pkgconf"
+    "pkgconf",
+    "capnp"
   ]
 }
