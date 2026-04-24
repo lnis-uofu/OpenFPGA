@@ -89,7 +89,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dep required by Yosys windows build preparation
-        run: bison clang flex libffi-dev libfl-dev libreadline-dev pkg-config tcl-dev zlib1g-dev libgtest-dev libgmock-dev
+        run: sudo apt-get install bison clang flex libffi-dev libfl-dev libreadline-dev pkg-config tcl-dev zlib1g-dev libgtest-dev libgmock-dev
 #sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
 
       - name: Check tool version
