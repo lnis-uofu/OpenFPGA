@@ -83,6 +83,7 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
+        with:
           submodules: true
           persist-credentials: false
 
