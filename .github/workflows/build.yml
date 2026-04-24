@@ -83,13 +83,13 @@ jobs:
           
       # Force checkout all the submodules recursively as yosys require submodules to be checked out before build MSVC project 
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           persist-credentials: false
 
       - name: Install dep required by Yosys windows build preparation
-        run: sudo apt-get install libfl-dev
+        run: sudo apt-get install libfl-dev bison
 
       - name: Build
         run: |
