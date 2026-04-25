@@ -1,0 +1,7 @@
+
+.model buffer
+.inputs in
+.outputs out
+.names in out
+1 1
+.end

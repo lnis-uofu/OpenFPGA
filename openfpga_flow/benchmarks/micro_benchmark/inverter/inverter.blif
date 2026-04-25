@@ -1,0 +1,7 @@
+
+.model inverter
+.inputs in
+.outputs out
+.names in out
+0 1
+.end
