@@ -1,5 +1,5 @@
-#ifndef BASIC_COMMAND_H
-#define BASIC_COMMAND_H
+#ifndef YOSYS_COMMAND_H
+#define YOSYS_COMMAND_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -14,8 +14,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell);
-void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell);
+void add_yosys_commands(openfpga::Shell<OpenfpgaContext>& shell);
 
 } /* end namespace openfpga */
 

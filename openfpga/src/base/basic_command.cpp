@@ -6,6 +6,7 @@
  *******************************************************************/
 #include "basic_command.h"
 
+#include "app_options_commands.h"
 #include "command_exit_codes.h"
 #include "openfpga_basic.h"
 #include "openfpga_title.h"
@@ -80,6 +81,47 @@ static ShellCommandId add_openfpga_source_command(
   return shell_cmd_id;
 }
 
+void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell) {
+  ShellCommandClassId basic_cmd_class = shell.add_command_class("app_options");
+  /* ========================================================= */
+  /* Add set_app_option command to configure shell app options */
+  /* ========================================================= */
+  Command shell_cmd_set_app_option("set_app_option");
+  CommandOptionId set_opt_name = shell_cmd_set_app_option.add_option(
+    "name", true, "Name of an application option");
+  shell_cmd_set_app_option.set_option_short_name(set_opt_name, "n");
+  shell_cmd_set_app_option.set_option_require_value(set_opt_name,
+                                                    openfpga::OPT_STRING);
+  CommandOptionId set_opt_value = shell_cmd_set_app_option.add_option(
+    "value", true, "Value of an application option");
+  shell_cmd_set_app_option.set_option_short_name(set_opt_value, "v");
+  shell_cmd_set_app_option.set_option_require_value(set_opt_value,
+                                                    openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_set_app_option_id = shell.add_command(
+    shell_cmd_set_app_option, "Set an application option in shell runtime");
+  shell.set_command_class(shell_cmd_set_app_option_id, basic_cmd_class);
+  shell.set_command_execute_function(shell_cmd_set_app_option_id,
+                                     set_app_option_command);
+
+  /* ========================================================= */
+  /* Add report_app_option command to print configured options */
+  /* ========================================================= */
+  Command shell_cmd_report_app_option("report_app_option");
+  CommandOptionId report_opt_name = shell_cmd_report_app_option.add_option(
+    "name", false, "Name of an application option");
+  shell_cmd_report_app_option.set_option_short_name(report_opt_name, "n");
+  shell_cmd_report_app_option.set_option_require_value(report_opt_name,
+                                                       openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_report_app_option_id =
+    shell.add_command(shell_cmd_report_app_option,
+                      "Report one or all application options in shell runtime");
+  shell.set_command_class(shell_cmd_report_app_option_id, basic_cmd_class);
+  shell.set_command_execute_function(shell_cmd_report_app_option_id,
+                                     report_app_option_command);
+}
+
 void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Add a new class of commands */
   ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");
@@ -120,11 +162,25 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    * do a snapshot on the shell
    */
   Command shell_cmd_help("help");
+  CommandOptionId opt_help_show_dep =
+    shell_cmd_help.add_option("show_dep", false,
+                              "Show dependency list for each command");
+  shell_cmd_help.set_option_short_name(opt_help_show_dep, "d");
+  CommandOptionId opt_help_show_hidden =
+    shell_cmd_help.add_option("hidden", false,
+                              "Also show hidden commands in the help output");
   ShellCommandId shell_cmd_help_id =
     shell.add_command(shell_cmd_help, "Launch help desk");
   shell.set_command_class(shell_cmd_help_id, basic_cmd_class);
-  shell.set_command_execute_function(shell_cmd_help_id,
-                                     [shell]() { shell.print_commands(); });
+  shell.set_command_execute_function(
+    shell_cmd_help_id,
+    [&shell](const Command& cmd, const CommandContext& cmd_context) {
+      bool show_hidden =
+        cmd_context.option_enable(cmd, cmd.option("hidden"));
+      bool show_dep = cmd_context.option_enable(cmd, cmd.option("show_dep"));
+      shell.print_commands(show_hidden, show_dep);
+      return openfpga::CMD_EXEC_SUCCESS;
+    });
 }
 
 } /* end namespace openfpga */
