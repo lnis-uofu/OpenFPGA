@@ -3,8 +3,8 @@
  * or code blocks, with a focus on
  * `include user-defined or auto-generated netlists in Verilog format
  *******************************************************************/
-#include <algorithm>  // for std::replace
-#include <filesystem> // for std::filesystem::path to extract filename from full paths (portable includes)
+#include <algorithm>   // for std::replace
+#include <filesystem>  // for std::filesystem::path to extract filename from full paths (portable includes)
 #include <fstream>
 
 /* Headers from vtrutil library */
@@ -65,7 +65,7 @@ void print_verilog_mock_fabric_include_netlist(
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::TOP_MODULE_NETLIST)) {
     print_verilog_include_netlist(
-      fp, 
+      fp,
       normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
@@ -109,7 +109,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   print_verilog_comment(
     fp, std::string("------ Include defines: preproc flags -----"));
   print_verilog_include_netlist(
-    fp, normalize_verilog_include_path(src_dir + 
+    fp, normalize_verilog_include_path(src_dir +
                                        std::string(DEFINES_VERILOG_FILE_NAME)));
   fp << std::endl;
 
@@ -134,7 +134,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::SUBMODULE_NETLIST)) {
     print_verilog_include_netlist(
-      fp, 
+      fp,
       normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
@@ -145,7 +145,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::LOGIC_BLOCK_NETLIST)) {
     print_verilog_include_netlist(
-      fp, 
+      fp,
       normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
@@ -156,7 +156,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   for (const NetlistId& nlist_id : netlist_manager.netlists_by_type(
          NetlistManager::ROUTING_MODULE_NETLIST)) {
     print_verilog_include_netlist(
-      fp, 
+      fp,
       normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
@@ -167,7 +167,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::TILE_MODULE_NETLIST)) {
     print_verilog_include_netlist(
-      fp, 
+      fp,
       normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
@@ -178,7 +178,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   for (const NetlistId& nlist_id :
        netlist_manager.netlists_by_type(NetlistManager::TOP_MODULE_NETLIST)) {
     print_verilog_include_netlist(
-      fp, 
+      fp,
       normalize_verilog_include_path(netlist_manager.netlist_name(nlist_id)));
   }
   fp << std::endl;
@@ -304,9 +304,8 @@ void print_verilog_preconfigured_testbench_include_netlists(
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-    print_verilog_include_netlist(
-      fp, normalize_verilog_include_path(
-            std::string(reference_benchmark_file)));
+  print_verilog_include_netlist(fp, normalize_verilog_include_path(
+                                      std::string(reference_benchmark_file)));
     fp << std::endl;
   }
 
