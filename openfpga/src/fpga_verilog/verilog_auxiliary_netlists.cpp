@@ -122,8 +122,8 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     // Verilog remains portable across Windows and Linux. Absolute paths may
     // introduce platform-specific separators and break simulators such as
     // Icarus Verilog.
-    std::string netlist_name = 
-      "./SRC/" + 
+    std::string netlist_name =
+      "./SRC/" +
       std::filesystem::path(user_defined_netlist).filename().string();
     print_verilog_include_netlist(fp, netlist_name);
   }
@@ -304,8 +304,8 @@ void print_verilog_preconfigured_testbench_include_netlists(
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-  print_verilog_include_netlist(fp, normalize_verilog_include_path(
-                                      std::string(reference_benchmark_file)));
+    print_verilog_include_netlist(fp, normalize_verilog_include_path(
+                                        std::string(reference_benchmark_file)));
     fp << std::endl;
   }
 
