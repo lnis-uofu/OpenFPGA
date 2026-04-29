@@ -122,9 +122,12 @@ set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as 
 # TCL file/lib required to link with SWIG generated wrapper
 if (OPENFPGA_WITH_SWIG)
 #Find Tcl
-  include(FindTCL)
-  message(STATUS "tcl.h path is : ${TCL_INCLUDE_PATH}")
-  message(STATUS "libtcl.so path is : ${TCL_LIBRARY}") 
+  find_package(TCL)
+  if(NOT TCL_FOUND)
+    message(FATAL_ERROR "TCL not found. Please install TCL development headers (e.g. tcl8.6-dev).")
+  endif()
+  message(STATUS "TCL_INCLUDE_PATH: ${TCL_INCLUDE_PATH}")
+  message(STATUS "TCL_LIBRARY: ${TCL_LIBRARY}")
 
 #Find SWIG
   find_package(SWIG 3.0 REQUIRED)

@@ -5,10 +5,16 @@ project(libini)
 file(GLOB_RECURSE LIB_HEADERS src/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
-# Create a header-only interface library
-add_library(libini INTERFACE)
+#Create the library
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19")
+    add_library(libini INTERFACE
+                ${LIB_HEADERS})
+else()
+    add_library(libini INTERFACE)
+endif()
 
 target_include_directories(libini INTERFACE ${LIB_INCLUDE_DIRS})
+set_target_properties(libini PROPERTIES PREFIX "")
 
 install(DIRECTORY src/
         DESTINATION bin
