@@ -981,22 +981,22 @@ def run_rewrite_verilog():
 def run_netlists_verification(exit_if_fail=True):
     ExecTime["VerificationStart"] = time.time()
     compiled_file = "compiled_" + args.top_module
-    # include_netlists = args.top_module+"_include_netlists.v"
     tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
-    # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-
-    command += ["./SRC/%s_include_netlists.v" % args.top_module]
+    
+    # Compile fabric and design files directly, bypassing include directive issues
+    command += ["./SRC/fabric_netlists.v"]
+    command += ["./SRC/%s_top_formal_verification.v" % args.top_module]
+    command += ["./SRC/%s_formal_random_top_tb.v" % args.top_module]
+    
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
-    # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
-    # Add source directory to the include dir
     command += ["-I", "./SRC"]
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
