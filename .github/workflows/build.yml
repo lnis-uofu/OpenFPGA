@@ -70,7 +70,7 @@ jobs:
 
   # Test the compilation compatibility
   # Yosys-slang plugin has issues on linking library to Yosys in Msys2. Suspect the root of cause is on the linking path. Disable it for now.
-  win_build:
+  win_msys2_build:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
