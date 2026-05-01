@@ -5,7 +5,7 @@
  * - write_analysis_sdc: TODO: generate SDC based on users' implementations
  *******************************************************************/
 #include "openfpga_sdc_command.h"
-#include "openfpga_windows_compatibility.h"
+
 #include "openfpga_sdc_command_template.h"
 
 /* begin namespace openfpga */

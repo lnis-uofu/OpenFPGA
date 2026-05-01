@@ -6,7 +6,7 @@
  * - generate_fabric_verilog_testbench : TODO: generate Verilog testbenches
  *******************************************************************/
 #include "openfpga_verilog_command.h"
-#include "openfpga_windows_compatibility.h"
+
 #include "openfpga_verilog_command_template.h"
 
 /* begin namespace openfpga */

@@ -46,11 +46,6 @@ project("OpenFPGA-tool-suites" C CXX)
 
 # Windows fixes
 if (MSVC)
-    add_compile_options(
-        /Uisdigit
-        /Uisxdigit
-    )
-
     add_compile_definitions(
         NOMINMAX
         _CRT_SECURE_NO_WARNINGS

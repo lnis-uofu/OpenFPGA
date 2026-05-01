@@ -5,7 +5,7 @@
  * - repack : create physical pbs and redo packing
  *******************************************************************/
 #include "openfpga_bitstream_command.h"
-#include "openfpga_windows_compatibility.h"
+
 #include "openfpga_bitstream_command_template.h"
 
 /* begin namespace openfpga */
