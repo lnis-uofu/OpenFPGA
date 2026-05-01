@@ -1108,7 +1108,7 @@ def run_netlists_verification(exit_if_fail=True):
     tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
-    
+
     make_iverilog_includes_relative("./SRC/%s_include_netlists.v" % args.top_module)
     make_iverilog_includes_relative("./SRC/fabric_netlists.v")
 
@@ -1124,7 +1124,7 @@ def run_netlists_verification(exit_if_fail=True):
     # Add source directory to the include dir
     command += ["-I./SRC"]
     command += ["-I."]
-    
+
     command += ["./SRC/%s_include_netlists.v" % args.top_module]
 
     cell_lib_dir = os.path.join(
