@@ -171,12 +171,45 @@ def remove_run_dir():
     try:
         for eachdir in remove_dir:
             logger.info("Removing run_dir %s" % (eachdir))
-            if os.path.exists("latest"):
+            if os.path.islink("latest"):
                 if eachdir == os.readlink("latest"):
                     remove_dir += ["latest"]
+            elif os.path.isfile("latest_run.txt"):
+                with open("latest_run.txt", encoding="utf-8") as fp:
+                    if eachdir == fp.read().strip():
+                        remove_dir += ["latest_run.txt"]
             shutil.rmtree(eachdir, ignore_errors=True)
     except:
         logger.exception("Failed to remove %s run directory" % (eachdir or "Unknown"))
+
+
+def remove_path(path):
+    if os.path.islink(path) or os.path.isfile(path):
+        os.remove(path)
+    elif os.path.isdir(path):
+        shutil.rmtree(path)
+
+
+def update_latest_run_dir(curr_run_dir):
+    """
+    Update the latest run pointer.
+
+    Prefer a symlink on platforms where it is supported.
+    Fall back to a lightweight text marker on Windows or restricted systems.
+    """
+    if os.path.exists("latest") or os.path.islink("latest"):
+        remove_path("latest")
+
+    try:
+        os.symlink(curr_run_dir, "latest", target_is_directory=True)
+    except (OSError, NotImplementedError) as e:
+        logger.warning(
+            'Could not create symlink "latest" -> "%s"; writing latest_run.txt instead: %s',
+            curr_run_dir,
+            e,
+        )
+        with open("latest_run.txt", "w", encoding="utf-8") as fp:
+            fp.write(curr_run_dir + "\n")
 
 
 def generate_each_task_actions(taskname):
@@ -228,9 +261,7 @@ def generate_each_task_actions(taskname):
     )
     try:
         os.mkdir(curr_run_dir)
-        if os.path.islink("latest") or os.path.exists("latest"):
-            os.remove("latest")
-        os.symlink(curr_run_dir, "latest")
+        update_latest_run_dir(curr_run_dir)
         logger.info('Created "%s" directory for current task run' % curr_run_dir)
     except:
         logger.exception("")

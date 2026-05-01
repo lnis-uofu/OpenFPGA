@@ -105,8 +105,8 @@ parser.add_argument("--openfpga_arch_file", type=str, help="Openfpga architectur
 parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
-# parser.add_argument('--openfpga_sim_setting_file', type=str,
-#                     help="Openfpga simulation file for shell")
+parser.add_argument("--openfpga_sim_setting_file", type=str,
+                    help="Openfpga simulation file for shell")
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
 parser.add_argument(
@@ -399,6 +399,112 @@ def main():
 # Subroutines starts here
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
+def parse_extra_template_vars(extra_args):
+    """
+    Convert unknown command-line args into template variables.
+
+    Supports both:
+      --KEY VALUE  -> {"KEY": "VALUE"}
+      --FLAG       -> {"FLAG": "1"}
+
+    This preserves Linux behavior while avoiding crashes when task configs
+    intentionally pass flag-style script parameters.
+    """
+    parsed_vars = {}
+    indx = 0
+
+    while indx < len(extra_args):
+        token = extra_args[indx]
+
+        if not token.startswith("--"):
+            logger.warning("Ignoring unexpected extra argument: %s", token)
+            indx += 1
+            continue
+
+        key = token[2:].upper()
+
+        if indx + 1 < len(extra_args) and not extra_args[indx + 1].startswith("--"):
+            parsed_vars[key] = extra_args[indx + 1]
+            indx += 2
+        else:
+            parsed_vars[key] = "1"
+            indx += 1
+
+    return parsed_vars
+
+def normalize_template_path(path):
+    if path is None:
+        return path
+    return os.path.abspath(path).replace("\\", "/")
+
+
+def normalize_iverilog_include_path(path):
+    path = os.path.abspath(path)
+
+    if os.name == "nt":
+        return path
+
+    return path.replace("\\", "/")
+
+
+def make_iverilog_includes_relative(verilog_file):
+    """
+    Make generated Verilog includes portable for Icarus Verilog.
+
+    Icarus on Windows may fail to resolve absolute C:/... paths inside
+    Verilog `include directives. Rewrite known absolute and repo-relative
+    prefixes to include-path-relative filenames.
+
+    For fabric_netlists.v, remove user cell-library includes because those
+    files are passed directly to iverilog as source files.
+    """
+    if not os.path.isfile(verilog_file):
+        return
+
+    with open(verilog_file, "r", encoding="utf-8") as fp:
+        content = fp.read()
+
+    content = content.replace("\\", "/")
+
+    openfpga_root = normalize_template_path(openfpga_base_dir).rstrip("/") + "/"
+    run_dir = normalize_template_path(os.getcwd()).rstrip("/") + "/"
+    cell_lib_dir = normalize_template_path(
+        os.path.join(
+            openfpga_base_dir,
+            "openfpga_flow",
+            "openfpga_cell_library",
+            "verilog",
+        )
+    ).rstrip("/") + "/"
+
+    # Remove more-specific prefixes before broader prefixes.
+    content = content.replace(run_dir, "")
+    content = content.replace(cell_lib_dir, "")
+
+    # Repo-relative prefixes that may remain after removing openfpga_root.
+    rel_run_dir = run_dir.replace(openfpga_root, "")
+    rel_cell_lib_dir = cell_lib_dir.replace(openfpga_root, "")
+
+    content = content.replace(rel_run_dir, "")
+    content = content.replace(rel_cell_lib_dir, "")
+
+    # General fallback: remove repo root last.
+    content = content.replace(openfpga_root, "")
+
+    # The user-defined cell-library files are passed directly to iverilog,
+    # so remove their `include lines from fabric_netlists.v.
+    if os.path.basename(verilog_file) == "fabric_netlists.v":
+        for cell_file in ["dff.v", "latch.v", "gpio.v"]:
+            content = re.sub(
+                r'^\s*`include\s+"' + re.escape(cell_file) + r'"\s*\n',
+                "",
+                content,
+                flags=re.MULTILINE,
+            )
+
+    with open(verilog_file, "w", encoding="utf-8") as fp:
+        fp.write(content)
+
 
 def check_required_file(default_tool_path):
     """Function ensure existace of all required files for the script"""
@@ -480,6 +586,14 @@ def validate_command_line_arguments():
     args.openfpga_arch_file = os.path.abspath(args.openfpga_arch_file)
     if not os.path.isfile(args.openfpga_arch_file):
         clean_up_and_exit("OpenFPGA architecture file not found. -%s" % args.openfpga_arch_file)
+
+    if args.openfpga_sim_setting_file:
+        args.openfpga_sim_setting_file = os.path.abspath(args.openfpga_sim_setting_file)
+        if not os.path.isfile(args.openfpga_sim_setting_file):
+            clean_up_and_exit(
+                "OpenFPGA simulation setting file not found. -%s"
+                % args.openfpga_sim_setting_file
+            )
 
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
@@ -588,9 +702,7 @@ def create_yosys_params():
     # Yosys script parameter mapping
     ys_params = script_env_vars["PATH"]
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        ys_params[tmpVar] = OpenFPGAArgs[indx + 1]
+    ys_params.update(parse_extra_template_vars(OpenFPGAArgs))
 
     if not args.verific:
         ys_params["VERILOG_FILES"] = " ".join(
@@ -883,15 +995,21 @@ def run_openfpga_shell():
 
     path_variables = script_env_vars["PATH"]
     path_variables["TOP_MODULE"] = args.top_module
-    path_variables["VPR_ARCH_FILE"] = args.arch_file
-    path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
-    path_variables["VPR_TESTBENCH_BLIF"] = args.top_module + ".blif"
-    path_variables["ACTIVITY_FILE"] = args.top_module + "_ace_out.act"
-    path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + "_output_verilog.v"
+    path_variables["VPR_ARCH_FILE"] = normalize_template_path(args.arch_file)
+    path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path(args.openfpga_arch_file)
+    if args.openfpga_sim_setting_file:
+        path_variables["OPENFPGA_SIM_SETTING_FILE"] = normalize_template_path(
+            args.openfpga_sim_setting_file
+        )
+    path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path(args.top_module + ".blif")
+    path_variables["ACTIVITY_FILE"] = normalize_template_path(args.top_module + "_ace_out.act")
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = normalize_template_path(
+        args.top_module + "_output_verilog.v"
+    )
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        path_variables[tmpVar] = OpenFPGAArgs[indx + 1]
+    extra_template_vars = parse_extra_template_vars(OpenFPGAArgs)
+    for key, value in extra_template_vars.items():
+        path_variables[key] = normalize_template_path(value)
 
     with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))
@@ -985,11 +1103,13 @@ def run_netlists_verification(exit_if_fail=True):
     tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
+    
+    make_iverilog_includes_relative("./SRC/%s_include_netlists.v" % args.top_module)
+    make_iverilog_includes_relative("./SRC/fabric_netlists.v")
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
 
-    command += ["./SRC/%s_include_netlists.v" % args.top_module]
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         command += [tb_top_formal]
@@ -997,7 +1117,23 @@ def run_netlists_verification(exit_if_fail=True):
         command += [tb_top_autochecked]
     # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
     # Add source directory to the include dir
-    command += ["-I", "./SRC"]
+    command += ["-I./SRC"]
+    command += ["-I."]
+    
+    command += ["./SRC/%s_include_netlists.v" % args.top_module]
+
+    cell_lib_dir = os.path.join(
+        openfpga_base_dir,
+        "openfpga_flow",
+        "openfpga_cell_library",
+        "verilog",
+    )
+
+    for cell_file in ["dff.v", "latch.v", "gpio.v"]:
+        command += [
+            normalize_template_path(os.path.join(cell_lib_dir, cell_file))
+        ]
+
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
