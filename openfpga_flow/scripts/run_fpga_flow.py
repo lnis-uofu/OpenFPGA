@@ -986,19 +986,25 @@ def run_netlists_verification(exit_if_fail=True):
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
+    command += ["-I", "./SRC"]  # Add include path first
     
-    # Include fabric netlists first
+    # Always include fabric and output verilog
     command += ["./SRC/fabric_netlists.v"]
+    command += ["./SRC/%s_output_verilog.v" % args.top_module]
     
-    # Include the design netlists (which includes the testbench files via `include directives)
-    command += ["./SRC/%s_include_netlists.v" % args.top_module]
+    # Conditionally include formal verification files
+    if args.vpr_fpga_verilog_formal_verification_top_netlist:
+        command += ["./SRC/%s_top_formal_verification.v" % args.top_module]
+        command += ["./SRC/%s_formal_random_top_tb.v" % args.top_module]
+    else:
+        command += ["./SRC/%s_include_netlists.v" % args.top_module]
     
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
-    command += ["-I", "./SRC"]
+    
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
