@@ -105,8 +105,9 @@ parser.add_argument("--openfpga_arch_file", type=str, help="Openfpga architectur
 parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
-parser.add_argument("--openfpga_sim_setting_file", type=str,
-                    help="Openfpga simulation file for shell")
+parser.add_argument(
+    "--openfpga_sim_setting_file", type=str, help="Openfpga simulation file for shell"
+)
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
 parser.add_argument(
@@ -399,6 +400,7 @@ def main():
 # Subroutines starts here
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
+
 def parse_extra_template_vars(extra_args):
     """
     Convert unknown command-line args into template variables.
@@ -431,6 +433,7 @@ def parse_extra_template_vars(extra_args):
             indx += 1
 
     return parsed_vars
+
 
 def normalize_template_path(path):
     if path is None:
@@ -468,14 +471,17 @@ def make_iverilog_includes_relative(verilog_file):
 
     openfpga_root = normalize_template_path(openfpga_base_dir).rstrip("/") + "/"
     run_dir = normalize_template_path(os.getcwd()).rstrip("/") + "/"
-    cell_lib_dir = normalize_template_path(
-        os.path.join(
-            openfpga_base_dir,
-            "openfpga_flow",
-            "openfpga_cell_library",
-            "verilog",
-        )
-    ).rstrip("/") + "/"
+    cell_lib_dir = (
+        normalize_template_path(
+            os.path.join(
+                openfpga_base_dir,
+                "openfpga_flow",
+                "openfpga_cell_library",
+                "verilog",
+            )
+        ).rstrip("/")
+        + "/"
+    )
 
     # Remove more-specific prefixes before broader prefixes.
     content = content.replace(run_dir, "")
@@ -591,8 +597,7 @@ def validate_command_line_arguments():
         args.openfpga_sim_setting_file = os.path.abspath(args.openfpga_sim_setting_file)
         if not os.path.isfile(args.openfpga_sim_setting_file):
             clean_up_and_exit(
-                "OpenFPGA simulation setting file not found. -%s"
-                % args.openfpga_sim_setting_file
+                "OpenFPGA simulation setting file not found. -%s" % args.openfpga_sim_setting_file
             )
 
     # Filter provided benchmark files
@@ -1130,9 +1135,7 @@ def run_netlists_verification(exit_if_fail=True):
     )
 
     for cell_file in ["dff.v", "latch.v", "gpio.v"]:
-        command += [
-            normalize_template_path(os.path.join(cell_lib_dir, cell_file))
-        ]
+        command += [normalize_template_path(os.path.join(cell_lib_dir, cell_file))]
 
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
