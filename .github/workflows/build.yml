@@ -167,6 +167,7 @@ jobs:
       - name: Create installer
         shell: msys2 {0}
         run: |
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF
           make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
   # This step is adapted from the Yosys MSVC build CI workflow at
