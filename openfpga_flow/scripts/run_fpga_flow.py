@@ -1124,8 +1124,12 @@ def run_netlists_verification(exit_if_fail=True):
     ExecTime["VerificationStart"] = time.time()
     compiled_file = "compiled_" + args.top_module
     # include_netlists = args.top_module+"_include_netlists.v"
-    tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
-    tb_top_formal_non_random = args.top_module + "_top_formal_verification_tb"
+    tb_top_formal_candidates = [
+        args.top_module + "_top_formal_verification_random_tb",
+        args.top_module + "_top_formal_verification_tb",
+        args.top_module + "_formal_random_top_tb",
+        args.top_module + "_formal_verification_tb",
+    ]
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
@@ -1138,15 +1142,20 @@ def run_netlists_verification(exit_if_fail=True):
     command += ["-s"]
 
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
-        if verilog_module_exists(tb_top_formal):
-            command += [tb_top_formal]
-        elif verilog_module_exists(tb_top_formal_non_random):
-            command += [tb_top_formal_non_random]
-        else:
+        tb_top = None
+        for candidate in tb_top_formal_candidates:
+            if verilog_module_exists(candidate):
+                tb_top = candidate
+                break
+
+        if tb_top is None:
             clean_up_and_exit(
-                "Could not find generated formal verification testbench module: "
-                + "%s or %s" % (tb_top_formal, tb_top_formal_non_random)
+                "Could not find generated formal verification testbench module. "
+                + "Checked: "
+                + ", ".join(tb_top_formal_candidates)
             )
+
+        command += [tb_top]
     else:
         command += [tb_top_autochecked]
     # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
