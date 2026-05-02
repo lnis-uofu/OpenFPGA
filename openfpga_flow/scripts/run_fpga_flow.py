@@ -401,16 +401,41 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
+def is_extra_template_key(token):
+    if not token.startswith("--"):
+        return False
+
+    key = token[2:]
+    key_upper = key.upper()
+
+    return (
+        key.startswith("openfpga_")
+        or key_upper.startswith("OPENFPGA_")
+        or key_upper.startswith("YOSYS_")
+        or key_upper
+        in [
+            "TOP",
+            "ACT",
+            "VERILOG",
+            "READ_VERILOG_OPTIONS",
+            "WRITE_UNIQUE_BLOCKS",
+        ]
+    )
+
+
 def parse_extra_template_vars(extra_args):
     """
     Convert unknown command-line args into template variables.
 
-    Supports both:
-      --KEY VALUE  -> {"KEY": "VALUE"}
-      --FLAG       -> {"FLAG": "1"}
+    Supports:
+      --KEY VALUE
+      --KEY value1 value2 ...
+      --KEY --value-starting-with-dash
+      --KEY with no value -> ""
 
-    This preserves Linux behavior while avoiding crashes when task configs
-    intentionally pass flag-style script parameters.
+    Extra template variables are substituted into shell/yosys templates.
+    Therefore, valueless variables should become an empty string rather
+    than "1".
     """
     parsed_vars = {}
     indx = 0
@@ -418,19 +443,20 @@ def parse_extra_template_vars(extra_args):
     while indx < len(extra_args):
         token = extra_args[indx]
 
-        if not token.startswith("--"):
+        if not is_extra_template_key(token):
             logger.warning("Ignoring unexpected extra argument: %s", token)
             indx += 1
             continue
 
         key = token[2:].upper()
+        indx += 1
 
-        if indx + 1 < len(extra_args) and not extra_args[indx + 1].startswith("--"):
-            parsed_vars[key] = extra_args[indx + 1]
-            indx += 2
-        else:
-            parsed_vars[key] = "1"
+        values = []
+        while indx < len(extra_args) and not is_extra_template_key(extra_args[indx]):
+            values.append(extra_args[indx])
             indx += 1
+
+        parsed_vars[key] = " ".join(values)
 
     return parsed_vars
 
