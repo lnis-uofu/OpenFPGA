@@ -512,6 +512,26 @@ def make_iverilog_includes_relative(verilog_file):
         fp.write(content)
 
 
+def verilog_module_exists(module_name):
+    module_pattern = re.compile(
+        r"^\s*module\s+" + re.escape(module_name) + r"\b",
+        re.MULTILINE,
+    )
+
+    verilog_files = glob.glob("./SRC/**/*.v", recursive=True)
+    verilog_files += glob.glob("./*.v")
+
+    for verilog_file in verilog_files:
+        if not os.path.isfile(verilog_file):
+            continue
+
+        with open(verilog_file, "r", encoding="utf-8") as fp:
+            if module_pattern.search(fp.read()):
+                return True
+
+    return False
+
+
 def check_required_file(default_tool_path):
     """Function ensure existace of all required files for the script"""
     files_dict = {
@@ -1105,6 +1125,7 @@ def run_netlists_verification(exit_if_fail=True):
     compiled_file = "compiled_" + args.top_module
     # include_netlists = args.top_module+"_include_netlists.v"
     tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
+    tb_top_formal_non_random = args.top_module + "_top_formal_verification_tb"
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
@@ -1115,8 +1136,17 @@ def run_netlists_verification(exit_if_fail=True):
     command += ["-o", compiled_file]
 
     command += ["-s"]
+
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
-        command += [tb_top_formal]
+        if verilog_module_exists(tb_top_formal):
+            command += [tb_top_formal]
+        elif verilog_module_exists(tb_top_formal_non_random):
+            command += [tb_top_formal_non_random]
+        else:
+            clean_up_and_exit(
+                "Could not find generated formal verification testbench module: "
+                + "%s or %s" % (tb_top_formal, tb_top_formal_non_random)
+            )
     else:
         command += [tb_top_autochecked]
     # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
