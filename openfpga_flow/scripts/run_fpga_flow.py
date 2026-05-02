@@ -512,6 +512,32 @@ def make_iverilog_includes_relative(verilog_file):
         fp.write(content)
 
 
+def find_verilog_module(module_candidates):
+    module_patterns = {
+        module_name: re.compile(
+            r"^\s*module\s+" + re.escape(module_name) + r"\b",
+            re.MULTILINE,
+        )
+        for module_name in module_candidates
+    }
+
+    verilog_files = glob.glob("./SRC/**/*.v", recursive=True)
+    verilog_files += glob.glob("./*.v")
+
+    for verilog_file in verilog_files:
+        if not os.path.isfile(verilog_file):
+            continue
+
+        with open(verilog_file, "r", encoding="utf-8") as fp:
+            content = fp.read()
+
+        for module_name, module_pattern in module_patterns.items():
+            if module_pattern.search(content):
+                return module_name
+
+    return None
+
+
 def verilog_module_exists(module_name):
     module_pattern = re.compile(
         r"^\s*module\s+" + re.escape(module_name) + r"\b",
@@ -1130,7 +1156,10 @@ def run_netlists_verification(exit_if_fail=True):
         args.top_module + "_formal_random_top_tb",
         args.top_module + "_formal_verification_tb",
     ]
-    tb_top_autochecked = args.top_module + "_autocheck_top_tb"
+
+    tb_top_autochecked_candidates = [
+        args.top_module + "_autocheck_top_tb",
+    ]
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
     make_iverilog_includes_relative("./SRC/%s_include_netlists.v" % args.top_module)
@@ -1142,22 +1171,23 @@ def run_netlists_verification(exit_if_fail=True):
     command += ["-s"]
 
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
-        tb_top = None
-        for candidate in tb_top_formal_candidates:
-            if verilog_module_exists(candidate):
-                tb_top = candidate
-                break
-
+        tb_top = find_verilog_module(tb_top_formal_candidates)
         if tb_top is None:
             clean_up_and_exit(
                 "Could not find generated formal verification testbench module. "
                 + "Checked: "
                 + ", ".join(tb_top_formal_candidates)
             )
-
         command += [tb_top]
     else:
-        command += [tb_top_autochecked]
+        tb_top = find_verilog_module(tb_top_autochecked_candidates)
+        if tb_top is None:
+            clean_up_and_exit(
+                "Could not find generated autocheck testbench module. "
+                + "Checked: "
+                + ", ".join(tb_top_autochecked_candidates)
+            )
+        command += [tb_top]
     # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
     # Add source directory to the include dir
     command += ["-I./SRC"]
