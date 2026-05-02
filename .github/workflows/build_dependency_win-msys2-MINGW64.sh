@@ -8,6 +8,7 @@
 # Latest gcc-16 is not yet stable. Pacman can only install the rolling version. So comment it out
 #pacman -Syu --noconfirm
 
+# This is for code compilation
 pacman -S --noconfirm --needed \
     autoconf \
     automake \
@@ -58,7 +59,14 @@ pacman -S --noconfirm --needed \
     openssl-devel \
     mingw-w64-x86_64-zlib \
     mingw-w64-x86_64-graphviz \
+    mingw-w64-x86_64-qt5 \
+    mingw-w64-x86_64-qt-installer-framework \
     mingw-w64-x86_64-openssl
+
+# This is for openfpga regression tests
+pacman -S --noconfirm --needed \
+    mingw-w64-x86_64-gtkwave \
+    mingw-w64-x86_64-iverilog
 
 # Yosys is still based on this version of gcc
 # Install fixed GCC 15.0.1 tools from MSYS2 archive
