@@ -441,15 +441,6 @@ def normalize_template_path(path):
     return os.path.abspath(path).replace("\\", "/")
 
 
-def normalize_iverilog_include_path(path):
-    path = os.path.abspath(path)
-
-    if os.name == "nt":
-        return path
-
-    return path.replace("\\", "/")
-
-
 def make_iverilog_includes_relative(verilog_file):
     """
     Make generated Verilog includes portable for Icarus Verilog.
@@ -462,7 +453,7 @@ def make_iverilog_includes_relative(verilog_file):
     files are passed directly to iverilog as source files.
     """
     if not os.path.isfile(verilog_file):
-        return
+        return []
 
     with open(verilog_file, "r", encoding="utf-8") as fp:
         content = fp.read()
@@ -483,36 +474,93 @@ def make_iverilog_includes_relative(verilog_file):
         + "/"
     )
 
-    # Remove more-specific prefixes before broader prefixes.
     content = content.replace(run_dir, "")
     content = content.replace(cell_lib_dir, "")
 
-    # Repo-relative prefixes that may remain after removing openfpga_root.
     rel_run_dir = run_dir.replace(openfpga_root, "")
     rel_cell_lib_dir = cell_lib_dir.replace(openfpga_root, "")
 
     content = content.replace(rel_run_dir, "")
     content = content.replace(rel_cell_lib_dir, "")
-
-    # General fallback: remove repo root last.
     content = content.replace(openfpga_root, "")
 
-    # The user-defined cell-library files are passed directly to iverilog,
-    # so remove their `include lines from fabric_netlists.v.
+    user_cell_files = []
+
     if os.path.basename(verilog_file) == "fabric_netlists.v":
-        for cell_file in ["dff.v", "latch.v", "gpio.v"]:
-            content = re.sub(
-                r'^\s*`include\s+"' + re.escape(cell_file) + r'"\s*\n',
-                "",
-                content,
-                flags=re.MULTILINE,
+        include_re = re.compile(r'^\s*`include\s+"([^"]+)"\s*\n', re.MULTILINE)
+
+        def replace_user_cell_include(match):
+            include_path = match.group(1).replace("\\", "/")
+            include_base = os.path.basename(include_path)
+            cell_file = os.path.join(
+                openfpga_base_dir,
+                "openfpga_flow",
+                "openfpga_cell_library",
+                "verilog",
+                include_base,
             )
+
+            if os.path.isfile(cell_file):
+                user_cell_files.append(normalize_template_path(cell_file))
+                return ""
+
+            return match.group(0)
+
+        content = include_re.sub(replace_user_cell_include, content)
 
     with open(verilog_file, "w", encoding="utf-8") as fp:
         fp.write(content)
 
+    return user_cell_files
 
-def find_verilog_module(module_candidates):
+
+def collect_included_verilog_files(root_file):
+    include_re = re.compile(r'^\s*`include\s+"([^"]+)"', re.MULTILINE)
+    search_dirs = [".", "./SRC"]
+    seen = set()
+    ordered_files = []
+
+    def resolve_include(include_path):
+        include_path = include_path.replace("\\", "/")
+
+        candidates = []
+
+        if os.path.isabs(include_path):
+            candidates.append(include_path)
+        else:
+            candidates.append(include_path)
+            for search_dir in search_dirs:
+                candidates.append(os.path.join(search_dir, include_path))
+
+        for candidate in candidates:
+            candidate = os.path.normpath(candidate)
+            if os.path.isfile(candidate):
+                return candidate
+
+        return None
+
+    def visit(verilog_file):
+        verilog_file = os.path.normpath(verilog_file)
+
+        if verilog_file in seen or not os.path.isfile(verilog_file):
+            return
+
+        seen.add(verilog_file)
+        ordered_files.append(verilog_file)
+
+        with open(verilog_file, "r", encoding="utf-8") as fp:
+            content = fp.read()
+
+        for include_path in include_re.findall(content):
+            resolved_file = resolve_include(include_path)
+            if resolved_file:
+                visit(resolved_file)
+
+    visit(root_file)
+    return ordered_files
+
+
+def find_verilog_module(module_candidates, verilog_files):
     module_patterns = {
         module_name: re.compile(
             r"^\s*module\s+" + re.escape(module_name) + r"\b",
@@ -520,9 +568,6 @@ def find_verilog_module(module_candidates):
         )
         for module_name in module_candidates
     }
-
-    verilog_files = glob.glob("./SRC/**/*.v", recursive=True)
-    verilog_files += glob.glob("./*.v")
 
     for verilog_file in verilog_files:
         if not os.path.isfile(verilog_file):
@@ -536,26 +581,6 @@ def find_verilog_module(module_candidates):
                 return module_name
 
     return None
-
-
-def verilog_module_exists(module_name):
-    module_pattern = re.compile(
-        r"^\s*module\s+" + re.escape(module_name) + r"\b",
-        re.MULTILINE,
-    )
-
-    verilog_files = glob.glob("./SRC/**/*.v", recursive=True)
-    verilog_files += glob.glob("./*.v")
-
-    for verilog_file in verilog_files:
-        if not os.path.isfile(verilog_file):
-            continue
-
-        with open(verilog_file, "r", encoding="utf-8") as fp:
-            if module_pattern.search(fp.read()):
-                return True
-
-    return False
 
 
 def check_required_file(default_tool_path):
@@ -1162,8 +1187,12 @@ def run_netlists_verification(exit_if_fail=True):
     ]
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
-    make_iverilog_includes_relative("./SRC/%s_include_netlists.v" % args.top_module)
-    make_iverilog_includes_relative("./SRC/fabric_netlists.v")
+    include_netlists_file = "./SRC/%s_include_netlists.v" % args.top_module
+
+    make_iverilog_includes_relative(include_netlists_file)
+    user_cell_files = make_iverilog_includes_relative("./SRC/fabric_netlists.v")
+
+    included_verilog_files = collect_included_verilog_files(include_netlists_file)
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
@@ -1171,7 +1200,7 @@ def run_netlists_verification(exit_if_fail=True):
     command += ["-s"]
 
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
-        tb_top = find_verilog_module(tb_top_formal_candidates)
+        tb_top = find_verilog_module(tb_top_formal_candidates, included_verilog_files)
         if tb_top is None:
             clean_up_and_exit(
                 "Could not find generated formal verification testbench module. "
@@ -1180,7 +1209,7 @@ def run_netlists_verification(exit_if_fail=True):
             )
         command += [tb_top]
     else:
-        tb_top = find_verilog_module(tb_top_autochecked_candidates)
+        tb_top = find_verilog_module(tb_top_autochecked_candidates, included_verilog_files)
         if tb_top is None:
             clean_up_and_exit(
                 "Could not find generated autocheck testbench module. "
@@ -1193,17 +1222,10 @@ def run_netlists_verification(exit_if_fail=True):
     command += ["-I./SRC"]
     command += ["-I."]
 
-    command += ["./SRC/%s_include_netlists.v" % args.top_module]
+    command += [include_netlists_file]
 
-    cell_lib_dir = os.path.join(
-        openfpga_base_dir,
-        "openfpga_flow",
-        "openfpga_cell_library",
-        "verilog",
-    )
-
-    for cell_file in ["dff.v", "latch.v", "gpio.v"]:
-        command += [normalize_template_path(os.path.join(cell_lib_dir, cell_file))]
+    for cell_file in user_cell_files:
+        command += [cell_file]
 
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
