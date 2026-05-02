@@ -162,6 +162,10 @@ jobs:
       - name: Quick Test
         shell: bash
         run: |
+          echo "==== Activate python3 virtual environment ===="
+          source myenv/bin/activate
+          python -c "import yaml; print('Installed')"      
+          echo "==== Run a quick test ===="
           python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
 
       - name: Create installer
