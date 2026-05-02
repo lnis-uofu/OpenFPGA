@@ -164,6 +164,11 @@ jobs:
         run: |
           python3 openfpga_flow/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
 
+      - name: Create installer
+        shell: msys2 {0}
+        run: |
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+
   # This step is adapted from the Yosys MSVC build CI workflow at
   #     http://github.com/YosysHQ/yosys/blob/2dc69a75783b00e151e500d036c7bf4add26a93b/.github/workflows/extra-builds.yml
   yosys-win-vs-prep:
