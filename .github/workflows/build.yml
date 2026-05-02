@@ -93,7 +93,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF -DVPR_ENABLE_INTERCHANGE=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
