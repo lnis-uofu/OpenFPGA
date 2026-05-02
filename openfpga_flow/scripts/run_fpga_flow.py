@@ -409,9 +409,9 @@ def is_extra_template_key(token):
     key_upper = key.upper()
 
     return (
-        key.startswith("openfpga_")
-        or key_upper.startswith("OPENFPGA_")
+        key_upper.startswith("OPENFPGA_")
         or key_upper.startswith("YOSYS_")
+        or key_upper.startswith("VPR_")
         or key_upper
         in [
             "TOP",
@@ -419,6 +419,8 @@ def is_extra_template_key(token):
             "VERILOG",
             "READ_VERILOG_OPTIONS",
             "WRITE_UNIQUE_BLOCKS",
+            "READ_UNIQUE_BLOCKS",
+            "EXTERNAL_FABRIC_KEY_FILE",
         ]
     )
 
