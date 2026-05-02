@@ -1013,8 +1013,7 @@ def run_openfpga_shell():
     )
 
     extra_template_vars = parse_extra_template_vars(OpenFPGAArgs)
-    for key, value in extra_template_vars.items():
-        path_variables[key] = normalize_template_path(value)
+    path_variables.update(extra_template_vars)
 
     with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))
