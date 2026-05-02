@@ -88,7 +88,7 @@ jobs:
 #            cxx: g++
 #            os: UCRT64
 #            prefix: ucrt64
-          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64)"
+          - name: "Installer (GCC, Windows Msys2-MINGW64)"
             cc: gcc
             cxx: g++
             os: MINGW64
