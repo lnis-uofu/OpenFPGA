@@ -162,7 +162,7 @@ jobs:
       - name: Quick Test
         shell: bash
         run: |
-          python3 openfpga_flow/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
+          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
 
       - name: Create installer
         shell: msys2 {0}
