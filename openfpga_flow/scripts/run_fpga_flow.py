@@ -1278,10 +1278,29 @@ def run_netlists_verification(exit_if_fail=True):
     for cell_file in user_cell_files:
         command += [cell_file]
 
-    run_command("iverilog_verification", "iverilog_output.txt", command)
+    iverilog_output = run_command(
+        "iverilog_verification",
+        "iverilog_output.txt",
+        command,
+        exit_if_fail=exit_if_fail,
+    )
+
+    if not os.path.isfile(compiled_file):
+        if exit_if_fail:
+            clean_up_and_exit("Icarus did not produce compiled simulation output")
+        logger.warning("Skipping VVP verification because Icarus did not produce %s", compiled_file)
+        ExecTime["VerificationEnd"] = time.time()
+        return
 
     vvp_command = ["vvp", compiled_file]
-    output = run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
+
+    output = run_command(
+        "vvp_verification",
+        "vvp_sim_output.txt",
+        vvp_command,
+        exit_if_fail=exit_if_fail,
+    )
+
     if "Succeed" in output:
         logger.info("VVP Simulation Successful")
     else:
