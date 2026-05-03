@@ -1,5 +1,8 @@
 #ifndef OPENFPGA_SETUP_COMMAND_TEMPLATE_H
 #define OPENFPGA_SETUP_COMMAND_TEMPLATE_H
+
+#include "openfpga_windows_compatibility.h"
+
 /********************************************************************
  * Add commands to the OpenFPGA shell interface,
  * in purpose of setting up OpenFPGA core engine, including:

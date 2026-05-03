@@ -1,5 +1,8 @@
 #ifndef OPENFPGA_BITSTREAM_COMMAND_TEMPLATE_H
 #define OPENFPGA_BITSTREAM_COMMAND_TEMPLATE_H
+
+#include "openfpga_windows_compatibility.h"
+
 /********************************************************************
  * Add commands to the OpenFPGA shell interface,
  * in purpose of generate Verilog netlists modeling the full FPGA fabric
