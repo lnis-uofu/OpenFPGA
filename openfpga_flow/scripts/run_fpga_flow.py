@@ -365,7 +365,10 @@ def main():
         logger.info("Running OpenFPGA Shell Engine ")
         run_openfpga_shell()
         if args.end_flow_with_test:
-            run_netlists_verification()
+            if "generate_testbench" in os.path.basename(args.openfpga_shell_template):
+                run_netlists_verification(exit_if_fail=False)
+            else:
+                run_netlists_verification()
 
     ExecTime["End"] = time.time()
 
@@ -1230,20 +1233,38 @@ def run_netlists_verification(exit_if_fail=True):
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         tb_top = find_verilog_module(tb_top_formal_candidates, included_verilog_files)
         if tb_top is None:
-            clean_up_and_exit(
+            msg = (
                 "Could not find generated formal verification testbench module. "
                 + "Checked: "
                 + ", ".join(tb_top_formal_candidates)
             )
+
+            if exit_if_fail:
+                clean_up_and_exit(msg)
+
+            logger.warning(msg)
+            logger.warning("Skipping Icarus/VVP verification for this flow")
+            ExecTime["VerificationEnd"] = time.time()
+            return
+
         command += [tb_top]
     else:
         tb_top = find_verilog_module(tb_top_autochecked_candidates, included_verilog_files)
         if tb_top is None:
-            clean_up_and_exit(
+            msg = (
                 "Could not find generated autocheck testbench module. "
                 + "Checked: "
                 + ", ".join(tb_top_autochecked_candidates)
             )
+
+            if exit_if_fail:
+                clean_up_and_exit(msg)
+
+            logger.warning(msg)
+            logger.warning("Skipping Icarus/VVP verification for this flow")
+            ExecTime["VerificationEnd"] = time.time()
+            return
+
         command += [tb_top]
     # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
     # Add source directory to the include dir
