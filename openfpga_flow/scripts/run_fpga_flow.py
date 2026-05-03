@@ -105,9 +105,7 @@ parser.add_argument("--openfpga_arch_file", type=str, help="Openfpga architectur
 parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
-parser.add_argument(
-    "--openfpga_sim_setting_file", type=str, help="Openfpga simulation file for shell"
-)
+parser.add_argument('--openfpga_sim_setting_file', type=str, help="Openfpga simulation file for shell")
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
 parser.add_argument(
@@ -365,10 +363,7 @@ def main():
         logger.info("Running OpenFPGA Shell Engine ")
         run_openfpga_shell()
         if args.end_flow_with_test:
-            if "generate_testbench" in os.path.basename(args.openfpga_shell_template):
-                run_netlists_verification(exit_if_fail=False)
-            else:
-                run_netlists_verification()
+            run_netlists_verification()
 
     ExecTime["End"] = time.time()
 
@@ -404,216 +399,93 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
-def is_extra_template_key(token):
-    if not token.startswith("--"):
-        return False
-
-    key = token[2:]
-    key_upper = key.upper()
-
-    return (
-        key_upper.startswith("OPENFPGA_")
-        or key_upper.startswith("YOSYS_")
-        or key_upper.startswith("VPR_")
-        or key_upper
-        in [
-            "TOP",
-            "ACT",
-            "VERILOG",
-            "READ_VERILOG_OPTIONS",
-            "WRITE_UNIQUE_BLOCKS",
-            "READ_UNIQUE_BLOCKS",
-            "EXTERNAL_FABRIC_KEY_FILE",
-            "BOUNDARY_TIMING_FILE",
-            "INPUT_SDC",
-        ]
-    )
-
-
-def parse_extra_template_vars(extra_args):
-    """
-    Convert unknown command-line args into template variables.
-
-    Supports:
-      --KEY VALUE
-      --KEY value1 value2 ...
-      --KEY --value-starting-with-dash
-      --KEY with no value -> ""
-
-    Extra template variables are substituted into shell/yosys templates.
-    Therefore, valueless variables should become an empty string rather
-    than "1".
-    """
-    parsed_vars = {}
-    indx = 0
-
-    while indx < len(extra_args):
-        token = extra_args[indx]
-
-        if not is_extra_template_key(token):
-            logger.warning("Ignoring unexpected extra argument: %s", token)
-            indx += 1
-            continue
-
-        key = token[2:].upper()
-        indx += 1
-
-        values = []
-        while indx < len(extra_args) and not is_extra_template_key(extra_args[indx]):
-            values.append(extra_args[indx])
-            indx += 1
-
-        parsed_vars[key] = " ".join(values)
-
-    return parsed_vars
-
-
 def normalize_template_path(path):
     if path is None:
         return path
     return os.path.abspath(path).replace("\\", "/")
 
 
-def make_iverilog_includes_relative(verilog_file):
+def prepare_windows_iverilog_netlists(include_netlists_file):
     """
-    Make generated Verilog includes portable for Icarus Verilog.
+    Windows-only fix for Icarus Verilog include resolution.
 
-    Icarus on Windows may fail to resolve absolute C:/... paths inside
-    Verilog `include directives. Rewrite known absolute and repo-relative
-    prefixes to include-path-relative filenames.
-
-    For fabric_netlists.v, remove user cell-library includes because those
-    files are passed directly to iverilog as source files.
+    Keep Linux behavior unchanged. On Windows, normalize generated Verilog
+    include paths and pass OpenFPGA cell-library files directly to iverilog.
     """
-    if not os.path.isfile(verilog_file):
+    if os.name != "nt":
         return []
 
-    with open(verilog_file, "r", encoding="utf-8") as fp:
-        content = fp.read()
-
-    content = content.replace("\\", "/")
-
-    openfpga_root = normalize_template_path(openfpga_base_dir).rstrip("/") + "/"
-    run_dir = normalize_template_path(os.getcwd()).rstrip("/") + "/"
-    cell_lib_dir = (
-        normalize_template_path(
-            os.path.join(
-                openfpga_base_dir,
-                "openfpga_flow",
-                "openfpga_cell_library",
-                "verilog",
-            )
-        ).rstrip("/")
-        + "/"
+    cell_lib_dir = os.path.join(
+        openfpga_base_dir,
+        "openfpga_flow",
+        "openfpga_cell_library",
+        "verilog",
     )
-
-    content = content.replace(run_dir, "")
-    content = content.replace(cell_lib_dir, "")
-
-    rel_run_dir = run_dir.replace(openfpga_root, "")
-    rel_cell_lib_dir = cell_lib_dir.replace(openfpga_root, "")
-
-    content = content.replace(rel_run_dir, "")
-    content = content.replace(rel_cell_lib_dir, "")
-    content = content.replace(openfpga_root, "")
+    cell_lib_dir_norm = normalize_template_path(cell_lib_dir).rstrip("/") + "/"
+    run_dir_norm = normalize_template_path(os.getcwd()).rstrip("/") + "/"
 
     user_cell_files = []
+    cell_file_names = {"dff.v", "latch.v", "gpio.v"}
 
-    if os.path.basename(verilog_file) == "fabric_netlists.v":
-        include_re = re.compile(r'^\s*`include\s+"([^"]+)"\s*\n', re.MULTILINE)
-
-        def replace_user_cell_include(match):
-            include_path = match.group(1).replace("\\", "/")
-            include_base = os.path.basename(include_path)
-            cell_file = os.path.join(
-                openfpga_base_dir,
-                "openfpga_flow",
-                "openfpga_cell_library",
-                "verilog",
-                include_base,
-            )
-
-            if os.path.isfile(cell_file):
-                user_cell_files.append(normalize_template_path(cell_file))
-                return ""
-
-            return match.group(0)
-
-        content = include_re.sub(replace_user_cell_include, content)
-
-    with open(verilog_file, "w", encoding="utf-8") as fp:
-        fp.write(content)
-
-    return user_cell_files
-
-
-def collect_included_verilog_files(root_file):
-    include_re = re.compile(r'^\s*`include\s+"([^"]+)"', re.MULTILINE)
-    search_dirs = [".", "./SRC"]
-    seen = set()
-    ordered_files = []
-
-    def resolve_include(include_path):
-        include_path = include_path.replace("\\", "/")
-
-        candidates = []
-
-        if os.path.isabs(include_path):
-            candidates.append(include_path)
-        else:
-            candidates.append(include_path)
-            for search_dir in search_dirs:
-                candidates.append(os.path.join(search_dir, include_path))
-
-        for candidate in candidates:
-            candidate = os.path.normpath(candidate)
-            if os.path.isfile(candidate):
-                return candidate
-
-        return None
-
-    def visit(verilog_file):
-        verilog_file = os.path.normpath(verilog_file)
-
-        if verilog_file in seen or not os.path.isfile(verilog_file):
-            return
-
-        seen.add(verilog_file)
-        ordered_files.append(verilog_file)
-
-        with open(verilog_file, "r", encoding="utf-8") as fp:
-            content = fp.read()
-
-        for include_path in include_re.findall(content):
-            resolved_file = resolve_include(include_path)
-            if resolved_file:
-                visit(resolved_file)
-
-    visit(root_file)
-    return ordered_files
-
-
-def find_verilog_module(module_candidates, verilog_files):
-    module_patterns = {
-        module_name: re.compile(
-            r"^\s*module\s+" + re.escape(module_name) + r"\b",
-            re.MULTILINE,
-        )
-        for module_name in module_candidates
-    }
-
-    for verilog_file in verilog_files:
+    for verilog_file in [include_netlists_file, "./SRC/fabric_netlists.v"]:
         if not os.path.isfile(verilog_file):
             continue
 
         with open(verilog_file, "r", encoding="utf-8") as fp:
             content = fp.read()
 
-        for module_name, module_pattern in module_patterns.items():
-            if module_pattern.search(content):
-                return module_name
+        content = content.replace("\\", "/")
+        content = content.replace(run_dir_norm, "")
+        content = content.replace(cell_lib_dir_norm, "")
 
-    return None
+        if os.path.basename(verilog_file) == "fabric_netlists.v":
+            include_re = re.compile(r'^\s*`include\s+"([^"]+)"\s*\n', re.MULTILINE)
+
+            def remove_cell_include(match):
+                include_path = match.group(1).replace("\\", "/")
+                include_base = os.path.basename(include_path)
+
+                if include_base in cell_file_names:
+                    cell_file = os.path.join(cell_lib_dir, include_base)
+                    if os.path.isfile(cell_file):
+                        normalized_cell_file = normalize_template_path(cell_file)
+                        if normalized_cell_file not in user_cell_files:
+                            user_cell_files.append(normalized_cell_file)
+                        return ""
+
+                return match.group(0)
+
+            content = include_re.sub(remove_cell_include, content)
+
+        with open(verilog_file, "w", encoding="utf-8") as fp:
+            fp.write(content)
+
+    return user_cell_files
+
+
+def update_template_vars_from_extra_args(template_vars):
+    indx = 0
+
+    while indx < len(OpenFPGAArgs):
+        key = OpenFPGAArgs[indx]
+
+        if not key.startswith("--"):
+            logger.warning("Ignoring unexpected extra argument: %s", key)
+            indx += 1
+            continue
+
+        tmpVar = key[2:].upper()
+
+        if indx + 1 >= len(OpenFPGAArgs) or OpenFPGAArgs[indx + 1].startswith("--"):
+            if tmpVar == "TOP":
+                template_vars[tmpVar] = args.top_module
+            else:
+                logger.warning("Ignoring extra argument without value: %s", key)
+            indx += 1
+            continue
+
+        template_vars[tmpVar] = OpenFPGAArgs[indx + 1]
+        indx += 2
 
 
 def check_required_file(default_tool_path):
@@ -701,7 +573,8 @@ def validate_command_line_arguments():
         args.openfpga_sim_setting_file = os.path.abspath(args.openfpga_sim_setting_file)
         if not os.path.isfile(args.openfpga_sim_setting_file):
             clean_up_and_exit(
-                "OpenFPGA simulation setting file not found. -%s" % args.openfpga_sim_setting_file
+                "OpenFPGA simulation setting file not found. -%s"
+                % args.openfpga_sim_setting_file
             )
 
     # Filter provided benchmark files
@@ -811,7 +684,7 @@ def create_yosys_params():
     # Yosys script parameter mapping
     ys_params = script_env_vars["PATH"]
 
-    ys_params.update(parse_extra_template_vars(OpenFPGAArgs))
+    update_template_vars_from_extra_args(ys_params)
 
     if not args.verific:
         ys_params["VERILOG_FILES"] = " ".join(
@@ -1106,18 +979,19 @@ def run_openfpga_shell():
     path_variables["TOP_MODULE"] = args.top_module
     path_variables["VPR_ARCH_FILE"] = normalize_template_path(args.arch_file)
     path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path(args.openfpga_arch_file)
+
     if args.openfpga_sim_setting_file:
         path_variables["OPENFPGA_SIM_SETTING_FILE"] = normalize_template_path(
             args.openfpga_sim_setting_file
         )
+
     path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path(args.top_module + ".blif")
     path_variables["ACTIVITY_FILE"] = normalize_template_path(args.top_module + "_ace_out.act")
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = normalize_template_path(
         args.top_module + "_output_verilog.v"
     )
 
-    extra_template_vars = parse_extra_template_vars(OpenFPGAArgs)
-    path_variables.update(extra_template_vars)
+    update_template_vars_from_extra_args(path_variables)
 
     with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))
@@ -1208,99 +1082,45 @@ def run_netlists_verification(exit_if_fail=True):
     ExecTime["VerificationStart"] = time.time()
     compiled_file = "compiled_" + args.top_module
     # include_netlists = args.top_module+"_include_netlists.v"
-    tb_top_formal_candidates = [
-        args.top_module + "_top_formal_verification_random_tb",
-        args.top_module + "_top_formal_verification_tb",
-        args.top_module + "_formal_random_top_tb",
-        args.top_module + "_formal_verification_tb",
-    ]
-
-    tb_top_autochecked_candidates = [
-        args.top_module + "_autocheck_top_tb",
-    ]
+    tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
+    tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
+    tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
+    tb_top_autochecked = args.top_module + "_autocheck_top_tb"
+
     include_netlists_file = "./SRC/%s_include_netlists.v" % args.top_module
-
-    make_iverilog_includes_relative(include_netlists_file)
-    user_cell_files = make_iverilog_includes_relative("./SRC/fabric_netlists.v")
-
-    included_verilog_files = collect_included_verilog_files(include_netlists_file)
+    user_cell_files = prepare_windows_iverilog_netlists(include_netlists_file)
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
 
-    command += ["-s"]
+    if os.name == "nt":
+        command += ["-s"]
+        if args.vpr_fpga_verilog_formal_verification_top_netlist:
+            command += [tb_top_formal]
+        else:
+            command += [tb_top_autochecked]
 
-    if args.vpr_fpga_verilog_formal_verification_top_netlist:
-        tb_top = find_verilog_module(tb_top_formal_candidates, included_verilog_files)
-        if tb_top is None:
-            msg = (
-                "Could not find generated formal verification testbench module. "
-                + "Checked: "
-                + ", ".join(tb_top_formal_candidates)
-            )
-
-            if exit_if_fail:
-                clean_up_and_exit(msg)
-
-            logger.warning(msg)
-            logger.warning("Skipping Icarus/VVP verification for this flow")
-            ExecTime["VerificationEnd"] = time.time()
-            return
-
-        command += [tb_top]
+        command += ["-I./SRC"]
+        command += ["-I."]
+        command += [include_netlists_file]
+        command += user_cell_files
     else:
-        tb_top = find_verilog_module(tb_top_autochecked_candidates, included_verilog_files)
-        if tb_top is None:
-            msg = (
-                "Could not find generated autocheck testbench module. "
-                + "Checked: "
-                + ", ".join(tb_top_autochecked_candidates)
-            )
+        command += [include_netlists_file]
+        command += ["-s"]
+        if args.vpr_fpga_verilog_formal_verification_top_netlist:
+            command += [tb_top_formal]
+        else:
+            command += [tb_top_autochecked]
+        # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
+        # Add source directory to the include dir
+        command += ["-I", "./SRC"]
 
-            if exit_if_fail:
-                clean_up_and_exit(msg)
-
-            logger.warning(msg)
-            logger.warning("Skipping Icarus/VVP verification for this flow")
-            ExecTime["VerificationEnd"] = time.time()
-            return
-
-        command += [tb_top]
-    # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
-    # Add source directory to the include dir
-    command += ["-I./SRC"]
-    command += ["-I."]
-
-    command += [include_netlists_file]
-
-    for cell_file in user_cell_files:
-        command += [cell_file]
-
-    iverilog_output = run_command(
-        "iverilog_verification",
-        "iverilog_output.txt",
-        command,
-        exit_if_fail=exit_if_fail,
-    )
-
-    if not os.path.isfile(compiled_file):
-        if exit_if_fail:
-            clean_up_and_exit("Icarus did not produce compiled simulation output")
-        logger.warning("Skipping VVP verification because Icarus did not produce %s", compiled_file)
-        ExecTime["VerificationEnd"] = time.time()
-        return
+    run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
-
-    output = run_command(
-        "vvp_verification",
-        "vvp_sim_output.txt",
-        vvp_command,
-        exit_if_fail=exit_if_fail,
-    )
-
+    output = run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
     if "Succeed" in output:
         logger.info("VVP Simulation Successful")
     else:
