@@ -425,8 +425,8 @@ def prepare_windows_iverilog_netlists(include_netlists_file):
         "openfpga_cell_library",
         "verilog",
     )
-    cell_lib_dir_norm = normalize_template_path(cell_lib_dir).rstrip("/") + "/"
-    run_dir_norm = normalize_template_path(os.getcwd()).rstrip("/") + "/"
+    cell_lib_dir_norm = normalize_template_path_for_windows(cell_lib_dir).rstrip("/") + "/"
+    run_dir_norm = normalize_template_path_for_windows(os.getcwd()).rstrip("/") + "/"
 
     user_cell_files = []
     cell_file_names = {"dff.v", "latch.v", "gpio.v"}
@@ -452,7 +452,7 @@ def prepare_windows_iverilog_netlists(include_netlists_file):
                 if include_base in cell_file_names:
                     cell_file = os.path.join(cell_lib_dir, include_base)
                     if os.path.isfile(cell_file):
-                        normalized_cell_file = normalize_template_path(cell_file)
+                        normalized_cell_file = normalize_template_path_for_windows(cell_file)
                         if normalized_cell_file not in user_cell_files:
                             user_cell_files.append(normalized_cell_file)
                         return ""
@@ -1097,9 +1097,6 @@ def run_netlists_verification(exit_if_fail=True):
     tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
-
-    tb_top_formal = args.top_module + "_top_formal_verification_random_tb"
-    tb_top_autochecked = args.top_module + "_autocheck_top_tb"
 
     include_netlists_file = "./SRC/%s_include_netlists.v" % args.top_module
     user_cell_files = prepare_windows_iverilog_netlists(include_netlists_file)
