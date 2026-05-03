@@ -338,7 +338,7 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
 endif()
 
 # we will check if yosys already exist. if not then build it
-if (OPENFPGA_WITH_YOSYS)
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
     if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys)
         message(STATUS "Yosys pre-build exist so skipping it")
     else ()

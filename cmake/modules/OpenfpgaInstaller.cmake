@@ -1,7 +1,7 @@
 # Special for Yosys, which does not use CMake to install. Do manual install configuration here
 include(GNUInstallDirs)
 
-if (OPENFPGA_WITH_YOSYS)
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ 
           DESTINATION ${CMAKE_INSTALL_BINDIR}
           COMPONENT openfpga_package
