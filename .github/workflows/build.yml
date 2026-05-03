@@ -262,7 +262,7 @@ jobs:
           ld --version
           echo "==== Checking python3 packages ===="
           source myenv/bin/activate
-          which python3
+          echo "PYTHON_EXEC=$(which python3)" >> $GITHUB_ENV
           python3 --version
           echo "==== Checking yosys packages ===="
           which yosys.exe
@@ -287,9 +287,10 @@ jobs:
         run: |
           echo "==== Activate python3 virtual environment ===="
           source myenv/bin/activate
-          python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
+          echo "==== Use python3 under ${PYTHON_EXEC} ===="
+          python3 -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
           echo "==== Run a quick test ===="
-          python openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
+          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
 
   # This step is adapted from the Yosys MSVC build CI workflow at
   #     http://github.com/YosysHQ/yosys/blob/2dc69a75783b00e151e500d036c7bf4add26a93b/.github/workflows/extra-builds.yml
