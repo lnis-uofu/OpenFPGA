@@ -5,6 +5,7 @@
 
 #include "openfpga_context.h"
 #include "shell.h"
+#include "vpr_types.h"
 
 /********************************************************************
  * This is a shell class built on top of the general-purpose shell
@@ -17,6 +18,9 @@ class OpenfpgaShell {
   OpenfpgaShell();
 
  public: /* Mutators */
+  // Sync the options in VPR setup to the app options in the shell, so that they
+  // can be used by commands in the shell
+
   /* Execute a specific command with options in a line, which is available in
    * the shell Note that running a command will be based on the current status
    * of data storage. The data storage is impacted by previous commands that

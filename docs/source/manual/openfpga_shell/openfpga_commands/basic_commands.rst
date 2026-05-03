@@ -3,6 +3,24 @@
 Basic Commands
 --------------
 
+report_app_option
+~~~~~~~~~~~~~~~~~
+
+  .. option:: --n <option_name>
+
+  This command is used to specify the app option to be reported.
+  The `option_name` is optional, if not specified, all options will be reported.
+  The `option_name` supports glob string.
+
+
+set_app_option
+~~~~~~~~~~~~~~
+
+
+  .. option:: --v <value>
+
+    The value is optional, and it is used to specify the value of the option. If not specified, the current value will be reported.
+
 version
 ~~~~~~~
 
