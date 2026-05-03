@@ -1,0 +1,10 @@
+# Msys2 uses latest python and try without any version requirements here than the default requirements.txt
+envyaml
+humanize
+coloredlogs
+pyverilog
+
+# Python linter and formatter
+click
+black
+pylint

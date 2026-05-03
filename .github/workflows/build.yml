@@ -130,10 +130,9 @@ jobs:
           python3 -m venv myenv
           source myenv/bin/activate
           python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install -r requirements.txt
+          python3 -m pip install -r msys2_requirements.txt
           echo "==== Checking python packages ===="
           python -c "import yaml; print('Installed')"      
-          pip install numpy cython setuptools>=60.0.0
 
       - name: Dump tool versions
         run: |
@@ -163,6 +162,7 @@ jobs:
       - name: Create installer
         shell: msys2 {0}
         run: |
+          make checkout
           make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF
           make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
@@ -229,10 +229,9 @@ jobs:
           python3 -m venv myenv
           source myenv/bin/activate
           python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install -r requirements.txt
+          python3 -m pip install -r msys2_requirements.txt
           echo "==== Checking python packages ===="
           python -c "import yaml; print('Installed')"      
-          pip install numpy cython setuptools>=60.0.0
 
       - name: Dump tool versions
         run: |
