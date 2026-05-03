@@ -163,7 +163,7 @@ jobs:
         shell: msys2 {0}
         run: |
           make checkout
-          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
           make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
       - name: Upload artifact
