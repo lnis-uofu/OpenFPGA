@@ -986,7 +986,9 @@ def run_openfpga_shell():
     path_variables = script_env_vars["PATH"]
     path_variables["TOP_MODULE"] = args.top_module
     path_variables["VPR_ARCH_FILE"] = normalize_template_path_for_windows(args.arch_file)
-    path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path_for_windows(args.openfpga_arch_file)
+    path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path_for_windows(
+        args.openfpga_arch_file
+    )
 
     if args.openfpga_sim_setting_file:
         path_variables["OPENFPGA_SIM_SETTING_FILE"] = normalize_template_path_for_windows(
