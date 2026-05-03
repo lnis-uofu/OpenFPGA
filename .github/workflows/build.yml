@@ -263,6 +263,7 @@ jobs:
           echo "==== Checking python3 packages ===="
           source myenv/bin/activate
           echo "PYTHON_EXEC=$(which python3)" >> $GITHUB_ENV
+          echo "OPENFPGA_PATH=$(pwd)" >> $GITHUB_ENV
           python3 --version
           echo "==== Checking yosys packages ===="
           which yosys.exe
