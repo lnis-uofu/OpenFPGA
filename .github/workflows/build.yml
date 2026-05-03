@@ -68,10 +68,51 @@ jobs:
           fi
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-  # Test the compilation compatibility on Windows
-  win_build:
+  # This step is adapted from the Yosys MSVC build CI workflow at
+  #     http://github.com/YosysHQ/yosys/blob/2dc69a75783b00e151e500d036c7bf4add26a93b/.github/workflows/extra-builds.yml
+  yosys-win-vs-prep:
+    name: Prepare Visual Studio build
+    runs-on: ubuntu-latest
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+          
+      # Force checkout all the submodules recursively as yosys require submodules to be checked out before build MSVC project 
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install dep required by Yosys windows build preparation
+        run: sudo apt-get install bison clang flex libffi-dev libfl-dev libreadline-dev pkg-config tcl-dev zlib1g-dev libgtest-dev libgmock-dev
+#sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+
+      - name: Check tool version
+        run: |
+          bison --version
+          flex --version
+          gcc --version
+
+      # Use -j1 to overwrite the default -j8 in this build.yaml. To ensure the verilog_parser.output can be built successfully 
+      - name: Build
+        run: |
+          cd yosys
+          ls
+          make vcxsrc YOSYS_COMPILER="Visual Studio" VCX_DIR_NAME=yosys-win32-vcxsrc-latest -j1
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vcxsrc
+          path: yosys/yosys-win32-vcxsrc-latest.zip
+
+  # Test the compilation compatibility on Windows
+  win_build:
+    needs: yosys-win-vs-prep
     name: ${{ matrix.config.name }}
     runs-on: windows-latest
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
@@ -121,10 +162,34 @@ jobs:
           cmake --version
           echo "TCL_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}"
 
-      - name: Configure and build with CMake
+      - name: Checkout all the submodules
         shell: powershell
         run: |
           make checkout
+
+      - name: Fetch Yosys MSVC artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: vcxsrc
+          path: yosys/
+
+      - name: Unzip Yosys MSVC artifact
+        run: |
+          cd yosys
+          unzip yosys-win32-vcxsrc-latest.zip
+
+      - name: setup-msbuild for Yosys
+        uses: microsoft/setup-msbuild@v2
+
+      - name: MSBuild for Yosys
+#        working-directory: yosys/yosys-win32-vcxsrc-latest
+        run: |
+          cd yosys/yosys-win32-vcxsrc-latest
+          msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
+
+      - name: Configure and build with CMake
+        shell: powershell
+        run: |
           mkdir build
           cd build
           cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\lib\tcl86.lib -DTCL_INCLUDE_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}\include
