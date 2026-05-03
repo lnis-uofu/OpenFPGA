@@ -424,6 +424,8 @@ def is_extra_template_key(token):
             "WRITE_UNIQUE_BLOCKS",
             "READ_UNIQUE_BLOCKS",
             "EXTERNAL_FABRIC_KEY_FILE",
+            "BOUNDARY_TIMING_FILE",
+            "INPUT_SDC",
         ]
     )
 
