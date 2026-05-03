@@ -40,6 +40,7 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt ${OPENFPGA_WRITE_FABRIC_HIE
 write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_FILE}  \
   --explicit_port_mapping \
   --no_time_stamp \
+  --use_relative_path \
   --little_endian
 
 # Repack the netlist to physical pbs
