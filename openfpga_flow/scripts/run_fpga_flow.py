@@ -106,7 +106,7 @@ parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
 parser.add_argument(
-    '--openfpga_sim_setting_file', type=str, help="Openfpga simulation file for shell"
+    "--openfpga_sim_setting_file", type=str, help="Openfpga simulation file for shell"
 )
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
@@ -401,8 +401,10 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
-def normalize_template_path(path):
+def normalize_template_path_for_windows(path):
     if path is None:
+        return path
+    if os.name != "nt":
         return path
     return os.path.abspath(path).replace("\\", "/")
 
@@ -983,17 +985,21 @@ def run_openfpga_shell():
 
     path_variables = script_env_vars["PATH"]
     path_variables["TOP_MODULE"] = args.top_module
-    path_variables["VPR_ARCH_FILE"] = normalize_template_path(args.arch_file)
-    path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path(args.openfpga_arch_file)
+    path_variables["VPR_ARCH_FILE"] = normalize_template_path_for_windows(args.arch_file)
+    path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path_for_windows(args.openfpga_arch_file)
 
     if args.openfpga_sim_setting_file:
-        path_variables["OPENFPGA_SIM_SETTING_FILE"] = normalize_template_path(
+        path_variables["OPENFPGA_SIM_SETTING_FILE"] = normalize_template_path_for_windows(
             args.openfpga_sim_setting_file
         )
 
-    path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path(args.top_module + ".blif")
-    path_variables["ACTIVITY_FILE"] = normalize_template_path(args.top_module + "_ace_out.act")
-    path_variables["REFERENCE_VERILOG_TESTBENCH"] = normalize_template_path(
+    path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(
+        args.top_module + ".blif"
+    )
+    path_variables["ACTIVITY_FILE"] = normalize_template_path_for_windows(
+        args.top_module + "_ace_out.act"
+    )
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = normalize_template_path_for_windows(
         args.top_module + "_output_verilog.v"
     )
 
