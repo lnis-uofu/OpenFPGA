@@ -272,7 +272,7 @@ jobs:
           make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
       - name: Quick Test
-        shell: bash
+        shell: msys2 {0}
         run: |
           echo "==== Activate python3 virtual environment ===="
           source myenv/bin/activate
