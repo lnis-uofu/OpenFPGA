@@ -105,7 +105,9 @@ parser.add_argument("--openfpga_arch_file", type=str, help="Openfpga architectur
 parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
-parser.add_argument('--openfpga_sim_setting_file', type=str, help="Openfpga simulation file for shell")
+parser.add_argument(
+    '--openfpga_sim_setting_file', type=str, help="Openfpga simulation file for shell"
+)
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
 parser.add_argument(
@@ -573,8 +575,7 @@ def validate_command_line_arguments():
         args.openfpga_sim_setting_file = os.path.abspath(args.openfpga_sim_setting_file)
         if not os.path.isfile(args.openfpga_sim_setting_file):
             clean_up_and_exit(
-                "OpenFPGA simulation setting file not found. -%s"
-                % args.openfpga_sim_setting_file
+                "OpenFPGA simulation setting file not found. -%s" % args.openfpga_sim_setting_file
             )
 
     # Filter provided benchmark files
