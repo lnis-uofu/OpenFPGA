@@ -27,6 +27,7 @@ module sb_5__2_(pReset,
                 right_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_,
                 right_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_,
                 right_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_,
+                right_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_,
                 chany_bottom_in,
                 bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_0_,
                 bottom_left_grid_right_width_0_height_0_subtile_0__pin_O_1_,
@@ -93,6 +94,8 @@ input [0:0] right_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_;
 input [0:0] right_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_;
 //----- INPUT PORTS -----
 input [0:0] right_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_;
+//----- INPUT PORTS -----
+input [0:0] right_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_;
 //----- INPUT PORTS -----
 input [15:0] chany_bottom_in;
 //----- INPUT PORTS -----
@@ -314,99 +317,99 @@ wire [447:0] sb_13__config_group_mem_size448_0_mem_outb;
 // ----- Net source id 0 -----
 // ----- Net sink id 12 -----
 	assign chanx_left_out[15] = chanx_right_in[14];
-// ----- Local connection due to Wire 47 -----
-// ----- Net source id 0 -----
-// ----- Net sink id 1 -----
-	assign chany_top_out[1] = chany_bottom_in[0];
 // ----- Local connection due to Wire 48 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 1 -----
-	assign chany_top_out[2] = chany_bottom_in[1];
+	assign chany_top_out[1] = chany_bottom_in[0];
 // ----- Local connection due to Wire 49 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 1 -----
-	assign chany_top_out[3] = chany_bottom_in[2];
-// ----- Local connection due to Wire 51 -----
+	assign chany_top_out[2] = chany_bottom_in[1];
+// ----- Local connection due to Wire 50 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 2 -----
-	assign chany_top_out[5] = chany_bottom_in[4];
+// ----- Net sink id 1 -----
+	assign chany_top_out[3] = chany_bottom_in[2];
 // ----- Local connection due to Wire 52 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 2 -----
-	assign chany_top_out[6] = chany_bottom_in[5];
+	assign chany_top_out[5] = chany_bottom_in[4];
 // ----- Local connection due to Wire 53 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 2 -----
-	assign chany_top_out[7] = chany_bottom_in[6];
-// ----- Local connection due to Wire 55 -----
+	assign chany_top_out[6] = chany_bottom_in[5];
+// ----- Local connection due to Wire 54 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 3 -----
-	assign chany_top_out[9] = chany_bottom_in[8];
+// ----- Net sink id 2 -----
+	assign chany_top_out[7] = chany_bottom_in[6];
 // ----- Local connection due to Wire 56 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 3 -----
-	assign chany_top_out[10] = chany_bottom_in[9];
+	assign chany_top_out[9] = chany_bottom_in[8];
 // ----- Local connection due to Wire 57 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 3 -----
-	assign chany_top_out[11] = chany_bottom_in[10];
-// ----- Local connection due to Wire 59 -----
+	assign chany_top_out[10] = chany_bottom_in[9];
+// ----- Local connection due to Wire 58 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 4 -----
-	assign chany_top_out[13] = chany_bottom_in[12];
+// ----- Net sink id 3 -----
+	assign chany_top_out[11] = chany_bottom_in[10];
 // ----- Local connection due to Wire 60 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 4 -----
-	assign chany_top_out[14] = chany_bottom_in[13];
+	assign chany_top_out[13] = chany_bottom_in[12];
 // ----- Local connection due to Wire 61 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 4 -----
-	assign chany_top_out[15] = chany_bottom_in[14];
-// ----- Local connection due to Wire 71 -----
+	assign chany_top_out[14] = chany_bottom_in[13];
+// ----- Local connection due to Wire 62 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 5 -----
-	assign chanx_right_out[1] = chanx_left_in[0];
+// ----- Net sink id 4 -----
+	assign chany_top_out[15] = chany_bottom_in[14];
 // ----- Local connection due to Wire 72 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 5 -----
-	assign chanx_right_out[2] = chanx_left_in[1];
+	assign chanx_right_out[1] = chanx_left_in[0];
 // ----- Local connection due to Wire 73 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 5 -----
-	assign chanx_right_out[3] = chanx_left_in[2];
-// ----- Local connection due to Wire 75 -----
+	assign chanx_right_out[2] = chanx_left_in[1];
+// ----- Local connection due to Wire 74 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 6 -----
-	assign chanx_right_out[5] = chanx_left_in[4];
+// ----- Net sink id 5 -----
+	assign chanx_right_out[3] = chanx_left_in[2];
 // ----- Local connection due to Wire 76 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 6 -----
-	assign chanx_right_out[6] = chanx_left_in[5];
+	assign chanx_right_out[5] = chanx_left_in[4];
 // ----- Local connection due to Wire 77 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 6 -----
-	assign chanx_right_out[7] = chanx_left_in[6];
-// ----- Local connection due to Wire 79 -----
+	assign chanx_right_out[6] = chanx_left_in[5];
+// ----- Local connection due to Wire 78 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 7 -----
-	assign chanx_right_out[9] = chanx_left_in[8];
+// ----- Net sink id 6 -----
+	assign chanx_right_out[7] = chanx_left_in[6];
 // ----- Local connection due to Wire 80 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 7 -----
-	assign chanx_right_out[10] = chanx_left_in[9];
+	assign chanx_right_out[9] = chanx_left_in[8];
 // ----- Local connection due to Wire 81 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 7 -----
-	assign chanx_right_out[11] = chanx_left_in[10];
-// ----- Local connection due to Wire 83 -----
+	assign chanx_right_out[10] = chanx_left_in[9];
+// ----- Local connection due to Wire 82 -----
 // ----- Net source id 0 -----
-// ----- Net sink id 8 -----
-	assign chanx_right_out[13] = chanx_left_in[12];
+// ----- Net sink id 7 -----
+	assign chanx_right_out[11] = chanx_left_in[10];
 // ----- Local connection due to Wire 84 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 8 -----
-	assign chanx_right_out[14] = chanx_left_in[13];
+	assign chanx_right_out[13] = chanx_left_in[12];
 // ----- Local connection due to Wire 85 -----
+// ----- Net source id 0 -----
+// ----- Net sink id 8 -----
+	assign chanx_right_out[14] = chanx_left_in[13];
+// ----- Local connection due to Wire 86 -----
 // ----- Net source id 0 -----
 // ----- Net sink id 8 -----
 	assign chanx_right_out[15] = chanx_left_in[14];
