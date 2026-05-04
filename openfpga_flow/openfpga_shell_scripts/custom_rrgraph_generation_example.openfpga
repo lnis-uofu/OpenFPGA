@@ -29,7 +29,10 @@ lut_truth_table_fixup
 #  - Enabled frame view creation to save runtime and memory
 #    Note that this is turned on when bitstream generation
 #    is the ONLY purpose of the flow!!!
-build_fabric --compress_routing --group_config_block --verbose ${OPENFPGA_BUILD_FABRIC_OPTIONS}
+build_fabric --compress_routing \
+  --group_config_block \
+  --write_fabric_key fabric_key_output.txt \
+  --verbose ${OPENFPGA_BUILD_FABRIC_OPTIONS}
 
 # Add a fpga core between fpga top and the underlying modules
 write_gsb_to_xml --exclude_rr_info --unique --file ${OPENFPGA_GSB_DIR} --verbose ${OPENFPGA_WRITE_GSB_OPTION}
@@ -51,6 +54,32 @@ repack
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
 build_architecture_bitstream --no_time_stamp --write_file ${OPENFPGA_INDEPENDENT_BITSTREAM_DIR}/fabric_independent_bitstream.xml
+
+# Build fabric-dependent bitstream
+build_fabric_bitstream --verbose
+
+report_bitstream_distribution --file bitstream_distribution.xml --no_time_stamp --verbose
+
+write_full_testbench \
+  --file ./SRC \
+  --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} \
+  --explicit_port_mapping \
+  --include_signal_init \
+  --bitstream fabric_bitstream.bit \
+  --little_endian
+
+write_preconfigured_fabric_wrapper \
+  --embed_bitstream iverilog \
+  --file ./SRC  \
+  --explicit_port_mapping \
+  --little_endian
+
+write_preconfigured_testbench \
+  --file ./SRC \
+  --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} \
+  --explicit_port_mapping \
+  --use_relative_path \
+  --little_endian
 
 ext_exec --command "${OPENFPGA_OPENFPGA_PATH}/openfpga_flow/scripts/clean_reports.sh ${OPENFPGA_RRGRAPH_OUT_FILE}"
 # ext_exec --command "sed /.*tool_comment.*/<rr_graph schema_file_id=\"\" tool_comment=\"\" tool_name=\"vpr\" tool_version=\"\">#' ${OPENFPGA_RRGRAPH_OUT_FILE}"
