@@ -3,6 +3,7 @@
  *******************************************************************/
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <string>
 
 /* Headers from vtrutil library */
@@ -12,15 +13,56 @@
 
 /* Headers from openfpgautil library */
 #include "bitstream_manager_utils.h"
+#include "bitstream_reorder_map.h"
 #include "build_fabric_bitstream.h"
 #include "build_fabric_bitstream_memory_bank.h"
 #include "decoder_library_utils.h"
 #include "openfpga_decode.h"
+#include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+static void write_fabric_bitstream_to_text_file(
+  const BitstreamManager& bitstream_manager,
+  const FabricBitstream& original_fabric_bitstream,
+  const BitstreamReorderMap& bitstream_reorder_map,
+  const std::string& output_file_name) {
+  if (true == output_file_name.empty()) {
+    VTR_LOG_ERROR(
+      "Received empty file name to output bitstream!\n\tPlease specify a valid "
+      "file name.\n");
+  }
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(output_file_name, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(output_file_name.c_str(), fp);
+
+  size_t num_wls = bitstream_reorder_map.get_wl_address_size();
+  size_t num_bls = bitstream_reorder_map.get_bl_address_size();
+
+  for (size_t wl_index = 0; wl_index < num_wls; wl_index++) {
+    for (size_t bl_index = 0; bl_index < num_bls; bl_index++) {
+      BitstreamReorderBitId reordered_bit_id =
+        bitstream_reorder_map.get_reordered_id_from_wl_bl(wl_index, bl_index);
+      VTR_ASSERT(reordered_bit_id.is_valid());
+      reorder_bit_id_info bit_info =
+        bitstream_reorder_map.get_reorder_bit_id_info(reordered_bit_id);
+      ConfigBitId config_bit_id = bit_info.config_bit_id;
+      if (config_bit_id == ConfigBitId::INVALID()) {
+        fp << '0';
+      } else {
+        fp << bitstream_manager.bit_value(original_fabric_bitstream.config_bit(
+          FabricBitId(static_cast<size_t>(config_bit_id))));
+      }
+    }
+    fp << std::endl;
+  }
+}
 
 /********************************************************************
  * This function aims to build a bitstream for configuration chain-like protocol
@@ -278,6 +320,60 @@ static void rec_build_module_fabric_dependent_memory_bank_bitstream(
     /* Increase the memory index */
     cur_mem_index++;
   }
+}
+
+static void build_fabric_dependent_memory_bank_bitstream_with_reorder(
+  const BitstreamManager& bitstream_manager,
+  const BitstreamReorderMap& bitstream_reorder_map,
+  FabricBitstream& fabric_bitstream,
+  const FabricBitRegionId& fabric_bitstream_region,
+  std::unordered_set<ConfigBitId>& seen_config_bits, const int& region_id,
+  const size_t& bl_addr_size, const size_t& wl_addr_size) {
+  auto region_bl_wl_intersection_range =
+    bitstream_reorder_map.region_bl_wl_intersection_range(
+      BitstreamReorderRegionId(region_id));
+
+  size_t start_bit_id = region_bl_wl_intersection_range.first;
+  size_t end_bit_id = region_bl_wl_intersection_range.second;
+
+  size_t num_valid_intersections = 0;
+  for (size_t ibit = start_bit_id; ibit < end_bit_id; ++ibit) {
+    BitstreamReorderBitId bitstream_reorder_bit = BitstreamReorderBitId(ibit);
+    reorder_bit_id_info bit_info =
+      bitstream_reorder_map.get_reorder_bit_id_info(bitstream_reorder_bit);
+    ConfigBitId config_bit = bit_info.config_bit_id;
+    if (config_bit == ConfigBitId::INVALID()) {
+      continue;
+    }
+    VTR_ASSERT(seen_config_bits.find(config_bit) == seen_config_bits.end());
+    seen_config_bits.insert(config_bit);
+    num_valid_intersections++;
+    FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
+
+    /* Find BL address */
+    int bl_index = bit_info.bl_index;
+    std::vector<char> bl_addr_bits_vec = itobin_charvec(bl_index, bl_addr_size);
+
+    /* Find WL address */
+    int wl_index = bit_info.wl_index;
+    std::vector<char> wl_addr_bits_vec = itobin_charvec(wl_index, wl_addr_size);
+
+    /* Set BL address */
+    fabric_bitstream.set_bit_bl_address(fabric_bit, bl_addr_bits_vec);
+
+    /* Set WL address */
+    fabric_bitstream.set_bit_wl_address(fabric_bit, wl_addr_bits_vec);
+
+    /* Set data input */
+    fabric_bitstream.set_bit_din(fabric_bit,
+                                 bitstream_manager.bit_value(config_bit));
+
+    /* Add the bit to the region */
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
+  }
+
+  VTR_ASSERT(num_valid_intersections == bitstream_reorder_map.num_config_bits(
+                                          BitstreamReorderRegionId(region_id)));
 }
 
 /********************************************************************
@@ -813,6 +909,96 @@ FabricBitstream build_fabric_dependent_bitstream(
   build_module_fabric_dependent_bitstream(
     config_protocol, circuit_lib, bitstream_manager, top_block, module_manager,
     top_module, fabric_bitstream, verbose);
+
+  VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
+           fabric_bitstream.num_bits());
+
+  return fabric_bitstream;
+}
+
+FabricBitstream build_fabric_dependent_bitstream_with_reorder(
+  const BitstreamManager& bitstream_manager,
+  const FabricBitstream& original_fabric_bitstream,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const BitstreamReorderMap& bitstream_reorder_map,
+  const std::string& output_file_name, const bool& verbose) {
+  FabricBitstream fabric_bitstream;
+
+  vtr::ScopedStartFinishTimer timer(
+    "\nBuild fabric dependent bitstream with reorder\n");
+
+  /* Get the top module name in module manager, which is our starting point */
+  std::string top_module_name =
+    module_name_map.name(generate_fpga_top_module_name());
+  ModuleId top_module = module_manager.find_module(top_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
+  /* Find the top block in bitstream manager, which has not parents */
+  std::vector<ConfigBlockId> top_blocks =
+    find_bitstream_manager_top_blocks(bitstream_manager);
+  /* Make sure we have only 1 top block and its name matches the top module */
+  VTR_ASSERT(1 == top_blocks.size());
+  VTR_ASSERT(
+    0 == top_module_name.compare(bitstream_manager.block_name(top_blocks[0])));
+  ConfigBlockId top_block = top_blocks[0];
+
+  /* Create the core block when the fpga_core is added */
+  std::string core_block_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_block_name)) {
+    core_block_name = module_name_map.name(core_block_name);
+  }
+  const ModuleId& core_module = module_manager.find_module(core_block_name);
+  if (module_manager.valid_module_id(core_module)) {
+    /* Now we use the core_block as the top-level block for the remaining
+     * functions */
+    VTR_ASSERT(bitstream_manager.block_children(top_block).size() == 1);
+    ConfigBlockId core_block = bitstream_manager.block_children(top_block)[0];
+    top_module = core_module;
+    top_block = core_block;
+  }
+
+  /* Start build-up formally */
+
+  size_t num_bls = bitstream_reorder_map.get_bl_address_size();
+  size_t num_wls = bitstream_reorder_map.get_wl_address_size();
+
+  auto num_bits = [](unsigned int n) {
+    unsigned int bits = 0;
+    do {
+      ++bits;
+      n >>= 1;
+    } while (n);
+    return bits;
+  };
+
+  /* Reserve bits before build-up */
+  fabric_bitstream.set_use_address(true);
+  fabric_bitstream.set_use_wl_address(true);
+  fabric_bitstream.set_bl_address_length(num_bits(num_bls));
+  fabric_bitstream.set_wl_address_length(num_bits(num_wls));
+  fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
+
+  /* Build bitstreams by region */
+  // TODO: Rordering bitstream currently working only
+  // if we have one config region
+  // VTR_ASSERT(module_manager.regions(top_module).size() == 1);
+
+  std::unordered_set<ConfigBitId> seen_config_bits;
+  for (int region_id = 0;
+       region_id < static_cast<int>(module_manager.regions(top_module).size());
+       region_id++) {
+    FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+
+    build_fabric_dependent_memory_bank_bitstream_with_reorder(
+      bitstream_manager, bitstream_reorder_map, fabric_bitstream,
+      fabric_bitstream_region, seen_config_bits, region_id, num_bits(num_bls),
+      num_bits(num_wls));
+    fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
+  }
+
+  write_fabric_bitstream_to_text_file(bitstream_manager,
+                                      original_fabric_bitstream,
+                                      bitstream_reorder_map, output_file_name);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
            fabric_bitstream.num_bits());
