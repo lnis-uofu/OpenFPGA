@@ -16,6 +16,7 @@ pacman -S --noconfirm --needed \
     bison \
     ccache \
     base-devel \
+    cmake \
     mingw-w64-x86_64-autotools \
     mingw-w64-x86_64-cmake \
     mingw-w64-x86_64-toolchain \
