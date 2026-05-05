@@ -47,7 +47,8 @@ INSTALLER_TYPE=STGZ
 
 # Find CMake command from system variable, otherwise use a default one
 ifeq ($(origin CMAKE_COMMAND),undefined)
-CMAKE_COMMAND := cmake
+#Check for the cmake executable
+CMAKE_COMMAND := $(shell command -v cmake 2> /dev/null)
 else
 CMAKE_COMMAND := ${CMAKE_COMMAND}
 endif
