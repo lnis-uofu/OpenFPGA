@@ -35,7 +35,7 @@ pacman -S --noconfirm --needed \
     ncurses-devel \
     mingw-w64-x86_64-readline \
     mingw-w64-x86_64-libxml2 \
-    make \
+    mingw-w64-x86_64-make \
     perl \
     mingw-w64-x86_64-pkg-config \
     mingw-w64-x86_64-python3 \
