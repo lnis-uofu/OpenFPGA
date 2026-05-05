@@ -250,25 +250,25 @@ jobs:
           echo "==== Checking python3 packages ===="
           python3 -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
 
-      - name: Dump tool versions
-        run: |
-          which cmake
-          cmake --version
-          which ${CC}
-          ${CC} --version
-          which ${CXX}
-          ${CXX} --version
-          which ld
-          ld --version
-          echo "==== Checking python3 packages ===="
-          source myenv/bin/activate
-          echo "PYTHON_EXEC=$(which python3)" >> $GITHUB_ENV
-          echo "OPENFPGA_PATH=$(pwd)" >> $GITHUB_ENV
-          python3 --version
-          echo "==== Checking yosys packages ===="
-          which yosys.exe
-          echo "==== Checking libgnat.a ===="
-          ls /${{ matrix.config.prefix }}/lib/gcc/x86_64-w64-mingw32/*/adalib/libgnat.a
+#      - name: Dump tool versions
+#        run: |
+#          which cmake
+#          cmake --version
+#          which ${CC}
+#          ${CC} --version
+#          which ${CXX}
+#          ${CXX} --version
+#          which ld
+#          ld --version
+#          echo "==== Checking python3 packages ===="
+#          source myenv/bin/activate
+#          echo "PYTHON_EXEC=$(which python3)" >> $GITHUB_ENV
+#          echo "OPENFPGA_PATH=$(pwd)" >> $GITHUB_ENV
+#          python3 --version
+#          echo "==== Checking yosys packages ===="
+#          which yosys.exe
+#          echo "==== Checking libgnat.a ===="
+#          ls /${{ matrix.config.prefix }}/lib/gcc/x86_64-w64-mingw32/*/adalib/libgnat.a
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
