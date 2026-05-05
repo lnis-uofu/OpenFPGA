@@ -105,8 +105,9 @@ parser.add_argument("--openfpga_arch_file", type=str, help="Openfpga architectur
 parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
-# parser.add_argument('--openfpga_sim_setting_file', type=str,
-#                     help="Openfpga simulation file for shell")
+parser.add_argument(
+    "--openfpga_sim_setting_file", type=str, help="Openfpga simulation file for shell"
+)
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
 parser.add_argument(
@@ -400,6 +401,102 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
+def normalize_template_path_for_windows(path):
+    if path is None:
+        return path
+    if os.name != "nt":
+        return path
+    return os.path.abspath(path).replace("\\", "/")
+
+
+def prepare_windows_iverilog_netlists(include_netlists_file):
+    """
+    Windows-only fix for Icarus Verilog include resolution.
+
+    Keep Linux behavior unchanged. On Windows, normalize generated Verilog
+    include paths and pass OpenFPGA cell-library files directly to iverilog.
+    """
+    if os.name != "nt":
+        return []
+
+    cell_lib_dir = os.path.join(
+        openfpga_base_dir,
+        "openfpga_flow",
+        "openfpga_cell_library",
+        "verilog",
+    )
+    cell_lib_dir_norm = normalize_template_path_for_windows(cell_lib_dir).rstrip("/") + "/"
+    run_dir_norm = normalize_template_path_for_windows(os.getcwd()).rstrip("/") + "/"
+
+    user_cell_files = []
+    cell_file_names = {"dff.v", "latch.v", "gpio.v"}
+
+    for verilog_file in [include_netlists_file, "./SRC/fabric_netlists.v"]:
+        if not os.path.isfile(verilog_file):
+            continue
+
+        with open(verilog_file, "r", encoding="utf-8") as fp:
+            content = fp.read()
+
+        content = content.replace("\\", "/")
+        content = content.replace(run_dir_norm, "")
+        content = content.replace(cell_lib_dir_norm, "")
+
+        if os.path.basename(verilog_file) == "fabric_netlists.v":
+            include_re = re.compile(r'^\s*`include\s+"([^"]+)"\s*\n', re.MULTILINE)
+
+            def remove_cell_include(match):
+                include_path = match.group(1).replace("\\", "/")
+                include_base = os.path.basename(include_path)
+
+                if include_base in cell_file_names:
+                    cell_file = os.path.join(cell_lib_dir, include_base)
+                    if os.path.isfile(cell_file):
+                        normalized_cell_file = normalize_template_path_for_windows(cell_file)
+                        if normalized_cell_file not in user_cell_files:
+                            user_cell_files.append(normalized_cell_file)
+                        return ""
+
+                return match.group(0)
+
+            content = include_re.sub(remove_cell_include, content)
+
+        with open(verilog_file, "w", encoding="utf-8") as fp:
+            fp.write(content)
+
+    return user_cell_files
+
+
+def update_template_vars_from_extra_args(template_vars):
+    if os.name != "nt":
+        for indx in range(0, len(OpenFPGAArgs), 2):
+            tmpVar = OpenFPGAArgs[indx][2:].upper()
+            template_vars[tmpVar] = OpenFPGAArgs[indx + 1]
+        return
+
+    indx = 0
+    while indx < len(OpenFPGAArgs):
+        key = OpenFPGAArgs[indx]
+
+        if not key.startswith("--"):
+            logger.warning("Ignoring unexpected extra argument: %s", key)
+            indx += 1
+            continue
+
+        tmpVar = key[2:].upper()
+
+        if indx + 1 >= len(OpenFPGAArgs) or OpenFPGAArgs[indx + 1].startswith("--"):
+            if tmpVar == "TOP":
+                template_vars[tmpVar] = args.top_module
+            else:
+                logger.warning("Ignoring extra argument without value: %s", key)
+            indx += 1
+            continue
+
+        template_vars[tmpVar] = OpenFPGAArgs[indx + 1]
+        indx += 2
+
+
 def check_required_file(default_tool_path):
     """Function ensure existace of all required files for the script"""
     files_dict = {
@@ -480,6 +577,13 @@ def validate_command_line_arguments():
     args.openfpga_arch_file = os.path.abspath(args.openfpga_arch_file)
     if not os.path.isfile(args.openfpga_arch_file):
         clean_up_and_exit("OpenFPGA architecture file not found. -%s" % args.openfpga_arch_file)
+
+    if args.openfpga_sim_setting_file:
+        args.openfpga_sim_setting_file = os.path.abspath(args.openfpga_sim_setting_file)
+        if not os.path.isfile(args.openfpga_sim_setting_file):
+            clean_up_and_exit(
+                "OpenFPGA simulation setting file not found. -%s" % args.openfpga_sim_setting_file
+            )
 
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
@@ -588,9 +692,7 @@ def create_yosys_params():
     # Yosys script parameter mapping
     ys_params = script_env_vars["PATH"]
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        ys_params[tmpVar] = OpenFPGAArgs[indx + 1]
+    update_template_vars_from_extra_args(ys_params)
 
     if not args.verific:
         ys_params["VERILOG_FILES"] = " ".join(
@@ -883,15 +985,27 @@ def run_openfpga_shell():
 
     path_variables = script_env_vars["PATH"]
     path_variables["TOP_MODULE"] = args.top_module
-    path_variables["VPR_ARCH_FILE"] = args.arch_file
-    path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
-    path_variables["VPR_TESTBENCH_BLIF"] = args.top_module + ".blif"
-    path_variables["ACTIVITY_FILE"] = args.top_module + "_ace_out.act"
-    path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + "_output_verilog.v"
+    path_variables["VPR_ARCH_FILE"] = normalize_template_path_for_windows(args.arch_file)
+    path_variables["OPENFPGA_ARCH_FILE"] = normalize_template_path_for_windows(
+        args.openfpga_arch_file
+    )
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        path_variables[tmpVar] = OpenFPGAArgs[indx + 1]
+    if args.openfpga_sim_setting_file:
+        path_variables["OPENFPGA_SIM_SETTING_FILE"] = normalize_template_path_for_windows(
+            args.openfpga_sim_setting_file
+        )
+
+    path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(
+        args.top_module + ".blif"
+    )
+    path_variables["ACTIVITY_FILE"] = normalize_template_path_for_windows(
+        args.top_module + "_ace_out.act"
+    )
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = normalize_template_path_for_windows(
+        args.top_module + "_output_verilog.v"
+    )
+
+    update_template_vars_from_extra_args(path_variables)
 
     with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))
@@ -986,18 +1100,34 @@ def run_netlists_verification(exit_if_fail=True):
     tb_top_autochecked = args.top_module + "_autocheck_top_tb"
     # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
 
+    include_netlists_file = "./SRC/%s_include_netlists.v" % args.top_module
+    user_cell_files = prepare_windows_iverilog_netlists(include_netlists_file)
+
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
 
-    command += ["./SRC/%s_include_netlists.v" % args.top_module]
-    command += ["-s"]
-    if args.vpr_fpga_verilog_formal_verification_top_netlist:
-        command += [tb_top_formal]
+    if os.name == "nt":
+        command += ["-s"]
+        if args.vpr_fpga_verilog_formal_verification_top_netlist:
+            command += [tb_top_formal]
+        else:
+            command += [tb_top_autochecked]
+
+        command += ["-I./SRC"]
+        command += ["-I."]
+        command += [include_netlists_file]
+        command += user_cell_files
     else:
-        command += [tb_top_autochecked]
-    # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
-    # Add source directory to the include dir
-    command += ["-I", "./SRC"]
+        command += [include_netlists_file]
+        command += ["-s"]
+        if args.vpr_fpga_verilog_formal_verification_top_netlist:
+            command += [tb_top_formal]
+        else:
+            command += [tb_top_autochecked]
+        # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
+        # Add source directory to the include dir
+        command += ["-I", "./SRC"]
+
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
