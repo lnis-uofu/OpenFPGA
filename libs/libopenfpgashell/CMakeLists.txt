@@ -34,8 +34,13 @@ target_link_libraries(libopenfpgashell
                       libvtrutil)
 
 if(WIN32)
-  target_link_libraries(libopenfpgashell
-                        unofficial::readline-win32::readline)
+  if (MSVC)
+    target_link_libraries(libopenfpgashell
+                          unofficial::readline-win32::readline)
+  else()
+    target_link_libraries(libopenfpgashell
+                          readline)
+  endif()
 else()
   target_link_libraries(libopenfpgashell
                         readline)
