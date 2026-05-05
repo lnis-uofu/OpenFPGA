@@ -7,6 +7,7 @@
 # Update package database
 # Latest gcc-16 is not yet stable. Pacman can only install the rolling version. So comment it out
 #pacman -Syu --noconfirm
+#    mingw-w64-x86_64-toolchain \
 
 # This is for code compilation
 pacman -S --noconfirm --needed \
@@ -18,7 +19,6 @@ pacman -S --noconfirm --needed \
     base-devel \
     mingw-w64-x86_64-autotools \
     mingw-w64-x86_64-cmake \
-    mingw-w64-x86_64-toolchain \
     mingw-w64-x86_64-ctags \
     curl \
     mingw-w64-x86_64-doxygen \
