@@ -44,6 +44,12 @@ else:
     logging.basicConfig(level=logging.INFO, stream=sys.stdout, format=LOG_FORMAT)
 logger = logging.getLogger("OpenFPGA_Task_logs")
 
+def normalize_template_path_for_windows(path):
+    if path is None:
+        return path
+    if os.name != "nt":
+        return path
+    return os.path.abspath(path).replace("\\", "/")
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Read commandline arguments
@@ -413,7 +419,7 @@ def generate_each_task_actions(taskname):
                     task_conf=task_conf,
                 )
                 command += ["--flow_config", curr_task_conf_file]
-                command += ["--default_tool_path", args.default_tool_path]
+                command += ["--default_tool_path", normalize_template_path_for_windows(args.default_tool_path)]
                 flow_run_cmd_list.append(
                     {
                         "arch": arch,
