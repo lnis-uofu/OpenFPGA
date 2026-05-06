@@ -339,8 +339,9 @@ ExecTime = {}
 
 def main():
     logger.debug("Script Launched in " + os.getcwd())
-    check_required_file(args.default_tool_path)
-    read_script_config(args.default_tool_path)
+    nom_default_tool_path = normalize_template_path_for_windows(args.default_tool_path)
+    check_required_file(nom_default_tool_path)
+    read_script_config(nom_default_tool_path)
     validate_command_line_arguments()
     prepare_run_directory(args.run_dir)
     if args.fpga_flow == "yosys_vpr":
