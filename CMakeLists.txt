@@ -111,8 +111,21 @@ set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys Sy
 set(YOSYS_F4PGA_PLUGINS OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins")
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
+set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
 # TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
 #set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
+
+# Override WGET Options
+if (WIN32)
+  if(MSVC)
+    set(WGET_OUTPUT_OPTION "-o" CACHE STRING "Wget output option" FORCE)
+  elseif(DEFINED ENV{MSYSTEM})
+    message(STATUS "Wget specifically using the Msys2 toolchain")
+    set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
+  endif()
+elseif(UNIX AND NOT APPLE)
+  set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
+endif()
 
 # TCL file/lib required to link with SWIG generated wrapper
 if (OPENFPGA_WITH_SWIG)
@@ -341,7 +354,7 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
 endif()
 
 # we will check if yosys already exist. if not then build it
-if (OPENFPGA_WITH_YOSYS)
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
     if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys)
         message(STATUS "Yosys pre-build exist so skipping it")
     else ()
