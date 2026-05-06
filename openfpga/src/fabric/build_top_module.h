@@ -46,7 +46,7 @@ int build_top_module(
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
   const FabricKey& fabric_key, const bool& generate_random_fabric_key,
   const bool& group_config_block, const bool& perimeter_cb,
-  const bool& verbose);
+  const bool& group_routing, const bool& verbose);
 
 } /* end namespace openfpga */
 

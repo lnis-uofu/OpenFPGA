@@ -456,7 +456,7 @@ int build_top_module_fine_grained_child_instances(
   const bool& frame_view, const bool& compact_routing_hierarchy,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
   const bool& group_config_block, const bool& perimeter_cb,
-  const bool& verbose) {
+  const bool& group_routing, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   std::map<e_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
@@ -467,13 +467,18 @@ int build_top_module_fine_grained_child_instances(
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(
     module_manager, top_module, device_rr_gsb, compact_routing_hierarchy);
-  /* Add all the CBX and CBYs across the fabric */
-  cb_instance_ids[e_rr_type::CHANX] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, e_rr_type::CHANX,
-    compact_routing_hierarchy, verbose);
-  cb_instance_ids[e_rr_type::CHANY] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, e_rr_type::CHANY,
-    compact_routing_hierarchy, verbose);
+
+  if (false == group_routing) {
+    /* Add all the CBX and CBYs across the fabric */
+    cb_instance_ids[e_rr_type::CHANX] =
+      add_top_module_connection_block_instances(
+        module_manager, top_module, device_rr_gsb, e_rr_type::CHANX,
+        compact_routing_hierarchy, verbose);
+    cb_instance_ids[e_rr_type::CHANY] =
+      add_top_module_connection_block_instances(
+        module_manager, top_module, device_rr_gsb, e_rr_type::CHANY,
+        compact_routing_hierarchy, verbose);
+  }
 
   /* Update I/O children list */
   add_top_module_io_children(module_manager, top_module, grids, layer,
@@ -490,7 +495,8 @@ int build_top_module_fine_grained_child_instances(
     add_top_module_nets_connect_grids_and_gsbs(
       module_manager, top_module, vpr_device_annotation, grids, layer,
       grid_instance_ids, rr_graph, device_rr_gsb, sb_instance_ids,
-      cb_instance_ids, compact_routing_hierarchy, duplicate_grid_pin);
+      cb_instance_ids, compact_routing_hierarchy, duplicate_grid_pin,
+      group_routing);
     /* Add inter-CLB direct connections */
     add_top_module_nets_tile_direct_connections(
       module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
@@ -521,7 +527,7 @@ int build_top_module_fine_grained_child_instances(
     organize_top_module_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol, sram_model,
       grids, layer, grid_instance_ids, device_rr_gsb, sb_instance_ids,
-      cb_instance_ids, compact_routing_hierarchy);
+      cb_instance_ids, compact_routing_hierarchy, group_routing);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
     /* Throw a fatal error when the fabric key has a mismatch in region

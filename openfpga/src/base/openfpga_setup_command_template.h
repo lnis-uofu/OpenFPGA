@@ -441,6 +441,10 @@ ShellCommandId add_build_fabric_command_template(
                        "blocks etc. This helps to "
                        "reduce optimize the density of configuration memory "
                        "through physical design");
+  /* Add an option '--group_routing' */
+  shell_cmd.add_option("group_routing", false,
+                       "group routing resources into tiles. This helps to "
+                       "reduce the number of routing instances at top-level");
 
   /* Add an option '--generate_random_fabric_key' */
   shell_cmd.add_option("generate_random_fabric_key", false,

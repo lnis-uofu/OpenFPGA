@@ -32,7 +32,8 @@ void add_top_module_nets_connect_grids_and_gsbs(
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin);
+  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
+  const bool& group_routing);
 
 int add_top_module_global_ports_from_grid_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
