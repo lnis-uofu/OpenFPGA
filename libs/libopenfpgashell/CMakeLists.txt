@@ -4,7 +4,11 @@ project("libopenfpgashell")
 
 # We need readline to compile
 if(WIN32)
-  find_package(unofficial-readline-win32 CONFIG REQUIRED)
+  if (MSVC)
+    find_package(unofficial-readline-win32 CONFIG REQUIRED)
+  else()
+    find_package(Readline REQUIRED)
+  endif()
 else()
   find_package(Readline REQUIRED)
 endif()
@@ -30,8 +34,13 @@ target_link_libraries(libopenfpgashell
                       libvtrutil)
 
 if(WIN32)
-  target_link_libraries(libopenfpgashell
-                        unofficial::readline-win32::readline)
+  if (MSVC)
+    target_link_libraries(libopenfpgashell
+                          unofficial::readline-win32::readline)
+  else()
+    target_link_libraries(libopenfpgashell
+                          readline)
+  endif()
 else()
   target_link_libraries(libopenfpgashell
                         readline)

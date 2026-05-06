@@ -25,8 +25,6 @@ capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS
     ${CAPNP_DEFS}
 )
 
-
-
 add_library(libopenfpgacapnproto STATIC
             ${CAPNP_SRCS}
             ${IC_SRCS}

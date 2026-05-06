@@ -68,6 +68,231 @@ jobs:
           fi
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
+  # Test the compilation compatibility
+  # Yosys-slang plugin has issues on linking library to Yosys in Msys2. Suspect the root of cause is on the linking path. Disable it for now.
+  win_msys2_installer:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+#          - name: "Build Compatibility (GCC, Windows Msys2-UCRT64)"
+#            cc: gcc
+#            cxx: g++
+#            os: UCRT64
+#            prefix: ucrt64
+          - name: "Installer (GCC, Windows Msys2-MINGW64)"
+            cc: gcc
+            cxx: g++
+            os: MINGW64
+            prefix: mingw64
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
+    defaults:
+      run:
+        # This ensures all 'run' steps use the MSYS2 bash shell by default
+        shell: msys2 {0}
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.config.os }}
+          update: true
+          # Optional: Pre-install core tools needed to run your script
+          install: >-
+            wget
+            git
+
+      #In MSYS2, the flex package is an MSYS-native tool, meaning it installs its headers to /usr/include/FlexLexer.h. However, if you are using a MinGW-w64 environment (e.g., UCRT64, MINGW64), the compiler only looks for headers in /mingw64/include or similar toolchain-specific paths. The most common workaround is to copy or link the header from the MSYS directory to your active MinGW-w64 include directory. 
+      # For python build from sources
+      - name: Install dependencies
+        run: |
+          ./.github/workflows/build_dependency_win-msys2-${{ matrix.config.os}}.sh
+          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
+          python3 -m venv myenv
+          source myenv/bin/activate
+          python3 -m pip install --upgrade pip setuptools
+          python3 -m pip install -r msys2_requirements.txt
+          echo "==== Checking python packages ===="
+          python -c "import yaml; print('Installed')"      
+
+#      - name: Dump tool versions
+#        run: |
+#          which cmake
+#          cmake --version
+#          which ${CC}
+#          ${CC} --version
+#          which ${CXX}
+#          ${CXX} --version
+#          which ld
+#          ld --version
+#          which python3
+#          python3 --version
+#          echo "==== Checking yosys packages ===="
+#          which yosys.exe
+#          echo "==== Checking libgnat.a ===="
+#          ls /${{ matrix.config.prefix }}/lib/gcc/x86_64-w64-mingw32/*/adalib/libgnat.a
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-msys2-${{ github.job }}-
+            ${{ runner.os }}-msys2-
+
+      - name: Create installer
+        shell: msys2 {0}
+        run: |
+          make checkout
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: failed_msys2_installer_log
+          retention-days: 1
+          path: |
+            _CPack_Packages/win64/IFW/PreinstallOutput.log 
+
+      - name: Upload artifact installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: win_msys2_installer
+          retention-days: 1
+          path: |
+            OpenFPGA-tool-suites-*-win64.exe
+
+
+  # Test the compilation compatibility
+  # Yosys-slang plugin has issues on linking library to Yosys in Msys2. Suspect the root of cause is on the linking path. Disable it for now.
+  win_msys2_build:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+#          - name: "Build Compatibility (GCC, Windows Msys2-UCRT64)"
+#            cc: gcc
+#            cxx: g++
+#            os: UCRT64
+#            prefix: ucrt64
+          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64)"
+            cc: gcc
+            cxx: g++
+            os: MINGW64
+            prefix: mingw64
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
+    defaults:
+      run:
+        # This ensures all 'run' steps use the MSYS2 bash shell by default
+        shell: msys2 {0}
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.config.os }}
+          update: true
+          # Optional: Pre-install core tools needed to run your script
+          install: >-
+            wget
+            git
+
+      #In MSYS2, the flex package is an MSYS-native tool, meaning it installs its headers to /usr/include/FlexLexer.h. However, if you are using a MinGW-w64 environment (e.g., UCRT64, MINGW64), the compiler only looks for headers in /mingw64/include or similar toolchain-specific paths. The most common workaround is to copy or link the header from the MSYS directory to your active MinGW-w64 include directory. 
+      # For python build from sources
+      - name: Install dependencies
+        run: |
+          ./.github/workflows/build_dependency_win-msys2-${{ matrix.config.os}}.sh
+          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
+          python3 -m venv myenv
+          source myenv/bin/activate
+          python3 -m pip install --upgrade pip setuptools
+          python3 -m pip install -r msys2_requirements.txt
+          echo "==== Checking python3 packages ===="
+          python3 -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
+
+      - name: Dump tool versions
+        run: |
+          which cmake
+          cmake --version
+          which ${CC}
+          ${CC} --version
+          which ${CXX}
+          ${CXX} --version
+          which ld
+          ld --version
+          echo "==== Checking python3 packages ===="
+          source myenv/bin/activate
+          echo "PYTHON_EXEC=$(which python3)" >> $GITHUB_ENV
+          echo "OPENFPGA_PATH=$(pwd)" >> $GITHUB_ENV
+          python3 --version
+          echo "==== Checking yosys packages ===="
+          which yosys.exe
+          echo "==== Checking libgnat.a ===="
+          ls /${{ matrix.config.prefix }}/lib/gcc/x86_64-w64-mingw32/*/adalib/libgnat.a
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-msys2-${{ github.job }}-
+            ${{ runner.os }}-msys2-
+
+      - name: Build
+        shell: msys2 {0}
+        run: |
+          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+
+      - name: Quick Test
+        shell: msys2 {0}
+        run: |
+          echo "==== Activate python3 virtual environment ===="
+          source myenv/bin/activate
+          echo "==== Use python3 under ${PYTHON_EXEC} ===="
+          python3 -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
+          echo "==== Run a quick test ===="
+          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path ${{ github.workspace }}/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
+
   # This step is adapted from the Yosys MSVC build CI workflow at
   #     http://github.com/YosysHQ/yosys/blob/2dc69a75783b00e151e500d036c7bf4add26a93b/.github/workflows/extra-builds.yml
   yosys-win-vs-prep:
