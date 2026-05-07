@@ -407,15 +407,28 @@ jobs:
           }
           echo "CURL_PATH=$curlPath" >> $env:GITHUB_ENV
 
-      - name: setup-msbuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: Check MSVC Version
+        run: cl
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-msvc-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-msvc-
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Configure and build with CMake
         shell: powershell
         run: |
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}"
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S ..  -G "NMake Makefiles" -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}"
           cmake --build .
 #          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\bin\tcl86.dll -DTCL_INCLUDE_PATH=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
 
