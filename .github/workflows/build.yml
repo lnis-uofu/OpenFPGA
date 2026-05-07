@@ -395,6 +395,9 @@ jobs:
         run: |
           make checkout
 
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Configure and build with CMake
         shell: powershell
         run: |
@@ -413,9 +416,6 @@ jobs:
         run: |
           cd yosys
           unzip yosys-win32-vcxsrc-latest.zip
-
-      - name: setup-msbuild for Yosys
-        uses: microsoft/setup-msbuild@v2
 
       - name: MSBuild for Yosys
 #        working-directory: yosys/yosys-win32-vcxsrc-latest
