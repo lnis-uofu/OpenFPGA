@@ -374,11 +374,7 @@ jobs:
         shell: powershell
         run: |
           choco install winflexbison3 wget
-          choco install magicsplat-tcl-tk --version=2.0.3
-          # Optional: Verify installation
-          win_flex --version
-          win_bison --version
-          tclsh --version
+          choco install magicsplat-tcl-tk --version=1.16.0
 
 #      - name: Install Tcl
 #        id: setup_tcl 
@@ -391,6 +387,9 @@ jobs:
         run: |
           cmake --version
           where curl
+          win_flex --version
+          win_bison --version
+          tclsh --version
 #          echo "TCL_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}"
 
       - name: Checkout all the submodules
