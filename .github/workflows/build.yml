@@ -403,8 +403,8 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\lib\tcl86.lib -DTCL_INCLUDE_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
-          nmake
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -G Ninja -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\lib\tcl86.lib -DTCL_INCLUDE_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
+          cmake --build .
 
       - name: Fetch Yosys MSVC artifact
         uses: actions/download-artifact@v8
