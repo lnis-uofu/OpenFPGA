@@ -373,32 +373,17 @@ jobs:
       - name: Install WinFlexBison
         shell: powershell
         run: |
-          choco install winflexbison3 wget
+          choco install winflexbison3 wget magicsplat-tcl-tk
           # Optional: Verify installation
           win_flex --version
           win_bison --version
+          tclsh --version
 
 #      - name: Install Tcl
 #        id: setup_tcl 
 #        shell: powershell
 #        run: |
 #          ./.github/workflows/install_deps_win/install_tcl_win.ps1; echo "TCL_DIR path: $TCL_DIR"
-
-      - name: Install Tcl
-        shell: powershell
-        run: |
-          # Example using Magicsplat
-          Invoke-WebRequest -Uri "https://www.magicsplat.com/tcl-installer/magicsplat-tcl-8.6.17.0-64bit.exe" -OutFile "tcl.exe"
-          Start-Process -FilePath ".\tcl.exe" -ArgumentList "/SILENT", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/DIR=C:\Tcl" -Wait
-          
-          # Add to PATH
-          echo "C:\Tcl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Verify Tcl
-        shell: powershell
-        run: |
-          tclsh --version
-          info patchlevel
 
       - name: Dump tool versions
         shell: powershell
@@ -420,9 +405,9 @@ jobs:
         run: |
           mkdir build
           cd build
-#          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\bin\tcl86.dll -DTCL_INCLUDE_PATH=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
           cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET=${where.exe curl.exe}
           cmake --build .
+#          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\bin\tcl86.dll -DTCL_INCLUDE_PATH=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
 
       - name: Fetch Yosys MSVC artifact
         uses: actions/download-artifact@v8
