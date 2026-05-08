@@ -339,7 +339,7 @@ jobs:
           path: yosys/yosys-win32-vcxsrc-latest.zip
 
   # Test the compilation compatibility on Windows
-  win_build:
+  win_msvc_build:
     needs: yosys-win-vs-prep
     name: ${{ matrix.config.name }}
     runs-on: windows-2025
@@ -447,7 +447,6 @@ jobs:
           unzip yosys-win32-vcxsrc-latest.zip
 
       - name: MSBuild for Yosys
-        working-directory: yosys/yosys-win32-vcxsrc-latest
         run: |
           cd yosys/yosys-win32-vcxsrc-latest
           msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
