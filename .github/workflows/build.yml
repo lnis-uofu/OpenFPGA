@@ -514,10 +514,10 @@ jobs:
           win_bison --version
           tclsh --version
 
-      - name: Install QtIFW
-        uses: jmarrec/setup-qtifw@v1
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
         with:
-          qtifw-version: '4.8.1' # Supports SemVer ranges or exact versions
+          tools: 'tools_ifw'
 
       - name: Verify Installation
         run: binarycreator --version
