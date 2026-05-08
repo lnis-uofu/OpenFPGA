@@ -514,6 +514,11 @@ jobs:
           win_bison --version
           tclsh --version
 
+      - name: Install QtIFW
+        uses: jmarrec/setup-qtifw@v1
+        with:
+          qtifw-version: '4.x' # Supports SemVer ranges or exact versions
+
       - name: Checkout all the submodules
         shell: powershell
         run: |
