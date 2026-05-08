@@ -519,8 +519,8 @@ jobs:
         with:
           tools: 'tools_ifw'
 
-      - name: Verify Installation
-        run: binarycreator --version
+#      - name: Verify Installation
+#        run: binarycreator --version
 
       - name: Checkout all the submodules
         shell: powershell
