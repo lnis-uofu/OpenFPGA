@@ -517,7 +517,10 @@ jobs:
       - name: Install QtIFW
         uses: jmarrec/setup-qtifw@v1
         with:
-          qtifw-version: '4.x' # Supports SemVer ranges or exact versions
+          qtifw-version: '4.8.1' # Supports SemVer ranges or exact versions
+
+      - name: Verify Installation
+        run: binarycreator --version
 
       - name: Checkout all the submodules
         shell: powershell
