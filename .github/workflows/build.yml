@@ -432,6 +432,9 @@ jobs:
           cmake --build .
 #          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\bin\tcl86.dll -DTCL_INCLUDE_PATH=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
 
+      - name: setup-msbuild for Yosys
+        uses: microsoft/setup-msbuild@v2
+
       - name: Fetch Yosys MSVC artifact
         uses: actions/download-artifact@v8
         with:
@@ -444,7 +447,7 @@ jobs:
           unzip yosys-win32-vcxsrc-latest.zip
 
       - name: MSBuild for Yosys
-#        working-directory: yosys/yosys-win32-vcxsrc-latest
+        working-directory: yosys/yosys-win32-vcxsrc-latest
         run: |
           cd yosys/yosys-win32-vcxsrc-latest
           msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
