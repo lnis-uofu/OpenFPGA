@@ -339,8 +339,51 @@ jobs:
           path: yosys/yosys-win32-vcxsrc-latest.zip
 
   # Test the compilation compatibility on Windows
-  win_msvc_build:
+  win_yosys_msbuild:
     needs: yosys-win-vs-prep
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Prebuild Yosys (Windows-latest)"
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Fetch Yosys MSVC artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: vcxsrc
+          path: .
+
+      - name: Unzip Yosys MSVC artifact
+        run: |
+          unzip yosys-win32-vcxsrc-latest.zip
+
+      - name: setup-msbuild for Yosys
+        uses: microsoft/setup-msbuild@v2
+
+      - name: MSBuild for Yosys
+        run: |
+          cd yosys-win32-vcxsrc-latest
+          msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: prebuilt_yosys_win
+          path: yosys-win32-vcxsrc-latest/
+
+  # Test the compilation compatibility on Windows
+  win_msvc_build:
+    needs: win_yosys_msbuild
     name: ${{ matrix.config.name }}
     runs-on: windows-2025
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
@@ -376,12 +419,6 @@ jobs:
           choco install winflexbison3 wget
           choco install magicsplat-tcl-tk --version=1.16.0
 
-#      - name: Install Tcl
-#        id: setup_tcl 
-#        shell: powershell
-#        run: |
-#          ./.github/workflows/install_deps_win/install_tcl_win.ps1; echo "TCL_DIR path: $TCL_DIR"
-
       - name: Dump tool versions
         shell: powershell
         run: |
@@ -390,7 +427,6 @@ jobs:
           win_flex --version
           win_bison --version
           tclsh --version
-#          echo "TCL_DIR=${{ steps.setup_tcl.outputs.TCL_DIR }}"
 
       - name: Checkout all the submodules
         shell: powershell
@@ -430,26 +466,16 @@ jobs:
           cd build
           cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}"
           cmake --build .
-#          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DTCL_LIBRARY=${{ steps.setup_tcl.outputs.TCL_DIR }}\bin\tcl86.dll -DTCL_INCLUDE_PATH=${{ steps.setup_tcl.outputs.TCL_DIR }}\include -DOPENFPGA_WITH_YOSYS=OFF
 
-      - name: setup-msbuild for Yosys
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Fetch Yosys MSVC artifact
+# TODO: will try reg tests with Yosys together
+      - name: Fetch Prebuilt Yosys MSVC artifact
         uses: actions/download-artifact@v8
         with:
-          name: vcxsrc
+          name: prebuilt_yosys_win
           path: yosys/
 
-      - name: Unzip Yosys MSVC artifact
-        run: |
-          cd yosys
-          unzip yosys-win32-vcxsrc-latest.zip
+# TODO: Add an installer creation for MSVC build
 
-      - name: MSBuild for Yosys
-        run: |
-          cd yosys/yosys-win32-vcxsrc-latest
-          msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
 
   # Test the compilation compatibility on Linux
   linux_build:
