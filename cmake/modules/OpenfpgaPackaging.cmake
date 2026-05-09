@@ -50,6 +50,7 @@ if (CPACK_GENERATOR STREQUAL "IFW")
 endif() 
 
 # Variables must be defined before including the CPACK module
+set(CPACK_BUILD_CONFIG ${CMAKE_BUILD_TYPE})
 include(CPack)
 include(CPackIFW)
 
