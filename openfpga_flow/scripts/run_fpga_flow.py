@@ -402,6 +402,10 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
+def is_windows():
+    return os.name == "nt"
+
+
 def normalize_template_path_for_windows(path):
     if path is None:
         return path
