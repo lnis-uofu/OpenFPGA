@@ -2,6 +2,10 @@
  * This file includes functions that handles the file outputting
  * in OpenFPGA framework
  *******************************************************************/
+#ifdef _WIN32
+#include <direct.h>  // Windows: provides mkdir() (POSIX uses <sys/stat.h>)
+#endif
+
 #include <sys/stat.h>
 
 #include <algorithm>

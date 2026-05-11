@@ -89,6 +89,13 @@ int call_external_command(const Command& cmd,
   // Refer
   // https://pubs.opengroup.org/onlinepubs/009695399/functions/waitpid.html
   int status = system(cmd_ss.c_str());
+
+#ifdef _WIN32
+  // On Windows, system() returns the command exit code directly.
+  // Becareful if the final status is 2 or beyond, program will not error
+  // as it is treated as CMD_EXEC_MINOR_ERROR
+  return status;
+#else
   if (WIFEXITED(status)) {
     // This is normal program exit, WEXITSTATUS() will help you shift the status
     // accordingly (status >> 8)
@@ -96,6 +103,8 @@ int call_external_command(const Command& cmd,
     // as it is treated as CMD_EXEC_MINOR_ERROR
     return WEXITSTATUS(status);
   }
+#endif
+
   // Program maybe terminated because of various killed or stopped signal
   return CMD_EXEC_FATAL_ERROR;
 }

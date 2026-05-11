@@ -16,7 +16,7 @@ endif()
 target_include_directories(libini INTERFACE ${LIB_INCLUDE_DIRS})
 set_target_properties(libini PROPERTIES PREFIX "")
 
-install(TARGETS libini
+install(DIRECTORY src/
         DESTINATION bin
         COMPONENT openfpga_package
 )
