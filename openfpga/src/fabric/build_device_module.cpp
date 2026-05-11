@@ -100,6 +100,9 @@ int build_device_module_graph(
   RRGraphInEdges in_edges;
   in_edges.init(vpr_device_ctx.rr_graph);
 
+  module_manager.set_group_routing(group_routing);
+  VTR_LOGV(verbose, "Group routing: %s\n", group_routing ? "true" : "false");
+
   if (true == compress_routing) {
     build_unique_routing_modules(
       module_manager, decoder_lib, vpr_device_ctx,

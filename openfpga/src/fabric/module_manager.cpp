@@ -1581,4 +1581,10 @@ void ModuleManager::invalidate_port_lookup() { port_lookup_.clear(); }
 
 void ModuleManager::invalidate_net_lookup() { net_lookup_.clear(); }
 
+bool ModuleManager::group_routing() const { return _group_routing; }
+
+void ModuleManager::set_group_routing(const bool& group_routing) {
+  _group_routing = group_routing;
+}
+
 } /* end namespace openfpga */
