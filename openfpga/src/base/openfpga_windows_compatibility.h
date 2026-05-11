@@ -1,5 +1,4 @@
-#ifndef OPENFPGA_WINDOWS_COMPATIBILITY_H
-#define OPENFPGA_WINDOWS_COMPATIBILITY_H
+#pragma once
 
 /***
  * Windows MSVC Compatibility Fixes
@@ -17,6 +16,4 @@
 
 #ifdef isxdigit
 #undef isxdigit
-#endif
-
 #endif
