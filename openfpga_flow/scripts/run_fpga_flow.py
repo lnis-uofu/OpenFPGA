@@ -105,6 +105,8 @@ parser.add_argument("--openfpga_arch_file", type=str, help="Openfpga architectur
 parser.add_argument(
     "--arch_variable_file", type=str, default=None, help="Openfpga architecture file for shell"
 )
+
+# compilation_verification task use it as an argument
 parser.add_argument(
     "--openfpga_sim_setting_file", type=str, help="Openfpga simulation file for shell"
 )
