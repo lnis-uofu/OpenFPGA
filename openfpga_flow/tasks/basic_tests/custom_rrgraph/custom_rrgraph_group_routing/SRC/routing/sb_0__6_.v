@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Default net type -----
-`default_nettype none
-
 // ----- Verilog module for sb_0__6_ -----
 module sb_0__6_(chanx_right_in,
                 chany_bottom_in,
@@ -21,10 +18,6 @@ output [15:0] chanx_right_out;
 //----- OUTPUT PORTS -----
 output [15:0] chany_bottom_out;
 
-//----- BEGIN wire-connection ports -----
-//----- END wire-connection ports -----
-
-
 //----- BEGIN Registered ports -----
 //----- END Registered ports -----
 
@@ -37,9 +30,6 @@ output [15:0] chany_bottom_out;
 
 endmodule
 // ----- END Verilog module for sb_0__6_ -----
-
-//----- Default net type -----
-`default_nettype wire
 
 
 

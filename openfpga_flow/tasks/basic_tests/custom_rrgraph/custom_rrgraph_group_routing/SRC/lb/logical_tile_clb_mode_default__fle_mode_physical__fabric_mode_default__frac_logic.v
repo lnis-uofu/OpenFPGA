@@ -5,41 +5,33 @@
 //	Organization: University of Utah
 //-------------------------------------------
 // ----- BEGIN Physical programmable logic block Verilog module: frac_logic -----
-//----- Default net type -----
-`default_nettype none
-
 // ----- Verilog module for logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic -----
-module logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic(frac_logic_in,
-                                                                                         feedthrough_mem_in,
-                                                                                         feedthrough_mem_inb,
-                                                                                         frac_logic_out);
+module logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic(pReset,
+                                                                                         prog_clk,
+                                                                                         frac_logic_in,
+                                                                                         ccff_head,
+                                                                                         frac_logic_out,
+                                                                                         ccff_tail);
+//----- GLOBAL PORTS -----
+input [0:0] pReset;
+//----- GLOBAL PORTS -----
+input [0:0] prog_clk;
 //----- INPUT PORTS -----
 input [3:0] frac_logic_in;
 //----- INPUT PORTS -----
-input [19:0] feedthrough_mem_in;
-//----- INPUT PORTS -----
-input [19:0] feedthrough_mem_inb;
+input [0:0] ccff_head;
 //----- OUTPUT PORTS -----
 output [1:0] frac_logic_out;
-
-//----- BEGIN wire-connection ports -----
-wire [3:0] frac_logic_in;
-wire [1:0] frac_logic_out;
-//----- END wire-connection ports -----
-
+//----- OUTPUT PORTS -----
+output [0:0] ccff_tail;
 
 //----- BEGIN Registered ports -----
 //----- END Registered ports -----
 
 
-wire [0:0] direct_interc_1_out;
-wire [0:0] direct_interc_2_out;
-wire [0:0] direct_interc_3_out;
-wire [0:0] direct_interc_4_out;
 wire [1:0] logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut3_out;
-wire [0:0] logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut4_out;
-wire [2:0] mux_1level_tapbuf_size2_0_sram;
-wire [2:0] mux_1level_tapbuf_size2_0_sram_inv;
+wire [1:0] mux_1level_tapbuf_size2_0_sram;
+wire [1:0] mux_1level_tapbuf_size2_0_sram_inv;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -47,23 +39,27 @@ wire [2:0] mux_1level_tapbuf_size2_0_sram_inv;
 // ----- END Local output short connections -----
 
 	logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4 logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
 		.frac_lut4_in({direct_interc_4_out, direct_interc_3_out, direct_interc_2_out, direct_interc_1_out}),
-		.feedthrough_mem_in({feedthrough_mem_in[16], feedthrough_mem_in[15], feedthrough_mem_in[14], feedthrough_mem_in[13], feedthrough_mem_in[12], feedthrough_mem_in[11], feedthrough_mem_in[10], feedthrough_mem_in[9], feedthrough_mem_in[8], feedthrough_mem_in[7], feedthrough_mem_in[6], feedthrough_mem_in[5], feedthrough_mem_in[4], feedthrough_mem_in[3], feedthrough_mem_in[2], feedthrough_mem_in[1], feedthrough_mem_in[0]}),
-		.feedthrough_mem_inb({feedthrough_mem_inb[16], feedthrough_mem_inb[15], feedthrough_mem_inb[14], feedthrough_mem_inb[13], feedthrough_mem_inb[12], feedthrough_mem_inb[11], feedthrough_mem_inb[10], feedthrough_mem_inb[9], feedthrough_mem_inb[8], feedthrough_mem_inb[7], feedthrough_mem_inb[6], feedthrough_mem_inb[5], feedthrough_mem_inb[4], feedthrough_mem_inb[3], feedthrough_mem_inb[2], feedthrough_mem_inb[1], feedthrough_mem_inb[0]}),
+		.ccff_head(ccff_head),
 		.frac_lut4_lut3_out({logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut3_out[1], logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut3_out[0]}),
-		.frac_lut4_lut4_out(logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut4_out));
+		.frac_lut4_lut4_out(logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut4_out),
+		.ccff_tail(logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_ccff_tail));
 
 	mux_1level_tapbuf_size2 mux_frac_logic_out_0 (
 		.in({logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut3_out[0], logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut4_out}),
-		.sram({mux_1level_tapbuf_size2_0_sram[2], mux_1level_tapbuf_size2_0_sram[1], mux_1level_tapbuf_size2_0_sram[0]}),
-		.sram_inv({mux_1level_tapbuf_size2_0_sram_inv[2], mux_1level_tapbuf_size2_0_sram_inv[1], mux_1level_tapbuf_size2_0_sram_inv[0]}),
+		.sram({mux_1level_tapbuf_size2_0_sram[1], mux_1level_tapbuf_size2_0_sram[0]}),
+		.sram_inv({mux_1level_tapbuf_size2_0_sram_inv[1], mux_1level_tapbuf_size2_0_sram_inv[0]}),
 		.out(frac_logic_out[0]));
 
-	mux_1level_tapbuf_size2_feedthrough_mem virtual_mem_frac_logic_out_0 (
-		.feedthrough_mem_in({feedthrough_mem_in[19], feedthrough_mem_in[18], feedthrough_mem_in[17]}),
-		.feedthrough_mem_inb({feedthrough_mem_inb[19], feedthrough_mem_inb[18], feedthrough_mem_inb[17]}),
-		.mem_out({mux_1level_tapbuf_size2_0_sram[2], mux_1level_tapbuf_size2_0_sram[1], mux_1level_tapbuf_size2_0_sram[0]}),
-		.mem_outb({mux_1level_tapbuf_size2_0_sram_inv[2], mux_1level_tapbuf_size2_0_sram_inv[1], mux_1level_tapbuf_size2_0_sram_inv[0]}));
+	mux_1level_tapbuf_size2_mem mem_frac_logic_out_0 (
+		.pReset(pReset),
+		.prog_clk(prog_clk),
+		.ccff_head(logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_ccff_tail),
+		.ccff_tail(ccff_tail),
+		.mem_out({mux_1level_tapbuf_size2_0_sram[1], mux_1level_tapbuf_size2_0_sram[0]}),
+		.mem_outb({mux_1level_tapbuf_size2_0_sram_inv[1], mux_1level_tapbuf_size2_0_sram_inv[0]}));
 
 	direct_interc direct_interc_0_ (
 		.in(logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0_frac_lut4_lut3_out[1]),
@@ -87,9 +83,6 @@ wire [2:0] mux_1level_tapbuf_size2_0_sram_inv;
 
 endmodule
 // ----- END Verilog module for logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic -----
-
-//----- Default net type -----
-`default_nettype wire
 
 
 

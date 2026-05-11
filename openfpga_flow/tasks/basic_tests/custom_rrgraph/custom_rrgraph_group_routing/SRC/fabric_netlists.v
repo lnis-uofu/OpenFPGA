@@ -8,6 +8,9 @@
 `include "fpga_defines.v"
 
 // ------ Include user-defined netlists -----
+`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/inv.v"
+`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/buf4.v"
+`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/mux2.v"
 `include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/dff.v"
 `include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/gpio.v"
 // ------ Include primitive module netlists -----
@@ -48,11 +51,9 @@
 `include "routing/sb_1__6_.v"
 `include "routing/sb_2__1_.v"
 `include "routing/sb_2__2_.v"
-`include "routing/sb_2__5_.v"
 `include "routing/sb_2__6_.v"
 `include "routing/sb_5__1_.v"
 `include "routing/sb_5__2_.v"
-`include "routing/sb_5__5_.v"
 `include "routing/sb_6__0_.v"
 `include "routing/sb_6__1_.v"
 `include "routing/sb_6__2_.v"

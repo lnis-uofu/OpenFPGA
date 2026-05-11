@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Default net type -----
-`default_nettype none
-
 // ----- Verilog module for frac_lut4 -----
 module frac_lut4(in,
                  sram,
@@ -30,26 +27,10 @@ output [1:0] lut3_out;
 //----- OUTPUT PORTS -----
 output [0:0] lut4_out;
 
-//----- BEGIN wire-connection ports -----
-wire [3:0] in;
-wire [1:0] lut3_out;
-wire [0:0] lut4_out;
-//----- END wire-connection ports -----
-
-
 //----- BEGIN Registered ports -----
 //----- END Registered ports -----
 
 
-wire [0:0] INVTX1_0_out;
-wire [0:0] INVTX1_1_out;
-wire [0:0] INVTX1_2_out;
-wire [0:0] INVTX1_3_out;
-wire [0:0] OR2_0_out;
-wire [0:0] buf4_0_out;
-wire [0:0] buf4_1_out;
-wire [0:0] buf4_2_out;
-wire [0:0] buf4_3_out;
 
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
@@ -102,9 +83,6 @@ wire [0:0] buf4_3_out;
 
 endmodule
 // ----- END Verilog module for frac_lut4 -----
-
-//----- Default net type -----
-`default_nettype wire
 
 
 

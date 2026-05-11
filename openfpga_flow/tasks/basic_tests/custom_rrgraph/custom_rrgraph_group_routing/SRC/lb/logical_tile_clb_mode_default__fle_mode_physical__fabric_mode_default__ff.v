@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Default net type -----
-`default_nettype none
-
 // ----- Verilog module for logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__ff -----
 module logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__ff(set,
                                                                                  reset,
@@ -27,13 +24,6 @@ output [0:0] ff_Q;
 //----- CLOCK PORTS -----
 input [0:0] ff_clk;
 
-//----- BEGIN wire-connection ports -----
-wire [0:0] ff_D;
-wire [0:0] ff_Q;
-wire [0:0] ff_clk;
-//----- END wire-connection ports -----
-
-
 //----- BEGIN Registered ports -----
 //----- END Registered ports -----
 
@@ -53,9 +43,6 @@ wire [0:0] ff_clk;
 
 endmodule
 // ----- END Verilog module for logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__ff -----
-
-//----- Default net type -----
-`default_nettype wire
 
 
 
