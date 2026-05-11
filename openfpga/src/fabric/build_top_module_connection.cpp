@@ -960,6 +960,161 @@ static void add_top_module_nets_connect_sb_and_cb(
   }
 }
 
+static void add_top_module_nets_connect_sb_and_sb(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
+  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const bool& compact_routing_hierarchy, const bool& group_routing) {
+  /* We could have two different coordinators,
+     one for instance and other for the module */
+  vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(),
+                                            rr_gsb.get_sb_y());
+  vtr::Point<size_t> module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
+
+  /* Skip those Switch blocks that do not exist */
+  if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
+    return;
+  }
+
+  /* If we use compact routing hierarchy, we should find the unique module of
+   * SB, which is added to the top module */
+  if (true == compact_routing_hierarchy) {
+    vtr::Point<size_t> gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+    const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(gsb_coord);
+    module_gsb_sb_coordinate.set_x(unique_mirror.get_x());
+    module_gsb_sb_coordinate.set_y(unique_mirror.get_y());
+  }
+
+  /* This is the source sb that is added to the top module */
+  const RRGSB& module_sb = device_rr_gsb.get_gsb(module_gsb_sb_coordinate);
+  vtr::Point<size_t> module_sb_coordinate(module_sb.get_sb_x(),
+                                          module_sb.get_sb_y());
+  std::string sb_module_name =
+    generate_switch_block_module_name(module_sb_coordinate);
+  ModuleId sb_module_id = module_manager.find_module(sb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(sb_module_id));
+  size_t sb_instance =
+    sb_instance_ids[instance_sb_coordinate.x()][instance_sb_coordinate.y()];
+
+  VTR_LOG("=====  Check sb module name: sb_%u__%u_[%s] ======\n",
+          instance_sb_coordinate.x(), instance_sb_coordinate.y(),
+          sb_module_name.c_str());
+
+  /* Connect grid output pins (OPIN) to switch block grid pins */
+  for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
+    SideManager side_manager(side);
+    /* Iterate over the routing tracks on this side */
+    /* Early skip: if there is no routing tracks at this side */
+    if (0 == module_sb.get_chan_width(side_manager.get_side())) {
+      continue;
+    }
+    /* Find the neighbouring switch block */
+    /* We find the original switch block and then spot its unique mirror!
+     */
+
+    auto x_offset = 0;
+    auto y_offset = 0;
+    switch (side_manager.get_side()) {
+      case LEFT:
+        x_offset = -1;
+        break;
+      case RIGHT:
+        x_offset = 1;
+        break;
+      case TOP:
+        y_offset = 1;
+        break;
+      case BOTTOM:
+        y_offset = -1;
+        break;
+      default:
+        VTR_ASSERT(false);
+    }
+
+    vtr::Point<size_t> adj_instance_sb_coordinate(rr_gsb.get_sb_x() + x_offset,
+                                              rr_gsb.get_sb_y() + y_offset);
+    vtr::Point<size_t> adj_module_gsb_sb_coordinate(rr_gsb.get_x() + x_offset,
+                                              rr_gsb.get_y() + y_offset);
+
+    /* Skip those Connection blocks that do not exist: */
+
+    /* If we use compact routing hierarchy, we should find the unique
+    module of
+      * CB, which is added to the top module */
+    if (true == compact_routing_hierarchy) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_sb_unique_module(adj_instance_sb_coordinate);
+      adj_module_gsb_sb_coordinate.set_x(unique_mirror.get_x());
+      adj_module_gsb_sb_coordinate.set_y(unique_mirror.get_y());
+    }
+
+
+    /* This is the sink sb that is added to the top module */
+    const RRGSB& adj_module_sb =
+    device_rr_gsb.get_gsb(adj_module_gsb_sb_coordinate);
+    vtr::Point<size_t> adj_module_sb_coordinate(adj_module_sb.get_sb_x(),
+    adj_module_sb.get_sb_y());
+    std::string adj_sb_module_name =
+    generate_switch_block_module_name(adj_module_sb_coordinate);
+    ModuleId adj_sb_module_id = module_manager.find_module(adj_sb_module_name);
+
+    if (false == device_rr_gsb.is_sb_exist(adj_module_sb.get_x(),
+                                           adj_module_sb.get_y())) {
+      continue;
+    }
+    VTR_LOG("      adj sb module name %s: sb_%u__%u_[%s] ======\n",
+            side_manager.to_string().c_str(), adj_instance_sb_coordinate.x(),
+            adj_instance_sb_coordinate.y(), adj_sb_module_name.c_str());
+
+    size_t adj_sb_instance =
+      sb_instance_ids[adj_instance_sb_coordinate.x()][adj_instance_sb_coordinate.y()];
+
+    for (size_t itrack = 0;
+         itrack < module_sb.get_chan_width(side_manager.get_side()); ++itrack) {
+
+      // Get sink port information from current switch block
+      e_rr_type node_type = rr_graph.node_type(module_sb.get_chan_node(side_manager.get_side(), itrack));
+      PORTS node_dir = module_sb.get_chan_node_direction(side_manager.get_side(), itrack);
+
+      std::string sb_port_name = generate_sb_module_track_port_name(
+        node_type, side_manager.get_side(), node_dir);
+
+        /* Prepare SB-related port information */
+      ModulePortId sb_port_id =
+        module_manager.find_module_port(sb_module_id, sb_port_name);
+      VTR_ASSERT(true ==
+                 module_manager.valid_module_port_id(sb_module_id, sb_port_id));
+      BasicPort sb_port = module_manager.module_port(sb_module_id, sb_port_id);
+
+      // Get source port information from adjacent switch block
+      e_rr_type adj_node_type = rr_graph.node_type(adj_module_sb.get_chan_node(side_manager.get_opposite(), itrack));
+      PORTS adj_node_dir = adj_module_sb.get_chan_node_direction(side_manager.get_opposite(), itrack);
+
+      std::string adj_sb_port_name = generate_sb_module_track_port_name(
+        adj_node_type, side_manager.get_opposite(), adj_node_dir);
+      ModulePortId adj_sb_port_id =
+        module_manager.find_module_port(adj_sb_module_id, adj_sb_port_name);
+      VTR_ASSERT(true ==
+                 module_manager.valid_module_port_id(adj_sb_module_id, adj_sb_port_id));
+
+      /* Connect: source is OUT_PORT from adjacent SB, sink is IN_PORT to current SB */
+      if (OUT_PORT == adj_node_dir && IN_PORT == node_dir) {
+         VTR_LOG("        Connect OUT port %s of sb_%u__%u_[%s] to IN port %s of sb_%u__%u_[%s]\n",
+                adj_sb_port_name.c_str(), adj_instance_sb_coordinate.x(),
+                adj_instance_sb_coordinate.y(), adj_sb_module_name.c_str(),
+                sb_port_name.c_str(), instance_sb_coordinate.x(),
+                instance_sb_coordinate.y(), sb_module_name.c_str());
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, top_module, adj_sb_module_id, adj_sb_instance,
+          adj_sb_port_id, itrack / 2);
+        module_manager.add_module_net_sink(top_module, net, sb_module_id,
+                                           sb_instance, sb_port_id, itrack / 2);
+      }
+    }
+  }
+}
+
 /********************************************************************
  * Add module nets to connect the grid ports/pins to Connection Blocks
  * and Switch Blocks
@@ -1040,6 +1195,10 @@ void add_top_module_nets_connect_grids_and_gsbs(
           module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
           sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);
       } else {
+        add_top_module_nets_connect_sb_and_sb(
+          module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
+          sb_instance_ids, cb_instance_ids, compact_routing_hierarchy,
+          group_routing);
         VTR_LOG(
           "Skip adding nets between CBs and SBs since group routing is "
           "enabled.\n");
