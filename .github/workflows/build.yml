@@ -379,7 +379,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: prebuilt_yosys_win
-          path: yosys-win32-vcxsrc-latest/
+          path: yosys-win32-vcxsrc-latest/  
 
   # Add an installer creation for MSVC build
   win_msvc_installer:
@@ -498,6 +498,57 @@ jobs:
           retention-days: 1
           path: |
             build/OpenFPGA-tool-suites-*-win64.exe
+
+  # For WASI integration
+  wasi_build:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-latest
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Installer w/o doc (MsBuild Windows-latest)"
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v4
+
+      - name: Setup WASI SDK
+        id: setup-wasi
+        uses: bytecodealliance/setup-wasi-sdk-action@v1
+        with:
+          version: '24' # Specifies the WASI SDK version
+
+      - name: Checkout all the submodules
+        run: |
+          make checkout
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
+
+      - name: Create installer
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-wasi.outputs.wasi-sdk-path }}/share/cmake/wasi-sdk.cmake -G Ninja -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DOPENFPGA_INSTALL_DOC=OFF
+          cmake --build .
+  
+      - name: Upload WebAssembly Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasi-executable
+          path: build/*.wasm
 
   # Test the compilation compatibility on Linux
   linux_build:
