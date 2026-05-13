@@ -513,7 +513,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Installer w/o doc (MsBuild Windows-latest)"
+          - name: "Build Compatibility (WASI)"
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.12.1
