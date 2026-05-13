@@ -77,7 +77,7 @@ parser = argparse.ArgumentParser(formatter_class=formatter)
 parser.add_argument("arch_file", type=str)
 parser.add_argument("benchmark_files", type=str, nargs="+")
 # parser.add_argument('extraArgs', nargs=argparse.REMAINDER)
-parser.add_argument("otherthings", nargs="*")
+# parser.add_argument("otherthings", nargs="*")
 
 # Optional arguments
 parser.add_argument("--top_module", type=str, default="top")
@@ -406,6 +406,37 @@ def main():
 
 def is_windows():
     return os.name == "nt"
+
+
+def shorten_windows_output_path(path):
+    """
+    On Windows, avoid passing very long absolute output directories into
+    OpenFPGA-generated file writers. The flow already runs from args.run_dir,
+    so outputs targeting the current run directory can be expressed as ".".
+
+    Linux behavior is intentionally unchanged.
+    """
+    if os.name != "nt" or not path:
+        return path
+
+    abs_path = os.path.abspath(path)
+    abs_run_dir = os.path.abspath(args.run_dir)
+
+    try:
+        if os.path.samefile(abs_path, abs_run_dir):
+            return "."
+    except OSError:
+        pass
+
+    # In some tasks, the configured output path uses task/latest/... rather
+    # than the actual runXXX/... path. On Windows, latest may be a symlink or
+    # fallback alias to the current run. Avoid feeding this deep absolute path
+    # into OpenFPGA file generation.
+    normalized = abs_path.replace("\\", "/")
+    if "/latest/" in normalized:
+        return "."
+
+    return normalize_template_path_for_windows(path)
 
 
 def normalize_template_path_for_windows(path):
@@ -1013,6 +1044,11 @@ def run_openfpga_shell():
     )
 
     update_template_vars_from_extra_args(path_variables)
+
+    if os.name == "nt" and "OPENFPGA_VERILOG_OUTPUT_DIR" in path_variables:
+        path_variables["OPENFPGA_VERILOG_OUTPUT_DIR"] = shorten_windows_output_path(
+            path_variables["OPENFPGA_VERILOG_OUTPUT_DIR"]
+        )
 
     with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))

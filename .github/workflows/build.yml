@@ -493,7 +493,7 @@ jobs:
           echo "OPENFPGA_PATH=${{ github.workspace }}" >> $env:GITHUB_ENV
 
           echo "==== Run a quick test ===="
-          python openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs
+          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
