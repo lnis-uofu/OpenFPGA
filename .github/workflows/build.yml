@@ -502,11 +502,18 @@ jobs:
       - name: Quick Test
         shell: powershell
         run: |
+          echo "==== Activate python virtual environment ===="
+          .\myenv\Scripts\Activate.ps1
+          
           echo "==== Set OpenFPGA path ===="
           $env:OPENFPGA_PATH = "${{ github.workspace }}"
 
+          echo "==== Show Python path ===="
+          python -c "import sys; print(sys.executable)"
+          python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
+
           echo "==== Run a quick test ===="
-          .\myenv\Scripts\python.exe openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs
+          python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
