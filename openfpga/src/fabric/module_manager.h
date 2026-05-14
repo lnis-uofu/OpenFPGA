@@ -728,7 +728,12 @@ class ModuleManager {
    */
   std::vector<std::pair<ModuleId, ModulePortId>> net_terminal_storage_;
 
-  bool _group_routing = false; /* A flag to indicate if the routing nets are grouped together in the same module. If true, all the routing nets will be grouped together in a module. Otherwise, each net will be put in the module where it is defined. This is used for memory optimization. */
+  bool _group_routing =
+    false; /* A flag to indicate if the routing nets are grouped together in the
+              same module. If true, all the routing nets will be grouped
+              together in a module. Otherwise, each net will be put in the
+              module where it is defined. This is used for memory optimization.
+            */
 };
 
 } /* end namespace openfpga */

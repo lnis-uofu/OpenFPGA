@@ -1033,9 +1033,9 @@ static void add_top_module_nets_connect_sb_and_sb(
     }
 
     vtr::Point<size_t> adj_instance_sb_coordinate(rr_gsb.get_sb_x() + x_offset,
-                                              rr_gsb.get_sb_y() + y_offset);
+                                                  rr_gsb.get_sb_y() + y_offset);
     vtr::Point<size_t> adj_module_gsb_sb_coordinate(rr_gsb.get_x() + x_offset,
-                                              rr_gsb.get_y() + y_offset);
+                                                    rr_gsb.get_y() + y_offset);
 
     /* Skip those Connection blocks that do not exist: */
 
@@ -1049,14 +1049,13 @@ static void add_top_module_nets_connect_sb_and_sb(
       adj_module_gsb_sb_coordinate.set_y(unique_mirror.get_y());
     }
 
-
     /* This is the sink sb that is added to the top module */
     const RRGSB& adj_module_sb =
-    device_rr_gsb.get_gsb(adj_module_gsb_sb_coordinate);
+      device_rr_gsb.get_gsb(adj_module_gsb_sb_coordinate);
     vtr::Point<size_t> adj_module_sb_coordinate(adj_module_sb.get_sb_x(),
-    adj_module_sb.get_sb_y());
+                                                adj_module_sb.get_sb_y());
     std::string adj_sb_module_name =
-    generate_switch_block_module_name(adj_module_sb_coordinate);
+      generate_switch_block_module_name(adj_module_sb_coordinate);
     ModuleId adj_sb_module_id = module_manager.find_module(adj_sb_module_name);
 
     if (false == device_rr_gsb.is_sb_exist(adj_module_sb.get_x(),
@@ -1067,20 +1066,21 @@ static void add_top_module_nets_connect_sb_and_sb(
             side_manager.to_string().c_str(), adj_instance_sb_coordinate.x(),
             adj_instance_sb_coordinate.y(), adj_sb_module_name.c_str());
 
-    size_t adj_sb_instance =
-      sb_instance_ids[adj_instance_sb_coordinate.x()][adj_instance_sb_coordinate.y()];
+    size_t adj_sb_instance = sb_instance_ids[adj_instance_sb_coordinate.x()]
+                                            [adj_instance_sb_coordinate.y()];
 
     for (size_t itrack = 0;
          itrack < module_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-
       // Get sink port information from current switch block
-      e_rr_type node_type = rr_graph.node_type(module_sb.get_chan_node(side_manager.get_side(), itrack));
-      PORTS node_dir = module_sb.get_chan_node_direction(side_manager.get_side(), itrack);
+      e_rr_type node_type = rr_graph.node_type(
+        module_sb.get_chan_node(side_manager.get_side(), itrack));
+      PORTS node_dir =
+        module_sb.get_chan_node_direction(side_manager.get_side(), itrack);
 
       std::string sb_port_name = generate_sb_module_track_port_name(
         node_type, side_manager.get_side(), node_dir);
 
-        /* Prepare SB-related port information */
+      /* Prepare SB-related port information */
       ModulePortId sb_port_id =
         module_manager.find_module_port(sb_module_id, sb_port_name);
       VTR_ASSERT(true ==
@@ -1088,23 +1088,28 @@ static void add_top_module_nets_connect_sb_and_sb(
       BasicPort sb_port = module_manager.module_port(sb_module_id, sb_port_id);
 
       // Get source port information from adjacent switch block
-      e_rr_type adj_node_type = rr_graph.node_type(adj_module_sb.get_chan_node(side_manager.get_opposite(), itrack));
-      PORTS adj_node_dir = adj_module_sb.get_chan_node_direction(side_manager.get_opposite(), itrack);
+      e_rr_type adj_node_type = rr_graph.node_type(
+        adj_module_sb.get_chan_node(side_manager.get_opposite(), itrack));
+      PORTS adj_node_dir = adj_module_sb.get_chan_node_direction(
+        side_manager.get_opposite(), itrack);
 
       std::string adj_sb_port_name = generate_sb_module_track_port_name(
         adj_node_type, side_manager.get_opposite(), adj_node_dir);
       ModulePortId adj_sb_port_id =
         module_manager.find_module_port(adj_sb_module_id, adj_sb_port_name);
-      VTR_ASSERT(true ==
-                 module_manager.valid_module_port_id(adj_sb_module_id, adj_sb_port_id));
+      VTR_ASSERT(true == module_manager.valid_module_port_id(adj_sb_module_id,
+                                                             adj_sb_port_id));
 
-      /* Connect: source is OUT_PORT from adjacent SB, sink is IN_PORT to current SB */
+      /* Connect: source is OUT_PORT from adjacent SB, sink is IN_PORT to
+       * current SB */
       if (OUT_PORT == adj_node_dir && IN_PORT == node_dir) {
-         VTR_LOG("        Connect OUT port %s of sb_%u__%u_[%s] to IN port %s of sb_%u__%u_[%s]\n",
-                adj_sb_port_name.c_str(), adj_instance_sb_coordinate.x(),
-                adj_instance_sb_coordinate.y(), adj_sb_module_name.c_str(),
-                sb_port_name.c_str(), instance_sb_coordinate.x(),
-                instance_sb_coordinate.y(), sb_module_name.c_str());
+        VTR_LOG(
+          "        Connect OUT port %s of sb_%u__%u_[%s] to IN port %s of "
+          "sb_%u__%u_[%s]\n",
+          adj_sb_port_name.c_str(), adj_instance_sb_coordinate.x(),
+          adj_instance_sb_coordinate.y(), adj_sb_module_name.c_str(),
+          sb_port_name.c_str(), instance_sb_coordinate.x(),
+          instance_sb_coordinate.y(), sb_module_name.c_str());
         ModuleNetId net = create_module_source_pin_net(
           module_manager, top_module, adj_sb_module_id, adj_sb_instance,
           adj_sb_port_id, itrack / 2);
