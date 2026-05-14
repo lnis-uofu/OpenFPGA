@@ -8,11 +8,11 @@
 `include "fpga_defines.v"
 
 // ------ Include user-defined netlists -----
-`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/inv.v"
-`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/buf4.v"
-`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/mux2.v"
-`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/dff.v"
-`include "/localproj/ggore/OpenFPGA-QL/openfpga_flow/openfpga_cell_library/verilog/gpio.v"
+`include "/localproj/ggore/OpenFPGA-QL-2/openfpga_flow/openfpga_cell_library/verilog/inv.v"
+`include "/localproj/ggore/OpenFPGA-QL-2/openfpga_flow/openfpga_cell_library/verilog/buf4.v"
+`include "/localproj/ggore/OpenFPGA-QL-2/openfpga_flow/openfpga_cell_library/verilog/mux2.v"
+`include "/localproj/ggore/OpenFPGA-QL-2/openfpga_flow/openfpga_cell_library/verilog/dff.v"
+`include "/localproj/ggore/OpenFPGA-QL-2/openfpga_flow/openfpga_cell_library/verilog/gpio.v"
 // ------ Include primitive module netlists -----
 `include "sub_module/inv_buf_passgate.v"
 `include "sub_module/arch_encoder.v"

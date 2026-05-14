@@ -343,7 +343,7 @@
 	<CHANX side="right" index="30" mux_size="0">
 		<driver_node type="CHANX" side="left" index="28"/>
 	</CHANX>
-	<CHANY side="bottom" index="1" mux_size="39">
+	<CHANY side="bottom" index="1" mux_size="40">
 		<driver_node type="CHANY" side="top" index="3" tap="0"/>
 		<driver_node type="CHANY" side="top" index="3" tap="0"/>
 		<driver_node type="CHANY" side="top" index="3" tap="1"/>
@@ -376,6 +376,7 @@
 		<driver_node type="CHANX" side="right" index="3" tap="1"/>
 		<driver_node type="CHANX" side="right" index="3" tap="1"/>
 		<driver_node type="CHANX" side="right" index="3" tap="2"/>
+		<driver_node type="OPIN" side="bottom" index="3" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="3" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="3" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="3" tap="1"/>
@@ -393,7 +394,7 @@
 	<CHANY side="bottom" index="7" mux_size="0">
 		<driver_node type="CHANY" side="top" index="7"/>
 	</CHANY>
-	<CHANY side="bottom" index="9" mux_size="39">
+	<CHANY side="bottom" index="9" mux_size="40">
 		<driver_node type="CHANY" side="top" index="11" tap="0"/>
 		<driver_node type="CHANY" side="top" index="11" tap="0"/>
 		<driver_node type="CHANY" side="top" index="11" tap="1"/>
@@ -426,6 +427,7 @@
 		<driver_node type="CHANX" side="right" index="11" tap="1"/>
 		<driver_node type="CHANX" side="right" index="11" tap="1"/>
 		<driver_node type="CHANX" side="right" index="11" tap="2"/>
+		<driver_node type="OPIN" side="bottom" index="11" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="11" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="11" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="11" tap="1"/>
@@ -443,7 +445,7 @@
 	<CHANY side="bottom" index="15" mux_size="0">
 		<driver_node type="CHANY" side="top" index="15"/>
 	</CHANY>
-	<CHANY side="bottom" index="17" mux_size="39">
+	<CHANY side="bottom" index="17" mux_size="40">
 		<driver_node type="CHANY" side="top" index="19" tap="0"/>
 		<driver_node type="CHANY" side="top" index="19" tap="0"/>
 		<driver_node type="CHANY" side="top" index="19" tap="1"/>
@@ -476,6 +478,7 @@
 		<driver_node type="CHANX" side="right" index="19" tap="1"/>
 		<driver_node type="CHANX" side="right" index="19" tap="1"/>
 		<driver_node type="CHANX" side="right" index="19" tap="2"/>
+		<driver_node type="OPIN" side="bottom" index="19" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="19" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="19" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="19" tap="1"/>
@@ -493,7 +496,7 @@
 	<CHANY side="bottom" index="23" mux_size="0">
 		<driver_node type="CHANY" side="top" index="23"/>
 	</CHANY>
-	<CHANY side="bottom" index="25" mux_size="39">
+	<CHANY side="bottom" index="25" mux_size="40">
 		<driver_node type="CHANY" side="top" index="27" tap="0"/>
 		<driver_node type="CHANY" side="top" index="27" tap="0"/>
 		<driver_node type="CHANY" side="top" index="27" tap="1"/>
@@ -526,6 +529,7 @@
 		<driver_node type="CHANX" side="right" index="27" tap="1"/>
 		<driver_node type="CHANX" side="right" index="27" tap="1"/>
 		<driver_node type="CHANX" side="right" index="27" tap="2"/>
+		<driver_node type="OPIN" side="bottom" index="27" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="27" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="27" tap="1"/>
 		<driver_node type="OPIN" side="bottom" index="27" tap="1"/>
