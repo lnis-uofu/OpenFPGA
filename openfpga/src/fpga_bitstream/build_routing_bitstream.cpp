@@ -293,6 +293,7 @@ static void build_switch_block_bitstream(
         unused_mux_config, verbose);
     }
     if (true == module_manager.group_routing()) {
+      // If routing is grouped, we need to generate bitstream for IPINs in switch blocks as well since they are in the same module with the routing multiplexers
       for (size_t inode = 0;
            inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
            ++inode) {
@@ -608,10 +609,7 @@ static void build_connection_block_bitstreams(
       }
       ModuleId cb_module =
         module_manager.find_module(module_name_map.name(cb_module_name));
-
-      if (false == module_manager.valid_module_id(cb_module)) {
-        continue;
-      }
+      VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
       /* Bypass empty blocks which have none configurable children */
       if (0 == count_module_manager_module_configurable_children(
@@ -833,6 +831,11 @@ void build_routing_bitstream(
   }
   VTR_LOG("Done\n");
 
+  if (true == module_manager.group_routing()) {
+    VTR_LOG("Skip generating bitstream for Connection blocks since they are "
+            "grouped with Switch blocks in the same module\n");
+    return;
+  }
   /* Generate bitstream for each connection blocks
    * To organize the bitstream in blocks, we create a block for each connection
    * block and give names which are same as they are in top-level module

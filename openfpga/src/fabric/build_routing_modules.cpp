@@ -1361,16 +1361,17 @@ void build_flatten_routing_modules(
         device_rr_gsb, rr_gsb, group_config_block, verbose);
     }
   }
+  if (false == module_manager.group_routing()) {
+    build_flatten_connection_block_modules(
+      module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
+      device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX,
+      group_config_block, verbose);
 
-  build_flatten_connection_block_modules(
-    module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
-    device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX,
-    group_config_block, verbose);
-
-  build_flatten_connection_block_modules(
-    module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
-    device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY,
-    group_config_block, verbose);
+    build_flatten_connection_block_modules(
+      module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
+      device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY,
+      group_config_block, verbose);
+  }
 }
 
 /********************************************************************
