@@ -104,20 +104,20 @@ int build_device_module_graph(
   VTR_LOGV(verbose, "Group routing: %s\n", group_routing ? "true" : "false");
 
   if (true == compress_routing) {
-    build_unique_routing_modules(
-      module_manager, decoder_lib, vpr_device_ctx,
-      openfpga_ctx.vpr_device_annotation(), in_edges,
-      openfpga_ctx.device_rr_gsb(), openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.arch().config_protocol.type(), sram_model,
-      group_config_block, group_routing, verbose);
+    build_unique_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
+                                 openfpga_ctx.vpr_device_annotation(), in_edges,
+                                 openfpga_ctx.device_rr_gsb(),
+                                 openfpga_ctx.arch().circuit_lib,
+                                 openfpga_ctx.arch().config_protocol.type(),
+                                 sram_model, group_config_block, verbose);
   } else {
     VTR_ASSERT_SAFE(false == compress_routing);
-    build_flatten_routing_modules(
-      module_manager, decoder_lib, vpr_device_ctx,
-      openfpga_ctx.vpr_device_annotation(), in_edges,
-      openfpga_ctx.device_rr_gsb(), openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.arch().config_protocol.type(), sram_model,
-      group_config_block, group_routing, verbose);
+    build_flatten_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
+                                  openfpga_ctx.vpr_device_annotation(),
+                                  in_edges, openfpga_ctx.device_rr_gsb(),
+                                  openfpga_ctx.arch().circuit_lib,
+                                  openfpga_ctx.arch().config_protocol.type(),
+                                  sram_model, group_config_block, verbose);
   }
 
   /* Build tile modules if defined */
@@ -152,7 +152,7 @@ int build_device_module_graph(
     sram_model, fabric_tile, name_module_using_index, frame_view,
     compress_routing, duplicate_grid_pin, fabric_key,
     generate_random_fabric_key, group_config_block,
-    vpr_device_ctx.arch->perimeter_cb, group_routing, verbose);
+    vpr_device_ctx.arch->perimeter_cb, verbose);
 
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;

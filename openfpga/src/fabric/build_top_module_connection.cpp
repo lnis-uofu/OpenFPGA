@@ -69,7 +69,7 @@ static void add_top_module_nets_connect_grids_and_sb(
   const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
-  const bool& compact_routing_hierarchy, const bool& group_routing) {
+  const bool& compact_routing_hierarchy) {
   /* Skip those Switch blocks that do not exist */
   if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
     return;
@@ -192,7 +192,7 @@ static void add_top_module_nets_connect_grids_and_sb(
   /* Optional direct connection: SB output tracks -> adjacent grid IPINs
    * This is useful when SB outputs should directly drive grid pins.
    */
-  if (true == group_routing) {
+  if (true == module_manager.group_routing()) {
     ModuleId src_sb_module = sink_sb_module;
     size_t src_sb_instance = sink_sb_instance;
     for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
@@ -965,7 +965,7 @@ static void add_top_module_nets_connect_sb_and_sb(
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy, const bool& group_routing) {
+  const bool& compact_routing_hierarchy) {
   /* We could have two different coordinators,
      one for instance and other for the module */
   vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(),
@@ -1160,8 +1160,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
-  const bool& group_routing) {
+  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin) {
   vtr::ScopedStartFinishTimer timer("Add module nets between grids and GSBs");
 
   vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
@@ -1176,7 +1175,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
         add_top_module_nets_connect_grids_and_sb(
           module_manager, top_module, vpr_device_annotation, grids, layer,
           grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, sb_instance_ids,
-          compact_routing_hierarchy, group_routing);
+          compact_routing_hierarchy);
       } else {
         VTR_ASSERT_SAFE(true == duplicate_grid_pin);
         add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
@@ -1185,7 +1184,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
           compact_routing_hierarchy);
       }
 
-      if (false == group_routing) {
+      if (false == module_manager.group_routing()) {
         add_top_module_nets_connect_grids_and_cb(
           module_manager, top_module, vpr_device_annotation, grids, layer,
           grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, e_rr_type::CHANX,
@@ -1202,8 +1201,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
       } else {
         add_top_module_nets_connect_sb_and_sb(
           module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
-          sb_instance_ids, cb_instance_ids, compact_routing_hierarchy,
-          group_routing);
+          sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);
         VTR_LOG(
           "Skip adding nets between CBs and SBs since group routing is "
           "enabled.\n");

@@ -420,7 +420,7 @@ static void build_connection_block_mux_module(
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block, const bool& group_routing);
+  const bool& group_config_block);
 
 static void build_switch_block_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
@@ -429,8 +429,7 @@ static void build_switch_block_module(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb,
-  const RRGSB& rr_gsb, const bool& group_config_block,
-  const bool& group_routing, const bool& verbose) {
+  const RRGSB& rr_gsb, const bool& group_config_block, const bool& verbose) {
   /* Create a Module of Switch Block and add to module manager */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
 
@@ -548,7 +547,7 @@ static void build_switch_block_module(
     }
   }
 
-  if (true == group_routing) {
+  if (true == module_manager.group_routing()) {
     // Cache the switch block output port nets for later use in connection block
     // building
     for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
@@ -612,7 +611,7 @@ static void build_switch_block_module(
             module_manager, sb_module, device_annotation, grids, rr_graph,
             in_edges, rr_gsb, gsb_edges, cb_type, circuit_lib,
             side_manager.get_side(), inode, input_port_to_module_nets,
-            group_config_block, group_routing);
+            group_config_block);
         }
       }
     }
@@ -762,7 +761,7 @@ static void build_connection_block_mux_module(
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block, const bool& group_routing) {
+  const bool& group_config_block) {
   const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Check current rr_node is an input pin of a CLB */
   VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(cur_rr_node));
@@ -830,14 +829,14 @@ static void build_connection_block_mux_module(
   /* TODO: Generate input ports that are wired to the input bus of the routing
    * multiplexer */
   std::vector<ModulePinInfo> cb_input_port_ids;
-  if (false == group_routing) {
+  if (false == module_manager.group_routing()) {
     cb_input_port_ids = find_connection_block_module_input_ports(
       module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
       cb_type, driver_rr_nodes);
   } else {
     cb_input_port_ids = find_switch_block_module_input_ports(
       module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
-      driver_rr_nodes, group_routing);
+      driver_rr_nodes);
   }
 
   /* Link input bus port to Switch Block inputs */
@@ -993,8 +992,7 @@ static void build_connection_block_interc_modules(
     build_connection_block_mux_module(
       module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
       rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
-      input_port_to_module_nets, group_config_block,
-      module_manager.group_routing());
+      input_port_to_module_nets, group_config_block);
   } /*Nothing should be done else*/
 }
 
@@ -1345,7 +1343,7 @@ void build_flatten_routing_modules(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
-  const bool& group_routing, const bool& verbose) {
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build routing modules...");
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
@@ -1360,7 +1358,7 @@ void build_flatten_routing_modules(
       build_switch_block_module(
         module_manager, decoder_lib, device_annotation, device_ctx.grid,
         device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-        device_rr_gsb, rr_gsb, group_config_block, group_routing, verbose);
+        device_rr_gsb, rr_gsb, group_config_block, verbose);
     }
   }
 
@@ -1393,7 +1391,7 @@ void build_unique_routing_modules(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
-  const bool& group_routing, const bool& verbose) {
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build unique routing modules...");
 
   /* Build unique switch block modules */
@@ -1402,10 +1400,10 @@ void build_unique_routing_modules(
     build_switch_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, group_config_block, group_routing, verbose);
+      device_rr_gsb, unique_mirror, group_config_block, verbose);
   }
 
-  if (false == group_routing) {
+  if (false == module_manager.group_routing()) {
     /* Build unique X-direction connection block modules */
     for (size_t icb = 0;
          icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);

@@ -232,7 +232,7 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(
   const ModuleManager& module_manager, const ModuleId& sb_module,
   const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
-  const std::vector<RRNodeId>& input_rr_nodes, const bool& group_routing) {
+  const std::vector<RRNodeId>& input_rr_nodes) {
   std::vector<ModulePinInfo> input_ports;
 
   for (const RRNodeId& input_rr_node : input_rr_nodes) {
@@ -242,7 +242,7 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(
     int index = -1;
     rr_gsb.get_node_side_and_index(rr_graph, input_rr_node, IN_PORT,
                                    input_pin_side, index);
-    if (group_routing && (NUM_2D_SIDES == input_pin_side)) {
+    if (module_manager.group_routing() && (NUM_2D_SIDES == input_pin_side)) {
       // In group routing, the input_rr_node may not be directly connected
       // to the switch block outputs
       rr_gsb.get_node_side_and_index(rr_graph, input_rr_node, OUT_PORT,

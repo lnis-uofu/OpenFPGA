@@ -29,7 +29,7 @@ void build_flatten_routing_modules(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
-  const bool& group_routing, const bool& verbose);
+  const bool& verbose);
 
 void build_unique_routing_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
@@ -38,7 +38,7 @@ void build_unique_routing_modules(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const bool& group_config_block,
-  const bool& group_routing, const bool& verbose);
+  const bool& verbose);
 
 } /* end namespace openfpga */
 
