@@ -489,18 +489,24 @@ jobs:
           cmake --build . --config Release
           cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
 
+      - name: Create Python virtual environment
+        shell: powershell
+        run: |
+          python -m venv myenv
+
+          echo "==== Install python packages ===="
+          .\myenv\Scripts\python.exe -m pip install --upgrade pip
+          .\myenv\Scripts\python.exe -m pip install "setuptools<81"
+          .\myenv\Scripts\python.exe -m pip install -r requirements.txt
+
       - name: Quick Test
         shell: powershell
         run: |
-          echo "==== Install python packages ===="
-          python -m pip install --upgrade pip setuptools
-          python -m pip install -r requirements.txt
-
           echo "==== Set OpenFPGA path ===="
-          echo "OPENFPGA_PATH=${{ github.workspace }}" >> $env:GITHUB_ENV
+          $env:OPENFPGA_PATH = "${{ github.workspace }}"
 
           echo "==== Run a quick test ===="
-          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs
+          .\myenv\Scripts\python.exe openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
