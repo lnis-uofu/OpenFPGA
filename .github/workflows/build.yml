@@ -519,7 +519,7 @@ jobs:
           Get-Command vvp -ErrorAction SilentlyContinue
           
           echo "==== Run a quick test ===="
-          python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs
+          python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
