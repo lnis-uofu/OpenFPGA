@@ -511,7 +511,13 @@ jobs:
           echo "==== Show Python path ===="
           python -c "import sys; print(sys.executable)"
           python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
-      
+    
+          echo "==== Locate executable files ===="
+          Get-ChildItem -Recurse -Filter openfpga.exe build | Select-Object FullName
+          Get-ChildItem -Recurse -Filter vpr.exe build | Select-Object FullName
+          Get-Command iverilog -ErrorAction SilentlyContinue
+          Get-Command vvp -ErrorAction SilentlyContinue
+          
           echo "==== Run a quick test ===="
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs
 
