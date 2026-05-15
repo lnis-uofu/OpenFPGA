@@ -494,11 +494,6 @@ jobs:
         run: |
           python -m venv myenv
 
-          echo "==== Install python packages ===="
-          .\myenv\Scripts\python.exe -m pip install --upgrade pip
-          .\myenv\Scripts\python.exe -m pip install "setuptools<81"
-          .\myenv\Scripts\python.exe -m pip install -r requirements.txt
-
       - name: Quick Test
         shell: powershell
         run: |
@@ -507,11 +502,16 @@ jobs:
           
           echo "==== Set OpenFPGA path ===="
           $env:OPENFPGA_PATH = "${{ github.workspace }}"
-
+      
+          echo "==== Install Python dependencies ===="
+          .\myenv\Scripts\python.exe -m pip install --upgrade pip
+          .\myenv\Scripts\python.exe -m pip install "setuptools<81"
+          .\myenv\Scripts\python.exe -m pip install -r requirements.txt
+          
           echo "==== Show Python path ===="
           python -c "import sys; print(sys.executable)"
           python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
-
+      
           echo "==== Run a quick test ===="
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs
 
