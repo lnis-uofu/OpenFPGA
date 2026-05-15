@@ -293,7 +293,9 @@ static void build_switch_block_bitstream(
         unused_mux_config, verbose);
     }
     if (true == module_manager.group_routing()) {
-      // If routing is grouped, we need to generate bitstream for IPINs in switch blocks as well since they are in the same module with the routing multiplexers
+      // If routing is grouped, we need to generate bitstream for IPINs in
+      // switch blocks as well since they are in the same module with the
+      // routing multiplexers
       for (size_t inode = 0;
            inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
            ++inode) {
@@ -832,8 +834,9 @@ void build_routing_bitstream(
   VTR_LOG("Done\n");
 
   if (true == module_manager.group_routing()) {
-    VTR_LOG("Skip generating bitstream for Connection blocks since they are "
-            "grouped with Switch blocks in the same module\n");
+    VTR_LOG(
+      "Skip generating bitstream for Connection blocks since they are "
+      "grouped with Switch blocks in the same module\n");
     return;
   }
   /* Generate bitstream for each connection blocks

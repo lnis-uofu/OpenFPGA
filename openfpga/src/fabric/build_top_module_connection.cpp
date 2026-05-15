@@ -1199,7 +1199,8 @@ void add_top_module_nets_connect_grids_and_gsbs(
           module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
           sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);
       } else {
-        // If group routing is enabled, we will not connect CBs and SBs, instead we will directly connect SBs to SBs on top level.
+        // If group routing is enabled, we will not connect CBs and SBs, instead
+        // we will directly connect SBs to SBs on top level.
         add_top_module_nets_connect_sb_and_sb(
           module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
           sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);

@@ -1,20 +1,20 @@
 <rr_sb x="5" y="5" num_sides="4">
 	<CHANY side="top" index="0" mux_size="48">
-		<driver_node type="CHANX" side="right" index="0" tap="3"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="1"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="3"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="1"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="3"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="1"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="3"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
-		<driver_node type="CHANX" side="right" index="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="0" tap="2"/>
 		<driver_node type="CHANX" side="right" index="0" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="0" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="0" tap="2"/>
@@ -59,21 +59,21 @@
 		<driver_node type="CHANY" side="bottom" index="0"/>
 	</CHANY>
 	<CHANY side="top" index="8" mux_size="48">
-		<driver_node type="CHANX" side="right" index="8" tap="3"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="1"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="3"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="1"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="3"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="1"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="3"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
-		<driver_node type="CHANX" side="right" index="8" tap="1"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
+		<driver_node type="CHANX" side="right" index="8" tap="2"/>
 		<driver_node type="CHANX" side="right" index="8" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="8" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="8" tap="2"/>
@@ -118,21 +118,21 @@
 		<driver_node type="CHANY" side="bottom" index="8"/>
 	</CHANY>
 	<CHANY side="top" index="16" mux_size="48">
-		<driver_node type="CHANX" side="right" index="16" tap="3"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="1"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="3"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="1"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="3"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="1"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="3"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
-		<driver_node type="CHANX" side="right" index="16" tap="1"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
+		<driver_node type="CHANX" side="right" index="16" tap="2"/>
 		<driver_node type="CHANX" side="right" index="16" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="16" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="16" tap="2"/>
@@ -177,21 +177,21 @@
 		<driver_node type="CHANY" side="bottom" index="16"/>
 	</CHANY>
 	<CHANY side="top" index="24" mux_size="48">
-		<driver_node type="CHANX" side="right" index="24" tap="3"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="1"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="3"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="1"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="3"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="1"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="3"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
-		<driver_node type="CHANX" side="right" index="24" tap="1"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
+		<driver_node type="CHANX" side="right" index="24" tap="2"/>
 		<driver_node type="CHANX" side="right" index="24" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="24" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="24" tap="2"/>
@@ -236,21 +236,21 @@
 		<driver_node type="CHANY" side="bottom" index="24"/>
 	</CHANY>
 	<CHANX side="right" index="0" mux_size="48">
-		<driver_node type="CHANY" side="top" index="0" tap="3"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="1"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="3"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="1"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="3"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="1"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="3"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
-		<driver_node type="CHANY" side="top" index="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="0" tap="2"/>
 		<driver_node type="CHANY" side="top" index="0" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="0" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="0" tap="2"/>
@@ -295,21 +295,21 @@
 		<driver_node type="CHANX" side="left" index="0"/>
 	</CHANX>
 	<CHANX side="right" index="8" mux_size="48">
-		<driver_node type="CHANY" side="top" index="8" tap="3"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="1"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="3"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="1"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="3"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="1"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="3"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
-		<driver_node type="CHANY" side="top" index="8" tap="1"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
+		<driver_node type="CHANY" side="top" index="8" tap="2"/>
 		<driver_node type="CHANY" side="top" index="8" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="8" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="8" tap="2"/>
@@ -354,21 +354,21 @@
 		<driver_node type="CHANX" side="left" index="8"/>
 	</CHANX>
 	<CHANX side="right" index="16" mux_size="48">
-		<driver_node type="CHANY" side="top" index="16" tap="3"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="1"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="3"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="1"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="3"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="1"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="3"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
-		<driver_node type="CHANY" side="top" index="16" tap="1"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
+		<driver_node type="CHANY" side="top" index="16" tap="2"/>
 		<driver_node type="CHANY" side="top" index="16" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="16" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="16" tap="2"/>
@@ -413,21 +413,21 @@
 		<driver_node type="CHANX" side="left" index="16"/>
 	</CHANX>
 	<CHANX side="right" index="24" mux_size="48">
-		<driver_node type="CHANY" side="top" index="24" tap="3"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="1"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="3"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="1"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="3"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="1"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="3"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
-		<driver_node type="CHANY" side="top" index="24" tap="1"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
+		<driver_node type="CHANY" side="top" index="24" tap="2"/>
 		<driver_node type="CHANY" side="top" index="24" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="24" tap="1"/>
 		<driver_node type="CHANY" side="bottom" index="24" tap="2"/>
@@ -473,61 +473,61 @@
 	</CHANX>
 	<CHANY side="bottom" index="1" mux_size="56">
 		<driver_node type="CHANY" side="top" index="7" tap="1"/>
-		<driver_node type="CHANY" side="top" index="7" tap="2"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
 		<driver_node type="CHANY" side="top" index="7" tap="1"/>
-		<driver_node type="CHANY" side="top" index="7" tap="2"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
 		<driver_node type="CHANY" side="top" index="7" tap="1"/>
-		<driver_node type="CHANY" side="top" index="7" tap="2"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
 		<driver_node type="CHANY" side="top" index="7" tap="1"/>
-		<driver_node type="CHANY" side="top" index="7" tap="2"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="5"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="5"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="5"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="5"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="7" tap="3"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="7" tap="0"/>
+		<driver_node type="CHANX" side="left" index="7" tap="0"/>
+		<driver_node type="CHANX" side="left" index="7" tap="1"/>
+		<driver_node type="CHANX" side="left" index="7" tap="2"/>
 		<driver_node type="CHANX" side="left" index="7" tap="3"/>
-		<driver_node type="CHANX" side="left" index="7" tap="4"/>
-		<driver_node type="CHANX" side="left" index="7" tap="5"/>
-		<driver_node type="CHANX" side="left" index="7" tap="6"/>
+		<driver_node type="CHANX" side="left" index="7" tap="0"/>
+		<driver_node type="CHANX" side="left" index="7" tap="1"/>
+		<driver_node type="CHANX" side="left" index="7" tap="2"/>
 		<driver_node type="CHANX" side="left" index="7" tap="3"/>
-		<driver_node type="CHANX" side="left" index="7" tap="4"/>
-		<driver_node type="CHANX" side="left" index="7" tap="5"/>
-		<driver_node type="CHANX" side="left" index="7" tap="6"/>
+		<driver_node type="CHANX" side="left" index="7" tap="0"/>
+		<driver_node type="CHANX" side="left" index="7" tap="1"/>
+		<driver_node type="CHANX" side="left" index="7" tap="2"/>
 		<driver_node type="CHANX" side="left" index="7" tap="3"/>
-		<driver_node type="CHANX" side="left" index="7" tap="4"/>
-		<driver_node type="CHANX" side="left" index="7" tap="5"/>
-		<driver_node type="CHANX" side="left" index="7" tap="6"/>
+		<driver_node type="CHANX" side="left" index="7" tap="0"/>
+		<driver_node type="CHANX" side="left" index="7" tap="1"/>
+		<driver_node type="CHANX" side="left" index="7" tap="2"/>
 		<driver_node type="CHANX" side="left" index="7" tap="3"/>
-		<driver_node type="CHANX" side="left" index="7" tap="4"/>
-		<driver_node type="CHANX" side="left" index="7" tap="5"/>
-		<driver_node type="CHANX" side="left" index="7" tap="6"/>
 	</CHANY>
 	<CHANY side="bottom" index="3" mux_size="0">
 		<driver_node type="CHANY" side="top" index="7"/>
@@ -540,61 +540,61 @@
 	</CHANY>
 	<CHANY side="bottom" index="9" mux_size="56">
 		<driver_node type="CHANY" side="top" index="15" tap="1"/>
-		<driver_node type="CHANY" side="top" index="15" tap="2"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
 		<driver_node type="CHANY" side="top" index="15" tap="1"/>
-		<driver_node type="CHANY" side="top" index="15" tap="2"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
 		<driver_node type="CHANY" side="top" index="15" tap="1"/>
-		<driver_node type="CHANY" side="top" index="15" tap="2"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
 		<driver_node type="CHANY" side="top" index="15" tap="1"/>
-		<driver_node type="CHANY" side="top" index="15" tap="2"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="5"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="5"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="5"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="5"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="15" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="15" tap="0"/>
+		<driver_node type="CHANX" side="left" index="15" tap="0"/>
+		<driver_node type="CHANX" side="left" index="15" tap="1"/>
+		<driver_node type="CHANX" side="left" index="15" tap="2"/>
 		<driver_node type="CHANX" side="left" index="15" tap="3"/>
-		<driver_node type="CHANX" side="left" index="15" tap="4"/>
-		<driver_node type="CHANX" side="left" index="15" tap="5"/>
-		<driver_node type="CHANX" side="left" index="15" tap="6"/>
+		<driver_node type="CHANX" side="left" index="15" tap="0"/>
+		<driver_node type="CHANX" side="left" index="15" tap="1"/>
+		<driver_node type="CHANX" side="left" index="15" tap="2"/>
 		<driver_node type="CHANX" side="left" index="15" tap="3"/>
-		<driver_node type="CHANX" side="left" index="15" tap="4"/>
-		<driver_node type="CHANX" side="left" index="15" tap="5"/>
-		<driver_node type="CHANX" side="left" index="15" tap="6"/>
+		<driver_node type="CHANX" side="left" index="15" tap="0"/>
+		<driver_node type="CHANX" side="left" index="15" tap="1"/>
+		<driver_node type="CHANX" side="left" index="15" tap="2"/>
 		<driver_node type="CHANX" side="left" index="15" tap="3"/>
-		<driver_node type="CHANX" side="left" index="15" tap="4"/>
-		<driver_node type="CHANX" side="left" index="15" tap="5"/>
-		<driver_node type="CHANX" side="left" index="15" tap="6"/>
+		<driver_node type="CHANX" side="left" index="15" tap="0"/>
+		<driver_node type="CHANX" side="left" index="15" tap="1"/>
+		<driver_node type="CHANX" side="left" index="15" tap="2"/>
 		<driver_node type="CHANX" side="left" index="15" tap="3"/>
-		<driver_node type="CHANX" side="left" index="15" tap="4"/>
-		<driver_node type="CHANX" side="left" index="15" tap="5"/>
-		<driver_node type="CHANX" side="left" index="15" tap="6"/>
 	</CHANY>
 	<CHANY side="bottom" index="11" mux_size="0">
 		<driver_node type="CHANY" side="top" index="15"/>
@@ -607,61 +607,61 @@
 	</CHANY>
 	<CHANY side="bottom" index="17" mux_size="56">
 		<driver_node type="CHANY" side="top" index="23" tap="1"/>
-		<driver_node type="CHANY" side="top" index="23" tap="2"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
 		<driver_node type="CHANY" side="top" index="23" tap="1"/>
-		<driver_node type="CHANY" side="top" index="23" tap="2"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
 		<driver_node type="CHANY" side="top" index="23" tap="1"/>
-		<driver_node type="CHANY" side="top" index="23" tap="2"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
 		<driver_node type="CHANY" side="top" index="23" tap="1"/>
-		<driver_node type="CHANY" side="top" index="23" tap="2"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="5"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="5"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="5"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="5"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="23" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="23" tap="0"/>
+		<driver_node type="CHANX" side="left" index="23" tap="0"/>
+		<driver_node type="CHANX" side="left" index="23" tap="1"/>
+		<driver_node type="CHANX" side="left" index="23" tap="2"/>
 		<driver_node type="CHANX" side="left" index="23" tap="3"/>
-		<driver_node type="CHANX" side="left" index="23" tap="4"/>
-		<driver_node type="CHANX" side="left" index="23" tap="5"/>
-		<driver_node type="CHANX" side="left" index="23" tap="6"/>
+		<driver_node type="CHANX" side="left" index="23" tap="0"/>
+		<driver_node type="CHANX" side="left" index="23" tap="1"/>
+		<driver_node type="CHANX" side="left" index="23" tap="2"/>
 		<driver_node type="CHANX" side="left" index="23" tap="3"/>
-		<driver_node type="CHANX" side="left" index="23" tap="4"/>
-		<driver_node type="CHANX" side="left" index="23" tap="5"/>
-		<driver_node type="CHANX" side="left" index="23" tap="6"/>
+		<driver_node type="CHANX" side="left" index="23" tap="0"/>
+		<driver_node type="CHANX" side="left" index="23" tap="1"/>
+		<driver_node type="CHANX" side="left" index="23" tap="2"/>
 		<driver_node type="CHANX" side="left" index="23" tap="3"/>
-		<driver_node type="CHANX" side="left" index="23" tap="4"/>
-		<driver_node type="CHANX" side="left" index="23" tap="5"/>
-		<driver_node type="CHANX" side="left" index="23" tap="6"/>
+		<driver_node type="CHANX" side="left" index="23" tap="0"/>
+		<driver_node type="CHANX" side="left" index="23" tap="1"/>
+		<driver_node type="CHANX" side="left" index="23" tap="2"/>
 		<driver_node type="CHANX" side="left" index="23" tap="3"/>
-		<driver_node type="CHANX" side="left" index="23" tap="4"/>
-		<driver_node type="CHANX" side="left" index="23" tap="5"/>
-		<driver_node type="CHANX" side="left" index="23" tap="6"/>
 	</CHANY>
 	<CHANY side="bottom" index="19" mux_size="0">
 		<driver_node type="CHANY" side="top" index="23"/>
@@ -674,61 +674,61 @@
 	</CHANY>
 	<CHANY side="bottom" index="25" mux_size="56">
 		<driver_node type="CHANY" side="top" index="31" tap="1"/>
-		<driver_node type="CHANY" side="top" index="31" tap="2"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
 		<driver_node type="CHANY" side="top" index="31" tap="1"/>
-		<driver_node type="CHANY" side="top" index="31" tap="2"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
 		<driver_node type="CHANY" side="top" index="31" tap="1"/>
-		<driver_node type="CHANY" side="top" index="31" tap="2"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
 		<driver_node type="CHANY" side="top" index="31" tap="1"/>
-		<driver_node type="CHANY" side="top" index="31" tap="2"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="5"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="5"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="5"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="5"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
-		<driver_node type="OPIN" side="bottom" index="31" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="OPIN" side="bottom" index="31" tap="0"/>
+		<driver_node type="CHANX" side="left" index="31" tap="0"/>
+		<driver_node type="CHANX" side="left" index="31" tap="1"/>
+		<driver_node type="CHANX" side="left" index="31" tap="2"/>
 		<driver_node type="CHANX" side="left" index="31" tap="3"/>
-		<driver_node type="CHANX" side="left" index="31" tap="4"/>
-		<driver_node type="CHANX" side="left" index="31" tap="5"/>
-		<driver_node type="CHANX" side="left" index="31" tap="6"/>
+		<driver_node type="CHANX" side="left" index="31" tap="0"/>
+		<driver_node type="CHANX" side="left" index="31" tap="1"/>
+		<driver_node type="CHANX" side="left" index="31" tap="2"/>
 		<driver_node type="CHANX" side="left" index="31" tap="3"/>
-		<driver_node type="CHANX" side="left" index="31" tap="4"/>
-		<driver_node type="CHANX" side="left" index="31" tap="5"/>
-		<driver_node type="CHANX" side="left" index="31" tap="6"/>
+		<driver_node type="CHANX" side="left" index="31" tap="0"/>
+		<driver_node type="CHANX" side="left" index="31" tap="1"/>
+		<driver_node type="CHANX" side="left" index="31" tap="2"/>
 		<driver_node type="CHANX" side="left" index="31" tap="3"/>
-		<driver_node type="CHANX" side="left" index="31" tap="4"/>
-		<driver_node type="CHANX" side="left" index="31" tap="5"/>
-		<driver_node type="CHANX" side="left" index="31" tap="6"/>
+		<driver_node type="CHANX" side="left" index="31" tap="0"/>
+		<driver_node type="CHANX" side="left" index="31" tap="1"/>
+		<driver_node type="CHANX" side="left" index="31" tap="2"/>
 		<driver_node type="CHANX" side="left" index="31" tap="3"/>
-		<driver_node type="CHANX" side="left" index="31" tap="4"/>
-		<driver_node type="CHANX" side="left" index="31" tap="5"/>
-		<driver_node type="CHANX" side="left" index="31" tap="6"/>
 	</CHANY>
 	<CHANY side="bottom" index="27" mux_size="0">
 		<driver_node type="CHANY" side="top" index="31"/>
@@ -740,54 +740,54 @@
 		<driver_node type="CHANY" side="top" index="31"/>
 	</CHANY>
 	<CHANX side="left" index="1" mux_size="48">
-		<driver_node type="CHANY" side="top" index="7" tap="5"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="5"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="5"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="5"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
-		<driver_node type="CHANY" side="top" index="7" tap="3"/>
-		<driver_node type="CHANY" side="top" index="7" tap="4"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" tap="1"/>
 		<driver_node type="CHANX" side="right" index="7" tap="1"/>
-		<driver_node type="CHANX" side="right" index="7" tap="2"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
 		<driver_node type="CHANX" side="right" index="7" tap="1"/>
-		<driver_node type="CHANX" side="right" index="7" tap="2"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
 		<driver_node type="CHANX" side="right" index="7" tap="1"/>
-		<driver_node type="CHANX" side="right" index="7" tap="2"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
 		<driver_node type="CHANX" side="right" index="7" tap="1"/>
-		<driver_node type="CHANX" side="right" index="7" tap="2"/>
-		<driver_node type="CHANX" side="right" index="7" tap="3"/>
-		<driver_node type="CHANX" side="right" index="7" tap="4"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="7" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="7" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="7" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="7" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="7" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="7" tap="6"/>
 	</CHANX>
 	<CHANX side="left" index="3" mux_size="0">
 		<driver_node type="CHANX" side="right" index="7"/>
@@ -799,54 +799,54 @@
 		<driver_node type="CHANX" side="right" index="7"/>
 	</CHANX>
 	<CHANX side="left" index="9" mux_size="48">
-		<driver_node type="CHANY" side="top" index="15" tap="5"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="5"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="5"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="5"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
-		<driver_node type="CHANY" side="top" index="15" tap="3"/>
-		<driver_node type="CHANY" side="top" index="15" tap="4"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" tap="1"/>
 		<driver_node type="CHANX" side="right" index="15" tap="1"/>
-		<driver_node type="CHANX" side="right" index="15" tap="2"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
 		<driver_node type="CHANX" side="right" index="15" tap="1"/>
-		<driver_node type="CHANX" side="right" index="15" tap="2"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
 		<driver_node type="CHANX" side="right" index="15" tap="1"/>
-		<driver_node type="CHANX" side="right" index="15" tap="2"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
 		<driver_node type="CHANX" side="right" index="15" tap="1"/>
-		<driver_node type="CHANX" side="right" index="15" tap="2"/>
-		<driver_node type="CHANX" side="right" index="15" tap="3"/>
-		<driver_node type="CHANX" side="right" index="15" tap="4"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="15" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="15" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="15" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="15" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="15" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="15" tap="6"/>
 	</CHANX>
 	<CHANX side="left" index="11" mux_size="0">
 		<driver_node type="CHANX" side="right" index="15"/>
@@ -858,54 +858,54 @@
 		<driver_node type="CHANX" side="right" index="15"/>
 	</CHANX>
 	<CHANX side="left" index="17" mux_size="48">
-		<driver_node type="CHANY" side="top" index="23" tap="5"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="5"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="5"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="5"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
-		<driver_node type="CHANY" side="top" index="23" tap="3"/>
-		<driver_node type="CHANY" side="top" index="23" tap="4"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" tap="1"/>
 		<driver_node type="CHANX" side="right" index="23" tap="1"/>
-		<driver_node type="CHANX" side="right" index="23" tap="2"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
 		<driver_node type="CHANX" side="right" index="23" tap="1"/>
-		<driver_node type="CHANX" side="right" index="23" tap="2"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
 		<driver_node type="CHANX" side="right" index="23" tap="1"/>
-		<driver_node type="CHANX" side="right" index="23" tap="2"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
 		<driver_node type="CHANX" side="right" index="23" tap="1"/>
-		<driver_node type="CHANX" side="right" index="23" tap="2"/>
-		<driver_node type="CHANX" side="right" index="23" tap="3"/>
-		<driver_node type="CHANX" side="right" index="23" tap="4"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="23" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="23" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="23" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="23" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="23" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="23" tap="6"/>
 	</CHANX>
 	<CHANX side="left" index="19" mux_size="0">
 		<driver_node type="CHANX" side="right" index="23"/>
@@ -917,54 +917,54 @@
 		<driver_node type="CHANX" side="right" index="23"/>
 	</CHANX>
 	<CHANX side="left" index="25" mux_size="48">
-		<driver_node type="CHANY" side="top" index="31" tap="5"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="5"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="5"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="5"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
-		<driver_node type="CHANY" side="top" index="31" tap="3"/>
-		<driver_node type="CHANY" side="top" index="31" tap="4"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" tap="1"/>
 		<driver_node type="CHANX" side="right" index="31" tap="1"/>
-		<driver_node type="CHANX" side="right" index="31" tap="2"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
 		<driver_node type="CHANX" side="right" index="31" tap="1"/>
-		<driver_node type="CHANX" side="right" index="31" tap="2"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
 		<driver_node type="CHANX" side="right" index="31" tap="1"/>
-		<driver_node type="CHANX" side="right" index="31" tap="2"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
 		<driver_node type="CHANX" side="right" index="31" tap="1"/>
-		<driver_node type="CHANX" side="right" index="31" tap="2"/>
-		<driver_node type="CHANX" side="right" index="31" tap="3"/>
-		<driver_node type="CHANX" side="right" index="31" tap="4"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="31" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="31" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="31" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="6"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="31" tap="2"/>
 		<driver_node type="CHANY" side="bottom" index="31" tap="3"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="4"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="5"/>
-		<driver_node type="CHANY" side="bottom" index="31" tap="6"/>
 	</CHANX>
 	<CHANX side="left" index="27" mux_size="0">
 		<driver_node type="CHANX" side="right" index="31"/>
@@ -975,4 +975,988 @@
 	<CHANX side="left" index="31" mux_size="0">
 		<driver_node type="CHANX" side="right" index="31"/>
 	</CHANX>
+	<IPIN side="bottom" index="0" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="1" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="2" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="3" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="4" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="5" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="6" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="7" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="8" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="9" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="10" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="11" mux_size="80">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANY" side="top" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANY" side="bottom" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="0" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="7" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="8" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="15" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="16" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="23" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="0"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="2"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+		<driver_node type="CHANX" side="left" index="24" segment_id="0" tap="3"/>
+		<driver_node type="CHANX" side="right" index="31" segment_id="0" tap="1"/>
+	</IPIN>
 </rr_sb>

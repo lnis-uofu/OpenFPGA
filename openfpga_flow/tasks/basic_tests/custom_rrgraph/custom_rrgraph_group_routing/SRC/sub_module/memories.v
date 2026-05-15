@@ -4,8 +4,8 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-// ----- Verilog module for mux_2level_tapbuf_size16_mem -----
-module mux_2level_tapbuf_size16_mem(pReset,
+// ----- Verilog module for mux_2level_tapbuf_size48_mem -----
+module mux_2level_tapbuf_size48_mem(pReset,
                                     prog_clk,
                                     ccff_head,
                                     ccff_tail,
@@ -20,9 +20,9 @@ input [0:0] ccff_head;
 //----- OUTPUT PORTS -----
 output [0:0] ccff_tail;
 //----- OUTPUT PORTS -----
-output [4:0] mem_out;
+output [5:0] mem_out;
 //----- OUTPUT PORTS -----
-output [4:0] mem_outb;
+output [5:0] mem_outb;
 
 //----- BEGIN Registered ports -----
 //----- END Registered ports -----
@@ -32,7 +32,7 @@ output [4:0] mem_outb;
 // ----- BEGIN Local short connections -----
 // ----- END Local short connections -----
 // ----- BEGIN Local output short connections -----
-	assign ccff_tail[0] = mem_out[4];
+	assign ccff_tail[0] = mem_out[5];
 // ----- END Local output short connections -----
 
 	DFFR DFFR_0_ (
@@ -70,8 +70,180 @@ output [4:0] mem_outb;
 		.Q(mem_out[4]),
 		.QN(mem_outb[4]));
 
+	DFFR DFFR_5_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[4]),
+		.Q(mem_out[5]),
+		.QN(mem_outb[5]));
+
 endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size16_mem -----
+// ----- END Verilog module for mux_2level_tapbuf_size48_mem -----
+
+
+
+
+// ----- Verilog module for mux_2level_tapbuf_size80_mem -----
+module mux_2level_tapbuf_size80_mem(pReset,
+                                    prog_clk,
+                                    ccff_head,
+                                    ccff_tail,
+                                    mem_out,
+                                    mem_outb);
+//----- GLOBAL PORTS -----
+input [0:0] pReset;
+//----- GLOBAL PORTS -----
+input [0:0] prog_clk;
+//----- INPUT PORTS -----
+input [0:0] ccff_head;
+//----- OUTPUT PORTS -----
+output [0:0] ccff_tail;
+//----- OUTPUT PORTS -----
+output [6:0] mem_out;
+//----- OUTPUT PORTS -----
+output [6:0] mem_outb;
+
+//----- BEGIN Registered ports -----
+//----- END Registered ports -----
+
+
+
+// ----- BEGIN Local short connections -----
+// ----- END Local short connections -----
+// ----- BEGIN Local output short connections -----
+	assign ccff_tail[0] = mem_out[6];
+// ----- END Local output short connections -----
+
+	DFFR DFFR_0_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(ccff_head),
+		.Q(mem_out[0]),
+		.QN(mem_outb[0]));
+
+	DFFR DFFR_1_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[0]),
+		.Q(mem_out[1]),
+		.QN(mem_outb[1]));
+
+	DFFR DFFR_2_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[1]),
+		.Q(mem_out[2]),
+		.QN(mem_outb[2]));
+
+	DFFR DFFR_3_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[2]),
+		.Q(mem_out[3]),
+		.QN(mem_outb[3]));
+
+	DFFR DFFR_4_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[3]),
+		.Q(mem_out[4]),
+		.QN(mem_outb[4]));
+
+	DFFR DFFR_5_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[4]),
+		.Q(mem_out[5]),
+		.QN(mem_outb[5]));
+
+	DFFR DFFR_6_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[5]),
+		.Q(mem_out[6]),
+		.QN(mem_outb[6]));
+
+endmodule
+// ----- END Verilog module for mux_2level_tapbuf_size80_mem -----
+
+
+
+
+// ----- Verilog module for mux_2level_tapbuf_size39_mem -----
+module mux_2level_tapbuf_size39_mem(pReset,
+                                    prog_clk,
+                                    ccff_head,
+                                    ccff_tail,
+                                    mem_out,
+                                    mem_outb);
+//----- GLOBAL PORTS -----
+input [0:0] pReset;
+//----- GLOBAL PORTS -----
+input [0:0] prog_clk;
+//----- INPUT PORTS -----
+input [0:0] ccff_head;
+//----- OUTPUT PORTS -----
+output [0:0] ccff_tail;
+//----- OUTPUT PORTS -----
+output [5:0] mem_out;
+//----- OUTPUT PORTS -----
+output [5:0] mem_outb;
+
+//----- BEGIN Registered ports -----
+//----- END Registered ports -----
+
+
+
+// ----- BEGIN Local short connections -----
+// ----- END Local short connections -----
+// ----- BEGIN Local output short connections -----
+	assign ccff_tail[0] = mem_out[5];
+// ----- END Local output short connections -----
+
+	DFFR DFFR_0_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(ccff_head),
+		.Q(mem_out[0]),
+		.QN(mem_outb[0]));
+
+	DFFR DFFR_1_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[0]),
+		.Q(mem_out[1]),
+		.QN(mem_outb[1]));
+
+	DFFR DFFR_2_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[1]),
+		.Q(mem_out[2]),
+		.QN(mem_outb[2]));
+
+	DFFR DFFR_3_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[2]),
+		.Q(mem_out[3]),
+		.QN(mem_outb[3]));
+
+	DFFR DFFR_4_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[3]),
+		.Q(mem_out[4]),
+		.QN(mem_outb[4]));
+
+	DFFR DFFR_5_ (
+		.RST(pReset),
+		.CK(prog_clk),
+		.D(mem_out[4]),
+		.Q(mem_out[5]),
+		.QN(mem_outb[5]));
+
+endmodule
+// ----- END Verilog module for mux_2level_tapbuf_size39_mem -----
 
 
 
@@ -151,164 +323,6 @@ output [5:0] mem_outb;
 
 endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size40_mem -----
-
-
-
-
-// ----- Verilog module for mux_2level_tapbuf_size32_mem -----
-module mux_2level_tapbuf_size32_mem(pReset,
-                                    prog_clk,
-                                    ccff_head,
-                                    ccff_tail,
-                                    mem_out,
-                                    mem_outb);
-//----- GLOBAL PORTS -----
-input [0:0] pReset;
-//----- GLOBAL PORTS -----
-input [0:0] prog_clk;
-//----- INPUT PORTS -----
-input [0:0] ccff_head;
-//----- OUTPUT PORTS -----
-output [0:0] ccff_tail;
-//----- OUTPUT PORTS -----
-output [5:0] mem_out;
-//----- OUTPUT PORTS -----
-output [5:0] mem_outb;
-
-//----- BEGIN Registered ports -----
-//----- END Registered ports -----
-
-
-
-// ----- BEGIN Local short connections -----
-// ----- END Local short connections -----
-// ----- BEGIN Local output short connections -----
-	assign ccff_tail[0] = mem_out[5];
-// ----- END Local output short connections -----
-
-	DFFR DFFR_0_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(ccff_head),
-		.Q(mem_out[0]),
-		.QN(mem_outb[0]));
-
-	DFFR DFFR_1_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[0]),
-		.Q(mem_out[1]),
-		.QN(mem_outb[1]));
-
-	DFFR DFFR_2_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[1]),
-		.Q(mem_out[2]),
-		.QN(mem_outb[2]));
-
-	DFFR DFFR_3_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[2]),
-		.Q(mem_out[3]),
-		.QN(mem_outb[3]));
-
-	DFFR DFFR_4_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[3]),
-		.Q(mem_out[4]),
-		.QN(mem_outb[4]));
-
-	DFFR DFFR_5_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[4]),
-		.Q(mem_out[5]),
-		.QN(mem_outb[5]));
-
-endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size32_mem -----
-
-
-
-
-// ----- Verilog module for mux_2level_tapbuf_size48_mem -----
-module mux_2level_tapbuf_size48_mem(pReset,
-                                    prog_clk,
-                                    ccff_head,
-                                    ccff_tail,
-                                    mem_out,
-                                    mem_outb);
-//----- GLOBAL PORTS -----
-input [0:0] pReset;
-//----- GLOBAL PORTS -----
-input [0:0] prog_clk;
-//----- INPUT PORTS -----
-input [0:0] ccff_head;
-//----- OUTPUT PORTS -----
-output [0:0] ccff_tail;
-//----- OUTPUT PORTS -----
-output [5:0] mem_out;
-//----- OUTPUT PORTS -----
-output [5:0] mem_outb;
-
-//----- BEGIN Registered ports -----
-//----- END Registered ports -----
-
-
-
-// ----- BEGIN Local short connections -----
-// ----- END Local short connections -----
-// ----- BEGIN Local output short connections -----
-	assign ccff_tail[0] = mem_out[5];
-// ----- END Local output short connections -----
-
-	DFFR DFFR_0_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(ccff_head),
-		.Q(mem_out[0]),
-		.QN(mem_outb[0]));
-
-	DFFR DFFR_1_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[0]),
-		.Q(mem_out[1]),
-		.QN(mem_outb[1]));
-
-	DFFR DFFR_2_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[1]),
-		.Q(mem_out[2]),
-		.QN(mem_outb[2]));
-
-	DFFR DFFR_3_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[2]),
-		.Q(mem_out[3]),
-		.QN(mem_outb[3]));
-
-	DFFR DFFR_4_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[3]),
-		.Q(mem_out[4]),
-		.QN(mem_outb[4]));
-
-	DFFR DFFR_5_ (
-		.RST(pReset),
-		.CK(prog_clk),
-		.D(mem_out[4]),
-		.Q(mem_out[5]),
-		.QN(mem_outb[5]));
-
-endmodule
-// ----- END Verilog module for mux_2level_tapbuf_size48_mem -----
 
 
 

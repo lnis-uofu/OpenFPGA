@@ -26,7 +26,6 @@ module sb_5__1_(pReset,
                 left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_,
                 left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_,
                 left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_,
-                left_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_,
                 ccff_head,
                 chany_top_out,
                 chanx_right_out,
@@ -84,8 +83,6 @@ input [0:0] left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_;
 //----- INPUT PORTS -----
 input [0:0] left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_;
 //----- INPUT PORTS -----
-input [0:0] left_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_;
-//----- INPUT PORTS -----
 input [0:0] ccff_head;
 //----- OUTPUT PORTS -----
 output [15:0] chany_top_out;
@@ -118,46 +115,46 @@ output [0:0] ccff_tail;
 //----- END Registered ports -----
 
 
-wire [4:0] mux_2level_tapbuf_size16_0_sram;
-wire [4:0] mux_2level_tapbuf_size16_0_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_1_sram;
-wire [4:0] mux_2level_tapbuf_size16_1_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_2_sram;
-wire [4:0] mux_2level_tapbuf_size16_2_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_3_sram;
-wire [4:0] mux_2level_tapbuf_size16_3_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_4_sram;
-wire [4:0] mux_2level_tapbuf_size16_4_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_5_sram;
-wire [4:0] mux_2level_tapbuf_size16_5_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_6_sram;
-wire [4:0] mux_2level_tapbuf_size16_6_sram_inv;
-wire [4:0] mux_2level_tapbuf_size16_7_sram;
-wire [4:0] mux_2level_tapbuf_size16_7_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_0_sram;
-wire [5:0] mux_2level_tapbuf_size32_0_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_1_sram;
-wire [5:0] mux_2level_tapbuf_size32_1_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_2_sram;
-wire [5:0] mux_2level_tapbuf_size32_2_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_3_sram;
-wire [5:0] mux_2level_tapbuf_size32_3_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_4_sram;
-wire [5:0] mux_2level_tapbuf_size32_4_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_5_sram;
-wire [5:0] mux_2level_tapbuf_size32_5_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_6_sram;
-wire [5:0] mux_2level_tapbuf_size32_6_sram_inv;
-wire [5:0] mux_2level_tapbuf_size32_7_sram;
-wire [5:0] mux_2level_tapbuf_size32_7_sram_inv;
-wire [5:0] mux_2level_tapbuf_size40_0_sram;
-wire [5:0] mux_2level_tapbuf_size40_0_sram_inv;
-wire [5:0] mux_2level_tapbuf_size40_1_sram;
-wire [5:0] mux_2level_tapbuf_size40_1_sram_inv;
-wire [5:0] mux_2level_tapbuf_size40_2_sram;
-wire [5:0] mux_2level_tapbuf_size40_2_sram_inv;
-wire [5:0] mux_2level_tapbuf_size40_3_sram;
-wire [5:0] mux_2level_tapbuf_size40_3_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_0_sram;
+wire [5:0] mux_2level_tapbuf_size39_0_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_10_sram;
+wire [5:0] mux_2level_tapbuf_size39_10_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_11_sram;
+wire [5:0] mux_2level_tapbuf_size39_11_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_1_sram;
+wire [5:0] mux_2level_tapbuf_size39_1_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_2_sram;
+wire [5:0] mux_2level_tapbuf_size39_2_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_3_sram;
+wire [5:0] mux_2level_tapbuf_size39_3_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_4_sram;
+wire [5:0] mux_2level_tapbuf_size39_4_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_5_sram;
+wire [5:0] mux_2level_tapbuf_size39_5_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_6_sram;
+wire [5:0] mux_2level_tapbuf_size39_6_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_7_sram;
+wire [5:0] mux_2level_tapbuf_size39_7_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_8_sram;
+wire [5:0] mux_2level_tapbuf_size39_8_sram_inv;
+wire [5:0] mux_2level_tapbuf_size39_9_sram;
+wire [5:0] mux_2level_tapbuf_size39_9_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_0_sram;
+wire [5:0] mux_2level_tapbuf_size48_0_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_1_sram;
+wire [5:0] mux_2level_tapbuf_size48_1_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_2_sram;
+wire [5:0] mux_2level_tapbuf_size48_2_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_3_sram;
+wire [5:0] mux_2level_tapbuf_size48_3_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_4_sram;
+wire [5:0] mux_2level_tapbuf_size48_4_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_5_sram;
+wire [5:0] mux_2level_tapbuf_size48_5_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_6_sram;
+wire [5:0] mux_2level_tapbuf_size48_6_sram_inv;
+wire [5:0] mux_2level_tapbuf_size48_7_sram;
+wire [5:0] mux_2level_tapbuf_size48_7_sram_inv;
 
 // ----- BEGIN Local short connections -----
 // ----- Local connection due to Wire 0 -----
@@ -356,285 +353,285 @@ wire [5:0] mux_2level_tapbuf_size40_3_sram_inv;
 // ----- BEGIN Local output short connections -----
 // ----- END Local output short connections -----
 
-	mux_2level_tapbuf_size32 mux_top_track_0 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
-		.sram({mux_2level_tapbuf_size32_0_sram[5], mux_2level_tapbuf_size32_0_sram[4], mux_2level_tapbuf_size32_0_sram[3], mux_2level_tapbuf_size32_0_sram[2], mux_2level_tapbuf_size32_0_sram[1], mux_2level_tapbuf_size32_0_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_0_sram_inv[5], mux_2level_tapbuf_size32_0_sram_inv[4], mux_2level_tapbuf_size32_0_sram_inv[3], mux_2level_tapbuf_size32_0_sram_inv[2], mux_2level_tapbuf_size32_0_sram_inv[1], mux_2level_tapbuf_size32_0_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_top_track_0 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
+		.sram({mux_2level_tapbuf_size39_0_sram[5], mux_2level_tapbuf_size39_0_sram[4], mux_2level_tapbuf_size39_0_sram[3], mux_2level_tapbuf_size39_0_sram[2], mux_2level_tapbuf_size39_0_sram[1], mux_2level_tapbuf_size39_0_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_0_sram_inv[5], mux_2level_tapbuf_size39_0_sram_inv[4], mux_2level_tapbuf_size39_0_sram_inv[3], mux_2level_tapbuf_size39_0_sram_inv[2], mux_2level_tapbuf_size39_0_sram_inv[1], mux_2level_tapbuf_size39_0_sram_inv[0]}),
 		.out(chany_top_out[0]));
 
-	mux_2level_tapbuf_size32 mux_top_track_8 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
-		.sram({mux_2level_tapbuf_size32_1_sram[5], mux_2level_tapbuf_size32_1_sram[4], mux_2level_tapbuf_size32_1_sram[3], mux_2level_tapbuf_size32_1_sram[2], mux_2level_tapbuf_size32_1_sram[1], mux_2level_tapbuf_size32_1_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_1_sram_inv[5], mux_2level_tapbuf_size32_1_sram_inv[4], mux_2level_tapbuf_size32_1_sram_inv[3], mux_2level_tapbuf_size32_1_sram_inv[2], mux_2level_tapbuf_size32_1_sram_inv[1], mux_2level_tapbuf_size32_1_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_top_track_8 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
+		.sram({mux_2level_tapbuf_size39_1_sram[5], mux_2level_tapbuf_size39_1_sram[4], mux_2level_tapbuf_size39_1_sram[3], mux_2level_tapbuf_size39_1_sram[2], mux_2level_tapbuf_size39_1_sram[1], mux_2level_tapbuf_size39_1_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_1_sram_inv[5], mux_2level_tapbuf_size39_1_sram_inv[4], mux_2level_tapbuf_size39_1_sram_inv[3], mux_2level_tapbuf_size39_1_sram_inv[2], mux_2level_tapbuf_size39_1_sram_inv[1], mux_2level_tapbuf_size39_1_sram_inv[0]}),
 		.out(chany_top_out[4]));
 
-	mux_2level_tapbuf_size32 mux_top_track_16 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
-		.sram({mux_2level_tapbuf_size32_2_sram[5], mux_2level_tapbuf_size32_2_sram[4], mux_2level_tapbuf_size32_2_sram[3], mux_2level_tapbuf_size32_2_sram[2], mux_2level_tapbuf_size32_2_sram[1], mux_2level_tapbuf_size32_2_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_2_sram_inv[5], mux_2level_tapbuf_size32_2_sram_inv[4], mux_2level_tapbuf_size32_2_sram_inv[3], mux_2level_tapbuf_size32_2_sram_inv[2], mux_2level_tapbuf_size32_2_sram_inv[1], mux_2level_tapbuf_size32_2_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_top_track_16 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
+		.sram({mux_2level_tapbuf_size39_2_sram[5], mux_2level_tapbuf_size39_2_sram[4], mux_2level_tapbuf_size39_2_sram[3], mux_2level_tapbuf_size39_2_sram[2], mux_2level_tapbuf_size39_2_sram[1], mux_2level_tapbuf_size39_2_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_2_sram_inv[5], mux_2level_tapbuf_size39_2_sram_inv[4], mux_2level_tapbuf_size39_2_sram_inv[3], mux_2level_tapbuf_size39_2_sram_inv[2], mux_2level_tapbuf_size39_2_sram_inv[1], mux_2level_tapbuf_size39_2_sram_inv[0]}),
 		.out(chany_top_out[8]));
 
-	mux_2level_tapbuf_size32 mux_top_track_24 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
-		.sram({mux_2level_tapbuf_size32_3_sram[5], mux_2level_tapbuf_size32_3_sram[4], mux_2level_tapbuf_size32_3_sram[3], mux_2level_tapbuf_size32_3_sram[2], mux_2level_tapbuf_size32_3_sram[1], mux_2level_tapbuf_size32_3_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_3_sram_inv[5], mux_2level_tapbuf_size32_3_sram_inv[4], mux_2level_tapbuf_size32_3_sram_inv[3], mux_2level_tapbuf_size32_3_sram_inv[2], mux_2level_tapbuf_size32_3_sram_inv[1], mux_2level_tapbuf_size32_3_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_top_track_24 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0]}),
+		.sram({mux_2level_tapbuf_size39_3_sram[5], mux_2level_tapbuf_size39_3_sram[4], mux_2level_tapbuf_size39_3_sram[3], mux_2level_tapbuf_size39_3_sram[2], mux_2level_tapbuf_size39_3_sram[1], mux_2level_tapbuf_size39_3_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_3_sram_inv[5], mux_2level_tapbuf_size39_3_sram_inv[4], mux_2level_tapbuf_size39_3_sram_inv[3], mux_2level_tapbuf_size39_3_sram_inv[2], mux_2level_tapbuf_size39_3_sram_inv[1], mux_2level_tapbuf_size39_3_sram_inv[0]}),
 		.out(chany_top_out[12]));
 
-	mux_2level_tapbuf_size32 mux_right_track_0 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size32_4_sram[5], mux_2level_tapbuf_size32_4_sram[4], mux_2level_tapbuf_size32_4_sram[3], mux_2level_tapbuf_size32_4_sram[2], mux_2level_tapbuf_size32_4_sram[1], mux_2level_tapbuf_size32_4_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_4_sram_inv[5], mux_2level_tapbuf_size32_4_sram_inv[4], mux_2level_tapbuf_size32_4_sram_inv[3], mux_2level_tapbuf_size32_4_sram_inv[2], mux_2level_tapbuf_size32_4_sram_inv[1], mux_2level_tapbuf_size32_4_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_right_track_0 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_4_sram[5], mux_2level_tapbuf_size39_4_sram[4], mux_2level_tapbuf_size39_4_sram[3], mux_2level_tapbuf_size39_4_sram[2], mux_2level_tapbuf_size39_4_sram[1], mux_2level_tapbuf_size39_4_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_4_sram_inv[5], mux_2level_tapbuf_size39_4_sram_inv[4], mux_2level_tapbuf_size39_4_sram_inv[3], mux_2level_tapbuf_size39_4_sram_inv[2], mux_2level_tapbuf_size39_4_sram_inv[1], mux_2level_tapbuf_size39_4_sram_inv[0]}),
 		.out(chanx_right_out[0]));
 
-	mux_2level_tapbuf_size32 mux_right_track_8 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size32_5_sram[5], mux_2level_tapbuf_size32_5_sram[4], mux_2level_tapbuf_size32_5_sram[3], mux_2level_tapbuf_size32_5_sram[2], mux_2level_tapbuf_size32_5_sram[1], mux_2level_tapbuf_size32_5_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_5_sram_inv[5], mux_2level_tapbuf_size32_5_sram_inv[4], mux_2level_tapbuf_size32_5_sram_inv[3], mux_2level_tapbuf_size32_5_sram_inv[2], mux_2level_tapbuf_size32_5_sram_inv[1], mux_2level_tapbuf_size32_5_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_right_track_8 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_5_sram[5], mux_2level_tapbuf_size39_5_sram[4], mux_2level_tapbuf_size39_5_sram[3], mux_2level_tapbuf_size39_5_sram[2], mux_2level_tapbuf_size39_5_sram[1], mux_2level_tapbuf_size39_5_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_5_sram_inv[5], mux_2level_tapbuf_size39_5_sram_inv[4], mux_2level_tapbuf_size39_5_sram_inv[3], mux_2level_tapbuf_size39_5_sram_inv[2], mux_2level_tapbuf_size39_5_sram_inv[1], mux_2level_tapbuf_size39_5_sram_inv[0]}),
 		.out(chanx_right_out[4]));
 
-	mux_2level_tapbuf_size32 mux_right_track_16 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size32_6_sram[5], mux_2level_tapbuf_size32_6_sram[4], mux_2level_tapbuf_size32_6_sram[3], mux_2level_tapbuf_size32_6_sram[2], mux_2level_tapbuf_size32_6_sram[1], mux_2level_tapbuf_size32_6_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_6_sram_inv[5], mux_2level_tapbuf_size32_6_sram_inv[4], mux_2level_tapbuf_size32_6_sram_inv[3], mux_2level_tapbuf_size32_6_sram_inv[2], mux_2level_tapbuf_size32_6_sram_inv[1], mux_2level_tapbuf_size32_6_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_right_track_16 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_6_sram[5], mux_2level_tapbuf_size39_6_sram[4], mux_2level_tapbuf_size39_6_sram[3], mux_2level_tapbuf_size39_6_sram[2], mux_2level_tapbuf_size39_6_sram[1], mux_2level_tapbuf_size39_6_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_6_sram_inv[5], mux_2level_tapbuf_size39_6_sram_inv[4], mux_2level_tapbuf_size39_6_sram_inv[3], mux_2level_tapbuf_size39_6_sram_inv[2], mux_2level_tapbuf_size39_6_sram_inv[1], mux_2level_tapbuf_size39_6_sram_inv[0]}),
 		.out(chanx_right_out[8]));
 
-	mux_2level_tapbuf_size32 mux_right_track_24 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size32_7_sram[5], mux_2level_tapbuf_size32_7_sram[4], mux_2level_tapbuf_size32_7_sram[3], mux_2level_tapbuf_size32_7_sram[2], mux_2level_tapbuf_size32_7_sram[1], mux_2level_tapbuf_size32_7_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size32_7_sram_inv[5], mux_2level_tapbuf_size32_7_sram_inv[4], mux_2level_tapbuf_size32_7_sram_inv[3], mux_2level_tapbuf_size32_7_sram_inv[2], mux_2level_tapbuf_size32_7_sram_inv[1], mux_2level_tapbuf_size32_7_sram_inv[0]}),
+	mux_2level_tapbuf_size39 mux_right_track_24 (
+		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0], left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_7_sram[5], mux_2level_tapbuf_size39_7_sram[4], mux_2level_tapbuf_size39_7_sram[3], mux_2level_tapbuf_size39_7_sram[2], mux_2level_tapbuf_size39_7_sram[1], mux_2level_tapbuf_size39_7_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_7_sram_inv[5], mux_2level_tapbuf_size39_7_sram_inv[4], mux_2level_tapbuf_size39_7_sram_inv[3], mux_2level_tapbuf_size39_7_sram_inv[2], mux_2level_tapbuf_size39_7_sram_inv[1], mux_2level_tapbuf_size39_7_sram_inv[0]}),
 		.out(chanx_right_out[12]));
 
-	mux_2level_tapbuf_size32_mem mem_top_track_0 (
+	mux_2level_tapbuf_size39 mux_left_track_1 (
+		.in({left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_8_sram[5], mux_2level_tapbuf_size39_8_sram[4], mux_2level_tapbuf_size39_8_sram[3], mux_2level_tapbuf_size39_8_sram[2], mux_2level_tapbuf_size39_8_sram[1], mux_2level_tapbuf_size39_8_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_8_sram_inv[5], mux_2level_tapbuf_size39_8_sram_inv[4], mux_2level_tapbuf_size39_8_sram_inv[3], mux_2level_tapbuf_size39_8_sram_inv[2], mux_2level_tapbuf_size39_8_sram_inv[1], mux_2level_tapbuf_size39_8_sram_inv[0]}),
+		.out(chanx_left_out[0]));
+
+	mux_2level_tapbuf_size39 mux_left_track_9 (
+		.in({left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_9_sram[5], mux_2level_tapbuf_size39_9_sram[4], mux_2level_tapbuf_size39_9_sram[3], mux_2level_tapbuf_size39_9_sram[2], mux_2level_tapbuf_size39_9_sram[1], mux_2level_tapbuf_size39_9_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_9_sram_inv[5], mux_2level_tapbuf_size39_9_sram_inv[4], mux_2level_tapbuf_size39_9_sram_inv[3], mux_2level_tapbuf_size39_9_sram_inv[2], mux_2level_tapbuf_size39_9_sram_inv[1], mux_2level_tapbuf_size39_9_sram_inv[0]}),
+		.out(chanx_left_out[4]));
+
+	mux_2level_tapbuf_size39 mux_left_track_17 (
+		.in({left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_10_sram[5], mux_2level_tapbuf_size39_10_sram[4], mux_2level_tapbuf_size39_10_sram[3], mux_2level_tapbuf_size39_10_sram[2], mux_2level_tapbuf_size39_10_sram[1], mux_2level_tapbuf_size39_10_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_10_sram_inv[5], mux_2level_tapbuf_size39_10_sram_inv[4], mux_2level_tapbuf_size39_10_sram_inv[3], mux_2level_tapbuf_size39_10_sram_inv[2], mux_2level_tapbuf_size39_10_sram_inv[1], mux_2level_tapbuf_size39_10_sram_inv[0]}),
+		.out(chanx_left_out[8]));
+
+	mux_2level_tapbuf_size39 mux_left_track_25 (
+		.in({left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size39_11_sram[5], mux_2level_tapbuf_size39_11_sram[4], mux_2level_tapbuf_size39_11_sram[3], mux_2level_tapbuf_size39_11_sram[2], mux_2level_tapbuf_size39_11_sram[1], mux_2level_tapbuf_size39_11_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size39_11_sram_inv[5], mux_2level_tapbuf_size39_11_sram_inv[4], mux_2level_tapbuf_size39_11_sram_inv[3], mux_2level_tapbuf_size39_11_sram_inv[2], mux_2level_tapbuf_size39_11_sram_inv[1], mux_2level_tapbuf_size39_11_sram_inv[0]}),
+		.out(chanx_left_out[12]));
+
+	mux_2level_tapbuf_size39_mem mem_top_track_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
 		.ccff_head(ccff_head),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_0_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_0_sram[5], mux_2level_tapbuf_size32_0_sram[4], mux_2level_tapbuf_size32_0_sram[3], mux_2level_tapbuf_size32_0_sram[2], mux_2level_tapbuf_size32_0_sram[1], mux_2level_tapbuf_size32_0_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_0_sram_inv[5], mux_2level_tapbuf_size32_0_sram_inv[4], mux_2level_tapbuf_size32_0_sram_inv[3], mux_2level_tapbuf_size32_0_sram_inv[2], mux_2level_tapbuf_size32_0_sram_inv[1], mux_2level_tapbuf_size32_0_sram_inv[0]}));
+		.ccff_tail(mux_2level_tapbuf_size39_mem_0_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_0_sram[5], mux_2level_tapbuf_size39_0_sram[4], mux_2level_tapbuf_size39_0_sram[3], mux_2level_tapbuf_size39_0_sram[2], mux_2level_tapbuf_size39_0_sram[1], mux_2level_tapbuf_size39_0_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_0_sram_inv[5], mux_2level_tapbuf_size39_0_sram_inv[4], mux_2level_tapbuf_size39_0_sram_inv[3], mux_2level_tapbuf_size39_0_sram_inv[2], mux_2level_tapbuf_size39_0_sram_inv[1], mux_2level_tapbuf_size39_0_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_top_track_8 (
+	mux_2level_tapbuf_size39_mem mem_top_track_8 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_1_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_1_sram[5], mux_2level_tapbuf_size32_1_sram[4], mux_2level_tapbuf_size32_1_sram[3], mux_2level_tapbuf_size32_1_sram[2], mux_2level_tapbuf_size32_1_sram[1], mux_2level_tapbuf_size32_1_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_1_sram_inv[5], mux_2level_tapbuf_size32_1_sram_inv[4], mux_2level_tapbuf_size32_1_sram_inv[3], mux_2level_tapbuf_size32_1_sram_inv[2], mux_2level_tapbuf_size32_1_sram_inv[1], mux_2level_tapbuf_size32_1_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_1_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_1_sram[5], mux_2level_tapbuf_size39_1_sram[4], mux_2level_tapbuf_size39_1_sram[3], mux_2level_tapbuf_size39_1_sram[2], mux_2level_tapbuf_size39_1_sram[1], mux_2level_tapbuf_size39_1_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_1_sram_inv[5], mux_2level_tapbuf_size39_1_sram_inv[4], mux_2level_tapbuf_size39_1_sram_inv[3], mux_2level_tapbuf_size39_1_sram_inv[2], mux_2level_tapbuf_size39_1_sram_inv[1], mux_2level_tapbuf_size39_1_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_top_track_16 (
+	mux_2level_tapbuf_size39_mem mem_top_track_16 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_2_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_2_sram[5], mux_2level_tapbuf_size32_2_sram[4], mux_2level_tapbuf_size32_2_sram[3], mux_2level_tapbuf_size32_2_sram[2], mux_2level_tapbuf_size32_2_sram[1], mux_2level_tapbuf_size32_2_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_2_sram_inv[5], mux_2level_tapbuf_size32_2_sram_inv[4], mux_2level_tapbuf_size32_2_sram_inv[3], mux_2level_tapbuf_size32_2_sram_inv[2], mux_2level_tapbuf_size32_2_sram_inv[1], mux_2level_tapbuf_size32_2_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_2_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_2_sram[5], mux_2level_tapbuf_size39_2_sram[4], mux_2level_tapbuf_size39_2_sram[3], mux_2level_tapbuf_size39_2_sram[2], mux_2level_tapbuf_size39_2_sram[1], mux_2level_tapbuf_size39_2_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_2_sram_inv[5], mux_2level_tapbuf_size39_2_sram_inv[4], mux_2level_tapbuf_size39_2_sram_inv[3], mux_2level_tapbuf_size39_2_sram_inv[2], mux_2level_tapbuf_size39_2_sram_inv[1], mux_2level_tapbuf_size39_2_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_top_track_24 (
+	mux_2level_tapbuf_size39_mem mem_top_track_24 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_3_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_3_sram[5], mux_2level_tapbuf_size32_3_sram[4], mux_2level_tapbuf_size32_3_sram[3], mux_2level_tapbuf_size32_3_sram[2], mux_2level_tapbuf_size32_3_sram[1], mux_2level_tapbuf_size32_3_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_3_sram_inv[5], mux_2level_tapbuf_size32_3_sram_inv[4], mux_2level_tapbuf_size32_3_sram_inv[3], mux_2level_tapbuf_size32_3_sram_inv[2], mux_2level_tapbuf_size32_3_sram_inv[1], mux_2level_tapbuf_size32_3_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_3_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_3_sram[5], mux_2level_tapbuf_size39_3_sram[4], mux_2level_tapbuf_size39_3_sram[3], mux_2level_tapbuf_size39_3_sram[2], mux_2level_tapbuf_size39_3_sram[1], mux_2level_tapbuf_size39_3_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_3_sram_inv[5], mux_2level_tapbuf_size39_3_sram_inv[4], mux_2level_tapbuf_size39_3_sram_inv[3], mux_2level_tapbuf_size39_3_sram_inv[2], mux_2level_tapbuf_size39_3_sram_inv[1], mux_2level_tapbuf_size39_3_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_right_track_0 (
+	mux_2level_tapbuf_size39_mem mem_right_track_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_4_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_4_sram[5], mux_2level_tapbuf_size32_4_sram[4], mux_2level_tapbuf_size32_4_sram[3], mux_2level_tapbuf_size32_4_sram[2], mux_2level_tapbuf_size32_4_sram[1], mux_2level_tapbuf_size32_4_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_4_sram_inv[5], mux_2level_tapbuf_size32_4_sram_inv[4], mux_2level_tapbuf_size32_4_sram_inv[3], mux_2level_tapbuf_size32_4_sram_inv[2], mux_2level_tapbuf_size32_4_sram_inv[1], mux_2level_tapbuf_size32_4_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_4_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_4_sram[5], mux_2level_tapbuf_size39_4_sram[4], mux_2level_tapbuf_size39_4_sram[3], mux_2level_tapbuf_size39_4_sram[2], mux_2level_tapbuf_size39_4_sram[1], mux_2level_tapbuf_size39_4_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_4_sram_inv[5], mux_2level_tapbuf_size39_4_sram_inv[4], mux_2level_tapbuf_size39_4_sram_inv[3], mux_2level_tapbuf_size39_4_sram_inv[2], mux_2level_tapbuf_size39_4_sram_inv[1], mux_2level_tapbuf_size39_4_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_right_track_8 (
+	mux_2level_tapbuf_size39_mem mem_right_track_8 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_4_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_5_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_5_sram[5], mux_2level_tapbuf_size32_5_sram[4], mux_2level_tapbuf_size32_5_sram[3], mux_2level_tapbuf_size32_5_sram[2], mux_2level_tapbuf_size32_5_sram[1], mux_2level_tapbuf_size32_5_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_5_sram_inv[5], mux_2level_tapbuf_size32_5_sram_inv[4], mux_2level_tapbuf_size32_5_sram_inv[3], mux_2level_tapbuf_size32_5_sram_inv[2], mux_2level_tapbuf_size32_5_sram_inv[1], mux_2level_tapbuf_size32_5_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_5_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_5_sram[5], mux_2level_tapbuf_size39_5_sram[4], mux_2level_tapbuf_size39_5_sram[3], mux_2level_tapbuf_size39_5_sram[2], mux_2level_tapbuf_size39_5_sram[1], mux_2level_tapbuf_size39_5_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_5_sram_inv[5], mux_2level_tapbuf_size39_5_sram_inv[4], mux_2level_tapbuf_size39_5_sram_inv[3], mux_2level_tapbuf_size39_5_sram_inv[2], mux_2level_tapbuf_size39_5_sram_inv[1], mux_2level_tapbuf_size39_5_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_right_track_16 (
+	mux_2level_tapbuf_size39_mem mem_right_track_16 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_5_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_6_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_6_sram[5], mux_2level_tapbuf_size32_6_sram[4], mux_2level_tapbuf_size32_6_sram[3], mux_2level_tapbuf_size32_6_sram[2], mux_2level_tapbuf_size32_6_sram[1], mux_2level_tapbuf_size32_6_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_6_sram_inv[5], mux_2level_tapbuf_size32_6_sram_inv[4], mux_2level_tapbuf_size32_6_sram_inv[3], mux_2level_tapbuf_size32_6_sram_inv[2], mux_2level_tapbuf_size32_6_sram_inv[1], mux_2level_tapbuf_size32_6_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_5_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_6_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_6_sram[5], mux_2level_tapbuf_size39_6_sram[4], mux_2level_tapbuf_size39_6_sram[3], mux_2level_tapbuf_size39_6_sram[2], mux_2level_tapbuf_size39_6_sram[1], mux_2level_tapbuf_size39_6_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_6_sram_inv[5], mux_2level_tapbuf_size39_6_sram_inv[4], mux_2level_tapbuf_size39_6_sram_inv[3], mux_2level_tapbuf_size39_6_sram_inv[2], mux_2level_tapbuf_size39_6_sram_inv[1], mux_2level_tapbuf_size39_6_sram_inv[0]}));
 
-	mux_2level_tapbuf_size32_mem mem_right_track_24 (
+	mux_2level_tapbuf_size39_mem mem_right_track_24 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_6_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size32_mem_7_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size32_7_sram[5], mux_2level_tapbuf_size32_7_sram[4], mux_2level_tapbuf_size32_7_sram[3], mux_2level_tapbuf_size32_7_sram[2], mux_2level_tapbuf_size32_7_sram[1], mux_2level_tapbuf_size32_7_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size32_7_sram_inv[5], mux_2level_tapbuf_size32_7_sram_inv[4], mux_2level_tapbuf_size32_7_sram_inv[3], mux_2level_tapbuf_size32_7_sram_inv[2], mux_2level_tapbuf_size32_7_sram_inv[1], mux_2level_tapbuf_size32_7_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_6_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_7_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_7_sram[5], mux_2level_tapbuf_size39_7_sram[4], mux_2level_tapbuf_size39_7_sram[3], mux_2level_tapbuf_size39_7_sram[2], mux_2level_tapbuf_size39_7_sram[1], mux_2level_tapbuf_size39_7_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_7_sram_inv[5], mux_2level_tapbuf_size39_7_sram_inv[4], mux_2level_tapbuf_size39_7_sram_inv[3], mux_2level_tapbuf_size39_7_sram_inv[2], mux_2level_tapbuf_size39_7_sram_inv[1], mux_2level_tapbuf_size39_7_sram_inv[0]}));
 
-	mux_2level_tapbuf_size40 mux_left_track_1 (
-		.in({left_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size40_0_sram[5], mux_2level_tapbuf_size40_0_sram[4], mux_2level_tapbuf_size40_0_sram[3], mux_2level_tapbuf_size40_0_sram[2], mux_2level_tapbuf_size40_0_sram[1], mux_2level_tapbuf_size40_0_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size40_0_sram_inv[5], mux_2level_tapbuf_size40_0_sram_inv[4], mux_2level_tapbuf_size40_0_sram_inv[3], mux_2level_tapbuf_size40_0_sram_inv[2], mux_2level_tapbuf_size40_0_sram_inv[1], mux_2level_tapbuf_size40_0_sram_inv[0]}),
-		.out(chanx_left_out[0]));
-
-	mux_2level_tapbuf_size40 mux_left_track_9 (
-		.in({left_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size40_1_sram[5], mux_2level_tapbuf_size40_1_sram[4], mux_2level_tapbuf_size40_1_sram[3], mux_2level_tapbuf_size40_1_sram[2], mux_2level_tapbuf_size40_1_sram[1], mux_2level_tapbuf_size40_1_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size40_1_sram_inv[5], mux_2level_tapbuf_size40_1_sram_inv[4], mux_2level_tapbuf_size40_1_sram_inv[3], mux_2level_tapbuf_size40_1_sram_inv[2], mux_2level_tapbuf_size40_1_sram_inv[1], mux_2level_tapbuf_size40_1_sram_inv[0]}),
-		.out(chanx_left_out[4]));
-
-	mux_2level_tapbuf_size40 mux_left_track_17 (
-		.in({left_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size40_2_sram[5], mux_2level_tapbuf_size40_2_sram[4], mux_2level_tapbuf_size40_2_sram[3], mux_2level_tapbuf_size40_2_sram[2], mux_2level_tapbuf_size40_2_sram[1], mux_2level_tapbuf_size40_2_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size40_2_sram_inv[5], mux_2level_tapbuf_size40_2_sram_inv[4], mux_2level_tapbuf_size40_2_sram_inv[3], mux_2level_tapbuf_size40_2_sram_inv[2], mux_2level_tapbuf_size40_2_sram_inv[1], mux_2level_tapbuf_size40_2_sram_inv[0]}),
-		.out(chanx_left_out[8]));
-
-	mux_2level_tapbuf_size40 mux_left_track_25 (
-		.in({left_bottom_grid_top_width_0_height_0_subtile_7__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_6__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_5__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_4__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_3__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_2__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_1__pin_inpad_0_, left_bottom_grid_top_width_0_height_0_subtile_0__pin_inpad_0_, chanx_right_in[15], chanx_right_in[14], chanx_right_in[13], chanx_right_in[12], chanx_right_in[11], chanx_right_in[10], chanx_right_in[9], chanx_right_in[8], chanx_right_in[7], chanx_right_in[6], chanx_right_in[5], chanx_right_in[4], chanx_right_in[3], chanx_right_in[2], chanx_right_in[1], chanx_right_in[0], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
-		.sram({mux_2level_tapbuf_size40_3_sram[5], mux_2level_tapbuf_size40_3_sram[4], mux_2level_tapbuf_size40_3_sram[3], mux_2level_tapbuf_size40_3_sram[2], mux_2level_tapbuf_size40_3_sram[1], mux_2level_tapbuf_size40_3_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size40_3_sram_inv[5], mux_2level_tapbuf_size40_3_sram_inv[4], mux_2level_tapbuf_size40_3_sram_inv[3], mux_2level_tapbuf_size40_3_sram_inv[2], mux_2level_tapbuf_size40_3_sram_inv[1], mux_2level_tapbuf_size40_3_sram_inv[0]}),
-		.out(chanx_left_out[12]));
-
-	mux_2level_tapbuf_size40_mem mem_left_track_1 (
+	mux_2level_tapbuf_size39_mem mem_left_track_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size32_mem_7_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size40_mem_0_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size40_0_sram[5], mux_2level_tapbuf_size40_0_sram[4], mux_2level_tapbuf_size40_0_sram[3], mux_2level_tapbuf_size40_0_sram[2], mux_2level_tapbuf_size40_0_sram[1], mux_2level_tapbuf_size40_0_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size40_0_sram_inv[5], mux_2level_tapbuf_size40_0_sram_inv[4], mux_2level_tapbuf_size40_0_sram_inv[3], mux_2level_tapbuf_size40_0_sram_inv[2], mux_2level_tapbuf_size40_0_sram_inv[1], mux_2level_tapbuf_size40_0_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_7_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_8_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_8_sram[5], mux_2level_tapbuf_size39_8_sram[4], mux_2level_tapbuf_size39_8_sram[3], mux_2level_tapbuf_size39_8_sram[2], mux_2level_tapbuf_size39_8_sram[1], mux_2level_tapbuf_size39_8_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_8_sram_inv[5], mux_2level_tapbuf_size39_8_sram_inv[4], mux_2level_tapbuf_size39_8_sram_inv[3], mux_2level_tapbuf_size39_8_sram_inv[2], mux_2level_tapbuf_size39_8_sram_inv[1], mux_2level_tapbuf_size39_8_sram_inv[0]}));
 
-	mux_2level_tapbuf_size40_mem mem_left_track_9 (
+	mux_2level_tapbuf_size39_mem mem_left_track_9 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size40_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size40_mem_1_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size40_1_sram[5], mux_2level_tapbuf_size40_1_sram[4], mux_2level_tapbuf_size40_1_sram[3], mux_2level_tapbuf_size40_1_sram[2], mux_2level_tapbuf_size40_1_sram[1], mux_2level_tapbuf_size40_1_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size40_1_sram_inv[5], mux_2level_tapbuf_size40_1_sram_inv[4], mux_2level_tapbuf_size40_1_sram_inv[3], mux_2level_tapbuf_size40_1_sram_inv[2], mux_2level_tapbuf_size40_1_sram_inv[1], mux_2level_tapbuf_size40_1_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_8_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_9_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_9_sram[5], mux_2level_tapbuf_size39_9_sram[4], mux_2level_tapbuf_size39_9_sram[3], mux_2level_tapbuf_size39_9_sram[2], mux_2level_tapbuf_size39_9_sram[1], mux_2level_tapbuf_size39_9_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_9_sram_inv[5], mux_2level_tapbuf_size39_9_sram_inv[4], mux_2level_tapbuf_size39_9_sram_inv[3], mux_2level_tapbuf_size39_9_sram_inv[2], mux_2level_tapbuf_size39_9_sram_inv[1], mux_2level_tapbuf_size39_9_sram_inv[0]}));
 
-	mux_2level_tapbuf_size40_mem mem_left_track_17 (
+	mux_2level_tapbuf_size39_mem mem_left_track_17 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size40_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size40_mem_2_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size40_2_sram[5], mux_2level_tapbuf_size40_2_sram[4], mux_2level_tapbuf_size40_2_sram[3], mux_2level_tapbuf_size40_2_sram[2], mux_2level_tapbuf_size40_2_sram[1], mux_2level_tapbuf_size40_2_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size40_2_sram_inv[5], mux_2level_tapbuf_size40_2_sram_inv[4], mux_2level_tapbuf_size40_2_sram_inv[3], mux_2level_tapbuf_size40_2_sram_inv[2], mux_2level_tapbuf_size40_2_sram_inv[1], mux_2level_tapbuf_size40_2_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_9_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_10_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_10_sram[5], mux_2level_tapbuf_size39_10_sram[4], mux_2level_tapbuf_size39_10_sram[3], mux_2level_tapbuf_size39_10_sram[2], mux_2level_tapbuf_size39_10_sram[1], mux_2level_tapbuf_size39_10_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_10_sram_inv[5], mux_2level_tapbuf_size39_10_sram_inv[4], mux_2level_tapbuf_size39_10_sram_inv[3], mux_2level_tapbuf_size39_10_sram_inv[2], mux_2level_tapbuf_size39_10_sram_inv[1], mux_2level_tapbuf_size39_10_sram_inv[0]}));
 
-	mux_2level_tapbuf_size40_mem mem_left_track_25 (
+	mux_2level_tapbuf_size39_mem mem_left_track_25 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size40_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size40_mem_3_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size40_3_sram[5], mux_2level_tapbuf_size40_3_sram[4], mux_2level_tapbuf_size40_3_sram[3], mux_2level_tapbuf_size40_3_sram[2], mux_2level_tapbuf_size40_3_sram[1], mux_2level_tapbuf_size40_3_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size40_3_sram_inv[5], mux_2level_tapbuf_size40_3_sram_inv[4], mux_2level_tapbuf_size40_3_sram_inv[3], mux_2level_tapbuf_size40_3_sram_inv[2], mux_2level_tapbuf_size40_3_sram_inv[1], mux_2level_tapbuf_size40_3_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_10_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size39_mem_11_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size39_11_sram[5], mux_2level_tapbuf_size39_11_sram[4], mux_2level_tapbuf_size39_11_sram[3], mux_2level_tapbuf_size39_11_sram[2], mux_2level_tapbuf_size39_11_sram[1], mux_2level_tapbuf_size39_11_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size39_11_sram_inv[5], mux_2level_tapbuf_size39_11_sram_inv[4], mux_2level_tapbuf_size39_11_sram_inv[3], mux_2level_tapbuf_size39_11_sram_inv[2], mux_2level_tapbuf_size39_11_sram_inv[1], mux_2level_tapbuf_size39_11_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_0 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_0_sram[4], mux_2level_tapbuf_size16_0_sram[3], mux_2level_tapbuf_size16_0_sram[2], mux_2level_tapbuf_size16_0_sram[1], mux_2level_tapbuf_size16_0_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_0_sram_inv[4], mux_2level_tapbuf_size16_0_sram_inv[3], mux_2level_tapbuf_size16_0_sram_inv[2], mux_2level_tapbuf_size16_0_sram_inv[1], mux_2level_tapbuf_size16_0_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_0 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_0_sram[5], mux_2level_tapbuf_size48_0_sram[4], mux_2level_tapbuf_size48_0_sram[3], mux_2level_tapbuf_size48_0_sram[2], mux_2level_tapbuf_size48_0_sram[1], mux_2level_tapbuf_size48_0_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_0_sram_inv[5], mux_2level_tapbuf_size48_0_sram_inv[4], mux_2level_tapbuf_size48_0_sram_inv[3], mux_2level_tapbuf_size48_0_sram_inv[2], mux_2level_tapbuf_size48_0_sram_inv[1], mux_2level_tapbuf_size48_0_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_0__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_1 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_1_sram[4], mux_2level_tapbuf_size16_1_sram[3], mux_2level_tapbuf_size16_1_sram[2], mux_2level_tapbuf_size16_1_sram[1], mux_2level_tapbuf_size16_1_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_1_sram_inv[4], mux_2level_tapbuf_size16_1_sram_inv[3], mux_2level_tapbuf_size16_1_sram_inv[2], mux_2level_tapbuf_size16_1_sram_inv[1], mux_2level_tapbuf_size16_1_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_1 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_1_sram[5], mux_2level_tapbuf_size48_1_sram[4], mux_2level_tapbuf_size48_1_sram[3], mux_2level_tapbuf_size48_1_sram[2], mux_2level_tapbuf_size48_1_sram[1], mux_2level_tapbuf_size48_1_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_1_sram_inv[5], mux_2level_tapbuf_size48_1_sram_inv[4], mux_2level_tapbuf_size48_1_sram_inv[3], mux_2level_tapbuf_size48_1_sram_inv[2], mux_2level_tapbuf_size48_1_sram_inv[1], mux_2level_tapbuf_size48_1_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_1__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_2 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_2_sram[4], mux_2level_tapbuf_size16_2_sram[3], mux_2level_tapbuf_size16_2_sram[2], mux_2level_tapbuf_size16_2_sram[1], mux_2level_tapbuf_size16_2_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_2_sram_inv[4], mux_2level_tapbuf_size16_2_sram_inv[3], mux_2level_tapbuf_size16_2_sram_inv[2], mux_2level_tapbuf_size16_2_sram_inv[1], mux_2level_tapbuf_size16_2_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_2 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_2_sram[5], mux_2level_tapbuf_size48_2_sram[4], mux_2level_tapbuf_size48_2_sram[3], mux_2level_tapbuf_size48_2_sram[2], mux_2level_tapbuf_size48_2_sram[1], mux_2level_tapbuf_size48_2_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_2_sram_inv[5], mux_2level_tapbuf_size48_2_sram_inv[4], mux_2level_tapbuf_size48_2_sram_inv[3], mux_2level_tapbuf_size48_2_sram_inv[2], mux_2level_tapbuf_size48_2_sram_inv[1], mux_2level_tapbuf_size48_2_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_2__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_3 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_3_sram[4], mux_2level_tapbuf_size16_3_sram[3], mux_2level_tapbuf_size16_3_sram[2], mux_2level_tapbuf_size16_3_sram[1], mux_2level_tapbuf_size16_3_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_3_sram_inv[4], mux_2level_tapbuf_size16_3_sram_inv[3], mux_2level_tapbuf_size16_3_sram_inv[2], mux_2level_tapbuf_size16_3_sram_inv[1], mux_2level_tapbuf_size16_3_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_3 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_3_sram[5], mux_2level_tapbuf_size48_3_sram[4], mux_2level_tapbuf_size48_3_sram[3], mux_2level_tapbuf_size48_3_sram[2], mux_2level_tapbuf_size48_3_sram[1], mux_2level_tapbuf_size48_3_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_3_sram_inv[5], mux_2level_tapbuf_size48_3_sram_inv[4], mux_2level_tapbuf_size48_3_sram_inv[3], mux_2level_tapbuf_size48_3_sram_inv[2], mux_2level_tapbuf_size48_3_sram_inv[1], mux_2level_tapbuf_size48_3_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_3__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_4 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_4_sram[4], mux_2level_tapbuf_size16_4_sram[3], mux_2level_tapbuf_size16_4_sram[2], mux_2level_tapbuf_size16_4_sram[1], mux_2level_tapbuf_size16_4_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_4_sram_inv[4], mux_2level_tapbuf_size16_4_sram_inv[3], mux_2level_tapbuf_size16_4_sram_inv[2], mux_2level_tapbuf_size16_4_sram_inv[1], mux_2level_tapbuf_size16_4_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_4 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_4_sram[5], mux_2level_tapbuf_size48_4_sram[4], mux_2level_tapbuf_size48_4_sram[3], mux_2level_tapbuf_size48_4_sram[2], mux_2level_tapbuf_size48_4_sram[1], mux_2level_tapbuf_size48_4_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_4_sram_inv[5], mux_2level_tapbuf_size48_4_sram_inv[4], mux_2level_tapbuf_size48_4_sram_inv[3], mux_2level_tapbuf_size48_4_sram_inv[2], mux_2level_tapbuf_size48_4_sram_inv[1], mux_2level_tapbuf_size48_4_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_4__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_5 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_5_sram[4], mux_2level_tapbuf_size16_5_sram[3], mux_2level_tapbuf_size16_5_sram[2], mux_2level_tapbuf_size16_5_sram[1], mux_2level_tapbuf_size16_5_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_5_sram_inv[4], mux_2level_tapbuf_size16_5_sram_inv[3], mux_2level_tapbuf_size16_5_sram_inv[2], mux_2level_tapbuf_size16_5_sram_inv[1], mux_2level_tapbuf_size16_5_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_5 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_5_sram[5], mux_2level_tapbuf_size48_5_sram[4], mux_2level_tapbuf_size48_5_sram[3], mux_2level_tapbuf_size48_5_sram[2], mux_2level_tapbuf_size48_5_sram[1], mux_2level_tapbuf_size48_5_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_5_sram_inv[5], mux_2level_tapbuf_size48_5_sram_inv[4], mux_2level_tapbuf_size48_5_sram_inv[3], mux_2level_tapbuf_size48_5_sram_inv[2], mux_2level_tapbuf_size48_5_sram_inv[1], mux_2level_tapbuf_size48_5_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_5__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_6 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_6_sram[4], mux_2level_tapbuf_size16_6_sram[3], mux_2level_tapbuf_size16_6_sram[2], mux_2level_tapbuf_size16_6_sram[1], mux_2level_tapbuf_size16_6_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_6_sram_inv[4], mux_2level_tapbuf_size16_6_sram_inv[3], mux_2level_tapbuf_size16_6_sram_inv[2], mux_2level_tapbuf_size16_6_sram_inv[1], mux_2level_tapbuf_size16_6_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_6 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_6_sram[5], mux_2level_tapbuf_size48_6_sram[4], mux_2level_tapbuf_size48_6_sram[3], mux_2level_tapbuf_size48_6_sram[2], mux_2level_tapbuf_size48_6_sram[1], mux_2level_tapbuf_size48_6_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_6_sram_inv[5], mux_2level_tapbuf_size48_6_sram_inv[4], mux_2level_tapbuf_size48_6_sram_inv[3], mux_2level_tapbuf_size48_6_sram_inv[2], mux_2level_tapbuf_size48_6_sram_inv[1], mux_2level_tapbuf_size48_6_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_6__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16 mux_top_ipin_7 (
-		.in({chanx_left_in[15], chanx_left_in[14], chanx_left_in[13], chanx_left_in[12], chanx_left_in[11], chanx_left_in[10], chanx_left_in[9], chanx_left_in[8], chanx_left_in[7], chanx_left_in[6], chanx_left_in[5], chanx_left_in[4], chanx_left_in[3], chanx_left_in[2], chanx_left_in[1], chanx_left_in[0]}),
-		.sram({mux_2level_tapbuf_size16_7_sram[4], mux_2level_tapbuf_size16_7_sram[3], mux_2level_tapbuf_size16_7_sram[2], mux_2level_tapbuf_size16_7_sram[1], mux_2level_tapbuf_size16_7_sram[0]}),
-		.sram_inv({mux_2level_tapbuf_size16_7_sram_inv[4], mux_2level_tapbuf_size16_7_sram_inv[3], mux_2level_tapbuf_size16_7_sram_inv[2], mux_2level_tapbuf_size16_7_sram_inv[1], mux_2level_tapbuf_size16_7_sram_inv[0]}),
+	mux_2level_tapbuf_size48 mux_top_ipin_7 (
+		.in({chanx_right_in[14], chanx_left_in[15], chanx_right_in[13], chanx_left_in[14], chanx_right_in[12], chanx_left_in[13], chanx_left_in[12], chanx_right_in[10], chanx_left_in[11], chanx_right_in[9], chanx_left_in[10], chanx_right_in[8], chanx_left_in[9], chanx_left_in[8], chanx_right_in[6], chanx_left_in[7], chanx_right_in[5], chanx_left_in[6], chanx_right_in[4], chanx_left_in[5], chanx_left_in[4], chanx_right_in[2], chanx_left_in[3], chanx_right_in[1], chanx_left_in[2], chanx_right_in[0], chanx_left_in[1], chanx_left_in[0], chanx_right_in[15], chanx_right_in[11], chanx_right_in[7], chanx_right_in[3], chany_top_in[15], chany_top_in[14], chany_top_in[13], chany_top_in[12], chany_top_in[11], chany_top_in[10], chany_top_in[9], chany_top_in[8], chany_top_in[7], chany_top_in[6], chany_top_in[5], chany_top_in[4], chany_top_in[3], chany_top_in[2], chany_top_in[1], chany_top_in[0]}),
+		.sram({mux_2level_tapbuf_size48_7_sram[5], mux_2level_tapbuf_size48_7_sram[4], mux_2level_tapbuf_size48_7_sram[3], mux_2level_tapbuf_size48_7_sram[2], mux_2level_tapbuf_size48_7_sram[1], mux_2level_tapbuf_size48_7_sram[0]}),
+		.sram_inv({mux_2level_tapbuf_size48_7_sram_inv[5], mux_2level_tapbuf_size48_7_sram_inv[4], mux_2level_tapbuf_size48_7_sram_inv[3], mux_2level_tapbuf_size48_7_sram_inv[2], mux_2level_tapbuf_size48_7_sram_inv[1], mux_2level_tapbuf_size48_7_sram_inv[0]}),
 		.out(bottom_grid_top_width_0_height_0_subtile_7__pin_outpad_0_));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_0 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_0 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size40_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_0_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_0_sram[4], mux_2level_tapbuf_size16_0_sram[3], mux_2level_tapbuf_size16_0_sram[2], mux_2level_tapbuf_size16_0_sram[1], mux_2level_tapbuf_size16_0_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_0_sram_inv[4], mux_2level_tapbuf_size16_0_sram_inv[3], mux_2level_tapbuf_size16_0_sram_inv[2], mux_2level_tapbuf_size16_0_sram_inv[1], mux_2level_tapbuf_size16_0_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size39_mem_11_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_0_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_0_sram[5], mux_2level_tapbuf_size48_0_sram[4], mux_2level_tapbuf_size48_0_sram[3], mux_2level_tapbuf_size48_0_sram[2], mux_2level_tapbuf_size48_0_sram[1], mux_2level_tapbuf_size48_0_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_0_sram_inv[5], mux_2level_tapbuf_size48_0_sram_inv[4], mux_2level_tapbuf_size48_0_sram_inv[3], mux_2level_tapbuf_size48_0_sram_inv[2], mux_2level_tapbuf_size48_0_sram_inv[1], mux_2level_tapbuf_size48_0_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_1 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_1 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_0_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_1_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_1_sram[4], mux_2level_tapbuf_size16_1_sram[3], mux_2level_tapbuf_size16_1_sram[2], mux_2level_tapbuf_size16_1_sram[1], mux_2level_tapbuf_size16_1_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_1_sram_inv[4], mux_2level_tapbuf_size16_1_sram_inv[3], mux_2level_tapbuf_size16_1_sram_inv[2], mux_2level_tapbuf_size16_1_sram_inv[1], mux_2level_tapbuf_size16_1_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size48_mem_0_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_1_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_1_sram[5], mux_2level_tapbuf_size48_1_sram[4], mux_2level_tapbuf_size48_1_sram[3], mux_2level_tapbuf_size48_1_sram[2], mux_2level_tapbuf_size48_1_sram[1], mux_2level_tapbuf_size48_1_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_1_sram_inv[5], mux_2level_tapbuf_size48_1_sram_inv[4], mux_2level_tapbuf_size48_1_sram_inv[3], mux_2level_tapbuf_size48_1_sram_inv[2], mux_2level_tapbuf_size48_1_sram_inv[1], mux_2level_tapbuf_size48_1_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_2 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_2 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_1_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_2_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_2_sram[4], mux_2level_tapbuf_size16_2_sram[3], mux_2level_tapbuf_size16_2_sram[2], mux_2level_tapbuf_size16_2_sram[1], mux_2level_tapbuf_size16_2_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_2_sram_inv[4], mux_2level_tapbuf_size16_2_sram_inv[3], mux_2level_tapbuf_size16_2_sram_inv[2], mux_2level_tapbuf_size16_2_sram_inv[1], mux_2level_tapbuf_size16_2_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size48_mem_1_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_2_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_2_sram[5], mux_2level_tapbuf_size48_2_sram[4], mux_2level_tapbuf_size48_2_sram[3], mux_2level_tapbuf_size48_2_sram[2], mux_2level_tapbuf_size48_2_sram[1], mux_2level_tapbuf_size48_2_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_2_sram_inv[5], mux_2level_tapbuf_size48_2_sram_inv[4], mux_2level_tapbuf_size48_2_sram_inv[3], mux_2level_tapbuf_size48_2_sram_inv[2], mux_2level_tapbuf_size48_2_sram_inv[1], mux_2level_tapbuf_size48_2_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_3 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_3 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_2_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_3_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_3_sram[4], mux_2level_tapbuf_size16_3_sram[3], mux_2level_tapbuf_size16_3_sram[2], mux_2level_tapbuf_size16_3_sram[1], mux_2level_tapbuf_size16_3_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_3_sram_inv[4], mux_2level_tapbuf_size16_3_sram_inv[3], mux_2level_tapbuf_size16_3_sram_inv[2], mux_2level_tapbuf_size16_3_sram_inv[1], mux_2level_tapbuf_size16_3_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size48_mem_2_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_3_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_3_sram[5], mux_2level_tapbuf_size48_3_sram[4], mux_2level_tapbuf_size48_3_sram[3], mux_2level_tapbuf_size48_3_sram[2], mux_2level_tapbuf_size48_3_sram[1], mux_2level_tapbuf_size48_3_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_3_sram_inv[5], mux_2level_tapbuf_size48_3_sram_inv[4], mux_2level_tapbuf_size48_3_sram_inv[3], mux_2level_tapbuf_size48_3_sram_inv[2], mux_2level_tapbuf_size48_3_sram_inv[1], mux_2level_tapbuf_size48_3_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_4 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_4 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_3_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_4_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_4_sram[4], mux_2level_tapbuf_size16_4_sram[3], mux_2level_tapbuf_size16_4_sram[2], mux_2level_tapbuf_size16_4_sram[1], mux_2level_tapbuf_size16_4_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_4_sram_inv[4], mux_2level_tapbuf_size16_4_sram_inv[3], mux_2level_tapbuf_size16_4_sram_inv[2], mux_2level_tapbuf_size16_4_sram_inv[1], mux_2level_tapbuf_size16_4_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size48_mem_3_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_4_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_4_sram[5], mux_2level_tapbuf_size48_4_sram[4], mux_2level_tapbuf_size48_4_sram[3], mux_2level_tapbuf_size48_4_sram[2], mux_2level_tapbuf_size48_4_sram[1], mux_2level_tapbuf_size48_4_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_4_sram_inv[5], mux_2level_tapbuf_size48_4_sram_inv[4], mux_2level_tapbuf_size48_4_sram_inv[3], mux_2level_tapbuf_size48_4_sram_inv[2], mux_2level_tapbuf_size48_4_sram_inv[1], mux_2level_tapbuf_size48_4_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_5 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_5 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_4_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_5_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_5_sram[4], mux_2level_tapbuf_size16_5_sram[3], mux_2level_tapbuf_size16_5_sram[2], mux_2level_tapbuf_size16_5_sram[1], mux_2level_tapbuf_size16_5_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_5_sram_inv[4], mux_2level_tapbuf_size16_5_sram_inv[3], mux_2level_tapbuf_size16_5_sram_inv[2], mux_2level_tapbuf_size16_5_sram_inv[1], mux_2level_tapbuf_size16_5_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size48_mem_4_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_5_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_5_sram[5], mux_2level_tapbuf_size48_5_sram[4], mux_2level_tapbuf_size48_5_sram[3], mux_2level_tapbuf_size48_5_sram[2], mux_2level_tapbuf_size48_5_sram[1], mux_2level_tapbuf_size48_5_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_5_sram_inv[5], mux_2level_tapbuf_size48_5_sram_inv[4], mux_2level_tapbuf_size48_5_sram_inv[3], mux_2level_tapbuf_size48_5_sram_inv[2], mux_2level_tapbuf_size48_5_sram_inv[1], mux_2level_tapbuf_size48_5_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_6 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_6 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_5_ccff_tail),
-		.ccff_tail(mux_2level_tapbuf_size16_mem_6_ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_6_sram[4], mux_2level_tapbuf_size16_6_sram[3], mux_2level_tapbuf_size16_6_sram[2], mux_2level_tapbuf_size16_6_sram[1], mux_2level_tapbuf_size16_6_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_6_sram_inv[4], mux_2level_tapbuf_size16_6_sram_inv[3], mux_2level_tapbuf_size16_6_sram_inv[2], mux_2level_tapbuf_size16_6_sram_inv[1], mux_2level_tapbuf_size16_6_sram_inv[0]}));
+		.ccff_head(mux_2level_tapbuf_size48_mem_5_ccff_tail),
+		.ccff_tail(mux_2level_tapbuf_size48_mem_6_ccff_tail),
+		.mem_out({mux_2level_tapbuf_size48_6_sram[5], mux_2level_tapbuf_size48_6_sram[4], mux_2level_tapbuf_size48_6_sram[3], mux_2level_tapbuf_size48_6_sram[2], mux_2level_tapbuf_size48_6_sram[1], mux_2level_tapbuf_size48_6_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_6_sram_inv[5], mux_2level_tapbuf_size48_6_sram_inv[4], mux_2level_tapbuf_size48_6_sram_inv[3], mux_2level_tapbuf_size48_6_sram_inv[2], mux_2level_tapbuf_size48_6_sram_inv[1], mux_2level_tapbuf_size48_6_sram_inv[0]}));
 
-	mux_2level_tapbuf_size16_mem mem_top_ipin_7 (
+	mux_2level_tapbuf_size48_mem mem_top_ipin_7 (
 		.pReset(pReset),
 		.prog_clk(prog_clk),
-		.ccff_head(mux_2level_tapbuf_size16_mem_6_ccff_tail),
+		.ccff_head(mux_2level_tapbuf_size48_mem_6_ccff_tail),
 		.ccff_tail(ccff_tail),
-		.mem_out({mux_2level_tapbuf_size16_7_sram[4], mux_2level_tapbuf_size16_7_sram[3], mux_2level_tapbuf_size16_7_sram[2], mux_2level_tapbuf_size16_7_sram[1], mux_2level_tapbuf_size16_7_sram[0]}),
-		.mem_outb({mux_2level_tapbuf_size16_7_sram_inv[4], mux_2level_tapbuf_size16_7_sram_inv[3], mux_2level_tapbuf_size16_7_sram_inv[2], mux_2level_tapbuf_size16_7_sram_inv[1], mux_2level_tapbuf_size16_7_sram_inv[0]}));
+		.mem_out({mux_2level_tapbuf_size48_7_sram[5], mux_2level_tapbuf_size48_7_sram[4], mux_2level_tapbuf_size48_7_sram[3], mux_2level_tapbuf_size48_7_sram[2], mux_2level_tapbuf_size48_7_sram[1], mux_2level_tapbuf_size48_7_sram[0]}),
+		.mem_outb({mux_2level_tapbuf_size48_7_sram_inv[5], mux_2level_tapbuf_size48_7_sram_inv[4], mux_2level_tapbuf_size48_7_sram_inv[3], mux_2level_tapbuf_size48_7_sram_inv[2], mux_2level_tapbuf_size48_7_sram_inv[1], mux_2level_tapbuf_size48_7_sram_inv[0]}));
 
 endmodule
 // ----- END Verilog module for sb_5__1_ -----
