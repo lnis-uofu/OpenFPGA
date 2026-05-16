@@ -526,7 +526,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: failed_${{ matrix.config.name }}_regression_log
+          name: failed_win_msvc_installer_regression_log
           retention-days: 1
           path: |
             openfpga_flow/**/*.log
