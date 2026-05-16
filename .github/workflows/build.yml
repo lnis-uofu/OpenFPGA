@@ -515,9 +515,21 @@ jobs:
           python -c "import sys; print(sys.executable)"
           python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
 
+          echo "==== Current PATH ===="
+          echo $env:PATH
+
+          echo "==== Locate DLLs under build ===="
+          Get-ChildItem -Recurse -Filter "*.dll" build | Select-Object FullName
+
+          echo "==== Locate bin directories under build ===="
+          Get-ChildItem -Recurse -Directory -Filter bin build | Select-Object FullName
+
           echo "==== Test OpenFPGA executable directly ===="
           & "${{ github.workspace }}\build\openfpga\Release\openfpga.exe" --help
           echo "openfpga.exe exit code: $LASTEXITCODE"
+          if ($LASTEXITCODE -ne 0) {
+            throw "openfpga.exe failed to start"
+          }
 
           echo "==== Run a quick test ===="
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
@@ -535,6 +547,7 @@ jobs:
             openfpga_flow/**/*.result
             openfpga_flow/**/iverilog_output.txt
             openfpga_flow/**/vvp_sim_output.txt
+            build/**/*.dll
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
