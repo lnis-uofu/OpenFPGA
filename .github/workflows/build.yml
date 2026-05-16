@@ -499,7 +499,7 @@ jobs:
         run: |
           echo "==== Activate python virtual environment ===="
           .\myenv\Scripts\Activate.ps1
-          
+
           echo "==== Set OpenFPGA path ===="
           $env:OPENFPGA_PATH = "${{ github.workspace }}"
 
@@ -510,22 +510,31 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "setuptools<81"
           python -m pip install -r requirements.txt
-          
+
           echo "==== Show Python path ===="
           python -c "import sys; print(sys.executable)"
           python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
 
-          echo "==== Locate executable files ===="
-          Get-ChildItem -Recurse -Filter openfpga.exe build | Select-Object FullName
-          Get-ChildItem -Recurse -Filter vpr.exe build | Select-Object FullName
-          Get-Command iverilog -ErrorAction SilentlyContinue
-          Get-Command vvp -ErrorAction SilentlyContinue
-
           echo "==== Test OpenFPGA executable directly ===="
           & "${{ github.workspace }}\build\openfpga\Release\openfpga.exe" --help
-          
+          echo "openfpga.exe exit code: $LASTEXITCODE"
+
           echo "==== Run a quick test ===="
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
+
+      - name: Upload regression logs
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: failed_${{ matrix.config.name }}_regression_log
+          retention-days: 1
+          path: |
+            openfpga_flow/**/*.log
+            openfpga_flow/**/*_out.log
+            openfpga_flow/**/*.openfpga
+            openfpga_flow/**/*.result
+            openfpga_flow/**/iverilog_output.txt
+            openfpga_flow/**/vvp_sim_output.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
