@@ -494,6 +494,13 @@ jobs:
         run: |
           python -m venv myenv
 
+      - name: Install Icarus Verilog
+        shell: powershell
+        run: |
+          choco install iverilog
+          where.exe iverilog
+          where.exe vvp
+
       - name: Quick Test
         shell: powershell
         run: |
@@ -528,6 +535,12 @@ jobs:
           echo "==== Show Python path ===="
           python -c "import sys; print(sys.executable)"
           python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
+
+          echo "==== Check Icarus Verilog ===="
+          where.exe iverilog
+          where.exe vvp
+          iverilog -V
+          vvp -V
 
           echo "==== Check OpenFPGA dependencies ===="
           where.exe dumpbin
