@@ -545,12 +545,6 @@ jobs:
           retention-days: 1
           path: |
             openfpga_flow/**/*.log
-            openfpga_flow/**/*_out.log
-            openfpga_flow/**/*.openfpga
-            openfpga_flow/**/*.result
-            openfpga_flow/**/iverilog_output.txt
-            openfpga_flow/**/vvp_sim_output.txt
-            build/**/*.dll
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
