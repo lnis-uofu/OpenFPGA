@@ -286,15 +286,22 @@ jobs:
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
 #   D:/a/OpenFPGA/OpenFPGA/openfpga_flow/tasks/compilation_verification/run001/aOpenFPGAOpenFPGA/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
-#      - name: Quick Test
-#        shell: msys2 {0}
-#        run: |
-#          echo "==== Activate python3 virtual environment ===="
-#          source myenv/bin/activate
-#          echo "==== Use python3 under ${PYTHON_EXEC} ===="
-#          python3 -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
-#          echo "==== Run a quick test ===="
-#          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path ${{ github.workspace }}/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
+      - name: Quick Test
+        shell: msys2 {0}
+        run: |
+          echo "==== Activate python3 virtual environment ===="
+          source myenv/bin/activate
+
+          echo "==== Use python3 under ${PYTHON_EXEC} ===="
+          python3 -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"      
+
+          echo "==== Resolve default tool path ===="
+          DEFAULT_TOOL_PATH="$(cygpath -m "$GITHUB_WORKSPACE")/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf"
+          echo "DEFAULT_TOOL_PATH=${DEFAULT_TOOL_PATH}"
+          test -f "${DEFAULT_TOOL_PATH}"
+
+          echo "==== Run a quick test ===="
+          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path "${DEFAULT_TOOL_PATH}"
 
   # This step is adapted from the Yosys MSVC build CI workflow at
   #     http://github.com/YosysHQ/yosys/blob/2dc69a75783b00e151e500d036c7bf4add26a93b/.github/workflows/extra-builds.yml
@@ -481,6 +488,63 @@ jobs:
           cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF
           cmake --build . --config Release
           cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
+
+      - name: Create Python virtual environment
+        shell: powershell
+        run: |
+          python -m venv myenv
+
+      - name: Install Icarus Verilog
+        shell: powershell
+        run: |
+          choco install iverilog
+          where.exe iverilog
+          where.exe vvp
+
+      - name: Quick Test
+        shell: powershell
+        run: |
+          echo "==== Activate python virtual environment ===="
+          .\myenv\Scripts\Activate.ps1
+
+          echo "==== Set OpenFPGA path ===="
+          $env:OPENFPGA_PATH = "${{ github.workspace }}"
+
+          echo "==== Add DLL directories to PATH ===="
+          $dllPaths = @(
+            "${{ github.workspace }}\build\openfpga\Release",
+            "${{ github.workspace }}\build\libs\libopenfpgashell\Release",
+            "${{ github.workspace }}\build\libs\libpcf\Release",
+            "${{ github.workspace }}\build\vtr-verilog-to-routing\vpr\Release",
+            "C:\Program Files\Tcl\bin"
+          ) | Where-Object { $_ -and (Test-Path $_) }
+
+          $env:PATH = ($dllPaths -join ";") + ";" + $env:PATH
+
+          echo "==== Install Python dependencies ===="
+          python -m pip install --upgrade pip
+          python -m pip install "setuptools<81"
+          python -m pip install -r requirements.txt
+
+          echo "==== Show Python path ===="
+          python -c "import sys; print(sys.executable)"
+          python -c "import envyaml; import humanize; import coloredlogs; import pyverilog; print('Installed')"
+
+          echo "==== Check Icarus Verilog ===="
+          where.exe iverilog
+          where.exe vvp
+
+          echo "==== Run a quick test ===="
+          python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
+
+      - name: Upload regression logs
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: failed_win_msvc_installer_regression_log
+          retention-days: 1
+          path: |
+            openfpga_flow/**/*.log
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
