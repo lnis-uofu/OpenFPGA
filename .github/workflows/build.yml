@@ -510,10 +510,6 @@ jobs:
           echo "==== Set OpenFPGA path ===="
           $env:OPENFPGA_PATH = "${{ github.workspace }}"
 
-          echo "==== Locate Tcl ===="
-          where.exe tclsh
-          Get-ChildItem -Filter "tcl86t.dll" "C:\Program Files\Tcl\bin" -ErrorAction SilentlyContinue | Select-Object FullName
-
           echo "==== Add DLL directories to PATH ===="
           $dllPaths = @(
             "${{ github.workspace }}\build\openfpga\Release",
@@ -524,8 +520,6 @@ jobs:
           ) | Where-Object { $_ -and (Test-Path $_) }
 
           $env:PATH = ($dllPaths -join ";") + ";" + $env:PATH
-          echo "Added DLL paths:"
-          $dllPaths
 
           echo "==== Install Python dependencies ===="
           python -m pip install --upgrade pip
@@ -539,16 +533,6 @@ jobs:
           echo "==== Check Icarus Verilog ===="
           where.exe iverilog
           where.exe vvp
-          iverilog -V
-          vvp -V
-
-          echo "==== Check OpenFPGA dependencies ===="
-          where.exe dumpbin
-          dumpbin /dependents "${{ github.workspace }}\build\openfpga\Release\openfpga.exe"
-
-          echo "==== Test OpenFPGA executable directly ===="
-          & "${{ github.workspace }}\build\openfpga\Release\openfpga.exe" --help
-          echo "openfpga.exe help exit code: $LASTEXITCODE"
 
           echo "==== Run a quick test ===="
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
