@@ -285,7 +285,8 @@ int pcf2sdc_wrapper_template(const Command& cmd,
 
   /*get clk info from blif or eblfi file*/
   std::vector<std::string> clock_names = read_blif_clock_info(
-    arch_fname.c_str(), blif_fname.c_str(), ckt_fmt.c_str());
+    arch_fname.c_str(), blif_fname.c_str(), ckt_fmt.c_str(),
+    cmd_context.option_enable(cmd, opt_verbose));
 
   if (!input_sdc.empty()) {
     std::ifstream ifs(input_sdc);

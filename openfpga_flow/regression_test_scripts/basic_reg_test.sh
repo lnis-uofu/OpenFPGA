@@ -7,6 +7,13 @@ source openfpga.sh
 ##############################################
 echo -e "Basic regression tests";
 
+echo -e "Check if openfpgashell can execute commands with -x option"
+${OPENFPGA_PATH}/build/openfpga/openfpga -x "version; exit;"
+if [ $? -ne 0 ]; then
+  echo "Error: openfpgashell execution with -x option failed"
+  exit 1
+fi
+
 echo -e "Test multiple runs of vpr"
 run-task basic_tests/vpr_standalone $@
 
@@ -306,6 +313,7 @@ run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_sb $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing $@
+run-task basic_tests/write_gsb/write_gsb_reorder_incoming_edges $@
 
 echo -e "Testing fabric hierarchy file"
 run-task basic_tests/write_fabric_hierarchy/module_filter $@

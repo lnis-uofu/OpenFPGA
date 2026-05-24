@@ -6,7 +6,7 @@ OpenFPGA widely uses XML format for interchangeable files
 
 .. _file_formats:
    File formats
- 
+
 .. toctree::
    :maxdepth: 2
 
@@ -53,3 +53,5 @@ OpenFPGA widely uses XML format for interchangeable files
    reference_file
 
    unique_blocks
+
+   file_formats_gsb_xml

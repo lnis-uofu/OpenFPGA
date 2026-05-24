@@ -2,7 +2,7 @@
 
 ## Download and extract the tcl8.6 package
 param(
-    [string]$DownloadUrl = "https://github.com/teclabat/tcltk-binaries/releases/download/version-8.6.18.14/tcltk86-8.6.18.14.Win10.nightly.20260214.tgz",
+    [string]$DownloadUrl = "https://github.com/lnis-uofu/OpenFPGA/releases/download/v1.1.541/tcltk86-8.6.18.14.Win10.nightly.20260214.tgz",
     [switch]$AddToPath = $true,
     [switch]$AddToGithubEnv = $true
 )

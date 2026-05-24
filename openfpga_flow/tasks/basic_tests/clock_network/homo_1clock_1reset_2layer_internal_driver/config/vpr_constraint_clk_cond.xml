@@ -5,7 +5,7 @@
       <add_region x_low="1" y_low="2" x_high="1" y_high="2"/>
     </partition>
     <partition name="int_clk_part">
-      <add_atom name_pattern="int_clk*"/>
+      <add_atom name_pattern="int_clk*" is_regex="true"/>
       <add_region x_low="1" y_low="1" x_high="1" y_high="1"/>
     </partition>
   </partition_list>

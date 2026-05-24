@@ -95,10 +95,8 @@ void report_unique_module_status_write(const DeviceRRGSB& device_rr_gsb,
            "Write %lu unique switch blocks from a total of %d (compression "
            "rate=%.2f%)\n",
            device_rr_gsb.get_num_sb_unique_module(),
-           find_device_rr_gsb_num_sb_modules(device_rr_gsb,
-                                             g_vpr_ctx.device().rr_graph),
-           100. * ((float)find_device_rr_gsb_num_sb_modules(
-                     device_rr_gsb, g_vpr_ctx.device().rr_graph) /
+           find_device_rr_gsb_num_sb_modules(device_rr_gsb),
+           100. * ((float)find_device_rr_gsb_num_sb_modules(device_rr_gsb) /
                      (float)device_rr_gsb.get_num_sb_unique_module() -
                    1.));
 

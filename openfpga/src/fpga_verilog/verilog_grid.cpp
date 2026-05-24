@@ -16,7 +16,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 
 /* Headers from vpr library */
 #include "circuit_library_utils.h"

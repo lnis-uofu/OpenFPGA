@@ -28,6 +28,7 @@
 #include "pnr_sdc_grid_writer.h"
 #include "pnr_sdc_routing_writer.h"
 #include "pnr_sdc_writer.h"
+#include "rr_graph_in_edges.h"
 #include "sdc_hierarchy_writer.h"
 #include "sdc_memory_utils.h"
 #include "sdc_mux_utils.h"
@@ -87,8 +88,7 @@ static void print_pnr_sdc_constrain_configurable_memory_outputs(
 static void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
   const std::string& sdc_dir, const bool& flatten_names,
   const bool& include_time_stamp, const ModuleManager& module_manager,
-  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb,
-  const RRGraphView& rr_graph) {
+  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb) {
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir +
                         std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
@@ -125,7 +125,7 @@ static void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
 
-      if (false == rr_gsb.is_sb_exist(rr_graph)) {
+      if (false == device_rr_gsb.is_sb_exist(ix, iy)) {
         continue;
       }
 
@@ -213,8 +213,7 @@ static void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
 static void print_pnr_sdc_compact_routing_disable_switch_block_outputs(
   const std::string& sdc_dir, const bool& flatten_names,
   const bool& include_time_stamp, const ModuleManager& module_manager,
-  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb,
-  const RRGraphView& rr_graph) {
+  const ModuleId& top_module, const DeviceRRGSB& device_rr_gsb) {
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir +
                         std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
@@ -248,7 +247,8 @@ static void print_pnr_sdc_compact_routing_disable_switch_block_outputs(
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
 
-    if (false == rr_gsb.is_sb_exist(rr_graph)) {
+    if (false ==
+        device_rr_gsb.is_sb_exist(rr_gsb.get_sb_x(), rr_gsb.get_sb_y())) {
       continue;
     }
 
@@ -393,28 +393,29 @@ int print_pnr_sdc(
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_disable_switch_block_outputs(
         sdc_options.sdc_dir(), sdc_options.flatten_names(),
-        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb,
-        device_ctx.rr_graph);
+        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE(false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_disable_switch_block_outputs(
         sdc_options.sdc_dir(), sdc_options.flatten_names(),
-        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb,
-        device_ctx.rr_graph);
+        sdc_options.time_stamp(), module_manager, top_module, device_rr_gsb);
     }
   }
+
+  RRGraphInEdges in_edges;
+  in_edges.init(device_ctx.rr_graph);
 
   /* Output routing constraints for Switch Blocks */
   if (true == sdc_options.constrain_sb()) {
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_sb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE(false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_sb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     }
   }
 
@@ -423,8 +424,7 @@ int print_pnr_sdc(
       (true == sdc_options.output_hierarchy()) &&
       (true == compact_routing_hierarchy)) {
     print_pnr_sdc_routing_sb_hierarchy(sdc_options.sdc_dir(), module_manager,
-                                       top_module, device_rr_gsb,
-                                       device_ctx.rr_graph);
+                                       top_module, device_rr_gsb);
   }
 
   /* Output routing constraints for Connection Blocks */
@@ -432,12 +432,12 @@ int print_pnr_sdc(
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_cb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE(false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_cb_timing(
         sdc_options, module_manager, top_module, device_annotation,
-        device_ctx.grid, device_ctx.rr_graph, device_rr_gsb);
+        device_ctx.grid, device_ctx.rr_graph, in_edges, device_rr_gsb);
     }
   }
 

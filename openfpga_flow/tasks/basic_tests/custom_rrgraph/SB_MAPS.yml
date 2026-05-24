@@ -1,0 +1,24 @@
+SB_MAPS:
+  SB_\*__0_: null # Entire bottom row
+  SB_0__\*_: null # Entire left row
+  SB_\*__7_: null # Entire top row
+  SB_7__\*_: null # Entire right row
+  # ==================================================
+  # Corner Switchboxes
+  # ==================================================
+  SB_6__6_: null
+  SB_1__1_: null
+  SB_1__6_: null
+  SB_6__1_: null
+  # SB_6__6_: switchbox_corner_right_top.csv
+  # SB_1__1_: switchbox_corner_left_bottom.csv
+  # SB_1__6_: switchbox_corner_left_top.csv
+  # SB_6__1_: switchbox_corner_right_bottom.csv
+  # ==================================================
+  # IO Switchboxes
+  # ==================================================
+  SB_1__\*_: switchbox_left.csv
+  SB_6__\*_: switchbox_right.csv
+  SB_\*__1_: switchbox_bottom.csv
+  SB_\*__6_: switchbox_top.csv
+  SB_\*__\*_: switchbox_main.csv

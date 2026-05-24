@@ -1,6 +1,8 @@
 #ifndef OPENFPGA_SPICE_COMMAND_TEMPLATE_H
 #define OPENFPGA_SPICE_COMMAND_TEMPLATE_H
 
+#include "openfpga_windows_compatibility.h"
+
 /********************************************************************
  * Add commands to the OpenFPGA shell interface,
  * in purpose of generate SPICE netlists modeling the full FPGA fabric

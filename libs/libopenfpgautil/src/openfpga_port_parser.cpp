@@ -20,12 +20,13 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-PortParser::PortParser(const std::string& data, const int support_format)
+PortParser::PortParser(const std::string& data, const int support_format,
+                       const bool& only_range)
   : bracket_('\0', '\0') {
   set_default_bracket();
   set_default_delim();
   set_support_format(support_format);
-  set_data(data);
+  set_data(data, only_range);
 }
 
 /************************************************************************
@@ -48,9 +49,11 @@ void PortParser::set_support_format(const int support_format) {
   return;
 }
 
-void PortParser::set_data(const std::string& data) {
+void PortParser::set_data(const std::string& data, const bool& only_range) {
   data_ = data;
-  parse();
+
+  parse(only_range);
+
   return;
 }
 
@@ -58,7 +61,7 @@ void PortParser::set_data(const std::string& data) {
  * Internal Mutators
  ***********************************************************************/
 /* Parse the data */
-void PortParser::parse() {
+void PortParser::parse(const bool& only_range) {
   valid_ = true;
 
   /* Create a tokenizer */
@@ -66,22 +69,28 @@ void PortParser::parse() {
 
   /* Split the data into <port_name> and <pin_string> */
   std::vector<std::string> port_tokens = tokenizer.split(bracket_.x());
-  /* Make sure we have a port name! */
-  VTR_ASSERT_SAFE((1 == port_tokens.size()) || (2 == port_tokens.size()));
+  if (!only_range) {
+    /* Make sure we have a port name! */
+    VTR_ASSERT_SAFE((1 == port_tokens.size()) || (2 == port_tokens.size()));
 
-  /* Store the port name! */
-  port_.set_name(port_tokens[0]);
+    /* Store the port name! */
+    port_.set_name(port_tokens[0]);
 
-  /* If we only have one token */
-  if (1 == port_tokens.size()) {
-    // there is no [
-    valid_ = (support_format_ & PORT_PARSER_SUPPORT_NO_PORT_FORMAT) != 0;
-    port_.set_width(1);
-    return; /* We can finish here */
+    /* If we only have one token */
+    if (1 == port_tokens.size()) {
+      // there is no [
+      valid_ = (support_format_ & PORT_PARSER_SUPPORT_NO_PORT_FORMAT) != 0;
+      port_.set_width(1);
+      return; /* We can finish here */
+    }
+  }
+  /* Chomp the ']' */
+  if (!only_range) {
+    tokenizer.set_data(port_tokens[1]);
+  } else {
+    tokenizer.set_data(port_tokens[0]);
   }
 
-  /* Chomp the ']' */
-  tokenizer.set_data(port_tokens[1]);
   std::vector<std::string> pin_tokens = tokenizer.split(bracket_.y());
   /* Make sure we have a valid string! */
   VTR_ASSERT_SAFE(1 == port_tokens.size());

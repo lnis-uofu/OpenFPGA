@@ -3,6 +3,7 @@
  ********************************************************************/
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 
 /* Headers from vtrutil library */
 #include "vtr_log.h"
@@ -405,6 +406,48 @@ void Shell<T>::run_script_mode(const char* script_file_name,
   /* If not in batch mode, switch to interactive mode, stay tuned */
   if (!batch_mode) {
     run_interactive_mode(context, true); 
+  }
+}
+
+template <class T>
+void Shell<T>::run_execute_mode(const char* command_lines, T& context) {
+  time_start_ = std::clock();
+
+  /* Print the title of the shell */
+  if (!title().empty()) {
+    VTR_LOG("%s\n", title().c_str());
+  }
+
+  std::string exec_lines = command_lines ? command_lines : "";
+  size_t cmd_begin = 0;
+
+  while (cmd_begin < exec_lines.size()) {
+    size_t cmd_end = exec_lines.find(';', cmd_begin);
+    if (std::string::npos == cmd_end) {
+      cmd_end = exec_lines.size();
+    }
+
+    std::string cmd_line = exec_lines.substr(cmd_begin, cmd_end - cmd_begin);
+
+    StringToken cmd_line_tokenizer(cmd_line);
+    cmd_line_tokenizer.ltrim(std::string(" \t\n\r"));
+    cmd_line_tokenizer.rtrim(std::string(" \t\n\r"));
+    cmd_line = cmd_line_tokenizer.data();
+
+    if (!cmd_line.empty()) {
+      VTR_LOG("\nCommand line to execute: %s\n", cmd_line.c_str());
+      /* Do not allow any hidden command to be directly called by users */
+      int status = execute_command(cmd_line.c_str(), context, false);
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        VTR_LOG("Fatal error occurred!\n");
+        break;
+      }
+    }
+
+    if (cmd_end == exec_lines.size()) {
+      break;
+    }
+    cmd_begin = cmd_end + 1;
   }
 }
 

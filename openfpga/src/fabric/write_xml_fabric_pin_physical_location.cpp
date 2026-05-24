@@ -16,7 +16,7 @@
 /* Headers from openfpgautil library */
 #include "command_exit_codes.h"
 #include "openfpga_digest.h"
-#include "openfpga_side_manager.h"
+#include "side_manager.h"
 
 /* Headers from arch openfpga library */
 #include "fabric_pin_physical_location_xml_constants.h"

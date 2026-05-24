@@ -44,6 +44,17 @@ set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 #Create the project 
 project("OpenFPGA-tool-suites" C CXX)
 
+# Windows fixes
+if (MSVC)
+    add_compile_definitions(
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+    )
+else()
+    add_compile_definitions(NOMINMAX)
+endif()
+
+
 # Version number
 file (STRINGS "VERSION.md" VERSION_NUMBER)
 string (REPLACE "." ";" VERSION_LIST ${VERSION_NUMBER})
@@ -81,6 +92,7 @@ message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
 message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")
 
 # Options pass on to VTR
+
 set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
 set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
 set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
@@ -95,15 +107,31 @@ set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys Sy
 set(YOSYS_F4PGA_PLUGINS OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins")
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
+set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
 # TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
 #set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
+
+# Override WGET Options
+if (WIN32)
+  if(MSVC)
+    set(WGET_OUTPUT_OPTION "-o" CACHE STRING "Wget output option" FORCE)
+  elseif(DEFINED ENV{MSYSTEM})
+    message(STATUS "Wget specifically using the Msys2 toolchain")
+    set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
+  endif()
+elseif(UNIX AND NOT APPLE)
+  set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
+endif()
 
 # TCL file/lib required to link with SWIG generated wrapper
 if (OPENFPGA_WITH_SWIG)
 #Find Tcl
-  include(FindTCL)
-  message(STATUS "tcl.h path is : ${TCL_INCLUDE_PATH}")
-  message(STATUS "libtcl.so path is : ${TCL_LIBRARY}") 
+  find_package(TCL)
+  if(NOT TCL_FOUND)
+    message(FATAL_ERROR "TCL not found. Please install TCL development headers (e.g. tcl8.6-dev).")
+  endif()
+  message(STATUS "TCL_INCLUDE_PATH: ${TCL_INCLUDE_PATH}")
+  message(STATUS "TCL_LIBRARY: ${TCL_LIBRARY}")
 
 #Find SWIG
   find_package(SWIG 3.0 REQUIRED)
@@ -322,7 +350,7 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
 endif()
 
 # we will check if yosys already exist. if not then build it
-if (OPENFPGA_WITH_YOSYS)
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
     if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys)
         message(STATUS "Yosys pre-build exist so skipping it")
     else ()

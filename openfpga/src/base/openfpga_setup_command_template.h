@@ -1,5 +1,8 @@
 #ifndef OPENFPGA_SETUP_COMMAND_TEMPLATE_H
 #define OPENFPGA_SETUP_COMMAND_TEMPLATE_H
+
+#include "openfpga_windows_compatibility.h"
+
 /********************************************************************
  * Add commands to the OpenFPGA shell interface,
  * in purpose of setting up OpenFPGA core engine, including:
@@ -210,6 +213,9 @@ ShellCommandId add_link_arch_command_template(
   /* Add an option '--sort_gsb_chan_node_in_edges'*/
   shell_cmd.add_option("sort_gsb_chan_node_in_edges", false,
                        "Sort all the incoming edges for each routing track "
+                       "output node in General Switch Blocks (GSBs)");
+  shell_cmd.add_option("reorder_incoming_edges", false,
+                       "Reorder the incoming edges for each routing track "
                        "output node in General Switch Blocks (GSBs)");
 
   /* Add an option '--verbose' */

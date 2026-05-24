@@ -54,3 +54,7 @@ vpr/vpr
 node_modules
 package-lock.json
 /_*/ 
+.vs/
+openfpga_flow/.vs/
+vcpkg_installed/
+CMakeSettings.json

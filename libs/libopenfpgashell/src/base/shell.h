@@ -196,6 +196,9 @@ class Shell {
    * commands to run */
   void run_script_mode(const char* script_file_name, T& context,
                        const bool& batch_mode = false);
+  /* Start the execute mode, where users provide command lines separated by
+   * ';' and the shell executes them sequentially */
+  void run_execute_mode(const char* command_lines, T& context);
   /* Print all the commands by their classes. This is actually the help desk */
   void print_commands(const bool& show_hidden = false) const;
   /* Find the exit code (assume quit shell now) */

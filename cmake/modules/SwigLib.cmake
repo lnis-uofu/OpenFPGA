@@ -84,10 +84,12 @@ function(SwigLib)
   get_target_property(GEN_SRCS ${ARG_NAME} SOURCES)
 
   foreach(GEN_SRC ${GEN_SRCS})
-    set_source_files_properties(${GEN_SRC}
-      PROPERTIES
-        COMPILE_OPTIONS "-Wno-cast-qual;-Wno-missing-braces"
-    )
+    if(NOT MSVC)
+        set_source_files_properties(${GEN_SRC}
+          PROPERTIES
+            COMPILE_OPTIONS "-Wno-cast-qual;-Wno-missing-braces"
+        )
+    endif()
   endforeach()
 
   # These includes are always needed.

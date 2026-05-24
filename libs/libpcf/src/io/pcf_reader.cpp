@@ -127,7 +127,15 @@ static int read_xml_pcf_command(pugi::xml_node& xml_pcf_command,
           status = pcf_custom_command.create_custom_decimal_mode_segment(
             command_name, option_name, segment_range, segment_offset);
         }
-
+        if (pcf_custom_command.custom_decimal_mode_has_segment(command_name,
+                                                               option_name)) {
+          /*check whether the segment offsets and bits are valid*/
+          if (!pcf_custom_command.custom_decimal_mode_segments_valid(
+                command_name, option_name)) {
+            VTR_LOG_ERROR("Invalid segment sets for option %s \n",
+                          option_name.c_str());
+          }
+        }
       } else if (option_type == "mode") {
         status = pcf_custom_command.create_custom_option(
           command_name, option_name, option_type);
@@ -269,43 +277,10 @@ int read_pcf(const char* fname, PcfData& pcf_data,
                     pcf_custom_command.custom_decimal_mode_has_segment(
                       word, option_name);
                   if (has_segment) {
-                    /*check whether the segment offsets and bits are valid*/
-                    if (!pcf_custom_command.custom_decimal_mode_segments_valid(
-                          word, option_name)) {
-                      VTR_LOG_ERROR("Invalid segment sets for option %s \n",
-                                    option_name.c_str());
-                    }
-                    /*split and rearrange according to segment*/
-                    std::vector<std::string> mode_parsed;
-                    std::vector<int> mode_parsed_offset;
-                    for (auto segment_id :
-                         pcf_custom_command.custom_decimal_mode_segments(
-                           word, option_name)) {
-                      vtr::Point<int> range =
-                        pcf_custom_command.custom_decimal_mode_segments_range(
-                          segment_id);
-                      std::string sub_mode =
-                        mode_value.substr(range.x(), range.y() - range.x() + 1);
-                      int sub_mode_offset =
-                        pcf_custom_command.custom_decimal_mode_segment_offset(
-                          segment_id);
-                      mode_parsed.push_back(sub_mode);
-                      mode_parsed_offset.push_back(sub_mode_offset);
-                    }
-                    std::vector<int> idx(mode_parsed_offset.size());
-                    std::iota(idx.begin(), idx.end(), 0);
-                    std::sort(idx.begin(), idx.end(),
-                              [&mode_parsed_offset](int i1, int i2) {
-                                return mode_parsed_offset[i1] <
-                                       mode_parsed_offset[i2];
-                              });
-                    std::string mode_value_mod = "";
-                    for (auto sorted_index : idx) {
-                      mode_value_mod += mode_parsed[sorted_index];
-                    }
-                    VTR_LOG("Convert original mode %s to %s \n",
-                            mode_value.c_str(), mode_value_mod.c_str());
-                    mode_value = mode_value_mod;
+                    mode_value =
+                      pcf_custom_command
+                        .custom_decimal_mode_convert_mode_with_segment(
+                          word, option_name, mode_value);
                   }
 
                   int mode_offset =

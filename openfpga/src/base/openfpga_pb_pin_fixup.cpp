@@ -17,9 +17,9 @@
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_pb_pin_fixup.h"
 #include "openfpga_physical_tile_utils.h"
-#include "openfpga_side_manager.h"
 #include "pb_type_utils.h"
 #include "physical_types_util.h"
+#include "side_manager.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

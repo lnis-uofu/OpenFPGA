@@ -9,6 +9,22 @@
 #include "command_exit_codes.h"
 #include "openfpga_title.h"
 
+/*
+ * WIFEXITED and WEXITSTATUS are POSIX macros from <sys/wait.h> used to
+ * interpret the return value of system(). They are not available on Windows.
+ * On Windows, system() returns the exit code directly from cmd.exe,
+ * so we provide equivalent shims here.
+ * See: https://pubs.opengroup.org/onlinepubs/009695399/functions/waitpid.html
+ */
+#if defined(_WIN32) || defined(WIN32)
+#ifndef WIFEXITED
+#define WIFEXITED(status) (((status)&0x7f) == 0)
+#endif
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(status) (((status)&0xff00) >> 8)
+#endif
+#endif
+
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -73,6 +89,13 @@ int call_external_command(const Command& cmd,
   // Refer
   // https://pubs.opengroup.org/onlinepubs/009695399/functions/waitpid.html
   int status = system(cmd_ss.c_str());
+
+#ifdef _WIN32
+  // On Windows, system() returns the command exit code directly.
+  // Becareful if the final status is 2 or beyond, program will not error
+  // as it is treated as CMD_EXEC_MINOR_ERROR
+  return status;
+#else
   if (WIFEXITED(status)) {
     // This is normal program exit, WEXITSTATUS() will help you shift the status
     // accordingly (status >> 8)
@@ -80,6 +103,8 @@ int call_external_command(const Command& cmd,
     // as it is treated as CMD_EXEC_MINOR_ERROR
     return WEXITSTATUS(status);
   }
+#endif
+
   // Program maybe terminated because of various killed or stopped signal
   return CMD_EXEC_FATAL_ERROR;
 }

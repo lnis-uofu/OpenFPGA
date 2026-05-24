@@ -15,6 +15,14 @@ To launch OpenFPGA shell, users can choose two modes.
 
   Launch OpenFPGA in script mode where users write commands in scripts and FPGA will execute them
 
+.. option:: --execute or -x
+  
+  Execute OpenFPGA command line(s) from a string. Commands should be separated by ``;``. All the commands will be executed in serial. For example, 
+
+.. code-block::
+
+  openfpga --execute "version;exit;"
+
 .. option::	--batch_execution or -batch
 
   Execute OpenFPGA script in batch mode. This option is only valid for script mode.

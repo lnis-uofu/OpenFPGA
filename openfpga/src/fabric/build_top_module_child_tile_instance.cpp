@@ -29,8 +29,9 @@
 #include "openfpga_naming.h"
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_reserved_words.h"
+#include "openfpga_rr_graph_utils.h"
 #include "rr_gsb_utils.h"
-#include "tileable_rr_graph_utils.h"
+#include "side_manager.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -293,7 +294,7 @@ static int build_top_module_tile_nets_between_sb_and_pb(
   const bool& compact_routing_hierarchy, const bool& name_module_using_index,
   const bool& verbose) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist(rr_graph)) {
+  if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
     return CMD_EXEC_SUCCESS;
   }
 
@@ -752,7 +753,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
   }
 
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist(rr_graph)) {
+  if (false == device_rr_gsb.is_sb_exist(rr_gsb.get_x(), rr_gsb.get_y())) {
     return CMD_EXEC_SUCCESS;
   }
 

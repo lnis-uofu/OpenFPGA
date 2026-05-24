@@ -8,8 +8,10 @@
 #include "vtr_geometry.h"
 
 /* Header files from vpr library */
+#include "rr_graph_in_edges.h"
 #include "rr_graph_view.h"
 #include "rr_gsb.h"
+#include "rr_gsb_edges.h"
 #include "vpr_device_annotation.h"
 
 /* namespace openfpga begins */
@@ -38,6 +40,10 @@ class DeviceRRGSB {
     const; /* Get a rr switch block in the array with a coordinate */
   const RRGSB& get_gsb(const size_t& x, const size_t& y)
     const; /* Get a rr switch block in the array with a coordinate */
+  const RRGSBEdges& get_gsb_edges(const vtr::Point<size_t>& coordinate) const;
+  const RRGSBEdges& get_gsb_edges(const size_t& x, const size_t& y) const;
+  RRGSBEdges& get_mutable_gsb_edges(const vtr::Point<size_t>& coordinate);
+  RRGSBEdges& get_mutable_gsb_edges(const size_t& x, const size_t& y);
   /* Get a gsb using its connection block coordinate */
   const RRGSB& get_gsb_by_cb_coordinate(
     const vtr::Point<size_t>& coordinate) const;
@@ -80,6 +86,9 @@ class DeviceRRGSB {
     const; /* get the number of unique mirrors of CBs */
   bool is_gsb_exist(const RRGraphView& rr_graph,
                     const vtr::Point<size_t> coord) const;
+  /* Check if a Switch Block exists at a given GSB coordinate */
+  bool is_sb_exist(const vtr::Point<size_t>& coord) const;
+  bool is_sb_exist(const size_t& x, const size_t& y) const;
   /* Get the index of the unique Switch block module with a given GSB
    * coordinate. Note: Do NOT use sb coordinate!!! */
   size_t get_sb_unique_module_index(const vtr::Point<size_t>& coordinate) const;
@@ -113,10 +122,12 @@ class DeviceRRGSB {
     const size_t& x,
     const size_t& y); /* Get a rr switch block in the array with a coordinate */
   void build_unique_module(
-    const RRGraphView& rr_graph); /* Add a switch block to the array, which will
-                                     automatically identify and update the lists
-                                     of unique mirrors and rotatable mirrors */
-  void clear();                   /* clean the content */
+    const RRGraphView& rr_graph,
+    const RRGraphInEdges&
+      in_edges); /* Add a switch block to the array, which will
+                    automatically identify and update the lists
+                    of unique mirrors and rotatable mirrors */
+  void clear();  /* clean the content */
   void preload_unique_cbx_module(
     const vtr::Point<size_t>& block_coordinate,
     const std::vector<vtr::Point<size_t>>&
@@ -166,17 +177,20 @@ when read_unique_blocks command invoked */
   void set_cb_unique_module_id(const e_rr_type& cb_type,
                                const vtr::Point<size_t>& coordinate, size_t id);
   void build_sb_unique_module(
-    const RRGraphView& rr_graph); /* Add a switch block to the array, which will
-                                     automatically identify and update the lists
-                                     of unique mirrors and rotatable mirrors */
-  void build_cb_unique_module(
     const RRGraphView& rr_graph,
+    const RRGraphInEdges&
+      in_edges); /* Add a switch block to the array, which will
+                    automatically identify and update the lists
+                    of unique mirrors and rotatable mirrors */
+  void build_cb_unique_module(
+    const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
     const e_rr_type&
       cb_type); /* Add a switch block to the array, which will automatically
                    identify and update the lists of unique side module */
 
  private: /* Internal Data */
   std::vector<std::vector<RRGSB>> rr_gsb_;
+  std::vector<std::vector<RRGSBEdges>> rr_gsb_edges_; /* parallel to rr_gsb_ */
   bool is_compressed_ =
     false; /* True if the unique blocks have been preloaded or built */
 

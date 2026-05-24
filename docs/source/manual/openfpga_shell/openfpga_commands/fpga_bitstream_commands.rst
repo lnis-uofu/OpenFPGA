@@ -51,6 +51,15 @@ build_architecture_bitstream
 
     Output the fabric-independent bitstream to an XML file. See details at :ref:`file_formats_architecture_bitstream`.
 
+  .. option:: --unused_mux_config  <string>
+
+    Specify the strategy to select the input for unused muxes. The default is ``auto``.
+
+    - ``auto``: Uses OpenFPGA's default strategy. Constant inputs will be considered if the MUX circuit model has any. When constant inputs are not available, the first input will be used.
+    - ``first``: Configures the first input of any unused mux
+    - ``last``: Configures the last input of any unused mux
+    - ``unused_input``: If MUX does not have a constant input, selects the lowest unused input for each driver (if available at the mux input). If no unmapped input is available, it will print warning and fallback to the auto strategy.
+
   .. option:: --no_time_stamp
 
     Do not print time stamp in bitstream files
@@ -127,15 +136,6 @@ write_fabric_bitstream
   .. option:: --keep_dont_care_bits
 
     Keep don't care bits (``x``) in the outputted bitstream file. This is only applicable to plain text file format. If not enabled, the don't care bits are converted to either logic ``0`` or ``1``.
-
-  .. option:: --unused_mux_config  <string>
-
-    Specify the strategy to select the input for unused muxes. The default is ``auto``.
-
-    - ``auto``: Uses OpenFPGA's default strategy (equivalent to current behavior)
-    - ``first``: Configures the first input of any unused mux
-    - ``last``: Configures the last input of any unused mux
-    - ``unused_input``: If MUX does not have a constant input, selects the lowest unused input for each driver (if available at the mux input). If no unmapped input is available, it will print warning and fallback to the auto strategy.
 
   .. option:: --no_time_stamp
 
