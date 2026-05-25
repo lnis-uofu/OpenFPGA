@@ -211,9 +211,9 @@ int annotate_simulation_setting(
      * enabled mode
      */
     bool is_flat = g_vpr_ctx.routing().is_flat;
-    const Netlist<>& net_list =
-      is_flat ? (const Netlist<>&)atom_ctx.netlist()
-              : (const Netlist<>&)cluster_ctx.clb_nlist;
+    const Netlist<>& net_list = is_flat
+                                  ? (const Netlist<>&)atom_ctx.netlist()
+                                  : (const Netlist<>&)cluster_ctx.clb_nlist;
     NetPinsMatrix<float> net_delay = make_net_pins_matrix<float>(net_list);
     /* Load the net delays */
     load_net_delay_from_routing(net_list, net_delay);
