@@ -16,6 +16,7 @@
 #include "AnalysisDelayCalculator.h"
 #include "annotate_simulation_setting.h"
 #include "concrete_timing_info.h"
+#include "globals.h"
 #include "net_delay.h"
 
 /* begin namespace openfpga */
@@ -209,15 +210,17 @@ int annotate_simulation_setting(
      *   - MUST mention in documentation that VPR should be run in timing
      * enabled mode
      */
-    NetPinsMatrix<float> net_delay =
-      make_net_pins_matrix<float>((const Netlist<>&)cluster_ctx.clb_nlist);
+    bool is_flat = g_vpr_ctx.routing().is_flat;
+    const Netlist<>& net_list =
+      is_flat ? (const Netlist<>&)atom_ctx.netlist()
+              : (const Netlist<>&)cluster_ctx.clb_nlist;
+    NetPinsMatrix<float> net_delay = make_net_pins_matrix<float>(net_list);
     /* Load the net delays */
-    load_net_delay_from_routing((const Netlist<>&)cluster_ctx.clb_nlist,
-                                net_delay);
+    load_net_delay_from_routing(net_list, net_delay);
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(
-      atom_ctx.netlist(), atom_ctx.lookup(), net_delay, false);
+      atom_ctx.netlist(), atom_ctx.lookup(), net_delay, is_flat);
     auto timing_info = make_setup_hold_timing_info(analysis_delay_calc,
                                                    e_timing_update_type::FULL);
     timing_info->update();
