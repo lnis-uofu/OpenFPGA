@@ -12,7 +12,13 @@ How to Compile
 Supported Operating Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OpenFPGA is continously tested with Ubuntu 22.04, Ubuntu 24.04 and CentOS 9
+OpenFPGA is continously tested on
+
+- Windows 2025 server (equivalent to Win10/11)
+- Ubuntu 22.04
+- Ubuntu 24.04
+- CentOS 9
+
 It might work with earlier versions and other distributions.
 
 In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
@@ -20,6 +26,7 @@ In addition to continous integration, our community users have tested OpenFPGA o
 - CentOS 7.8
 - CentOS 7.9
 - CentOS 8
+- Redhat 8
 - Ubuntu 18.04
 - Ubuntu 21.04
 - Ubuntu 20.04 
@@ -35,7 +42,7 @@ In general, please follow the steps to compile
   cd OpenFPGA
   make all
 
-.. note:: OpenFPGA requires gcc/g++ version >= 11 and clang version >= 17.
+.. note:: OpenFPGA requires gcc/g++ version >= 11 or clang version >= 17 or MSVC version >= 14.
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
@@ -159,6 +166,21 @@ If your OS is CentOS 9, we offer the script to install all the dependencies.
 
 .. include:: centos9_dependencies.sh
   :code: shell
+
+Windows (Mingw64)
+^^^^^^^^^^^^^^^^^
+
+If your OS is Msys2 in Windows, we offer the script to install all the dependencies
+
+.. note:: We support only MINGW64 on Msys2.
+
+.. include:: win_msys2_mingw64.sh
+
+Windows (MSVC)
+^^^^^^^^^^^^^^^^^
+
+If your OS is Windows and use Microsoft Visual C++ as compiler, you need to install packages through ``vcpkg``, ``chocolatery`` etc.
+You may refer to the section ``win_msvc_installer`` in ``.github/workflows/build.yml`` for full details.
 
 Running with pre-built docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
