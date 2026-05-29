@@ -14,7 +14,7 @@ Supported Operating Systems
 
 OpenFPGA is continously tested on
 
-- Windows 2025 server (equivalent to Win10/11)
+- Windows 2025 server (compatible to Windows 10 and Windows 11)
 - Ubuntu 22.04
 - Ubuntu 24.04
 - CentOS 9
@@ -175,9 +175,10 @@ If your OS is Msys2 in Windows, we offer the script to install all the dependenc
 .. note:: We support only MINGW64 on Msys2.
 
 .. include:: win_msys2_mingw64.sh
+  :code: shell
 
 Windows (MSVC)
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 If your OS is Windows and use Microsoft Visual C++ as compiler, you need to install packages through ``vcpkg``, ``chocolatery`` etc.
 You may refer to the section ``win_msvc_installer`` in ``.github/workflows/build.yml`` for full details.
