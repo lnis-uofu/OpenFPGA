@@ -77,7 +77,7 @@ include(CheckCXXCompilerFlag)
 # Options
 ## General options
 option(OPENFPGA_WITH_YOSYS "Enable building Yosys" ON)
-option(OPENFPGA_WITH_YOSYS_PLUGIN "Enable building Yosys plugin" ON)
+option(OPENFPGA_WITH_SLANG "Enable building Yosys Slang plugin" ON)
 option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
 option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number" ON)
 option(OPENFPGA_WITH_SWIG "Enable SWIG interface when building codebase. Disable when you do not need high-level interfaces, such as Tcl/Python" ON)
@@ -380,7 +380,7 @@ if (DEFINED ENV{MSYSTEM})
     message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
     set(YOSYS_CONFIG_OPTION "config-msys2-64" CACHE STRING "Yosys configuration on environment" FORCE) 
     set(YOSYS_BUILD_OPTION "DISABLE_ABC_THREADS=1 ENABLE_CCACHE=1" CACHE STRING "Yosys build options on environment" FORCE) 
-#    set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
+    set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
     set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
 endif() 
 
@@ -400,18 +400,20 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
         )
         # Add dependency on patched Makefile if on MinGW
         if (DEFINED ENV{MSYSTEM})
-            add_dependencies(yosys patch_abc_makefile)
+          add_dependencies(yosys patch_abc_makefile)
         endif()  
         # yosys compilation ends
         # yosys-plugins compilation starts
-        add_custom_target(
-            yosys-slang ALL
-            COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
-            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
-            COMMENT "Compile Yosys-Slang with given Makefile"
-        )
-        add_dependencies(yosys-slang yosys)
+        if (OPENFPGA_WITH_SLANG)
+          add_custom_target(
+              yosys-slang ALL
+              COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
+              DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
+              COMMENT "Compile Yosys-Slang with given Makefile"
+          )
+          add_dependencies(yosys-slang yosys)
+        endif()
     endif()
 endif()
 
