@@ -406,37 +406,14 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
         # yosys-plugins compilation starts
         add_custom_target(
             yosys-slang ALL
-            COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang" ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
+            COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
             COMMENT "Compile Yosys-Slang with given Makefile"
         )
         add_dependencies(yosys-slang yosys)
-
-        ## yosys-plugins compilation starts
-        #if (OPENFPGA_WITH_YOSYS_PLUGIN)
-        #    add_custom_target(
-        #        yosys-plugins ALL
-        #        COMMAND $(MAKE) install_ql-qlf YOSYS_PATH=${CMAKE_CURRENT_BINARY_DIR}/yosys EXTRA_FLAGS="-DPASS_NAME=synth_ql"
-        #        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
-        #        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
-        #        COMMENT "Compile Yosys-plugins with given Makefile"
-        #    )
-        #    add_dependencies(yosys-plugins yosys)
-        #endif()
     endif()
 endif()
-
-# run make to extract compiler options, linker options and list of source files
-#add_custom_target(
-#  yosys
-#  COMMAND make run
-#  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-#)
-
-# Add extra compilation flags to suppress warnings from some libraries/tools
-# Note that target_compile_options() *appends* to the current compilation options of
-# the specified target
 
 # For installer
 if (OPENFPGA_WITH_INSTALLER)
