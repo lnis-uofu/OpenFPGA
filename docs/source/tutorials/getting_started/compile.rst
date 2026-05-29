@@ -172,10 +172,20 @@ Windows (Mingw64)
 
 If your OS is Msys2 in Windows, we offer the script to install all the dependencies
 
-.. note:: We support only MINGW64 on Msys2.
+.. note:: We support only MINGW64 on Msys2. 
 
 .. include:: win_msys2_mingw64.sh
   :code: shell
+
+Yosys build is not supported yet on Msys2. Please disable it during the build by adding to cmake flags (See details in :ref:`tutorial_compile_build_options`)
+
+.. code-block::
+
+  make all CMAKE_FLAGS="-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
+
+Instead, please use the prebuilt version of Yosys at 
+`mingw-w64-x86_64-yosys <https://packages.msys2.org/packages/mingw-w64-x86_64-yosys>`_.
+
 
 Windows (MSVC)
 ^^^^^^^^^^^^^^
