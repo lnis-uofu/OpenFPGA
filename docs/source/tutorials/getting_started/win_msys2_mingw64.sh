@@ -1,0 +1,1 @@
+../../../../.github/workflows/build_dependency_win-msys2-MINGW64.sh
