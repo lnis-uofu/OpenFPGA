@@ -349,6 +349,41 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
     target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
 endif()
 
+# Only patch abc makefile on Msys2 where linker complains
+# Find the Python 3 interpreter
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+if (DEFINED ENV{MSYSTEM})
+    set(PY_PATCH_ABC_MAKEFILE "${CMAKE_CURRENT_SOURCE_DIR}/dev/patch_abc_makefile.py")
+    set(ABC_MAKEFILE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yosys/abc")
+    set(ABC_MAKEFILE_FPATH "Makefile")
+    set(ABC_MAKEFILE_PATCH_FPATH "Makefile.patched")
+    message(STATUS "Patching ${ABC_MAKEFILE_DIR}/${ABC_MAKEFILE_FPATH}")
+    add_custom_command(
+        OUTPUT ${ABC_MAKEFILE_PATCH_FPATH}
+        COMMAND "${Python3_EXECUTABLE}" "${PY_PATCH_ABC_MAKEFILE}" "${ABC_MAKEFILE_FPATH}"
+        COMMAND ${CMAKE_COMMAND} -E touch ${ABC_MAKEFILE_PATCH_FPATH}
+        COMMENT "Apply sed patch to ${ABC_MAKEFILE_DIR}/${ABC_MAKEFILE_FPATH} for long linker command fix"
+        DEPENDS "${PY_PATCH_ABC_MAKEFILE}"
+        VERBATIM
+        WORKING_DIRECTORY "${ABC_MAKEFILE_DIR}"
+    )
+    add_custom_target(patch_abc_makefile ALL DEPENDS ${ABC_MAKEFILE_PATCH_FPATH})
+endif()
+
+# Once Yosys adapts to CMake. This will be much simplified
+# Yosys build options
+set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
+set(YOSYS_BUILD_OPTION "ENABLE_CCACHE=1" CACHE STRING "Yosys build options") 
+set(SLANG_BUILD_CONFIG "" CACHE STRING "Slang build configuration on environment") 
+set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
+if (DEFINED ENV{MSYSTEM})
+    message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
+    set(YOSYS_CONFIG_OPTION "config-msys2-64" CACHE STRING "Yosys configuration on environment" FORCE) 
+    set(YOSYS_BUILD_OPTION "ENABLE_THREADS=0 ENABLE_CCACHE=1" CACHE STRING "Yosys build options on environment" FORCE) 
+    set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
+    set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
+endif() 
+
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
     if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys)
@@ -358,16 +393,20 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
         add_custom_target(
             yosys ALL
             # add step to remove the 'built-in' quicklogic plugins code in yosys
-            COMMAND $(MAKE) config-gcc
-            COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/
+            COMMAND $(MAKE) ${YOSYS_CONFIG_OPTION}
+            COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/ ${YOSYS_BUILD_OPTION}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
             COMMENT "Compile Yosys with given Makefile"
         )
+        # Add dependency on patched Makefile if on MinGW
+        if (DEFINED ENV{MSYSTEM})
+            add_dependencies(aa_yosys patch_abc_makefile)
+        endif()  
         # yosys compilation ends
         # yosys-plugins compilation starts
         add_custom_target(
             yosys-slang ALL
-            COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang"
+            COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang" ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
             COMMENT "Compile Yosys-Slang with given Makefile"
