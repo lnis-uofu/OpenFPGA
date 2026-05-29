@@ -379,7 +379,7 @@ set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment
 if (DEFINED ENV{MSYSTEM})
     message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
     set(YOSYS_CONFIG_OPTION "config-msys2-64" CACHE STRING "Yosys configuration on environment" FORCE) 
-    set(YOSYS_BUILD_OPTION "ENABLE_THREADS=0 ENABLE_CCACHE=1" CACHE STRING "Yosys build options on environment" FORCE) 
+    set(YOSYS_BUILD_OPTION "DISABLE_ABC_THREADS=1 ENABLE_CCACHE=1" CACHE STRING "Yosys build options on environment" FORCE) 
     set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
     set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
 endif() 
