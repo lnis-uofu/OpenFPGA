@@ -288,7 +288,32 @@ build_fabric
 
   .. option:: --group_routing
 
-    Adding this option will combine connection block and switch block into a single module (Currently named as `SB_*__*_`). The IPIN and OPIN of the grid makes connection to SB directly instead of going through a connection block. This is helpful, when IPIN is connected to CHANX and CHANY together.
+    Adding this option will combine connection block and switch block into a single module (Currently named as `SB_*__*_`). The IPIN and OPIN of the grid makes connection to SB directly instead of going through a connection block. This is helpful, when IPIN is connected to CHANX and CHANY together, or to the both side of the Switchboxes.
+
+  .. code-block:: text
+
+
+            WITHOUT --group_routing            WITH --group_routing
+
+                             │  ▲
+                             ▼  │                            │  ▲
+           ┌───────┐  ┌──────┴──┴──┐                         ▼  │
+      ◄────┤  CBX  ├─►│            ├◄──        ┌─────────────┴──┴───┐
+      ────►│ [x][y]├◄─┤       SB   ├──►   ◄────┤                    │
+           └──┬─┬──┘  └───┐ [x][y] │      ────►│               SB   ├◄──
+              ▼ ▲         │        │           └───┬─┬─────┐ [x][y] ├──►
+           ┌──┴─┴───────┐ │        │               ▼ ▲     │        │
+           │            ├►┤        │            ┌──┴─┴───┐ │        │
+           │            │ └──┬──┬──┘            │        │ │        │
+           │            │    ▼  ▲               │  Grid  ├►┤        │
+           │    Grid    │ ┌──┴──┴──┐            │ [x][y] │ │        │
+           │   [x][y]   ├◄┤  CBY   │            │        ├◄┤        │
+           │            │ │ [x][y] │            └────────┘ │        │
+           └────────────┘ └──┬──┬──┘                       └──┬──┬──┘
+                             ▼  ▲                             ▼  ▲
+                             │  │                             │  │
+
+
 
   .. _fig_group_config_block_overview:
 
