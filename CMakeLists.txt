@@ -400,7 +400,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
         )
         # Add dependency on patched Makefile if on MinGW
         if (DEFINED ENV{MSYSTEM})
-            add_dependencies(aa_yosys patch_abc_makefile)
+            add_dependencies(yosys patch_abc_makefile)
         endif()  
         # yosys compilation ends
         # yosys-plugins compilation starts
