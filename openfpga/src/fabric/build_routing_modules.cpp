@@ -402,25 +402,6 @@ static void build_switch_block_interc_modules(
  *
  *
  ********************************************************************/
-/* Forward declarations for connection block helpers defined later in this file
- */
-static void build_connection_block_module_short_interc(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const e_side& cb_ipin_side, const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets);
-
-static void build_connection_block_mux_module(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
-  const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block);
 
 static void build_switch_block_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
