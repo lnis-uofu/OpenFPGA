@@ -102,7 +102,7 @@ The following options are available for a custom build
 
   - ``DOPENFPGA_WITH_TEST=[ON|OFF]``: Enable/Disable the test build
   - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
-  - ``DOPENFPGA_WITH_YOSYS_PLUGIN=[ON|OFF]``: Enable/Disable the build of yosys-plugin.
+  - ``DOPENFPGA_WITH_SLANG=[ON|OFF]``: Enable/Disable the build of yosys-plugin Slang. If disabled, system verilog will not be supported. By default, it is enabled.
   - ``DOPENFPGA_WITH_VERSION=[ON|OFF]``: Enable/Disable the build of version number. When disabled, version number will be displayed as an empty string.
   - ``DOPENFPGA_WITH_SWIG=[ON|OFF]``: Enable/Disable the build of SWIG, which is required for integrating to high-level interface.
   - ``OPENFPGA_ENABLE_STRICT_COMPILE=[ON|OFF]``: Specifies whether compiler warnings should be treated as errors (e.g. -Werror)
@@ -177,11 +177,11 @@ If your OS is Msys2 in Windows, we offer the script to install all the dependenc
 .. include:: win_msys2_mingw64.sh
   :code: shell
 
-Yosys build is not supported yet on Msys2. Please disable it during the build by adding to cmake flags (See details in :ref:`tutorial_compile_build_options`)
+Yosys Slang build is not supported yet on Msys2. Please disable it during the build by adding to cmake flags (See details in :ref:`tutorial_compile_build_options`)
 
 .. code-block::
 
-  make all CMAKE_FLAGS="-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
+  make all CMAKE_FLAGS="-DOPENFPGA_WITH_SLANG=OFF"
 
 Instead, please use the prebuilt version of Yosys at 
 `mingw-w64-x86_64-yosys <https://packages.msys2.org/packages/mingw-w64-x86_64-yosys>`_.
