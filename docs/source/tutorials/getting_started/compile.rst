@@ -12,7 +12,13 @@ How to Compile
 Supported Operating Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OpenFPGA is continously tested with Ubuntu 22.04, Ubuntu 24.04 and CentOS 9
+OpenFPGA is continously tested on
+
+- Windows 2025 server (compatible to Windows 10 and Windows 11)
+- Ubuntu 22.04
+- Ubuntu 24.04
+- CentOS 9
+
 It might work with earlier versions and other distributions.
 
 In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
@@ -20,6 +26,7 @@ In addition to continous integration, our community users have tested OpenFPGA o
 - CentOS 7.8
 - CentOS 7.9
 - CentOS 8
+- Redhat 8
 - Ubuntu 18.04
 - Ubuntu 21.04
 - Ubuntu 20.04 
@@ -35,7 +42,7 @@ In general, please follow the steps to compile
   cd OpenFPGA
   make all
 
-.. note:: OpenFPGA requires gcc/g++ version >= 11 and clang version >= 17.
+.. note:: OpenFPGA requires gcc/g++ version >= 11 or clang version >= 17 or MSVC version >= 14.
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
@@ -95,7 +102,7 @@ The following options are available for a custom build
 
   - ``DOPENFPGA_WITH_TEST=[ON|OFF]``: Enable/Disable the test build
   - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
-  - ``DOPENFPGA_WITH_YOSYS_PLUGIN=[ON|OFF]``: Enable/Disable the build of yosys-plugin.
+  - ``DOPENFPGA_WITH_SLANG=[ON|OFF]``: Enable/Disable the build of yosys-plugin Slang. If disabled, system verilog will not be supported. By default, it is enabled.
   - ``DOPENFPGA_WITH_VERSION=[ON|OFF]``: Enable/Disable the build of version number. When disabled, version number will be displayed as an empty string.
   - ``DOPENFPGA_WITH_SWIG=[ON|OFF]``: Enable/Disable the build of SWIG, which is required for integrating to high-level interface.
   - ``OPENFPGA_ENABLE_STRICT_COMPILE=[ON|OFF]``: Specifies whether compiler warnings should be treated as errors (e.g. -Werror)
@@ -159,6 +166,32 @@ If your OS is CentOS 9, we offer the script to install all the dependencies.
 
 .. include:: centos9_dependencies.sh
   :code: shell
+
+Windows (Mingw64)
+^^^^^^^^^^^^^^^^^
+
+If your OS is Msys2 in Windows, we offer the script to install all the dependencies
+
+.. note:: We support only MINGW64 on Msys2. 
+
+.. include:: win_msys2_mingw64.sh
+  :code: shell
+
+Yosys Slang build is not supported yet on Msys2. Please disable it during the build by adding to cmake flags (See details in :ref:`tutorial_compile_build_options`)
+
+.. code-block::
+
+  make all CMAKE_FLAGS="-DOPENFPGA_WITH_SLANG=OFF"
+
+Instead, please use the prebuilt version of Yosys at 
+`mingw-w64-x86_64-yosys <https://packages.msys2.org/packages/mingw-w64-x86_64-yosys>`_.
+
+
+Windows (MSVC)
+^^^^^^^^^^^^^^
+
+If your OS is Windows and use Microsoft Visual C++ as compiler, you need to install packages through ``vcpkg``, ``chocolatery`` etc.
+You may refer to the section ``win_msvc_installer`` in ``.github/workflows/build.yml`` for full details.
 
 Running with pre-built docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

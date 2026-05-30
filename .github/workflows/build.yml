@@ -18,7 +18,6 @@ concurrency:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  MAKEFLAGS: "-j8"
   DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
   # (Boolean) Setting this value to True, will force linux tet always
   IGNORE_DOCKER_TEST: ${{ secrets.IGNORE_DOCKER_TEST }}
@@ -93,7 +92,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -209,7 +208,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -606,11 +605,18 @@ jobs:
           ${CXX} --version
 
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE
+           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+           make all BUILD_TYPE=$BUILD_TYPE -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Clear error log
         if: ${{ failure() }}
@@ -658,10 +664,10 @@ jobs:
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF"
-          - name: "Build w/o Yosys plugin (Ubuntu 22.04)"
+          - name: "Build w/o Yosys Slang (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS_PLUGIN=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_SLANG=OFF"
           - name: "Build w/o test (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
@@ -701,11 +707,18 @@ jobs:
           ${CXX} --version
 
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
   centos_support:
     needs: change_detect
@@ -740,12 +753,19 @@ jobs:
           ${CXX} --version
 
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: bash
         run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           git config --global --add safe.directory '*'
-          make all BUILD_TYPE=$BUILD_TYPE 
+          make all BUILD_TYPE=$BUILD_TYPE  -j${{ steps.cpu-cores.outputs.count}}
 
   # Support 24.04
   ubuntu_support:
@@ -787,11 +807,18 @@ jobs:
           python3 --version
   
       - uses: hendrikmuhs/ccache-action@v1.2
-  
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE 
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          make all BUILD_TYPE=$BUILD_TYPE -j${{ steps.cpu-cores.outputs.count}} 
 
       - name: Quick Test
         shell: bash
@@ -813,7 +840,6 @@ jobs:
             cc: gcc-13
             cxx: g++-13
             build_type: debug
-            cores: 4
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -841,11 +867,18 @@ jobs:
           python3 --version
 
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }}
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Quick Test
         shell: bash
@@ -865,7 +898,6 @@ jobs:
             cc: gcc-11
             cxx: g++-11
             build_type: release
-            cores: 4
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -892,11 +924,18 @@ jobs:
           ${CXX} --version
 
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
 
       - name: Quick Test
         shell: bash
@@ -942,13 +981,20 @@ jobs:
           ${CXX} --version
 
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: bash
         run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           make checkout
-          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
-          make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF -j${{ steps.cpu-cores.outputs.count}}
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF -j${{ steps.cpu-cores.outputs.count}}
 
   docker_distribution:
     name: Build docker image for distribution
