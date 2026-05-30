@@ -68,7 +68,7 @@
         10e-12 5e-12
       </delay_matrix>
     </circuit_model>
-   <circuit_model type="gate" name="MUX2" prefix="MUX2" is_default="false" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/mux2.v">
+    <circuit_model type="gate" name="MUX2" prefix="MUX2" is_default="false" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/mux2.v">
       <design_technology type="cmos" topology="MUX2"/>
       <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
@@ -97,7 +97,7 @@
       <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
     <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
-      <design_technology type="cmos"  structure="tree" add_const_input="true" const_input_val="1"/>
+      <design_technology type="cmos" structure="tree" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="MUX2"/>
@@ -106,7 +106,7 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <circuit_model type="mux" name="mux_2level_tapbuf" prefix="mux_2level_tapbuf" dump_structural_verilog="true">
-      <design_technology type="cmos"  structure="tree" add_const_input="true" const_input_val="1"/>
+      <design_technology type="cmos" structure="tree" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="MUX2"/>
