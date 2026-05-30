@@ -86,6 +86,7 @@ write_preconfigured_testbench \
 
 ext_exec --command "rm -rf ${OPENFPGA_VERILOG_OUTPUT_FILE}"
 ext_exec --command "cp -rf ./SRC/ ${OPENFPGA_VERILOG_OUTPUT_FILE}/"
+ext_exec --command "${OPENFPGA_OPENFPGA_PATH}/openfpga_flow/scripts/clean_reports.sh ${OPENFPGA_VERILOG_OUTPUT_FILE}/fabric_netlists.v"
 ext_exec --command "${OPENFPGA_OPENFPGA_PATH}/openfpga_flow/scripts/clean_reports.sh ${OPENFPGA_RRGRAPH_OUT_FILE}"
 # ext_exec --command "sed /.*tool_comment.*/<rr_graph schema_file_id=\"\" tool_comment=\"\" tool_name=\"vpr\" tool_version=\"\">#' ${OPENFPGA_RRGRAPH_OUT_FILE}"
 # Finish and exit OpenFPGA
