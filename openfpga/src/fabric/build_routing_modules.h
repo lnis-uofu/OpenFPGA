@@ -40,24 +40,6 @@ void build_unique_routing_modules(
   const CircuitModelId& sram_model, const bool& group_config_block,
   const bool& verbose);
 
-static void build_connection_block_module_short_interc(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const e_side& cb_ipin_side, const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets);
-
-static void build_connection_block_mux_module(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
-  const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block);
-
 } /* end namespace openfpga */
 
 #endif

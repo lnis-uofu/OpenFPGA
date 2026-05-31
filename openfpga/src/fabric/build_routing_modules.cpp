@@ -341,6 +341,285 @@ static void build_switch_block_interc_modules(
   } /*Nothing should be done else*/
 }
 
+/*********************************************************************
+ * Print a short interconneciton in connection
+ ********************************************************************/
+static void build_connection_block_module_short_interc(
+  ModuleManager& module_manager, const ModuleId& cb_module,
+  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const e_side& cb_ipin_side, const size_t& ipin_index,
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
+  /* Ensure we have only one 1 driver node */
+  const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+  const std::vector<RREdgeId>& driver_rr_edges =
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side,
+                                     ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
+
+  /* We have OPINs since we may have direct connections:
+   * These connections should be handled by other functions in the
+   * compact_netlist.c So we just return here for OPINs
+   */
+  if (0 == driver_rr_nodes.size()) {
+    return;
+  }
+
+  /* Find the driver node */
+  VTR_ASSERT_SAFE(1 == driver_rr_nodes.size());
+  const RRNodeId& driver_rr_node = driver_rr_nodes[0];
+
+  /* Xifan Tang: VPR considers delayless switch to be configurable
+   * As a result, the direct connection is considered to be configurable...
+   * Here, I simply kick out OPINs in CB connection because they should be built
+   * in the top mopdule.
+   *
+   * Note: this MUST BE reconsidered if we do have OPIN connected to IPINs
+   * through a programmable multiplexer!!!
+   */
+  if (e_rr_type::OPIN == rr_graph.node_type(driver_rr_node)) {
+    return;
+  }
+
+  VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(driver_rr_node)) ||
+             (e_rr_type::CHANY == rr_graph.node_type(driver_rr_node)));
+
+  /* Create port description for the routing track middle output */
+  ModulePinInfo input_port_info = find_connection_block_module_chan_port(
+    module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_node);
+
+  /* Create port description for input pin of a CLB */
+  ModulePortId ipin_port_id = find_connection_block_module_ipin_port(
+    module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+    src_rr_node);
+
+  /* The input port and output port must match in size */
+  BasicPort input_port =
+    module_manager.module_port(cb_module, input_port_info.first);
+  BasicPort ipin_port = module_manager.module_port(cb_module, ipin_port_id);
+  VTR_ASSERT(1 == ipin_port.get_width());
+
+  /* Create a module net for this short-wire connection */
+  ModuleNetId net = input_port_to_module_nets.at(input_port_info);
+  /* Skip Configuring the net source, it is done before */
+  /* Configure the net sink */
+  module_manager.add_module_net_sink(cb_module, net, cb_module, 0, ipin_port_id,
+                                     ipin_port.pins()[0]);
+}
+
+/*********************************************************************
+ * Build a instance of a routing multiplexer as well as
+ * associated memory modules for a connection inside a connection block
+ ********************************************************************/
+static void build_connection_block_mux_module(
+  ModuleManager& module_manager, const ModuleId& cb_module,
+  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
+  const size_t& ipin_index,
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block) {
+  const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+  /* Check current rr_node is an input pin of a CLB */
+  VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(cur_rr_node));
+
+  /* Build a vector of driver rr_nodes */
+  const std::vector<RREdgeId>& driver_rr_edges =
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side,
+                                     ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
+
+  std::vector<RRSwitchId> driver_switches;
+  for (const RREdgeId& edge : driver_rr_edges) {
+    RRSwitchId sw = RRSwitchId(rr_graph.edge_switch(edge));
+    if (driver_switches.end() ==
+        std::find(driver_switches.begin(), driver_switches.end(), sw)) {
+      driver_switches.push_back(sw);
+    }
+  }
+  VTR_ASSERT_MSG(1 <= driver_switches.size(),
+                 ("There should be at least one driver switch for " +
+                  std::to_string(size_t(cur_rr_node)))
+                   .c_str());
+  /* Iterate over driver switches to find a common switch that can be used */
+  CircuitModelId switch_index =
+    device_annotation.rr_switch_circuit_model(driver_switches[0]);
+  for (size_t i = 1; i < driver_switches.size(); ++i) {
+    VTR_ASSERT_MSG(device_annotation.rr_switch_circuit_model(
+                     driver_switches[i]) == switch_index,
+                   ("All driver switches of " +
+                    std::to_string(size_t(cur_rr_node)) + " must be the same")
+                     .c_str());
+  }
+  /* Get the circuit model id of the routing multiplexer */
+  CircuitModelId mux_model =
+    device_annotation.rr_switch_circuit_model(driver_switches[0]);
+
+  /* Find the input size of the implementation of a routing multiplexer */
+  size_t datapath_mux_size = driver_rr_nodes.size();
+
+  /* Find the module name of the multiplexer and try to find it in the module
+   * manager */
+  std::string mux_module_name = generate_mux_subckt_name(
+    circuit_lib, mux_model, datapath_mux_size, std::string(""));
+  ModuleId mux_module = module_manager.find_module(mux_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
+
+  /* Get the MUX instance id from the module manager */
+  size_t mux_instance_id = module_manager.num_instance(cb_module, mux_module);
+  module_manager.add_child_module(cb_module, mux_module);
+
+  /* Give an instance name: this name should be consistent with the block name
+   * given in SDC manager, If you want to bind the SDC generation to modules
+   */
+  std::string mux_instance_name = generate_cb_mux_instance_name(
+    CONNECTION_BLOCK_MUX_INSTANCE_PREFIX,
+    get_rr_graph_single_node_side(
+      rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
+    ipin_index, std::string(""));
+  module_manager.set_child_instance_name(cb_module, mux_module, mux_instance_id,
+                                         mux_instance_name);
+
+  /* TODO: Generate input ports that are wired to the input bus of the routing
+   * multiplexer */
+  std::vector<ModulePinInfo> cb_input_port_ids;
+  if (false == module_manager.group_routing()) {
+    cb_input_port_ids = find_connection_block_module_input_ports(
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+      cb_type, driver_rr_nodes);
+  } else {
+    cb_input_port_ids = find_switch_block_module_input_ports(
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+      driver_rr_nodes);
+  }
+
+  /* Link input bus port to Switch Block inputs */
+  std::vector<CircuitPortId> mux_model_input_ports =
+    circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == mux_model_input_ports.size());
+  /* Find the module port id of the input port */
+  ModulePortId mux_input_port_id = module_manager.find_module_port(
+    mux_module, circuit_lib.port_prefix(mux_model_input_ports[0]));
+  VTR_ASSERT(
+    true == module_manager.valid_module_port_id(mux_module, mux_input_port_id));
+  BasicPort mux_input_port =
+    module_manager.module_port(mux_module, mux_input_port_id);
+
+  /* Check port size should match */
+  VTR_ASSERT(mux_input_port.get_width() == cb_input_port_ids.size());
+  for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
+    /* Use the exising net */
+    ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
+    VTR_LOG(
+      "Connecting CB input port %zu (pin %zu) to MUX input port %zu (pin %zu) "
+      "via Net %zu\n",
+      cb_input_port_ids[pin_id].first, cb_input_port_ids[pin_id].second,
+      mux_input_port_id, pin_id, net);
+    /* No need to configure the net source since it is already done before */
+    /* Configure the net sink */
+    module_manager.add_module_net_sink(cb_module, net, mux_module,
+                                       mux_instance_id, mux_input_port_id,
+                                       mux_input_port.pins()[pin_id]);
+  }
+
+  /* Link output port to Connection Block outputs */
+  std::vector<CircuitPortId> mux_model_output_ports =
+    circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == mux_model_output_ports.size());
+  /* Use the port name convention in the circuit library */
+  ModulePortId mux_output_port_id = module_manager.find_module_port(
+    mux_module, circuit_lib.port_prefix(mux_model_output_ports[0]));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module,
+                                                         mux_output_port_id));
+  BasicPort mux_output_port =
+    module_manager.module_port(mux_module, mux_output_port_id);
+  ModulePortId cb_output_port_id = find_connection_block_module_ipin_port(
+    module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+    cur_rr_node);
+  BasicPort cb_output_port =
+    module_manager.module_port(cb_module, cb_output_port_id);
+
+  /* Check port size should match */
+  VTR_ASSERT(cb_output_port.get_width() == mux_output_port.get_width());
+  for (size_t pin_id = 0; pin_id < mux_output_port.pins().size(); ++pin_id) {
+    /* Configuring the net source */
+    ModuleNetId net = create_module_source_pin_net(
+      module_manager, cb_module, mux_module, mux_instance_id,
+      mux_output_port_id, mux_output_port.pins()[pin_id]);
+    /* Configure the net sink */
+    module_manager.add_module_net_sink(cb_module, net, cb_module, 0,
+                                       cb_output_port_id,
+                                       cb_output_port.pins()[pin_id]);
+  }
+
+  /* Instanciate memory modules */
+  /* Find the name and module id of the memory module */
+  std::string mem_module_name =
+    generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                             std::string(MEMORY_MODULE_POSTFIX));
+  if (group_config_block) {
+    mem_module_name =
+      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                               std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+  }
+  ModuleId mem_module = module_manager.find_module(mem_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
+
+  size_t mem_instance_id = module_manager.num_instance(cb_module, mem_module);
+  module_manager.add_child_module(cb_module, mem_module);
+
+  /* Give an instance name: this name should be consistent with the block name
+   * given in bitstream manager, If you want to bind the bitstream generation to
+   * modules
+   */
+  std::string mem_instance_name = generate_cb_memory_instance_name(
+    CONNECTION_BLOCK_MEM_INSTANCE_PREFIX,
+    get_rr_graph_single_node_side(
+      rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
+    ipin_index, std::string(""), group_config_block);
+  module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id,
+                                         mem_instance_name);
+
+  /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of
+   * memory module */
+  add_module_nets_between_logic_and_memory_sram_bus(
+    module_manager, cb_module, mux_module, mux_instance_id, mem_module,
+    mem_instance_id, circuit_lib, mux_model);
+  /* Update memory and instance list */
+  size_t config_child_id = module_manager.num_configurable_children(
+    cb_module, ModuleManager::e_config_child_type::LOGICAL);
+  module_manager.add_configurable_child(
+    cb_module, mem_module, mem_instance_id,
+    group_config_block ? ModuleManager::e_config_child_type::LOGICAL
+                       : ModuleManager::e_config_child_type::UNIFIED);
+  /* For logical memory, define the physical memory here */
+  if (group_config_block) {
+    std::string physical_mem_module_name =
+      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                               std::string(MEMORY_MODULE_POSTFIX));
+    ModuleId physical_mem_module =
+      module_manager.find_module(physical_mem_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
+    module_manager.set_logical2physical_configurable_child(
+      cb_module, config_child_id, physical_mem_module);
+    std::string physical_mem_instance_name = generate_cb_memory_instance_name(
+      CONNECTION_BLOCK_MEM_INSTANCE_PREFIX,
+      get_rr_graph_single_node_side(
+        rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
+      ipin_index, std::string(""), false);
+    module_manager.set_logical2physical_configurable_child_instance_name(
+      cb_module, config_child_id, physical_mem_instance_name);
+  }
+}
+
 /********************************************************************
  * Build a module for a switch block whose detailed description is
  * available in a RRGSB object
@@ -658,285 +937,6 @@ static void build_switch_block_module(
   }
 
   VTR_LOGV(verbose, "Done\n");
-}
-
-/*********************************************************************
- * Print a short interconneciton in connection
- ********************************************************************/
-static void build_connection_block_module_short_interc(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const e_side& cb_ipin_side, const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
-  /* Ensure we have only one 1 driver node */
-  const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
-  const std::vector<RREdgeId>& driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side,
-                                     ipin_index);
-  std::vector<RRNodeId> driver_rr_nodes;
-  for (const RREdgeId curr_edge : driver_rr_edges) {
-    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
-  }
-
-  /* We have OPINs since we may have direct connections:
-   * These connections should be handled by other functions in the
-   * compact_netlist.c So we just return here for OPINs
-   */
-  if (0 == driver_rr_nodes.size()) {
-    return;
-  }
-
-  /* Find the driver node */
-  VTR_ASSERT_SAFE(1 == driver_rr_nodes.size());
-  const RRNodeId& driver_rr_node = driver_rr_nodes[0];
-
-  /* Xifan Tang: VPR considers delayless switch to be configurable
-   * As a result, the direct connection is considered to be configurable...
-   * Here, I simply kick out OPINs in CB connection because they should be built
-   * in the top mopdule.
-   *
-   * Note: this MUST BE reconsidered if we do have OPIN connected to IPINs
-   * through a programmable multiplexer!!!
-   */
-  if (e_rr_type::OPIN == rr_graph.node_type(driver_rr_node)) {
-    return;
-  }
-
-  VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(driver_rr_node)) ||
-             (e_rr_type::CHANY == rr_graph.node_type(driver_rr_node)));
-
-  /* Create port description for the routing track middle output */
-  ModulePinInfo input_port_info = find_connection_block_module_chan_port(
-    module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_node);
-
-  /* Create port description for input pin of a CLB */
-  ModulePortId ipin_port_id = find_connection_block_module_ipin_port(
-    module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
-    src_rr_node);
-
-  /* The input port and output port must match in size */
-  BasicPort input_port =
-    module_manager.module_port(cb_module, input_port_info.first);
-  BasicPort ipin_port = module_manager.module_port(cb_module, ipin_port_id);
-  VTR_ASSERT(1 == ipin_port.get_width());
-
-  /* Create a module net for this short-wire connection */
-  ModuleNetId net = input_port_to_module_nets.at(input_port_info);
-  /* Skip Configuring the net source, it is done before */
-  /* Configure the net sink */
-  module_manager.add_module_net_sink(cb_module, net, cb_module, 0, ipin_port_id,
-                                     ipin_port.pins()[0]);
-}
-
-/*********************************************************************
- * Build a instance of a routing multiplexer as well as
- * associated memory modules for a connection inside a connection block
- ********************************************************************/
-static void build_connection_block_mux_module(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
-  const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block) {
-  const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
-  /* Check current rr_node is an input pin of a CLB */
-  VTR_ASSERT(e_rr_type::IPIN == rr_graph.node_type(cur_rr_node));
-
-  /* Build a vector of driver rr_nodes */
-  const std::vector<RREdgeId>& driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side,
-                                     ipin_index);
-  std::vector<RRNodeId> driver_rr_nodes;
-  for (const RREdgeId curr_edge : driver_rr_edges) {
-    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
-  }
-
-  std::vector<RRSwitchId> driver_switches;
-  for (const RREdgeId& edge : driver_rr_edges) {
-    RRSwitchId sw = RRSwitchId(rr_graph.edge_switch(edge));
-    if (driver_switches.end() ==
-        std::find(driver_switches.begin(), driver_switches.end(), sw)) {
-      driver_switches.push_back(sw);
-    }
-  }
-  VTR_ASSERT_MSG(1 <= driver_switches.size(),
-                 ("There should be at least one driver switch for " +
-                  std::to_string(size_t(cur_rr_node)))
-                   .c_str());
-  /* Iterate over driver switches to find a common switch that can be used */
-  CircuitModelId switch_index =
-    device_annotation.rr_switch_circuit_model(driver_switches[0]);
-  for (size_t i = 1; i < driver_switches.size(); ++i) {
-    VTR_ASSERT_MSG(device_annotation.rr_switch_circuit_model(
-                     driver_switches[i]) == switch_index,
-                   ("All driver switches of " +
-                    std::to_string(size_t(cur_rr_node)) + " must be the same")
-                     .c_str());
-  }
-  /* Get the circuit model id of the routing multiplexer */
-  CircuitModelId mux_model =
-    device_annotation.rr_switch_circuit_model(driver_switches[0]);
-
-  /* Find the input size of the implementation of a routing multiplexer */
-  size_t datapath_mux_size = driver_rr_nodes.size();
-
-  /* Find the module name of the multiplexer and try to find it in the module
-   * manager */
-  std::string mux_module_name = generate_mux_subckt_name(
-    circuit_lib, mux_model, datapath_mux_size, std::string(""));
-  ModuleId mux_module = module_manager.find_module(mux_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
-
-  /* Get the MUX instance id from the module manager */
-  size_t mux_instance_id = module_manager.num_instance(cb_module, mux_module);
-  module_manager.add_child_module(cb_module, mux_module);
-
-  /* Give an instance name: this name should be consistent with the block name
-   * given in SDC manager, If you want to bind the SDC generation to modules
-   */
-  std::string mux_instance_name = generate_cb_mux_instance_name(
-    CONNECTION_BLOCK_MUX_INSTANCE_PREFIX,
-    get_rr_graph_single_node_side(
-      rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
-    ipin_index, std::string(""));
-  module_manager.set_child_instance_name(cb_module, mux_module, mux_instance_id,
-                                         mux_instance_name);
-
-  /* TODO: Generate input ports that are wired to the input bus of the routing
-   * multiplexer */
-  std::vector<ModulePinInfo> cb_input_port_ids;
-  if (false == module_manager.group_routing()) {
-    cb_input_port_ids = find_connection_block_module_input_ports(
-      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
-      cb_type, driver_rr_nodes);
-  } else {
-    cb_input_port_ids = find_switch_block_module_input_ports(
-      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
-      driver_rr_nodes);
-  }
-
-  /* Link input bus port to Switch Block inputs */
-  std::vector<CircuitPortId> mux_model_input_ports =
-    circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
-  VTR_ASSERT(1 == mux_model_input_ports.size());
-  /* Find the module port id of the input port */
-  ModulePortId mux_input_port_id = module_manager.find_module_port(
-    mux_module, circuit_lib.port_prefix(mux_model_input_ports[0]));
-  VTR_ASSERT(
-    true == module_manager.valid_module_port_id(mux_module, mux_input_port_id));
-  BasicPort mux_input_port =
-    module_manager.module_port(mux_module, mux_input_port_id);
-
-  /* Check port size should match */
-  VTR_ASSERT(mux_input_port.get_width() == cb_input_port_ids.size());
-  for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
-    /* Use the exising net */
-    ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
-    VTR_LOG(
-      "Connecting CB input port %zu (pin %zu) to MUX input port %zu (pin %zu) "
-      "via Net %zu\n",
-      cb_input_port_ids[pin_id].first, cb_input_port_ids[pin_id].second,
-      mux_input_port_id, pin_id, net);
-    /* No need to configure the net source since it is already done before */
-    /* Configure the net sink */
-    module_manager.add_module_net_sink(cb_module, net, mux_module,
-                                       mux_instance_id, mux_input_port_id,
-                                       mux_input_port.pins()[pin_id]);
-  }
-
-  /* Link output port to Connection Block outputs */
-  std::vector<CircuitPortId> mux_model_output_ports =
-    circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
-  VTR_ASSERT(1 == mux_model_output_ports.size());
-  /* Use the port name convention in the circuit library */
-  ModulePortId mux_output_port_id = module_manager.find_module_port(
-    mux_module, circuit_lib.port_prefix(mux_model_output_ports[0]));
-  VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module,
-                                                         mux_output_port_id));
-  BasicPort mux_output_port =
-    module_manager.module_port(mux_module, mux_output_port_id);
-  ModulePortId cb_output_port_id = find_connection_block_module_ipin_port(
-    module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
-    cur_rr_node);
-  BasicPort cb_output_port =
-    module_manager.module_port(cb_module, cb_output_port_id);
-
-  /* Check port size should match */
-  VTR_ASSERT(cb_output_port.get_width() == mux_output_port.get_width());
-  for (size_t pin_id = 0; pin_id < mux_output_port.pins().size(); ++pin_id) {
-    /* Configuring the net source */
-    ModuleNetId net = create_module_source_pin_net(
-      module_manager, cb_module, mux_module, mux_instance_id,
-      mux_output_port_id, mux_output_port.pins()[pin_id]);
-    /* Configure the net sink */
-    module_manager.add_module_net_sink(cb_module, net, cb_module, 0,
-                                       cb_output_port_id,
-                                       cb_output_port.pins()[pin_id]);
-  }
-
-  /* Instanciate memory modules */
-  /* Find the name and module id of the memory module */
-  std::string mem_module_name =
-    generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
-                             std::string(MEMORY_MODULE_POSTFIX));
-  if (group_config_block) {
-    mem_module_name =
-      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
-                               std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
-  }
-  ModuleId mem_module = module_manager.find_module(mem_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
-
-  size_t mem_instance_id = module_manager.num_instance(cb_module, mem_module);
-  module_manager.add_child_module(cb_module, mem_module);
-
-  /* Give an instance name: this name should be consistent with the block name
-   * given in bitstream manager, If you want to bind the bitstream generation to
-   * modules
-   */
-  std::string mem_instance_name = generate_cb_memory_instance_name(
-    CONNECTION_BLOCK_MEM_INSTANCE_PREFIX,
-    get_rr_graph_single_node_side(
-      rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
-    ipin_index, std::string(""), group_config_block);
-  module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id,
-                                         mem_instance_name);
-
-  /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of
-   * memory module */
-  add_module_nets_between_logic_and_memory_sram_bus(
-    module_manager, cb_module, mux_module, mux_instance_id, mem_module,
-    mem_instance_id, circuit_lib, mux_model);
-  /* Update memory and instance list */
-  size_t config_child_id = module_manager.num_configurable_children(
-    cb_module, ModuleManager::e_config_child_type::LOGICAL);
-  module_manager.add_configurable_child(
-    cb_module, mem_module, mem_instance_id,
-    group_config_block ? ModuleManager::e_config_child_type::LOGICAL
-                       : ModuleManager::e_config_child_type::UNIFIED);
-  /* For logical memory, define the physical memory here */
-  if (group_config_block) {
-    std::string physical_mem_module_name =
-      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
-                               std::string(MEMORY_MODULE_POSTFIX));
-    ModuleId physical_mem_module =
-      module_manager.find_module(physical_mem_module_name);
-    VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
-    module_manager.set_logical2physical_configurable_child(
-      cb_module, config_child_id, physical_mem_module);
-    std::string physical_mem_instance_name = generate_cb_memory_instance_name(
-      CONNECTION_BLOCK_MEM_INSTANCE_PREFIX,
-      get_rr_graph_single_node_side(
-        rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
-      ipin_index, std::string(""), false);
-    module_manager.set_logical2physical_configurable_child_instance_name(
-      cb_module, config_child_id, physical_mem_instance_name);
-  }
 }
 
 /********************************************************************
