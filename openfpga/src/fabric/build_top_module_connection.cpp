@@ -964,7 +964,6 @@ static void add_top_module_nets_connect_sb_and_sb(
   ModuleManager& module_manager, const ModuleId& top_module,
   const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
-  const std::map<e_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* We could have two different coordinators,
      one for instance and other for the module */
@@ -1203,7 +1202,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
         // we will directly connect SBs to SBs on top level.
         add_top_module_nets_connect_sb_and_sb(
           module_manager, top_module, rr_graph, device_rr_gsb, rr_gsb,
-          sb_instance_ids, cb_instance_ids, compact_routing_hierarchy);
+          sb_instance_ids, compact_routing_hierarchy);
         VTR_LOG(
           "Skip adding nets between CBs and SBs since group routing is "
           "enabled.\n");
