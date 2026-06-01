@@ -36,6 +36,7 @@ dnf install -y \
     tk \
     tk-devel \
     zlib-devel \
+    libedit-devel \
     readline-devel \
 	ccache \
     && dnf clean all
