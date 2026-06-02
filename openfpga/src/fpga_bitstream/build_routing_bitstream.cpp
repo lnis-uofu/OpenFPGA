@@ -253,66 +253,6 @@ static void build_switch_block_interc_bitstream(
 }
 
 /********************************************************************
- * This function generates bitstream for a Switch Block
- * and add it to the bitstream manager
- * This function will spot all the routing multiplexers in a Switch Block
- * using a simple but effective rule:
- * The fan-in of each output node.
- * If there are more than 2 fan-in, there is a routing multiplexer
- *
- * Note that the output nodes typically spread over all the sides of a Switch
- *Block So, we will iterate over that.
- *******************************************************************/
-static void build_switch_block_bitstream(
-  BitstreamManager& bitstream_manager, const ConfigBlockId& sb_config_block,
-  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
-  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const std::string& unused_mux_config,
-  const bool& verbose) {
-  /* Iterate over all the multiplexers */
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    SideManager side_manager(side);
-    for (size_t itrack = 0;
-         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
-      VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(rr_gsb.get_chan_node(
-                                        side_manager.get_side(), itrack))) ||
-                 (e_rr_type::CHANY == rr_graph.node_type(rr_gsb.get_chan_node(
-                                        side_manager.get_side(), itrack))));
-      /* Only output port indicates a routing multiplexer */
-      if (OUT_PORT !=
-          rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-        continue;
-      }
-      build_switch_block_interc_bitstream(
-        bitstream_manager, sb_config_block, module_manager, module_name_map,
-        circuit_lib, mux_lib, rr_graph, in_edges, atom_ctx, device_annotation,
-        routing_annotation, rr_gsb, gsb_edges, side_manager.get_side(), itrack,
-        unused_mux_config, verbose);
-    }
-    if (true == module_manager.group_routing()) {
-      // If routing is grouped, we need to generate bitstream for IPINs in
-      // switch blocks as well since they are in the same module with the
-      // routing multiplexers
-      for (size_t inode = 0;
-           inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
-           ++inode) {
-        VTR_LOGV(verbose, "\tGenerating bitstream for IPIN at '%s' side\n",
-                 side_manager.to_string().c_str());
-
-        build_connection_block_interc_bitstream(
-          bitstream_manager, sb_config_block, module_manager, module_name_map,
-          circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
-          rr_graph, in_edges, rr_gsb, gsb_edges, side_manager.get_side(), inode,
-          unused_mux_config, verbose);
-      }
-    }
-  }
-}
-
-/********************************************************************
  * This function generates bitstream for a routing multiplexer
  * in a Connection block
  * This function will identify if a node indicates a routing multiplexer
@@ -509,6 +449,66 @@ static void build_connection_block_interc_bitstream(
       rr_graph, in_edges, rr_gsb, gsb_edges, cb_ipin_side, ipin_index,
       unused_mux_config, verbose);
   } /*Nothing should be done else*/
+}
+
+/********************************************************************
+ * This function generates bitstream for a Switch Block
+ * and add it to the bitstream manager
+ * This function will spot all the routing multiplexers in a Switch Block
+ * using a simple but effective rule:
+ * The fan-in of each output node.
+ * If there are more than 2 fan-in, there is a routing multiplexer
+ *
+ * Note that the output nodes typically spread over all the sides of a Switch
+ *Block So, we will iterate over that.
+ *******************************************************************/
+static void build_switch_block_bitstream(
+  BitstreamManager& bitstream_manager, const ConfigBlockId& sb_config_block,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
+  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
+  const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
+  const RRGSBEdges& gsb_edges, const std::string& unused_mux_config,
+  const bool& verbose) {
+  /* Iterate over all the multiplexers */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    SideManager side_manager(side);
+    for (size_t itrack = 0;
+         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      VTR_ASSERT((e_rr_type::CHANX == rr_graph.node_type(rr_gsb.get_chan_node(
+                                        side_manager.get_side(), itrack))) ||
+                 (e_rr_type::CHANY == rr_graph.node_type(rr_gsb.get_chan_node(
+                                        side_manager.get_side(), itrack))));
+      /* Only output port indicates a routing multiplexer */
+      if (OUT_PORT !=
+          rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        continue;
+      }
+      build_switch_block_interc_bitstream(
+        bitstream_manager, sb_config_block, module_manager, module_name_map,
+        circuit_lib, mux_lib, rr_graph, in_edges, atom_ctx, device_annotation,
+        routing_annotation, rr_gsb, gsb_edges, side_manager.get_side(), itrack,
+        unused_mux_config, verbose);
+    }
+    if (true == module_manager.group_routing()) {
+      // If routing is grouped, we need to generate bitstream for IPINs in
+      // switch blocks as well since they are in the same module with the
+      // routing multiplexers
+      for (size_t inode = 0;
+           inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
+           ++inode) {
+        VTR_LOGV(verbose, "\tGenerating bitstream for IPIN at '%s' side\n",
+                 side_manager.to_string().c_str());
+
+        build_connection_block_interc_bitstream(
+          bitstream_manager, sb_config_block, module_manager, module_name_map,
+          circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
+          rr_graph, in_edges, rr_gsb, gsb_edges, side_manager.get_side(), inode,
+          unused_mux_config, verbose);
+      }
+    }
+  }
 }
 
 /********************************************************************

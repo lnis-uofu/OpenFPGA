@@ -38,18 +38,6 @@ void build_routing_bitstream(
   const RRGraphInEdges& in_edges, const DeviceRRGSB& device_rr_gsb,
   const bool& compact_routing_hierarchy, const std::string& unused_mux_config,
   const bool& verbose);
-
-static void build_connection_block_interc_bitstream(
-  BitstreamManager& bitstream_manager,
-  const ConfigBlockId& cb_configurable_block,
-  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
-  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const e_side& cb_ipin_side,
-  const size_t& ipin_index, const std::string& unused_mux_config,
-  const bool& verbose);
 } /* end namespace openfpga */
 
 #endif
