@@ -616,6 +616,44 @@ static void build_connection_block_mux_module(
 }
 
 /********************************************************************
+ * Print internal connections of a connection block
+ * For a IPIN node that is driven by only 1 fan-in,
+ * a short wire will be created
+ * For a IPIN node that is driven by more than two fan-ins,
+ * a routing multiplexer will be instanciated
+ ********************************************************************/
+static void build_connection_block_interc_modules(
+  ModuleManager& module_manager, const ModuleId& cb_module,
+  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
+  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
+  const size_t& ipin_index,
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block) {
+  const std::vector<RREdgeId>& driver_rr_edges =
+    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side,
+                                     ipin_index);
+
+  if (1 > driver_rr_edges.size()) {
+    return; /* This port has no driver, skip it */
+  } else if (1 == driver_rr_edges.size()) {
+    /* Print a direct connection */
+    build_connection_block_module_short_interc(
+      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
+      rr_gsb, gsb_edges, cb_type, cb_ipin_side, ipin_index,
+      input_port_to_module_nets);
+
+  } else if (1 < driver_rr_edges.size()) {
+    /* Print the multiplexer, fan_in >= 2 */
+    build_connection_block_mux_module(
+      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
+      rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
+      input_port_to_module_nets, group_config_block);
+  } /*Nothing should be done else*/
+}
+
+/********************************************************************
  * Build a module for a switch block whose detailed description is
  * available in a RRGSB object
  * A Switch Box module consists of following ports:
@@ -844,30 +882,17 @@ static void build_switch_block_module(
           module_manager, sb_module, sb_module, 0, output_port_id, 0);
         input_port_to_module_nets[ModulePinInfo(output_port_id, 0)] = net;
 
-        /* Build a vector of driver rr_nodes */
-        const std::vector<RREdgeId>& driver_rr_edges =
-          in_edges.node_in_edges(ipin_node);
-
+        /* IPINs on the top/bottom sides are driven by CHANY tracks, while
+         * those on the left/right sides are driven by CHANX tracks */
         e_rr_type cb_type = (side_manager.get_side() == e_side::TOP ||
                              side_manager.get_side() == e_side::BOTTOM)
                               ? e_rr_type::CHANY
                               : e_rr_type::CHANX;
-        if (1 > driver_rr_edges.size()) {
-          continue; /* This port has no driver, skip it */
-        } else if (1 == driver_rr_edges.size()) {
-          /* Print a direct connection */
-          build_connection_block_module_short_interc(
-            module_manager, sb_module, device_annotation, grids, rr_graph,
-            in_edges, rr_gsb, gsb_edges, cb_type, side_manager.get_side(),
-            inode, input_port_to_module_nets);
-        } else if (1 < driver_rr_edges.size()) {
-          /* Print the multiplexer, fan_in >= 2 */
-          build_connection_block_mux_module(
-            module_manager, sb_module, device_annotation, grids, rr_graph,
-            in_edges, rr_gsb, gsb_edges, cb_type, circuit_lib,
-            side_manager.get_side(), inode, input_port_to_module_nets,
-            group_config_block);
-        }
+        build_connection_block_interc_modules(
+          module_manager, sb_module, device_annotation, grids, rr_graph,
+          in_edges, rr_gsb, gsb_edges, cb_type, circuit_lib,
+          side_manager.get_side(), inode, input_port_to_module_nets,
+          group_config_block);
       }
     }
   }
@@ -932,44 +957,6 @@ static void build_switch_block_module(
   }
 
   VTR_LOGV(verbose, "Done\n");
-}
-
-/********************************************************************
- * Print internal connections of a connection block
- * For a IPIN node that is driven by only 1 fan-in,
- * a short wire will be created
- * For a IPIN node that is driven by more than two fan-ins,
- * a routing multiplexer will be instanciated
- ********************************************************************/
-static void build_connection_block_interc_modules(
-  ModuleManager& module_manager, const ModuleId& cb_module,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const e_rr_type& cb_type,
-  const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
-  const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
-  const bool& group_config_block) {
-  const std::vector<RREdgeId>& driver_rr_edges =
-    gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, cb_ipin_side,
-                                     ipin_index);
-
-  if (1 > driver_rr_edges.size()) {
-    return; /* This port has no driver, skip it */
-  } else if (1 == driver_rr_edges.size()) {
-    /* Print a direct connection */
-    build_connection_block_module_short_interc(
-      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
-      rr_gsb, gsb_edges, cb_type, cb_ipin_side, ipin_index,
-      input_port_to_module_nets);
-
-  } else if (1 < driver_rr_edges.size()) {
-    /* Print the multiplexer, fan_in >= 2 */
-    build_connection_block_mux_module(
-      module_manager, cb_module, device_annotation, grids, rr_graph, in_edges,
-      rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
-      input_port_to_module_nets, group_config_block);
-  } /*Nothing should be done else*/
 }
 
 /********************************************************************
