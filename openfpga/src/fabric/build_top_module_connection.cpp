@@ -209,7 +209,6 @@ static void add_top_module_nets_connect_grids_and_sb(
           side_manager.get_side(), grids, vpr_device_annotation, rr_graph,
           module_ipin_node);
 
-        VTR_LOG_WARN("Grid IPINs %s \n", src_sb_port_name.c_str());
         ModulePortId src_sb_port_id =
           module_manager.find_module_port(src_sb_module, src_sb_port_name);
         VTR_ASSERT(true == module_manager.valid_module_port_id(src_sb_module,
@@ -1061,9 +1060,6 @@ static void add_top_module_nets_connect_sb_and_sb(
                                            adj_module_sb.get_y())) {
       continue;
     }
-    VTR_LOG("      adj sb module name %s: sb_%u__%u_[%s] ======\n",
-            side_manager.to_string().c_str(), adj_instance_sb_coordinate.x(),
-            adj_instance_sb_coordinate.y(), adj_sb_module_name.c_str());
 
     size_t adj_sb_instance = sb_instance_ids[adj_instance_sb_coordinate.x()]
                                             [adj_instance_sb_coordinate.y()];

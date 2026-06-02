@@ -518,11 +518,6 @@ static void build_connection_block_mux_module(
   for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
     /* Use the exising net */
     ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
-    VTR_LOG(
-      "Connecting CB input port %zu (pin %zu) to MUX input port %zu (pin %zu) "
-      "via Net %zu\n",
-      cb_input_port_ids[pin_id].first, cb_input_port_ids[pin_id].second,
-      mux_input_port_id, pin_id, net);
     /* No need to configure the net source since it is already done before */
     /* Configure the net sink */
     module_manager.add_module_net_sink(cb_module, net, mux_module,

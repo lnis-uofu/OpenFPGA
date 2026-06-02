@@ -97,7 +97,6 @@ static void print_verilog_routing_connection_box_unique_module(
    * manager */
   std::string cb_module_name = module_name_map.name(orig_module_name);
   ModuleId cb_module = module_manager.find_module(cb_module_name);
-  // VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
   if (false == module_manager.valid_module_id(cb_module)) {
     VTR_LOG(
       "Skip generating Verilog module for connection block [%d][%d] due to "
