@@ -13,8 +13,7 @@
 #include "openfpga_tokenizer.h"
 
 /* Headers from readline library */
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <editline/readline.h>
 
 /* Headers from openfpgashell library */
 #include "command_parser.h"

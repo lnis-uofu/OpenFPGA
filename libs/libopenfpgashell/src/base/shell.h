@@ -1,5 +1,4 @@
-#ifndef SHELL_H
-#define SHELL_H
+#pragma once
 
 #include <ctime>
 #include <functional>
@@ -306,5 +305,3 @@ class Shell {
 
 /* Include the template implementation functions in the header file */
 #include "shell.tpp"
-
-#endif
