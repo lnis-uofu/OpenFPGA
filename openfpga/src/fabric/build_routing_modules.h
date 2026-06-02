@@ -20,8 +20,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-typedef std::pair<ModulePortId, size_t> ModulePinInfo;
-
 void build_flatten_routing_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,

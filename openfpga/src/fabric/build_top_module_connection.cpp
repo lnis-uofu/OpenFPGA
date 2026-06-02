@@ -1202,7 +1202,7 @@ void add_top_module_nets_connect_grids_and_gsbs(
         VTR_LOG(
           "Skip adding nets between CBs and SBs since group routing is "
           "enabled.\n");
-      };
+      }
     }
   }
 }

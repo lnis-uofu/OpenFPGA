@@ -48,6 +48,10 @@ static int calculate_manhattan_distance(const RRGraphView& rr_graph,
       (rr_graph.node_xhigh(node1) - rr_graph.node_xlow(node1)) +
       (rr_graph.node_yhigh(node1) - rr_graph.node_ylow(node1));
     const RRSegmentId& src_segment_id = rr_graph.node_segment(node1);
+    /* The logical segment length must be at least the physical length;
+     * otherwise the unsigned subtraction below would underflow */
+    VTR_ASSERT(rr_graph.rr_segments()[src_segment_id].length >=
+               static_cast<int>(physical_length));
     offset = rr_graph.rr_segments()[src_segment_id].length - physical_length;
   }
   if (rr_graph.node_type(node2) == e_rr_type::CHANX ||
@@ -121,7 +125,7 @@ static void write_rr_gsb_ipin_connection_to_xml(
         driver_node_index = rr_gsb.get_chan_node_index(
           chan_side_manager.get_opposite(), driver_node);
       }
-      /* We must have a valide node index */
+      /* We must have a valid node index */
       VTR_ASSERT(-1 != driver_node_index);
       const RRSegmentId& des_segment_id = rr_graph.node_segment(driver_node);
 

@@ -166,7 +166,7 @@ static void build_switch_block_mux_module(
   /* Check port size should match */
   VTR_ASSERT(mux_input_port.get_width() == sb_input_port_ids.size());
   for (size_t pin_id = 0; pin_id < sb_input_port_ids.size(); ++pin_id) {
-    /* Use the exising net */
+    /* Use the existing net */
     ModuleNetId net = input_port_to_module_nets.at(sb_input_port_ids[pin_id]);
     /* Configure the net source only if it is not yet in the source list */
     if (false ==
@@ -516,7 +516,7 @@ static void build_connection_block_mux_module(
   /* Check port size should match */
   VTR_ASSERT(mux_input_port.get_width() == cb_input_port_ids.size());
   for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
-    /* Use the exising net */
+    /* Use the existing net */
     ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
     /* No need to configure the net source since it is already done before */
     /* Configure the net sink */
