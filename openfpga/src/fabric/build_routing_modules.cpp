@@ -853,7 +853,7 @@ static void build_switch_block_module(
                               ? e_rr_type::CHANY
                               : e_rr_type::CHANX;
         if (1 > driver_rr_edges.size()) {
-          return; /* This port has no driver, skip it */
+          continue; /* This port has no driver, skip it */
         } else if (1 == driver_rr_edges.size()) {
           /* Print a direct connection */
           build_connection_block_module_short_interc(
