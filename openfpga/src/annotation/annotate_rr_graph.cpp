@@ -299,6 +299,50 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           continue;
         }
 
+        /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
+         * originates in the current switch block */
+        const auto& rr_graph = vpr_device_ctx.rr_graph;
+        bool connected_opin_in_curr_sb = false;
+        for (RREdgeId edge : rr_graph.edge_range(inode)) {
+          RRNodeId to_node = rr_graph.edge_sink_node(edge);
+
+          /* Only channel nodes can anchor the OPIN to a switch block */
+          e_rr_type to_node_type = rr_graph.node_type(to_node);
+          if (to_node_type != e_rr_type::CHANX &&
+              to_node_type != e_rr_type::CHANY) {
+            continue;
+          }
+
+          /* The driver end of a wire is at (xlow, ylow) for INC wires and
+           * (xhigh, yhigh) for DEC wires */
+          Direction driver_dir = rr_graph.node_direction(to_node);
+          int driver_x = (driver_dir == Direction::INC)
+                           ? rr_graph.node_xlow(to_node)
+                           : rr_graph.node_xhigh(to_node);
+          int driver_y = (driver_dir == Direction::INC)
+                           ? rr_graph.node_ylow(to_node)
+                           : rr_graph.node_yhigh(to_node);
+
+          /* The current switch block drives:
+           *   - DEC wires starting at [x][y]
+           *   - INC wires starting at [x+1][y]
+           *   - INC wires starting at [x][y+1]
+           */
+          if ((driver_dir == Direction::DEC && driver_x == gsb_coord.x() &&
+               driver_y == gsb_coord.y()) ||
+              (driver_dir == Direction::INC && driver_x == gsb_coord.x() + 1 &&
+               driver_y == gsb_coord.y()) ||
+              (driver_dir == Direction::INC && driver_x == gsb_coord.x() &&
+               driver_y == gsb_coord.y() + 1)) {
+            connected_opin_in_curr_sb = true;
+            break;
+          }
+        }
+        /* If the OPIN does not drive a channel in the current SB, skip it */
+        if (!connected_opin_in_curr_sb) {
+          continue;
+        }
+
         /* Grid[x+1][y+1] Bottom side outputs pins */
         rr_gsb.add_opin_node(inode, side_manager.get_side());
       }
