@@ -322,13 +322,13 @@ include(CMakeParseArguments)
 
 # Options to enable/disable dependencies for yosys
 set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
-set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys" OFF)
-set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys" OFF)
-set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys" OFF)
-set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys" OFF)
-set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys" OFF)
-set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys" OFF)
-set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys" OFF)
+set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
+set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
+set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
+set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
+set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
+set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
+set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
 
 #
 ## Search and link dependent packages
@@ -377,7 +377,7 @@ endif()
 
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake/modules)
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
   add_subdirectory(yosys)
   # Add dependency on patched Makefile if on MinGW
   if (DEFINED ENV{MSYSTEM})
@@ -386,6 +386,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   # yosys compilation ends
   # yosys-plugins compilation starts
   if (OPENFPGA_WITH_SLANG)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang/cmake)
     set(YOSYS_CONFIG <TARGET_FILE:yosys-config> CACHE STRING "Slang requires the exact location to the yosys-config executable")
     add_subdirectory(yosys-slang)
     add_dependencies(yosys-slang yosys)
