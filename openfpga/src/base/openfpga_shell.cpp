@@ -1,5 +1,8 @@
 #include "openfpga_shell.h"
 
+#include <map>
+
+#include "app_options_commands.h"
 #include "basic_command.h"
 #include "command_echo.h"
 #include "command_parser.h"
@@ -10,14 +13,22 @@
 #include "openfpga_spice_command.h"
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
+#include "show_setup.h"
 #include "vpr_command.h"
+#include "vpr_shell_utils.h"
+#include "yosys_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
+  vpr::sync_vpr_setup_to_app_options(openfpga_ctx_.mutable_vpr_setup(), shell_);
+
   shell_.set_name("OpenFPGA");
   shell_.add_title(create_openfpga_title().c_str());
 
   /* Add vpr commands */
   openfpga::add_vpr_commands(shell_);
+
+  /* Add yosys commands */
+  openfpga::add_yosys_commands(shell_);
 
   /* Add openfpga setup commands */
   openfpga::add_openfpga_setup_commands(shell_);
@@ -33,6 +44,9 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell_);
+
+  // Add app options commands
+  openfpga::add_app_options_commands(shell_);
 
   /* Add basic commands: exit, help, etc.
    * Note:
