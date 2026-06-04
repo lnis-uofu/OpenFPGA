@@ -320,23 +320,20 @@ add_subdirectory(openfpga)
 # Compilation options for yosys
 include(CMakeParseArguments)
 
-##project(yosys)
-
-# Options to enable/disable dependencies
-option(YOSYS_ENABLE_TCL, "Enable TCL parser integrated in yosys" ON)
-option(YOSYS_ENABLE_ABC, "Enable ABC library integrated in yosys" ON)
-option(YOSYS_ENABLE_PLUGINS, "Enable plug-in in yosys" ON)
-option(YOSYS_ENABLE_READLINE, "Enable readline library in yosys" ON)
-option(YOSYS_ENABLE_VERIFIC, "Enable verification library in yosys" OFF)
-option(YOSYS_ENABLE_COVER, "Enable coverage test in yosys" ON)
-option(YOSYS_ENABLE_LIBYOSYS, "Enable static library compiled yosys" OFF)
-option(YOSYS_ENABLE_GPROF, "Enable profiling in compiled yosys" OFF)
-option(YOSYS_ENABLE_NDEBUG, "Enable non-debugging feature in compiled yosys" OFF)
+# Options to enable/disable dependencies for yosys
+set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
+set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys" OFF)
+set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys" OFF)
+set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys" OFF)
+set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys" OFF)
+set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys" OFF)
+set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys" OFF)
+set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys" OFF)
 
 #
 ## Search and link dependent packages
 ## We need readline to compile 
-if (YOSYS_ENABLE_READLINE)
+if (YOSYS_WITHOUT_READLINE)
   find_package(Readline REQUIRED)
 endif()
 
@@ -372,49 +369,26 @@ endif()
 
 # Once Yosys adapts to CMake. This will be much simplified
 # Yosys build options
-set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
-set(YOSYS_BUILD_OPTION "ENABLE_CCACHE=1" CACHE STRING "Yosys build options") 
-set(SLANG_BUILD_CONFIG "" CACHE STRING "Slang build configuration on environment") 
-set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
 if (DEFINED ENV{MSYSTEM})
     message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
-    set(YOSYS_CONFIG_OPTION "config-msys2-64" CACHE STRING "Yosys configuration on environment" FORCE) 
-    set(YOSYS_BUILD_OPTION "DISABLE_ABC_THREADS=1 ENABLE_CCACHE=1" CACHE STRING "Yosys build options on environment" FORCE) 
+    set(YOSYS_DISABLE_THREADS ON CACHE BOOL "Disable threads in yosys" ON)
     set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
-    set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
 endif() 
 
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
-    if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys)
-        message(STATUS "Yosys pre-build exist so skipping it")
-    else ()
-        # run makefile provided, we pass-on the options to the local make file 
-        add_custom_target(
-            yosys ALL
-            # add step to remove the 'built-in' quicklogic plugins code in yosys
-            COMMAND $(MAKE) ${YOSYS_CONFIG_OPTION}
-            COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/ ${YOSYS_BUILD_OPTION}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-            COMMENT "Compile Yosys with given Makefile"
-        )
-        # Add dependency on patched Makefile if on MinGW
-        if (DEFINED ENV{MSYSTEM})
-          add_dependencies(yosys patch_abc_makefile)
-        endif()  
-        # yosys compilation ends
-        # yosys-plugins compilation starts
-        if (OPENFPGA_WITH_SLANG)
-          add_custom_target(
-              yosys-slang ALL
-              COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
-              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
-              DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
-              COMMENT "Compile Yosys-Slang with given Makefile"
-          )
-          add_dependencies(yosys-slang yosys)
-        endif()
-    endif()
+  add_subdirectory(yosys)
+  # Add dependency on patched Makefile if on MinGW
+  if (DEFINED ENV{MSYSTEM})
+    add_dependencies(yosys patch_abc_makefile)
+  endif()  
+  # yosys compilation ends
+  # yosys-plugins compilation starts
+  if (OPENFPGA_WITH_SLANG)
+    set(YOSYS_CONFIG <TARGET_FILE:yosys-config> CACHE STRING "Slang requires the exact location to the yosys-config executable")
+    add_subdirectory(yosys-slang)
+    add_dependencies(yosys-slang yosys)
+  endif()
 endif()
 
 # For installer
