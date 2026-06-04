@@ -377,6 +377,7 @@ endif()
 
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake/modules)
   add_subdirectory(yosys)
   # Add dependency on patched Makefile if on MinGW
   if (DEFINED ENV{MSYSTEM})
