@@ -418,6 +418,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           manifest-dir: ${{ github.workspace }} # Set to the directory containing your vcpkg.json file
           triplet: x64-windows-release # This must be set with a valid vcpkg triplet
+          extra-args: "--allow-unsupported"
 
       - name: Install WinFlexBison
         shell: powershell
