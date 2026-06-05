@@ -64,6 +64,10 @@ void initialize_readline(const std::vector<std::string>& completion_words) {
 #if defined(USE_READLINE) || defined(USE_LIBEDIT)
     // Register our custom completion function with the readline library
     rl_attempted_completion_function = my_attempted_completion;
+    // Explicitly bind the TAB key to the completion command.
+    // GNU Readline does this by default, but libedit often requires this
+    // to initialize its internal keymaps correctly.
+    rl_bind_key('\t', rl_complete);
 #endif
 }
 
