@@ -13,7 +13,7 @@
 // Global/File-static variable to hold vocabulary for completion
 static std::vector<std::string> vocabulary;
 
-#if defined(USE_READLINE) || defined(USE_LIBEDIT)
+#if defined(OPENFPGA_USE_READLINE) || defined(OPENFPGA_USE_LIBEDIT)
 /**
  * Generator function for readline's completion engine.
  * It is called repeatedly by readline to find matches.
@@ -61,18 +61,22 @@ static char** my_attempted_completion(const char* text, int start, int end) {
 void initialize_readline(const std::vector<std::string>& completion_words) {
     vocabulary = completion_words;
 
-#if defined(USE_READLINE) || defined(USE_LIBEDIT)
+#if defined(OPENFPGA_USE_READLINE) || defined(OPENFPGA_USE_LIBEDIT)
     // Register our custom completion function with the readline library
     rl_attempted_completion_function = my_attempted_completion;
     // Explicitly bind the TAB key to the completion command.
     // GNU Readline does this by default, but libedit often requires this
     // to initialize its internal keymaps correctly.
     rl_bind_key('\t', rl_complete);
+    // FORCE IMMEDIATE DISPLAY OF CANDIDATES
+    // By default, readline beeps on the first Tab if there are multiple choices.
+    // Setting this to 0 forces it to list choices immediately on the first Tab.
+    rl_completion_query_items = 0;
 #endif
 }
 
 std::string get_user_input(const std::string& prompt) {
-#if defined(USE_READLINE) || defined(USE_LIBEDIT)
+#if defined(OPENFPGA_USE_READLINE) || defined(OPENFPGA_USE_LIBEDIT)
     char* buffer = readline(prompt.c_str());
     
     if (!buffer) {
