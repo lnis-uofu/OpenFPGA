@@ -6,7 +6,6 @@
     "readline",
     "openssl",
     "pkgconf",
-    "libedit",
     "capnproto"
   ]
 }
