@@ -89,7 +89,7 @@ option(OPENFPGA_WITH_INSTALLER "Enable installer to be built" ON)
 option(OPENFPGA_INSTALL_DOC "Installer will include documentation" ON)
 # Readline options
 set(OPENFPGA_READLINE_MODES "libreadline" "libedit" "standard")
-set(OPENFPGA_READLINE_MODE "libreadline" CACHE STRING "Select the type of readline function to use in shell interface"
+set(OPENFPGA_READLINE_MODE "libreadline" CACHE STRING "Select the type of readline function to use in shell interface")
 # Attach the STRINGS property so GUI/TUI tools display a dropdown
 set_property(CACHE OPENFPGA_READLINE_MODE PROPERTY STRINGS ${OPENFPGA_READLINE_MODES})
 # Enforce validation on configure
