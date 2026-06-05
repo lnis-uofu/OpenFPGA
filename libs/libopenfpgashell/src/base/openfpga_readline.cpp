@@ -49,7 +49,7 @@ static char* command_generator(const char* text, int state) {
 /**
  * Custom completion function called by readline/libedit.
  */
-static char** my_attempted_completion(const char* text, int start, int end) {
+static char** my_attempted_completion(const char* text, int /*start*/, int /*end*/) {
     // Avoid default filename completion if our generator fails
     rl_attempted_completion_over = 1; 
     
