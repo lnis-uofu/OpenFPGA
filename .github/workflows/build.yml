@@ -125,6 +125,8 @@ jobs:
       - name: Install dependencies
         run: |
           ./.github/workflows/build_dependency_win-msys2-${{ matrix.config.os}}.sh
+          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
+          sleep 10s
           cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
           python3 -m venv myenv
           source myenv/bin/activate
