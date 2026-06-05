@@ -296,7 +296,7 @@ class Shell {
   std::map<std::string, ShellCommandClassId> command_class2ids_;
   vtr::vector<ShellCommandClassId, std::vector<ShellCommandId>>
     commands_by_classes_;
-  std::vector<std::string> commands4autocomplete_
+  std::vector<std::string> commands4autocomplete_;
 
   /* Timer */
   std::clock_t time_start_;

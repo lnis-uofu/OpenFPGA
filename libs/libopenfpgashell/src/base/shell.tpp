@@ -282,7 +282,7 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
   }
 
   /* Wait for users input and execute the command */
-  initialize_readline(command4autocomplete_);
+  initialize_readline(commands4autocomplete_);
   std::string cmd_prompt = name() + std::string("> ");
   while (true) {
     std::string cmd_line = get_user_input(cmd_prompt);
@@ -292,12 +292,8 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
      */
     if (!cmd_line.empty()) {
       /* Do not allow any hidden command to be directly called by users */
-      execute_command((const char*)cmd_line, context, false);
-      add_history(cmd_line);
+      execute_command(cmd_line.c_str(), context, false);
     }
-
-    /* Free the line as readline malloc a new line each time */
-    free(cmd_line);
   }
 }
 
