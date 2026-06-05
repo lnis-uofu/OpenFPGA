@@ -87,6 +87,15 @@ option(OPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN "Specifies whether to update capn'proto
 option(OPENFPGA_GUI_INSTALLER "Enable installer with a graphical user interface" ON)
 option(OPENFPGA_WITH_INSTALLER "Enable installer to be built" ON)
 option(OPENFPGA_INSTALL_DOC "Installer will include documentation" ON)
+# Readline options
+set(OPENFPGA_READLINE_MODES "libreadline" "libedit" "standard")
+set(OPENFPGA_READLINE_MODE "libreadline" CACHE STRING "Select the type of readline function to use in shell interface"
+# Attach the STRINGS property so GUI/TUI tools display a dropdown
+set_property(CACHE OPENFPGA_READLINE_MODE PROPERTY STRINGS ${OPENFPGA_READLINE_MODES})
+# Enforce validation on configure
+if (NOT OPENFPGA_READLINE_MODE IN_LIST OPENFPGA_READLINE_MODES)
+    message(FATAL_ERROR "Invalid value for OPENFPGA_READLINE_MODE. Allowed values are: ${OPENFPGA_READLINE_MODES}")
+endif()
 
 message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
 message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")

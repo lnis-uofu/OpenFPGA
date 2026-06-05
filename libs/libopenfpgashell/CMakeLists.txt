@@ -2,17 +2,6 @@ cmake_minimum_required(VERSION 3.9)
 
 project("libopenfpgashell")
 
-## We need readline to compile
-#if(WIN32)
-#  if (MSVC)
-#    find_package(unofficial-readline-win32 CONFIG REQUIRED)
-#  else()
-#    find_package(Readline REQUIRED)
-#  endif()
-#else()
-#  find_package(Readline REQUIRED)
-#endif()
-
 file(GLOB_RECURSE EXEC_SOURCES test/*.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
 file(GLOB_RECURSE LIB_HEADERS src/*/*.h)
@@ -33,41 +22,45 @@ target_link_libraries(libopenfpgashell
                       libopenfpgautil
                       libvtrutil)
 
-# Find libedit 
-if(WIN32)
-    # Windows-specific dependency mapping
-    # Note: 'wineditline' or 'libedit' can be installed via: vcpkg install libedit
-    find_package(libedit CONFIG QUIET)
-    if(libedit_FOUND)
-        target_link_libraries(libopenfpgashell libedit::libedit)
+# Decide what readline package to use now 
+if (OPENFPGA_READLINE_MODE STREQUAL "libreadline")
+  # Include compiler definition and linked lib for libreadline
+  target_compile_definitions(libopenfpgashell PRIVATE OPENFPGA_USE_READLINE)
+  if(WIN32)
+    if (MSVC)
+      target_link_libraries(libopenfpgashell
+                            unofficial::readline-win32::readline)
     else()
-        # Fallback preprocessor definition if compiling without a readline library
-        target_compile_definitions(libopenfpgashell PRIVATE USE_BASIC_GETLINE)
-        message(STATUS "libedit not found on Windows. Falling back to std::getline.")
+      target_link_libraries(libopenfpgashell
+                            readline)
     endif()
-elseif(UNIX AND NOT APPLE)
-    # Linux-specific PkgConfig mapping
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(EDITLINE REQUIRED libedit)
-#    target_include_directories(libopenfpgashell PRIVATE ${EDITLINE_INCLUDE_DIRS})
-    target_link_libraries(libopenfpgashell ${EDITLINE_LIBRARIES})
-elseif(APPLE)
-    # macOS includes libedit natively in the SDK
-    target_link_libraries(libopenfpgashell edit)
+  else()
+    target_link_libraries(libopenfpgashell
+                          readline)
+  endif()
+elseif (OPENFPGA_READLINE_MODE STREQUAL "libedit")
+  # Include compiler definition and linked lib for libedit
+  target_compile_definitions(libopenfpgashell PRIVATE OPENFPGA_USE_LIBEDIT)
+  if(WIN32)
+      # Windows-specific dependency mapping
+      # Note: 'wineditline' or 'libedit' can be installed via: vcpkg install libedit
+      find_package(libedit REQUIRED)
+      target_link_libraries(libopenfpgashell libedit::libedit)
+  elseif(UNIX AND NOT APPLE)
+      # Linux-specific PkgConfig mapping
+      find_package(PkgConfig REQUIRED)
+      pkg_check_modules(EDITLINE REQUIRED libedit)
+      target_link_libraries(libopenfpgashell ${EDITLINE_LIBRARIES})
+  elseif(APPLE)
+      # macOS includes libedit natively in the SDK
+      target_link_libraries(libopenfpgashell edit)
+  endif()
+elseif (OPENFPGA_READLINE_MODE STREQUAL "standard")
+  message(STATUS "Use the standard minimum readline mode in shell interface. No readline features will be included")
+else()
+  # This acts as a fallback safety net
+  message(FATAL_ERROR "Unknown readline feature mode: ${OPENFPGA_READLINE_MODE}")
 endif()
-
-#if(WIN32)
-#  if (MSVC)
-#    target_link_libraries(libopenfpgashell
-#                          unofficial::readline-win32::readline)
-#  else()
-#    target_link_libraries(libopenfpgashell
-#                          readline)
-#  endif()
-#else()
-#  target_link_libraries(libopenfpgashell
-#                        readline)
-#endif()
 
 # Create the test executable
 foreach(testsourcefile ${EXEC_SOURCES})

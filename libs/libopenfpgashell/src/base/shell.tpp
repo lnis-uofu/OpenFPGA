@@ -13,7 +13,7 @@
 #include "openfpga_tokenizer.h"
 
 /* Headers from readline library */
-#include <editline/readline.h>
+#include "openfpga_readline.h"
 
 /* Headers from openfpgashell library */
 #include "command_parser.h"
@@ -145,6 +145,9 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
 
   /* Register the name in the name2id map */
   command_name2ids_[cmd.name()] = shell_cmd;
+  if (!hidden) {
+    commands4autocomplete_.push_back(cmd.name());
+  }
 
   return shell_cmd;
 } 
@@ -279,13 +282,15 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
   }
 
   /* Wait for users input and execute the command */
-  char* cmd_line;
-  while ((cmd_line = readline(std::string(name() + std::string("> ")).c_str())) != nullptr) {
+  initialize_readline(command4autocomplete_);
+  std::string cmd_prompt = name() + std::string("> ");
+  while (true) {
+    std::string cmd_line = get_user_input(cmd_prompt);
     /* If the line is not empty:
      * Try to execute the command and
      * Add to history 
      */
-    if (strlen(cmd_line) > 0) {
+    if (!cmd_line.empty()) {
       /* Do not allow any hidden command to be directly called by users */
       execute_command((const char*)cmd_line, context, false);
       add_history(cmd_line);
