@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "dependencies": [
     "zlib",
-    "readline-win32",
+    "readline",
     "openssl",
     "pkgconf",
     "capnproto"

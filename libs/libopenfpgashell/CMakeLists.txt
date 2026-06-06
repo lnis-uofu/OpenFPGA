@@ -29,7 +29,7 @@ if (OPENFPGA_READLINE_MODE STREQUAL "libreadline")
   if(WIN32)
     if (MSVC)
       target_link_libraries(libopenfpgashell
-                            unofficial::readline-win32::readline)
+                            readline)
     else()
       target_link_libraries(libopenfpgashell
                             readline)
