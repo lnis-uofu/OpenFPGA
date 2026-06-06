@@ -20,7 +20,6 @@ set_target_properties(libclkarchopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib
 #Specify link-time dependancies
 target_link_libraries(libclkarchopenfpga
                       libopenfpgautil
-                      libopenfpgashell
                       libarchopenfpga
                       librrgraph
                       libvtrutil
