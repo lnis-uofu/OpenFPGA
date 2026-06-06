@@ -28,13 +28,16 @@ if (OPENFPGA_READLINE_MODE STREQUAL "libreadline")
   target_compile_definitions(libopenfpgashell PRIVATE OPENFPGA_USE_READLINE)
   if(WIN32)
     if (MSVC)
+      find_package(unofficial-readline-win32 CONFIG REQUIRED)
       target_link_libraries(libopenfpgashell
-                            readline)
+                            unofficial::readline-win32::readline)
     else()
+      find_package(Readline REQUIRED)
       target_link_libraries(libopenfpgashell
                             readline)
     endif()
   else()
+    find_package(Readline REQUIRED)
     target_link_libraries(libopenfpgashell
                           readline)
   endif()
