@@ -92,7 +92,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -162,6 +162,8 @@ jobs:
 
       - name: Create installer
         shell: msys2 {0}
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           make checkout
           make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
@@ -210,7 +212,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -281,6 +283,8 @@ jobs:
 
       - name: Build
         shell: msys2 {0}
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
@@ -486,8 +490,8 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF
-          cmake --build . --config Release
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build . --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
           cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
 
       - name: Create Python virtual environment
