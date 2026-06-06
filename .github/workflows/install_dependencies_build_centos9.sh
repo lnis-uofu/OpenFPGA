@@ -39,9 +39,10 @@ dnf install -y \
     libedit-devel \
     readline-devel \
 	ccache \
+	swig \
     && dnf clean all
 
-yum install -y https://dl.fedoraproject.org/pub/epel/8/Modular/x86_64/Packages/s/swig-4.0.2-9.module_el8+12710+6335019d.x86_64.rpm
+#yum install -y https://dl.fedoraproject.org/pub/epel/8/Modular/x86_64/Packages/s/swig-4.0.2-9.module_el8+12710+6335019d.x86_64.rpm
 localedef -i en_US -f UTF-8 en_US.UTF-8
 
 mkdir -p /tmp/iverilog \

@@ -125,15 +125,15 @@ jobs:
       - name: Install dependencies
         run: |
           ./.github/workflows/build_dependency_win-msys2-${{ matrix.config.os}}.sh
-          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
-          sleep 10s
-          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
           python3 -m venv myenv
           source myenv/bin/activate
           python3 -m pip install --upgrade pip setuptools
           python3 -m pip install -r msys2_requirements.txt
           echo "==== Checking python packages ===="
           python -c "import yaml; print('Installed')"      
+          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
+          sleep 10s
+          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
 
       - name: Dump tool versions
         run: |
