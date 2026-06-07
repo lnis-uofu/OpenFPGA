@@ -27,6 +27,7 @@ apt-get install -y \
     libncurses5-dev \
     libreadline-dev \
     libreadline8 \
+    libedit-dev \
     libx11-dev \
     libxft-dev \
     libxml++2.6-dev \

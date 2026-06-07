@@ -92,7 +92,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -125,13 +125,15 @@ jobs:
       - name: Install dependencies
         run: |
           ./.github/workflows/build_dependency_win-msys2-${{ matrix.config.os}}.sh
-          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
           python3 -m venv myenv
           source myenv/bin/activate
           python3 -m pip install --upgrade pip setuptools
           python3 -m pip install -r msys2_requirements.txt
           echo "==== Checking python packages ===="
           python -c "import yaml; print('Installed')"      
+          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
+          sleep 10s
+          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
 
       - name: Dump tool versions
         run: |
@@ -153,17 +155,23 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          key: ${{ matrix.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
           restore-keys: |
-            ${{ runner.os }}-msys2-${{ github.job }}-
-            ${{ runner.os }}-msys2-
+            ${{ matrix.os }}-msys2-${{ github.job }}-
+            ${{ matrix.os }}-msys2-
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Create installer
         shell: msys2 {0}
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           make checkout
-          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
-          make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -208,7 +216,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -272,15 +280,21 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          key: ${{ matrix.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
           restore-keys: |
-            ${{ runner.os }}-msys2-${{ github.job }}-
-            ${{ runner.os }}-msys2-
+            ${{ matrix.os }}-msys2-${{ github.job }}-
+            ${{ matrix.os }}-msys2-
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: msys2 {0}
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
@@ -484,8 +498,8 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF
-          cmake --build . --config Release
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build . --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
           cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
 
       - name: Create Python virtual environment
@@ -606,7 +620,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -684,6 +702,14 @@ jobs:
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN=ON"
+          - name: "Build with libedit (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            cmake_flags: "-DOPENFPGA_READLINE_MODE=libedit"
+          - name: "Build with std::getline (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            cmake_flags: "-DOPENFPGA_READLINE_MODE=standard"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -708,7 +734,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-${{ matrix.config.cmake_flags}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -754,7 +784,12 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-${{ matrix.config.dependency_version}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-
+
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -808,7 +843,12 @@ jobs:
   
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
+
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -868,7 +908,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -925,7 +969,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -982,7 +1030,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
