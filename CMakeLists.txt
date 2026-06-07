@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
+# Include user-defined functions
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+include(FilesToDirs)
+include(SwigLib)
+# Auto-enable ccache
+include(SupportCcache)
 
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
@@ -36,6 +37,8 @@ endif()
 
 set(OPENFPGA_IPO_BUILD "auto" CACHE STRING "Should OpenFPGA be compiled with interprocedural compiler optimizations?")
 set_property(CACHE OPENFPGA_IPO_BUILD PROPERTY STRINGS auto on off)
+# Synchronize IPO settings to submodules
+set(VTR_IPO_BUILD ${OPENFPGA_IPO_BUILD} CACHE STRING "Should verilog-to-routing be compiled with interprocedural compiler optimizations?" FORCE)
 
 #Allow the user to configure how much assertion checking should occur
 set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
@@ -63,10 +66,6 @@ list(GET VERSION_LIST 1 OPENFPGA_VERSION_MINOR)
 list(GET VERSION_LIST 2 OPENFPGA_VERSION_PATCH)
 set(OPENFPGA_VERSION_PRERELEASE "dev")
 
-# Include user-defined functions
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
-include(FilesToDirs)
-include(SwigLib)
 
 # Set the assertion level
 add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
@@ -87,9 +86,18 @@ option(OPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN "Specifies whether to update capn'proto
 option(OPENFPGA_GUI_INSTALLER "Enable installer with a graphical user interface" ON)
 option(OPENFPGA_WITH_INSTALLER "Enable installer to be built" ON)
 option(OPENFPGA_INSTALL_DOC "Installer will include documentation" ON)
-
 message(STATUS "CMAKE_OPENFPGA_WITH_INSTALLER: ${OPENFPGA_WITH_INSTALLER}")
 message(STATUS "CMAKE_OPENFPGA_INSTALL_DOC: ${OPENFPGA_INSTALL_DOC}")
+# Readline options
+set(OPENFPGA_READLINE_MODES "libreadline" "libedit" "standard")
+set(OPENFPGA_READLINE_MODE "libreadline" CACHE STRING "Select the type of readline function to use in shell interface")
+# Attach the STRINGS property so GUI/TUI tools display a dropdown
+set_property(CACHE OPENFPGA_READLINE_MODE PROPERTY STRINGS ${OPENFPGA_READLINE_MODES})
+# Enforce validation on configure
+if (NOT OPENFPGA_READLINE_MODE IN_LIST OPENFPGA_READLINE_MODES)
+    message(FATAL_ERROR "Invalid value for OPENFPGA_READLINE_MODE. Allowed values are: ${OPENFPGA_READLINE_MODES}")
+endif()
+message(STATUS "Readline feature mode: ${OPENFPGA_READLINE_MODE}")
 
 # Options pass on to VTR
 
