@@ -155,10 +155,10 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
           restore-keys: |
-            ${{ matrix.os }}-msys2-${{ github.job }}-
-            ${{ matrix.os }}-msys2-
+            ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-
+            ${{ runner.os }}-msys2-${{ github.job }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -280,10 +280,10 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
           restore-keys: |
-            ${{ matrix.os }}-msys2-${{ github.job }}-
-            ${{ matrix.os }}-msys2-
+            ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}
+            ${{ runner.os }}-msys2-${{ github.job }}
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -495,6 +495,8 @@ jobs:
 
       - name: Create installer
         shell: powershell
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           mkdir build
           cd build
