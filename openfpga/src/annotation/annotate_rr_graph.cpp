@@ -25,8 +25,8 @@ namespace openfpga {
 /* Returns true if the given OPIN node drives at least one CHANX/Y wire that
  * is a valid (non-passing) output track in the switch block. */
 static bool is_rr_opin_drive_gsb_track(const RRGraphView& rr_graph,
-                                        const RRGSB& rr_gsb,
-                                        const RRNodeId& opin_node) {
+                                       const RRGSB& rr_gsb,
+                                       const RRNodeId& opin_node) {
   for (RREdgeId edge : rr_graph.edge_range(opin_node)) {
     RRNodeId to_node = rr_graph.edge_sink_node(edge);
 
@@ -333,7 +333,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
          * originates in the current switch block */
         if (!is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
-                                         inode)) {
+                                        inode)) {
           continue;
         }
 
