@@ -33,6 +33,7 @@ yum install -y \
     tk \
     tk-devel \
     zlib-devel \
+    libedit-devel \
     readline-devel
 
 # Install required gcc version and setup
