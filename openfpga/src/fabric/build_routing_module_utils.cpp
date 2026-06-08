@@ -242,6 +242,21 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(
     int index = -1;
     rr_gsb.get_node_side_and_index(rr_graph, input_rr_node, IN_PORT,
                                    input_pin_side, index);
+    if (module_manager.group_routing() && (NUM_2D_SIDES == input_pin_side)) {
+      // In group routing, the input_rr_node may not be directly connected
+      // to the switch block outputs
+      rr_gsb.get_node_side_and_index(rr_graph, input_rr_node, OUT_PORT,
+                                     input_pin_side, index);
+
+      VTR_ASSERT(NUM_2D_SIDES != input_pin_side);
+      VTR_ASSERT(-1 != index);
+
+      input_ports.push_back(find_switch_block_module_chan_port(
+        module_manager, sb_module, rr_graph, rr_gsb, input_pin_side,
+        input_rr_node, OUT_PORT));
+      continue;
+    }
+
     VTR_ASSERT(NUM_2D_SIDES != input_pin_side);
     VTR_ASSERT(-1 != index);
 

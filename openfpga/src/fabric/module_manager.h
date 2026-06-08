@@ -511,6 +511,9 @@ class ModuleManager {
                                  const std::string& instance_name,
                                  const bool& add_nets);
 
+  bool group_routing() const;
+  void set_group_routing(const bool& group_routing);
+
  public: /* Public deconstructors */
   /* This is a strong function which will remove all the configurable children
    * under a given parent module
@@ -724,6 +727,13 @@ class ModuleManager {
    * terminals (either source or sink)
    */
   std::vector<std::pair<ModuleId, ModulePortId>> net_terminal_storage_;
+
+  bool group_routing_ =
+    false; /* A flag to indicate if the routing nets are grouped together in the
+              same module. If true, all the routing nets will be grouped
+              together in a module. Otherwise, each net will be put in the
+              module where it is defined. This is used for memory optimization.
+            */
 };
 
 } /* end namespace openfpga */

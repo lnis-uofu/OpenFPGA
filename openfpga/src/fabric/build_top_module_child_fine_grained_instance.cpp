@@ -467,13 +467,18 @@ int build_top_module_fine_grained_child_instances(
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(
     module_manager, top_module, device_rr_gsb, compact_routing_hierarchy);
-  /* Add all the CBX and CBYs across the fabric */
-  cb_instance_ids[e_rr_type::CHANX] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, e_rr_type::CHANX,
-    compact_routing_hierarchy, verbose);
-  cb_instance_ids[e_rr_type::CHANY] = add_top_module_connection_block_instances(
-    module_manager, top_module, device_rr_gsb, e_rr_type::CHANY,
-    compact_routing_hierarchy, verbose);
+
+  if (false == module_manager.group_routing()) {
+    /* Add all the CBX and CBYs across the fabric */
+    cb_instance_ids[e_rr_type::CHANX] =
+      add_top_module_connection_block_instances(
+        module_manager, top_module, device_rr_gsb, e_rr_type::CHANX,
+        compact_routing_hierarchy, verbose);
+    cb_instance_ids[e_rr_type::CHANY] =
+      add_top_module_connection_block_instances(
+        module_manager, top_module, device_rr_gsb, e_rr_type::CHANY,
+        compact_routing_hierarchy, verbose);
+  }
 
   /* Update I/O children list */
   add_top_module_io_children(module_manager, top_module, grids, layer,
