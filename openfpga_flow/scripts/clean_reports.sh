@@ -6,13 +6,17 @@ if [ "$#" -ne 1 ]; then
 fi
 
 file="$1"
-echo "Cleaning tool_comment from rr_graph tag in $file if it does not have .xml extension..."
 
 # Check if file has .xml extension
 if [[ "$file" == *.xml ]]; then
     # Remove tool_comment attribute from rr_graph tag
     sed -i 's/<rr_graph.*>/<rr_graph schema_file_id="" tool_comment="" tool_name="vpr" tool_version="">/g' "$file"
     echo "Cleaned tool_comment from rr_graph tag in $file"
-else
-    echo "File $file does not have .xml extension, skipping cleaning."
+fi
+
+# Check if file is fabric_netlist.v
+if [[ "$file" == *.v ]]; then
+    # Remove tool_comment attribute from rr_graph tag
+    sed -i "s#${OPENFPGA_PATH}#\${OPENFPGA_PATH}#g" "$file"
+    echo "Cleaned tool_comment from rr_graph tag in $file"
 fi

@@ -38,7 +38,6 @@ void build_routing_bitstream(
   const RRGraphInEdges& in_edges, const DeviceRRGSB& device_rr_gsb,
   const bool& compact_routing_hierarchy, const std::string& unused_mux_config,
   const bool& verbose);
-
 } /* end namespace openfpga */
 
 #endif

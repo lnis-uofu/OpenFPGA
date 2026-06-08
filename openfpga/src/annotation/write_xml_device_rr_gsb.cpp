@@ -25,11 +25,47 @@ namespace openfpga {
 static int calculate_manhattan_distance(const RRGraphView& rr_graph,
                                         const RRNodeId& node1,
                                         const RRNodeId& node2) {
-  int distance_x = std::abs(static_cast<int>(rr_graph.node_xlow(node1)) -
-                            static_cast<int>(rr_graph.node_xlow(node2)));
-  int distance_y = std::abs(static_cast<int>(rr_graph.node_ylow(node1)) -
-                            static_cast<int>(rr_graph.node_ylow(node2)));
-  return distance_x + distance_y;
+  uint32_t x1, x2, y1, y2;
+  uint32_t offset = 0;
+
+  x1 = rr_graph.node_xlow(node1);
+  y1 = rr_graph.node_ylow(node1);
+  x2 = rr_graph.node_xlow(node2);
+  y2 = rr_graph.node_ylow(node2);
+
+  if (rr_graph.node_type(node1) == e_rr_type::CHANX ||
+      rr_graph.node_type(node1) == e_rr_type::CHANY) {
+    if (rr_graph.node_direction(node1) == Direction::DEC) {
+      // if the node is DEC, the driver is placed at xhigh and yhigh
+      x1 = rr_graph.node_xhigh(node1);
+      y1 = rr_graph.node_yhigh(node1);
+    }
+    // On the edges all the drivers are placed on first row or column
+    // For tap calculation logical driver location can be found by
+    // finding the difference in logical length and physical length of the
+    // segment, which is the offset from the driver to the first row/column
+    uint32_t physical_length =
+      (rr_graph.node_xhigh(node1) - rr_graph.node_xlow(node1)) +
+      (rr_graph.node_yhigh(node1) - rr_graph.node_ylow(node1));
+    const RRSegmentId& src_segment_id = rr_graph.node_segment(node1);
+    /* The logical segment length must be at least the physical length;
+     * otherwise the unsigned subtraction below would underflow */
+    VTR_ASSERT(rr_graph.rr_segments()[src_segment_id].length >=
+               static_cast<int>(physical_length));
+    offset = rr_graph.rr_segments()[src_segment_id].length - physical_length;
+  }
+  if (rr_graph.node_type(node2) == e_rr_type::CHANX ||
+      rr_graph.node_type(node2) == e_rr_type::CHANY) {
+    if (rr_graph.node_direction(node2) == Direction::DEC) {
+      // if the node is DEC, the driver is placed at xhigh and yhigh
+      x2 = rr_graph.node_xhigh(node2);
+      y2 = rr_graph.node_yhigh(node2);
+    }
+  }
+
+  uint32_t distance_x = std::abs(static_cast<int>(x1) - static_cast<int>(x2));
+  uint32_t distance_y = std::abs(static_cast<int>(y1) - static_cast<int>(y2));
+  return distance_x + distance_y + offset;
 }
 
 /***************************************************************************************
@@ -70,7 +106,7 @@ static void write_rr_gsb_ipin_connection_to_xml(
         calculate_manhattan_distance(rr_graph, driver_node, cur_rr_node);
 
       enum Direction node_direction = rr_graph.node_direction(driver_node);
-      int driver_node_index = rr_graph.node_track_num(driver_node);
+
       enum e_side chan_side;
       if (driver_node_type == e_rr_type::CHANX) {
         chan_side = (node_direction == Direction::INC) ? LEFT : RIGHT;
@@ -80,8 +116,17 @@ static void write_rr_gsb_ipin_connection_to_xml(
 
       SideManager chan_side_manager(chan_side);
 
-      // int driver_node_index = -1;
-      // driver_node_index = rr_gsb.get_chan_node_index(chan_side, driver_node);
+      int driver_node_index =
+        rr_gsb.get_chan_node_index(chan_side, driver_node);
+      if (-1 == driver_node_index) {
+        /* If node index is not found, it could be connected to the channel
+           starting from current grid location, in which case, we try to find
+           the node index on the opposite side */
+        driver_node_index = rr_gsb.get_chan_node_index(
+          chan_side_manager.get_opposite(), driver_node);
+      }
+      /* We must have a valid node index */
+      VTR_ASSERT(-1 != driver_node_index);
       const RRSegmentId& des_segment_id = rr_graph.node_segment(driver_node);
 
       // Write to a file in the following format:
@@ -186,8 +231,7 @@ static void write_rr_gsb_chan_connection_to_xml(
             get_rr_graph_single_node_side(rr_graph, driver_rr_node));
           fp << "\t\t<driver_node type=\"" << rr_node_typename[e_rr_type::OPIN]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
-             << rr_graph.node_track_num(cur_rr_node) << "\" tap=\""
-             << manhattan_distance;
+             << driver_node_index << "\" tap=\"" << manhattan_distance;
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node) << "\" grid_side=\""
                << grid_side.to_string() << "\" sb_module_pin_name=\""
@@ -202,8 +246,7 @@ static void write_rr_gsb_chan_connection_to_xml(
           fp << "\t\t<driver_node type=\""
              << rr_node_typename[rr_graph.node_type(driver_rr_node)]
              << "\" side=\"" << driver_side.to_string() << "\" index=\""
-             << rr_graph.node_track_num(cur_rr_node) << "\" tap=\""
-             << manhattan_distance;
+             << driver_node_index << "\" tap=\"" << manhattan_distance;
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" segment_id=\"" << size_t(des_segment_id)
@@ -231,7 +274,8 @@ static void write_rr_switch_block_to_xml(
   const std::string fname_prefix, const DeviceGrid& vpr_device_grid,
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
   const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
-  const RRGSBEdges& gsb_edges, const RRGSBWriterOption& options) {
+  const RRGSBEdges& gsb_edges, const bool include_ipin_info,
+  const RRGSBWriterOption& options) {
   /* Prepare file name */
   std::string fname(fname_prefix);
   vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -273,6 +317,16 @@ static void write_rr_switch_block_to_xml(
     write_rr_gsb_chan_connection_to_xml(
       fp, vpr_device_grid, vpr_device_annotation, rr_graph, in_edges, rr_gsb,
       gsb_edges, gsb_side, options.include_rr_info());
+  }
+  if (include_ipin_info) {
+    /* Output IPINs and related connections */
+    for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+      SideManager gsb_side_manager(side);
+      enum e_side gsb_side = gsb_side_manager.get_side();
+      write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, in_edges, rr_gsb,
+                                          gsb_edges, gsb_side,
+                                          options.include_rr_info());
+    }
   }
 
   fp << "</rr_sb>" << std::endl;
@@ -348,7 +402,8 @@ static void write_rr_connection_block_to_xml(const std::string fname_prefix,
 void write_device_rr_gsb_to_xml(
   const DeviceGrid& vpr_device_grid,
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const RRGSBWriterOption& options) {
+  const DeviceRRGSB& device_rr_gsb, const ModuleManager& module_manager,
+  const RRGSBWriterOption& options) {
   std::string xml_dir_name = format_dir_path(options.output_directory());
 
   /* Create directories */
@@ -378,22 +433,26 @@ void write_device_rr_gsb_to_xml(
       const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coord);
       /* Write CBx, CBy, SB on need */
       if (options.include_sb_content()) {
-        write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid,
-                                     vpr_device_annotation, rr_graph, in_edges,
-                                     rr_gsb, gsb_edges, options);
+        write_rr_switch_block_to_xml(
+          xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph,
+          in_edges, rr_gsb, gsb_edges, module_manager.group_routing(), options);
       }
       sb_counter++;
     }
-    for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
-      for (size_t igsb = 0;
-           igsb < device_rr_gsb.get_num_cb_unique_module(cb_type); ++igsb) {
-        const RRGSB& rr_gsb = device_rr_gsb.get_cb_unique_module(cb_type, igsb);
-        vtr::Point<size_t> gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
-        const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coord);
-        if (options.include_cb_content(cb_type)) {
-          write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
-                                           rr_gsb, gsb_edges, cb_type, options);
-          cb_counters[cb_type]++;
+    if (false == module_manager.group_routing()) {
+      for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
+        for (size_t igsb = 0;
+             igsb < device_rr_gsb.get_num_cb_unique_module(cb_type); ++igsb) {
+          const RRGSB& rr_gsb =
+            device_rr_gsb.get_cb_unique_module(cb_type, igsb);
+          vtr::Point<size_t> gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+          const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coord);
+          if (options.include_cb_content(cb_type)) {
+            write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
+                                             rr_gsb, gsb_edges, cb_type,
+                                             options);
+            cb_counters[cb_type]++;
+          }
         }
       }
     }
@@ -408,15 +467,18 @@ void write_device_rr_gsb_to_xml(
         if (options.include_sb_content()) {
           write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid,
                                        vpr_device_annotation, rr_graph,
-                                       in_edges, rr_gsb, gsb_edges, options);
+                                       in_edges, rr_gsb, gsb_edges,
+                                       module_manager.group_routing(), options);
           sb_counter++;
         }
-        for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
-          if (options.include_cb_content(cb_type)) {
-            write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
-                                             rr_gsb, gsb_edges, cb_type,
-                                             options);
-            cb_counters[cb_type]++;
+        if (false == module_manager.group_routing()) {
+          for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
+            if (options.include_cb_content(cb_type)) {
+              write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
+                                               rr_gsb, gsb_edges, cb_type,
+                                               options);
+              cb_counters[cb_type]++;
+            }
           }
         }
       }

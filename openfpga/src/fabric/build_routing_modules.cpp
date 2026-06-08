@@ -166,7 +166,7 @@ static void build_switch_block_mux_module(
   /* Check port size should match */
   VTR_ASSERT(mux_input_port.get_width() == sb_input_port_ids.size());
   for (size_t pin_id = 0; pin_id < sb_input_port_ids.size(); ++pin_id) {
-    /* Use the exising net */
+    /* Use the existing net */
     ModuleNetId net = input_port_to_module_nets.at(sb_input_port_ids[pin_id]);
     /* Configure the net source only if it is not yet in the source list */
     if (false ==
@@ -341,253 +341,6 @@ static void build_switch_block_interc_modules(
   } /*Nothing should be done else*/
 }
 
-/********************************************************************
- * Build a module for a switch block whose detailed description is
- * available in a RRGSB object
- * A Switch Box module consists of following ports:
- * 1. Channel Y [x][y] inputs
- * 2. Channel X [x+1][y] inputs
- * 3. Channel Y [x][y-1] outputs
- * 4. Channel X [x][y] outputs
- * 5. Grid[x][y+1] Right side outputs pins
- * 6. Grid[x+1][y+1] Left side output pins
- * 7. Grid[x+1][y+1] Bottom side output pins
- * 8. Grid[x+1][y] Top side output pins
- * 9. Grid[x+1][y] Left side output pins
- * 10. Grid[x][y] Right side output pins
- * 11. Grid[x][y] Top side output pins
- * 12. Grid[x][y+1] Bottom side output pins
- *
- * Location of a Switch Box in FPGA fabric:
- *
- *    --------------          --------------
- *    |            |          |            |
- *    |    Grid    |  ChanY   |    Grid    |
- *    |  [x][y+1]  | [x][y+1] | [x+1][y+1] |
- *    |            |          |            |
- *    --------------          --------------
- *                  ----------
- *       ChanX      | Switch |     ChanX
- *       [x][y]     |   Box  |    [x+1][y]
- *                  | [x][y] |
- *                  ----------
- *    --------------          --------------
- *    |            |          |            |
- *    |    Grid    |  ChanY   |    Grid    |
- *    |   [x][y]   |  [x][y]  |  [x+1][y]  |
- *    |            |          |            |
- *    --------------          --------------
- *
- * Switch Block pin location map
- *
- *                       Grid[x][y+1]   ChanY[x][y+1]  Grid[x+1][y+1]
- *                        right_pins  inputs/outputs     left_pins
- *                            |             ^                |
- *                            |             |                |
- *                            v             v                v
- *                    +-----------------------------------------------+
- *                    |                                               |
- *    Grid[x][y+1]    |                                               |
- *Grid[x+1][y+1] bottom_pins---->| |<---- bottom_pins | | ChanX[x][y]        |
- *Switch Box [x][y]                |     ChanX[x+1][y] inputs/outputs<--->|
- *|<---> inputs/outputs |                                               |
- *    Grid[x][y+1]    |                                               |
- *Grid[x+1][y+1] top_pins---->| |<---- top_pins | |
- *                    +-----------------------------------------------+
- *                            ^             ^                ^
- *                            |             |                |
- *                            |             v                |
- *                       Grid[x][y]     ChanY[x][y]      Grid[x+1][y]
- *                       right_pins    inputs/outputs      left_pins
- *
- *
- ********************************************************************/
-static void build_switch_block_module(
-  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
-  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const CircuitLibrary& circuit_lib,
-  const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb,
-  const RRGSB& rr_gsb, const bool& group_config_block, const bool& verbose) {
-  /* Create a Module of Switch Block and add to module manager */
-  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
-  ModuleId sb_module = module_manager.add_module(
-    generate_switch_block_module_name(gsb_coordinate));
-
-  /* Label module usage */
-  module_manager.set_module_usage(sb_module, ModuleManager::MODULE_SB);
-
-  VTR_LOGV(verbose, "Building module '%s'...",
-           generate_switch_block_module_name(gsb_coordinate).c_str());
-
-  /* Create a cache (fast look up) for module nets whose source are input ports
-   */
-  std::map<ModulePinInfo, ModuleNetId> input_port_to_module_nets;
-
-  /* Add routing channel ports at each side of the GSB */
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    SideManager side_manager(side);
-
-    /* Count input and output port sizes */
-    size_t chan_input_port_size = 0;
-    size_t chan_output_port_size = 0;
-
-    for (size_t itrack = 0;
-         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
-      switch (rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-        case OUT_PORT:
-          chan_output_port_size++;
-          break;
-        case IN_PORT:
-          chan_input_port_size++;
-          break;
-        default:
-          VTR_LOGF_ERROR(__FILE__, __LINE__,
-                         "Invalid direction of chan[%d][%d]_track[%d]!\n",
-                         rr_gsb.get_sb_x(), rr_gsb.get_sb_y(), itrack);
-          exit(1);
-      }
-    }
-
-    /* Do only when we have routing tracks */
-    if (0 < rr_gsb.get_chan_width(side_manager.get_side())) {
-      e_rr_type chan_type = rr_gsb.get_chan_type(side_manager.get_side());
-
-      std::string chan_input_port_name = generate_sb_module_track_port_name(
-        chan_type, side_manager.get_side(), IN_PORT);
-      BasicPort chan_input_port(chan_input_port_name, chan_input_port_size);
-      ModulePortId chan_input_port_id = module_manager.add_port(
-        sb_module, chan_input_port, ModuleManager::MODULE_INPUT_PORT);
-      /* Add side to the port */
-      module_manager.set_port_side(sb_module, chan_input_port_id,
-                                   side_manager.get_side());
-
-      /* Cache the input net */
-      for (const size_t& pin : chan_input_port.pins()) {
-        ModuleNetId net = create_module_source_pin_net(
-          module_manager, sb_module, sb_module, 0, chan_input_port_id, pin);
-        input_port_to_module_nets[ModulePinInfo(chan_input_port_id, pin)] = net;
-      }
-
-      std::string chan_output_port_name = generate_sb_module_track_port_name(
-        chan_type, side_manager.get_side(), OUT_PORT);
-      BasicPort chan_output_port(chan_output_port_name, chan_output_port_size);
-      ModulePortId chan_output_port_id = module_manager.add_port(
-        sb_module, chan_output_port, ModuleManager::MODULE_OUTPUT_PORT);
-      /* Add side to the port */
-      module_manager.set_port_side(sb_module, chan_output_port_id,
-                                   side_manager.get_side());
-    }
-
-    /* Dump OPINs of adjacent CLBs */
-    for (size_t inode = 0;
-         inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
-      vtr::Point<size_t> port_coord(rr_graph.node_xlow(rr_gsb.get_opin_node(
-                                      side_manager.get_side(), inode)),
-                                    rr_graph.node_ylow(rr_gsb.get_opin_node(
-                                      side_manager.get_side(), inode)));
-      std::string port_name = generate_sb_module_grid_port_name(
-        side_manager.get_side(),
-        get_rr_graph_single_node_side(
-          rr_graph, rr_gsb.get_opin_node(side_manager.get_side(), inode)),
-        grids, device_annotation, rr_graph,
-        rr_gsb.get_opin_node(side_manager.get_side(), inode));
-      BasicPort module_port(port_name,
-                            1); /* Every grid output has a port size of 1 */
-      /* Grid outputs are inputs of switch blocks */
-      ModulePortId input_port_id = module_manager.add_port(
-        sb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
-      /* Add side to the port */
-      module_manager.set_port_side(sb_module, input_port_id,
-                                   side_manager.get_side());
-
-      /* Cache the input net */
-      ModuleNetId net = create_module_source_pin_net(
-        module_manager, sb_module, sb_module, 0, input_port_id, 0);
-      input_port_to_module_nets[ModulePinInfo(input_port_id, 0)] = net;
-    }
-  }
-
-  /* Add routing multiplexers as child modules */
-  const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coordinate);
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    SideManager side_manager(side);
-    for (size_t itrack = 0;
-         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
-      /* We care OUTPUT tracks at this time only */
-      if (OUT_PORT ==
-          rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-        build_switch_block_interc_modules(
-          module_manager, sb_module, device_annotation, grids, rr_graph,
-          in_edges, rr_gsb, gsb_edges, circuit_lib, side_manager.get_side(),
-          itrack, input_port_to_module_nets, group_config_block);
-      }
-    }
-  }
-
-  /* Build a physical memory block */
-  if (group_config_block) {
-    std::string mem_module_name_prefix =
-      generate_switch_block_module_name_using_index(
-        device_rr_gsb.get_sb_unique_module_index(gsb_coordinate));
-    add_physical_memory_module(module_manager, decoder_lib, sb_module,
-                               mem_module_name_prefix, circuit_lib,
-                               sram_orgz_type, sram_model, verbose);
-  }
-
-  /* Add global ports to the pb_module:
-   * This is a much easier job after adding sub modules (instances),
-   * we just need to find all the global ports from the child modules and build
-   * a list of it
-   */
-  add_module_global_ports_from_child_modules(module_manager, sb_module);
-
-  /* Count shared SRAM ports from the sub-modules under this Verilog module
-   * This is a much easier job after adding sub modules (instances),
-   * we just need to find all the I/O ports from the child modules and build a
-   * list of it
-   */
-  size_t module_num_shared_config_bits =
-    find_module_num_shared_config_bits_from_child_modules(module_manager,
-                                                          sb_module);
-  if (0 < module_num_shared_config_bits) {
-    add_reserved_sram_ports_to_module_manager(module_manager, sb_module,
-                                              module_num_shared_config_bits);
-  }
-
-  /* Count SRAM ports from the sub-modules under this Verilog module
-   * This is a much easier job after adding sub modules (instances),
-   * we just need to find all the I/O ports from the child modules and build a
-   * list of it
-   */
-  ModuleManager::e_config_child_type config_child_type =
-    group_config_block ? ModuleManager::e_config_child_type::PHYSICAL
-                       : ModuleManager::e_config_child_type::LOGICAL;
-  size_t module_num_config_bits =
-    find_module_num_config_bits_from_child_modules(
-      module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type,
-      config_child_type);
-  if (0 < module_num_config_bits) {
-    add_pb_sram_ports_to_module_manager(module_manager, sb_module, circuit_lib,
-                                        sram_model, sram_orgz_type,
-                                        module_num_config_bits);
-  }
-
-  /* Add all the nets to connect configuration ports from memory module to
-   * primitive modules This is a one-shot addition that covers all the memory
-   * modules in this primitive module!
-   */
-  if (0 <
-      module_manager.num_configurable_children(sb_module, config_child_type)) {
-    add_pb_module_nets_memory_config_bus(
-      module_manager, decoder_lib, sb_module, sram_orgz_type,
-      circuit_lib.design_tech_type(sram_model), config_child_type);
-  }
-
-  VTR_LOGV(verbose, "Done\n");
-}
-
 /*********************************************************************
  * Print a short interconneciton in connection
  ********************************************************************/
@@ -737,10 +490,16 @@ static void build_connection_block_mux_module(
 
   /* TODO: Generate input ports that are wired to the input bus of the routing
    * multiplexer */
-  std::vector<ModulePinInfo> cb_input_port_ids =
-    find_connection_block_module_input_ports(module_manager, cb_module, grids,
-                                             device_annotation, rr_graph,
-                                             rr_gsb, cb_type, driver_rr_nodes);
+  std::vector<ModulePinInfo> cb_input_port_ids;
+  if (false == module_manager.group_routing()) {
+    cb_input_port_ids = find_connection_block_module_input_ports(
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+      cb_type, driver_rr_nodes);
+  } else {
+    cb_input_port_ids = find_switch_block_module_input_ports(
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb,
+      driver_rr_nodes);
+  }
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports =
@@ -757,7 +516,7 @@ static void build_connection_block_mux_module(
   /* Check port size should match */
   VTR_ASSERT(mux_input_port.get_width() == cb_input_port_ids.size());
   for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
-    /* Use the exising net */
+    /* Use the existing net */
     ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
     /* No need to configure the net source since it is already done before */
     /* Configure the net sink */
@@ -766,7 +525,7 @@ static void build_connection_block_mux_module(
                                        mux_input_port.pins()[pin_id]);
   }
 
-  /* Link output port to Switch Block outputs */
+  /* Link output port to Connection Block outputs */
   std::vector<CircuitPortId> mux_model_output_ports =
     circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
   VTR_ASSERT(1 == mux_model_output_ports.size());
@@ -892,6 +651,312 @@ static void build_connection_block_interc_modules(
       rr_gsb, gsb_edges, cb_type, circuit_lib, cb_ipin_side, ipin_index,
       input_port_to_module_nets, group_config_block);
   } /*Nothing should be done else*/
+}
+
+/********************************************************************
+ * Build a module for a switch block whose detailed description is
+ * available in a RRGSB object
+ * A Switch Box module consists of following ports:
+ * 1. Channel Y [x][y] inputs
+ * 2. Channel X [x+1][y] inputs
+ * 3. Channel Y [x][y-1] outputs
+ * 4. Channel X [x][y] outputs
+ * 5. Grid[x][y+1] Right side outputs pins
+ * 6. Grid[x+1][y+1] Left side output pins
+ * 7. Grid[x+1][y+1] Bottom side output pins
+ * 8. Grid[x+1][y] Top side output pins
+ * 9. Grid[x+1][y] Left side output pins
+ * 10. Grid[x][y] Right side output pins
+ * 11. Grid[x][y] Top side output pins
+ * 12. Grid[x][y+1] Bottom side output pins
+ *
+ * Location of a Switch Box in FPGA fabric:
+ *
+ *    --------------          --------------
+ *    |            |          |            |
+ *    |    Grid    |  ChanY   |    Grid    |
+ *    |  [x][y+1]  | [x][y+1] | [x+1][y+1] |
+ *    |            |          |            |
+ *    --------------          --------------
+ *                  ----------
+ *       ChanX      | Switch |     ChanX
+ *       [x][y]     |   Box  |    [x+1][y]
+ *                  | [x][y] |
+ *                  ----------
+ *    --------------          --------------
+ *    |            |          |            |
+ *    |    Grid    |  ChanY   |    Grid    |
+ *    |   [x][y]   |  [x][y]  |  [x+1][y]  |
+ *    |            |          |            |
+ *    --------------          --------------
+ *
+ * Switch Block pin location map
+ *
+ *                       Grid[x][y+1]   ChanY[x][y+1]  Grid[x+1][y+1]
+ *                        right_pins  inputs/outputs     left_pins
+ *                            |             ^                |
+ *                            |             |                |
+ *                            v             v                v
+ *                    +-----------------------------------------------+
+ *                    |                                               |
+ *    Grid[x][y+1]    |                                               |
+ *Grid[x+1][y+1] bottom_pins---->| |<---- bottom_pins | | ChanX[x][y]        |
+ *Switch Box [x][y]                |     ChanX[x+1][y] inputs/outputs<--->|
+ *|<---> inputs/outputs |                                               |
+ *    Grid[x][y+1]    |                                               |
+ *Grid[x+1][y+1] top_pins---->| |<---- top_pins | |
+ *                    +-----------------------------------------------+
+ *                            ^             ^                ^
+ *                            |             |                |
+ *                            |             v                |
+ *                       Grid[x][y]     ChanY[x][y]      Grid[x+1][y]
+ *                       right_pins    inputs/outputs      left_pins
+ *
+ *
+ ********************************************************************/
+
+static void build_switch_block_module(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
+  const CircuitLibrary& circuit_lib,
+  const e_config_protocol_type& sram_orgz_type,
+  const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb,
+  const RRGSB& rr_gsb, const bool& group_config_block, const bool& verbose) {
+  /* Create a Module of Switch Block and add to module manager */
+  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+
+  std::string sb_module_name =
+    generate_switch_block_module_name(gsb_coordinate);
+  ModuleId sb_module = module_manager.add_module(sb_module_name);
+
+  /* Label module usage */
+  module_manager.set_module_usage(sb_module, ModuleManager::MODULE_SB);
+
+  VTR_LOGV(verbose, "Building module '%s'...", sb_module_name.c_str());
+
+  // Create fast lookup for module nets whose source are input ports
+
+  std::map<ModulePinInfo, ModuleNetId> input_port_to_module_nets;
+
+  /* Add routing channel ports at each side of the GSB */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    SideManager side_manager(side);
+
+    /* Count input and output port sizes */
+    size_t chan_input_port_size = 0;
+    size_t chan_output_port_size = 0;
+
+    for (size_t itrack = 0;
+         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      switch (rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        case OUT_PORT:
+          chan_output_port_size++;
+          break;
+        case IN_PORT:
+          chan_input_port_size++;
+          break;
+        default:
+          VTR_LOGF_ERROR(__FILE__, __LINE__,
+                         "Invalid direction of chan[%d][%d]_track[%d]!\n",
+                         rr_gsb.get_sb_x(), rr_gsb.get_sb_y(), itrack);
+          exit(1);
+      }
+    }
+
+    /* Do only when we have routing tracks */
+    if (0 < rr_gsb.get_chan_width(side_manager.get_side())) {
+      e_rr_type chan_type = rr_gsb.get_chan_type(side_manager.get_side());
+
+      std::string chan_input_port_name = generate_sb_module_track_port_name(
+        chan_type, side_manager.get_side(), IN_PORT);
+      BasicPort chan_input_port(chan_input_port_name, chan_input_port_size);
+      ModulePortId chan_input_port_id = module_manager.add_port(
+        sb_module, chan_input_port, ModuleManager::MODULE_INPUT_PORT);
+      /* Add side to the port */
+      module_manager.set_port_side(sb_module, chan_input_port_id,
+                                   side_manager.get_side());
+
+      /* Cache the input net */
+      for (const size_t& pin : chan_input_port.pins()) {
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, sb_module, sb_module, 0, chan_input_port_id, pin);
+        input_port_to_module_nets[ModulePinInfo(chan_input_port_id, pin)] = net;
+      }
+
+      std::string chan_output_port_name = generate_sb_module_track_port_name(
+        chan_type, side_manager.get_side(), OUT_PORT);
+      BasicPort chan_output_port(chan_output_port_name, chan_output_port_size);
+      ModulePortId chan_output_port_id = module_manager.add_port(
+        sb_module, chan_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      /* Add side to the port */
+      module_manager.set_port_side(sb_module, chan_output_port_id,
+                                   side_manager.get_side());
+    }
+
+    /* Dump OPINs of adjacent CLBs */
+    for (size_t inode = 0;
+         inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+      vtr::Point<size_t> port_coord(rr_graph.node_xlow(rr_gsb.get_opin_node(
+                                      side_manager.get_side(), inode)),
+                                    rr_graph.node_ylow(rr_gsb.get_opin_node(
+                                      side_manager.get_side(), inode)));
+      std::string port_name = generate_sb_module_grid_port_name(
+        side_manager.get_side(),
+        get_rr_graph_single_node_side(
+          rr_graph, rr_gsb.get_opin_node(side_manager.get_side(), inode)),
+        grids, device_annotation, rr_graph,
+        rr_gsb.get_opin_node(side_manager.get_side(), inode));
+      BasicPort module_port(port_name,
+                            1); /* Every grid output has a port size of 1 */
+      /* Grid outputs are inputs of switch blocks */
+      ModulePortId input_port_id = module_manager.add_port(
+        sb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
+      /* Add side to the port */
+      module_manager.set_port_side(sb_module, input_port_id,
+                                   side_manager.get_side());
+
+      /* Cache the input net */
+      ModuleNetId net = create_module_source_pin_net(
+        module_manager, sb_module, sb_module, 0, input_port_id, 0);
+      input_port_to_module_nets[ModulePinInfo(input_port_id, 0)] = net;
+    }
+  }
+
+  /* Add routing multiplexers as child modules */
+  const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coordinate);
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    SideManager side_manager(side);
+    for (size_t itrack = 0;
+         itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      /* We care OUTPUT tracks at this time only */
+      if (OUT_PORT ==
+          rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        build_switch_block_interc_modules(
+          module_manager, sb_module, device_annotation, grids, rr_graph,
+          in_edges, rr_gsb, gsb_edges, circuit_lib, side_manager.get_side(),
+          itrack, input_port_to_module_nets, group_config_block);
+      }
+    }
+  }
+
+  if (true == module_manager.group_routing()) {
+    // Cache the switch block output port nets for later use in connection block
+    // building
+    for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+      SideManager side_manager(side);
+      for (size_t itrack = 0;
+           itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+        if (OUT_PORT ==
+            rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+          RRNodeId out_rr_node =
+            rr_gsb.get_chan_node(side_manager.get_side(), itrack);
+          ModulePinInfo output_port_info = find_switch_block_module_chan_port(
+            module_manager, sb_module, rr_graph, rr_gsb,
+            side_manager.get_side(), out_rr_node, OUT_PORT);
+          ModuleNetId net = create_module_source_pin_net(
+            module_manager, sb_module, sb_module, 0, output_port_info.first,
+            output_port_info.second);
+          input_port_to_module_nets[output_port_info] = net;
+        }
+      }
+    }
+    // Create IPIN Ports if IPIN exist in the current GSB
+    for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+      SideManager side_manager(side);
+      for (size_t inode = 0;
+           inode < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
+           ++inode) {
+        RRNodeId ipin_node =
+          rr_gsb.get_ipin_node(side_manager.get_side(), inode);
+        std::string port_name = generate_cb_module_grid_port_name(
+          side_manager.get_side(), grids, device_annotation, rr_graph,
+          ipin_node);
+        BasicPort module_port(port_name, 1);
+        ModulePortId output_port_id = module_manager.add_port(
+          sb_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
+        module_manager.set_port_side(sb_module, output_port_id,
+                                     side_manager.get_side());
+
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, sb_module, sb_module, 0, output_port_id, 0);
+        input_port_to_module_nets[ModulePinInfo(output_port_id, 0)] = net;
+
+        /* IPINs on the top/bottom sides are driven by CHANY tracks, while
+         * those on the left/right sides are driven by CHANX tracks */
+        e_rr_type cb_type = (side_manager.get_side() == e_side::TOP ||
+                             side_manager.get_side() == e_side::BOTTOM)
+                              ? e_rr_type::CHANY
+                              : e_rr_type::CHANX;
+        build_connection_block_interc_modules(
+          module_manager, sb_module, device_annotation, grids, rr_graph,
+          in_edges, rr_gsb, gsb_edges, cb_type, circuit_lib,
+          side_manager.get_side(), inode, input_port_to_module_nets,
+          group_config_block);
+      }
+    }
+  }
+
+  /* Build a physical memory block */
+  if (group_config_block) {
+    std::string mem_module_name_prefix =
+      generate_switch_block_module_name_using_index(
+        device_rr_gsb.get_sb_unique_module_index(gsb_coordinate));
+    add_physical_memory_module(module_manager, decoder_lib, sb_module,
+                               mem_module_name_prefix, circuit_lib,
+                               sram_orgz_type, sram_model, verbose);
+  }
+
+  /* Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the global ports from the child modules and build
+   * a list of it
+   */
+  add_module_global_ports_from_child_modules(module_manager, sb_module);
+
+  /* Count shared SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the I/O ports from the child modules and build a
+   * list of it
+   */
+  size_t module_num_shared_config_bits =
+    find_module_num_shared_config_bits_from_child_modules(module_manager,
+                                                          sb_module);
+  if (0 < module_num_shared_config_bits) {
+    add_reserved_sram_ports_to_module_manager(module_manager, sb_module,
+                                              module_num_shared_config_bits);
+  }
+
+  /* Count SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the I/O ports from the child modules and build a
+   * list of it
+   */
+  ModuleManager::e_config_child_type config_child_type =
+    group_config_block ? ModuleManager::e_config_child_type::PHYSICAL
+                       : ModuleManager::e_config_child_type::LOGICAL;
+  size_t module_num_config_bits =
+    find_module_num_config_bits_from_child_modules(
+      module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type,
+      config_child_type);
+  if (0 < module_num_config_bits) {
+    add_pb_sram_ports_to_module_manager(module_manager, sb_module, circuit_lib,
+                                        sram_model, sram_orgz_type,
+                                        module_num_config_bits);
+  }
+
+  /* Add all the nets to connect configuration ports from memory module to
+   * primitive modules This is a one-shot addition that covers all the memory
+   * modules in this primitive module!
+   */
+  if (0 <
+      module_manager.num_configurable_children(sb_module, config_child_type)) {
+    add_pb_module_nets_memory_config_bus(
+      module_manager, decoder_lib, sb_module, sram_orgz_type,
+      circuit_lib.design_tech_type(sram_model), config_child_type);
+  }
+
+  VTR_LOGV(verbose, "Done\n");
 }
 
 /********************************************************************
@@ -1259,16 +1324,17 @@ void build_flatten_routing_modules(
         device_rr_gsb, rr_gsb, group_config_block, verbose);
     }
   }
+  if (false == module_manager.group_routing()) {
+    build_flatten_connection_block_modules(
+      module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
+      device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX,
+      group_config_block, verbose);
 
-  build_flatten_connection_block_modules(
-    module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
-    device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANX,
-    group_config_block, verbose);
-
-  build_flatten_connection_block_modules(
-    module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
-    device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY,
-    group_config_block, verbose);
+    build_flatten_connection_block_modules(
+      module_manager, decoder_lib, device_ctx, in_edges, device_annotation,
+      device_rr_gsb, circuit_lib, sram_orgz_type, sram_model, e_rr_type::CHANY,
+      group_config_block, verbose);
+  }
 }
 
 /********************************************************************
@@ -1301,31 +1367,34 @@ void build_unique_routing_modules(
       device_rr_gsb, unique_mirror, group_config_block, verbose);
   }
 
-  /* Build unique X-direction connection block modules */
-  for (size_t icb = 0;
-       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
-    const RRGSB& unique_mirror =
-      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
+  if (false == module_manager.group_routing()) {
+    /* Build unique X-direction connection block modules */
+    for (size_t icb = 0;
+         icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
+         ++icb) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
-    build_connection_block_module(
-      module_manager, decoder_lib, device_annotation, device_ctx.grid,
-      device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block,
-      verbose);
-  }
+      build_connection_block_module(
+        module_manager, decoder_lib, device_annotation, device_ctx.grid,
+        device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
+        device_rr_gsb, unique_mirror, e_rr_type::CHANX, group_config_block,
+        verbose);
+    }
 
-  /* Build unique X-direction connection block modules */
-  for (size_t icb = 0;
-       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
-    const RRGSB& unique_mirror =
-      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
+    /* Build unique Y-direction connection block modules */
+    for (size_t icb = 0;
+         icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
+         ++icb) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
-    build_connection_block_module(
-      module_manager, decoder_lib, device_annotation, device_ctx.grid,
-      device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
-      device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block,
-      verbose);
+      build_connection_block_module(
+        module_manager, decoder_lib, device_annotation, device_ctx.grid,
+        device_ctx.rr_graph, in_edges, circuit_lib, sram_orgz_type, sram_model,
+        device_rr_gsb, unique_mirror, e_rr_type::CHANY, group_config_block,
+        verbose);
+    }
   }
 }
-
 } /* end namespace openfpga */
