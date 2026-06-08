@@ -22,6 +22,37 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/* Returns true if the given OPIN node drives at least one CHANX/Y wire that
+ * is a valid (non-passing) output track in the switch block. */
+static bool is_rr_opin_drive_gsb_track(const RRGraphView& rr_graph,
+                                        const RRGSB& rr_gsb,
+                                        const RRNodeId& opin_node) {
+  for (RREdgeId edge : rr_graph.edge_range(opin_node)) {
+    RRNodeId to_node = rr_graph.edge_sink_node(edge);
+
+    e_rr_type to_node_type = rr_graph.node_type(to_node);
+    if (to_node_type != e_rr_type::CHANX && to_node_type != e_rr_type::CHANY) {
+      continue;
+    }
+
+    e_side node_side = NUM_2D_SIDES;
+    int node_index = -1;
+    rr_gsb.get_node_side_and_index(rr_graph, to_node, OUT_PORT, node_side,
+                                   node_index);
+    if (node_index < 0) {
+      continue;
+    }
+
+    if (rr_gsb.is_sb_node_passing_wire(rr_graph, node_side,
+                                       (size_t)node_index)) {
+      continue;
+    }
+
+    return true;
+  }
+  return false;
+}
+
 /* Build a RRChan Object with the given channel type and coorindators */
 static RRChan build_one_rr_chan(const DeviceContext& vpr_device_ctx,
                                 const e_rr_type& chan_type, const size_t& layer,
@@ -301,45 +332,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
          * originates in the current switch block */
-        const auto& rr_graph = vpr_device_ctx.rr_graph;
-        bool connected_opin_in_curr_sb = false;
-        for (RREdgeId edge : rr_graph.edge_range(inode)) {
-          RRNodeId to_node = rr_graph.edge_sink_node(edge);
-
-          /* Only channel nodes can anchor the OPIN to a switch block */
-          e_rr_type to_node_type = rr_graph.node_type(to_node);
-          if (to_node_type != e_rr_type::CHANX &&
-              to_node_type != e_rr_type::CHANY) {
-            continue;
-          }
-
-          /* The driver end of a wire is at (xlow, ylow) for INC wires and
-           * (xhigh, yhigh) for DEC wires */
-          Direction driver_dir = rr_graph.node_direction(to_node);
-          int driver_x = (driver_dir == Direction::INC)
-                           ? rr_graph.node_xlow(to_node)
-                           : rr_graph.node_xhigh(to_node);
-          int driver_y = (driver_dir == Direction::INC)
-                           ? rr_graph.node_ylow(to_node)
-                           : rr_graph.node_yhigh(to_node);
-
-          /* The current switch block drives:
-           *   - DEC wires starting at [x][y]
-           *   - INC wires starting at [x+1][y]
-           *   - INC wires starting at [x][y+1]
-           */
-          if ((driver_dir == Direction::DEC && driver_x == gsb_coord.x() &&
-               driver_y == gsb_coord.y()) ||
-              (driver_dir == Direction::INC && driver_x == gsb_coord.x() + 1 &&
-               driver_y == gsb_coord.y()) ||
-              (driver_dir == Direction::INC && driver_x == gsb_coord.x() &&
-               driver_y == gsb_coord.y() + 1)) {
-            connected_opin_in_curr_sb = true;
-            break;
-          }
-        }
-        /* If the OPIN does not drive a channel in the current SB, skip it */
-        if (!connected_opin_in_curr_sb) {
+        if (!is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
+                                         inode)) {
           continue;
         }
 
