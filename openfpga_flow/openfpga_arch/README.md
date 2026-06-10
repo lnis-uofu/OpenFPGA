@@ -14,7 +14,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
   - The keyword 'wide' is to specify if the DSP spans more than 1 column. 
   - The keyword 'frac' is to specify if the DSP is fracturable to operate in different modes.
   - The keyword 'reg' is to specify if the DSP has input and output registers. If only input or output registers are used, the keyword will be 'regin' or 'regout' respectively.
-- mem<mem\_size>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword wide is to specify if the BRAM spanns more than 1 column.
+- mem<mem\_size><preload>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword wide is to specify if the BRAM spanns more than 1 column. The keyword 'preload' indicates the BRAM supports initialization through a dedicated interface.
 - aib: If the Advanced Interface Bus (AIB) is used in place of some I/Os.
 - <bank\|cc\|frame\|standalone>: specify the type of configuration protocol used in the architecture.
   - `bank` refers to the memory bank
