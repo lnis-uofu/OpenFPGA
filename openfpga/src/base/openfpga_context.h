@@ -13,6 +13,7 @@
 #include "fabric_tile.h"
 #include "io_location_map.h"
 #include "io_name_map.h"
+#include "mif_storage.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
 #include "module_name_map.h"
@@ -66,6 +67,7 @@ class OpenfpgaContext : public Context {
   const openfpga::BitstreamSetting& bitstream_setting() const {
     return bitstream_setting_;
   }
+  const openfpga::MifStorage& mif_storage() const { return mif_storage_; }
   const openfpga::ClockNetwork& clock_arch() const { return clock_arch_; }
   const openfpga::RRClockSpatialLookup& clock_rr_lookup() const {
     return clock_rr_lookup_;
@@ -130,6 +132,7 @@ class OpenfpgaContext : public Context {
   openfpga::BitstreamSetting& mutable_bitstream_setting() {
     return bitstream_setting_;
   }
+  openfpga::MifStorage& mutable_mif_storage() { return mif_storage_; }
   openfpga::ClockNetwork& mutable_clock_arch() { return clock_arch_; }
   openfpga::RRClockSpatialLookup& mutable_clock_rr_lookup() {
     return clock_rr_lookup_;
@@ -188,6 +191,7 @@ class OpenfpgaContext : public Context {
   openfpga::Arch arch_;
   openfpga::SimulationSetting sim_setting_;
   openfpga::BitstreamSetting bitstream_setting_;
+  openfpga::MifStorage mif_storage_;
   openfpga::ClockNetwork clock_arch_;
   openfpga::RRClockSpatialLookup clock_rr_lookup_;
 
