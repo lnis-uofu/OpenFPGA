@@ -3,6 +3,7 @@ verilog/aib.v
 verilog/buf4.v
 verilog/dff.v
 verilog/dpram.v
+verilog/dpram128preload.v
 verilog/dpram16k.v
 verilog/dpram1k.v
 verilog/dpram8k.v
