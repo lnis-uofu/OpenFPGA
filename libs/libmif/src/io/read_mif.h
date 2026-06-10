@@ -12,7 +12,7 @@ namespace openfpga {
 int read_mif(const std::string& file_path, MifStorage& mif_storage);
 
 /* Write all segments in storage to a MIF file (overwrite). */
-bool write_mif(const std::string& file_path, const MifStorage& mif_storage);
+int write_mif(const std::string& file_path, const MifStorage& mif_storage);
 
 } /* namespace openfpga */
 

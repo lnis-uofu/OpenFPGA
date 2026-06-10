@@ -53,8 +53,9 @@ int write_mif_template(const T& openfpga_context, const Command& cmd,
   }
 
   const std::string& out_path = cmd_context.option_value(cmd, opt_file);
-  if (!write_mif(out_path, openfpga_context.mif_storage())) {
-    return CMD_EXEC_FATAL_ERROR;
+  const int exec_status = write_mif(out_path, openfpga_context.mif_storage());
+  if (CMD_EXEC_SUCCESS != exec_status) {
+    return exec_status;
   }
   VTR_LOG("write_mif: wrote '%s'\n", out_path.c_str());
   return CMD_EXEC_SUCCESS;
