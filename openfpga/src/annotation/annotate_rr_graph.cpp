@@ -22,6 +22,37 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/* Returns true if the given OPIN node drives at least one CHANX/Y wire that
+ * is a valid (non-passing) output track in the switch block. */
+static bool is_rr_opin_drive_gsb_track(const RRGraphView& rr_graph,
+                                       const RRGSB& rr_gsb,
+                                       const RRNodeId& opin_node) {
+  for (RREdgeId edge : rr_graph.edge_range(opin_node)) {
+    RRNodeId to_node = rr_graph.edge_sink_node(edge);
+
+    e_rr_type to_node_type = rr_graph.node_type(to_node);
+    if (to_node_type != e_rr_type::CHANX && to_node_type != e_rr_type::CHANY) {
+      continue;
+    }
+
+    e_side node_side = NUM_2D_SIDES;
+    int node_index = -1;
+    rr_gsb.get_node_side_and_index(rr_graph, to_node, OUT_PORT, node_side,
+                                   node_index);
+    if (node_index < 0) {
+      continue;
+    }
+
+    if (rr_gsb.is_sb_node_passing_wire(rr_graph, node_side,
+                                       (size_t)node_index)) {
+      continue;
+    }
+
+    return true;
+  }
+  return false;
+}
+
 /* Build a RRChan Object with the given channel type and coorindators */
 static RRChan build_one_rr_chan(const DeviceContext& vpr_device_ctx,
                                 const e_rr_type& chan_type, const size_t& layer,
@@ -296,6 +327,13 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
          */
         if (true ==
             is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) {
+          continue;
+        }
+
+        /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
+         * originates in the current switch block */
+        if (!is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
+                                        inode)) {
           continue;
         }
 
