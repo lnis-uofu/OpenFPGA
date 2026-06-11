@@ -43,7 +43,7 @@ endmodule
 // Description : Memory initializer controller for OpenFPGA dpram_8x16_preload
 //               Sequentially populates the 8 words (16-bit) of the RAM.
 //---------------------------------------------------------------------
-module dpram_preload_initializer (
+module dpram_8x16_preload_initializer (
     input wire clk,
     input wire rst_n,
     

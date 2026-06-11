@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_dpram_initializer;
+module dpram_8x16_preload_tb;
 
     // Clock and Reset
     reg clk;
@@ -44,7 +44,7 @@ module tb_dpram_initializer;
     end
 
     // 2. Instantiate the Big-Endian Memory Block Initializer
-    dpram_preload_initializer u_initializer (
+    dpram_8x16_preload_initializer u_initializer (
         .clk             (clk),
         .rst_n           (rst_n),
         .init_start      (init_start),
@@ -140,5 +140,11 @@ module tb_dpram_initializer;
         #100;
         $finish;
     end
+
+    // Waveform dump for icarus verilog
+    initial begin
+      $dumpfile("dpram_8x16_init_waveform.vcd")
+      $dumpvars(0, dpram_8x16_preload_tb); // dump all the signals in the testbench and submodules
+    end 
 
 endmodule
