@@ -1,6 +1,9 @@
 #ifndef OPENFPGA_MIF_TEMPLATE_H
 #define OPENFPGA_MIF_TEMPLATE_H
 
+#include <string>
+#include <vector>
+
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
@@ -8,9 +11,6 @@
 #include "shell.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
-#include <string>
-#include <vector>
 
 /* begin namespace openfpga */
 namespace openfpga {

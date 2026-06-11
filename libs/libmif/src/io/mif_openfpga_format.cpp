@@ -132,7 +132,7 @@ static bool try_address_data_line(const std::string& line, uint64_t& addr,
 }
 
 static bool segment_has_content(const MifStorage& mif_storage,
-                         const MifSegmentId& segment_id) {
+                                const MifSegmentId& segment_id) {
   return !mif_storage.segment_memory_lines(segment_id).empty() ||
          mif_storage.has_xy(segment_id) || mif_storage.has_ram_id(segment_id);
 }
@@ -167,7 +167,8 @@ static void start_new_segment_for_ram_id(MifStorage& mif_storage,
 /* Parse the body of a '//' directive line and update the current segment. */
 static int parse_mif_directive(const std::string& file_path, size_t line_no,
                                const std::string& directive,
-                               MifStorage& mif_storage, bool& has_current_segment,
+                               MifStorage& mif_storage,
+                               bool& has_current_segment,
                                MifSegmentId& current_segment_id) {
   std::istringstream ls(directive);
   std::string key;
@@ -194,7 +195,8 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
                     static_cast<unsigned long>(line_no));
       return CMD_EXEC_FATAL_ERROR;
     }
-    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
+    ensure_current_segment(mif_storage, has_current_segment,
+                           current_segment_id);
     mif_storage.set_segment_coord_x(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
@@ -204,7 +206,8 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
                     static_cast<unsigned long>(line_no));
       return CMD_EXEC_FATAL_ERROR;
     }
-    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
+    ensure_current_segment(mif_storage, has_current_segment,
+                           current_segment_id);
     mif_storage.set_segment_coord_y(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
@@ -214,7 +217,8 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
                     static_cast<unsigned long>(line_no));
       return CMD_EXEC_FATAL_ERROR;
     }
-    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
+    ensure_current_segment(mif_storage, has_current_segment,
+                           current_segment_id);
     mif_storage.set_segment_addr_width(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
@@ -224,7 +228,8 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
                     static_cast<unsigned long>(line_no));
       return CMD_EXEC_FATAL_ERROR;
     }
-    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
+    ensure_current_segment(mif_storage, has_current_segment,
+                           current_segment_id);
     mif_storage.set_segment_data_width(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
@@ -234,7 +239,8 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
                     static_cast<unsigned long>(line_no));
       return CMD_EXEC_FATAL_ERROR;
     }
-    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
+    ensure_current_segment(mif_storage, has_current_segment,
+                           current_segment_id);
     mif_storage.set_segment_id_width(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
@@ -261,9 +267,8 @@ int parse_mif_line(const std::string& file_path, size_t line_no,
   uint64_t data = 0;
   if (try_address_data_line(line, addr, data)) {
     if (!has_current_segment) {
-      VTR_LOG_ERROR(
-        "%s:%lu: address/data line before any // directive\n",
-        file_path.c_str(), static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: address/data line before any // directive\n",
+                    file_path.c_str(), static_cast<unsigned long>(line_no));
       return CMD_EXEC_FATAL_ERROR;
     }
     mif_storage.create_memory_line(current_segment_id, addr, data);
@@ -276,9 +281,11 @@ int parse_mif_line(const std::string& file_path, size_t line_no,
   return CMD_EXEC_FATAL_ERROR;
 }
 
-int finalize_openfpga_mif_parse(MifStorage& mif_storage, bool has_current_segment,
+int finalize_openfpga_mif_parse(MifStorage& mif_storage,
+                                bool has_current_segment,
                                 const MifSegmentId& current_segment_id,
-                                size_t total_words, const std::string& file_path) {
+                                size_t total_words,
+                                const std::string& file_path) {
   if (has_current_segment &&
       !segment_has_content(mif_storage, current_segment_id)) {
     mif_storage.remove_last_segment_if_empty();

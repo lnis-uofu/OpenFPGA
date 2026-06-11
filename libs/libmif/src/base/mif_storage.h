@@ -14,7 +14,8 @@ namespace openfpga {
 
 class MifStorage {
  public: /* Types */
-  typedef vtr::vector<MifSegmentId, MifSegmentId>::const_iterator segment_iterator;
+  typedef vtr::vector<MifSegmentId, MifSegmentId>::const_iterator
+    segment_iterator;
   typedef vtr::Range<segment_iterator> segment_range;
   typedef vtr::vector<MifMemoryLineId, MifMemoryLineId>::const_iterator
     memory_line_iterator;

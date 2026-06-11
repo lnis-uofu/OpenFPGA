@@ -1278,52 +1278,50 @@ ShellCommandId add_report_reference_command_template(
 /********************************************************************
  * Command 'read_mif'
  *******************************************************************/
- template <class T>
- ShellCommandId add_read_mif_command_template(
-   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-   const bool& hidden) {
-   Command shell_cmd("read_mif");
- 
-   CommandOptionId opt_file = shell_cmd.add_option(
-     "file", true, "file path to the Memory Initialization File (MIF)");
-   shell_cmd.set_option_short_name(opt_file, "f");
-   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
- 
-   ShellCommandId shell_cmd_id =
-     shell.add_command(shell_cmd,
-                       "Read a MIF file and aggregate with prior read_mif data; "
-                       "intended before link_openfpga_arch when using MIF",
-                       hidden);
-   shell.set_command_class(shell_cmd_id, cmd_class_id);
-   shell.set_command_execute_function(shell_cmd_id, read_mif_template<T>);
- 
-   return shell_cmd_id;
- }
- 
- /********************************************************************
-  * Command 'write_mif'
-  *******************************************************************/
- template <class T>
- ShellCommandId add_write_mif_command_template(
-   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
-   Command shell_cmd("write_mif");
- 
-   CommandOptionId opt_file = shell_cmd.add_option(
-     "file", true, "file path to write aggregated MIF content");
-   shell_cmd.set_option_short_name(opt_file, "f");
-   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
- 
-   ShellCommandId shell_cmd_id =
-     shell.add_command(shell_cmd,
-                       "Write all aggregated MIF data from read_mif to a file",
-                       hidden);
-   shell.set_command_class(shell_cmd_id, cmd_class_id);
-   shell.set_command_const_execute_function(shell_cmd_id, write_mif_template<T>);
-   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
- 
-   return shell_cmd_id;
- } 
+template <class T>
+ShellCommandId add_read_mif_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const bool& hidden) {
+  Command shell_cmd("read_mif");
+
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to the Memory Initialization File (MIF)");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_id =
+    shell.add_command(shell_cmd,
+                      "Read a MIF file and aggregate with prior read_mif data; "
+                      "intended before link_openfpga_arch when using MIF",
+                      hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, read_mif_template<T>);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * Command 'write_mif'
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_mif_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_mif");
+
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to write aggregated MIF content");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Write all aggregated MIF data from read_mif to a file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id, write_mif_template<T>);
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
 
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,

@@ -142,7 +142,7 @@ void MifStorage::set_segment_addr_width(const MifSegmentId& segment_id,
 }
 
 void MifStorage::set_segment_data_width(const MifSegmentId& segment_id,
-                                         int width) {
+                                        int width) {
   VTR_ASSERT(valid_segment_id(segment_id));
   segment_data_width_[segment_id] = width;
 }
@@ -174,8 +174,8 @@ void MifStorage::reset_segment(const MifSegmentId& segment_id) {
 }
 
 MifMemoryLineId MifStorage::create_memory_line(const MifSegmentId& segment_id,
-                                                uint64_t address,
-                                                uint64_t data) {
+                                               uint64_t address,
+                                               uint64_t data) {
   VTR_ASSERT(valid_segment_id(segment_id));
   MifMemoryLineId memory_line_id(memory_line_ids_.size());
   memory_line_ids_.push_back(memory_line_id);
