@@ -38,6 +38,80 @@ module dpram_8x16_preload_ctrl (
 
 endmodule
 
+module dpram_8x16_core (
+    input wclk, input wen, input [0:2] waddr, input [0:15] data_in,
+    input rclk, input ren, input [0:2] raddr, output [0:15] d_out
+);
+    // Explicit Big-Endian dimensions for memory registers array
+    reg [0:15] ram [0:7]; 
+    reg [0:15] internal;
+    assign d_out = internal;
+
+    always @(posedge wclk) begin 
+        if(wen) ram[waddr] <= data_in; 
+    end
+    always @(posedge rclk) begin 
+        if(ren) internal <= ram[raddr]; 
+    end
+endmodule
+
+//-----------------------------------------------------
+// Design Name : dpram_8x16_preload
+// File Name   : dpram128preload.v
+// Function    : Dual port RAM 8x16 with preload blocks for initialization 
+// Coder       : Xifan Tang
+//-----------------------------------------------------
+module dpram_8x16_core_preload (
+    input wire         preload_busy,
+    input wire         preload_wen,
+    input wire  [0:2]  preload_waddr,
+    input wire  [0:15] preload_d_in,
+    input clk,
+    input wen,
+    input ren,
+    input  [0:2]  waddr,
+    input  [0:2]  raddr,
+    input  [0:15] d_in,
+    output [0:15] d_out
+);
+
+    wire        to_core_wen;
+    wire        to_core_ren;
+    wire [0:2]  to_core_waddr;
+    wire [0:2]  to_core_raddr;
+    wire [0:15] to_core_data_in;
+
+    // Bridge Multiplexer Block Routing
+    dpram_8x16_preload_ctrl mux_bridge_inst (
+        .sys_wen       (wen),
+        .sys_ren       (ren),
+        .sys_waddr     (waddr),
+        .sys_raddr     (raddr),
+        .sys_d_in      (d_in),
+        .preload_busy  (preload_busy),
+        .preload_wen   (preload_wen),
+        .preload_waddr (preload_waddr),
+        .preload_d_in  (preload_d_in),
+        .core_wen      (to_core_wen),
+        .core_ren      (to_core_ren),
+        .core_waddr    (to_core_waddr),
+        .core_raddr    (to_core_raddr),
+        .core_data_in  (to_core_data_in)
+    );
+
+    // Fixed internal Core RAM block utilizing clean big endian array bounds
+    dpram_8x16_core memory_0 (
+        .wclk    (clk),
+        .wen     (to_core_wen),
+        .waddr   (to_core_waddr),
+        .data_in (to_core_data_in),
+        .rclk    (clk),
+        .ren     (to_core_ren),
+        .raddr   (to_core_raddr),
+        .d_out   (d_out)
+    );
+endmodule
+
 //---------------------------------------------------------------------
 // Design Name : dpram_preload_initializer (Big-Endian Version)
 // Description : Memory initializer controller for OpenFPGA dpram_8x16_preload
@@ -144,80 +218,5 @@ module dpram_8x16_preload_initializer (
         endcase
     end
 
-endmodule
-
-
-module dpram_8x16_core (
-    input wclk, input wen, input [0:2] waddr, input [0:15] data_in,
-    input rclk, input ren, input [0:2] raddr, output [0:15] d_out
-);
-    // Explicit Big-Endian dimensions for memory registers array
-    reg [0:15] ram [0:7]; 
-    reg [0:15] internal;
-    assign d_out = internal;
-
-    always @(posedge wclk) begin 
-        if(wen) ram[waddr] <= data_in; 
-    end
-    always @(posedge rclk) begin 
-        if(ren) internal <= ram[raddr]; 
-    end
-endmodule
-
-//-----------------------------------------------------
-// Design Name : dpram_8x16_preload
-// File Name   : dpram128preload.v
-// Function    : Dual port RAM 8x16 with preload blocks for initialization 
-// Coder       : Xifan Tang
-//-----------------------------------------------------
-module dpram_8x16_preload (
-    input wire         preload_busy,
-    input wire         preload_wen,
-    input wire  [0:2]  preload_waddr,
-    input wire  [0:15] preload_d_in,
-    input clk,
-    input wen,
-    input ren,
-    input  [0:2]  waddr,
-    input  [0:2]  raddr,
-    input  [0:15] d_in,
-    output [0:15] d_out
-);
-
-    wire        to_core_wen;
-    wire        to_core_ren;
-    wire [0:2]  to_core_waddr;
-    wire [0:2]  to_core_raddr;
-    wire [0:15] to_core_data_in;
-
-    // Bridge Multiplexer Block Routing
-    dpram_8x16_preload_ctrl mux_bridge_inst (
-        .sys_wen       (wen),
-        .sys_ren       (ren),
-        .sys_waddr     (waddr),
-        .sys_raddr     (raddr),
-        .sys_d_in      (d_in),
-        .preload_busy  (preload_busy),
-        .preload_wen   (preload_wen),
-        .preload_waddr (preload_waddr),
-        .preload_d_in  (preload_d_in),
-        .core_wen      (to_core_wen),
-        .core_ren      (to_core_ren),
-        .core_waddr    (to_core_waddr),
-        .core_raddr    (to_core_raddr),
-        .core_data_in  (to_core_data_in)
-    );
-
-    // Fixed internal Core RAM block utilizing clean big endian array bounds
-    dpram_8x16_core memory_0 (
-        .wclk    (clk),
-        .wen     (to_core_wen),
-        .waddr   (to_core_waddr),
-        .data_in (to_core_data_in),
-        .rclk    (clk),
-        .ren     (to_core_ren),
-        .raddr   (to_core_raddr),
-        .d_out   (d_out)
-    );
 endmodule
 

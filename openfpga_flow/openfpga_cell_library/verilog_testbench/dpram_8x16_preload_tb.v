@@ -143,7 +143,7 @@ module dpram_8x16_preload_tb;
 
     // Waveform dump for icarus verilog
     initial begin
-      $dumpfile("dpram_8x16_init_waveform.vcd")
+      $dumpfile("dpram_8x16_init_waveform.vcd");
       $dumpvars(0, dpram_8x16_preload_tb); // dump all the signals in the testbench and submodules
     end 
 
