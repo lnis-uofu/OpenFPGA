@@ -44,27 +44,13 @@ module dpram_8x16_preload_tb;
     end
 
     // 2. Instantiate the Big-Endian Memory Block Initializer
-    dpram_8x16_preload_initializer u_initializer (
+    dpram_8x16_preload dut (
         .clk             (clk),
         .rst_n           (rst_n),
         .init_start      (init_start),
         .init_done       (init_done),
         .init_src_addr   (init_src_addr),
         .init_src_data   (init_src_data),
-        .preload_busy    (preload_busy),
-        .preload_wen     (preload_wen),
-        .preload_waddr   (preload_waddr),
-        .preload_d_in    (preload_d_in)
-    );
-
-    // 3. Instantiate the Patched Core Block mapping Big-Endian Ports
-    dpram_8x16_preload u_ram_block (
-        .preload_busy    (preload_busy),
-        .preload_wen     (preload_wen),
-        .preload_waddr   (preload_waddr),
-        .preload_d_in    (preload_d_in),
-        
-        .clk             (clk),
         .wen             (sys_wen),
         .ren             (sys_ren),
         .waddr           (sys_waddr),
