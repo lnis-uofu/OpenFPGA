@@ -4,6 +4,11 @@ name: Test
 on:
   workflow_dispatch:
   pull_request:
+    paths-ignore: # prevent from running if only docs are updated
+      - '**.md'
+      - 'docs/**'
+      - '**/*README*'
+      - '**.rst'
   push:
     branches:
       - 'master'
