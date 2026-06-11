@@ -1433,7 +1433,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> link_arch_dependent_cmds;
   link_arch_dependent_cmds.push_back(read_arch_cmd_id);
-  link_arch_dependent_cmds.push_back(read_mif_cmd_id);
+  // link_arch_dependent_cmds.push_back(read_mif_cmd_id);
   /* TODO: This will be uncommented when openfpga flow script is updated
    */
   link_arch_dependent_cmds.push_back(read_sim_setting_cmd_id);
