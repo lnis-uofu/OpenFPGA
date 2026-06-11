@@ -220,3 +220,71 @@ module dpram_8x16_preload_initializer (
 
 endmodule
 
+//---------------------------------------------------------------------
+// Design Name : dpram_8x16_preload
+// File Name   : dpram_8x16_preload.v
+// Function    : Dual port RAM 8x16 with preload/initialization support.
+//               Combines dpram_8x16_core_preload (RAM + mux bridge) and
+//               dpram_8x16_preload_initializer (FSM) into a single module.
+// Coder       : Xifan Tang
+//---------------------------------------------------------------------
+module dpram_8x16_preload (
+    input wire clk,
+    input wire rst_n,
+    // Initialization control
+    input wire init_start,
+    output wire init_done,
+    // Initialization data source (Big-Endian indexed buses)
+    output wire [0:2] init_src_addr,
+    input wire [0:15] init_src_data,
+    // System functional interface
+    input wire wen,
+    input wire ren,
+    input wire [0:2] waddr,
+    input wire [0:2] raddr,
+    input wire [0:15] d_in,
+    output wire [0:15] d_out
+);
+
+    // ----------------------------------------------------------------
+    // Internal wires connecting the initializer FSM to the core+mux
+    // ----------------------------------------------------------------
+    wire        preload_busy;
+    wire        preload_wen;
+    wire [0:2]  preload_waddr;
+    wire [0:15] preload_d_in;
+
+    // ----------------------------------------------------------------
+    // dpram_8x16_preload_initializer instance
+    // ----------------------------------------------------------------
+    dpram_8x16_preload_initializer initializer_inst (
+        .clk            (clk),
+        .rst_n          (rst_n),
+        .init_start     (init_start),
+        .init_done      (init_done),
+        .init_src_addr  (init_src_addr),
+        .init_src_data  (init_src_data),
+        .preload_busy   (preload_busy),
+        .preload_wen    (preload_wen),
+        .preload_waddr  (preload_waddr),
+        .preload_d_in   (preload_d_in)
+    );
+
+    // ----------------------------------------------------------------
+    // dpram_8x16_core_preload instance  (RAM + mux bridge)
+    // ----------------------------------------------------------------
+    dpram_8x16_core_preload core_preload_inst (
+        .preload_busy   (preload_busy),
+        .preload_wen    (preload_wen),
+        .preload_waddr  (preload_waddr),
+        .preload_d_in   (preload_d_in),
+        .clk            (clk),
+        .wen            (wen),
+        .ren            (ren),
+        .waddr          (waddr),
+        .raddr          (raddr),
+        .d_in           (d_in),
+        .d_out          (d_out)
+    );
+
+endmodule
