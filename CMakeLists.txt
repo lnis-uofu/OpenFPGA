@@ -27,7 +27,7 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message("CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
     message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
-    message(FATAL_ERROR "In-source builds not allowed. Use the Makefile wrapper (e.g. make), or create a new build directory and call cmake manually from there (e.g. mkdir -p build && cd build && cmake .. && make). You may need to 'rm -rf CMakeCache.txt CMakeFiles' first.")
+    message(FATAL_ERROR "In-source builds not allowed. Use the Makefile wrapper (e.g. make), or create a new build directory and call cmake manually from there (e.g. mkdir -p build && cd build && cmake ..)")
 endif()
 
 #We install to the source directory by default
@@ -37,11 +37,19 @@ endif()
 
 set(OPENFPGA_IPO_BUILD "auto" CACHE STRING "Should OpenFPGA be compiled with interprocedural compiler optimizations?")
 set_property(CACHE OPENFPGA_IPO_BUILD PROPERTY STRINGS auto on off)
+
+# Disable IPO on Windows MSYS2 to avoid linker errors with complex STL templates
+# LTO causes "two or more sections for .gnu.lto__ZNSt..." errors on MinGW64
+if (DEFINED ENV{MSYSTEM})
+    message(STATUS "Disabling IPO on MSYS2 environment to avoid LTO linker conflicts")
+    set(OPENFPGA_IPO_BUILD "off" CACHE STRING "Should OpenFPGA be compiled with interprocedural compiler optimizations?" FORCE)
+endif()
+
 # Synchronize IPO settings to submodules
 set(VTR_IPO_BUILD ${OPENFPGA_IPO_BUILD} CACHE STRING "Should verilog-to-routing be compiled with interprocedural compiler optimizations?" FORCE)
 
 #Allow the user to configure how much assertion checking should occur
-set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
+set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions")
 set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 
 #Create the project 

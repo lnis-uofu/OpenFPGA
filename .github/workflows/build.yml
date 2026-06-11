@@ -211,7 +211,7 @@ jobs:
 #            cxx: g++
 #            os: UCRT64
 #            prefix: ucrt64
-          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64)"
+          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64, debug)"
             cc: gcc
             cxx: g++
             os: MINGW64
@@ -294,7 +294,7 @@ jobs:
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+          make all BUILD_TYPE=DEBUG CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
