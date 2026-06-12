@@ -185,9 +185,8 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
   if (key == MIF_DIRECTIVE_RAM_ID) {
     int ram_id = 0;
     if (!(ls >> ram_id)) {
-      VTR_LOG_ERROR("%s:%lu: expected integer after //%s\n",
-                    file_path.c_str(), static_cast<unsigned long>(line_no),
-                    MIF_DIRECTIVE_RAM_ID);
+      VTR_LOG_ERROR("%s:%lu: expected integer after //%s\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_RAM_ID);
       return CMD_EXEC_FATAL_ERROR;
     }
     start_new_segment_for_ram_id(mif_storage, has_current_segment,
