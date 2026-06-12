@@ -1,5 +1,4 @@
-#ifndef OPENFPGA_MIF_TEMPLATE_H
-#define OPENFPGA_MIF_TEMPLATE_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -11,6 +10,7 @@
 #include "shell.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "write_mif.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

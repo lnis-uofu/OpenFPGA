@@ -1,5 +1,4 @@
-#ifndef MIF_STORAGE_H
-#define MIF_STORAGE_H
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -78,5 +77,3 @@ class MifStorage {
 };
 
 } /* namespace openfpga */
-
-#endif

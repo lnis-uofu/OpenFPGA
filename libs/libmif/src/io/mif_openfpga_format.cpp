@@ -43,28 +43,34 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
     first = false;
 
     if (storage.has_xy(segment_id)) {
-      os << "// X " << storage.coord_x(segment_id)
+      os << "// " << MIF_DIRECTIVE_X << " " << storage.coord_x(segment_id)
          << " # Coordinates of the RAM block\n";
-      os << "// Y " << storage.coord_y(segment_id)
+      os << "// " << MIF_DIRECTIVE_Y << " " << storage.coord_y(segment_id)
          << " # Coordinates of the RAM block\n";
     }
     if (!storage.has_ram_id(segment_id)) {
       if (storage.addr_width(segment_id) >= 0) {
-        os << "// ADDR_WIDTH " << storage.addr_width(segment_id) << "\n";
+        os << "// " << MIF_DIRECTIVE_ADDR_WIDTH << " "
+           << storage.addr_width(segment_id) << "\n";
       }
       if (storage.data_width(segment_id) >= 0) {
-        os << "// DATA_WIDTH " << storage.data_width(segment_id) << "\n";
+        os << "// " << MIF_DIRECTIVE_DATA_WIDTH << " "
+           << storage.data_width(segment_id) << "\n";
       }
     } else {
-      os << "//RAM_ID " << storage.ram_id(segment_id) << "\n";
+      os << "//" << MIF_DIRECTIVE_RAM_ID << " " << storage.ram_id(segment_id)
+         << "\n";
       if (storage.id_width(segment_id) >= 0) {
-        os << "//ID_WIDTH " << storage.id_width(segment_id) << "\n";
+        os << "//" << MIF_DIRECTIVE_ID_WIDTH << " "
+           << storage.id_width(segment_id) << "\n";
       }
       if (storage.addr_width(segment_id) >= 0) {
-        os << "// ADDR_WIDTH " << storage.addr_width(segment_id) << "\n";
+        os << "// " << MIF_DIRECTIVE_ADDR_WIDTH << " "
+           << storage.addr_width(segment_id) << "\n";
       }
       if (storage.data_width(segment_id) >= 0) {
-        os << "// DATA_WIDTH " << storage.data_width(segment_id) << "\n";
+        os << "// " << MIF_DIRECTIVE_DATA_WIDTH << " "
+           << storage.data_width(segment_id) << "\n";
       }
     }
     os << "# Address Data \n";
@@ -176,11 +182,12 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     return CMD_EXEC_SUCCESS;
   }
 
-  if (key == "RAM_ID") {
+  if (key == MIF_DIRECTIVE_RAM_ID) {
     int ram_id = 0;
     if (!(ls >> ram_id)) {
-      VTR_LOG_ERROR("%s:%lu: expected integer after //RAM_ID\n",
-                    file_path.c_str(), static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: expected integer after //%s\n",
+                    file_path.c_str(), static_cast<unsigned long>(line_no),
+                    MIF_DIRECTIVE_RAM_ID);
       return CMD_EXEC_FATAL_ERROR;
     }
     start_new_segment_for_ram_id(mif_storage, has_current_segment,
@@ -189,10 +196,10 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
   }
 
   int value = 0;
-  if (key == "X") {
+  if (key == MIF_DIRECTIVE_X) {
     if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // X directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_X);
       return CMD_EXEC_FATAL_ERROR;
     }
     ensure_current_segment(mif_storage, has_current_segment,
@@ -200,10 +207,10 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     mif_storage.set_segment_coord_x(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
-  if (key == "Y") {
+  if (key == MIF_DIRECTIVE_Y) {
     if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // Y directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_Y);
       return CMD_EXEC_FATAL_ERROR;
     }
     ensure_current_segment(mif_storage, has_current_segment,
@@ -211,10 +218,11 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     mif_storage.set_segment_coord_y(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
-  if (key == "ADDR_WIDTH") {
+  if (key == MIF_DIRECTIVE_ADDR_WIDTH) {
     if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // ADDR_WIDTH directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no),
+                    MIF_DIRECTIVE_ADDR_WIDTH);
       return CMD_EXEC_FATAL_ERROR;
     }
     ensure_current_segment(mif_storage, has_current_segment,
@@ -222,10 +230,11 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     mif_storage.set_segment_addr_width(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
-  if (key == "DATA_WIDTH") {
+  if (key == MIF_DIRECTIVE_DATA_WIDTH) {
     if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // DATA_WIDTH directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no),
+                    MIF_DIRECTIVE_DATA_WIDTH);
       return CMD_EXEC_FATAL_ERROR;
     }
     ensure_current_segment(mif_storage, has_current_segment,
@@ -233,10 +242,11 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     mif_storage.set_segment_data_width(current_segment_id, value);
     return CMD_EXEC_SUCCESS;
   }
-  if (key == "ID_WIDTH") {
+  if (key == MIF_DIRECTIVE_ID_WIDTH) {
     if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // ID_WIDTH directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no));
+      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no),
+                    MIF_DIRECTIVE_ID_WIDTH);
       return CMD_EXEC_FATAL_ERROR;
     }
     ensure_current_segment(mif_storage, has_current_segment,
