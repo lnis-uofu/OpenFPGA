@@ -17,9 +17,9 @@ module dual_port_ram_128 #(
   output [15:0] dout
 );
 
-    dual_port_sram_128 memory_0 #
+    dual_port_sram_128 #(
       .MEM_FILE(MEM_FILE)
-    )(
+    ) memory_0 (
       .wclk    (clk),
       .wen    (wen),
       .waddr    (waddr),
