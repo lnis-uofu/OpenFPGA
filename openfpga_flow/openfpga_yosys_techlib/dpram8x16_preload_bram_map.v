@@ -1,4 +1,6 @@
-module $__MY_DPRAM_8x16 (
+module $__MY_DPRAM_8x16 #(
+  parameter INIT = 128'bx // Yosys passes the array initialization here
+)(
   output [0:15] B1DATA,
   input CLK1,
   input [0:2] B1ADDR,
@@ -8,7 +10,9 @@ module $__MY_DPRAM_8x16 (
   input B1EN );
 
   generate
-    dpram_8x16 #() _TECHMAP_REPLACE_ (
+    dpram_8x16 #(
+      .INIT(INIT) // Pass it directly
+    ) _TECHMAP_REPLACE_ (
       .clk    (CLK1),
       .wen    (A1EN),
       .waddr    (A1ADDR),
