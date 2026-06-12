@@ -36,7 +36,7 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
 }
 
 /********************************************************************
- * A function to write the aggregated MIF data to a file
+ * Write processed in-memory MIF data to a MIF file
  *******************************************************************/
 template <class T>
 int write_mif_template(const T& openfpga_context, const Command& cmd,
@@ -62,5 +62,3 @@ int write_mif_template(const T& openfpga_context, const Command& cmd,
 }
 
 } /* end namespace openfpga */
-
-#endif
