@@ -7,6 +7,7 @@
 #include "mif_storage.h"
 #include "read_mif.h"
 #include "vtr_log.h"
+#include "write_mif.h"
 
 int main(int argc, const char** argv) {
   openfpga::MifStorage storage;

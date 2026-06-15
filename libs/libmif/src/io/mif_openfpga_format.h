@@ -1,5 +1,4 @@
-#ifndef MIF_OPENFPGA_FORMAT_H
-#define MIF_OPENFPGA_FORMAT_H
+#pragma once
 
 #include <cstddef>
 #include <ostream>
@@ -19,6 +18,13 @@
  *******************************************************************/
 namespace openfpga {
 
+constexpr const char* MIF_DIRECTIVE_X = "X";
+constexpr const char* MIF_DIRECTIVE_Y = "Y";
+constexpr const char* MIF_DIRECTIVE_RAM_ID = "RAM_ID";
+constexpr const char* MIF_DIRECTIVE_ADDR_WIDTH = "ADDR_WIDTH";
+constexpr const char* MIF_DIRECTIVE_DATA_WIDTH = "DATA_WIDTH";
+constexpr const char* MIF_DIRECTIVE_ID_WIDTH = "ID_WIDTH";
+
 void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os);
 
 /* Parse one raw MIF input line (comments stripped inside). */
@@ -35,5 +41,3 @@ int finalize_openfpga_mif_parse(MifStorage& mif_storage,
                                 const std::string& file_path);
 
 } /* namespace openfpga */
-
-#endif

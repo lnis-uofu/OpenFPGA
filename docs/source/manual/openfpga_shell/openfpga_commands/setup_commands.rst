@@ -87,6 +87,32 @@ write_openfpga_bitstream_setting
 
     Show verbose log
 
+read_mif
+~~~~~~~~
+
+  Read a Memory Initialization File in the **OpenFPGA MIF** format (see below), parse it, and append the resulting segment(s) to in-memory storage. May be run multiple times; each successful read appends more segments. Intended before ``link_openfpga_arch`` when the flow uses MIF-based BRAM initialization.
+
+  **Format (summary)**
+
+  * Line comments: ``# ...`` or ``// ...`` (``//`` directives are described next).
+  * Optional tile coordinates: ``// X <int>``, ``// Y <int>`` (``#`` may follow on the same line).
+  * Optional widths: ``// ADDR_WIDTH <int>``, ``// DATA_WIDTH <int>``, ``//ID_WIDTH <int>``.
+  * A new RAM block section starts at ``//RAM_ID <int>``; data lines before the first ``//RAM_ID`` belong to the placement-oriented block (X/Y); following lines belong to the RAM_ID block.
+  * Data lines: ``<hex_address> <hex_data>`` (e.g. ``0x2000 0x0000000a``), exactly two tokens per line.
+
+  .. option:: --file <string> or -f <string>
+
+    Path to the MIF file to read.
+
+write_mif
+~~~~~~~~~
+
+  Write the processed in-memory MIF data to one file in the OpenFPGA MIF format. Requires that ``read_mif`` has completed successfully at least once before this command (shell dependency).
+
+  .. option:: --file <string> or -f <string>
+
+    Path to the output file (overwrite).
+
 .. _openfpga_setup_command_read_openfpga_clock_arch:
 
 read_openfpga_clock_arch
