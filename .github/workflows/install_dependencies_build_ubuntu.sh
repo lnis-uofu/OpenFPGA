@@ -47,6 +47,7 @@ apt-get install -y \
     zip \
     swig \
     expect \
+    libeigen3-dev \
     libxml2-utils
 
 # Install Ubuntu 20.04 packages
