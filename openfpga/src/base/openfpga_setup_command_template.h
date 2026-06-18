@@ -219,6 +219,12 @@ ShellCommandId add_link_arch_command_template(
                        "Reorder the incoming edges for each routing track "
                        "output node in General Switch Blocks (GSBs)");
 
+  /* Add an option '--gsb_version'*/
+  CommandOptionId opt_gsb_version = shell_cmd.add_option(
+    "gsb_version", false,
+    "Specify the version of GSB to be used (Must match with the GSB version set for VPR). Default value is 1");
+  shell_cmd.set_option_require_value(opt_gsb_version, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
