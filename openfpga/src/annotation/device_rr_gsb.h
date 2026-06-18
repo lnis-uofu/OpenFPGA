@@ -6,6 +6,7 @@
  *******************************************************************/
 /* Header files from vtrutil library */
 #include "vtr_geometry.h"
+#include "vpr_types.h"
 
 /* Header files from vpr library */
 #include "rr_graph_in_edges.h"
@@ -96,6 +97,7 @@ class DeviceRRGSB {
    * coordinate. Note: Do NOT use sb coordinate!!! */
   size_t get_cb_unique_module_index(const e_rr_type& cb_type,
                                     const vtr::Point<size_t>& coordinate) const;
+  e_gsb_version get_gsb_version() const;
 
  public: /* Mutators */
   bool is_compressed() const;
@@ -146,6 +148,7 @@ when read_unique_blocks command invoked */
                    and their corresponding instance information. This function
                    will be called when read_unique_blocks command invoked */
   void clear_unique_modules(); /* clean the content of unique blocks*/
+  void set_gsb_version(const e_gsb_version& version);
 
  private:                                                /* Internal cleaners */
   void clear_gsb();                                      /* clean the content */
@@ -215,6 +218,7 @@ when read_unique_blocks command invoked */
     cby_unique_module_; /* For each side of connection block, we identify a list
                            of unique modules based on its connection. This is a
                            matrix [0..num_module] */
+  e_gsb_version gsb_version_ = e_gsb_version::GSB_V1;
 
   /* Cached data */
   const VprDeviceAnnotation& device_annotation_;
