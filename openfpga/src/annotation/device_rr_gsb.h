@@ -5,8 +5,8 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 /* Header files from vtrutil library */
-#include "vtr_geometry.h"
 #include "vpr_types.h"
+#include "vtr_geometry.h"
 
 /* Header files from vpr library */
 #include "rr_graph_in_edges.h"

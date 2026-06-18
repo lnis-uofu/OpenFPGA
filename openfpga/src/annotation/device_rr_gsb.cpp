@@ -809,5 +809,4 @@ void DeviceRRGSB::set_gsb_version(const e_gsb_version& version) {
   gsb_version_ = version;
 }
 
-
 } /* End namespace openfpga*/
