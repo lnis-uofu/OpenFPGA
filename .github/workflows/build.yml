@@ -46,7 +46,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -113,7 +113,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -179,7 +179,7 @@ jobs:
           make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_msys2_installer_log
@@ -188,7 +188,7 @@ jobs:
             _CPack_Packages/win64/IFW/PreinstallOutput.log 
 
       - name: Upload artifact installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: win_msys2_installer
           retention-days: 1
@@ -237,7 +237,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -427,7 +427,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: vcpkg build
         uses: johnwason/vcpkg-action@v7
@@ -558,7 +558,7 @@ jobs:
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
 
       - name: Upload regression logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_win_msvc_installer_regression_log
@@ -567,7 +567,7 @@ jobs:
             openfpga_flow/**/*.log
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_msys2_installer_log
@@ -576,7 +576,7 @@ jobs:
             _CPack_Packages/win64/IFW/PreinstallOutput.log 
 
       - name: Upload artifact installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: win_msvc_installer
           retention-days: 1
@@ -614,7 +614,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -653,7 +653,7 @@ jobs:
       - name: Check ccache size
         run: ccache -s
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ matrix.config.cc == 'gcc-11'}}
         with:
           name: openfpga
@@ -728,7 +728,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -778,7 +778,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
@@ -833,7 +833,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
   
       - name: Install dependencies
         run: |
@@ -898,7 +898,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -960,7 +960,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -1024,7 +1024,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -1066,7 +1066,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1119,7 +1119,7 @@ jobs:
           access_token: ${{ github.token }}
     
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1139,7 +1139,7 @@ jobs:
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_${{matrix.config.name}}_regression_log
@@ -1177,7 +1177,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
@@ -1188,7 +1188,7 @@ jobs:
           unset OPENFPGA_PATH
           source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_${{matrix.config.name}}_regression_log
