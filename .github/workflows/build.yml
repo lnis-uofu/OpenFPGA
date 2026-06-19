@@ -441,7 +441,7 @@ jobs:
       - name: Install WinFlexBison
         shell: powershell
         run: |
-          choco install winflexbison3 wget
+          choco install winflexbison3 wget eigen
           choco install magicsplat-tcl-tk --version=1.16.0
 
       - name: Dump tool versions

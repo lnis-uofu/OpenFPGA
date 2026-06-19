@@ -142,7 +142,7 @@ endif()
 # TCL file/lib required to link with SWIG generated wrapper
 if (OPENFPGA_WITH_SWIG)
 #Find Tcl
-  find_package(TCL)
+  find_package(TCL REQUIRED)
   if(NOT TCL_FOUND)
     message(FATAL_ERROR "TCL not found. Please install TCL development headers (e.g. tcl8.6-dev).")
   endif()
