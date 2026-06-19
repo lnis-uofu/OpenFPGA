@@ -38,8 +38,7 @@ apt-get install -y \
     python3-setuptools \
     python3-lxml \
     python3-pip \
-    tcllib \
-    tcl8.6-dev \
+    tcl-dev \
     texinfo \
     time \
     valgrind \
