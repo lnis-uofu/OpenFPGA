@@ -46,7 +46,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -113,7 +113,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -237,7 +237,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -427,7 +427,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: vcpkg build
         uses: johnwason/vcpkg-action@v7
@@ -614,7 +614,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -728,7 +728,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -778,7 +778,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
@@ -833,7 +833,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
   
       - name: Install dependencies
         run: |
@@ -898,7 +898,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -960,7 +960,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -1024,7 +1024,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -1066,7 +1066,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1119,7 +1119,7 @@ jobs:
           access_token: ${{ github.token }}
     
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1177,7 +1177,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
