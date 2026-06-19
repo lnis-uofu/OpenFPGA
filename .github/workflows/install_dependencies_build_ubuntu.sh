@@ -48,7 +48,6 @@ apt-get install -y \
     swig \
     expect \
     libeigen3-dev \
-    libgompl \
     libxml2-utils
 
 # Install Ubuntu 20.04 packages
