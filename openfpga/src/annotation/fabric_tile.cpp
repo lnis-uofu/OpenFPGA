@@ -217,7 +217,7 @@ size_t FabricTile::find_pb_index_in_tile(const FabricTileId& tile_id,
     return pb_gsb_coords_[tile_id].size();
   } else {
     for (size_t idx = 0; idx < pb_coords_[tile_id].size(); ++idx) {
-      if (pb_coords_[tile_id][idx].coincident(coord)) {
+      if (pb_coords_[tile_id][idx].contains_inclusive(coord)) {
         return idx;
       }
     }

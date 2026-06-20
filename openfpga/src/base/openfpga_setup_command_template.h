@@ -219,6 +219,13 @@ ShellCommandId add_link_arch_command_template(
                        "Reorder the incoming edges for each routing track "
                        "output node in General Switch Blocks (GSBs)");
 
+  /* Add an option '--gsb_version'*/
+  CommandOptionId opt_gsb_version = shell_cmd.add_option(
+    "gsb_version", false,
+    "Specify the version of GSB to be used (Must match with the GSB version "
+    "set for VPR). Default value is 1");
+  shell_cmd.set_option_require_value(opt_gsb_version, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
@@ -1310,12 +1317,12 @@ ShellCommandId add_write_mif_command_template(
   Command shell_cmd("write_mif");
 
   CommandOptionId opt_file = shell_cmd.add_option(
-    "file", true, "file path to write aggregated MIF content");
+    "file", true, "file path to write processed in-memory MIF data");
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "Write all aggregated MIF data from read_mif to a file", hidden);
+    shell_cmd, "Write processed in-memory MIF data to a MIF file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id, write_mif_template<T>);
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
