@@ -4,7 +4,8 @@ apt-get install --no-install-recommends -y \
 libdatetime-perl libc6 libffi-dev libgcc1 libreadline8 libstdc++6 \
 libtcl8.6 tcl python3-pip zlib1g libbz2-1.0 \
 iverilog git rsync make curl wget tree \
-libomp-dev
+libgcc-11-dev
+# The gcc-11-dev is for libgomp.so
 
 # Install Ubuntu 20.04 packages
 if [ "$(lsb_release -rs)" = "20.04" ]; then
