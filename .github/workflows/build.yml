@@ -1138,7 +1138,7 @@ jobs:
       - name: linker status
         run: |
           ldd build/openfpga/openfpga
-          ldd build/openfpga/yosys
+          ldd build/yosys/bin/yosys
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
