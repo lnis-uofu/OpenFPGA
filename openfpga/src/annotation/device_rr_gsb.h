@@ -34,6 +34,9 @@ class DeviceRRGSB {
   DeviceRRGSB(const VprDeviceAnnotation& device_annotation);
 
  public: /* Accessors */
+  /* The GSB version that VPR used to build the routing graph, as captured in the
+   * device annotation */
+  e_gsb_version get_gsb_version() const;
   vtr::Point<size_t> get_gsb_range()
     const; /* get the max coordinate of the switch block array */
   const RRGSB& get_gsb(const vtr::Point<size_t>& coordinate)
