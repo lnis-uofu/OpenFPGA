@@ -118,7 +118,7 @@ std::vector<t_pb_graph_pin*> pb_graph_interc_sink_pins(
    * interconnect */
   for (int ipin = 0; ipin < des_port->num_pins; ++ipin) {
     t_pb_graph_pin* pin = &port_pins[ipin];
-    if (selected_inter  connect == pb_graph_pin_interc(pin, selected_mode)) {
+    if (selected_interconnect == pb_graph_pin_interc(pin, selected_mode)) {
       pins.push_back(pin);
     }
   }
