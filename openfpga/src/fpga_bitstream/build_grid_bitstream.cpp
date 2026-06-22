@@ -244,6 +244,47 @@ static void build_primitive_bitstream(
 }
 
 /********************************************************************
+ * Find the mux path id (the index of the selected input) for the mux that
+ * drives a given destination pin, based on the routing results stored in
+ * physical_pb. Returns DEFAULT_PATH_ID when the destination is unmapped, has no
+ * net, or none of the mux inputs carries the destination's net.
+ *******************************************************************/
+static int find_physical_block_pin_mux_path_id(const PhysicalPb& physical_pb,
+                                                t_pb_graph_pin* des_pb_graph_pin,
+                                                t_interconnect* cur_interc,
+                                                const size_t& fan_in) {
+  const PhysicalPbId& des_pb_id =
+    physical_pb.find_pb(des_pb_graph_pin->parent_node);
+  if (true != physical_pb.valid_pb_id(des_pb_id)) {
+    return DEFAULT_PATH_ID;
+  }
+  AtomNetId output_net =
+    physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin);
+  if (AtomNetId::INVALID() == output_net) {
+    return DEFAULT_PATH_ID;
+  }
+  size_t mux_input_pin_id = 0;
+  for (t_pb_graph_pin* src_pb_graph_pin :
+       pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
+    const PhysicalPbId& src_pb_id =
+      physical_pb.find_pb(src_pb_graph_pin->parent_node);
+    /* If the src pb id is not valid, we bypass it */
+    if ((true == physical_pb.valid_pb_id(src_pb_id)) &&
+        (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) ==
+         output_net)) {
+      break;
+    }
+    mux_input_pin_id++;
+  }
+  VTR_ASSERT(mux_input_pin_id <= fan_in);
+  /* Unmapped pin, use default path id */
+  if (fan_in == mux_input_pin_id) {
+    return DEFAULT_PATH_ID;
+  }
+  return (int)mux_input_pin_id;
+}
+
+/********************************************************************
  * This function generates bitstream for a programmable routing
  * multiplexer which drives an output pin of physical_pb_graph_node and its the
  *input_edges
@@ -300,49 +341,72 @@ static void build_physical_block_pin_interc_bitstream(
       std::vector<AtomNetId> input_nets;
       AtomNetId output_net = AtomNetId::INVALID();
 
-      /* Find the path id:
-       * - if des pb is not valid, this is an unmapped pb, we can set a default
-       * path_id
-       * - There is no net mapped to des_pb_graph_pin we use default path id
-       * - There is a net mapped to des_pin_graph_pin: we find the path id
-       */
-      const PhysicalPbId& des_pb_id =
-        physical_pb.find_pb(des_pb_graph_pin->parent_node);
+      /* Determine the representative pin used to name shared resources. For a
+       * bus-based mux all the bits of the output bus share a single selector
+       * (one memory block), named after the lowest-index bit. Only that
+       * representative bit emits a bitstream block; the other bits are handled
+       * together with it and skipped here. */
+      t_pb_graph_pin* rep_pb_graph_pin = des_pb_graph_pin;
       size_t mux_input_pin_id = 0;
-      if (true != physical_pb.valid_pb_id(des_pb_id)) {
-        mux_input_pin_id = DEFAULT_PATH_ID;
-      } else if (AtomNetId::INVALID() == physical_pb.pb_graph_pin_atom_net(
-                                           des_pb_id, des_pb_graph_pin)) {
-        mux_input_pin_id = DEFAULT_PATH_ID;
-      } else {
-        output_net =
-          physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin);
 
-        for (t_pb_graph_pin* src_pb_graph_pin :
-             pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
-          const PhysicalPbId& src_pb_id =
-            physical_pb.find_pb(src_pb_graph_pin->parent_node);
-          input_nets.push_back(
-            physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin));
+      if (true == cur_interc->bus) {
+        std::vector<t_pb_graph_pin*> bus_pins = pb_graph_interc_sink_pins(
+          des_pb_graph_pin, cur_interc, physical_mode);
+        VTR_ASSERT(false == bus_pins.empty());
+        rep_pb_graph_pin = bus_pins.front();
+        /* Only the representative bit emits the shared bitstream block */
+        if (des_pb_graph_pin != rep_pb_graph_pin) {
+          return;
         }
-
-        for (t_pb_graph_pin* src_pb_graph_pin :
-             pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
-          const PhysicalPbId& src_pb_id =
-            physical_pb.find_pb(src_pb_graph_pin->parent_node);
-          /* If the src pb id is not valid, we bypass it */
-          if ((true == physical_pb.valid_pb_id(src_pb_id)) &&
-              (AtomNetId::INVALID() != output_net) &&
-              (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) ==
-               output_net)) {
-            break;
+        /* All the mapped bits of the bus must select the same input port,
+         * otherwise the bus mux cannot be realized with a single shared
+         * selector. The path id equals the selected input-port index. */
+        int bus_path_id = DEFAULT_PATH_ID;
+        for (t_pb_graph_pin* bus_pin : bus_pins) {
+          int pin_path_id = find_physical_block_pin_mux_path_id(
+            physical_pb, bus_pin, cur_interc, fan_in);
+          if (DEFAULT_PATH_ID == pin_path_id) {
+            continue;
           }
-          mux_input_pin_id++;
+          if (DEFAULT_PATH_ID == bus_path_id) {
+            bus_path_id = pin_path_id;
+          } else if (bus_path_id != pin_path_id) {
+            VTR_LOGF_ERROR(
+              __FILE__, __LINE__,
+              "Bus-based mux '%s' (Arch[LINE%d]) requires all bits of the "
+              "output bus to be routed from the same input port. Bit '%s' "
+              "selects input %d while another bit of the same bus selects "
+              "input %d. Check the packing/routing results.\n",
+              cur_interc->name, cur_interc->line_num,
+              bus_pin->to_string().c_str(), pin_path_id, bus_path_id);
+            exit(CMD_EXEC_FATAL_ERROR);
+          }
         }
-        VTR_ASSERT(mux_input_pin_id <= fan_in);
-        /* Unmapped pin, use default path id */
-        if (fan_in == mux_input_pin_id) {
-          mux_input_pin_id = DEFAULT_PATH_ID;
+        mux_input_pin_id = (DEFAULT_PATH_ID == bus_path_id)
+                             ? size_t(DEFAULT_PATH_ID)
+                             : size_t(bus_path_id);
+      } else {
+        int pin_path_id = find_physical_block_pin_mux_path_id(
+          physical_pb, des_pb_graph_pin, cur_interc, fan_in);
+        mux_input_pin_id = (DEFAULT_PATH_ID == pin_path_id)
+                             ? size_t(DEFAULT_PATH_ID)
+                             : size_t(pin_path_id);
+      }
+
+      /* Record input/output nets of the representative bit for reporting */
+      const PhysicalPbId& rep_pb_id =
+        physical_pb.find_pb(rep_pb_graph_pin->parent_node);
+      if (true == physical_pb.valid_pb_id(rep_pb_id)) {
+        output_net =
+          physical_pb.pb_graph_pin_atom_net(rep_pb_id, rep_pb_graph_pin);
+        if (AtomNetId::INVALID() != output_net) {
+          for (t_pb_graph_pin* src_pb_graph_pin :
+               pb_graph_pin_inputs(rep_pb_graph_pin, cur_interc)) {
+            const PhysicalPbId& src_pb_id =
+              physical_pb.find_pb(src_pb_graph_pin->parent_node);
+            input_nets.push_back(
+              physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin));
+          }
         }
       }
 
@@ -361,9 +425,10 @@ static void build_physical_block_pin_interc_bitstream(
                             mux_input_pin_id, unused_mux_config);
 
       /* Create the block denoting the memory instances that drives this node in
-       * physical_block */
+       * physical_block. For a bus-based mux this is the shared memory named
+       * after the representative bit, so it matches the fabric module. */
       std::string mem_block_name = generate_pb_memory_instance_name(
-        GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
+        GRID_MEM_INSTANCE_PREFIX, rep_pb_graph_pin, std::string(""));
 
       /* Find the module in module manager and ensure the bitstream size
        * matches! */
