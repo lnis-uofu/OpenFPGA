@@ -134,8 +134,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_coord,
                           const bool& perimeter_cb, const bool& include_clock,
                           const RRGraphInEdges& in_edges) {
-  /* Create an object to return */
-  RRGSB rr_gsb;
+  /* Create an object to return, using the GSB version that VPR used to build
+   * the tileable RR graph (stored on the device context). */
+  RRGSB rr_gsb(vpr_device_ctx.gsb_version);
 
   VTR_ASSERT(gsb_coord.x() <= gsb_range.x());
   VTR_ASSERT(gsb_coord.y() <= gsb_range.y());
