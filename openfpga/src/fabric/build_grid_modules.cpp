@@ -535,6 +535,198 @@ static void add_module_pb_graph_pin2pin_net(
 }
 
 /********************************************************************
+ * Instantiate a single multiplexer that drives the destination pin
+ * des_pb_graph_pin and wire up its data input nets (from the source pins) and
+ * its output net (to des_pb_graph_pin). The SRAM ports of the mux are left
+ * unconnected: they are wired separately to a (possibly shared) memory module
+ * by the caller.
+ *
+ * Returns the instance id of the newly created mux instance.
+ *******************************************************************/
+static size_t add_module_pb_graph_pin_mux_instance(
+  ModuleManager& module_manager, const ModuleId& pb_module,
+  const CircuitLibrary& circuit_lib,
+  const CircuitModelId& interc_circuit_model,
+  const CircuitPortId& interc_model_input,
+  const CircuitPortId& interc_model_output, t_pb_graph_pin* des_pb_graph_pin,
+  t_interconnect* cur_interc, const size_t& fan_in) {
+  /* Find the mux module in the module manager */
+  ModuleId mux_module = module_manager.find_module(generate_mux_subckt_name(
+    circuit_lib, interc_circuit_model, fan_in, std::string()));
+  VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
+
+  /* Instanciate the MUX */
+  size_t mux_instance = module_manager.num_instance(pb_module, mux_module);
+  module_manager.add_child_module(pb_module, mux_module);
+  std::string mux_instance_name = generate_pb_mux_instance_name(
+    GRID_MUX_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
+  module_manager.set_child_instance_name(pb_module, mux_module, mux_instance,
+                                         mux_instance_name);
+
+  /* Ensure output port of the MUX model has only 1 pin */
+  VTR_ASSERT(1 == circuit_lib.port_size(interc_model_output));
+
+  /* Wire the mux data inputs to their source pb_graph_pins. Not every input
+   * edge of the destination pin is used in the physical model, so we follow
+   * pb_graph_pin_inputs() which already filters by the selected interconnect */
+  size_t mux_input_pin_id = 0;
+  for (t_pb_graph_pin* src_pb_graph_pin :
+       pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
+    add_module_pb_graph_pin2pin_net(
+      module_manager, pb_module, mux_module, mux_instance,
+      circuit_lib.port_prefix(interc_model_input), mux_input_pin_id,
+      src_pb_graph_pin, INPUT2INPUT_INTERC);
+    mux_input_pin_id++;
+  }
+  /* Ensure all the fan_in has been covered */
+  VTR_ASSERT(mux_input_pin_id == fan_in);
+
+  /* Wire the mux output to des_pb_graph_pin */
+  add_module_pb_graph_pin2pin_net(
+    module_manager, pb_module, mux_module, mux_instance,
+    circuit_lib.port_prefix(interc_model_output),
+    0, /* MUX should have only 1 pin in its output port */
+    des_pb_graph_pin, OUTPUT2OUTPUT_INTERC);
+
+  return mux_instance;
+}
+
+/********************************************************************
+ * Instantiate the memory (SRAM) module that holds the configuration bits of a
+ * MUX and register it as a configurable child of pb_module. This is shared by
+ * the per-pin mux path and the bus-based mux path (where a single memory is
+ * shared by all the bits of the bus).
+ *
+ * When group_config_block is enabled the inline child is a feedthrough memory
+ * (a placeholder that only wires signals through) and a logical->physical
+ * mapping is registered to the real memory module that lives in the grouped
+ * configuration block. naming_pin names the memory instance; for a bus-based
+ * mux this is the representative (lowest-index) bit.
+ *
+ * Returns the module id and instance id of the memory module. The SRAM nets
+ * between the mux(es) and this memory are wired by the caller, since the
+ * fan-out differs between a single mux and a shared bus mux.
+ *******************************************************************/
+static std::pair<ModuleId, size_t> add_module_pb_mux_memory(
+  ModuleManager& module_manager, const ModuleId& pb_module,
+  std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
+  const CircuitLibrary& circuit_lib,
+  const CircuitModelId& interc_circuit_model, t_pb_graph_pin* naming_pin,
+  const size_t& fan_in, const bool& group_config_block, const bool& verbose) {
+  /* Instantiate a memory module for the MUX. When grouping configuration
+   * blocks, the inline module is a feedthrough placeholder. */
+  std::string mux_mem_module_name = generate_mux_subckt_name(
+    circuit_lib, interc_circuit_model, fan_in, std::string(MEMORY_MODULE_POSTFIX));
+  if (group_config_block) {
+    mux_mem_module_name =
+      generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
+                               std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+  }
+  ModuleId mux_mem_module = module_manager.find_module(mux_mem_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(mux_mem_module));
+  size_t mux_mem_instance =
+    module_manager.num_instance(pb_module, mux_mem_module);
+  module_manager.add_child_module(pb_module, mux_mem_module);
+  std::string mux_mem_instance_name = generate_pb_memory_instance_name(
+    GRID_MEM_INSTANCE_PREFIX, naming_pin, std::string(""), group_config_block);
+  module_manager.set_child_instance_name(pb_module, mux_mem_module,
+                                         mux_mem_instance, mux_mem_instance_name);
+  /* Add this memory as a configurable child to the pb_module */
+  size_t config_child_id = module_manager.num_configurable_children(
+    pb_module, ModuleManager::e_config_child_type::LOGICAL);
+  module_manager.add_configurable_child(
+    pb_module, mux_mem_module, mux_mem_instance,
+    group_config_block ? ModuleManager::e_config_child_type::LOGICAL
+                       : ModuleManager::e_config_child_type::UNIFIED);
+  if (group_config_block) {
+    std::string phy_mem_module_name = generate_mux_subckt_name(
+      circuit_lib, interc_circuit_model, fan_in,
+      std::string(MEMORY_MODULE_POSTFIX));
+    ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
+    VTR_ASSERT(module_manager.valid_module_id(phy_mem_module));
+    VTR_LOGV(verbose,
+             "Mapping feedthrough memory module '%s' to physical memory "
+             "module '%s'...\n",
+             mux_mem_module_name.c_str(), phy_mem_module_name.c_str());
+    module_manager.set_logical2physical_configurable_child(
+      pb_module, config_child_id, phy_mem_module);
+    std::string phy_mux_mem_instance_name = generate_pb_memory_instance_name(
+      GRID_MEM_INSTANCE_PREFIX, naming_pin, std::string(""), false);
+    module_manager.set_logical2physical_configurable_child_instance_name(
+      pb_module, config_child_id, phy_mux_mem_instance_name);
+    VTR_LOGV(verbose, "Now use a feedthrough memory for '%s'\n",
+             phy_mem_module_name.c_str());
+  }
+
+  /* Update memory modules and memory instance list */
+  memory_modules.push_back(mux_mem_module);
+  memory_instances.push_back(mux_mem_instance);
+
+  return {mux_mem_module, mux_mem_instance};
+}
+
+/********************************************************************
+ * Add modules and nets for a bus-based multiplexer interconnect.
+ *
+ * A bus-based mux (<mux bus="true"/> in the VPR architecture) drives an output
+ * bus of width W from N input ports. In VPR's pb graph it is lowered into W
+ * independent single-bit muxes (one per output bit, each selecting the matching
+ * bit of one of the N input ports). For a *true* bus mux all W bits must select
+ * the same input port, therefore all W per-bit muxes must be controlled by the
+ * same selector. We model this by instantiating W mux modules but a single
+ * shared memory module, whose output fans out to the SRAM ports of every mux.
+ *
+ * This function is called once per bus interconnect, with bus_pins being the
+ * ordered list of all the destination pins driven by the interconnect.
+ *******************************************************************/
+static void add_module_pb_bus_mux_interc(
+  ModuleManager& module_manager, const ModuleId& pb_module,
+  std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
+  const CircuitLibrary& circuit_lib,
+  const CircuitModelId& interc_circuit_model,
+  const CircuitPortId& interc_model_input,
+  const CircuitPortId& interc_model_output,
+  const std::vector<t_pb_graph_pin*>& bus_pins, t_interconnect* cur_interc,
+  const size_t& fan_in, const bool& group_config_block, const bool& verbose) {
+  VTR_ASSERT(false == bus_pins.empty());
+  /* The representative pin (lowest bit index) names the shared resources */
+  t_pb_graph_pin* rep_pb_graph_pin = bus_pins.front();
+
+  VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(interc_circuit_model));
+  VTR_ASSERT((2 == fan_in) || (2 < fan_in));
+
+  /* Instantiate a single shared memory module for the whole bus, named after
+   * the representative pin */
+  auto [mux_mem_module, mux_mem_instance] = add_module_pb_mux_memory(
+    module_manager, pb_module, memory_modules, memory_instances, circuit_lib,
+    interc_circuit_model, rep_pb_graph_pin, fan_in, group_config_block, verbose);
+
+  /* Instantiate one mux per bus bit and collect their instance ids */
+  std::vector<size_t> mux_instances;
+  for (t_pb_graph_pin* des_pb_graph_pin : bus_pins) {
+    /* Every bit of the bus must have the same fan-in (number of input ports) */
+    VTR_ASSERT(fan_in ==
+               pb_graph_pin_inputs(des_pb_graph_pin, cur_interc).size());
+    mux_instances.push_back(add_module_pb_graph_pin_mux_instance(
+      module_manager, pb_module, circuit_lib, interc_circuit_model,
+      interc_model_input, interc_model_output, des_pb_graph_pin, cur_interc,
+      fan_in));
+  }
+
+  VTR_LOGV(verbose,
+           "Built bus-based mux '%s' with %lu shared bit-muxes driven by a "
+           "single selector\n",
+           cur_interc->name, mux_instances.size());
+
+  /* Wire the shared memory output to the SRAM ports of every mux instance */
+  ModuleId mux_module = module_manager.find_module(generate_mux_subckt_name(
+    circuit_lib, interc_circuit_model, fan_in, std::string()));
+  add_module_nets_between_logics_and_shared_memory_sram_bus(
+    module_manager, pb_module, mux_module, mux_instances, mux_mem_module,
+    mux_mem_instance, circuit_lib, interc_circuit_model);
+}
+
+/********************************************************************
  * We check output_pins of cur_pb_graph_node and its the input_edges
  * Built the interconnections between outputs of cur_pb_graph_node and outputs
  *of child_pb_graph_node src_pb_graph_node.[in|out]_pins ----------------->
@@ -592,6 +784,26 @@ static void add_module_pb_graph_pin_interc(
    * both wire and MUX */
   VTR_ASSERT(1 == interc_model_inputs.size());
   VTR_ASSERT(1 == interc_model_outputs.size());
+
+  /* Special handling for bus-based muxes: all the bits of the output bus share
+   * a single selector. We process the whole bus once, from its representative
+   * (lowest-index) pin, and skip the remaining bits.
+   * Note: the 'bus' attribute is only valid on <mux> tags (MUX_INTERC) in the
+   * VPR architecture, so this never applies to crossbars or direct wires. */
+  if ((true == cur_interc->bus) && (MUX_INTERC == interc_type)) {
+    std::vector<t_pb_graph_pin*> bus_pins =
+      pb_graph_interc_sink_pins(des_pb_graph_pin, cur_interc, physical_mode);
+    VTR_ASSERT(false == bus_pins.empty());
+    /* Only the representative pin builds the whole bus group */
+    if (des_pb_graph_pin != bus_pins.front()) {
+      return;
+    }
+    add_module_pb_bus_mux_interc(
+      module_manager, pb_module, memory_modules, memory_instances, circuit_lib,
+      interc_circuit_model, interc_model_inputs[0], interc_model_outputs[0],
+      bus_pins, cur_interc, fan_in, group_config_block, verbose);
+    return;
+  }
 
   /* Branch on the type of physical implementation,
    * We add instances of programmable interconnection
@@ -658,116 +870,29 @@ static void add_module_pb_graph_pin_interc(
       /* Ensure that circuit model is a MUX */
       VTR_ASSERT(CIRCUIT_MODEL_MUX ==
                  circuit_lib.model_type(interc_circuit_model));
-      /* Find the wire module in the module manager */
+
+      /* Instantiate the MUX and wire its data inputs/output to the pb_module */
+      size_t mux_instance = add_module_pb_graph_pin_mux_instance(
+        module_manager, pb_module, circuit_lib, interc_circuit_model,
+        interc_model_inputs[0], interc_model_outputs[0], des_pb_graph_pin,
+        cur_interc, fan_in);
+
+      /* Find the mux module, needed to wire its SRAM ports to the memory */
       ModuleId mux_module = module_manager.find_module(generate_mux_subckt_name(
         circuit_lib, interc_circuit_model, fan_in, std::string()));
       VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
 
-      /* Instanciate the MUX */
-      size_t mux_instance = module_manager.num_instance(pb_module, mux_module);
-      module_manager.add_child_module(pb_module, mux_module);
-      /* Give an instance name: this name should be consistent with the block
-       * name given in SDC generator, If you want to bind the SDC generation to
-       * modules
-       */
-      std::string mux_instance_name = generate_pb_mux_instance_name(
-        GRID_MUX_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
-      module_manager.set_child_instance_name(pb_module, mux_module,
-                                             mux_instance, mux_instance_name);
-
-      /* Instanciate a memory module for the MUX */
-      std::string mux_mem_module_name =
-        generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
-                                 std::string(MEMORY_MODULE_POSTFIX));
-      if (group_config_block) {
-        mux_mem_module_name = generate_mux_subckt_name(
-          circuit_lib, interc_circuit_model, fan_in,
-          std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
-      }
-      ModuleId mux_mem_module = module_manager.find_module(mux_mem_module_name);
-      VTR_ASSERT(true == module_manager.valid_module_id(mux_mem_module));
-      size_t mux_mem_instance =
-        module_manager.num_instance(pb_module, mux_mem_module);
-      module_manager.add_child_module(pb_module, mux_mem_module);
-      /* Give an instance name: this name should be consistent with the block
-       * name given in bitstream manager, If you want to bind the bitstream
-       * generation to modules
-       */
-      std::string mux_mem_instance_name = generate_pb_memory_instance_name(
-        GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""),
-        group_config_block);
-      module_manager.set_child_instance_name(
-        pb_module, mux_mem_module, mux_mem_instance, mux_mem_instance_name);
-      /* Add this MUX as a configurable child to the pb_module */
-      size_t config_child_id = module_manager.num_configurable_children(
-        pb_module, ModuleManager::e_config_child_type::LOGICAL);
-      module_manager.add_configurable_child(
-        pb_module, mux_mem_module, mux_mem_instance,
-        group_config_block ? ModuleManager::e_config_child_type::LOGICAL
-                           : ModuleManager::e_config_child_type::UNIFIED);
-      if (group_config_block) {
-        std::string phy_mem_module_name =
-          generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
-                                   std::string(MEMORY_MODULE_POSTFIX));
-        ModuleId phy_mem_module =
-          module_manager.find_module(phy_mem_module_name);
-        VTR_ASSERT(module_manager.valid_module_id(phy_mem_module));
-        VTR_LOGV(verbose,
-                 "Mapping feedthrough memory module '%s' to physical memory "
-                 "module '%s'...\n",
-                 mux_mem_module_name.c_str(), phy_mem_module_name.c_str());
-        module_manager.set_logical2physical_configurable_child(
-          pb_module, config_child_id, phy_mem_module);
-        std::string phy_mux_mem_instance_name =
-          generate_pb_memory_instance_name(
-            GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""), false);
-        module_manager.set_logical2physical_configurable_child_instance_name(
-          pb_module, config_child_id, phy_mux_mem_instance_name);
-        VTR_LOGV(verbose, "Now use a feedthrough memory for '%s'\n",
-                 phy_mem_module_name.c_str());
-      }
+      /* Instantiate the memory module that holds this MUX's configuration */
+      auto [mux_mem_module, mux_mem_instance] = add_module_pb_mux_memory(
+        module_manager, pb_module, memory_modules, memory_instances,
+        circuit_lib, interc_circuit_model, des_pb_graph_pin, fan_in,
+        group_config_block, verbose);
 
       /* Add nets to connect SRAM ports of the MUX to the SRAM port of memory
        * module */
       add_module_nets_between_logic_and_memory_sram_bus(
         module_manager, pb_module, mux_module, mux_instance, mux_mem_module,
         mux_mem_instance, circuit_lib, interc_circuit_model);
-
-      /* Update memory modules and memory instance list */
-      memory_modules.push_back(mux_mem_module);
-      memory_instances.push_back(mux_mem_instance);
-
-      /* Ensure output port of the MUX model has only 1 pin,
-       * while the input port size is dependent on the architecture conext,
-       * no constaints on the circuit model definition
-       */
-      VTR_ASSERT(1 == circuit_lib.port_size(interc_model_outputs[0]));
-
-      /* Create nets to wire between the MUX and PB module */
-      /* Add a net to wire the inputs of the multiplexer to its source
-       * pb_graph_pin inside pb_module Here is a tricky part. Not every input
-       * edges from the destination pb_graph_pin is used in the physical_model
-       * of pb_type So, we will skip these input edges when building nets
-       */
-      size_t mux_input_pin_id = 0;
-      for (t_pb_graph_pin* src_pb_graph_pin :
-           pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
-        /* Add a net, set its source and sink */
-        add_module_pb_graph_pin2pin_net(
-          module_manager, pb_module, mux_module, mux_instance,
-          circuit_lib.port_prefix(interc_model_inputs[0]), mux_input_pin_id,
-          src_pb_graph_pin, INPUT2INPUT_INTERC);
-        mux_input_pin_id++;
-      }
-      /* Ensure all the fan_in has been covered */
-      VTR_ASSERT(mux_input_pin_id == fan_in);
-
-      /* Add a net to wire the output of the multiplexer to des_pb_graph_pin */
-      add_module_pb_graph_pin2pin_net(
-        module_manager, pb_module, mux_module, mux_instance,
-        circuit_lib.port_prefix(interc_model_outputs[0]),
-        0, /* MUX should have only 1 pin in its output port */
-        des_pb_graph_pin, OUTPUT2OUTPUT_INTERC);
       break;
     }
     default:
