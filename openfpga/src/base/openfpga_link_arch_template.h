@@ -54,6 +54,11 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     cmd.option("reorder_incoming_edges");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
+  /* Capture the GSB version VPR used so that the GSB annotation can later build
+   * RRGSB objects with the matching version */
+  openfpga_ctx.mutable_vpr_device_annotation().set_gsb_version(
+    g_vpr_ctx.device().gsb_version);
+
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
     g_vpr_ctx.device(), openfpga_ctx.mutable_vpr_device_annotation());
