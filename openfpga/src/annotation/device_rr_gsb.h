@@ -35,9 +35,6 @@ class DeviceRRGSB {
   DeviceRRGSB(const VprDeviceAnnotation& device_annotation);
 
  public: /* Accessors */
-  /* The GSB version that VPR used to build the routing graph, as captured in the
-   * device annotation */
-  e_gsb_version get_gsb_version() const;
   vtr::Point<size_t> get_gsb_range()
     const; /* get the max coordinate of the switch block array */
   const RRGSB& get_gsb(const vtr::Point<size_t>& coordinate)
@@ -221,7 +218,10 @@ when read_unique_blocks command invoked */
     cby_unique_module_; /* For each side of connection block, we identify a list
                            of unique modules based on its connection. This is a
                            matrix [0..num_module] */
+  /* The GSB version that VPR used to build the routing graph. gsb_version_set_
+   * guards against reading the version before set_gsb_version() is called. */
   e_gsb_version gsb_version_ = e_gsb_version::GSB_V1;
+  bool gsb_version_set_ = false;
 
   /* Cached data */
   const VprDeviceAnnotation& device_annotation_;

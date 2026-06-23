@@ -19,10 +19,6 @@ DeviceRRGSB::DeviceRRGSB(const VprDeviceAnnotation& device_annotation)
 /************************************************************************
  * Public accessors
  ***********************************************************************/
-e_gsb_version DeviceRRGSB::get_gsb_version() const {
-  return device_annotation_.gsb_version();
-}
-
 /* get the max coordinate of the switch block array */
 vtr::Point<size_t> DeviceRRGSB::get_gsb_range() const {
   size_t max_y = 0;
@@ -286,7 +282,7 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
 
   for (size_t x = 0; x < coordinate.x(); ++x) {
     rr_gsb_[x].resize(coordinate.y(),
-                      RRGSB(device_annotation_.gsb_version()));
+                      RRGSB(get_gsb_version()));
 
     rr_gsb_edges_[x].resize(coordinate.y());
 
@@ -327,7 +323,7 @@ void DeviceRRGSB::resize_upon_need(const vtr::Point<size_t>& coordinate) {
 
   if (coordinate.y() + 1 > rr_gsb_[coordinate.x()].size()) {
     rr_gsb_[coordinate.x()].resize(coordinate.y() + 1,
-                                   RRGSB(device_annotation_.gsb_version()));
+                                   RRGSB(get_gsb_version()));
 
     rr_gsb_edges_[coordinate.x()].resize(coordinate.y() + 1);
     sb_unique_module_id_[coordinate.x()].resize(coordinate.y() + 1);
@@ -810,11 +806,18 @@ void DeviceRRGSB::preload_unique_sb_module(
 }
 
 /* Get the version of a GSB */
-e_gsb_version DeviceRRGSB::get_gsb_version() const { return gsb_version_; }
+e_gsb_version DeviceRRGSB::get_gsb_version() const {
+  VTR_ASSERT_OPT_MSG(gsb_version_set_,
+                     "Attempted to read the GSB version before it was set "
+                     "(set_gsb_version() must be called during architecture "
+                     "linking)");
+  return gsb_version_;
+}
 
 /* Set the version of a GSB */
 void DeviceRRGSB::set_gsb_version(const e_gsb_version& version) {
   gsb_version_ = version;
+  gsb_version_set_ = true;
 }
 
 } /* End namespace openfpga*/
