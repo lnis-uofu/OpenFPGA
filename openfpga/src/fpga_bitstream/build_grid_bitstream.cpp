@@ -250,9 +250,9 @@ static void build_primitive_bitstream(
  * net, or none of the mux inputs carries the destination's net.
  *******************************************************************/
 static int find_physical_block_pin_mux_path_id(const PhysicalPb& physical_pb,
-                                                t_pb_graph_pin* des_pb_graph_pin,
-                                                t_interconnect* cur_interc,
-                                                const size_t& fan_in) {
+                                               t_pb_graph_pin* des_pb_graph_pin,
+                                               t_interconnect* cur_interc,
+                                               const size_t& fan_in) {
   const PhysicalPbId& des_pb_id =
     physical_pb.find_pb(des_pb_graph_pin->parent_node);
   if (true != physical_pb.valid_pb_id(des_pb_id)) {

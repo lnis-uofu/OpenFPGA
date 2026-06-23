@@ -545,8 +545,7 @@ static void add_module_pb_graph_pin2pin_net(
  *******************************************************************/
 static size_t add_module_pb_graph_pin_mux_instance(
   ModuleManager& module_manager, const ModuleId& pb_module,
-  const CircuitLibrary& circuit_lib,
-  const CircuitModelId& interc_circuit_model,
+  const CircuitLibrary& circuit_lib, const CircuitModelId& interc_circuit_model,
   const CircuitPortId& interc_model_input,
   const CircuitPortId& interc_model_output, t_pb_graph_pin* des_pb_graph_pin,
   t_interconnect* cur_interc, const size_t& fan_in) {
@@ -610,13 +609,14 @@ static size_t add_module_pb_graph_pin_mux_instance(
 static std::pair<ModuleId, size_t> add_module_pb_mux_memory(
   ModuleManager& module_manager, const ModuleId& pb_module,
   std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
-  const CircuitLibrary& circuit_lib,
-  const CircuitModelId& interc_circuit_model, t_pb_graph_pin* naming_pin,
-  const size_t& fan_in, const bool& group_config_block, const bool& verbose) {
+  const CircuitLibrary& circuit_lib, const CircuitModelId& interc_circuit_model,
+  t_pb_graph_pin* naming_pin, const size_t& fan_in,
+  const bool& group_config_block, const bool& verbose) {
   /* Instantiate a memory module for the MUX. When grouping configuration
    * blocks, the inline module is a feedthrough placeholder. */
-  std::string mux_mem_module_name = generate_mux_subckt_name(
-    circuit_lib, interc_circuit_model, fan_in, std::string(MEMORY_MODULE_POSTFIX));
+  std::string mux_mem_module_name =
+    generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
+                             std::string(MEMORY_MODULE_POSTFIX));
   if (group_config_block) {
     mux_mem_module_name =
       generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
@@ -629,8 +629,8 @@ static std::pair<ModuleId, size_t> add_module_pb_mux_memory(
   module_manager.add_child_module(pb_module, mux_mem_module);
   std::string mux_mem_instance_name = generate_pb_memory_instance_name(
     GRID_MEM_INSTANCE_PREFIX, naming_pin, std::string(""), group_config_block);
-  module_manager.set_child_instance_name(pb_module, mux_mem_module,
-                                         mux_mem_instance, mux_mem_instance_name);
+  module_manager.set_child_instance_name(
+    pb_module, mux_mem_module, mux_mem_instance, mux_mem_instance_name);
   /* Add this memory as a configurable child to the pb_module */
   size_t config_child_id = module_manager.num_configurable_children(
     pb_module, ModuleManager::e_config_child_type::LOGICAL);
@@ -639,9 +639,9 @@ static std::pair<ModuleId, size_t> add_module_pb_mux_memory(
     group_config_block ? ModuleManager::e_config_child_type::LOGICAL
                        : ModuleManager::e_config_child_type::UNIFIED);
   if (group_config_block) {
-    std::string phy_mem_module_name = generate_mux_subckt_name(
-      circuit_lib, interc_circuit_model, fan_in,
-      std::string(MEMORY_MODULE_POSTFIX));
+    std::string phy_mem_module_name =
+      generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
+                               std::string(MEMORY_MODULE_POSTFIX));
     ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
     VTR_ASSERT(module_manager.valid_module_id(phy_mem_module));
     VTR_LOGV(verbose,
@@ -682,8 +682,7 @@ static std::pair<ModuleId, size_t> add_module_pb_mux_memory(
 static void add_module_pb_bus_mux_interc(
   ModuleManager& module_manager, const ModuleId& pb_module,
   std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
-  const CircuitLibrary& circuit_lib,
-  const CircuitModelId& interc_circuit_model,
+  const CircuitLibrary& circuit_lib, const CircuitModelId& interc_circuit_model,
   const CircuitPortId& interc_model_input,
   const CircuitPortId& interc_model_output,
   const std::vector<t_pb_graph_pin*>& bus_pins, t_interconnect* cur_interc,
@@ -699,7 +698,8 @@ static void add_module_pb_bus_mux_interc(
    * the representative pin */
   auto [mux_mem_module, mux_mem_instance] = add_module_pb_mux_memory(
     module_manager, pb_module, memory_modules, memory_instances, circuit_lib,
-    interc_circuit_model, rep_pb_graph_pin, fan_in, group_config_block, verbose);
+    interc_circuit_model, rep_pb_graph_pin, fan_in, group_config_block,
+    verbose);
 
   /* Instantiate one mux per bus bit and collect their instance ids */
   std::vector<size_t> mux_instances;

@@ -281,8 +281,7 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
   cby_unique_module_id_.resize(coordinate.x());
 
   for (size_t x = 0; x < coordinate.x(); ++x) {
-    rr_gsb_[x].resize(coordinate.y(),
-                      RRGSB(get_gsb_version()));
+    rr_gsb_[x].resize(coordinate.y(), RRGSB(get_gsb_version()));
 
     rr_gsb_edges_[x].resize(coordinate.y());
 

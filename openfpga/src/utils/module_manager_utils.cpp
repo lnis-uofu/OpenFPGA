@@ -913,8 +913,8 @@ static std::vector<ModulePortId> find_logic_module_sram_port_ids(
   std::vector<ModulePortId> logic_module_sram_port_ids;
   for (const std::string& logic_model_sram_port_name :
        logic_model_sram_port_names) {
-    ModulePortId port_id = module_manager.find_module_port(
-      logic_module, logic_model_sram_port_name);
+    ModulePortId port_id =
+      module_manager.find_module_port(logic_module, logic_model_sram_port_name);
     if (ModulePortId::INVALID() == port_id) {
       continue;
     }
