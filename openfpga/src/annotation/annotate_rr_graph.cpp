@@ -461,6 +461,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
                             const bool& include_clock,
                             const RRGraphInEdges& in_edges,
+                            const e_gsb_version& gsb_version,
                             const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
@@ -473,6 +474,9 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
   if (vpr_device_ctx.arch->perimeter_cb) {
     gsb_range.set(vpr_device_ctx.grid.width(), vpr_device_ctx.grid.height());
   }
+  device_rr_gsb.set_gsb_version(gsb_version);
+  /* Must set version before reserve. Other RRGSB version is not passed into
+   * actual data */
   device_rr_gsb.reserve(gsb_range);
 
   VTR_LOGV(verbose_output, "Start annotation GSB up to [%lu][%lu]\n",
@@ -490,10 +494,12 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        */
       vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
                                        vpr_device_ctx.grid.height() - 1);
+
       const RRGSB& rr_gsb = build_rr_gsb(
         vpr_device_ctx, device_rr_gsb.get_gsb_version(), sub_gsb_range, layer,
         vtr::Point<size_t>(ix, iy), vpr_device_ctx.arch->perimeter_cb,
         include_clock, in_edges);
+
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

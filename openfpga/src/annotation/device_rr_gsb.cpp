@@ -287,6 +287,7 @@ void DeviceRRGSB::reserve(const vtr::Point<size_t>& coordinate) {
   for (size_t x = 0; x < coordinate.x(); ++x) {
     rr_gsb_[x].resize(coordinate.y(),
                       RRGSB(device_annotation_.gsb_version()));
+
     rr_gsb_edges_[x].resize(coordinate.y());
 
     gsb_unique_module_id_[x].resize(coordinate.y());
@@ -327,6 +328,7 @@ void DeviceRRGSB::resize_upon_need(const vtr::Point<size_t>& coordinate) {
   if (coordinate.y() + 1 > rr_gsb_[coordinate.x()].size()) {
     rr_gsb_[coordinate.x()].resize(coordinate.y() + 1,
                                    RRGSB(device_annotation_.gsb_version()));
+
     rr_gsb_edges_[coordinate.x()].resize(coordinate.y() + 1);
     sb_unique_module_id_[coordinate.x()].resize(coordinate.y() + 1);
 
@@ -806,4 +808,13 @@ void DeviceRRGSB::preload_unique_sb_module(
       sb_unique_module_id_[block_coordinate.x()][block_coordinate.y()];
   }
 }
+
+/* Get the version of a GSB */
+e_gsb_version DeviceRRGSB::get_gsb_version() const { return gsb_version_; }
+
+/* Set the version of a GSB */
+void DeviceRRGSB::set_gsb_version(const e_gsb_version& version) {
+  gsb_version_ = version;
+}
+
 } /* End namespace openfpga*/

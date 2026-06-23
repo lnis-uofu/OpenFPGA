@@ -194,9 +194,16 @@ link_openfpga_arch
 
     Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges, this is performed after executing `--sort_gsb_chan_node_in_edges` option.
 
+  .. option:: --gsb_version
+
+    Can be  [ ``none`` | ``1`` | ``2`` ]. Specify the version for General Switch Blocks (GSBs), which will impact the outputs of GSB file. See details in :ref:`openfpga_setup_command_write_gsb_to_xml`. This version must be consistent with the GSB version when calling VPR. By default , ``1`` is considered.
+
   .. option:: --verbose
 
     Show verbose log
+
+
+.. _openfpga_setup_command_write_gsb_to_xml:
 
 write_gsb_to_xml
 ~~~~~~~~~~~~~~~~

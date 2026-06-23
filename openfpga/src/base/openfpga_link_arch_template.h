@@ -52,6 +52,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
   CommandOptionId opt_reorder_incoming_edges =
     cmd.option("reorder_incoming_edges");
+  CommandOptionId opt_gsb_version = cmd.option("gsb_version");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Capture the GSB version VPR used so that the GSB annotation can later build
@@ -124,7 +125,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    in_edges, cmd_context.option_enable(cmd, opt_verbose));
+    in_edges, gsb_version, cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
