@@ -12,9 +12,6 @@
 /* Header from archfpga library */
 #include "physical_types.h"
 
-/* Header from vpr library (for e_gsb_version) */
-#include "vpr_types.h"
-
 /* Header from openfpgautil library */
 #include "arch_direct.h"
 #include "circuit_library.h"
@@ -106,11 +103,8 @@ class VprDeviceAnnotation {
   t_logical_block_type_ptr physical_equivalent_site(
     t_physical_tile_type_ptr physical_tile,
     const std::string& sub_tile_name) const;
-  /* The GSB version that VPR used to build the tileable routing resource graph */
-  e_gsb_version gsb_version() const;
 
  public: /* Public mutators */
-  void set_gsb_version(const e_gsb_version& gsb_version);
   void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
   void add_physical_pb_type(t_pb_type* operating_pb_type,
                             t_pb_type* physical_pb_type);
@@ -173,12 +167,6 @@ class VprDeviceAnnotation {
     t_logical_block_type_ptr phy_site);
 
  private: /* Internal data */
-  /* The GSB version that VPR used to build the tileable routing resource graph.
-   * Captured from the VPR device context during architecture linking.
-   * gsb_version_set_ guards against reading the version before it is set. */
-  e_gsb_version gsb_version_ = e_gsb_version::NOT_CRR;
-  bool gsb_version_set_ = false;
-
   /* Pair a regular pb_type to its physical pb_type */
   std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
   std::map<t_pb_type*, float> physical_pb_type_index_factors_;

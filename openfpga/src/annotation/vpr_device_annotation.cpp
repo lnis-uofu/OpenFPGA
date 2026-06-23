@@ -469,22 +469,9 @@ t_logical_block_type_ptr VprDeviceAnnotation::physical_equivalent_site(
   return site_result->second;
 }
 
-e_gsb_version VprDeviceAnnotation::gsb_version() const {
-  VTR_ASSERT_OPT_MSG(gsb_version_set_,
-                     "Attempted to read the GSB version from the device "
-                     "annotation before it was set (set_gsb_version() must be "
-                     "called during architecture linking)");
-  return gsb_version_;
-}
-
 /************************************************************************
  * Public mutators
  ***********************************************************************/
-void VprDeviceAnnotation::set_gsb_version(const e_gsb_version& gsb_version) {
-  gsb_version_ = gsb_version;
-  gsb_version_set_ = true;
-}
-
 void VprDeviceAnnotation::add_pb_type_physical_mode(t_pb_type* pb_type,
                                                     t_mode* physical_mode) {
   /* Warn any override attempt */
