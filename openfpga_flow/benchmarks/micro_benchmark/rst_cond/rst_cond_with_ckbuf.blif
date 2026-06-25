@@ -9,7 +9,6 @@
 .names $undef
 .names rst_i rst_cond_i int_rst
 11 1
-.names int_rst int_rst_ckbuf
-1 1
+.subckt ckbuf in=int_rst out=int_rst_ckbuf
 .subckt dffr C=clk_i D=d_i Q=q_o R=int_rst_ckbuf
 .end
