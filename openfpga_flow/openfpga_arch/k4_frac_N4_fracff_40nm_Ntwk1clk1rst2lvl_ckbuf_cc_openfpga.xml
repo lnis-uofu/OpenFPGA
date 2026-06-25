@@ -65,15 +65,14 @@
         10e-12
       </delay_matrix>
     </circuit_model>
-		<circuit_model type="inv_buf" name="CKBUF_WRAPPER" prefix="CKBUF_WRAPPER" is_default="false">
-			<design_technology type="cmos" topology="buffer" size="1" num_level="2" f_per_stage="2" />
-			<device_technology device_model_name="logic" />
-			<port type="input" prefix="in" lib_name="in_i" size="1" />
-			<port type="output" prefix="out" lib_name="out_o" size="1" />
-			<delay_matrix type="rise" in_port="in" out_port="out">10e-12</delay_matrix>
-			<delay_matrix type="fall" in_port="in" out_port="out">10e-12</delay_matrix>
-		</circuit_model>
-
+    <circuit_model type="inv_buf" name="CKBUF_WRAPPER" prefix="CKBUF_WRAPPER" is_default="false">
+      <design_technology type="cmos" topology="buffer" size="1" num_level="2" f_per_stage="2"/>
+      <device_technology device_model_name="logic"/>
+      <port type="input" prefix="in" lib_name="in_i" size="1"/>
+      <port type="output" prefix="out" lib_name="out_o" size="1"/>
+      <delay_matrix type="rise" in_port="in" out_port="out">10e-12</delay_matrix>
+      <delay_matrix type="fall" in_port="in" out_port="out">10e-12</delay_matrix>
+    </circuit_model>
     <circuit_model type="gate" name="OR2" prefix="OR2" is_default="true">
       <design_technology type="cmos" topology="OR"/>
       <device_technology device_model_name="logic"/>
@@ -218,7 +217,7 @@
     </global_port>
   </tile_annotations>
   <pb_type_annotations>
-    <pb_type name="ckbuf[ckbuf_physical_mode].ckbuf_core" circuit_model_name="CKBUF_WRAPPER" />
+    <pb_type name="ckbuf[ckbuf_physical_mode].ckbuf_core" circuit_model_name="CKBUF_WRAPPER"/>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
     <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/>
