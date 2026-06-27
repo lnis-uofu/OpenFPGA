@@ -14,7 +14,7 @@
       <all from_pin="op_clk[0:0]" to_pin="clb[0:0].clk[0:0]"/>
     </taps>
   </clock_network>  
-  <clock_network name="rst_tree_2lvl" global_port="op_reset[0:0]"> 
+  <clock_network name="rst_tree_2lvl" global_port="op_reset[0:1]"> 
     <spine name="rst_spine_lvl0" start_x="0" start_y="1" end_x="2" end_y="1"> 
       <intermediate_driver x="0" y="1">
         <tap from_pin="clb[1:1].out[0:0]" to_pin="op_reset[0:0]"/>
@@ -31,6 +31,8 @@
     <spine name="rst_rib_lvl1_sw1_lower" start_x="2" start_y="1" end_x="2" end_y="1" type="CHANY" direction="DEC_DIRECTION"/>
     <taps>
       <all from_pin="op_reset[0:0]" to_pin="clb[0:0].reset[0:0]"/>
+      <all from_pin="op_reset[1:1]" to_pin="clb[0:0].I[0:11]"/>
+      <all from_pin="op_reset[1:1]" to_pin="clb[0:0].reset[0:0]"/>
     </taps>
   </clock_network>  
 </clock_networks> 
