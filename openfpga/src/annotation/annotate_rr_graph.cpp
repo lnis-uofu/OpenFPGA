@@ -425,10 +425,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       continue;
     }
     /* Collect IPIN rr_nodes*/
-    /* Skip empty grids */
-    if (vpr_device_ctx.EMPTY_PHYSICAL_TILE_TYPE == vpr_device_ctx.grid.get_physical_type({ix, iy, 0})) {
-      continue;
-    }
     temp_ipin_rr_nodes = find_rr_graph_grid_nodes(
       vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, ix, iy,
       e_rr_type::IPIN, ipin_rr_node_grid_side, include_clock);
