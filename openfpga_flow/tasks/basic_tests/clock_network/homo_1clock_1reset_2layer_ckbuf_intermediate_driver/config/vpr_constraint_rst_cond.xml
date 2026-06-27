@@ -5,4 +5,9 @@
       <add_region x_low="1" y_low="1" x_high="1" y_high="1" subtile="1"/>
     </partition>
   </partition_list>
+  <global_route_constraints>
+    <set_global_signal name="rst_i" route_model="ideal" />
+    <set_global_signal name="int_rst_ckbuf" route_model="ideal" />
+    <set_global_signal name="clk_i" route_model="ideal" />
+  </global_route_constraints>
 </vpr_constraints>
