@@ -135,32 +135,44 @@ void annotate_rr_node_previous_nodes(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
   VprRoutingAnnotation& vpr_routing_annotation, const bool& verbose) {
   size_t counter = 0;
-  VTR_LOG("Annotating previous nodes for rr_node...");
-  VTR_LOGV(verbose, "\n");
+  VTR_LOG("Annotating previous nodes for rr_node...\n");
 
   auto& netlist = clustering_ctx.clb_nlist;
 
   for (auto net_id : netlist.nets()) {
     /* Ignore nets that are not routed */
     if (true == netlist.net_is_ignored(net_id)) {
+      VTR_LOGV(verbose, "Bypass net '%s' as marked to be ignored\n", netlist.net_name(net_id).c_str());
       continue;
     }
     /* Ignore used in local cluster only, reserved one CLB pin */
     if (false == netlist.net_sinks(net_id).size()) {
+      VTR_LOGV(verbose, "Bypass net '%s' as it is fully resolved inside clusters\n", netlist.net_name(net_id).c_str());
       continue;
     }
 
     auto& tree = get_route_tree_from_cluster_net_id(net_id);
     if (!tree) {
+      VTR_LOGV(verbose, "Bypass net '%s' as it does not have a routing trace\n", netlist.net_name(net_id).c_str());
       continue;
     }
 
+    VTR_LOGV(verbose, "Annotating net '%s' based on its routing trace\n", netlist.net_name(net_id).c_str());
     for (auto& rt_node : tree->all_nodes()) {
       RRNodeId rr_node = rt_node.inode;
       auto parent = rt_node.parent();
       vpr_routing_annotation.set_rr_node_prev_node(
         device_ctx.rr_graph, rr_node,
         parent ? parent->inode : RRNodeId::INVALID());
+      if (parent) {
+        VTR_LOGV(verbose, "Current node: %s\n ->Previous node: %s\n\n",
+                          device_ctx.rr_graph.node_coordinate_to_string(rr_node).c_str(),
+                          device_ctx.rr_graph.node_coordinate_to_string(parent->inode).c_str());
+      } else {
+        VTR_LOGV(verbose, "Routing trace root node: %s\n",  
+                          device_ctx.rr_graph.node_coordinate_to_string(rr_node).c_str());
+      }
+      counter++;
     }
   }
 
