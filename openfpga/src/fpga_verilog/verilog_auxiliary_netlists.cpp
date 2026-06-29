@@ -109,8 +109,8 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     fp, std::string("------ Include user-defined netlists -----"));
   for (const std::string& user_defined_netlist :
        find_circuit_library_unique_verilog_netlists(circuit_lib)) {
-    std::filesystem::path src_dir_fpath = std::filesystem::absolute(std::filesystem::path(src_dir));
-    std::filesystem::path curr_nlist_fpath = std::filesystem::absolute(std::filesystem::path(user_defined_netlist);
+    std::filesystem::path src_dir_fpath = std::filesystem::absolute(std::filesystem::path(src_dir_path));
+    std::filesystem::path curr_nlist_fpath = std::filesystem::absolute(std::filesystem::path(user_defined_netlist));
     /* User defined netlist may contain directories */
     if (use_relative_path) {
       curr_nlist_fpath = std::filesystem::relative(curr_nlist_fpath, src_dir_fpath);
