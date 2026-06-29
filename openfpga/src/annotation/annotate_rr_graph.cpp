@@ -506,11 +506,10 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        */
       vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
                                        vpr_device_ctx.grid.height() - 1);
-      const RRGSB& rr_gsb = build_rr_gsb(vpr_device_ctx, sub_gsb_range, layer,
-                                         vtr::Point<size_t>(ix, iy),
-                                         vpr_device_ctx.arch->perimeter_cb,
-                                         include_clock, in_edges, allow_gsb_dangling_opin,
-                                         gsb_version);
+      const RRGSB& rr_gsb = build_rr_gsb(
+        vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
+        vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
+        allow_gsb_dangling_opin, gsb_version);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
