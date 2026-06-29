@@ -8,8 +8,8 @@
 `include "fpga_defines.v"
 
 // ------ Include user-defined netlists -----
-`include "/home/xifan/github/OpenFPGA/openfpga_flow/openfpga_cell_library/verilog/dff.v"
-`include "/home/xifan/github/OpenFPGA/openfpga_flow/openfpga_cell_library/verilog/gpio.v"
+`include "dff.v"
+`include "gpio.v"
 // ------ Include primitive module netlists -----
 `include "sub_module/inv_buf_passgate.v"
 `include "sub_module/arch_encoder.v"
