@@ -21,6 +21,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             const bool& include_clock,
                             const RRGraphInEdges& in_edges,
                             const e_gsb_version& gsb_version,
+                            const bool& allow_gsb_dangling_opin,
                             const bool& verbose_output);
 
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
