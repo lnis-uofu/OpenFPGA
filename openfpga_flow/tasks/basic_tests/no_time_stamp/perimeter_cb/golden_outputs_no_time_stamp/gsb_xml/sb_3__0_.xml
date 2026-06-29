@@ -1,0 +1,59 @@
+<rr_sb x="3" y="0" num_sides="4">
+	<CHANX side="left" index="1" node_id="725" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="3" node_id="725" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="3" node_id="741" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="3" node_id="741" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="5" node_id="727" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="7" node_id="727" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="7" node_id="743" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="7" node_id="743" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="9" node_id="729" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="11" node_id="729" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="11" node_id="745" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="11" node_id="745" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="13" node_id="731" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="15" node_id="731" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="15" node_id="747" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="15" node_id="747" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="17" node_id="733" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="19" node_id="733" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="19" node_id="749" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="19" node_id="749" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="21" node_id="735" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="23" node_id="735" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="23" node_id="751" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="23" node_id="751" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="25" node_id="737" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="27" node_id="737" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="27" node_id="753" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="27" node_id="753" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="29" node_id="739" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="31" node_id="739" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="31" node_id="755" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="31" node_id="755" segment_id="1" segment_name="L4" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="33" node_id="1175" segment_id="0" segment_name="L1" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="33" node_id="1175" segment_id="0" segment_name="L1" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="35" node_id="1177" segment_id="0" segment_name="L1" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="35" node_id="1177" segment_id="0" segment_name="L1" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+	<CHANX side="left" index="37" node_id="1179" segment_id="0" segment_name="L1" mux_size="0" sb_module_pin_name="chanx_left_out">
+		<driver_node type="CHANX" side="right" index="37" node_id="1179" segment_id="0" segment_name="L1" sb_module_pin_name="chanx_right_in"/>
+	</CHANX>
+</rr_sb>
