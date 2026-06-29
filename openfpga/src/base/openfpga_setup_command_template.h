@@ -219,7 +219,7 @@ ShellCommandId add_link_arch_command_template(
                        "Reorder the incoming edges for each routing track "
                        "output node in General Switch Blocks (GSBs)");
   shell_cmd.add_option("allow_gsb_dangling_opin", false,
-                       "Allow output port exists withouth driving any routing tracks "
+                       "Allow output port exists without driving any routing tracks "
                        "in General Switch Blocks (GSBs)");
 
   /* Add an option '--gsb_version'*/
