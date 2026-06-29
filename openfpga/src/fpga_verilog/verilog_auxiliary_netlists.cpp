@@ -3,8 +3,8 @@
  * or code blocks, with a focus on
  * `include user-defined or auto-generated netlists in Verilog format
  *******************************************************************/
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -112,7 +112,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
     std::filesystem::path curr_nlist_fpath = user_defined_netlist;
     /* User defined netlist may contain directories */
     if (use_relative_path && curr_nlist_fpath.is_absolute()) {
-      curr_nlist_fpath = curr_nlist_fpath.filename(); 
+      curr_nlist_fpath = curr_nlist_fpath.filename();
     }
     print_verilog_include_netlist(fp, curr_nlist_fpath.string());
   }
