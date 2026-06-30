@@ -41,5 +41,11 @@ build_fabric_bitstream
 # bus-based mux that lost its shared config bit would change these counts.
 report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml --no_time_stamp
 
+# Write the fabric Verilog netlists into the golden output directory. Only the
+# DSP tile module is tracked as golden (see the .gitignore in the golden dir);
+# it lets CI verify the bus mux config-block connectivity in the netlist, i.e.
+# the single shared memory feeding all the per-bit muxes.
+write_fabric_verilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --no_time_stamp
+
 # Finish and exit OpenFPGA
 exit
