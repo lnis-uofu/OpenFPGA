@@ -188,6 +188,8 @@ echo -e "Testing K4N4 with routing channel width distribution: x = 0.8, y = 1.0 
 run-task basic_tests/k4_series/k4n4_chandistr_segdist $@
 echo -e "Testing K4N4 with 32-bit fracturable multiplier";
 run-task basic_tests/k4_series/k4n4_frac_mult $@
+echo -e "Testing K4N4 with 32-bit fracturable multiplier using a bus-based mux (shared config bit)";
+run-task basic_tests/k4_series/k4n4_frac_mult_busmux $@
 echo -e "Testing K4N5 with pattern based local routing";
 run-task basic_tests/k4_series/k4n5_pattern_local_routing $@
 echo -e "Testing K4N4 with custom I/O location syntax";
@@ -356,6 +358,8 @@ run-task basic_tests/no_time_stamp/device_1x1 $@
 run-task basic_tests/no_time_stamp/device_4x4 $@
 run-task basic_tests/no_time_stamp/no_cout_in_gsb $@
 run-task basic_tests/no_time_stamp/dump_waveform $@
+echo -e "Testing bus-based mux shared config bit via golden bitstream distribution";
+run-task basic_tests/no_time_stamp/frac_dsp_busmux $@
 run-task basic_tests/no_time_stamp/perimeter_cb $@
 
 echo -e "Testing report reference to file";
