@@ -194,6 +194,10 @@ link_openfpga_arch
 
     Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges, this is performed after executing `--sort_gsb_chan_node_in_edges` option.
 
+  .. option:: --allow_gsb_dangling_opin
+
+    Allow dangling output ports exist without driving any routing tracks in General Switch Blocks (GSBs). By default, it is disabled to keep netlist clean and maximize the efficiency in uniquifying routing blocks. Enable it to ensure support on legacy devices.
+
   .. option:: --gsb_version
 
     Can be  [ ``none`` | ``1`` | ``2`` ]. Specify the version for General Switch Blocks (GSBs), which will impact the outputs of GSB file. See details in :ref:`openfpga_setup_command_write_gsb_to_xml`. This version must be consistent with the GSB version when calling VPR. By default , ``1`` is considered.

@@ -52,6 +52,9 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
   CommandOptionId opt_reorder_incoming_edges =
     cmd.option("reorder_incoming_edges");
+  CommandOptionId opt_allow_gsb_dangling_opin =
+    cmd.option("allow_gsb_dangling_opin");
+
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Build fast look-up between physical tile pin index and port information */

@@ -36,6 +36,7 @@ Please reveal the following architecture features in the names to help quickly s
 - GlobalTile<Int>Clk: How many clocks are defined through global ports from physical tiles. <Int> is the number of clocks
 - ecb: *Enhanced Connection Block* where connection blocks includes feedback connections
 - custrrg: *custom rrgraph* where IOs are placed inside the first and last column than on periphery
+- ckbuf: Embedded clock buffer cell to constrain clock mapping location. This is to support local clock and reset generation
 
 Other features are used in naming should be listed here.
 
