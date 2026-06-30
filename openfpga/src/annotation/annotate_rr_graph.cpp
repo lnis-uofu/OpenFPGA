@@ -134,6 +134,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_coord,
                           const bool& perimeter_cb, const bool& include_clock,
                           const RRGraphInEdges& in_edges,
+                          const bool& allow_gsb_dangling_opin,
                           const e_gsb_version& gsb_version) {
   /* Create an object to return */
   RRGSB rr_gsb(gsb_version);
@@ -347,7 +348,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
          * originates in the current switch block */
-        if (!is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
+        if (!allow_gsb_dangling_opin &&
+            !is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
                                         inode)) {
           continue;
         }
@@ -471,6 +473,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             const bool& include_clock,
                             const RRGraphInEdges& in_edges,
                             const e_gsb_version& gsb_version,
+                            const bool& allow_gsb_dangling_opin,
                             const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
@@ -503,10 +506,10 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        */
       vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
                                        vpr_device_ctx.grid.height() - 1);
-      const RRGSB& rr_gsb = build_rr_gsb(vpr_device_ctx, sub_gsb_range, layer,
-                                         vtr::Point<size_t>(ix, iy),
-                                         vpr_device_ctx.arch->perimeter_cb,
-                                         include_clock, in_edges, gsb_version);
+      const RRGSB& rr_gsb = build_rr_gsb(
+        vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
+        vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
+        allow_gsb_dangling_opin, gsb_version);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

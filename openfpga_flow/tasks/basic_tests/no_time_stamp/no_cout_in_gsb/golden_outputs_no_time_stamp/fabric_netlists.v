@@ -8,9 +8,9 @@
 `include "fpga_defines.v"
 
 // ------ Include user-defined netlists -----
-`include "openfpga_flow/openfpga_cell_library/verilog/dff.v"
-`include "openfpga_flow/openfpga_cell_library/verilog/gpio.v"
-`include "openfpga_flow/openfpga_cell_library/verilog/adder.v"
+`include "../../../../../openfpga_cell_library/verilog/dff.v"
+`include "../../../../../../../OpenFPGAopenfpga_flow/openfpga_cell_library/verilog/gpio.v"
+`include "../../../../../../../OpenFPGAopenfpga_flow/openfpga_cell_library/verilog/adder.v"
 // ------ Include primitive module netlists -----
 `include "sub_module/inv_buf_passgate.v"
 `include "sub_module/arch_encoder.v"
