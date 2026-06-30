@@ -36,6 +36,13 @@ build_architecture_bitstream --write_file fabric_independent_bitstream.xml
 # Build fabric-dependent bitstream
 build_fabric_bitstream
 
+# Write the fabric (fabric-dependent) bitstream to a golden file, paths only.
+# --path_only emits the configuration-bit hierarchy paths (no values), which is
+# deterministic and structural. For a bus-based mux the shared configuration
+# memory appears once and is referenced by every per-bit mux path, so this
+# golden verifies the shared config bit in the actual fabric bitstream.
+write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml --format xml --path_only --no_time_stamp
+
 # Report bitstream distribution to a golden file (no time stamp so it can be
 # diffed in CI). This captures the per-block configuration-bit counts; a
 # bus-based mux that lost its shared config bit would change these counts.
