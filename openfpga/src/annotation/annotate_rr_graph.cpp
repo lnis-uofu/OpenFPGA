@@ -25,52 +25,53 @@ namespace openfpga {
 /*********************************************************************
  * Find a list of rr_nodes that locate at a side of a grid
  **********************************************************************/
-static std::vector<RRNodeId> openfpga_find_rr_graph_grid_nodes(const RRGraphView& rr_graph,
-                                               const DeviceGrid& device_grid,
-                                               const size_t& layer,
-                                               const int& x,
-                                               const int& y,
-                                               const e_rr_type& rr_type,
-                                               const e_side& side,
-                                               bool include_ignored_global_pins) {
-    std::vector<RRNodeId> indices;
+static std::vector<RRNodeId> openfpga_find_rr_graph_grid_nodes(
+  const RRGraphView& rr_graph, const DeviceGrid& device_grid,
+  const size_t& layer, const int& x, const int& y, const e_rr_type& rr_type,
+  const e_side& side, bool include_ignored_global_pins) {
+  std::vector<RRNodeId> indices;
 
-    VTR_ASSERT(rr_type == e_rr_type::IPIN || rr_type == e_rr_type::OPIN);
+  VTR_ASSERT(rr_type == e_rr_type::IPIN || rr_type == e_rr_type::OPIN);
 
-    /* Ensure that (x, y) is a valid location in grids */
-    if (size_t(x) > device_grid.width() - 1 || size_t(y) > device_grid.height() - 1) {
-        return indices;
-    }
-
-    /* Ensure we have a valid side */
-    VTR_ASSERT(side != NUM_2D_SIDES);
-
-    /* Find all the pins on the side of the grid */
-    t_physical_tile_loc tile_loc(x, y, layer);
-    int width_offset = device_grid.get_width_offset(tile_loc);
-    int height_offset = device_grid.get_height_offset(tile_loc);
-
-    for (int pin = 0; pin < device_grid.get_physical_type(tile_loc)->num_pins; ++pin) {
-        /* Skip those pins have been ignored during rr_graph build-up */
-        if (device_grid.get_physical_type(tile_loc)->is_ignored_pin[pin] && device_grid.get_physical_type(tile_loc)->is_pin_global[pin]) {
-            /* If specified, force to include all the ignored pins */
-            if (!include_ignored_global_pins) {
-                continue;
-            }
-        }
-        if (false == device_grid.get_physical_type(tile_loc)->pinloc[width_offset][height_offset][side][pin]) {
-            /* Not the pin on this side, we skip */
-            continue;
-        }
-
-        /* Try to find the rr node */
-        RRNodeId rr_node_index = rr_graph.node_lookup().find_node(layer, x, y, rr_type, pin, side);
-        if (rr_node_index != RRNodeId::INVALID()) {
-            indices.push_back(rr_node_index);
-        }
-    }
-
+  /* Ensure that (x, y) is a valid location in grids */
+  if (size_t(x) > device_grid.width() - 1 ||
+      size_t(y) > device_grid.height() - 1) {
     return indices;
+  }
+
+  /* Ensure we have a valid side */
+  VTR_ASSERT(side != NUM_2D_SIDES);
+
+  /* Find all the pins on the side of the grid */
+  t_physical_tile_loc tile_loc(x, y, layer);
+  int width_offset = device_grid.get_width_offset(tile_loc);
+  int height_offset = device_grid.get_height_offset(tile_loc);
+
+  for (int pin = 0; pin < device_grid.get_physical_type(tile_loc)->num_pins;
+       ++pin) {
+    /* Skip those pins have been ignored during rr_graph build-up */
+    if (device_grid.get_physical_type(tile_loc)->is_ignored_pin[pin] &&
+        device_grid.get_physical_type(tile_loc)->is_pin_global[pin]) {
+      /* If specified, force to include all the ignored pins */
+      if (!include_ignored_global_pins) {
+        continue;
+      }
+    }
+    if (false == device_grid.get_physical_type(tile_loc)
+                   ->pinloc[width_offset][height_offset][side][pin]) {
+      /* Not the pin on this side, we skip */
+      continue;
+    }
+
+    /* Try to find the rr node */
+    RRNodeId rr_node_index =
+      rr_graph.node_lookup().find_node(layer, x, y, rr_type, pin, side);
+    if (rr_node_index != RRNodeId::INVALID()) {
+      indices.push_back(rr_node_index);
+    }
+  }
+
+  return indices;
 }
 
 /* Returns true if the given OPIN node drives at least one CHANX/Y wire that
