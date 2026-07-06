@@ -227,21 +227,10 @@ int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
     "Append clock network to routing resource graph");
 
   CommandOptionId opt_verbose = cmd.option("verbose");
-  int rr_graph_x_offset = 0;
-  int rr_graph_y_offset = 0;
-  if (cmd_context.option_enable(cmd, cmd.option("rr_graph_x_offset"))) {
-    rr_graph_x_offset =
-      std::stoi(cmd_context.option_value(cmd, cmd.option("rr_graph_x_offset")));
-  }
-  if (cmd_context.option_enable(cmd, cmd.option("rr_graph_y_offset"))) {
-    rr_graph_y_offset =
-      std::stoi(cmd_context.option_value(cmd, cmd.option("rr_graph_y_offset")));
-  }
 
   return append_clock_rr_graph(
     g_vpr_ctx.mutable_device(), openfpga_ctx.mutable_clock_rr_lookup(),
-    openfpga_ctx.clock_arch(), rr_graph_x_offset, rr_graph_y_offset,
-    cmd_context.option_enable(cmd, opt_verbose));
+    openfpga_ctx.clock_arch(), cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************

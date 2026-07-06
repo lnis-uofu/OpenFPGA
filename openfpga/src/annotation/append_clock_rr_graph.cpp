@@ -44,10 +44,11 @@ static size_t estimate_clock_rr_graph_num_chan_nodes(
  * which are in the type of CHANX and CHANY
  * Note that switch blocks do not require any new nodes but new edges
  *******************************************************************/
-static size_t estimate_clock_rr_graph_num_nodes(
-  const DeviceGrid& grids, const size_t& layer, const int rr_graph_x_offset,
-  const int rr_graph_y_offset, const bool& perimeter_cb,
-  const bool& through_channel, const ClockNetwork& clk_ntwk) {
+static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
+                                                const size_t& layer,
+                                                const bool& perimeter_cb,
+                                                const bool& through_channel,
+                                                const ClockNetwork& clk_ntwk) {
   size_t num_nodes = 0;
   vtr::Rect<size_t> chanx_bb(1, 0, grids.width() - 1, grids.height() - 1);
   if (perimeter_cb) {
@@ -63,8 +64,7 @@ static size_t estimate_clock_rr_graph_num_nodes(
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chanx_exist(grids, layer, chanx_coord, rr_graph_x_offset,
-                                   perimeter_cb))) {
+          (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
       /* Estimate the routing tracks required by clock routing only */
@@ -87,8 +87,7 @@ static size_t estimate_clock_rr_graph_num_nodes(
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chany_exist(grids, layer, chany_coord, rr_graph_y_offset,
-                                   perimeter_cb))) {
+          (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
       /* Estimate the routing tracks required by clock routing only */
@@ -172,8 +171,7 @@ static void add_rr_graph_block_clock_nodes(
 static void add_rr_graph_clock_nodes(
   RRGraphBuilder& rr_graph_builder, RRClockSpatialLookup& clk_rr_lookup,
   const RRGraphView& rr_graph_view, const DeviceGrid& grids,
-  const size_t& layer, const int rr_graph_x_offset, const int rr_graph_y_offset,
-  const bool& perimeter_cb, const bool& through_channel,
+  const size_t& layer, const bool& perimeter_cb, const bool& through_channel,
   const ClockNetwork& clk_ntwk, const bool& verbose) {
   /* Pre-allocate memory: Must do otherwise data will be messed up! */
   clk_rr_lookup.reserve_nodes(grids.width(), grids.height(),
@@ -194,8 +192,7 @@ static void add_rr_graph_clock_nodes(
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chanx_exist(grids, layer, chanx_coord, rr_graph_x_offset,
-                                   perimeter_cb))) {
+          (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_nodes(
@@ -218,8 +215,7 @@ static void add_rr_graph_clock_nodes(
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chany_exist(grids, layer, chany_coord, rr_graph_y_offset,
-                                   perimeter_cb))) {
+          (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_nodes(
@@ -831,8 +827,7 @@ static int add_rr_graph_opin2clk_intermediate_edges(
 static void add_rr_graph_clock_edges(
   RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
   const RRClockSpatialLookup& clk_rr_lookup, const RRGraphView& rr_graph_view,
-  const DeviceGrid& grids, const size_t& layer, const int rr_graph_x_offset,
-  const int rr_graph_y_offset, const bool& perimeter_cb,
+  const DeviceGrid& grids, const size_t& layer, const bool& perimeter_cb,
   const bool& through_channel, const ClockNetwork& clk_ntwk,
   const bool& verbose) {
   vtr::Rect<size_t> chanx_bb(1, 0, grids.width() - 1, grids.height() - 1);
@@ -849,8 +844,7 @@ static void add_rr_graph_clock_edges(
       /* Bypass if the routing channel does not exist when through channels are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chanx_exist(grids, layer, chanx_coord, rr_graph_x_offset,
-                                   perimeter_cb))) {
+          (false == is_chanx_exist(grids, layer, chanx_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_edges(
@@ -873,8 +867,7 @@ static void add_rr_graph_clock_edges(
       /* Bypass if the routing channel does not exist when through channel are
        * not allowed */
       if ((false == through_channel) &&
-          (false == is_chany_exist(grids, layer, chany_coord, rr_graph_y_offset,
-                                   perimeter_cb))) {
+          (false == is_chany_exist(grids, layer, chany_coord, perimeter_cb))) {
         continue;
       }
       add_rr_graph_block_clock_edges(
@@ -901,9 +894,7 @@ static void add_rr_graph_clock_edges(
  *******************************************************************/
 int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
                           RRClockSpatialLookup& clk_rr_lookup,
-                          const ClockNetwork& clk_ntwk,
-                          const int rr_graph_x_offset,
-                          const int rr_graph_y_offset, const bool& verbose) {
+                          const ClockNetwork& clk_ntwk, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Appending programmable clock network to routing resource graph");
 
@@ -929,9 +920,8 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   /* Estimate the number of nodes and pre-allocate */
   size_t orig_num_nodes = vpr_device_ctx.rr_graph.num_nodes();
   size_t num_clock_nodes = estimate_clock_rr_graph_num_nodes(
-    vpr_device_ctx.grid, 0, rr_graph_x_offset, rr_graph_y_offset,
-    vpr_device_ctx.arch->perimeter_cb, vpr_device_ctx.arch->through_channel,
-    clk_ntwk);
+    vpr_device_ctx.grid, 0, vpr_device_ctx.arch->perimeter_cb,
+    vpr_device_ctx.arch->through_channel, clk_ntwk);
   vpr_device_ctx.rr_graph_builder.unlock_storage();
   vpr_device_ctx.rr_graph_builder.reserve_nodes(num_clock_nodes +
                                                 orig_num_nodes);
@@ -943,9 +933,8 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   /* Add clock nodes */
   add_rr_graph_clock_nodes(
     vpr_device_ctx.rr_graph_builder, clk_rr_lookup, vpr_device_ctx.rr_graph,
-    vpr_device_ctx.grid, 0, rr_graph_x_offset, rr_graph_y_offset,
-    vpr_device_ctx.arch->perimeter_cb, vpr_device_ctx.arch->through_channel,
-    clk_ntwk, verbose);
+    vpr_device_ctx.grid, 0, vpr_device_ctx.arch->perimeter_cb,
+    vpr_device_ctx.arch->through_channel, clk_ntwk, verbose);
   VTR_LOGV(verbose,
            "Added %lu clock nodes to routing "
            "resource graph.\n",
@@ -958,9 +947,9 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   add_rr_graph_clock_edges(
     vpr_device_ctx.rr_graph_builder, num_clock_edges,
     static_cast<const RRClockSpatialLookup&>(clk_rr_lookup),
-    vpr_device_ctx.rr_graph, vpr_device_ctx.grid, 0, rr_graph_x_offset,
-    rr_graph_y_offset, vpr_device_ctx.arch->perimeter_cb,
-    vpr_device_ctx.arch->through_channel, clk_ntwk, verbose);
+    vpr_device_ctx.rr_graph, vpr_device_ctx.grid, 0,
+    vpr_device_ctx.arch->perimeter_cb, vpr_device_ctx.arch->through_channel,
+    clk_ntwk, verbose);
   VTR_LOGV(verbose,
            "Added %lu clock edges to routing "
            "resource graph.\n",
