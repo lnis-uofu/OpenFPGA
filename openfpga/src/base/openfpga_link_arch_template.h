@@ -57,26 +57,8 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_gsb_version = cmd.option("gsb_version");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
-  /* TODO: The best to get the gsb version from RRGraphView when it is created.
-   * It can avoid mismatches between vpr options and here */
-  e_gsb_version gsb_version =
-    e_gsb_version::GSB_V1; /* Default GSB version is 1 */
-  if (cmd_context.option_enable(cmd, opt_gsb_version)) {
-    /* TODO: Encapsulate the string-to-enum conversion to a function */
-    std::string gsb_ver_str = cmd_context.option_value(cmd, opt_gsb_version);
-    if (gsb_ver_str == std::string("none")) {
-      gsb_version = e_gsb_version::NOT_CRR;
-    } else if (gsb_ver_str == std::string("1")) {
-      gsb_version = e_gsb_version::GSB_V1;
-    } else if (gsb_ver_str == std::string("2")) {
-      gsb_version = e_gsb_version::GSB_V2;
-    } else {
-      VTR_LOG_ERROR(
-        "Invalid GSB version '%s'. Supported versions are [ none | 1 | 2 ].\n",
-        gsb_ver_str.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-  }
+  /* Get the GSB version from the VPR device context (set during RR graph generation) */
+  e_gsb_version gsb_version = g_vpr_ctx.device().gsb_version;
 
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
@@ -244,10 +226,21 @@ int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
     "Append clock network to routing resource graph");
 
   CommandOptionId opt_verbose = cmd.option("verbose");
+  int rr_graph_x_offset = 0;
+  int rr_graph_y_offset = 0;
+  if (cmd_context.option_enable(cmd, cmd.option("rr_graph_x_offset"))) {
+    rr_graph_x_offset =
+      std::stoi(cmd_context.option_value(cmd, cmd.option("rr_graph_x_offset")));
+  }
+  if (cmd_context.option_enable(cmd, cmd.option("rr_graph_y_offset"))) {
+    rr_graph_y_offset =
+      std::stoi(cmd_context.option_value(cmd, cmd.option("rr_graph_y_offset")));
+  }
 
   return append_clock_rr_graph(
     g_vpr_ctx.mutable_device(), openfpga_ctx.mutable_clock_rr_lookup(),
-    openfpga_ctx.clock_arch(), cmd_context.option_enable(cmd, opt_verbose));
+    openfpga_ctx.clock_arch(), rr_graph_x_offset, rr_graph_y_offset,
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************

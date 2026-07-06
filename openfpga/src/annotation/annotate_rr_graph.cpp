@@ -2,6 +2,9 @@
  * This file includes functions that are used to annotate device-level
  * information, in particular the routing resource graph
  *******************************************************************/
+#include <algorithm>
+#include <unordered_set>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -15,6 +18,7 @@
 #include "openfpga_rr_graph_utils.h"
 #include "physical_types.h"
 #include "rr_graph_in_edges.h"
+#include "rr_graph_view.h"
 #include "rr_graph_view_util.h"
 #include "rr_gsb_edges.h"
 #include "tileable_rr_graph_utils.h"
@@ -126,6 +130,374 @@ static RRChan build_one_rr_chan(const DeviceContext& vpr_device_ctx,
   }
 
   return rr_chan;
+}
+
+/* Build a RRChan Object with the given channel type and coorindators */
+static RRChan build_rr_chan_for_gsb2(const RRGraphView& rr_graph,
+                                     const SideManager& side, const size_t& x,
+                                     const size_t& y) {
+  /* Create a rr_chan object and check if it is unique in the graph */
+  RRChan rr_chan;
+
+  /* Fill the information */
+  rr_chan.set_type(
+    (side.get_side() == e_side::TOP || side.get_side() == e_side::BOTTOM)
+      ? e_rr_type::CHANY
+      : e_rr_type::CHANX);
+
+  std::vector<RRNodeId> chan_outnodes =
+    find_rr_graph_chan_nodes(rr_graph, 0, x, y, rr_chan.get_type());
+
+  /* A track terminates at this GSB when, on the RIGHT/TOP sides its high
+   * coordinate equals the GSB coordinate, and on the LEFT/BOTTOM sides its low
+   * coordinate does. Such terminating tracks do not pass through the GSB and
+   * are filtered out. */
+  bool use_high_coord;
+  switch (side.get_side()) {
+    case e_side::RIGHT:
+    case e_side::TOP:
+      use_high_coord = true;
+      break;
+    case e_side::LEFT:
+    case e_side::BOTTOM:
+      use_high_coord = false;
+      break;
+    default:
+      VTR_LOG_ERROR("Invalid side for GSB channel: %s\n", side.c_str());
+      return rr_chan;
+  }
+
+  auto terminates_at_gsb = [&](const RRNodeId& chan_outnode) {
+    if (use_high_coord) {
+      return rr_graph.node_yhigh(chan_outnode) == (int)y &&
+             rr_graph.node_xhigh(chan_outnode) == (int)x;
+    }
+    return rr_graph.node_ylow(chan_outnode) == (int)y &&
+           rr_graph.node_xlow(chan_outnode) == (int)x;
+  };
+
+  /* Keep only the tracks that pass through this GSB (drop terminating ones),
+   * partitioned by routing direction so that INC and DEC tracks can be
+   * interleaved below. */
+  std::vector<RRNodeId> filted_chan_inc_outnodes;
+  std::vector<RRNodeId> filted_chan_dec_outnodes;
+  for (const RRNodeId& chan_outnode : chan_outnodes) {
+    if (terminates_at_gsb(chan_outnode)) {
+      continue;
+    }
+    switch (rr_graph.node_direction(chan_outnode)) {
+      case Direction::INC:
+        filted_chan_inc_outnodes.push_back(chan_outnode);
+        break;
+      case Direction::DEC:
+        filted_chan_dec_outnodes.push_back(chan_outnode);
+        break;
+      default:
+        VTR_LOG_ERROR("Invalid direction for GSB channel node: %s\n",
+                      side.c_str());
+    }
+  }
+
+  /* Sort each direction by track number so the interleaving below is
+   * deterministic and matches the physical track ordering. */
+  auto by_track_num = [&rr_graph](const RRNodeId& a, const RRNodeId& b) {
+    return rr_graph.node_track_num(a) < rr_graph.node_track_num(b);
+  };
+  std::sort(filted_chan_inc_outnodes.begin(), filted_chan_inc_outnodes.end(),
+            by_track_num);
+  std::sort(filted_chan_dec_outnodes.begin(), filted_chan_dec_outnodes.end(),
+            by_track_num);
+
+  VTR_ASSERT(filted_chan_inc_outnodes.size() ==
+             filted_chan_dec_outnodes.size());
+
+  /* Interleave INC and DEC tracks (inc[0], dec[0], inc[1], dec[1], ...). This
+   * track ordering is what the downstream switch-block wiring relies on. */
+  for (size_t i = 0; i < filted_chan_inc_outnodes.size(); ++i) {
+    rr_chan.add_node(rr_graph, filted_chan_inc_outnodes[i],
+                     rr_graph.node_segment(filted_chan_inc_outnodes[i]));
+    rr_chan.add_node(rr_graph, filted_chan_dec_outnodes[i],
+                     rr_graph.node_segment(filted_chan_dec_outnodes[i]));
+  }
+
+  return rr_chan;
+}
+
+static void print_gsb_info(const RRGSB& rr_gsb, const RRGraphView& rr_graph) {
+  VTR_LOG("========== Print GSB information ==========\n");
+  VTR_LOG("    GSB coordinate: (%zu, %zu)\n", rr_gsb.get_grid_coordinate().x(),
+          rr_gsb.get_grid_coordinate().y());
+
+  /* Count and print node types */
+  size_t num_ipin = 0, num_opin = 0, num_chan = 0, num_in_ports = 0,
+         num_out_ports = 0;
+
+  /* Count nodes by type */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    SideManager side_manager(side);
+
+    /* Count IPIN nodes */
+    num_ipin += rr_gsb.get_num_ipin_nodes(side_manager.get_side());
+
+    /* Count OPIN nodes */
+    num_opin += rr_gsb.get_num_opin_nodes(side_manager.get_side());
+
+    /* Count CHAN nodes */
+    num_chan += rr_gsb.get_chan_width(side_manager.get_side());
+
+    VTR_LOG("  Side %s\n", side_manager.c_str());
+    VTR_LOG("    Number of IPIN nodes: %zu\n",
+            rr_gsb.get_num_ipin_nodes(side_manager.get_side()));
+    VTR_LOG("    Number of OPIN nodes: %zu\n",
+            rr_gsb.get_num_opin_nodes(side_manager.get_side()));
+    VTR_LOG("    Number of CHANX nodes: %zu\n",
+            rr_gsb.get_chan_width(side_manager.get_side()));
+
+    for (size_t track_id = 0;
+         track_id < rr_gsb.get_chan_width(side_manager.get_side());
+         ++track_id) {
+      RRNodeId chan_node =
+        rr_gsb.get_chan_node(side_manager.get_side(), track_id);
+      std::string node_info = rr_graph.node_coordinate_to_string(chan_node);
+      VTR_LOG("      Channel node: %7s %s track=%d %s %s\n",
+              side_manager.c_str(),
+              rr_graph.node_direction_string(chan_node).c_str(),
+              rr_graph.node_track_num(chan_node), node_info.c_str(),
+              rr_gsb.get_chan_node_direction(side_manager.get_side(),
+                                             track_id) == OUT_PORT
+                ? "OUT_PORT"
+                : "IN_PORT");
+      if (rr_gsb.get_chan_node_direction(side_manager.get_side(), track_id) ==
+          OUT_PORT) {
+        num_out_ports++;
+      } else {
+        num_in_ports++;
+      }
+    }
+
+    for (size_t ipin_id = 0;
+         ipin_id < rr_gsb.get_num_ipin_nodes(side_manager.get_side());
+         ++ipin_id) {
+      RRNodeId ipin_node =
+        rr_gsb.get_ipin_node(side_manager.get_side(), ipin_id);
+      std::string node_info = rr_graph.node_coordinate_to_string(ipin_node);
+      VTR_LOG("      IPIN node: %7s %s\n", side_manager.c_str(),
+              node_info.c_str());
+    }
+
+    for (size_t opin_id = 0;
+         opin_id < rr_gsb.get_num_opin_nodes(side_manager.get_side());
+         ++opin_id) {
+      RRNodeId opin_node =
+        rr_gsb.get_opin_node(side_manager.get_side(), opin_id);
+      std::string node_info = rr_graph.node_coordinate_to_string(opin_node);
+      VTR_LOG("      OPIN node: %7s %s\n", side_manager.c_str(),
+              node_info.c_str());
+    }
+  }
+
+  VTR_LOG("  Total Number of IPIN nodes: %zu\n", num_ipin);
+  VTR_LOG("  Total Number of OPIN nodes: %zu\n", num_opin);
+  VTR_LOG("  Total Number of CHANX nodes: %zu\n", num_chan);
+  VTR_LOG("  Total Number of IN_PORTS: %zu\n", num_in_ports);
+  VTR_LOG("  Total Number of OUT_PORTS: %zu\n", num_out_ports);
+}
+
+static RRGSB build_rr_gsb2(const DeviceContext& vpr_device_ctx,
+                           const vtr::Point<size_t>& gsb_range,
+                           const size_t& layer,
+                           const vtr::Point<size_t>& gsb_coord,
+                           const bool& perimeter_cb, const bool& include_clock,
+                           const RRGraphInEdges& in_edges,
+                           const bool& allow_gsb_dangling_opin,
+                           const bool& verbose) {
+  VTR_ASSERT(vpr_device_ctx.gsb_version == e_gsb_version::GSB_V2);
+
+  /* Create an object to return */
+  RRGSB rr_gsb(e_gsb_version::GSB_V2);
+
+  VTR_ASSERT(gsb_coord.x() <= gsb_range.x());
+  VTR_ASSERT(gsb_coord.y() <= gsb_range.y());
+
+  /* Coordinator initialization */
+  rr_gsb.set_coordinate(gsb_coord.x(), gsb_coord.y());
+
+  /* Basic information*/
+  rr_gsb.init_num_sides(4); /* Fixed number of sides */
+
+  /* Find all rr_nodes of channels */
+  /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    /* Local variables inside this for loop */
+    SideManager side_manager(side);
+    vtr::Point<size_t> coordinate = rr_gsb.get_grid_coordinate();
+    RRChan rr_chan;
+    rr_chan = build_rr_chan_for_gsb2(vpr_device_ctx.rr_graph, side_manager,
+                                     gsb_coord.x(), gsb_coord.y());
+
+    /* Organize channels from each side in GSB data structure */
+    if (0 < rr_chan.get_chan_width()) {
+      std::vector<enum PORTS> rr_chan_dir(rr_chan.get_chan_width());
+      for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+        RRNodeId node = rr_chan.get_node(itrack);
+        auto node_dir = vpr_device_ctx.rr_graph.node_direction(node);
+        int xlow = vpr_device_ctx.rr_graph.node_xlow(node);
+        int ylow = vpr_device_ctx.rr_graph.node_ylow(node);
+        int xhigh = vpr_device_ctx.rr_graph.node_xhigh(node);
+        int yhigh = vpr_device_ctx.rr_graph.node_yhigh(node);
+
+        /* Use signed copies of the GSB coordinate to compare against the signed
+         * node coordinates above without sign-conversion warnings. */
+        const int gsb_x = (int)gsb_coord.x();
+        const int gsb_y = (int)gsb_coord.y();
+
+        VTR_ASSERT(node_dir == Direction::INC || node_dir == Direction::DEC);
+
+        if (node_dir == Direction::INC && xlow <= gsb_x && ylow <= gsb_y) {
+          rr_chan_dir[itrack] = PORTS::OUT_PORT;
+        } else if (node_dir == Direction::DEC && xhigh == gsb_x &&
+                   yhigh == gsb_y) {
+          rr_chan_dir[itrack] = PORTS::OUT_PORT;
+        } else {
+          rr_chan_dir[itrack] = PORTS::IN_PORT;
+        }
+
+        // Detect pass through channels and set them accordingly
+        switch (side) {
+          case TOP:
+            if (node_dir == Direction::INC && ylow < gsb_y) {
+              rr_chan_dir[itrack] = PORTS::OUT_PORT;
+            } else if (node_dir == Direction::DEC && yhigh > gsb_y) {
+              rr_chan_dir[itrack] = PORTS::IN_PORT;
+            }
+            break;
+          case RIGHT:
+            if (node_dir == Direction::INC && xlow < gsb_x) {
+              rr_chan_dir[itrack] = PORTS::OUT_PORT;
+            } else if (node_dir == Direction::DEC && xhigh > gsb_x) {
+              rr_chan_dir[itrack] = PORTS::IN_PORT;
+            }
+            break;
+          case BOTTOM:
+            if (node_dir == Direction::INC && ylow < gsb_y) {
+              rr_chan_dir[itrack] = PORTS::IN_PORT;
+            } else if (node_dir == Direction::DEC && yhigh > gsb_y) {
+              rr_chan_dir[itrack] = PORTS::OUT_PORT;
+            }
+            break;
+          case LEFT:
+            if (node_dir == Direction::INC && xlow < gsb_x) {
+              rr_chan_dir[itrack] = PORTS::IN_PORT;
+            } else if (node_dir == Direction::DEC && xhigh > gsb_x) {
+              rr_chan_dir[itrack] = PORTS::OUT_PORT;
+            }
+            break;
+          default:
+            VTR_LOG_ERROR("Invalid side for GSB channel: %s\n",
+                          side_manager.c_str());
+        }
+      }
+      /* Fill chan_rr_nodes */
+      rr_gsb.add_chan_node(side_manager.get_side(), rr_chan, rr_chan_dir);
+    }
+  }
+
+  /* =====================  Fill opin_rr_nodes ===================== */
+  /* GSBv2 is side-agnostic: collect OPIN pins from every side of the grid
+   * tile. A pin reachable from multiple sides shares a single node id, so use a
+   * set to deduplicate; each node's actual side is recovered below via
+   * node_sides(). */
+  std::unordered_set<RRNodeId> opin_rr_nodes;
+  for (size_t side = 0; side < NUM_2D_SIDES; ++side) {
+    SideManager side_manager(side);
+    std::vector<RRNodeId> side_opin_nodes = find_rr_graph_grid_nodes(
+      vpr_device_ctx.rr_graph, vpr_device_ctx.grid, 0, gsb_coord.x(),
+      gsb_coord.y(), e_rr_type::OPIN, side_manager.get_side(), false);
+    opin_rr_nodes.insert(side_opin_nodes.begin(), side_opin_nodes.end());
+  }
+
+  /* Copy from temp_opin_rr_node to opin_rr_node */
+  for (const RRNodeId& inode : opin_rr_nodes) {
+    /* Skip those has no configurable outgoing, they should NOT appear in
+     * the GSB connection This is for those grid output pins used by direct
+     * connections
+     */
+    if (0 == vpr_device_ctx.rr_graph.num_configurable_edges(inode)) {
+      continue;
+    }
+    /* Do not consider OPINs that directly drive an IPIN
+     * they are supposed to be handled by direct connection
+     */
+    if (true == is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) {
+      continue;
+    }
+
+    /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
+     * originates in the current switch block */
+    if (!allow_gsb_dangling_opin &&
+        !is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb, inode)) {
+      continue;
+    }
+
+    // GSBv2 is side agnostic
+    VTR_ASSERT(vpr_device_ctx.rr_graph.node_sides(inode).size() == 1);
+    e_side opin_grid_side = vpr_device_ctx.rr_graph.node_sides(inode)[0];
+    rr_gsb.add_opin_node(inode, opin_grid_side);
+  }
+  /* =====================  Fill ipin_rr_nodes ===================== */
+  /* GSBv2 is side-agnostic: collect IPIN pins from every side of the grid
+   * tile. A pin reachable from multiple sides shares a single node id, so use a
+   * set to deduplicate; each node's actual side is recovered below via
+   * node_sides(). */
+  std::unordered_set<RRNodeId> ipin_rr_nodes;
+  for (size_t side = 0; side < NUM_2D_SIDES; ++side) {
+    SideManager side_manager(side);
+    std::vector<RRNodeId> side_ipin_nodes = find_rr_graph_grid_nodes(
+      vpr_device_ctx.rr_graph, vpr_device_ctx.grid, 0, gsb_coord.x(),
+      gsb_coord.y(), e_rr_type::IPIN, side_manager.get_side(), false);
+    ipin_rr_nodes.insert(side_ipin_nodes.begin(), side_ipin_nodes.end());
+  }
+
+  /* Copy from temp_ipin_rr_node to ipin_rr_node */
+  for (const RRNodeId& inode : ipin_rr_nodes) {
+    /* Skip those has no configurable outgoing, they should NOT appear in the
+     * GSB connection This is for those grid output pins used by direct
+     * connections
+     */
+    bool has_configurable_in = false;
+    for (const RREdgeId& e : in_edges.node_in_edges(inode)) {
+      if (vpr_device_ctx.rr_graph.edge_is_configurable(e)) {
+        has_configurable_in = true;
+        break;
+      }
+    }
+    if (!has_configurable_in) {
+      continue;
+    }
+
+    /* Do not consider IPINs that are directly connected by an OPIN
+     * they are supposed to be handled by direct connection
+     */
+    if (true == is_ipin_direct_connected_opin(vpr_device_ctx.rr_graph, in_edges,
+                                              inode)) {
+      continue;
+    }
+
+    // GSBv2 is side agnostic
+    VTR_ASSERT_MSG(
+      vpr_device_ctx.rr_graph.node_sides(inode).size() == 1,
+      vtr::string_fmt("IPIN node #%d has multiple sides in the RR graph, which "
+                      "is not expected for GSBv2 annotation.\n",
+                      size_t(inode))
+        .c_str());
+    e_side ipin_grid_side = vpr_device_ctx.rr_graph.node_sides(inode)[0];
+    rr_gsb.add_ipin_node(inode, ipin_grid_side);
+  }
+
+  if (verbose) {
+    print_gsb_info(rr_gsb, vpr_device_ctx.rr_graph);
+  }
+  return rr_gsb;
 }
 
 /* Build a General Switch Block (GSB)
@@ -542,6 +914,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
   /* Must set version before reserve. Other RRGSB version is not passed into
    * actual data */
   device_rr_gsb.reserve(gsb_range);
+  device_rr_gsb.set_gsb_version(gsb_version);
 
   VTR_LOGV(verbose_output, "Start annotation GSB up to [%lu][%lu]\n",
            gsb_range.x(), gsb_range.y());
@@ -558,10 +931,29 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        */
       vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
                                        vpr_device_ctx.grid.height() - 1);
-      const RRGSB& rr_gsb = build_rr_gsb(
-        vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
-        vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
-        allow_gsb_dangling_opin, gsb_version);
+      RRGSB rr_gsb(gsb_version);
+      if (e_gsb_version::GSB_V2 == gsb_version) {
+        /* For GSB version 2, we build the GSB context using the side-agnostic
+         * GSBv2 channel model: channel rr_nodes and their port directions are
+         * derived from the pass-through behavior of each track, and the
+         * OPIN/IPIN nodes are added on their own grid side. The OPIN/IPIN nodes
+         * are filtered here based on the in-edges to drop direct connections
+         * and nodes without configurable connectivity. */
+        rr_gsb = build_rr_gsb2(vpr_device_ctx, sub_gsb_range, layer,
+                               vtr::Point<size_t>(ix, iy),
+                               vpr_device_ctx.arch->perimeter_cb, include_clock,
+                               in_edges, allow_gsb_dangling_opin,
+                               verbose_output);
+      } else {
+        /* For GSB version 1, we build the complete GSB context with OPIN/IPIN
+         * nodes included. The OPIN/IPIN nodes will be filtered later based on
+         * the sorted incoming edges of each channel node. */
+        rr_gsb = build_rr_gsb(vpr_device_ctx, sub_gsb_range, layer,
+                              vtr::Point<size_t>(ix, iy),
+                              vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
+                              allow_gsb_dangling_opin, gsb_version);
+      }
+
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);
