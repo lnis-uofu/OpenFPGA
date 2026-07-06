@@ -34,6 +34,8 @@ yum install -y \
     tk-devel \
     zlib-devel \
     libedit-devel \
+    eigen3-devel \
+    libopm-devel \
     readline-devel
 
 # Install required gcc version and setup

@@ -22,6 +22,58 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/*********************************************************************
+ * Find a list of rr_nodes that locate at a side of a grid
+ **********************************************************************/
+static std::vector<RRNodeId> openfpga_find_rr_graph_grid_nodes(
+  const RRGraphView& rr_graph, const DeviceGrid& device_grid,
+  const size_t& layer, const int& x, const int& y, const e_rr_type& rr_type,
+  const e_side& side, bool include_ignored_global_pins) {
+  std::vector<RRNodeId> indices;
+
+  VTR_ASSERT(rr_type == e_rr_type::IPIN || rr_type == e_rr_type::OPIN);
+
+  /* Ensure that (x, y) is a valid location in grids */
+  if (size_t(x) > device_grid.width() - 1 ||
+      size_t(y) > device_grid.height() - 1) {
+    return indices;
+  }
+
+  /* Ensure we have a valid side */
+  VTR_ASSERT(side != NUM_2D_SIDES);
+
+  /* Find all the pins on the side of the grid */
+  t_physical_tile_loc tile_loc(x, y, layer);
+  int width_offset = device_grid.get_width_offset(tile_loc);
+  int height_offset = device_grid.get_height_offset(tile_loc);
+
+  for (int pin = 0; pin < device_grid.get_physical_type(tile_loc)->num_pins;
+       ++pin) {
+    /* Skip those pins have been ignored during rr_graph build-up */
+    if (device_grid.get_physical_type(tile_loc)->is_ignored_pin[pin] &&
+        device_grid.get_physical_type(tile_loc)->is_pin_global[pin]) {
+      /* If specified, force to include all the ignored pins */
+      if (!include_ignored_global_pins) {
+        continue;
+      }
+    }
+    if (false == device_grid.get_physical_type(tile_loc)
+                   ->pinloc[width_offset][height_offset][side][pin]) {
+      /* Not the pin on this side, we skip */
+      continue;
+    }
+
+    /* Try to find the rr node */
+    RRNodeId rr_node_index =
+      rr_graph.node_lookup().find_node(layer, x, y, rr_type, pin, side);
+    if (rr_node_index != RRNodeId::INVALID()) {
+      indices.push_back(rr_node_index);
+    }
+  }
+
+  return indices;
+}
+
 /* Returns true if the given OPIN node drives at least one CHANX/Y wire that
  * is a valid (non-passing) output track in the switch block. */
 static bool is_rr_opin_drive_gsb_track(const RRGraphView& rr_graph,
@@ -133,9 +185,11 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const size_t& layer,
                           const vtr::Point<size_t>& gsb_coord,
                           const bool& perimeter_cb, const bool& include_clock,
-                          const RRGraphInEdges& in_edges) {
+                          const RRGraphInEdges& in_edges,
+                          const bool& allow_gsb_dangling_opin,
+                          const e_gsb_version& gsb_version) {
   /* Create an object to return */
-  RRGSB rr_gsb;
+  RRGSB rr_gsb(gsb_version);
 
   VTR_ASSERT(gsb_coord.x() <= gsb_range.x());
   VTR_ASSERT(gsb_coord.y() <= gsb_range.y());
@@ -146,7 +200,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
   /* Basic information*/
   rr_gsb.init_num_sides(4); /* Fixed number of sides */
 
-  /* Find all rr_nodes of channels */
+  /* Find all rr_nodes of channels and add them */
   /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     /* Local variables inside this for loop */
@@ -154,8 +208,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     vtr::Point<size_t> coordinate =
       rr_gsb.get_side_block_coordinate(side_manager.get_side());
     RRChan rr_chan;
-    std::vector<std::vector<RRNodeId>> temp_opin_rr_nodes(2);
-    enum e_side opin_grid_side[2] = {NUM_2D_SIDES, NUM_2D_SIDES};
     enum PORTS chan_dir_to_port_dir_mapping[2] = {
       OUT_PORT, IN_PORT}; /* 0: INC_DIRECTION => ?; 1: DEC_DIRECTION => ? */
 
@@ -174,23 +226,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           OUT_PORT; /* INC_DIRECTION => OUT_PORT */
         chan_dir_to_port_dir_mapping[1] =
           IN_PORT; /* DEC_DIRECTION => IN_PORT */
-
-        /* Build the Switch block: opin and opin_grid_side */
-        /* Assign grid side of OPIN */
-        /* Grid[x][y+1] RIGHT side outputs pins */
-        opin_grid_side[0] = RIGHT;
-        /* Grid[x+1][y+1] left side outputs pins */
-        opin_grid_side[1] = LEFT;
-        /* Include Grid[x][y+1] RIGHT side outputs pins */
-        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
-          gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[0]);
-        /* Include Grid[x+1][y+1] Left side output pins */
-        temp_opin_rr_nodes[1] =
-          find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
-                                   layer, gsb_coord.x() + 1, gsb_coord.y() + 1,
-                                   e_rr_type::OPIN, opin_grid_side[1]);
-
         break;
       case RIGHT: /* RIGHT = 1 */
         if (gsb_coord.x() == gsb_range.x()) {
@@ -207,23 +242,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           OUT_PORT; /* INC_DIRECTION => OUT_PORT */
         chan_dir_to_port_dir_mapping[1] =
           IN_PORT; /* DEC_DIRECTION => IN_PORT */
-
-        /* Build the Switch block: opin and opin_grid_side */
-        /* Assign grid side of OPIN */
-        /* Grid[x+1][y+1] BOTTOM side outputs pins */
-        opin_grid_side[0] = BOTTOM;
-        /* Grid[x+1][y] TOP side outputs pins */
-        opin_grid_side[1] = TOP;
-
-        /* include Grid[x+1][y+1] Bottom side output pins */
-        temp_opin_rr_nodes[0] =
-          find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
-                                   layer, gsb_coord.x() + 1, gsb_coord.y() + 1,
-                                   e_rr_type::OPIN, opin_grid_side[0]);
-        /* include Grid[x+1][y] Top side output pins */
-        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
-          gsb_coord.x() + 1, gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
         if (!perimeter_cb && gsb_coord.y() == 0) {
@@ -240,21 +258,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           IN_PORT; /* INC_DIRECTION => IN_PORT */
         chan_dir_to_port_dir_mapping[1] =
           OUT_PORT; /* DEC_DIRECTION => OUT_PORT */
-
-        /* Build the Switch block: opin and opin_grid_side */
-        /* Assign grid side of OPIN */
-        /* Grid[x+1][y] LEFT side outputs pins */
-        opin_grid_side[0] = LEFT;
-        /* Grid[x][y] RIGHT side outputs pins */
-        opin_grid_side[1] = RIGHT;
-        /* include Grid[x+1][y] Left side output pins */
-        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
-          gsb_coord.x() + 1, gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[0]);
-        /* include Grid[x][y] Right side output pins */
-        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
-          gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[1]);
         break;
       case LEFT: /* LEFT = 3 */
         if (!perimeter_cb && gsb_coord.x() == 0) {
@@ -271,26 +274,11 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           IN_PORT; /* INC_DIRECTION => IN_PORT */
         chan_dir_to_port_dir_mapping[1] =
           OUT_PORT; /* DEC_DIRECTION => OUT_PORT */
-
-        /* Build the Switch block: opin and opin_grid_side */
-        /* Grid[x][y+1] BOTTOM side outputs pins */
-        opin_grid_side[0] = BOTTOM;
-        /* Grid[x][y] TOP side outputs pins */
-        opin_grid_side[1] = TOP;
-        /* include Grid[x][y+1] Bottom side outputs pins */
-        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
-          gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[0]);
-        /* include Grid[x][y] Top side output pins */
-        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
-          gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[1]);
         break;
       default:
         VTR_LOG_ERROR("Invalid side index!\n");
         exit(1);
     }
-
     /* Organize a vector of port direction */
     if (0 < rr_chan.get_chan_width()) {
       std::vector<enum PORTS> rr_chan_dir;
@@ -309,7 +297,87 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       /* Fill chan_rr_nodes */
       rr_gsb.add_chan_node(side_manager.get_side(), rr_chan, rr_chan_dir);
     }
+  }
 
+  /* Find all the OPIN nodes of channels and add them */
+  /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    /* Local variables inside this for loop */
+    SideManager side_manager(side);
+    std::vector<std::vector<RRNodeId>> temp_opin_rr_nodes(2);
+    enum e_side opin_grid_side[2] = {NUM_2D_SIDES, NUM_2D_SIDES};
+
+    switch (side) {
+      case TOP: /* TOP = 0 */
+        /* Build the Switch block: opin and opin_grid_side */
+        /* Assign grid side of OPIN */
+        /* Grid[x][y+1] RIGHT side outputs pins */
+        opin_grid_side[0] = RIGHT;
+        /* Grid[x+1][y+1] left side outputs pins */
+        opin_grid_side[1] = LEFT;
+        /* Include Grid[x][y+1] RIGHT side outputs pins */
+        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
+          gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[0]);
+        /* Include Grid[x+1][y+1] Left side output pins */
+        temp_opin_rr_nodes[1] =
+          find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
+                                   layer, gsb_coord.x() + 1, gsb_coord.y() + 1,
+                                   e_rr_type::OPIN, opin_grid_side[1]);
+        break;
+      case RIGHT: /* RIGHT = 1 */
+        /* Build the Switch block: opin and opin_grid_side */
+        /* Assign grid side of OPIN */
+        /* Grid[x+1][y+1] BOTTOM side outputs pins */
+        opin_grid_side[0] = BOTTOM;
+        /* Grid[x+1][y] TOP side outputs pins */
+        opin_grid_side[1] = TOP;
+
+        /* include Grid[x+1][y+1] Bottom side output pins */
+        temp_opin_rr_nodes[0] =
+          find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
+                                   layer, gsb_coord.x() + 1, gsb_coord.y() + 1,
+                                   e_rr_type::OPIN, opin_grid_side[0]);
+        /* include Grid[x+1][y] Top side output pins */
+        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
+          gsb_coord.x() + 1, gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[1]);
+        break;
+      case BOTTOM: /* BOTTOM = 2*/
+        /* Build the Switch block: opin and opin_grid_side */
+        /* Assign grid side of OPIN */
+        /* Grid[x+1][y] LEFT side outputs pins */
+        opin_grid_side[0] = LEFT;
+        /* Grid[x][y] RIGHT side outputs pins */
+        opin_grid_side[1] = RIGHT;
+        /* include Grid[x+1][y] Left side output pins */
+        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
+          gsb_coord.x() + 1, gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[0]);
+        /* include Grid[x][y] Right side output pins */
+        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
+          gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[1]);
+        break;
+      case LEFT: /* LEFT = 3 */
+        /* Build the Switch block: opin and opin_grid_side */
+        /* Grid[x][y+1] BOTTOM side outputs pins */
+        opin_grid_side[0] = BOTTOM;
+        /* Grid[x][y] TOP side outputs pins */
+        opin_grid_side[1] = TOP;
+        /* include Grid[x][y+1] Bottom side outputs pins */
+        temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
+          gsb_coord.y() + 1, e_rr_type::OPIN, opin_grid_side[0]);
+        /* include Grid[x][y] Top side output pins */
+        temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
+          gsb_coord.y(), e_rr_type::OPIN, opin_grid_side[1]);
+        break;
+      default:
+        VTR_LOG_ERROR("Invalid side index!\n");
+        exit(1);
+    }
     /* Fill opin_rr_nodes */
     /* Copy from temp_opin_rr_node to opin_rr_node */
     for (size_t opin_array_id = 0; opin_array_id < temp_opin_rr_nodes.size();
@@ -332,7 +400,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         /* Add the OPIN to the GSB only if it drives a CHANX/Y wire that
          * originates in the current switch block */
-        if (!is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
+        if (!allow_gsb_dangling_opin &&
+            !is_rr_opin_drive_gsb_track(vpr_device_ctx.rr_graph, rr_gsb,
                                         inode)) {
           continue;
         }
@@ -341,11 +410,6 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         rr_gsb.add_opin_node(inode, side_manager.get_side());
       }
     }
-
-    /* Clean ipin_rr_nodes */
-    /* We do not have any IPIN for a Switch Block */
-    rr_gsb.clear_ipin_nodes(side_manager.get_side());
-
     /* Clear the temp data */
     temp_opin_rr_nodes[0].clear();
     temp_opin_rr_nodes[1].clear();
@@ -353,6 +417,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     opin_grid_side[1] = NUM_2D_SIDES;
   }
 
+  /* Add IPIN nodes */
   /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     /* Local variables inside this for loop */
@@ -414,7 +479,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       continue;
     }
     /* Collect IPIN rr_nodes*/
-    temp_ipin_rr_nodes = find_rr_graph_grid_nodes(
+    temp_ipin_rr_nodes = openfpga_find_rr_graph_grid_nodes(
       vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, ix, iy,
       e_rr_type::IPIN, ipin_rr_node_grid_side, include_clock);
     /* Fill the ipin nodes of RRGSB */
@@ -459,6 +524,8 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
                             const bool& include_clock,
                             const RRGraphInEdges& in_edges,
+                            const e_gsb_version& gsb_version,
+                            const bool& allow_gsb_dangling_opin,
                             const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
@@ -471,6 +538,9 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
   if (vpr_device_ctx.arch->perimeter_cb) {
     gsb_range.set(vpr_device_ctx.grid.width(), vpr_device_ctx.grid.height());
   }
+  device_rr_gsb.set_gsb_version(gsb_version);
+  /* Must set version before reserve. Other RRGSB version is not passed into
+   * actual data */
   device_rr_gsb.reserve(gsb_range);
 
   VTR_LOGV(verbose_output, "Start annotation GSB up to [%lu][%lu]\n",
@@ -490,7 +560,8 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                                        vpr_device_ctx.grid.height() - 1);
       const RRGSB& rr_gsb = build_rr_gsb(
         vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
-        vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges);
+        vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
+        allow_gsb_dangling_opin, gsb_version);
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

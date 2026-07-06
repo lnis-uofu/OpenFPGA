@@ -57,6 +57,7 @@ pacman -S --noconfirm --needed \
     mingw-w64-x86_64-boost-libs \
     libreadline-devel \
     zlib-devel \
+    mingw-w64-x86_64-eigen3 \
     openssl-devel \
     mingw-w64-x86_64-zlib \
     mingw-w64-x86_64-graphviz \

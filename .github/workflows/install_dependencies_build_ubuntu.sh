@@ -38,8 +38,8 @@ apt-get install -y \
     python3-setuptools \
     python3-lxml \
     python3-pip \
-    tcllib \
     tcl8.6-dev \
+    tk8.6-dev \
     texinfo \
     time \
     valgrind \
@@ -47,6 +47,8 @@ apt-get install -y \
     zip \
     swig \
     expect \
+    libeigen3-dev \
+    libomp-dev \
     libxml2-utils
 
 # Install Ubuntu 20.04 packages

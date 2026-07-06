@@ -87,6 +87,32 @@ write_openfpga_bitstream_setting
 
     Show verbose log
 
+read_mif
+~~~~~~~~
+
+  Read a Memory Initialization File in the **OpenFPGA MIF** format (see below), parse it, and append the resulting segment(s) to in-memory storage. May be run multiple times; each successful read appends more segments. Intended before ``link_openfpga_arch`` when the flow uses MIF-based BRAM initialization.
+
+  **Format (summary)**
+
+  * Line comments: ``# ...`` or ``// ...`` (``//`` directives are described next).
+  * Optional tile coordinates: ``// X <int>``, ``// Y <int>`` (``#`` may follow on the same line).
+  * Optional widths: ``// ADDR_WIDTH <int>``, ``// DATA_WIDTH <int>``, ``//ID_WIDTH <int>``.
+  * A new RAM block section starts at ``//RAM_ID <int>``; data lines before the first ``//RAM_ID`` belong to the placement-oriented block (X/Y); following lines belong to the RAM_ID block.
+  * Data lines: ``<hex_address> <hex_data>`` (e.g. ``0x2000 0x0000000a``), exactly two tokens per line.
+
+  .. option:: --file <string> or -f <string>
+
+    Path to the MIF file to read.
+
+write_mif
+~~~~~~~~~
+
+  Write the processed in-memory MIF data to one file in the OpenFPGA MIF format. Requires that ``read_mif`` has completed successfully at least once before this command (shell dependency).
+
+  .. option:: --file <string> or -f <string>
+
+    Path to the output file (overwrite).
+
 .. _openfpga_setup_command_read_openfpga_clock_arch:
 
 read_openfpga_clock_arch
@@ -168,9 +194,20 @@ link_openfpga_arch
 
     Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges, this is performed after executing `--sort_gsb_chan_node_in_edges` option.
 
+  .. option:: --allow_gsb_dangling_opin
+
+    Allow dangling output ports exist without driving any routing tracks in General Switch Blocks (GSBs). By default, it is disabled to keep netlist clean and maximize the efficiency in uniquifying routing blocks. Enable it to ensure support on legacy devices.
+
+  .. option:: --gsb_version
+
+    Can be  [ ``none`` | ``1`` | ``2`` ]. Specify the version for General Switch Blocks (GSBs), which will impact the outputs of GSB file. See details in :ref:`openfpga_setup_command_write_gsb_to_xml`. This version must be consistent with the GSB version when calling VPR. By default , ``1`` is considered.
+
   .. option:: --verbose
 
     Show verbose log
+
+
+.. _openfpga_setup_command_write_gsb_to_xml:
 
 write_gsb_to_xml
 ~~~~~~~~~~~~~~~~

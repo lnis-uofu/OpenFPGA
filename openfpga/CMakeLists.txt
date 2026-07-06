@@ -38,6 +38,7 @@ target_link_libraries(libopenfpga
                       libfabrickey
                       libfpgabitstream
                       libini
+                      libmif
                       libpcf
                       libvtrutil
                       libbusgroup

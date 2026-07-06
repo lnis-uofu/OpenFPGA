@@ -52,7 +52,31 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
   CommandOptionId opt_reorder_incoming_edges =
     cmd.option("reorder_incoming_edges");
+  CommandOptionId opt_allow_gsb_dangling_opin =
+    cmd.option("allow_gsb_dangling_opin");
+  CommandOptionId opt_gsb_version = cmd.option("gsb_version");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* TODO: The best to get the gsb version from RRGraphView when it is created.
+   * It can avoid mismatches between vpr options and here */
+  e_gsb_version gsb_version =
+    e_gsb_version::GSB_V1; /* Default GSB version is 1 */
+  if (cmd_context.option_enable(cmd, opt_gsb_version)) {
+    /* TODO: Encapsulate the string-to-enum conversion to a function */
+    std::string gsb_ver_str = cmd_context.option_value(cmd, opt_gsb_version);
+    if (gsb_ver_str == std::string("none")) {
+      gsb_version = e_gsb_version::NOT_CRR;
+    } else if (gsb_ver_str == std::string("1")) {
+      gsb_version = e_gsb_version::GSB_V1;
+    } else if (gsb_ver_str == std::string("2")) {
+      gsb_version = e_gsb_version::GSB_V2;
+    } else {
+      VTR_LOG_ERROR(
+        "Invalid GSB version '%s'. Supported versions are [ none | 1 | 2 ].\n",
+        gsb_ver_str.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
@@ -119,7 +143,9 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    in_edges, cmd_context.option_enable(cmd, opt_verbose));
+    in_edges, gsb_version,
+    cmd_context.option_enable(cmd, opt_allow_gsb_dangling_opin),
+    cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
