@@ -305,9 +305,10 @@ static void print_gsb_info(const RRGSB& rr_gsb, const RRGraphView& rr_graph) {
 
 static RRGSB build_rr_gsb2(const DeviceContext& vpr_device_ctx,
                            const vtr::Point<size_t>& gsb_range,
-                           const size_t& layer,
+                           const size_t& /*layer*/,
                            const vtr::Point<size_t>& gsb_coord,
-                           const bool& perimeter_cb, const bool& include_clock,
+                           const bool& /*perimeter_cb*/,
+                           const bool& /*include_clock*/,
                            const RRGraphInEdges& in_edges,
                            const bool& allow_gsb_dangling_opin,
                            const bool& verbose) {
@@ -330,7 +331,6 @@ static RRGSB build_rr_gsb2(const DeviceContext& vpr_device_ctx,
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     /* Local variables inside this for loop */
     SideManager side_manager(side);
-    vtr::Point<size_t> coordinate = rr_gsb.get_grid_coordinate();
     RRChan rr_chan;
     rr_chan = build_rr_chan_for_gsb2(vpr_device_ctx.rr_graph, side_manager,
                                      gsb_coord.x(), gsb_coord.y());
