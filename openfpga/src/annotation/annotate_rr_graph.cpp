@@ -303,15 +303,12 @@ static void print_gsb_info(const RRGSB& rr_gsb, const RRGraphView& rr_graph) {
   VTR_LOG("  Total Number of OUT_PORTS: %zu\n", num_out_ports);
 }
 
-static RRGSB build_rr_gsb2(const DeviceContext& vpr_device_ctx,
-                           const vtr::Point<size_t>& gsb_range,
-                           const size_t& /*layer*/,
-                           const vtr::Point<size_t>& gsb_coord,
-                           const bool& /*perimeter_cb*/,
-                           const bool& /*include_clock*/,
-                           const RRGraphInEdges& in_edges,
-                           const bool& allow_gsb_dangling_opin,
-                           const bool& verbose) {
+static RRGSB build_rr_gsb2(
+  const DeviceContext& vpr_device_ctx, const vtr::Point<size_t>& gsb_range,
+  const size_t& /*layer*/, const vtr::Point<size_t>& gsb_coord,
+  const bool& /*perimeter_cb*/, const bool& /*include_clock*/,
+  const RRGraphInEdges& in_edges, const bool& allow_gsb_dangling_opin,
+  const bool& verbose) {
   VTR_ASSERT(vpr_device_ctx.gsb_version == e_gsb_version::GSB_V2);
 
   /* Create an object to return */
