@@ -25,6 +25,10 @@ echo -e "Testing preloading rr_graph"
 run-task basic_tests/preload_rr_graph/preload_rr_graph_xml $@
 run-task basic_tests/preload_rr_graph/preload_rr_graph_bin $@
 
+echo -e "Testing custom routing resource graph (CRR) generation with GSBv2"
+run-task basic_tests/custom_rrgraph/custom_rrgraph_gsbv2_gen $@
+run-task basic_tests/custom_rrgraph/custom_rrgraph_gsbv2_offset_gen $@
+
 echo -e "Testing preloading unique blocks"
 run-task basic_tests/preload_unique_blocks/write_unique_blocks_full_flow $@
 run-task basic_tests/preload_unique_blocks/read_unique_blocks_full_flow $@
