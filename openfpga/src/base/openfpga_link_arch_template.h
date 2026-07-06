@@ -54,10 +54,11 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     cmd.option("reorder_incoming_edges");
   CommandOptionId opt_allow_gsb_dangling_opin =
     cmd.option("allow_gsb_dangling_opin");
-  CommandOptionId opt_gsb_version = cmd.option("gsb_version");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
-  /* Get the GSB version from the VPR device context (set during RR graph generation) */
+  /* Get the GSB version from the VPR device context (set during RR graph
+   * generation). It is not a command option to avoid any mismatch between the
+   * VPR options and this command */
   e_gsb_version gsb_version = g_vpr_ctx.device().gsb_version;
 
   /* Build fast look-up between physical tile pin index and port information */
