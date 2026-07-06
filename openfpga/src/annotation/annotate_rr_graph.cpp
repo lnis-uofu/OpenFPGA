@@ -939,19 +939,18 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
          * OPIN/IPIN nodes are added on their own grid side. The OPIN/IPIN nodes
          * are filtered here based on the in-edges to drop direct connections
          * and nodes without configurable connectivity. */
-        rr_gsb = build_rr_gsb2(vpr_device_ctx, sub_gsb_range, layer,
-                               vtr::Point<size_t>(ix, iy),
-                               vpr_device_ctx.arch->perimeter_cb, include_clock,
-                               in_edges, allow_gsb_dangling_opin,
-                               verbose_output);
+        rr_gsb = build_rr_gsb2(
+          vpr_device_ctx, sub_gsb_range, layer, vtr::Point<size_t>(ix, iy),
+          vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
+          allow_gsb_dangling_opin, verbose_output);
       } else {
         /* For GSB version 1, we build the complete GSB context with OPIN/IPIN
          * nodes included. The OPIN/IPIN nodes will be filtered later based on
          * the sorted incoming edges of each channel node. */
         rr_gsb = build_rr_gsb(vpr_device_ctx, sub_gsb_range, layer,
                               vtr::Point<size_t>(ix, iy),
-                              vpr_device_ctx.arch->perimeter_cb, include_clock, in_edges,
-                              allow_gsb_dangling_opin, gsb_version);
+                              vpr_device_ctx.arch->perimeter_cb, include_clock,
+                              in_edges, allow_gsb_dangling_opin, gsb_version);
       }
 
       /* Add to device_rr_gsb */
