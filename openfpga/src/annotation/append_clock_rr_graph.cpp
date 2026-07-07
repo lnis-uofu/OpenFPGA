@@ -220,8 +220,7 @@ static void add_rr_graph_clock_nodes(
       }
       add_rr_graph_block_clock_nodes(
         rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
-        chany_coord, e_rr_type::CHANY,
-        CHANX_COST_INDEX_START, verbose);
+        chany_coord, e_rr_type::CHANY, CHANX_COST_INDEX_START, verbose);
     }
   }
 }
