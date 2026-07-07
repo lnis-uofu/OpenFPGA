@@ -43,6 +43,10 @@ run-task fpga_verilog/bram/dpram1k $@
 echo -e "Testing Verilog generation with 1k block RAMs spanning two columns ";
 run-task fpga_verilog/bram/wide_dpram1k $@
 
+# Uncomment when the MIF support is ready
+#echo -e "Testing Verilog generation with 128-bit block RAMs with MIF support";
+#run-task fpga_verilog/bram/dpram128_mif $@
+
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8 $@
 
