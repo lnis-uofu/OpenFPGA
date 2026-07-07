@@ -177,7 +177,7 @@
       <port type="output" prefix="QN" size="1"/>
       <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
-    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}openfpga_flow/openfpga_cell_library/verilog/gpio.v">
+    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -186,7 +186,7 @@
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}openfpga_flow/openfpga_cell_library/spice/adder.sp" verilog_netlist="${OPENFPGA_PATH}openfpga_flow/openfpga_cell_library/verilog/adder.v">
+    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/adder.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
