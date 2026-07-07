@@ -735,8 +735,8 @@ def create_yosys_params():
     if not args.verific:
         ys_vlog_files = []
         for curr_file in args.benchmark_files:
-            if curr_file.endswith(".v"):
-              ys_vlog_files.append(shlex.quote(curr_file))
+            if curr_file.endswith(".v") or curr_file.endswith(".sv"):
+                ys_vlog_files.append(shlex.quote(curr_file))
         ys_params["VERILOG_FILES"] = " ".join(ys_vlog_files)
         if not "READ_VERILOG_OPTIONS" in ys_params:
             ys_params["READ_VERILOG_OPTIONS"] = ""
