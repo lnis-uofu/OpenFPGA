@@ -3,7 +3,7 @@
 module tb_dual_port_ram_128;
 
     // Testbench parameters
-    parameter MEM_FILE = "test_init.hex";
+    parameter MEM_FILE = "init.hex";
 
     // Inputs to the DUT (reg for driving stimulus)
     reg clk;
