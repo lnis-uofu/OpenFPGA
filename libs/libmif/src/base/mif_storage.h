@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "mif_storage_fwd.h"
@@ -39,9 +40,11 @@ class MifStorage {
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
   bool empty() const;
+  const std::vector<std::string>& source_files() const;
 
  public: /* Mutators */
   void clear();
+  void add_source_file(const std::string& file_path);
   void remove_last_segment_if_empty();
   MifSegmentId create_segment();
   void set_segment_coord_x(const MifSegmentId& segment_id, int x);
@@ -74,6 +77,9 @@ class MifStorage {
   vtr::vector<MifMemoryLineId, MifMemoryLineId> memory_line_ids_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_addresses_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_data_;
+
+  /* Paths passed to successful read_mif calls (init.hex / .mif). */
+  std::vector<std::string> source_files_;
 };
 
 } /* namespace openfpga */

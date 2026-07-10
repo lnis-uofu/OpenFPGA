@@ -98,4 +98,12 @@ bool path_has_file_extension(const std::string& file_path,
   return true;
 }
 
+std::string mif_file_basename(const std::string& file_path) {
+  const size_t slash = file_path.find_last_of("/\\");
+  if (slash == std::string::npos) {
+    return file_path;
+  }
+  return file_path.substr(slash + 1);
+}
+
 } /* namespace openfpga */

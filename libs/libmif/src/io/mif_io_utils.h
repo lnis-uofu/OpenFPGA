@@ -21,4 +21,7 @@ int mif_bit_width_for_max_value(uint64_t max_value);
 bool path_has_file_extension(const std::string& file_path,
                              const char* extension);
 
+/* Return filename component of a path (no directory). */
+std::string mif_file_basename(const std::string& file_path);
+
 } /* namespace openfpga */

@@ -3,11 +3,17 @@
  * 1. OpenFPGA .mif reader/writer
  * 2. Verilog init.hex reader (via read_mif) and echo as .mif
  * 3. memory_address_map.xml reader
+ * 4. find Verilog module that $readmemh the init.hex
  *
  * Usage:
  *   test_mif <test.mif> <mif_out.mif> <test_init.hex> <hex_out.mif> \
- *            <memory_address_map.xml>
+ *            <memory_address_map.xml> <benchmark.v> <init.hex>
  *******************************************************************/
+#include <map>
+#include <string>
+#include <utility>
+
+#include "bind_bram_to_mif_storage.h"
 #include "command_exit_codes.h"
 #include "memory_address_map.h"
 #include "mif_storage.h"
@@ -17,10 +23,10 @@
 #include "write_mif.h"
 
 int main(int argc, const char** argv) {
-  if (argc < 6) {
+  if (argc < 8) {
     VTR_LOG_ERROR(
       "Usage: %s <test.mif> <mif_out.mif> <test_init.hex> <hex_out.mif> "
-      "<memory_address_map.xml>\n",
+      "<memory_address_map.xml> <benchmark.v> <init.hex>\n",
       argv[0]);
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
@@ -70,6 +76,30 @@ int main(int argc, const char** argv) {
             memory_address_map.ram_id(memory_id),
             memory_address_map.addr_width(memory_id),
             memory_address_map.data_width(memory_id));
+  }
+
+  /* 4) Find module that reads init.hex, then bind.
+   *    Verilog MEM_FILE default is "init.hex", so bind uses that basename. */
+  const std::string module_name =
+    openfpga::find_verilog_module_reading_mif(argv[6], "init.hex");
+  if (module_name.empty()) {
+    VTR_LOG_ERROR("Failed to find module reading init.hex in %s\n", argv[6]);
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+  VTR_LOG("Found module reading init.hex: %s\n", module_name.c_str());
+
+  openfpga::MifStorage bind_storage;
+  status = openfpga::read_mif(argv[7], bind_storage);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+  /* Mock placement: module at (2,2) matches memory_address_map.xml */
+  std::map<std::string, std::pair<int, int>> inst_coord_map;
+  inst_coord_map[module_name] = std::make_pair(2, 2);
+  status = openfpga::bind_bram_to_mif_storage(
+    bind_storage, argv[6], inst_coord_map, memory_address_map);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
   }
 
   return openfpga::CMD_EXEC_SUCCESS;

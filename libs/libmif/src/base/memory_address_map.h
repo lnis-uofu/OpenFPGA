@@ -29,6 +29,8 @@ class MemoryAddressMap {
   int ram_id(const MemoryAddressId& memory_id) const;
   int addr_width(const MemoryAddressId& memory_id) const;
   int data_width(const MemoryAddressId& memory_id) const;
+  /* Find memory entry by tile coordinate; INVALID if not found */
+  MemoryAddressId find_by_xy(int x, int y) const;
   bool empty() const;
   size_t num_memories() const;
 

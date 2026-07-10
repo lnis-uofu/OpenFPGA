@@ -33,6 +33,15 @@ int MemoryAddressMap::data_width(const MemoryAddressId& memory_id) const {
   return memory_data_width_[memory_id];
 }
 
+MemoryAddressId MemoryAddressMap::find_by_xy(int x, int y) const {
+  for (const MemoryAddressId& memory_id : memory_ids_) {
+    if (memory_coord_x_[memory_id] == x && memory_coord_y_[memory_id] == y) {
+      return memory_id;
+    }
+  }
+  return MemoryAddressId::INVALID();
+}
+
 bool MemoryAddressMap::empty() const { return memory_ids_.empty(); }
 
 size_t MemoryAddressMap::num_memories() const { return memory_ids_.size(); }

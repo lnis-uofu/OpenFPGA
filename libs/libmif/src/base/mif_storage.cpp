@@ -70,6 +70,14 @@ uint64_t MifStorage::memory_line_data(
 
 bool MifStorage::empty() const { return segment_ids_.empty(); }
 
+const std::vector<std::string>& MifStorage::source_files() const {
+  return source_files_;
+}
+
+void MifStorage::add_source_file(const std::string& file_path) {
+  source_files_.push_back(file_path);
+}
+
 void MifStorage::remove_last_segment_if_empty() {
   if (segment_ids_.empty()) {
     return;
@@ -106,6 +114,7 @@ void MifStorage::clear() {
   memory_line_ids_.clear();
   memory_line_addresses_.clear();
   memory_line_data_.clear();
+  source_files_.clear();
 }
 
 MifSegmentId MifStorage::create_segment() {
