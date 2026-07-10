@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 
+#include "mif_init_hex_format.h"
 #include "mif_openfpga_format.h"
 #include "vtr_log.h"
 
@@ -10,6 +11,10 @@ namespace openfpga {
 
 /* Read a MIF file line-by-line and append parsed segments to storage. */
 int read_mif(const std::string& file_path, MifStorage& mif_storage) {
+  if (is_init_hex_file(file_path)) {
+    return read_init_hex(file_path, mif_storage);
+  }
+
   std::ifstream ifs(file_path.c_str());
   if (!ifs.is_open()) {
     VTR_LOG_ERROR("Failed to open MIF file '%s' for reading\n",

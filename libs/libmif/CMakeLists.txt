@@ -29,6 +29,10 @@ foreach(testsourcefile ${EXEC_SOURCES})
              COMMAND ${testname}
                      ${CMAKE_CURRENT_SOURCE_DIR}/example/src/test.mif
                      ${CMAKE_CURRENT_BINARY_DIR}/test_mif_out.mif)
+    add_test(NAME ${testname}_init_hex
+             COMMAND ${testname}
+                     ${CMAKE_CURRENT_SOURCE_DIR}/example/src/test_init.hex
+                     ${CMAKE_CURRENT_BINARY_DIR}/test_init_hex_out.mif)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
 install(TARGETS libmif

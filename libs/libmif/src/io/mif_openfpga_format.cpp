@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "command_exit_codes.h"
+#include "mif_text_utils.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -32,8 +33,8 @@ static void print_hex_with_width(std::ostream& os, uint64_t v, int width_bits) {
 }
 
 void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
-  os << "# This is a comment\n";
-  os << "# All the address and data in HEX format\n";
+  os << "// This is a comment\n";
+  os << "// All the address and data in HEX format\n";
 
   bool first = true;
   for (const MifSegmentId& segment_id : storage.segments()) {
@@ -44,9 +45,9 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
 
     if (storage.has_xy(segment_id)) {
       os << "// " << MIF_DIRECTIVE_X << " " << storage.coord_x(segment_id)
-         << " # Coordinates of the RAM block\n";
+         << " // Coordinates of the RAM block\n";
       os << "// " << MIF_DIRECTIVE_Y << " " << storage.coord_y(segment_id)
-         << " # Coordinates of the RAM block\n";
+         << " // Coordinates of the RAM block\n";
     }
     if (!storage.has_ram_id(segment_id)) {
       if (storage.addr_width(segment_id) >= 0) {
@@ -73,7 +74,7 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
            << storage.data_width(segment_id) << "\n";
       }
     }
-    os << "# Address Data \n";
+    os << "// Address Data \n";
     for (const MifMemoryLineId& memory_line_id :
          storage.segment_memory_lines(segment_id)) {
       print_hex_with_width(os, storage.memory_line_address(memory_line_id),
@@ -86,39 +87,9 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
   }
 }
 
-/* Remove leading and trailing whitespace from a string in place. */
-static void trim_inplace(std::string& s) {
-  while (!s.empty() && std::isspace(static_cast<unsigned char>(s.front()))) {
-    s.erase(s.begin());
-  }
-  while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back()))) {
-    s.pop_back();
-  }
-}
-
-static std::string normalize_mif_line(const std::string& raw_line) {
-  std::string line = raw_line;
-  const size_t hash = line.find('#');
-  if (hash != std::string::npos) {
-    line.resize(hash);
-  }
-  trim_inplace(line);
-  return line;
-}
-
 /* Parse a token as an unsigned 64-bit integer (decimal or hex). */
 static bool parse_hex_u64(const std::string& tok, uint64_t& out) {
-  if (tok.empty()) {
-    return false;
-  }
-  char* end = nullptr;
-  errno = 0;
-  unsigned long long v = std::strtoull(tok.c_str(), &end, 0);
-  if (end != tok.c_str() + tok.size() || errno == ERANGE) {
-    return false;
-  }
-  out = static_cast<uint64_t>(v);
-  return true;
+  return parse_mif_u64_token(tok, out);
 }
 
 /* Return true if the line is exactly one 'address data' hex pair. */
@@ -262,7 +233,7 @@ int parse_mif_line(const std::string& file_path, size_t line_no,
                    const std::string& raw_line, MifStorage& mif_storage,
                    bool& has_current_segment, MifSegmentId& current_segment_id,
                    size_t& total_words) {
-  const std::string line = normalize_mif_line(raw_line);
+  const std::string line = strip_mif_line_comment(raw_line);
   if (line.empty()) {
     return CMD_EXEC_SUCCESS;
   }
