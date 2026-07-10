@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 
-#include "mif_format.h"
+#include "mif_openfpga_format.h"
 #include "vtr_log.h"
 
 namespace openfpga {

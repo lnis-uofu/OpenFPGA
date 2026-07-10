@@ -1,4 +1,4 @@
-#include "mif_format.h"
+#include "mif_openfpga_format.h"
 
 #include <cctype>
 #include <fstream>
