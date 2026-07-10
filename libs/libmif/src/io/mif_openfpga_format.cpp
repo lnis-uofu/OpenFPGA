@@ -115,11 +115,6 @@ static bool openfpga_mif_address_data_line(const std::string& line) {
          (first[1] == 'x' || first[1] == 'X');
 }
 
-/* Parse a token as an unsigned 64-bit integer (decimal or hex). */
-static bool parse_hex_u64(const std::string& tok, uint64_t& out) {
-  return parse_mif_u64_token(tok, out);
-}
-
 /* Return true if the line is exactly one 'address data' hex pair. */
 static bool try_address_data_line(const std::string& line, uint64_t& addr,
                                   uint64_t& data) {
@@ -133,7 +128,7 @@ static bool try_address_data_line(const std::string& line, uint64_t& addr,
   if (iss >> extra) {
     return false;
   }
-  return parse_hex_u64(ta, addr) && parse_hex_u64(td, data);
+  return parse_mif_u64_token(ta, addr) && parse_mif_u64_token(td, data);
 }
 
 static bool segment_has_content(const MifStorage& mif_storage,
