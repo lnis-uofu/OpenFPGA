@@ -23,6 +23,11 @@ int MemoryAddressMap::ram_id(const MemoryAddressId& memory_id) const {
   return memory_ram_id_[memory_id];
 }
 
+int MemoryAddressMap::id_width(const MemoryAddressId& memory_id) const {
+  VTR_ASSERT(valid_memory_id(memory_id));
+  return memory_id_width_[memory_id];
+}
+
 int MemoryAddressMap::addr_width(const MemoryAddressId& memory_id) const {
   VTR_ASSERT(valid_memory_id(memory_id));
   return memory_addr_width_[memory_id];
@@ -51,18 +56,20 @@ void MemoryAddressMap::clear() {
   memory_coord_x_.clear();
   memory_coord_y_.clear();
   memory_ram_id_.clear();
+  memory_id_width_.clear();
   memory_addr_width_.clear();
   memory_data_width_.clear();
 }
 
 MemoryAddressId MemoryAddressMap::create_memory(int x, int y, int ram_id,
-                                                int addr_width,
+                                                int id_width, int addr_width,
                                                 int data_width) {
   MemoryAddressId memory_id(memory_ids_.size());
   memory_ids_.push_back(memory_id);
   memory_coord_x_.push_back(x);
   memory_coord_y_.push_back(y);
   memory_ram_id_.push_back(ram_id);
+  memory_id_width_.push_back(id_width);
   memory_addr_width_.push_back(addr_width);
   memory_data_width_.push_back(data_width);
   return memory_id;

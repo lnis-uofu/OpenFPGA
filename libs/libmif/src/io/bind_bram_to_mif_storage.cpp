@@ -295,6 +295,7 @@ int bind_bram_to_mif_storage(
       return CMD_EXEC_FATAL_ERROR;
     }
     const int ram_id = memory_address_map.ram_id(memory_id);
+    const int id_width = memory_address_map.id_width(memory_id);
     const int addr_width = memory_address_map.addr_width(memory_id);
     const int data_width = memory_address_map.data_width(memory_id);
 
@@ -307,6 +308,7 @@ int bind_bram_to_mif_storage(
       mif_storage.set_segment_coord_x(segment_id, coord_x);
       mif_storage.set_segment_coord_y(segment_id, coord_y);
       mif_storage.set_segment_ram_id(segment_id, ram_id);
+      mif_storage.set_segment_id_width(segment_id, id_width);
       mif_storage.set_segment_addr_width(segment_id, addr_width);
       mif_storage.set_segment_data_width(segment_id, data_width);
       filled = true;
@@ -322,8 +324,8 @@ int bind_bram_to_mif_storage(
 
     VTR_LOG(
       "bind_bram_to_mif_storage: instance '%s' -> (x=%d, y=%d) ram_id=%d "
-      "addr_width=%d data_width=%d\n",
-      instance_name.c_str(), coord_x, coord_y, ram_id, addr_width,
+      "id_width=%d addr_width=%d data_width=%d\n",
+      instance_name.c_str(), coord_x, coord_y, ram_id, id_width, addr_width,
       data_width);
   }
 

@@ -71,10 +71,11 @@ int main(int argc, const char** argv) {
           static_cast<unsigned long>(memory_address_map.num_memories()),
           argv[5]);
   for (const MemoryAddressId& memory_id : memory_address_map.memories()) {
-    VTR_LOG("  memory x=%d y=%d id=%d addr_width=%d data_width=%d\n",
+    VTR_LOG("  memory x=%d y=%d id=%d id_width=%d addr_width=%d data_width=%d\n",
             memory_address_map.coord_x(memory_id),
             memory_address_map.coord_y(memory_id),
             memory_address_map.ram_id(memory_id),
+            memory_address_map.id_width(memory_id),
             memory_address_map.addr_width(memory_id),
             memory_address_map.data_width(memory_id));
   }
@@ -116,6 +117,6 @@ int main(int argc, const char** argv) {
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
-
-  return openfpga::CMD_EXEC_SUCCESS;
+ status = write_mif("final_mif.mif", bind_storage);
+  return status;
 }

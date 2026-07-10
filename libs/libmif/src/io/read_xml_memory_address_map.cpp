@@ -3,7 +3,7 @@
  *
  * Expected format:
  *   <memory_address_map>
- *     <memory x="2" y="1" id="0" addr_width="3" data_width="16"/>
+ *     <memory x="2" y="1" id="0" id_width="8" addr_width="3" data_width="16"/>
  *   </memory_address_map>
  *******************************************************************/
 #include <string>
@@ -32,6 +32,10 @@ static void read_xml_one_memory(pugi::xml_node& xml_memory,
   const int ram_id =
     get_attribute(xml_memory, XML_MEMORY_ADDRESS_MAP_ATTRIBUTE_ID, loc_data)
       .as_int();
+  const int id_width = get_attribute(
+                         xml_memory, XML_MEMORY_ADDRESS_MAP_ATTRIBUTE_ID_WIDTH,
+                         loc_data)
+                         .as_int();
   const int addr_width = get_attribute(
                            xml_memory, XML_MEMORY_ADDRESS_MAP_ATTRIBUTE_ADDR_WIDTH,
                            loc_data)
@@ -52,14 +56,15 @@ static void read_xml_one_memory(pugi::xml_node& xml_memory,
                    "Invalid id = %d! Expect zero or a positive integer!\n",
                    ram_id);
   }
-  if (addr_width <= 0 || data_width <= 0) {
+  if (id_width <= 0 || addr_width <= 0 || data_width <= 0) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_memory),
-                   "Invalid addr_width/data_width = (%d, %d)! Expect positive "
-                   "integers!\n",
-                   addr_width, data_width);
+                   "Invalid id_width/addr_width/data_width = (%d, %d, %d)! "
+                   "Expect positive integers!\n",
+                   id_width, addr_width, data_width);
   }
 
-  memory_address_map.create_memory(x, y, ram_id, addr_width, data_width);
+  memory_address_map.create_memory(x, y, ram_id, id_width, addr_width,
+                                   data_width);
 }
 
 int read_xml_memory_address_map(const std::string& file_path,

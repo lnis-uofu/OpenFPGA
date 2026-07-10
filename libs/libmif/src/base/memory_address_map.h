@@ -6,7 +6,7 @@
 /********************************************************************
  * In-memory storage for a memory_address_map.xml:
  *   <memory_address_map>
- *     <memory x="2" y="1" id="0" addr_width="3" data_width="16"/>
+ *     <memory x="2" y="1" id="0" id_width="8" addr_width="3" data_width="16"/>
  *   </memory_address_map>
  *******************************************************************/
 namespace openfpga {
@@ -27,6 +27,7 @@ class MemoryAddressMap {
   int coord_x(const MemoryAddressId& memory_id) const;
   int coord_y(const MemoryAddressId& memory_id) const;
   int ram_id(const MemoryAddressId& memory_id) const;
+  int id_width(const MemoryAddressId& memory_id) const;
   int addr_width(const MemoryAddressId& memory_id) const;
   int data_width(const MemoryAddressId& memory_id) const;
   /* Find memory entry by tile coordinate; INVALID if not found */
@@ -36,8 +37,8 @@ class MemoryAddressMap {
 
  public: /* Mutators */
   void clear();
-  MemoryAddressId create_memory(int x, int y, int ram_id, int addr_width,
-                                int data_width);
+  MemoryAddressId create_memory(int x, int y, int ram_id, int id_width,
+                                int addr_width, int data_width);
 
  public: /* Validators */
   bool valid_memory_id(const MemoryAddressId& memory_id) const;
@@ -47,6 +48,7 @@ class MemoryAddressMap {
   vtr::vector<MemoryAddressId, int> memory_coord_x_;
   vtr::vector<MemoryAddressId, int> memory_coord_y_;
   vtr::vector<MemoryAddressId, int> memory_ram_id_;
+  vtr::vector<MemoryAddressId, int> memory_id_width_;
   vtr::vector<MemoryAddressId, int> memory_addr_width_;
   vtr::vector<MemoryAddressId, int> memory_data_width_;
 };
