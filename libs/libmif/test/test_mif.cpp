@@ -3,11 +3,11 @@
  * 1. OpenFPGA .mif reader/writer
  * 2. Verilog init.hex reader (via read_mif) and echo as .mif
  * 3. memory_address_map.xml reader
- * 4. find Verilog instance (memory_0) that $readmemh the init.hex
+ * 4. find Verilog instances and bind two init hex files
  *
  * Usage:
  *   test_mif <test.mif> <mif_out.mif> <test_init.hex> <hex_out.mif> \
- *            <memory_address_map.xml> <benchmark.v> <init.hex>
+ *            <memory_address_map.xml> <benchmark.v> <init.hex> <init1.hex>
  *******************************************************************/
 #include <map>
 #include <string>
@@ -16,6 +16,7 @@
 #include "bind_bram_to_mif_storage.h"
 #include "command_exit_codes.h"
 #include "memory_address_map.h"
+#include "mif_io_utils.h"
 #include "mif_storage.h"
 #include "read_mif.h"
 #include "read_xml_memory_address_map.h"
@@ -23,10 +24,10 @@
 #include "write_mif.h"
 
 int main(int argc, const char** argv) {
-  if (argc < 8) {
+  if (argc < 9) {
     VTR_LOG_ERROR(
       "Usage: %s <test.mif> <mif_out.mif> <test_init.hex> <hex_out.mif> "
-      "<memory_address_map.xml> <benchmark.v> <init.hex>\n",
+      "<memory_address_map.xml> <benchmark.v> <init.hex> <init1.hex>\n",
       argv[0]);
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
@@ -78,23 +79,38 @@ int main(int argc, const char** argv) {
             memory_address_map.data_width(memory_id));
   }
 
-  /* 4) Find instance that reads init.hex, then bind. */
-  const std::string instance_name =
-    openfpga::find_verilog_instance_reading_mif(argv[6], "init.hex");
-  if (instance_name.empty()) {
-    VTR_LOG_ERROR("Failed to find instance reading init.hex in %s\n", argv[6]);
-    return openfpga::CMD_EXEC_FATAL_ERROR;
-  }
-  VTR_LOG("Found instance reading init.hex: %s\n", instance_name.c_str());
-
+  /* 4) Read two init hex files and bind by instance name */
   openfpga::MifStorage bind_storage;
   status = openfpga::read_mif(argv[7], bind_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
-  /* Mock placement: memory_0 at (2,2) matches memory_address_map.xml */
+  status = openfpga::read_mif(argv[8], bind_storage);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+
+  const std::string init0_name = openfpga::mif_file_basename(argv[7]);
+  const std::string init1_name = openfpga::mif_file_basename(argv[8]);
+  const std::string instance_0 =
+    openfpga::find_verilog_instance_reading_mif(argv[6], init0_name);
+  const std::string instance_1 =
+    openfpga::find_verilog_instance_reading_mif(argv[6], init1_name);
+  if (instance_0.empty() || instance_1.empty()) {
+    VTR_LOG_ERROR(
+      "Failed to find instances for '%s' / '%s' in %s\n", init0_name.c_str(),
+      init1_name.c_str(), argv[6]);
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+  VTR_LOG("Found instance reading %s: %s\n", init0_name.c_str(),
+          instance_0.c_str());
+  VTR_LOG("Found instance reading %s: %s\n", init1_name.c_str(),
+          instance_1.c_str());
+
+  /* Mock placement: memory_0 -> (2,2), memory_1 -> (2,1) */
   std::map<std::string, std::pair<int, int>> inst_coord_map;
-  inst_coord_map[instance_name] = std::make_pair(2, 2);
+  inst_coord_map[instance_0] = std::make_pair(2, 2);
+  inst_coord_map[instance_1] = std::make_pair(2, 1);
   status = openfpga::bind_bram_to_mif_storage(
     bind_storage, argv[6], inst_coord_map, memory_address_map);
   if (openfpga::CMD_EXEC_SUCCESS != status) {

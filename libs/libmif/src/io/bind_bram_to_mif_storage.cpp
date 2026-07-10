@@ -298,6 +298,8 @@ int bind_bram_to_mif_storage(
     const int addr_width = memory_address_map.addr_width(memory_id);
     const int data_width = memory_address_map.data_width(memory_id);
 
+    /* Bind one unbound segment per MIF source file */
+    bool filled = false;
     for (const MifSegmentId& segment_id : mif_storage.segments()) {
       if (mif_storage.has_xy(segment_id)) {
         continue;
@@ -307,6 +309,15 @@ int bind_bram_to_mif_storage(
       mif_storage.set_segment_ram_id(segment_id, ram_id);
       mif_storage.set_segment_addr_width(segment_id, addr_width);
       mif_storage.set_segment_data_width(segment_id, data_width);
+      filled = true;
+      break;
+    }
+    if (!filled) {
+      VTR_LOG_ERROR(
+        "bind_bram_to_mif_storage: no unbound segment left for "
+        "instance '%s'\n",
+        instance_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
     }
 
     VTR_LOG(

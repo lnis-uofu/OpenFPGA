@@ -6,7 +6,7 @@
 
 module dual_port_ram_128 #(
   parameter MEM_FILE_0 = "init.hex", // MIF for memory_0
-  parameter MEM_FILE_1 = "init.hex"  // MIF for memory_1
+  parameter MEM_FILE_1 = "init1.hex" // MIF for memory_1
 )(
   input clk,
   input wen,
