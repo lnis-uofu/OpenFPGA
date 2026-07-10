@@ -1,0 +1,10 @@
+// Comments are allowed using double slashes
+10 // Address 0x00
+11 // Address 0x01
+12 // Address 0x02
+13 // Address 0x03
+1A // Address 0x04
+1B // Address 0x05
+1C // Address 0x06
+@0A F0
+@0B F1

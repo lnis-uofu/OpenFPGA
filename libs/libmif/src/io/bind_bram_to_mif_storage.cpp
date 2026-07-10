@@ -83,8 +83,8 @@ static bool basename_equal_ignore_case(const std::string& a,
   return true;
 }
 
-std::string find_verilog_module_reading_mif(const std::string& verilog_path,
-                                            const std::string& mif_file_name) {
+std::string find_verilog_instance_reading_mif(
+  const std::string& verilog_path, const std::string& mif_file_name) {
   std::ifstream ifs(verilog_path.c_str());
   if (!ifs.is_open()) {
     VTR_LOG_ERROR("Failed to open Verilog file '%s'\n", verilog_path.c_str());
@@ -106,12 +106,30 @@ std::string find_verilog_module_reading_mif(const std::string& verilog_path,
   const std::regex readmemh_re(
     R"(\$readmemh\s*\(\s*([A-Za-z_][A-Za-z0-9_$]*|\"[^\"]+\"))",
     std::regex::ECMAScript);
+  /* type #( .P(V) ) inst_name ( */
+  const std::regex inst_re(
+    R"(([A-Za-z_][A-Za-z0-9_$]*)\s*(?:#\s*\(([\s\S]*?)\))?\s*([A-Za-z_][A-Za-z0-9_$]*)\s*\()",
+    std::regex::ECMAScript);
+  const std::regex override_re(
+    R"(\.([A-Za-z_][A-Za-z0-9_$]*)\s*\(\s*([A-Za-z_][A-Za-z0-9_$]*|\"[^\"]+\")\s*\))",
+    std::regex::ECMAScript);
+
+  /* module_type -> parameter name used by $readmemh, and its default file */
+  std::map<std::string, std::pair<std::string, std::string>>
+    readmemh_module_param;
+  /* module_type -> fixed file if $readmemh("file") */
+  std::map<std::string, std::string> readmemh_module_fixed_file;
+  /* parent module -> string parameters */
+  std::map<std::string, std::map<std::string, std::string>> module_string_params;
+  /* parent module -> body text (for instance scan) */
+  std::map<std::string, std::string> module_bodies;
 
   std::sregex_iterator mod_begin(text.begin(), text.end(), module_re);
   std::sregex_iterator re_end;
   for (auto it = mod_begin; it != re_end; ++it) {
     const std::string module_name = (*it)[1].str();
-    const size_t body_start = static_cast<size_t>((*it)[0].second - text.begin());
+    const size_t body_start =
+      static_cast<size_t>((*it)[0].second - text.begin());
 
     std::smatch end_match;
     const std::string from_body = text.substr(body_start);
@@ -120,29 +138,82 @@ std::string find_verilog_module_reading_mif(const std::string& verilog_path,
     }
     const std::string body =
       from_body.substr(0, static_cast<size_t>(end_match.position()));
+    module_bodies[module_name] = body;
 
     std::map<std::string, std::string> string_params;
     for (std::sregex_iterator p(body.begin(), body.end(), param_re); p != re_end;
          ++p) {
       string_params[(*p)[1].str()] = (*p)[2].str();
     }
+    module_string_params[module_name] = string_params;
 
     for (std::sregex_iterator r(body.begin(), body.end(), readmemh_re);
          r != re_end; ++r) {
       std::string arg = (*r)[1].str();
       if (!arg.empty() && arg.front() == '"') {
-        /* $readmemh("init.hex", ...) */
-        arg = arg.substr(1, arg.size() - 2);
-        if (basename_equal_ignore_case(arg, mif_file_name)) {
-          return module_name;
-        }
+        readmemh_module_fixed_file[module_name] =
+          arg.substr(1, arg.size() - 2);
       } else {
-        /* $readmemh(MEM_FILE, ...) with parameter default */
         const auto found = string_params.find(arg);
-        if (found != string_params.end() &&
-            basename_equal_ignore_case(found->second, mif_file_name)) {
-          return module_name;
+        const std::string default_file =
+          (found != string_params.end()) ? found->second : std::string();
+        readmemh_module_param[module_name] =
+          std::make_pair(arg, default_file);
+      }
+    }
+  }
+
+  /* Scan instances inside each parent module */
+  for (const auto& parent_itor : module_bodies) {
+    const std::string& parent_name = parent_itor.first;
+    const std::string& body = parent_itor.second;
+    const auto& parent_params = module_string_params[parent_name];
+
+    for (std::sregex_iterator i(body.begin(), body.end(), inst_re); i != re_end;
+         ++i) {
+      const std::string type_name = (*i)[1].str();
+      const std::string param_block = (*i)[2].str();
+      const std::string instance_name = (*i)[3].str();
+
+      /* Skip the module header itself: "module foo (" is not matched by
+       * inst_re because of 'module' keyword; still skip non-readmemh types */
+      const bool is_param_readmemh =
+        readmemh_module_param.count(type_name) != 0;
+      const bool is_fixed_readmemh =
+        readmemh_module_fixed_file.count(type_name) != 0;
+      if (!is_param_readmemh && !is_fixed_readmemh) {
+        continue;
+      }
+
+      std::string resolved_file;
+      if (is_fixed_readmemh) {
+        resolved_file = readmemh_module_fixed_file[type_name];
+      } else {
+        const std::string& param_name = readmemh_module_param[type_name].first;
+        resolved_file = readmemh_module_param[type_name].second;
+
+        /* Instance override: .MEM_FILE(...) */
+        for (std::sregex_iterator o(param_block.begin(), param_block.end(),
+                                    override_re);
+             o != re_end; ++o) {
+          if ((*o)[1].str() != param_name) {
+            continue;
+          }
+          std::string ov = (*o)[2].str();
+          if (!ov.empty() && ov.front() == '"') {
+            resolved_file = ov.substr(1, ov.size() - 2);
+          } else {
+            const auto pfound = parent_params.find(ov);
+            if (pfound != parent_params.end()) {
+              resolved_file = pfound->second;
+            }
+          }
         }
+      }
+
+      if (!resolved_file.empty() &&
+          basename_equal_ignore_case(resolved_file, mif_file_name)) {
+        return instance_name;
       }
     }
   }
@@ -182,32 +253,31 @@ int bind_bram_to_mif_storage(
 
   for (const std::string& mif_path : mif_storage.source_files()) {
     const std::string mif_name = mif_file_basename(mif_path);
-    const std::string module_name =
-      find_verilog_module_reading_mif(verilog_path, mif_name);
-    if (module_name.empty()) {
+    const std::string instance_name =
+      find_verilog_instance_reading_mif(verilog_path, mif_name);
+    if (instance_name.empty()) {
       VTR_LOG_ERROR(
-        "bind_bram_to_mif_storage: no Verilog module with $readmemh "
+        "bind_bram_to_mif_storage: no Verilog instance with $readmemh "
         "for '%s' in '%s'\n",
         mif_name.c_str(), verilog_path.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     VTR_LOG(
-      "bind_bram_to_mif_storage: MIF '%s' is read by module '%s'\n",
-      mif_name.c_str(), module_name.c_str());
+      "bind_bram_to_mif_storage: MIF '%s' is read by instance '%s'\n",
+      mif_name.c_str(), instance_name.c_str());
 
-    auto coord_it = inst_coord_map.find(module_name);
-    /* Single-BRAM fallback: Verilog module name may differ from BLIF model */
+    auto coord_it = inst_coord_map.find(instance_name);
     if (coord_it == inst_coord_map.end() && inst_coord_map.size() == 1) {
       coord_it = inst_coord_map.begin();
       VTR_LOG(
-        "bind_bram_to_mif_storage: module '%s' not in map, use sole "
+        "bind_bram_to_mif_storage: instance '%s' not in map, use sole "
         "placement entry '%s'\n",
-        module_name.c_str(), coord_it->first.c_str());
+        instance_name.c_str(), coord_it->first.c_str());
     }
     if (coord_it == inst_coord_map.end()) {
       VTR_LOG_ERROR(
-        "bind_bram_to_mif_storage: no coordinate for module '%s'\n",
-        module_name.c_str());
+        "bind_bram_to_mif_storage: no coordinate for instance '%s'\n",
+        instance_name.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
 
@@ -240,9 +310,9 @@ int bind_bram_to_mif_storage(
     }
 
     VTR_LOG(
-      "bind_bram_to_mif_storage: module '%s' -> (x=%d, y=%d) ram_id=%d "
+      "bind_bram_to_mif_storage: instance '%s' -> (x=%d, y=%d) ram_id=%d "
       "addr_width=%d data_width=%d\n",
-      module_name.c_str(), coord_x, coord_y, ram_id, addr_width,
+      instance_name.c_str(), coord_x, coord_y, ram_id, addr_width,
       data_width);
   }
 

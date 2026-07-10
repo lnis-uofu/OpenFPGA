@@ -11,17 +11,17 @@
 namespace openfpga {
 
 /********************************************************************
- * Find the Verilog module that reads the given MIF/hex file via
- * $readmemh (directly or through a string parameter default).
+ * Find the Verilog instance (e.g. memory_0) that reads the given
+ * MIF/hex file via $readmemh (parameter default or instance override).
  * Returns empty string if not found.
  *******************************************************************/
-std::string find_verilog_module_reading_mif(const std::string& verilog_path,
-                                            const std::string& mif_file_name);
+std::string find_verilog_instance_reading_mif(const std::string& verilog_path,
+                                              const std::string& mif_file_name);
 
 /********************************************************************
  * Bind BRAM info into mif_storage:
- * 1) find Verilog module that $readmemh each MIF source
- * 2) look up (x, y) by module name from inst_coord_map (placement)
+ * 1) find Verilog instance that $readmemh each MIF source
+ * 2) look up (x, y) by instance name from inst_coord_map (placement)
  * 3) look up that (x, y) in memory_address_map for ram_id / addr_width /
  *    data_width; error if (x, y) is missing
  * 4) write X/Y/RAM_ID/widths into mif_storage segments

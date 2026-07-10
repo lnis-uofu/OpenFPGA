@@ -1,12 +1,12 @@
 //-----------------------------------------------------
 // Design Name : dual_port_ram_128
-// File Name   : dual_port_ram_128.v
-// Function    : Dual port RAM 8x16bit with memory initialization file (MIF)
-// Coder       : Xifan Tang
+// File Name   : dual_port_ram_8x16_mif.v
+// Function    : Dual port RAM 8x16bit x2 with memory initialization file (MIF)
 //-----------------------------------------------------
 
 module dual_port_ram_128 #(
-  parameter MEM_FILE = "init.hex" // provide a name of MIF file in HEX format
+  parameter MEM_FILE_0 = "init.hex", // MIF for memory_0
+  parameter MEM_FILE_1 = "init.hex"  // MIF for memory_1
 )(
   input clk,
   input wen,
@@ -14,11 +14,12 @@ module dual_port_ram_128 #(
   input [2:0] waddr,
   input [2:0] raddr,
   input [15:0] din,
-  output [15:0] dout
+  output [15:0] dout0,
+  output [15:0] dout1
 );
 
     dual_port_sram_128 #(
-      .MEM_FILE(MEM_FILE)
+      .MEM_FILE(MEM_FILE_0)
     ) memory_0 (
       .wclk    (clk),
       .wen    (wen),
@@ -27,7 +28,19 @@ module dual_port_ram_128 #(
       .rclk    (clk),
       .ren    (ren),
       .raddr    (raddr),
-      .data_out    (dout) );
+      .data_out    (dout0) );
+
+    dual_port_sram_128 #(
+      .MEM_FILE(MEM_FILE_1)
+    ) memory_1 (
+      .wclk    (clk),
+      .wen    (wen),
+      .waddr    (waddr),
+      .data_in  (din),
+      .rclk    (clk),
+      .ren    (ren),
+      .raddr    (raddr),
+      .data_out    (dout1) );
 
 endmodule
 
