@@ -8,17 +8,13 @@
 
 /********************************************************************
  * OpenFPGA custom MIF text format (example):
-    // line comments
-    // Comments are allowed using double slashes
-    00 // Address 0x00: Data value 0
-    01 // Address 0x01: Data value 1    
-    02 // Address 0x02: Data value 2
-    03 // Address 0x03: Data value 3
-    0A // Address 0x04: Data value 10
-    0B // Address 0x05: Data value 11
-    0C // Address 0x06: Data value 12
-    @0A FF // Jump to Address 0x0A and set value to 255
-    @0B FE // Address 0x0B: Data value 254
+ *   // line comments
+ *   // X <int>  // Y <int>  (optional tile coordinates)
+ *   // ADDR_WIDTH <int>  // DATA_WIDTH <int>
+ *   // Address Data
+ *   0x2000 0x0000000a
+ *   //RAM_ID <int>  (starts a new RAM block section)
+ *   0x2e00 0x0000038f
  *******************************************************************/
 namespace openfpga {
 
