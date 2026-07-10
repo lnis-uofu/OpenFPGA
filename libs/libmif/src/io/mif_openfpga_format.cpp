@@ -14,11 +14,11 @@
 namespace openfpga {
 
 /********************************************************************
- * OpenFPGA MIF — serialization
+ * OpenFPGA MIF — serialization (match MifManager::write_rfmif_file)
  *
  * Data: 0x + zero-padded to (data_width / 4) hex digits.
  * Address:
- *   - with RAM_ID: physical = (ram_id << addr_width) | (logical & mask),
+ *   - with RAM_ID: composed = (ram_id << id_width) + logical_addr,
  *     padded to ((id_width + addr_width) / 4) hex digits
  *   - without RAM_ID: logical address padded to (addr_width / 4)
  ********************************************************************/
@@ -44,7 +44,11 @@ static void print_hex_with_width(std::ostream& os, uint64_t v, int width_bits) {
   os << "0x" << hex_ss.str();
 }
 
-/* Build print address and its bit width for one memory line. */
+/* Build print address and its bit width for one memory line.
+ * Match MifManager::write_rfmif_file:
+ *   composed_address = (ram_id << id_width) + address;
+ *   setw((id_width + addr_width) / 4)
+ */
 static void resolve_print_address(const MifStorage& storage,
                                   const MifSegmentId& segment_id,
                                   uint64_t logical_addr, uint64_t& print_addr,
@@ -52,23 +56,19 @@ static void resolve_print_address(const MifStorage& storage,
   print_addr = logical_addr;
   print_addr_bits = storage.addr_width(segment_id);
 
-  if (!storage.has_ram_id(segment_id) || storage.addr_width(segment_id) <= 0) {
+  if (!storage.has_ram_id(segment_id)) {
     return;
   }
 
+  const int id_width = storage.id_width(segment_id);
   const int addr_width = storage.addr_width(segment_id);
-  const uint64_t addr_mask =
-    (addr_width >= 64) ? ~uint64_t(0)
-                       : ((uint64_t(1) << addr_width) - uint64_t(1));
-  print_addr = (uint64_t(storage.ram_id(segment_id)) << addr_width) |
-               (logical_addr & addr_mask);
-
-  int id_bits = storage.id_width(segment_id);
-  if (id_bits <= 0) {
-    id_bits = mif_bit_width_for_max_value(
-      static_cast<uint64_t>(storage.ram_id(segment_id)));
+  if (id_width <= 0) {
+    return;
   }
-  print_addr_bits = id_bits + addr_width;
+
+  print_addr =
+    (uint64_t(storage.ram_id(segment_id)) << id_width) + logical_addr;
+  print_addr_bits = id_width + (addr_width > 0 ? addr_width : 0);
 }
 
 void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
