@@ -446,7 +446,7 @@ static void build_physical_block_pin_interc_bitstream(
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
                      "Invalid interconnection type for %s (Arch[LINE%d])!\n",
-                     cur_interc->name, cur_interc->line_num);
+                     cur_interc->name.c_str(), cur_interc->line_num);
       exit(1);
   }
 }

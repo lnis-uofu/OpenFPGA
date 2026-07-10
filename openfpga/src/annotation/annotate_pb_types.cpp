@@ -667,8 +667,8 @@ static bool link_physical_pb_interconnect_to_circuit_model(
       "interconnect '%s' under physical mode '%s' of pb_type '%s'!\n",
       circuit_lib.model_name(circuit_model_id).c_str(),
       CIRCUIT_MODEL_TYPE_STRING[circuit_lib.model_type(circuit_model_id)],
-      CIRCUIT_MODEL_TYPE_STRING[required_circuit_model_type], pb_interc->name,
-      physical_mode->name, physical_pb_type->name);
+      CIRCUIT_MODEL_TYPE_STRING[required_circuit_model_type],
+      pb_interc->name.c_str(), physical_mode->name, physical_pb_type->name);
     return false;
   }
 
@@ -679,7 +679,7 @@ static bool link_physical_pb_interconnect_to_circuit_model(
   VTR_LOGV(verbose_output,
            "Bind pb_type '%s' physical mode '%s' interconnect '%s' to circuit "
            "model '%s'\n",
-           physical_pb_type->name, physical_mode->name, pb_interc->name,
+           physical_pb_type->name, physical_mode->name, pb_interc->name.c_str(),
            circuit_lib.model_name(circuit_model_id).c_str());
 
   return true;
@@ -930,7 +930,7 @@ static void rec_infer_vpr_pb_interconnect_circuit_model_annotation(
       VTR_LOG_ERROR(
         "Unable to infer a circuit model for interconnect '%s' under physical "
         "mode '%s' of pb_type '%s'!\n",
-        pb_interc->name, physical_mode->name, cur_pb_type->name);
+        pb_interc->name.c_str(), physical_mode->name, cur_pb_type->name);
     }
     vpr_device_annotation.add_interconnect_circuit_model(pb_interc,
                                                          default_circuit_model);
@@ -938,7 +938,7 @@ static void rec_infer_vpr_pb_interconnect_circuit_model_annotation(
              "Implicitly infer a circuit model '%s' for interconnect '%s' "
              "under physical mode '%s' of pb_type '%s'\n",
              circuit_lib.model_name(default_circuit_model).c_str(),
-             pb_interc->name, physical_mode->name, cur_pb_type->name);
+             pb_interc->name.c_str(), physical_mode->name, cur_pb_type->name);
   }
 
   /* Traverse the pb_type children under the physical mode */

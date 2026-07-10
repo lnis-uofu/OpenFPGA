@@ -229,7 +229,7 @@ e_interconnect pb_interconnect_physical_type(t_interconnect* pb_interc,
       break;
     default:
       VTR_LOG_ERROR("Invalid type for interconnection '%s'!\n",
-                    pb_interc->name);
+                    pb_interc->name.c_str());
       exit(1);
   }
 
