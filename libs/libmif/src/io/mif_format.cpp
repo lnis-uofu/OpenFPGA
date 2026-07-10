@@ -25,7 +25,7 @@ static int hex_digits_for_width(int width_bits) {
 }
 
 static void print_hex_with_width(std::ostream& os, uint64_t v, int width_bits) {
-  const int nd = hex_digits_for_width(width_bits);
+  int nd = hex_digits_for_width(width_bits);
   if (nd <= 0) {
     os << "0x" << std::hex << v;
   } else {
@@ -38,12 +38,12 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
   os << "// This is a comment\n";
   os << "// All the address and data in HEX format\n";
 
-  bool first_segment = true;
+  bool first = true;
   for (const MifSegmentId& segment_id : storage.segments()) {
-    if (!first_segment) {
+    if (!first) {
       os << "\n";
     }
-    first_segment = false;
+    first = false;
 
     if (storage.has_xy(segment_id)) {
       os << "// " << MIF_DIRECTIVE_X << " " << storage.coord_x(segment_id)
@@ -100,35 +100,40 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
  ********************************************************************/
 
 /* True when the line is exactly one 0x-prefixed address + data pair. */
-static bool is_openfpga_address_data_line(const std::string& line) {
+static bool openfpga_mif_address_data_line(const std::string& line) {
   std::istringstream iss(line);
-  std::string addr_tok;
-  std::string data_tok;
-  if (!(iss >> addr_tok >> data_tok)) {
+  std::string first;
+  std::string second;
+  if (!(iss >> first >> second)) {
     return false;
   }
   std::string extra;
   if (iss >> extra) {
     return false;
   }
-  return addr_tok.size() >= 2 && addr_tok[0] == '0' &&
-         (addr_tok[1] == 'x' || addr_tok[1] == 'X');
+  return first.size() >= 2 && first[0] == '0' &&
+         (first[1] == 'x' || first[1] == 'X');
 }
 
-static bool try_openfpga_address_data_line(const std::string& line,
-                                           uint64_t& addr, uint64_t& data) {
+/* Parse a token as an unsigned 64-bit integer (decimal or hex). */
+static bool parse_hex_u64(const std::string& tok, uint64_t& out) {
+  return parse_mif_u64_token(tok, out);
+}
+
+/* Return true if the line is exactly one 'address data' hex pair. */
+static bool try_address_data_line(const std::string& line, uint64_t& addr,
+                                  uint64_t& data) {
   std::istringstream iss(line);
-  std::string addr_tok;
-  std::string data_tok;
-  if (!(iss >> addr_tok >> data_tok)) {
+  std::string ta;
+  std::string td;
+  if (!(iss >> ta >> td)) {
     return false;
   }
   std::string extra;
   if (iss >> extra) {
     return false;
   }
-  return parse_mif_u64_token(addr_tok, addr) &&
-         parse_mif_u64_token(data_tok, data);
+  return parse_hex_u64(ta, addr) && parse_hex_u64(td, data);
 }
 
 static bool segment_has_content(const MifStorage& mif_storage,
@@ -163,19 +168,19 @@ static void start_new_segment_for_ram_id(MifStorage& mif_storage,
 }
 
 static int parse_mif_directive(const std::string& file_path, size_t line_no,
-                               const std::string& directive_body,
+                               const std::string& directive,
                                MifStorage& mif_storage,
                                bool& has_current_segment,
                                MifSegmentId& current_segment_id) {
-  std::istringstream iss(directive_body);
+  std::istringstream ls(directive);
   std::string key;
-  if (!(iss >> key)) {
+  if (!(ls >> key)) {
     return CMD_EXEC_SUCCESS;
   }
 
   if (key == MIF_DIRECTIVE_RAM_ID) {
     int ram_id = 0;
-    if (!(iss >> ram_id)) {
+    if (!(ls >> ram_id)) {
       VTR_LOG_ERROR("%s:%lu: expected integer after //%s\n", file_path.c_str(),
                     static_cast<unsigned long>(line_no), MIF_DIRECTIVE_RAM_ID);
       return CMD_EXEC_FATAL_ERROR;
@@ -187,7 +192,7 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
 
   int value = 0;
   if (key == MIF_DIRECTIVE_X) {
-    if (!(iss >> value)) {
+    if (!(ls >> value)) {
       VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
                     static_cast<unsigned long>(line_no), MIF_DIRECTIVE_X);
       return CMD_EXEC_FATAL_ERROR;
@@ -198,7 +203,7 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     return CMD_EXEC_SUCCESS;
   }
   if (key == MIF_DIRECTIVE_Y) {
-    if (!(iss >> value)) {
+    if (!(ls >> value)) {
       VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
                     static_cast<unsigned long>(line_no), MIF_DIRECTIVE_Y);
       return CMD_EXEC_FATAL_ERROR;
@@ -209,7 +214,7 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     return CMD_EXEC_SUCCESS;
   }
   if (key == MIF_DIRECTIVE_ADDR_WIDTH) {
-    if (!(iss >> value)) {
+    if (!(ls >> value)) {
       VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
                     static_cast<unsigned long>(line_no),
                     MIF_DIRECTIVE_ADDR_WIDTH);
@@ -221,7 +226,7 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     return CMD_EXEC_SUCCESS;
   }
   if (key == MIF_DIRECTIVE_DATA_WIDTH) {
-    if (!(iss >> value)) {
+    if (!(ls >> value)) {
       VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
                     static_cast<unsigned long>(line_no),
                     MIF_DIRECTIVE_DATA_WIDTH);
@@ -233,7 +238,7 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     return CMD_EXEC_SUCCESS;
   }
   if (key == MIF_DIRECTIVE_ID_WIDTH) {
-    if (!(iss >> value)) {
+    if (!(ls >> value)) {
       VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
                     static_cast<unsigned long>(line_no),
                     MIF_DIRECTIVE_ID_WIDTH);
@@ -245,7 +250,7 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
     return CMD_EXEC_SUCCESS;
   }
 
-  /* Unrecognized // line: treat as a free-form comment. */
+  /* Unrecognized // line: treat as comment */
   return CMD_EXEC_SUCCESS;
 }
 
@@ -265,7 +270,7 @@ int parse_mif_line(const std::string& file_path, size_t line_no,
 
   uint64_t addr = 0;
   uint64_t data = 0;
-  if (try_openfpga_address_data_line(line, addr, data)) {
+  if (try_address_data_line(line, addr, data)) {
     if (!has_current_segment) {
       VTR_LOG_ERROR("%s:%lu: address/data line before any // directive\n",
                     file_path.c_str(), static_cast<unsigned long>(line_no));
@@ -325,7 +330,7 @@ static bool file_contains_openfpga_mif_marker(std::ifstream& ifs) {
       }
     }
 
-    if (is_openfpga_address_data_line(line)) {
+    if (openfpga_mif_address_data_line(line)) {
       return true;
     }
   }
