@@ -106,6 +106,9 @@ class OpenfpgaContext : public Context {
   const openfpga::FabricBitstream& fabric_bitstream() const {
     return fabric_bitstream_;
   }
+  const openfpga::FabricBitstream& reorder_fabric_bitstream() const {
+    return reorder_fabric_bitstream_;
+  }
   const openfpga::IoLocationMap& io_location_map() const {
     return io_location_map_;
   }
@@ -169,6 +172,9 @@ class OpenfpgaContext : public Context {
   }
   openfpga::FabricBitstream& mutable_fabric_bitstream() {
     return fabric_bitstream_;
+  }
+  openfpga::FabricBitstream& mutable_reorder_fabric_bitstream() {
+    return reorder_fabric_bitstream_;
   }
   openfpga::IoLocationMap& mutable_io_location_map() {
     return io_location_map_;
@@ -241,6 +247,11 @@ class OpenfpgaContext : public Context {
   /* Bitstream database */
   openfpga::BitstreamManager bitstream_manager_;
   openfpga::FabricBitstream fabric_bitstream_;
+  /* This data structure is used to store the rordered fabric bitstream.
+   * The order is determined by the bitstream reorder map given by the user.
+   * It is currently mainly used for QL MSC bitstream generation.
+   */
+  openfpga::FabricBitstream reorder_fabric_bitstream_;
 
   /* Netlist database
    * TODO: Each format should have an independent entry
