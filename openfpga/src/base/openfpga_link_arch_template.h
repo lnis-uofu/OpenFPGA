@@ -125,7 +125,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   annotate_device_rr_gsb(
     g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
     !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
-    in_edges, g_vpr_ctx.device().gsb_version,
+    in_edges, gsb_version,
     cmd_context.option_enable(cmd, opt_allow_gsb_dangling_opin),
     cmd_context.option_enable(cmd, opt_verbose));
 
