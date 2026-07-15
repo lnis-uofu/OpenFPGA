@@ -180,6 +180,7 @@
   </switch_block>
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
+    <segment name="L5" circuit_model_name="chan_segment"/>
   </routing_segment>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->

@@ -899,7 +899,7 @@ static void add_module_pb_graph_pin_interc(
       VTR_LOGF_ERROR(
         __FILE__, __LINE__,
         "Invalid interconnection type for %s [at Architecture XML LINE%d]!\n",
-        cur_interc->name, cur_interc->line_num);
+        cur_interc->name.c_str(), cur_interc->line_num);
       exit(1);
   }
 }

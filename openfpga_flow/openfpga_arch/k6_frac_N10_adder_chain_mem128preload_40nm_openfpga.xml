@@ -150,21 +150,22 @@
       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
       <port type="output" prefix="Q" size="1"/>
-      <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
+      <port type="clock" prefix="clk" lib_name="CK" size="1"/>
     </circuit_model>
-    <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
+    <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
-      <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-"/>
+      <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="4" tri_state_map="---1" circuit_model_name="OR2"/>
-      <port type="output" prefix="lut3_out" size="2" lut_frac_level="3" lut_output_mask="0,1"/>
-      <port type="output" prefix="lut4_out" size="1" lut_output_mask="0"/>
-      <port type="sram" prefix="sram" size="16"/>
-      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
+      <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
+      <port type="output" prefix="lut4_out" size="4" lut_frac_level="4" lut_output_mask="0,1,2,3"/>
+      <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
+      <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
+      <port type="sram" prefix="sram" size="64"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
     <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
@@ -196,6 +197,25 @@
       <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
       <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
+    <circuit_model type="hard_logic" name="dpram_8x16_preload" prefix="dpram_8x16_preload" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dpram_8x16_preload.v">
+      <design_technology type="cmos"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
+      <port type="input" prefix="waddr" size="3"/>
+      <port type="input" prefix="raddr" size="3"/>
+      <port type="input" prefix="data_in" lib_name="d_in" size="16"/>
+      <port type="input" prefix="wen" size="1"/>
+      <port type="input" prefix="ren" size="1"/>
+      <port type="output" prefix="data_out" lib_name="d_out" size="16"/>
+      <port type="clock" prefix="clk" size="1"/>
+      <!-- Global ports for preload -->
+      <port type="input" prefix="mem_init_rst_n" lib_name="rst_n" size="1" is_global="true" default_val="1" is_reset="true"/>
+      <port type="input" prefix="mem_init_clk" lib_name="preload_clk" size="1" is_global="true" default_val="0"/>
+      <port type="input" prefix="mem_init_start" lib_name="init_start" size="1" is_global="true" default_val="0"/>
+      <port type="output" prefix="mem_init_done" lib_name="init_done" size="1" is_global="true" default_val="0" is_io="true"/>
+      <port type="output" prefix="mem_init_addr" lib_name="init_src_addr" size="2" is_global="true" default_val="0" is_io="true"/>
+      <port type="input" prefix="mem_init_data" lib_name="init_src_data" size="16" is_global="true" default_val="0" is_io="true"/>
+    </circuit_model>
   </circuit_library>
   <configuration_protocol>
     <organization type="scan_chain" circuit_model_name="DFFR"/>
@@ -210,9 +230,14 @@
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <direct_connection>
-    <!-- direct name="adder_carry" circuit_model_name="direct_interc" type="inter_column" x_dir="positive" y_dir="positive"/-->
-    <direct name="adder_carry" circuit_model_name="direct_interc"/>
+    <direct name="adder_carry" circuit_model_name="direct_interc" type="inter_column" x_dir="positive" y_dir="positive"/>
   </direct_connection>
+  <tile_annotations>
+    <global_port name="clk" is_clock="true" default_val="0">
+      <tile name="clb" port="clk"/>
+      <tile name="memory" port="clk"/>
+    </global_port>
+  </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
@@ -227,31 +252,35 @@
       <interconnect name="crossbar" circuit_model_name="mux_2level"/>
     </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
-    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="0"/>
+    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="DFFSRQ"/>
     <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="ADDF"/>
     <!-- Binding operating pb_type to physical pb_type -->
-    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1" physical_pb_type_index_factor="0.5">
-      <!-- Binding the lut3 to the first 3 inputs of fracturable lut4 -->
-      <port name="in" physical_mode_port="in[0:2]"/>
-      <port name="out" physical_mode_port="lut3_out[0:0]" physical_mode_pin_rotate_offset="1"/>
+    <!-- Binding operating pb_types in mode 'n2_lut5' -->
+    <pb_type name="clb.fle[n2_lut5].ble5.lut5" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="01" physical_pb_type_index_factor="0.5">
+      <!-- Binding the lut5 to the first 5 inputs of fracturable lut6 -->
+      <port name="in" physical_mode_port="in[0:4]"/>
+      <port name="out" physical_mode_port="lut5_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
-    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <pb_type name="clb.fle[n2_lut5].ble5.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
     <!-- Binding operating pb_types in mode 'arithmetic' -->
-    <pb_type name="clb.fle[arithmetic].arithmetic.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1" physical_pb_type_index_factor="0.5">
-      <!-- Binding the lut4 to the first 3 inputs of fracturable lut6 -->
-      <port name="in" physical_mode_port="in[0:2]"/>
-      <port name="out" physical_mode_port="lut3_out[0:0]" physical_mode_pin_rotate_offset="1"/>
+    <pb_type name="clb.fle[arithmetic].arithmetic.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="11" physical_pb_type_index_factor="0.25">
+      <!-- Binding the lut4 to the first 4 inputs of fracturable lut6 -->
+      <port name="in" physical_mode_port="in[0:3]"/>
+      <port name="out" physical_mode_port="lut4_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
     <pb_type name="clb.fle[arithmetic].arithmetic.adder" physical_pb_type_name="clb.fle[physical].fabric.adder"/>
     <pb_type name="clb.fle[arithmetic].arithmetic.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
-    <!-- Binding operating pb_types in mode 'ble4' -->
-    <pb_type name="clb.fle[n1_lut4].ble4.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="0">
-      <!-- Binding the lut4 to the first 4 inputs of fracturable lut4 -->
-      <port name="in" physical_mode_port="in[0:3]"/>
-      <port name="out" physical_mode_port="lut4_out"/>
+    <!-- Binding operating pb_types in mode 'ble6' -->
+    <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="00">
+      <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
+      <port name="in" physical_mode_port="in[0:5]"/>
+      <port name="out" physical_mode_port="lut6_out"/>
     </pb_type>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
-    <!-- End physical pb_type binding in complex block IO -->
+    <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <!-- End physical pb_type binding in complex block clb -->
+    <!-- physical pb_type binding in complex block memory -->
+    <pb_type name="memory[mem_8x16_dp].mem_8x16_dp" circuit_model_name="dpram_8x16_preload"/>
+    <!-- END physical pb_type binding in complex block memory -->
   </pb_type_annotations>
 </openfpga_architecture>
