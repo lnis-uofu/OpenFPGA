@@ -54,29 +54,12 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     cmd.option("reorder_incoming_edges");
   CommandOptionId opt_allow_gsb_dangling_opin =
     cmd.option("allow_gsb_dangling_opin");
-  CommandOptionId opt_gsb_version = cmd.option("gsb_version");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
-  /* TODO: The best to get the gsb version from RRGraphView when it is created.
-   * It can avoid mismatches between vpr options and here */
-  e_gsb_version gsb_version =
-    e_gsb_version::GSB_V1; /* Default GSB version is 1 */
-  if (cmd_context.option_enable(cmd, opt_gsb_version)) {
-    /* TODO: Encapsulate the string-to-enum conversion to a function */
-    std::string gsb_ver_str = cmd_context.option_value(cmd, opt_gsb_version);
-    if (gsb_ver_str == std::string("none")) {
-      gsb_version = e_gsb_version::NOT_CRR;
-    } else if (gsb_ver_str == std::string("1")) {
-      gsb_version = e_gsb_version::GSB_V1;
-    } else if (gsb_ver_str == std::string("2")) {
-      gsb_version = e_gsb_version::GSB_V2;
-    } else {
-      VTR_LOG_ERROR(
-        "Invalid GSB version '%s'. Supported versions are [ none | 1 | 2 ].\n",
-        gsb_ver_str.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-  }
+  /* Get the GSB version from the VPR device context (set during RR graph
+   * generation). It is not a command option to avoid any mismatch between the
+   * VPR options and this command */
+  e_gsb_version gsb_version = g_vpr_ctx.device().gsb_version;
 
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
