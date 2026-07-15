@@ -348,6 +348,10 @@ static void build_physical_block_pin_interc_bitstream(
        * together with it and skipped here. */
       t_pb_graph_pin* rep_pb_graph_pin = des_pb_graph_pin;
       size_t mux_input_pin_id = 0;
+      /* Pin whose input/output nets are recorded for reporting. For a
+       * partially mapped bus, the representative bit may be unused; prefer the
+       * first mapped bit instead (updated in the loop below) */
+      t_pb_graph_pin* net_pb_graph_pin = des_pb_graph_pin;
 
       if (true == cur_interc->bus) {
         std::vector<t_pb_graph_pin*> bus_pins = pb_graph_interc_sink_pins(
@@ -370,6 +374,7 @@ static void build_physical_block_pin_interc_bitstream(
           }
           if (DEFAULT_PATH_ID == bus_path_id) {
             bus_path_id = pin_path_id;
+            net_pb_graph_pin = bus_pin;
           } else if (bus_path_id != pin_path_id) {
             VTR_LOGF_ERROR(
               __FILE__, __LINE__,
@@ -393,15 +398,17 @@ static void build_physical_block_pin_interc_bitstream(
                              : size_t(pin_path_id);
       }
 
-      /* Record input/output nets of the representative bit for reporting */
-      const PhysicalPbId& rep_pb_id =
-        physical_pb.find_pb(rep_pb_graph_pin->parent_node);
-      if (true == physical_pb.valid_pb_id(rep_pb_id)) {
+      /* Record input/output nets for reporting. For a bus-based mux, nets are
+       * taken from the first mapped bit, since the representative bit may be
+       * unused when the bus is partially mapped */
+      const PhysicalPbId& net_pb_id =
+        physical_pb.find_pb(net_pb_graph_pin->parent_node);
+      if (true == physical_pb.valid_pb_id(net_pb_id)) {
         output_net =
-          physical_pb.pb_graph_pin_atom_net(rep_pb_id, rep_pb_graph_pin);
+          physical_pb.pb_graph_pin_atom_net(net_pb_id, net_pb_graph_pin);
         if (AtomNetId::INVALID() != output_net) {
           for (t_pb_graph_pin* src_pb_graph_pin :
-               pb_graph_pin_inputs(rep_pb_graph_pin, cur_interc)) {
+               pb_graph_pin_inputs(net_pb_graph_pin, cur_interc)) {
             const PhysicalPbId& src_pb_id =
               physical_pb.find_pb(src_pb_graph_pin->parent_node);
             input_nets.push_back(
