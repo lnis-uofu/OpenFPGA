@@ -218,7 +218,10 @@ when read_unique_blocks command invoked */
     cby_unique_module_; /* For each side of connection block, we identify a list
                            of unique modules based on its connection. This is a
                            matrix [0..num_module] */
+  /* The GSB version that VPR used to build the routing graph. gsb_version_set_
+   * guards against reading the version before set_gsb_version() is called. */
   e_gsb_version gsb_version_ = e_gsb_version::GSB_V1;
+  bool gsb_version_set_ = false;
 
   /* Cached data */
   const VprDeviceAnnotation& device_annotation_;
