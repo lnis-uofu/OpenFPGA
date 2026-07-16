@@ -78,7 +78,7 @@ if (OPENFPGA_USES_IPO)
 endif()
 
 deploy_runtime_dependencies(
-    TARGET libopenfpga openfpga
+    TARGETS libopenfpga openfpga
     DESTINATION bin
     COMPONENT openfpga_package
     RUNTIME_SET_NAME openfpga_shared_deps
