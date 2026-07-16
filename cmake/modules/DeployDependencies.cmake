@@ -74,13 +74,13 @@ function(deploy_runtime_dependencies)
 
         # Install target binary and append dependencies to the shared pool
         install(TARGETS ${current_target}
+            RUNTIME_DEPENDENCY_SET ${DEPLOY_RUNTIME_SET_NAME}
             RUNTIME 
                 DESTINATION ${DEPLOY_DESTINATION}
                 COMPONENT ${DEPLOY_COMPONENT}
             LIBRARY 
                 DESTINATION ${DEPLOY_DESTINATION}
                 COMPONENT ${DEPLOY_COMPONENT}
-            RUNTIME_DEPENDENCY_SET ${DEPLOY_RUNTIME_SET_NAME}
         )
     endforeach()
 
