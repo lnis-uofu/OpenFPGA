@@ -437,6 +437,12 @@ endif()
 
 # For installer
 if (OPENFPGA_WITH_INSTALLER)
+  # Disable automatic runtime dependency resolution on MSVC
+  # This prevents CPack from trying to include Windows API stub DLLs (api-ms-win-*.dll)
+  if (MSVC)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS "")
+    set(CMAKE_INSTALL_DEBUG_LIBRARIES FALSE)
+  endif()
   include(OpenfpgaInstaller)
   include(OpenfpgaPackaging)
 endif()
