@@ -8,6 +8,9 @@
 #    RUNTIME_SET_NAME project_shared_deps # Optional customization parameter
 #)
 cmake_minimum_required(VERSION 3.21)
+# Manually force the behavior in older project structures
+# This can be removed once cmake version requirements is >4.3
+cmake_policy(SET CMP0207 NEW)
 
 function(deploy_runtime_dependencies)
     set(options)
@@ -42,6 +45,11 @@ function(deploy_runtime_dependencies)
             "msvcrt\\.dll"
             "ucrtbase\\.dll"
             "ntdll\\.dll"
+            ".*[Aa]zure[Aa]ttest.*\\.dll"
+            ".*[Hh]vsi[Ff]ile.*\\.dll"
+            ".*[Pp]dm[Uu]tilities.*\\.dll"
+            ".*[Ww][Tt][Dd][Ss][Ee][Nn][Ss][Oo][Rr].*\\.dll"
+            "^[Cc]:/[Ww][Ii][Nn][Dd][Oo][Ww][Ss]/.*" # Ignores all standard Windows system DLL
         )
         # Robust check for MSYS2 contexts (MinGW, UCRT64, Clang64)
         if(MINGW OR CYGWIN OR DEFINED ENV{MSYSTEM})
