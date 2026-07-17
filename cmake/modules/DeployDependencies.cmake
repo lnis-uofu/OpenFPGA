@@ -8,9 +8,6 @@
 #    RUNTIME_SET_NAME project_shared_deps # Optional customization parameter
 #)
 cmake_minimum_required(VERSION 3.21)
-# Manually force the behavior in older project structures
-# This can be removed once cmake version requirements is >4.3
-cmake_policy(SET CMP0207 NEW)
 
 function(deploy_runtime_dependencies)
     set(options)
