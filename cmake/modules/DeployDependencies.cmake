@@ -35,9 +35,9 @@ function(deploy_runtime_dependencies)
         set(SYSTEM_EXCLUDE_REGEXES
             "^[Cc]:/[Ww][Ii][Nn][Dd][Oo][Ww][Ss]"
             "^[Aa][Pp][Pp][Dd][Aa][Tt][Aa]"
-            "api-ms-win"
-            "ext-ms-win"
-            "kernel32\\.dll"
+            "^api-ms-.*"
+            "^ext-ms-.*"
+            "^kernel32\\.dll"
             "user32\\.dll"
             "msvcrt\\.dll"
             "ucrtbase\\.dll"
