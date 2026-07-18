@@ -37,8 +37,8 @@ function(deploy_runtime_dependencies)
             "^[Aa][Pp][Pp][Dd][Aa][Tt][Aa]"
             "api-ms-win-.*"           # Exclude Windows API forwarder DLLs
             "ext-ms-win-.*"           # Exclude extended Windows API DLLs
-            "^/Windows/"              # Exclude Windows system directories
-            "^/WINDOWS/"
+            "/Windows/"              # Exclude Windows system directories
+            "/WINDOWS/"
             "^kernel32\\.dll"
             "user32\\.dll"
             "msvcrt\\.dll"
@@ -97,8 +97,8 @@ function(deploy_runtime_dependencies)
     install(RUNTIME_DEPENDENCY_SET ${DEPLOY_RUNTIME_SET_NAME}
         DESTINATION ${DEPLOY_DESTINATION}
         COMPONENT ${DEPLOY_COMPONENT}
-        PRE_EXCLUDE_REGEXES "${SYSTEM_EXCLUDE_REGEXES}"
-        POST_EXCLUDE_REGEXES "${SYSTEM_EXCLUDE_REGEXES}"
+        PRE_EXCLUDE_REGEXES ${SYSTEM_EXCLUDE_REGEXES}
+        POST_EXCLUDE_REGEXES ${SYSTEM_EXCLUDE_REGEXES}
         DIRECTORIES ${DEPLOY_ADDITIONAL_DIRECTORIES}
     )
 endfunction()
