@@ -35,8 +35,10 @@ function(deploy_runtime_dependencies)
         set(SYSTEM_EXCLUDE_REGEXES
             "^[Cc]:/[Ww][Ii][Nn][Dd][Oo][Ww][Ss]"
             "^[Aa][Pp][Pp][Dd][Aa][Tt][Aa]"
-            "^api-ms-.*"
-            "^ext-ms-.*"
+            "api-ms-win-.*"           # Exclude Windows API forwarder DLLs
+            "ext-ms-win-.*"           # Exclude extended Windows API DLLs
+            "^/Windows/"              # Exclude Windows system directories
+            "^/WINDOWS/"
             "^kernel32\\.dll"
             "user32\\.dll"
             "msvcrt\\.dll"
@@ -47,6 +49,8 @@ function(deploy_runtime_dependencies)
             ".*[Pp]dm[Uu]tilities.*\\.dll"
             ".*[Ww][Tt][Dd][Ss][Ee][Nn][Ss][Oo][Rr].*\\.dll"
             "^[Cc]:/[Ww][Ii][Nn][Dd][Oo][Ww][Ss]/.*" # Ignores all standard Windows system DLL
+            ".*system32.*"
+            ".*SysWOW64.*"
         )
         # Robust check for MSYS2 contexts (MinGW, UCRT64, Clang64)
         if(MINGW OR CYGWIN OR DEFINED ENV{MSYSTEM})
