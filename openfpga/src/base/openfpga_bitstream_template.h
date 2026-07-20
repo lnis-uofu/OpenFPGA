@@ -42,7 +42,7 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
-  CommandOptionId opt_write_mem_file = cmd.option("write_mem_file");
+  CommandOptionId opt_write_mif = cmd.option("write_mif");
   CommandOptionId opt_verilog = cmd.option("verilog");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
@@ -91,8 +91,8 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
 
   if (!openfpga_ctx.mif_storage().empty()) {
     std::string mem_file_path;
-    if (true == cmd_context.option_enable(cmd, opt_write_mem_file)) {
-      mem_file_path = cmd_context.option_value(cmd, opt_write_mem_file);
+    if (true == cmd_context.option_enable(cmd, opt_write_mif)) {
+      mem_file_path = cmd_context.option_value(cmd, opt_write_mif);
     } else if (true == cmd_context.option_enable(cmd, opt_write_file)) {
       mem_file_path = default_preload_mem_file_path(
         cmd_context.option_value(cmd, opt_write_file));

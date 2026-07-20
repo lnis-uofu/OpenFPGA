@@ -92,11 +92,11 @@ ShellCommandId add_build_arch_bitstream_command_template(
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
-  /* Add an option '--write_mem_file' */
-  CommandOptionId opt_write_mem_file = shell_cmd.add_option(
-    "write_mem_file", false,
+  /* Add an option '--write_mif' */
+  CommandOptionId opt_write_mif = shell_cmd.add_option(
+    "write_mif", false,
     "File path to output aggregated preload memory (.mem) for testbench");
-  shell_cmd.set_option_require_value(opt_write_mem_file, openfpga::OPT_STRING);
+  shell_cmd.set_option_require_value(opt_write_mif, openfpga::OPT_STRING);
 
   /* Add an option '--verilog' */
   CommandOptionId opt_verilog = shell_cmd.add_option(
