@@ -1,7 +1,6 @@
 #include "mif_vpr_placement.h"
 
 #include <algorithm>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -11,12 +10,14 @@
 
 namespace openfpga {
 
-static bool is_memory_model_name(const std::string& model_name) {
+namespace {
+
+bool is_memory_model_name(const std::string& model_name) {
   return model_name.find("ram") != std::string::npos ||
          model_name.find("memory") != std::string::npos;
 }
 
-static std::string compose_pb_type_path(const t_pb* leaf_pb) {
+std::string compose_pb_type_path(const t_pb* leaf_pb) {
   if (nullptr == leaf_pb) {
     return std::string();
   }
@@ -54,16 +55,16 @@ static std::string compose_pb_type_path(const t_pb* leaf_pb) {
   return pb_type_path;
 }
 
-/* Analyze VPR context to get ram instances' placement/pb_type info */
-std::map<std::string, MifPlacementInfo> get_instance_info_from_placement() {
-  std::map<std::string, MifPlacementInfo> inst_info_map;
+} /* namespace */
+
+std::map<std::string, std::string> get_instance_pb_type_path_from_placement() {
+  std::map<std::string, std::string> inst_pb_type_path_map;
   const auto& cluster_ctx = g_vpr_ctx.clustering();
-  const auto& block_locs = g_vpr_ctx.placement().block_locs();
   const auto& atom_ctx = g_vpr_ctx.atom();
   const auto& models = g_vpr_ctx.device().arch->models;
 
   if (cluster_ctx.clb_nlist.blocks().empty()) {
-    VTR_LOG("get_instance_info_from_placement: Found no blocks.\n");
+    VTR_LOG("get_instance_pb_type_path_from_placement: Found no blocks.\n");
   }
 
   for (const AtomBlockId& atom_blk_id : atom_ctx.netlist().blocks()) {
@@ -74,7 +75,7 @@ std::map<std::string, MifPlacementInfo> get_instance_info_from_placement() {
     }
 
     const ClusterBlockId clb_blk_id = atom_ctx.lookup().atom_clb(atom_blk_id);
-    if (!clb_blk_id.is_valid() || !block_locs.count(clb_blk_id)) {
+    if (!clb_blk_id.is_valid()) {
       continue;
     }
 
@@ -84,21 +85,21 @@ std::map<std::string, MifPlacementInfo> get_instance_info_from_placement() {
       continue;
     }
 
-    MifPlacementInfo info;
-    info.location = block_locs[clb_blk_id].loc;
-    info.pb_type_path = compose_pb_type_path(atom_pb);
+    const std::string pb_type_path = compose_pb_type_path(atom_pb);
+    if (pb_type_path.empty()) {
+      continue;
+    }
 
     const std::string instance_name =
       atom_ctx.netlist().block_name(atom_blk_id);
-    inst_info_map[instance_name] = info;
+    inst_pb_type_path_map[instance_name] = pb_type_path;
     VTR_LOG(
-      "get_instance_info_from_placement: instance '%s' -> (x=%d, y=%d) "
+      "get_instance_pb_type_path_from_placement: instance '%s' -> "
       "pb_type='%s'\n",
-      instance_name.c_str(), info.location.x, info.location.y,
-      info.pb_type_path.c_str());
+      instance_name.c_str(), pb_type_path.c_str());
   }
 
-  return inst_info_map;
+  return inst_pb_type_path_map;
 }
 
 } /* namespace openfpga */

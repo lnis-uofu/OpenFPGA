@@ -3,16 +3,10 @@
 #include <map>
 #include <string>
 
-#include "vpr_types.h"
-
 namespace openfpga {
 
-struct MifPlacementInfo {
-  t_pl_loc location;
-  std::string pb_type_path;
-};
-
-/* Analyze VPR context to get ram instance-name -> placement/pb_type info */
-std::map<std::string, MifPlacementInfo> get_instance_info_from_placement();
+/* Map Verilog atom instance name -> index-level pb_type path from VPR
+ * placement. */
+std::map<std::string, std::string> get_instance_pb_type_path_from_placement();
 
 } /* namespace openfpga */

@@ -34,7 +34,6 @@ class MifStorage {
   int data_width(const MifSegmentId& segment_id) const;
   bool has_source_file(const MifSegmentId& segment_id) const;
   const std::string& segment_source_file(const MifSegmentId& segment_id) const;
-  bool has_physical_pb(const MifSegmentId& segment_id) const;
   const std::string& physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;

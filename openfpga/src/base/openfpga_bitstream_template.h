@@ -107,12 +107,8 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
         return CMD_EXEC_FATAL_ERROR;
       }
 
-      const std::map<std::string, MifPlacementInfo> pl_info_map =
-        get_instance_info_from_placement();
-      std::map<std::string, std::string> inst_pb_type_path_map;
-      for (const auto& pl_kv : pl_info_map) {
-        inst_pb_type_path_map[pl_kv.first] = pl_kv.second.pb_type_path;
-      }
+      const std::map<std::string, std::string> inst_pb_type_path_map =
+        get_instance_pb_type_path_from_placement();
 
       const int mem_status = aggregate_mif_storage_and_write_preload_mem(
         openfpga_ctx.mif_storage(), openfpga_ctx.bitstream_setting(),

@@ -74,51 +74,6 @@ void serialize_preload_mem(const AggregatedMifStorage& storage,
   }
 }
 
-bool parse_init_hex_content_line(const std::string& line, uint64_t& next_addr,
-                                 uint64_t& addr, uint64_t& data) {
-  if (line.empty()) {
-    return false;
-  }
-
-  std::string work = line;
-  const bool has_at_jump = (!work.empty() && work.front() == '@');
-  if (has_at_jump) {
-    work.erase(work.begin());
-    trim_mif_line_inplace(work);
-  }
-
-  std::istringstream iss(work);
-  std::string first;
-  std::string second;
-  if (!(iss >> first)) {
-    return false;
-  }
-
-  std::string extra;
-  if (!(iss >> second)) {
-    if (has_at_jump) {
-      return false;
-    }
-    if (!parse_mif_init_hex_value_token(first, data)) {
-      return false;
-    }
-    addr = next_addr;
-    ++next_addr;
-    return true;
-  }
-
-  if (iss >> extra || !has_at_jump) {
-    return false;
-  }
-
-  if (!parse_mif_init_hex_value_token(first, addr) ||
-      !parse_mif_init_hex_value_token(second, data)) {
-    return false;
-  }
-  next_addr = addr + 1;
-  return true;
-}
-
 int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
   std::ifstream ifs(file_path.c_str());
   if (!ifs.is_open()) {
@@ -148,10 +103,11 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     }
     if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
       int parsed_depth = 0;
-      uint64_t parsed_min_addr = 0;
-      if (try_parse_init_hex_depth_metadata(line, parsed_depth, parsed_min_addr,
-                                            depth_max_addr)) {
+      uint64_t parsed_max_addr = 0;
+      if (try_parse_init_hex_depth_metadata(line, parsed_depth,
+                                            parsed_max_addr)) {
         has_depth_metadata = true;
+        depth_max_addr = parsed_max_addr;
       }
       int parsed_width = 0;
       if (try_parse_init_hex_width_metadata(line, parsed_width)) {
@@ -163,7 +119,7 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
 
     uint64_t addr = 0;
     uint64_t data = 0;
-    if (!parse_init_hex_content_line(line, next_addr, addr, data)) {
+    if (!parse_init_hex_line(line, next_addr, addr, data)) {
       VTR_LOG_ERROR("%s:%lu: cannot parse init.hex line: %s\n",
                     file_path.c_str(), static_cast<unsigned long>(line_no),
                     line.c_str());

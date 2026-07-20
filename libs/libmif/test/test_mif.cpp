@@ -15,7 +15,6 @@
 #include "mif_io_utils.h"
 #include "mif_storage.h"
 #include "mif_storage_fwd.h"
-#include "mif_verilog_utils.h"
 #include "read_mif.h"
 #include "read_xml_openfpga_arch.h"
 #include "vtr_assert.h"

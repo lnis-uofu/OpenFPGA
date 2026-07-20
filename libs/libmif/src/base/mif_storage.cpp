@@ -39,11 +39,6 @@ const std::string& MifStorage::segment_source_file(
   return segment_source_file_[segment_id];
 }
 
-bool MifStorage::has_physical_pb(const MifSegmentId& segment_id) const {
-  VTR_ASSERT(valid_segment_id(segment_id));
-  return !segment_physical_pb_[segment_id].empty();
-}
-
 const std::string& MifStorage::physical_pb(
   const MifSegmentId& segment_id) const {
   VTR_ASSERT(valid_segment_id(segment_id));

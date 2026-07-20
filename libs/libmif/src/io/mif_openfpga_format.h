@@ -27,7 +27,4 @@ void serialize_preload_mem(const AggregatedMifStorage& storage,
 
 int read_init_hex(const std::string& file_path, MifStorage& mif_storage);
 
-bool parse_init_hex_content_line(const std::string& line, uint64_t& next_addr,
-                                 uint64_t& addr, uint64_t& data);
-
 } /* namespace openfpga */

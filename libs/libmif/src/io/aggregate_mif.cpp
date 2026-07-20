@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "mif_io_utils.h"
-#include "mif_verilog_utils.h"
 #include "vtr_log.h"
 
 namespace openfpga {
