@@ -19,7 +19,11 @@ bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
 bool try_parse_init_hex_width_metadata(const std::string& comment_line,
                                        int& width);
 
-/* Parse one init.hex data line (supports @addr jump and bare data words). */
+/* Parse one init.hex data line. Supported forms:
+ *   <data>           sequential address (next_addr)
+ *   <addr> <data>    explicit address/data pair
+ *   @<addr> <data>   address jump (same as explicit pair)
+ */
 bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
                          uint64_t& addr, uint64_t& data);
 

@@ -15,7 +15,10 @@
  *   // Data width: 32
  *   0 0x00000000138F0000
  *
- * init.hex input parsing (depth/width from comments).
+ * init.hex input parsing (depth/width from comments):
+ *   <data>           sequential address
+ *   <addr> <data>    explicit address/data pair
+ *   @<addr> <data>   address jump
  *******************************************************************/
 namespace openfpga {
 

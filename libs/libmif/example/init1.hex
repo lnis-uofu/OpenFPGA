@@ -3,12 +3,9 @@
 // depth: 8 (indexed from 0 to 7)
 // width: 16
 // Format: <depth_index> <HEX_data_to_initialize> 
-10 // Address 0x00
-11 // Address 0x01
-12 // Address 0x02
-13 // Address 0x03
-1A // Address 0x04
-1B // Address 0x05
-1C // Address 0x06
-@0A F0
-@0B F1
+00 // Address 0x00: Data value 0
+01 // Address 0x01: Data value 1
+02 // Address 0x02: Data value 2
+03 // Address 0x03: Data value 8
+@0A FF // Jump to Address 0x0A and set value to 255
+@0B FE // Address 0x0B: Data value 254

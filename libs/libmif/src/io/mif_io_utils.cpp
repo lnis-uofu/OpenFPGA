@@ -277,7 +277,7 @@ bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
     return true;
   }
 
-  if (iss >> extra || !has_at_jump) {
+  if (iss >> extra) {
     return false;
   }
 

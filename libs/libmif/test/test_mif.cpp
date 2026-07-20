@@ -3,6 +3,7 @@
  *
  * Usage:
  *   test_mif <bitstream_setting.xml> <benchmark.v> <init.hex> <init1.hex>
+ *            <init_addr_data.hex>
  *******************************************************************/
 #include <cstdint>
 #include <map>
@@ -22,16 +23,22 @@
 #include "write_mif.h"
 
 int main(int argc, const char** argv) {
-  if (argc < 5) {
+  if (argc < 6) {
     VTR_LOG_ERROR(
       "Usage: %s <bitstream_setting.xml> <benchmark.v> <init.hex> "
-      "<init1.hex>\n",
+      "<init1.hex> <init_addr_data.hex>\n",
       argv[0]);
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
 
   openfpga::BitstreamSetting bitstream_setting;
   int status = read_xml_openfpga_bitstream_settings(argv[1], bitstream_setting);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+
+  openfpga::MifStorage addr_data_storage;
+  status = openfpga::read_mif(argv[5], addr_data_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
