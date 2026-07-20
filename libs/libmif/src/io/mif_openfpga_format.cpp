@@ -1,6 +1,6 @@
 #include "mif_openfpga_format.h"
 
-#include <cctype>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <ostream>
@@ -13,411 +13,66 @@
 
 namespace openfpga {
 
-/********************************************************************
- * OpenFPGA MIF — serialization (match MifManager::write_rfmif_file)
- *
- * Data: 0x + zero-padded to (data_width / 4) hex digits.
- * Address:
- *   - with RAM_ID: composed = (ram_id << id_width) + logical_addr,
- *     padded to ((id_width + addr_width) / 4) hex digits
- *   - without RAM_ID: logical address padded to (addr_width / 4)
- ********************************************************************/
-
 static int hex_digits_for_width(int width_bits) {
   if (width_bits <= 0) {
     return 0;
   }
-  /* Match MifManager::write_mif_file: setw(data_width / 4) */
-  return width_bits / 4;
+  return (width_bits + 3) / 4;
 }
 
-/* Print 0x + zero-padded lowercase hex using width_bits from mif_storage. */
-static void print_hex_with_width(std::ostream& os, uint64_t v, int width_bits) {
+static std::string format_hex_word(uint64_t value, int width_bits) {
   const int nd = hex_digits_for_width(width_bits);
   std::ostringstream hex_ss;
   hex_ss << std::hex << std::nouppercase << std::setfill('0');
   if (nd > 0) {
-    hex_ss << std::setw(nd) << v;
+    hex_ss << std::setw(nd) << value;
   } else {
-    hex_ss << v;
+    hex_ss << value;
   }
-  os << "0x" << hex_ss.str();
+  return hex_ss.str();
 }
 
-/* Build print address and its bit width for one memory line.
- * Match MifManager::write_rfmif_file:
- *   composed_address = (ram_id << id_width) + address;
- *   setw((id_width + addr_width) / 4)
- */
-static void resolve_print_address(const MifStorage& storage,
-                                  const MifSegmentId& segment_id,
-                                  uint64_t logical_addr, uint64_t& print_addr,
-                                  int& print_addr_bits) {
-  print_addr = logical_addr;
-  print_addr_bits = storage.addr_width(segment_id);
+static void serialize_preload_mem_segment(const AggregatedMifStorage& storage,
+                                          const MifSegmentId& segment_id,
+                                          std::ostream& os) {
+  os << "// " << MIF_PRELOAD_MEM_TITLE << "\n";
+  os << "// Address width: " << storage.addr_width(segment_id) << "\n";
+  os << "// Data width: " << storage.data_width(segment_id) << "\n";
+  os << "// PB_TYPE " << storage.physical_pb(segment_id) << "\n";
 
-  if (!storage.has_ram_id(segment_id)) {
-    return;
+  std::vector<uint64_t> addrs;
+  for (const MifMemoryLineId& memory_line_id :
+       storage.segment_memory_lines(segment_id)) {
+    addrs.push_back(storage.memory_line_address(memory_line_id));
   }
+  std::sort(addrs.begin(), addrs.end());
 
-  const int id_width = storage.id_width(segment_id);
-  const int addr_width = storage.addr_width(segment_id);
-  if (id_width <= 0) {
-    return;
+  for (const uint64_t addr : addrs) {
+    for (const MifMemoryLineId& memory_line_id :
+         storage.segment_memory_lines(segment_id)) {
+      if (storage.memory_line_address(memory_line_id) != addr) {
+        continue;
+      }
+      os << addr << " 0x"
+         << format_hex_word(storage.memory_line_data(memory_line_id),
+                            storage.data_width(segment_id))
+         << "\n";
+      break;
+    }
   }
-
-  print_addr =
-    (uint64_t(storage.ram_id(segment_id)) << id_width) + logical_addr;
-  print_addr_bits = id_width + (addr_width > 0 ? addr_width : 0);
 }
 
-void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
-  os << "// This is a comment\n";
-  os << "// All the address and data in HEX format\n";
-
+void serialize_preload_mem(const AggregatedMifStorage& storage,
+                           std::ostream& os) {
   bool first = true;
   for (const MifSegmentId& segment_id : storage.segments()) {
     if (!first) {
       os << "\n";
     }
     first = false;
-
-    if (storage.has_physical_pb(segment_id)) {
-      os << "// " << MIF_DIRECTIVE_PB_TYPE << " "
-         << storage.physical_pb(segment_id) << "\n";
-    } else if (storage.has_xy(segment_id)) {
-      os << "// " << MIF_DIRECTIVE_X << " " << storage.coord_x(segment_id)
-         << " // Coordinates of the RAM block\n";
-      os << "// " << MIF_DIRECTIVE_Y << " " << storage.coord_y(segment_id)
-         << " // Coordinates of the RAM block\n";
-    }
-
-    if (!storage.has_ram_id(segment_id)) {
-      if (storage.addr_width(segment_id) >= 0) {
-        os << "// " << MIF_DIRECTIVE_ADDR_WIDTH << " "
-           << storage.addr_width(segment_id) << "\n";
-      }
-      if (storage.data_width(segment_id) >= 0) {
-        os << "// " << MIF_DIRECTIVE_DATA_WIDTH << " "
-           << storage.data_width(segment_id) << "\n";
-      }
-    } else {
-      os << "//" << MIF_DIRECTIVE_RAM_ID << " " << storage.ram_id(segment_id)
-         << "\n";
-      if (storage.id_width(segment_id) >= 0) {
-        os << "//" << MIF_DIRECTIVE_ID_WIDTH << " "
-           << storage.id_width(segment_id) << "\n";
-      }
-      if (storage.addr_width(segment_id) >= 0) {
-        os << "// " << MIF_DIRECTIVE_ADDR_WIDTH << " "
-           << storage.addr_width(segment_id) << "\n";
-      }
-      if (storage.data_width(segment_id) >= 0) {
-        os << "// " << MIF_DIRECTIVE_DATA_WIDTH << " "
-           << storage.data_width(segment_id) << "\n";
-      }
-    }
-
-    os << "// Address Data \n";
-    for (const MifMemoryLineId& memory_line_id :
-         storage.segment_memory_lines(segment_id)) {
-      uint64_t print_addr = 0;
-      int print_addr_bits = -1;
-      resolve_print_address(storage, segment_id,
-                            storage.memory_line_address(memory_line_id),
-                            print_addr, print_addr_bits);
-      print_hex_with_width(os, print_addr, print_addr_bits);
-      os << " ";
-      print_hex_with_width(os, storage.memory_line_data(memory_line_id),
-                           storage.data_width(segment_id));
-      os << "\n";
-    }
+    serialize_preload_mem_segment(storage, segment_id, os);
   }
 }
-
-/********************************************************************
- * OpenFPGA MIF — parsing
- *
- * Each segment is opened by the first recognized // directive. RAM_ID
- * starts a new block; address/data lines must appear after a directive
- * created the current segment.
- ********************************************************************/
-
-/* True when the line is exactly one 0x-prefixed address + data pair. */
-static bool openfpga_mif_address_data_line(const std::string& line) {
-  std::istringstream iss(line);
-  std::string first;
-  std::string second;
-  if (!(iss >> first >> second)) {
-    return false;
-  }
-  std::string extra;
-  if (iss >> extra) {
-    return false;
-  }
-  return first.size() >= 2 && first[0] == '0' &&
-         (first[1] == 'x' || first[1] == 'X');
-}
-
-/* Return true if the line is exactly one 'address data' hex pair. */
-static bool try_address_data_line(const std::string& line, uint64_t& addr,
-                                  uint64_t& data) {
-  std::istringstream iss(line);
-  std::string ta;
-  std::string td;
-  if (!(iss >> ta >> td)) {
-    return false;
-  }
-  std::string extra;
-  if (iss >> extra) {
-    return false;
-  }
-  return parse_mif_u64_token(ta, addr) && parse_mif_u64_token(td, data);
-}
-
-static bool segment_has_content(const MifStorage& mif_storage,
-                                const MifSegmentId& segment_id) {
-  return !mif_storage.segment_memory_lines(segment_id).empty() ||
-         mif_storage.has_xy(segment_id) || mif_storage.has_ram_id(segment_id) ||
-         mif_storage.has_physical_pb(segment_id);
-}
-
-static void ensure_current_segment(MifStorage& mif_storage,
-                                   bool& has_current_segment,
-                                   MifSegmentId& current_segment_id) {
-  if (!has_current_segment) {
-    current_segment_id = mif_storage.create_segment();
-    has_current_segment = true;
-  }
-}
-
-static void start_new_segment_for_ram_id(MifStorage& mif_storage,
-                                         bool& has_current_segment,
-                                         MifSegmentId& current_segment_id,
-                                         int ram_id) {
-  if (!has_current_segment) {
-    current_segment_id = mif_storage.create_segment();
-    has_current_segment = true;
-  } else if (!mif_storage.segment_memory_lines(current_segment_id).empty() ||
-             mif_storage.has_xy(current_segment_id)) {
-    current_segment_id = mif_storage.create_segment();
-  } else {
-    mif_storage.reset_segment(current_segment_id);
-  }
-  mif_storage.set_segment_ram_id(current_segment_id, ram_id);
-}
-
-static int parse_mif_directive(const std::string& file_path, size_t line_no,
-                               const std::string& directive,
-                               MifStorage& mif_storage,
-                               bool& has_current_segment,
-                               MifSegmentId& current_segment_id) {
-  std::istringstream ls(directive);
-  std::string key;
-  if (!(ls >> key)) {
-    return CMD_EXEC_SUCCESS;
-  }
-
-  if (key == MIF_DIRECTIVE_PB_TYPE) {
-    std::string physical_pb;
-    if (!(ls >> physical_pb)) {
-      VTR_LOG_ERROR("%s:%lu: expected pb_type after // %s\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_PB_TYPE);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
-    if (!mif_storage.segment_memory_lines(current_segment_id).empty() ||
-        mif_storage.has_physical_pb(current_segment_id) ||
-        mif_storage.has_ram_id(current_segment_id) ||
-        mif_storage.has_xy(current_segment_id)) {
-      current_segment_id = mif_storage.create_segment();
-    } else {
-      mif_storage.reset_segment(current_segment_id);
-    }
-    mif_storage.set_segment_physical_pb(current_segment_id, physical_pb);
-    return CMD_EXEC_SUCCESS;
-  }
-
-  if (key == MIF_DIRECTIVE_RAM_ID) {
-    int ram_id = 0;
-    if (!(ls >> ram_id)) {
-      VTR_LOG_ERROR("%s:%lu: expected integer after //%s\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_RAM_ID);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    start_new_segment_for_ram_id(mif_storage, has_current_segment,
-                                 current_segment_id, ram_id);
-    return CMD_EXEC_SUCCESS;
-  }
-
-  int value = 0;
-  if (key == MIF_DIRECTIVE_X) {
-    if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_X);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    ensure_current_segment(mif_storage, has_current_segment,
-                           current_segment_id);
-    mif_storage.set_segment_coord_x(current_segment_id, value);
-    return CMD_EXEC_SUCCESS;
-  }
-  if (key == MIF_DIRECTIVE_Y) {
-    if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_Y);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    ensure_current_segment(mif_storage, has_current_segment,
-                           current_segment_id);
-    mif_storage.set_segment_coord_y(current_segment_id, value);
-    return CMD_EXEC_SUCCESS;
-  }
-  if (key == MIF_DIRECTIVE_ADDR_WIDTH) {
-    if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no),
-                    MIF_DIRECTIVE_ADDR_WIDTH);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    ensure_current_segment(mif_storage, has_current_segment,
-                           current_segment_id);
-    mif_storage.set_segment_addr_width(current_segment_id, value);
-    return CMD_EXEC_SUCCESS;
-  }
-  if (key == MIF_DIRECTIVE_DATA_WIDTH) {
-    if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no),
-                    MIF_DIRECTIVE_DATA_WIDTH);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    ensure_current_segment(mif_storage, has_current_segment,
-                           current_segment_id);
-    mif_storage.set_segment_data_width(current_segment_id, value);
-    return CMD_EXEC_SUCCESS;
-  }
-  if (key == MIF_DIRECTIVE_ID_WIDTH) {
-    if (!(ls >> value)) {
-      VTR_LOG_ERROR("%s:%lu: bad // %s directive\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no),
-                    MIF_DIRECTIVE_ID_WIDTH);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    ensure_current_segment(mif_storage, has_current_segment,
-                           current_segment_id);
-    mif_storage.set_segment_id_width(current_segment_id, value);
-    return CMD_EXEC_SUCCESS;
-  }
-
-  /* Unrecognized // line: treat as comment */
-  return CMD_EXEC_SUCCESS;
-}
-
-int parse_mif_line(const std::string& file_path, size_t line_no,
-                   const std::string& raw_line, MifStorage& mif_storage,
-                   bool& has_current_segment, MifSegmentId& current_segment_id,
-                   size_t& total_words) {
-  const std::string line = strip_mif_line_comment(raw_line);
-  if (line.empty()) {
-    return CMD_EXEC_SUCCESS;
-  }
-
-  if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
-    return parse_mif_directive(file_path, line_no, line.substr(2), mif_storage,
-                               has_current_segment, current_segment_id);
-  }
-
-  uint64_t addr = 0;
-  uint64_t data = 0;
-  if (try_address_data_line(line, addr, data)) {
-    if (!has_current_segment) {
-      VTR_LOG_ERROR("%s:%lu: address/data line before any // directive\n",
-                    file_path.c_str(), static_cast<unsigned long>(line_no));
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    mif_storage.create_memory_line(current_segment_id, addr, data);
-    ++total_words;
-    return CMD_EXEC_SUCCESS;
-  }
-
-  VTR_LOG_ERROR("%s:%lu: cannot parse line: %s\n", file_path.c_str(),
-                static_cast<unsigned long>(line_no), line.c_str());
-  return CMD_EXEC_FATAL_ERROR;
-}
-
-int finalize_openfpga_mif_parse(MifStorage& mif_storage,
-                                bool has_current_segment,
-                                const MifSegmentId& current_segment_id,
-                                size_t total_words,
-                                const std::string& file_path) {
-  if (has_current_segment &&
-      !segment_has_content(mif_storage, current_segment_id)) {
-    mif_storage.remove_last_segment_if_empty();
-  }
-
-  if (total_words == 0) {
-    VTR_LOG_ERROR(
-      "OpenFPGA MIF parse: no 'address data' hex lines found in %s\n",
-      file_path.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  return CMD_EXEC_SUCCESS;
-}
-
-/********************************************************************
- * Verilog init.hex — format detection
- *
- * .hex extension always selects init.hex. Otherwise sniff the file:
- * OpenFPGA markers (// directives or 0x address/data pairs) win.
- ********************************************************************/
-
-static bool file_contains_openfpga_mif_marker(std::ifstream& ifs) {
-  std::string raw_line;
-  while (std::getline(ifs, raw_line)) {
-    const std::string line = strip_mif_line_comment(raw_line);
-
-    if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
-      std::istringstream directive_iss(line.substr(2));
-      std::string key;
-      if (directive_iss >> key) {
-        if (key == MIF_DIRECTIVE_X || key == MIF_DIRECTIVE_Y ||
-            key == MIF_DIRECTIVE_PB_TYPE || key == MIF_DIRECTIVE_RAM_ID ||
-            key == MIF_DIRECTIVE_ADDR_WIDTH ||
-            key == MIF_DIRECTIVE_DATA_WIDTH || key == MIF_DIRECTIVE_ID_WIDTH) {
-          return true;
-        }
-      }
-    }
-
-    if (openfpga_mif_address_data_line(line)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool is_init_hex_file(const std::string& file_path) {
-  if (path_has_file_extension(file_path, "hex")) {
-    return true;
-  }
-
-  std::ifstream ifs(file_path.c_str());
-  if (!ifs.is_open()) {
-    return false;
-  }
-  return !file_contains_openfpga_mif_marker(ifs);
-}
-
-/********************************************************************
- * Verilog init.hex — parsing
- *
- * Address assignment rules:
- *   - Single token: data at next_addr, then next_addr++.
- *   - @addr data:   explicit jump; next_addr becomes addr + 1.
- * Bare hex digits are parsed in base 16 (Verilog $readmemh convention).
- ********************************************************************/
 
 bool parse_init_hex_content_line(const std::string& line, uint64_t& next_addr,
                                  uint64_t& addr, uint64_t& data) {
@@ -441,7 +96,6 @@ bool parse_init_hex_content_line(const std::string& line, uint64_t& next_addr,
 
   std::string extra;
   if (!(iss >> second)) {
-    /* Sequential data line: implicit address. */
     if (has_at_jump) {
       return false;
     }
@@ -453,7 +107,6 @@ bool parse_init_hex_content_line(const std::string& line, uint64_t& next_addr,
     return true;
   }
 
-  /* @addr data requires exactly two tokens after '@'. */
   if (iss >> extra || !has_at_jump) {
     return false;
   }
@@ -480,6 +133,10 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
   uint64_t max_addr = 0;
   uint64_t max_data = 0;
   uint64_t next_addr = 0;
+  bool has_depth_metadata = false;
+  bool has_width_metadata = false;
+  uint64_t depth_max_addr = 0;
+  int declared_data_width = 0;
 
   std::string raw_line;
   while (std::getline(ifs, raw_line)) {
@@ -489,8 +146,18 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     if (line.empty()) {
       continue;
     }
-    /* Full-line // comments are not directives in init.hex. */
     if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
+      int parsed_depth = 0;
+      uint64_t parsed_min_addr = 0;
+      if (try_parse_init_hex_depth_metadata(line, parsed_depth, parsed_min_addr,
+                                          depth_max_addr)) {
+        has_depth_metadata = true;
+      }
+      int parsed_width = 0;
+      if (try_parse_init_hex_width_metadata(line, parsed_width)) {
+        declared_data_width = parsed_width;
+        has_width_metadata = true;
+      }
       continue;
     }
 
@@ -526,10 +193,20 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  mif_storage.set_segment_addr_width(
-    segment_id, mif_bit_width_for_max_value(max_addr));
-  mif_storage.set_segment_data_width(
-    segment_id, mif_bit_width_for_max_value(max_data));
+  if (has_depth_metadata) {
+    mif_storage.set_segment_addr_width(
+      segment_id, mif_bit_width_for_max_value(depth_max_addr));
+  } else {
+    mif_storage.set_segment_addr_width(
+      segment_id, mif_bit_width_for_max_value(max_addr));
+  }
+
+  if (has_width_metadata) {
+    mif_storage.set_segment_data_width(segment_id, declared_data_width);
+  } else {
+    mif_storage.set_segment_data_width(
+      segment_id, mif_bit_width_for_max_value(max_data));
+  }
 
   return CMD_EXEC_SUCCESS;
 }

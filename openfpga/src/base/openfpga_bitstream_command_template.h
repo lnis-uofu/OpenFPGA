@@ -92,6 +92,19 @@ ShellCommandId add_build_arch_bitstream_command_template(
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
+  /* Add an option '--write_mem_file' */
+  CommandOptionId opt_write_mem_file = shell_cmd.add_option(
+    "write_mem_file", false,
+    "File path to output aggregated preload memory (.mem) for testbench");
+  shell_cmd.set_option_require_value(opt_write_mem_file, openfpga::OPT_STRING);
+
+  /* Add an option '--verilog' */
+  CommandOptionId opt_verilog = shell_cmd.add_option(
+    "verilog", false,
+    "Benchmark Verilog netlist used to resolve $readmemh instances for MIF "
+    "aggregation");
+  shell_cmd.set_option_require_value(opt_verilog, openfpga::OPT_STRING);
+
   /* Add command 'build_architecture_bitstream' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Build fabric-independent bitstream database", hidden);

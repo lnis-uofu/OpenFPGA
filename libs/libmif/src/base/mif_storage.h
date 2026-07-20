@@ -8,7 +8,7 @@
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory MIF data aggregated from one or more read_mif calls.
+ * In-memory logical MIF data read from init.hex via read_mif.
  *******************************************************************/
 namespace openfpga {
 
@@ -30,14 +30,8 @@ class MifStorage {
   size_t num_segments() const;
 
  public: /* Accessors */
-  bool has_xy(const MifSegmentId& segment_id) const;
-  int coord_x(const MifSegmentId& segment_id) const;
-  int coord_y(const MifSegmentId& segment_id) const;
   int addr_width(const MifSegmentId& segment_id) const;
   int data_width(const MifSegmentId& segment_id) const;
-  bool has_ram_id(const MifSegmentId& segment_id) const;
-  int ram_id(const MifSegmentId& segment_id) const;
-  int id_width(const MifSegmentId& segment_id) const;
   bool has_source_file(const MifSegmentId& segment_id) const;
   const std::string& segment_source_file(const MifSegmentId& segment_id) const;
   bool has_physical_pb(const MifSegmentId& segment_id) const;
@@ -45,24 +39,17 @@ class MifStorage {
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
   bool empty() const;
-  const std::vector<std::string>& source_files() const;
 
  public: /* Mutators */
   void clear();
-  void add_source_file(const std::string& file_path);
   void remove_last_segment_if_empty();
   MifSegmentId create_segment();
-  void set_segment_coord_x(const MifSegmentId& segment_id, int x);
-  void set_segment_coord_y(const MifSegmentId& segment_id, int y);
   void set_segment_addr_width(const MifSegmentId& segment_id, int width);
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
-  void set_segment_ram_id(const MifSegmentId& segment_id, int ram_id);
-  void set_segment_id_width(const MifSegmentId& segment_id, int width);
   void set_segment_source_file(const MifSegmentId& segment_id,
                                const std::string& file_path);
   void set_segment_physical_pb(const MifSegmentId& segment_id,
                                const std::string& physical_pb);
-  void reset_segment(const MifSegmentId& segment_id);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
                                      uint64_t address, uint64_t data);
 
@@ -72,17 +59,9 @@ class MifStorage {
 
  private: /* Internal data */
   vtr::vector<MifSegmentId, MifSegmentId> segment_ids_;
-  vtr::vector<MifSegmentId, bool> segment_has_xy_;
-  vtr::vector<MifSegmentId, int> segment_coord_x_;
-  vtr::vector<MifSegmentId, int> segment_coord_y_;
   vtr::vector<MifSegmentId, int> segment_addr_width_;
   vtr::vector<MifSegmentId, int> segment_data_width_;
-  vtr::vector<MifSegmentId, bool> segment_has_ram_id_;
-  vtr::vector<MifSegmentId, int> segment_ram_id_;
-  vtr::vector<MifSegmentId, int> segment_id_width_;
-  vtr::vector<MifSegmentId, bool> segment_has_source_file_;
   vtr::vector<MifSegmentId, std::string> segment_source_file_;
-  vtr::vector<MifSegmentId, bool> segment_has_physical_pb_;
   vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;
@@ -90,9 +69,6 @@ class MifStorage {
   vtr::vector<MifMemoryLineId, MifMemoryLineId> memory_line_ids_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_addresses_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_data_;
-
-  /* Paths passed to successful read_mif calls (init.hex / .mif). */
-  std::vector<std::string> source_files_;
 };
 
 } /* namespace openfpga */

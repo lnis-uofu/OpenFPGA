@@ -1,0 +1,13 @@
+// Aggregated MIF for memory preloading interface
+// Address width: 3
+// Data width: 32
+// PB_TYPE dpram8x32{dual}.dpram8x16
+0 0x00100000
+1 0x00110001
+2 0x00120002
+3 0x00130003
+4 0x001a000a
+5 0x001b000b
+6 0x001c000c
+10 0x00f000ff
+11 0x00f100fe

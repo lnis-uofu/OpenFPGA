@@ -13,7 +13,9 @@
 #include "command_exit_codes.h"
 #include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
+#include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
+#include "openfpga_mif_bitstream.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "overwrite_bitstream.h"
@@ -40,6 +42,8 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
+  CommandOptionId opt_write_mem_file = cmd.option("write_mem_file");
+  CommandOptionId opt_verilog = cmd.option("verilog");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(
@@ -84,6 +88,41 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
 
   extract_device_non_fabric_bitstream(
     g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
+
+  if (!openfpga_ctx.mif_storage().empty()) {
+    std::string mem_file_path;
+    if (true == cmd_context.option_enable(cmd, opt_write_mem_file)) {
+      mem_file_path = cmd_context.option_value(cmd, opt_write_mem_file);
+    } else if (true == cmd_context.option_enable(cmd, opt_write_file)) {
+      mem_file_path = default_preload_mem_file_path(
+        cmd_context.option_value(cmd, opt_write_file));
+    }
+
+    if (!mem_file_path.empty()) {
+      if (false == cmd_context.option_enable(cmd, opt_verilog) ||
+          cmd_context.option_value(cmd, opt_verilog).empty()) {
+        VTR_LOG_ERROR(
+          "build_architecture_bitstream: --verilog is required to aggregate "
+          "MIF data into preload .mem\n");
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      const std::map<std::string, MifPlacementInfo> pl_info_map =
+        get_instance_info_from_placement();
+      std::map<std::string, std::string> inst_pb_type_path_map;
+      for (const auto& pl_kv : pl_info_map) {
+        inst_pb_type_path_map[pl_kv.first] = pl_kv.second.pb_type_path;
+      }
+
+      const int mem_status = aggregate_mif_storage_and_write_preload_mem(
+        openfpga_ctx.mif_storage(), openfpga_ctx.bitstream_setting(),
+        inst_pb_type_path_map, cmd_context.option_value(cmd, opt_verilog),
+        openfpga_ctx.mutable_aggregated_mif_storage(), mem_file_path);
+      if (CMD_EXEC_SUCCESS != mem_status) {
+        return mem_status;
+      }
+    }
+  }
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

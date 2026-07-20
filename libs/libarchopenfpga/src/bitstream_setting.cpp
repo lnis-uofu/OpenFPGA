@@ -447,7 +447,6 @@ MifSourceSettingId BitstreamSetting::add_mif_source_setting(
 MifAddressMapSettingId BitstreamSetting::add_mif_address_map_setting(
   const std::string& pb_type, int address_offset, int data_offset) {
   VTR_ASSERT(!pb_type.empty());
-  VTR_ASSERT(!find_mif_address_map_by_pb_type(pb_type).is_valid());
   MifAddressMapSettingId id =
     MifAddressMapSettingId(mif_address_map_setting_ids_.size());
   mif_address_map_setting_ids_.push_back(id);

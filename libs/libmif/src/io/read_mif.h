@@ -7,7 +7,7 @@
 
 namespace openfpga {
 
-/* Read an Verilog init.hex memory initialization file or .mif Openfpga mif file into storage. */
+/* Read a Verilog init.hex memory initialization file into storage. */
 int read_mif(const std::string& file_path, MifStorage& mif_storage);
 
 } /* namespace openfpga */

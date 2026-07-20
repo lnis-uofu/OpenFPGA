@@ -245,13 +245,6 @@ static void read_xml_mif_address_map_setting(
                   loc_data)
       .as_int();
 
-  if (bitstream_setting.find_mif_address_map_by_pb_type(pb_type_attr)
-        .is_valid()) {
-    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_address_map),
-                   "Duplicate mif_address_map pb_type '%s'\n",
-                   pb_type_attr.c_str());
-  }
-
   bitstream_setting.add_mif_address_map_setting(pb_type_attr, address_offset,
                                                 data_offset);
 }

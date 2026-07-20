@@ -1,4 +1,8 @@
 // Comments are allowed using double slashes
+// This MIF is designed for a RAM of
+// depth: 8 (indexed from 0 to 7)
+// width: 16
+// Format: <depth_index> <HEX_data_to_initialize> 
 10 // Address 0x00
 11 // Address 0x01
 12 // Address 0x02

@@ -4,10 +4,9 @@
 #include <cstdint>
 #include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "bind_bram_to_mif_storage.h"
+#include "mif_verilog_utils.h"
 #include "mif_io_utils.h"
 #include "vtr_log.h"
 
@@ -18,27 +17,30 @@ namespace {
 struct PbAggregateState {
   int addr_width = 0;
   int data_width = 0;
-  std::unordered_map<uint64_t, uint64_t> phys_data_map;
+  std::map<uint64_t, uint64_t> phys_data_map;
 };
 
-/* Operating pb path from address_map is the leaf; parent is the physical pb. */
-static std::string physical_pb_from_operating_pb(
-  const std::string& operating_pb) {
-  const size_t pos = operating_pb.rfind('.');
-  if (pos == std::string::npos) {
-    return operating_pb;
-  }
-  return operating_pb.substr(0, pos);
-}
-
 } /* namespace */
+
+MifAddressMap mif_address_map_from_bitstream_setting(
+  const BitstreamSetting& bitstream_setting) {
+  MifAddressMap mif_address_map;
+  for (const MifAddressMapSettingId& map_id :
+       bitstream_setting.mif_address_map_settings()) {
+    mif_address_map.create_address_map(
+      bitstream_setting.mif_address_map_pb_type(map_id),
+      bitstream_setting.mif_address_map_address_offset(map_id),
+      bitstream_setting.mif_address_map_data_offset(map_id));
+  }
+  return mif_address_map;
+}
 
 int aggregate_mif(const MifStorage& logical_storage,
                    const std::string& verilog_path,
                    const std::map<std::string, std::string>&
                      instance_pb_type_path_map,
                    const MifAddressMap& mif_address_map,
-                   MifStorage& out_aggregated_storage) {
+                   AggregatedMifStorage& out_aggregated_storage) {
   if (logical_storage.empty()) {
     VTR_LOG_ERROR("aggregate_mif: empty logical MIF storage\n");
     return CMD_EXEC_FATAL_ERROR;
@@ -95,8 +97,8 @@ int aggregate_mif(const MifStorage& logical_storage,
       return CMD_EXEC_FATAL_ERROR;
     }
 
-    const std::string physical_pb =
-      physical_pb_from_operating_pb(mif_address_map.pb_type(map_id));
+    const std::string aggregated_pb_type =
+      strip_pb_type_indices(mif_address_map.pb_type(map_id));
     const int address_offset = mif_address_map.address_offset(map_id);
     const int data_offset = mif_address_map.data_offset(map_id);
 
@@ -108,7 +110,7 @@ int aggregate_mif(const MifStorage& logical_storage,
       return CMD_EXEC_FATAL_ERROR;
     }
 
-    PbAggregateState& pb_state = pb_agg_states[physical_pb];
+    PbAggregateState& pb_state = pb_agg_states[aggregated_pb_type];
     pb_state.addr_width =
       std::max(pb_state.addr_width, address_offset + op_addr_width);
     pb_state.data_width =
@@ -130,20 +132,18 @@ int aggregate_mif(const MifStorage& logical_storage,
   }
 
   for (const auto& pb_kv : pb_agg_states) {
-    const std::string& physical_pb = pb_kv.first;
+    const std::string& aggregated_pb_type = pb_kv.first;
     const PbAggregateState& pb_state = pb_kv.second;
     if (pb_state.phys_data_map.empty()) {
       VTR_LOG_ERROR("aggregate_mif: empty phys_data for pb '%s'\n",
-                    physical_pb.c_str());
+                    aggregated_pb_type.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
 
     const MifSegmentId out_seg = out_aggregated_storage.create_segment();
-    out_aggregated_storage.set_segment_physical_pb(out_seg, physical_pb);
-    out_aggregated_storage.set_segment_addr_width(out_seg,
-                                                  pb_state.addr_width);
-    out_aggregated_storage.set_segment_data_width(out_seg,
-                                                  pb_state.data_width);
+    out_aggregated_storage.set_segment_physical_pb(out_seg, aggregated_pb_type);
+    out_aggregated_storage.set_segment_addr_width(out_seg, pb_state.addr_width);
+    out_aggregated_storage.set_segment_data_width(out_seg, pb_state.data_width);
 
     std::vector<uint64_t> phys_addrs;
     phys_addrs.reserve(pb_state.phys_data_map.size());
@@ -152,7 +152,7 @@ int aggregate_mif(const MifStorage& logical_storage,
     }
     std::sort(phys_addrs.begin(), phys_addrs.end());
 
-    for (uint64_t phys_addr : phys_addrs) {
+    for (const uint64_t phys_addr : phys_addrs) {
       out_aggregated_storage.create_memory_line(
         out_seg, phys_addr, pb_state.phys_data_map.at(phys_addr));
     }
