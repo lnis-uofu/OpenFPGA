@@ -55,7 +55,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_allow_gsb_dangling_opin =
     cmd.option("allow_gsb_dangling_opin");
   CommandOptionId opt_verbose = cmd.option("verbose");
-
   /* Get the GSB version from the VPR device context (set during RR graph
    * generation). It is not a command option to avoid any mismatch between the
    * VPR options and this command */

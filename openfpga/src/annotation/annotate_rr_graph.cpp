@@ -928,6 +928,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
        */
       vtr::Point<size_t> sub_gsb_range(vpr_device_ctx.grid.width() - 1,
                                        vpr_device_ctx.grid.height() - 1);
+
       RRGSB rr_gsb(gsb_version);
       if (e_gsb_version::GSB_V2 == gsb_version) {
         /* For GSB version 2, we build the GSB context using the side-agnostic
