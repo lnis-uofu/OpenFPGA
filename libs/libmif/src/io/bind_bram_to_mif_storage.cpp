@@ -223,8 +223,7 @@ std::string find_verilog_instance_reading_mif(
 
 int bind_bram_to_mif_storage(
   MifStorage& mif_storage, const std::string& verilog_path,
-  const std::map<std::string, std::pair<int, int>>& inst_coord_map,
-  const MemoryAddressMap& memory_address_map) {
+  const std::map<std::string, std::pair<int, int>>& inst_coord_map) {
   if (mif_storage.empty()) {
     VTR_LOG_ERROR(
       "bind_bram_to_mif_storage: no MIF data; run read_mif first\n");
@@ -243,11 +242,6 @@ int bind_bram_to_mif_storage(
   if (inst_coord_map.empty()) {
     VTR_LOG_ERROR(
       "bind_bram_to_mif_storage: empty inst_coord_map\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  if (memory_address_map.empty()) {
-    VTR_LOG_ERROR(
-      "bind_bram_to_mif_storage: empty memory_address_map\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 
@@ -284,21 +278,6 @@ int bind_bram_to_mif_storage(
     const int coord_x = coord_it->second.first;
     const int coord_y = coord_it->second.second;
 
-    /* Read ram_id / widths from memory_address_map by (x, y) */
-    const MemoryAddressId memory_id =
-      memory_address_map.find_by_xy(coord_x, coord_y);
-    if (!memory_id.is_valid()) {
-      VTR_LOG_ERROR(
-        "bind_bram_to_mif_storage: (x=%d, y=%d) not found in "
-        "memory_address_map\n",
-        coord_x, coord_y);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    const int ram_id = memory_address_map.ram_id(memory_id);
-    const int id_width = memory_address_map.id_width(memory_id);
-    const int addr_width = memory_address_map.addr_width(memory_id);
-    const int data_width = memory_address_map.data_width(memory_id);
-
     /* Bind one unbound segment per MIF source file */
     bool filled = false;
     for (const MifSegmentId& segment_id : mif_storage.segments()) {
@@ -307,10 +286,6 @@ int bind_bram_to_mif_storage(
       }
       mif_storage.set_segment_coord_x(segment_id, coord_x);
       mif_storage.set_segment_coord_y(segment_id, coord_y);
-      mif_storage.set_segment_ram_id(segment_id, ram_id);
-      mif_storage.set_segment_id_width(segment_id, id_width);
-      mif_storage.set_segment_addr_width(segment_id, addr_width);
-      mif_storage.set_segment_data_width(segment_id, data_width);
       filled = true;
       break;
     }
@@ -323,10 +298,8 @@ int bind_bram_to_mif_storage(
     }
 
     VTR_LOG(
-      "bind_bram_to_mif_storage: instance '%s' -> (x=%d, y=%d) ram_id=%d "
-      "id_width=%d addr_width=%d data_width=%d\n",
-      instance_name.c_str(), coord_x, coord_y, ram_id, id_width, addr_width,
-      data_width);
+      "bind_bram_to_mif_storage: instance '%s' -> (x=%d, y=%d)\n",
+      instance_name.c_str(), coord_x, coord_y);
   }
 
   return CMD_EXEC_SUCCESS;

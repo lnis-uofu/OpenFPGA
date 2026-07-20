@@ -14,7 +14,7 @@
 #include "io_location_map.h"
 #include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
-#include "memory_address_map.h"
+#include "mif_address_map.h"
 #include "mif_storage.h"
 #include "module_manager.h"
 #include "module_name_map.h"
@@ -69,8 +69,8 @@ class OpenfpgaContext : public Context {
     return bitstream_setting_;
   }
   const openfpga::MifStorage& mif_storage() const { return mif_storage_; }
-  const openfpga::MemoryAddressMap& memory_address_map() const {
-    return memory_address_map_;
+  const openfpga::MifAddressMap& mif_address_map() const {
+    return mif_address_map_;
   }
   const openfpga::ClockNetwork& clock_arch() const { return clock_arch_; }
   const openfpga::RRClockSpatialLookup& clock_rr_lookup() const {
@@ -137,8 +137,8 @@ class OpenfpgaContext : public Context {
     return bitstream_setting_;
   }
   openfpga::MifStorage& mutable_mif_storage() { return mif_storage_; }
-  openfpga::MemoryAddressMap& mutable_memory_address_map() {
-    return memory_address_map_;
+  openfpga::MifAddressMap& mutable_mif_address_map() {
+    return mif_address_map_;
   }
   openfpga::ClockNetwork& mutable_clock_arch() { return clock_arch_; }
   openfpga::RRClockSpatialLookup& mutable_clock_rr_lookup() {
@@ -199,7 +199,7 @@ class OpenfpgaContext : public Context {
   openfpga::SimulationSetting sim_setting_;
   openfpga::BitstreamSetting bitstream_setting_;
   openfpga::MifStorage mif_storage_;
-  openfpga::MemoryAddressMap memory_address_map_;
+  openfpga::MifAddressMap mif_address_map_;
   openfpga::ClockNetwork clock_arch_;
   openfpga::RRClockSpatialLookup clock_rr_lookup_;
 

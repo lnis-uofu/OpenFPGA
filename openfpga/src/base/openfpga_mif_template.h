@@ -64,18 +64,17 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   const std::string& verilog_path = cmd_context.option_value(cmd, opt_verilog);
   auto& mif_storage = openfpga_context.mutable_mif_storage();
 
-  /* VPR placement: model_name -> coordinate (openfpga / g_vpr_ctx) */
-  const std::map<std::string, t_pl_loc> pl_coord_map =
+  /* VPR placement: instance_name -> placement/pb_type info */
+  const std::map<std::string, MifPlacementInfo> pl_info_map =
     get_instance_info_from_placement();
   std::map<std::string, std::pair<int, int>> inst_coord_map;
-  for (const auto& itor : pl_coord_map) {
+  for (const auto& itor : pl_info_map) {
     inst_coord_map[itor.first] =
-      std::make_pair(itor.second.x, itor.second.y);
+      std::make_pair(itor.second.location.x, itor.second.location.y);
   }
 
-  const int bind_status = bind_bram_to_mif_storage(
-    mif_storage, verilog_path, inst_coord_map,
-    openfpga_context.memory_address_map());
+  const int bind_status =
+    bind_bram_to_mif_storage(mif_storage, verilog_path, inst_coord_map);
   if (CMD_EXEC_SUCCESS != bind_status) {
     return bind_status;
   }

@@ -7,7 +7,12 @@
 
 namespace openfpga {
 
-/* Analyze vpr placement context to get ram model-name -> location map */
-std::map<std::string, t_pl_loc> get_instance_info_from_placement();
+struct MifPlacementInfo {
+  t_pl_loc location;
+  std::string pb_type_path;
+};
+
+/* Analyze VPR context to get ram instance-name -> placement/pb_type info */
+std::map<std::string, MifPlacementInfo> get_instance_info_from_placement();
 
 } /* namespace openfpga */

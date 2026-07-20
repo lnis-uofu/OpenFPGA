@@ -2,7 +2,7 @@
  * Unit test functions to validate the correctness of
  * 1. OpenFPGA .mif reader/writer
  * 2. Verilog init.hex reader (via read_mif) and echo as .mif
- * 3. memory_address_map.xml reader
+ * 3. memory_address_map.xml reader (MifAddressMap)
  * 4. find Verilog instances and bind two init hex files
  *
  * Usage:
@@ -15,11 +15,11 @@
 
 #include "bind_bram_to_mif_storage.h"
 #include "command_exit_codes.h"
-#include "memory_address_map.h"
+#include "mif_address_map.h"
 #include "mif_io_utils.h"
 #include "mif_storage.h"
 #include "read_mif.h"
-#include "read_xml_memory_address_map.h"
+#include "read_xml_mif_address_map.h"
 #include "vtr_log.h"
 #include "write_mif.h"
 
@@ -60,27 +60,24 @@ int main(int argc, const char** argv) {
   }
   VTR_LOG("Echo the MIF file to: %s.\n", argv[4]);
 
-  /* 3) memory_address_map.xml */
-  openfpga::MemoryAddressMap memory_address_map;
-  status = openfpga::read_xml_memory_address_map(argv[5], memory_address_map);
+  /* 3) memory_address_map.xml -> MifAddressMap */
+  openfpga::MifAddressMap mif_address_map;
+  status = openfpga::read_xml_mif_address_map(argv[5], mif_address_map);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
 
-  VTR_LOG("Read %lu memories from %s.\n",
-          static_cast<unsigned long>(memory_address_map.num_memories()),
+  VTR_LOG("Read %lu address maps from %s.\n",
+          static_cast<unsigned long>(mif_address_map.num_address_maps()),
           argv[5]);
-  for (const MemoryAddressId& memory_id : memory_address_map.memories()) {
-    VTR_LOG("  memory x=%d y=%d id=%d id_width=%d addr_width=%d data_width=%d\n",
-            memory_address_map.coord_x(memory_id),
-            memory_address_map.coord_y(memory_id),
-            memory_address_map.ram_id(memory_id),
-            memory_address_map.id_width(memory_id),
-            memory_address_map.addr_width(memory_id),
-            memory_address_map.data_width(memory_id));
+  for (const MifAddressMapId& map_id : mif_address_map.address_maps()) {
+    VTR_LOG("  address_map pb_type='%s' address_offset=%d data_offset=%d\n",
+            mif_address_map.pb_type(map_id).c_str(),
+            mif_address_map.address_offset(map_id),
+            mif_address_map.data_offset(map_id));
   }
 
-  /* 4) Read two init hex files and bind by instance name */
+  /* 4) Read two init hex files and bind placement coords by instance */
   openfpga::MifStorage bind_storage;
   status = openfpga::read_mif(argv[7], bind_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
@@ -112,11 +109,11 @@ int main(int argc, const char** argv) {
   std::map<std::string, std::pair<int, int>> inst_coord_map;
   inst_coord_map[instance_0] = std::make_pair(2, 2);
   inst_coord_map[instance_1] = std::make_pair(2, 1);
-  status = openfpga::bind_bram_to_mif_storage(
-    bind_storage, argv[6], inst_coord_map, memory_address_map);
+  status = openfpga::bind_bram_to_mif_storage(bind_storage, argv[6],
+                                              inst_coord_map);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
- status = write_mif("final_mif.mif", bind_storage);
+  status = openfpga::write_mif("final_mif.mif", bind_storage);
   return status;
 }
