@@ -18,7 +18,8 @@ size_t AggregatedMifStorage::num_segments() const {
   return storage_.num_segments();
 }
 
-AggregatedMifStorage::memory_line_range AggregatedMifStorage::segment_memory_lines(
+AggregatedMifStorage::memory_line_range
+AggregatedMifStorage::segment_memory_lines(
   const MifSegmentId& segment_id) const {
   return storage_.segment_memory_lines(segment_id);
 }
@@ -50,13 +51,13 @@ MifSegmentId AggregatedMifStorage::create_segment() {
   return storage_.create_segment();
 }
 
-void AggregatedMifStorage::set_segment_addr_width(const MifSegmentId& segment_id,
-                                                int width) {
+void AggregatedMifStorage::set_segment_addr_width(
+  const MifSegmentId& segment_id, int width) {
   storage_.set_segment_addr_width(segment_id, width);
 }
 
-void AggregatedMifStorage::set_segment_data_width(const MifSegmentId& segment_id,
-                                                  int width) {
+void AggregatedMifStorage::set_segment_data_width(
+  const MifSegmentId& segment_id, int width) {
   storage_.set_segment_data_width(segment_id, width);
 }
 

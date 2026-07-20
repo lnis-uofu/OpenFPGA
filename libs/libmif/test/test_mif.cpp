@@ -32,13 +32,10 @@ int main(int argc, const char** argv) {
   }
 
   openfpga::BitstreamSetting bitstream_setting;
-  int status =
-    read_xml_openfpga_bitstream_settings(argv[1], bitstream_setting);
+  int status = read_xml_openfpga_bitstream_settings(argv[1], bitstream_setting);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
-  const openfpga::MifAddressMap mif_address_map =
-    openfpga::mif_address_map_from_bitstream_setting(bitstream_setting);
 
   openfpga::MifStorage logical_storage;
   status = openfpga::read_mif(argv[3], logical_storage);
@@ -61,9 +58,9 @@ int main(int argc, const char** argv) {
   inst_pb_type_path_map[instance_1] = "dpram8x32[0]{dual}.dpram8x16[1]";
 
   openfpga::AggregatedMifStorage aggregated_storage;
-  status = openfpga::aggregate_mif(logical_storage, argv[2],
-                                   inst_pb_type_path_map, mif_address_map,
-                                   aggregated_storage);
+  status =
+    openfpga::aggregate_mif(logical_storage, argv[2], inst_pb_type_path_map,
+                            bitstream_setting, aggregated_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }

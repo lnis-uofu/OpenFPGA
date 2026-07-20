@@ -150,7 +150,7 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
       int parsed_depth = 0;
       uint64_t parsed_min_addr = 0;
       if (try_parse_init_hex_depth_metadata(line, parsed_depth, parsed_min_addr,
-                                          depth_max_addr)) {
+                                            depth_max_addr)) {
         has_depth_metadata = true;
       }
       int parsed_width = 0;
@@ -197,15 +197,15 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     mif_storage.set_segment_addr_width(
       segment_id, mif_bit_width_for_max_value(depth_max_addr));
   } else {
-    mif_storage.set_segment_addr_width(
-      segment_id, mif_bit_width_for_max_value(max_addr));
+    mif_storage.set_segment_addr_width(segment_id,
+                                       mif_bit_width_for_max_value(max_addr));
   }
 
   if (has_width_metadata) {
     mif_storage.set_segment_data_width(segment_id, declared_data_width);
   } else {
-    mif_storage.set_segment_data_width(
-      segment_id, mif_bit_width_for_max_value(max_data));
+    mif_storage.set_segment_data_width(segment_id,
+                                       mif_bit_width_for_max_value(max_data));
   }
 
   return CMD_EXEC_SUCCESS;

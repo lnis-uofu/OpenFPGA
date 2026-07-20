@@ -2,16 +2,15 @@
 
 #include "aggregate_mif.h"
 #include "openfpga_digest.h"
-#include "write_mif.h"
 #include "vtr_log.h"
+#include "write_mif.h"
 
 namespace openfpga {
 
 std::string default_preload_mem_file_path(const std::string& write_file_path) {
   const size_t slash = write_file_path.find_last_of("/\\");
   const size_t dot = write_file_path.find_last_of('.');
-  if (dot != std::string::npos &&
-      (slash == std::string::npos || dot > slash)) {
+  if (dot != std::string::npos && (slash == std::string::npos || dot > slash)) {
     return write_file_path.substr(0, dot) + "_memory.mem";
   }
   return write_file_path + "_memory.mem";
@@ -20,23 +19,22 @@ std::string default_preload_mem_file_path(const std::string& write_file_path) {
 int aggregate_mif_storage(
   const MifStorage& mif_storage, const BitstreamSetting& bitstream_setting,
   const std::map<std::string, std::string>& instance_pb_type_path_map,
-  const std::string& verilog_path, AggregatedMifStorage& aggregated_mif_storage) {
+  const std::string& verilog_path,
+  AggregatedMifStorage& aggregated_mif_storage) {
   aggregated_mif_storage.clear();
 
   if (mif_storage.empty()) {
     return CMD_EXEC_SUCCESS;
   }
 
-  const MifAddressMap mif_address_map =
-    mif_address_map_from_bitstream_setting(bitstream_setting);
-  if (mif_address_map.empty()) {
+  if (bitstream_setting.mif_address_map_settings().empty()) {
     VTR_LOG_ERROR(
       "aggregate_mif_storage: no mif_address_map in bitstream setting\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 
   return aggregate_mif(mif_storage, verilog_path, instance_pb_type_path_map,
-                       mif_address_map, aggregated_mif_storage);
+                       bitstream_setting, aggregated_mif_storage);
 }
 
 int aggregate_mif_storage_and_write_preload_mem(

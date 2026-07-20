@@ -76,8 +76,7 @@ class BitstreamSetting {
   typedef vtr::vector<OverwriteBitstreamId,
                       OverwriteBitstreamId>::const_iterator
     overwrite_bitstream_iterator;
-  typedef vtr::vector<MifSourceSettingId,
-                      MifSourceSettingId>::const_iterator
+  typedef vtr::vector<MifSourceSettingId, MifSourceSettingId>::const_iterator
     mif_source_setting_iterator;
   typedef vtr::vector<MifAddressMapSettingId,
                       MifAddressMapSettingId>::const_iterator
@@ -239,10 +238,11 @@ class BitstreamSetting {
 
   /* MIF settings */
   MifSourceSettingId add_mif_source_setting(const std::string& pb_type,
-                                              const std::string& source,
-                                              const std::string& content);
-  MifAddressMapSettingId add_mif_address_map_setting(
-    const std::string& pb_type, int address_offset, int data_offset);
+                                            const std::string& source,
+                                            const std::string& content);
+  MifAddressMapSettingId add_mif_address_map_setting(const std::string& pb_type,
+                                                     int address_offset,
+                                                     int data_offset);
 
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
@@ -257,8 +257,7 @@ class BitstreamSetting {
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
   bool valid_mif_source_setting_id(const MifSourceSettingId& id) const;
-  bool valid_mif_address_map_setting_id(
-    const MifAddressMapSettingId& id) const;
+  bool valid_mif_address_map_setting_id(const MifAddressMapSettingId& id) const;
   void clear();
 
  private: /* Internal data */

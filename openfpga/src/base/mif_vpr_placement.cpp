@@ -78,7 +78,8 @@ std::map<std::string, MifPlacementInfo> get_instance_info_from_placement() {
       continue;
     }
 
-    const t_pb* atom_pb = atom_ctx.lookup().atom_pb_bimap().atom_pb(atom_blk_id);
+    const t_pb* atom_pb =
+      atom_ctx.lookup().atom_pb_bimap().atom_pb(atom_blk_id);
     if (nullptr == atom_pb) {
       continue;
     }
@@ -87,7 +88,8 @@ std::map<std::string, MifPlacementInfo> get_instance_info_from_placement() {
     info.location = block_locs[clb_blk_id].loc;
     info.pb_type_path = compose_pb_type_path(atom_pb);
 
-    const std::string instance_name = atom_ctx.netlist().block_name(atom_blk_id);
+    const std::string instance_name =
+      atom_ctx.netlist().block_name(atom_blk_id);
     inst_info_map[instance_name] = info;
     VTR_LOG(
       "get_instance_info_from_placement: instance '%s' -> (x=%d, y=%d) "

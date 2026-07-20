@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "mif_verilog_utils.h"
 #include "mif_io_utils.h"
+#include "mif_verilog_utils.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -22,25 +22,11 @@ struct PbAggregateState {
 
 } /* namespace */
 
-MifAddressMap mif_address_map_from_bitstream_setting(
-  const BitstreamSetting& bitstream_setting) {
-  MifAddressMap mif_address_map;
-  for (const MifAddressMapSettingId& map_id :
-       bitstream_setting.mif_address_map_settings()) {
-    mif_address_map.create_address_map(
-      bitstream_setting.mif_address_map_pb_type(map_id),
-      bitstream_setting.mif_address_map_address_offset(map_id),
-      bitstream_setting.mif_address_map_data_offset(map_id));
-  }
-  return mif_address_map;
-}
-
-int aggregate_mif(const MifStorage& logical_storage,
-                   const std::string& verilog_path,
-                   const std::map<std::string, std::string>&
-                     instance_pb_type_path_map,
-                   const MifAddressMap& mif_address_map,
-                   AggregatedMifStorage& out_aggregated_storage) {
+int aggregate_mif(
+  const MifStorage& logical_storage, const std::string& verilog_path,
+  const std::map<std::string, std::string>& instance_pb_type_path_map,
+  const BitstreamSetting& bitstream_setting,
+  AggregatedMifStorage& out_aggregated_storage) {
   if (logical_storage.empty()) {
     VTR_LOG_ERROR("aggregate_mif: empty logical MIF storage\n");
     return CMD_EXEC_FATAL_ERROR;
@@ -53,8 +39,8 @@ int aggregate_mif(const MifStorage& logical_storage,
     VTR_LOG_ERROR("aggregate_mif: empty instance_pb_type_path_map\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (mif_address_map.empty()) {
-    VTR_LOG_ERROR("aggregate_mif: empty mif_address_map\n");
+  if (bitstream_setting.mif_address_map_settings().empty()) {
+    VTR_LOG_ERROR("aggregate_mif: no mif_address_map in bitstream setting\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 
@@ -88,8 +74,8 @@ int aggregate_mif(const MifStorage& logical_storage,
     }
 
     const std::string& operating_pb_type = pb_it->second;
-    const MifAddressMapId map_id =
-      mif_address_map.find_by_pb_type(operating_pb_type);
+    const MifAddressMapSettingId map_id =
+      bitstream_setting.find_mif_address_map_by_pb_type(operating_pb_type);
     if (!map_id.is_valid()) {
       VTR_LOG_ERROR(
         "aggregate_mif: pb_type '%s' not found in mif_address_map\n",
@@ -98,9 +84,11 @@ int aggregate_mif(const MifStorage& logical_storage,
     }
 
     const std::string aggregated_pb_type =
-      strip_pb_type_indices(mif_address_map.pb_type(map_id));
-    const int address_offset = mif_address_map.address_offset(map_id);
-    const int data_offset = mif_address_map.data_offset(map_id);
+      strip_pb_type_indices(bitstream_setting.mif_address_map_pb_type(map_id));
+    const int address_offset =
+      bitstream_setting.mif_address_map_address_offset(map_id);
+    const int data_offset =
+      bitstream_setting.mif_address_map_data_offset(map_id);
 
     const int op_addr_width = logical_storage.addr_width(segment_id);
     const int op_data_width = logical_storage.data_width(segment_id);
@@ -118,7 +106,8 @@ int aggregate_mif(const MifStorage& logical_storage,
 
     for (const MifMemoryLineId& line_id :
          logical_storage.segment_memory_lines(segment_id)) {
-      const uint64_t logical_addr = logical_storage.memory_line_address(line_id);
+      const uint64_t logical_addr =
+        logical_storage.memory_line_address(line_id);
       const uint64_t logical_data = logical_storage.memory_line_data(line_id);
       const uint64_t phys_addr = logical_addr << address_offset;
       const uint64_t phys_data = logical_data << data_offset;

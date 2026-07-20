@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "aggregated_mif_storage.h"
 #include "bitstream_manager.h"
 #include "bitstream_setting.h"
 #include "clock_network.h"
@@ -14,7 +15,6 @@
 #include "io_location_map.h"
 #include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
-#include "aggregated_mif_storage.h"
 #include "mif_storage.h"
 #include "module_manager.h"
 #include "module_name_map.h"

@@ -241,8 +241,8 @@ static void read_xml_mif_address_map_setting(
                   XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET, loc_data)
       .as_int();
   const int data_offset =
-    get_attribute(xml_mif_address_map, XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET,
-                  loc_data)
+    get_attribute(xml_mif_address_map,
+                  XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET, loc_data)
       .as_int();
 
   bitstream_setting.add_mif_address_map_setting(pb_type_attr, address_offset,

@@ -250,15 +250,15 @@ static void write_xml_mif_source_setting(
 
   fp << "\t"
      << "<" << XML_MIF_SOURCE_NODE_NAME;
-  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE,
-                      bitstream_setting.mif_source_pb_type(mif_source_setting_id)
-                        .c_str());
-  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_SOURCE,
-                      bitstream_setting.mif_source_source(mif_source_setting_id)
-                        .c_str());
-  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_CONTENT,
-                      bitstream_setting.mif_source_content(mif_source_setting_id)
-                        .c_str());
+  write_xml_attribute(
+    fp, XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE,
+    bitstream_setting.mif_source_pb_type(mif_source_setting_id).c_str());
+  write_xml_attribute(
+    fp, XML_MIF_SOURCE_ATTRIBUTE_SOURCE,
+    bitstream_setting.mif_source_source(mif_source_setting_id).c_str());
+  write_xml_attribute(
+    fp, XML_MIF_SOURCE_ATTRIBUTE_CONTENT,
+    bitstream_setting.mif_source_content(mif_source_setting_id).c_str());
   fp << "/>"
      << "\n";
 }
@@ -278,9 +278,9 @@ static void write_xml_mif_address_map_setting(
     fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_PB_TYPE,
     bitstream_setting.mif_address_map_pb_type(mif_address_map_setting_id)
       .c_str());
-  write_xml_attribute(
-    fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET,
-    bitstream_setting.mif_address_map_address_offset(mif_address_map_setting_id));
+  write_xml_attribute(fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET,
+                      bitstream_setting.mif_address_map_address_offset(
+                        mif_address_map_setting_id));
   write_xml_attribute(
     fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET,
     bitstream_setting.mif_address_map_data_offset(mif_address_map_setting_id));

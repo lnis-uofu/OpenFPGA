@@ -112,7 +112,8 @@ std::string find_verilog_instance_reading_mif(
   std::map<std::string, std::pair<std::string, std::string>>
     readmemh_module_param;
   std::map<std::string, std::string> readmemh_module_fixed_file;
-  std::map<std::string, std::map<std::string, std::string>> module_string_params;
+  std::map<std::string, std::map<std::string, std::string>>
+    module_string_params;
   std::map<std::string, std::string> module_bodies;
 
   std::sregex_iterator mod_begin(text.begin(), text.end(), module_re);
@@ -132,8 +133,8 @@ std::string find_verilog_instance_reading_mif(
     module_bodies[module_name] = body;
 
     std::map<std::string, std::string> string_params;
-    for (std::sregex_iterator p(body.begin(), body.end(), param_re); p != re_end;
-         ++p) {
+    for (std::sregex_iterator p(body.begin(), body.end(), param_re);
+         p != re_end; ++p) {
       string_params[(*p)[1].str()] = (*p)[2].str();
     }
     module_string_params[module_name] = string_params;
@@ -142,14 +143,12 @@ std::string find_verilog_instance_reading_mif(
          r != re_end; ++r) {
       std::string arg = (*r)[1].str();
       if (!arg.empty() && arg.front() == '"') {
-        readmemh_module_fixed_file[module_name] =
-          arg.substr(1, arg.size() - 2);
+        readmemh_module_fixed_file[module_name] = arg.substr(1, arg.size() - 2);
       } else {
         const auto found = string_params.find(arg);
         const std::string default_file =
           (found != string_params.end()) ? found->second : std::string();
-        readmemh_module_param[module_name] =
-          std::make_pair(arg, default_file);
+        readmemh_module_param[module_name] = std::make_pair(arg, default_file);
       }
     }
   }

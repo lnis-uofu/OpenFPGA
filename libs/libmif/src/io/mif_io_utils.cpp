@@ -47,8 +47,7 @@ bool parse_mif_init_hex_value_token(const std::string& tok, uint64_t& out) {
   if (tok.empty()) {
     return false;
   }
-  if (tok.size() >= 2 && tok[0] == '0' &&
-      (tok[1] == 'x' || tok[1] == 'X')) {
+  if (tok.size() >= 2 && tok[0] == '0' && (tok[1] == 'x' || tok[1] == 'X')) {
     return parse_mif_u64_token(tok, out);
   }
   for (char c : tok) {
@@ -122,15 +121,15 @@ bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
   max_addr = static_cast<uint64_t>(depth - 1);
 
   const size_t from_pos = comment_line.find("from");
-  const size_t to_pos = comment_line.find("to", from_pos == std::string::npos
-                                                     ? 0
-                                                     : from_pos + 4);
+  const size_t to_pos =
+    comment_line.find("to", from_pos == std::string::npos ? 0 : from_pos + 4);
   if (from_pos != std::string::npos && to_pos != std::string::npos) {
     int parsed_min = 0;
     int parsed_max = 0;
     if (parse_int_after_keyword(comment_line.substr(from_pos), "from",
                                 parsed_min) &&
-        parse_int_after_keyword(comment_line.substr(to_pos), "to", parsed_max)) {
+        parse_int_after_keyword(comment_line.substr(to_pos), "to",
+                                parsed_max)) {
       min_addr = static_cast<uint64_t>(parsed_min);
       max_addr = static_cast<uint64_t>(parsed_max);
     }

@@ -48,8 +48,8 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  const int exec_status = write_mif(cmd_context.option_value(cmd, opt_file),
-                                  aggregated_mif_storage);
+  const int exec_status =
+    write_mif(cmd_context.option_value(cmd, opt_file), aggregated_mif_storage);
   if (CMD_EXEC_SUCCESS == exec_status) {
     VTR_LOG("write_mif: wrote '%s'\n",
             cmd_context.option_value(cmd, opt_file).c_str());
