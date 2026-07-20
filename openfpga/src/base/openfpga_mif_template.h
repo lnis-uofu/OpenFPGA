@@ -5,10 +5,12 @@
 #include <string>
 #include <vector>
 
-#include "bind_bram_to_mif_storage.h"
+#include "aggregate_mif.h"
+#include "bitstream_setting.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
+#include "mif_address_map.h"
 #include "mif_vpr_placement.h"
 #include "read_mif.h"
 #include "shell.h"
@@ -18,6 +20,22 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/********************************************************************
+ * Build a runtime MifAddressMap from bitstream setting entries.
+ *******************************************************************/
+inline MifAddressMap mif_address_map_from_bitstream_setting(
+  const BitstreamSetting& bitstream_setting) {
+  MifAddressMap mif_address_map;
+  for (const MifAddressMapSettingId& map_id :
+       bitstream_setting.mif_address_map_settings()) {
+    mif_address_map.create_address_map(
+      bitstream_setting.mif_address_map_pb_type(map_id),
+      bitstream_setting.mif_address_map_address_offset(map_id),
+      bitstream_setting.mif_address_map_data_offset(map_id));
+  }
+  return mif_address_map;
+}
 
 /********************************************************************
  * A function to read a MIF file and append its contents to MIF storage
@@ -41,7 +59,7 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
 
 /********************************************************************
  * Write processed in-memory MIF data to a MIF file.
- * When MIF is enabled (!mif_storage.empty()), bind BRAM info first.
+ * Aggregates logical init segments per physical pb using address_map.
  *******************************************************************/
 template <class T>
 int write_mif_template(T& openfpga_context, const Command& cmd,
@@ -60,27 +78,36 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* MIF enabled: merge/bind physical BRAM info into mif_storage */
   const std::string& verilog_path = cmd_context.option_value(cmd, opt_verilog);
-  auto& mif_storage = openfpga_context.mutable_mif_storage();
+  const auto& mif_storage = openfpga_context.mif_storage();
 
-  /* VPR placement: instance_name -> placement/pb_type info */
+  /* VPR placement: instance_name -> pb_type_path */
   const std::map<std::string, MifPlacementInfo> pl_info_map =
     get_instance_info_from_placement();
-  std::map<std::string, std::pair<int, int>> inst_coord_map;
+  std::map<std::string, std::string> inst_pb_type_path_map;
   for (const auto& itor : pl_info_map) {
-    inst_coord_map[itor.first] =
-      std::make_pair(itor.second.location.x, itor.second.location.y);
+    inst_pb_type_path_map[itor.first] = itor.second.pb_type_path;
   }
 
-  const int bind_status =
-    bind_bram_to_mif_storage(mif_storage, verilog_path, inst_coord_map);
-  if (CMD_EXEC_SUCCESS != bind_status) {
-    return bind_status;
+  openfpga::MifStorage aggregated_storage;
+  const MifAddressMap mif_address_map =
+    mif_address_map_from_bitstream_setting(openfpga_context.bitstream_setting());
+  if (mif_address_map.empty()) {
+    VTR_LOG_ERROR(
+      "write_mif: no mif_address_map in bitstream setting; run "
+      "read_openfpga_bitstream_setting first\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  const int agg_status = aggregate_mif(mif_storage, verilog_path,
+                                       inst_pb_type_path_map, mif_address_map,
+                                       aggregated_storage);
+  if (CMD_EXEC_SUCCESS != agg_status) {
+    return agg_status;
   }
 
   const std::string& out_path = cmd_context.option_value(cmd, opt_file);
-  const int exec_status = write_mif(out_path, openfpga_context.mif_storage());
+  const int exec_status = write_mif(out_path, aggregated_storage);
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }

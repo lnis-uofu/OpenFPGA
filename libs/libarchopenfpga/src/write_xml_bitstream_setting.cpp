@@ -240,6 +240,55 @@ static void write_xml_bitstream_interconnect_setting(
 }
 
 /********************************************************************
+ * A writer to output a mif_source setting to XML format
+ *******************************************************************/
+static void write_xml_mif_source_setting(
+  std::fstream& fp, const char* fname,
+  const openfpga::BitstreamSetting& bitstream_setting,
+  const MifSourceSettingId& mif_source_setting_id) {
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t"
+     << "<" << XML_MIF_SOURCE_NODE_NAME;
+  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE,
+                      bitstream_setting.mif_source_pb_type(mif_source_setting_id)
+                        .c_str());
+  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_SOURCE,
+                      bitstream_setting.mif_source_source(mif_source_setting_id)
+                        .c_str());
+  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_CONTENT,
+                      bitstream_setting.mif_source_content(mif_source_setting_id)
+                        .c_str());
+  fp << "/>"
+     << "\n";
+}
+
+/********************************************************************
+ * A writer to output a mif_address_map setting to XML format
+ *******************************************************************/
+static void write_xml_mif_address_map_setting(
+  std::fstream& fp, const char* fname,
+  const openfpga::BitstreamSetting& bitstream_setting,
+  const MifAddressMapSettingId& mif_address_map_setting_id) {
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t"
+     << "<" << XML_MIF_ADDRESS_MAP_NODE_NAME;
+  write_xml_attribute(
+    fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_PB_TYPE,
+    bitstream_setting.mif_address_map_pb_type(mif_address_map_setting_id)
+      .c_str());
+  write_xml_attribute(
+    fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET,
+    bitstream_setting.mif_address_map_address_offset(mif_address_map_setting_id));
+  write_xml_attribute(
+    fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET,
+    bitstream_setting.mif_address_map_data_offset(mif_address_map_setting_id));
+  fp << "/>"
+     << "\n";
+}
+
+/********************************************************************
  * A writer to output a bitstream setting to XML format
  *******************************************************************/
 void write_xml_bitstream_setting(
@@ -279,6 +328,18 @@ void write_xml_bitstream_setting(
        bitstream_setting.interconnect_settings()) {
     write_xml_bitstream_interconnect_setting(fp, fname, bitstream_setting,
                                              bitstream_interc_setting_id);
+  }
+
+  for (const auto& mif_source_setting_id :
+       bitstream_setting.mif_source_settings()) {
+    write_xml_mif_source_setting(fp, fname, bitstream_setting,
+                                 mif_source_setting_id);
+  }
+
+  for (const auto& mif_address_map_setting_id :
+       bitstream_setting.mif_address_map_settings()) {
+    write_xml_mif_address_map_setting(fp, fname, bitstream_setting,
+                                      mif_address_map_setting_id);
   }
 
   /* Write the root node <openfpga_bitstream_setting> */

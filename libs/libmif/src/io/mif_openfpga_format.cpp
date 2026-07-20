@@ -82,7 +82,10 @@ void serialize_openfpga_mif(const MifStorage& storage, std::ostream& os) {
     }
     first = false;
 
-    if (storage.has_xy(segment_id)) {
+    if (storage.has_physical_pb(segment_id)) {
+      os << "// " << MIF_DIRECTIVE_PB_TYPE << " "
+         << storage.physical_pb(segment_id) << "\n";
+    } else if (storage.has_xy(segment_id)) {
       os << "// " << MIF_DIRECTIVE_X << " " << storage.coord_x(segment_id)
          << " // Coordinates of the RAM block\n";
       os << "// " << MIF_DIRECTIVE_Y << " " << storage.coord_y(segment_id)
@@ -175,7 +178,8 @@ static bool try_address_data_line(const std::string& line, uint64_t& addr,
 static bool segment_has_content(const MifStorage& mif_storage,
                                 const MifSegmentId& segment_id) {
   return !mif_storage.segment_memory_lines(segment_id).empty() ||
-         mif_storage.has_xy(segment_id) || mif_storage.has_ram_id(segment_id);
+         mif_storage.has_xy(segment_id) || mif_storage.has_ram_id(segment_id) ||
+         mif_storage.has_physical_pb(segment_id);
 }
 
 static void ensure_current_segment(MifStorage& mif_storage,
@@ -211,6 +215,26 @@ static int parse_mif_directive(const std::string& file_path, size_t line_no,
   std::istringstream ls(directive);
   std::string key;
   if (!(ls >> key)) {
+    return CMD_EXEC_SUCCESS;
+  }
+
+  if (key == MIF_DIRECTIVE_PB_TYPE) {
+    std::string physical_pb;
+    if (!(ls >> physical_pb)) {
+      VTR_LOG_ERROR("%s:%lu: expected pb_type after // %s\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no), MIF_DIRECTIVE_PB_TYPE);
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    ensure_current_segment(mif_storage, has_current_segment, current_segment_id);
+    if (!mif_storage.segment_memory_lines(current_segment_id).empty() ||
+        mif_storage.has_physical_pb(current_segment_id) ||
+        mif_storage.has_ram_id(current_segment_id) ||
+        mif_storage.has_xy(current_segment_id)) {
+      current_segment_id = mif_storage.create_segment();
+    } else {
+      mif_storage.reset_segment(current_segment_id);
+    }
+    mif_storage.set_segment_physical_pb(current_segment_id, physical_pb);
     return CMD_EXEC_SUCCESS;
   }
 
@@ -359,7 +383,8 @@ static bool file_contains_openfpga_mif_marker(std::ifstream& ifs) {
       std::string key;
       if (directive_iss >> key) {
         if (key == MIF_DIRECTIVE_X || key == MIF_DIRECTIVE_Y ||
-            key == MIF_DIRECTIVE_RAM_ID || key == MIF_DIRECTIVE_ADDR_WIDTH ||
+            key == MIF_DIRECTIVE_PB_TYPE || key == MIF_DIRECTIVE_RAM_ID ||
+            key == MIF_DIRECTIVE_ADDR_WIDTH ||
             key == MIF_DIRECTIVE_DATA_WIDTH || key == MIF_DIRECTIVE_ID_WIDTH) {
           return true;
         }

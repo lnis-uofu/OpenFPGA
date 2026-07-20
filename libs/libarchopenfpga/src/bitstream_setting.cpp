@@ -49,6 +49,18 @@ BitstreamSetting::overwrite_bitstreams() const {
                          overwrite_bitstream_ids_.end());
 }
 
+BitstreamSetting::mif_source_setting_range
+BitstreamSetting::mif_source_settings() const {
+  return vtr::make_range(mif_source_setting_ids_.begin(),
+                         mif_source_setting_ids_.end());
+}
+
+BitstreamSetting::mif_address_map_setting_range
+BitstreamSetting::mif_address_map_settings() const {
+  return vtr::make_range(mif_address_map_setting_ids_.begin(),
+                         mif_address_map_setting_ids_.end());
+}
+
 /************************************************************************
  * Constructors
  ***********************************************************************/
@@ -237,6 +249,52 @@ bool BitstreamSetting::overwrite_bitstream_value(
   return overwrite_bitstream_values_[id];
 }
 
+std::string BitstreamSetting::mif_source_pb_type(
+  const MifSourceSettingId& id) const {
+  VTR_ASSERT(valid_mif_source_setting_id(id));
+  return mif_source_pb_types_[id];
+}
+
+std::string BitstreamSetting::mif_source_source(
+  const MifSourceSettingId& id) const {
+  VTR_ASSERT(valid_mif_source_setting_id(id));
+  return mif_source_sources_[id];
+}
+
+std::string BitstreamSetting::mif_source_content(
+  const MifSourceSettingId& id) const {
+  VTR_ASSERT(valid_mif_source_setting_id(id));
+  return mif_source_contents_[id];
+}
+
+std::string BitstreamSetting::mif_address_map_pb_type(
+  const MifAddressMapSettingId& id) const {
+  VTR_ASSERT(valid_mif_address_map_setting_id(id));
+  return mif_address_map_pb_types_[id];
+}
+
+int BitstreamSetting::mif_address_map_address_offset(
+  const MifAddressMapSettingId& id) const {
+  VTR_ASSERT(valid_mif_address_map_setting_id(id));
+  return mif_address_map_address_offsets_[id];
+}
+
+int BitstreamSetting::mif_address_map_data_offset(
+  const MifAddressMapSettingId& id) const {
+  VTR_ASSERT(valid_mif_address_map_setting_id(id));
+  return mif_address_map_data_offsets_[id];
+}
+
+MifAddressMapSettingId BitstreamSetting::find_mif_address_map_by_pb_type(
+  const std::string& pb_type) const {
+  for (const MifAddressMapSettingId& map_id : mif_address_map_setting_ids_) {
+    if (mif_address_map_pb_types_[map_id] == pb_type) {
+      return map_id;
+    }
+  }
+  return MifAddressMapSettingId::INVALID();
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -372,6 +430,33 @@ OverwriteBitstreamId BitstreamSetting::add_overwrite_bitstream(
   return id;
 }
 
+MifSourceSettingId BitstreamSetting::add_mif_source_setting(
+  const std::string& pb_type, const std::string& source,
+  const std::string& content) {
+  VTR_ASSERT(!pb_type.empty());
+  VTR_ASSERT(!source.empty());
+  VTR_ASSERT(!content.empty());
+  MifSourceSettingId id = MifSourceSettingId(mif_source_setting_ids_.size());
+  mif_source_setting_ids_.push_back(id);
+  mif_source_pb_types_.push_back(pb_type);
+  mif_source_sources_.push_back(source);
+  mif_source_contents_.push_back(content);
+  return id;
+}
+
+MifAddressMapSettingId BitstreamSetting::add_mif_address_map_setting(
+  const std::string& pb_type, int address_offset, int data_offset) {
+  VTR_ASSERT(!pb_type.empty());
+  VTR_ASSERT(!find_mif_address_map_by_pb_type(pb_type).is_valid());
+  MifAddressMapSettingId id =
+    MifAddressMapSettingId(mif_address_map_setting_ids_.size());
+  mif_address_map_setting_ids_.push_back(id);
+  mif_address_map_pb_types_.push_back(pb_type);
+  mif_address_map_address_offsets_.push_back(address_offset);
+  mif_address_map_data_offsets_.push_back(data_offset);
+  return id;
+}
+
 /************************************************************************
  * Public Validators
  ***********************************************************************/
@@ -419,6 +504,18 @@ bool BitstreamSetting::valid_overwrite_bitstream_id(
          (id == overwrite_bitstream_ids_[id]);
 }
 
+bool BitstreamSetting::valid_mif_source_setting_id(
+  const MifSourceSettingId& id) const {
+  return (size_t(id) < mif_source_setting_ids_.size()) &&
+         (id == mif_source_setting_ids_[id]);
+}
+
+bool BitstreamSetting::valid_mif_address_map_setting_id(
+  const MifAddressMapSettingId& id) const {
+  return (size_t(id) < mif_address_map_setting_ids_.size()) &&
+         (id == mif_address_map_setting_ids_[id]);
+}
+
 void BitstreamSetting::clear() {
   pb_type_setting_ids_.clear();
   pb_type_names_.clear();
@@ -463,5 +560,15 @@ void BitstreamSetting::clear() {
   overwrite_bitstream_ids_.clear();
   overwrite_bitstream_paths_.clear();
   overwrite_bitstream_values_.clear();
+
+  mif_source_setting_ids_.clear();
+  mif_source_pb_types_.clear();
+  mif_source_sources_.clear();
+  mif_source_contents_.clear();
+
+  mif_address_map_setting_ids_.clear();
+  mif_address_map_pb_types_.clear();
+  mif_address_map_address_offsets_.clear();
+  mif_address_map_data_offsets_.clear();
 }
 }  // namespace openfpga

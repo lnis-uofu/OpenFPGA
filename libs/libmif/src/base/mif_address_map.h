@@ -6,16 +6,8 @@
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory storage for memory_address_map.xml (operating -> physical
- * bit-slice packing):
- *   <memory_address_map>
- *     <address_map pb_type="dpram8x32[0]{dual}.dpram8x16[0]"
- *                  address_offset="0" data_offset="0"/>
- *   </memory_address_map>
- *
- * address_offset / data_offset are bit starts on the physical addr/data
- * ports (e.g. operating addr[0:2] maps to physical addr[3:5] when
- * address_offset=3).
+ * Runtime MIF address map used by aggregate_mif. Populated from
+ * <mif_address_map> entries in openfpga_bitstream_setting.
  *******************************************************************/
 namespace openfpga {
 

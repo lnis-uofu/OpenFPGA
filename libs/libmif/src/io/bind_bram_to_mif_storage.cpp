@@ -283,6 +283,7 @@ int bind_bram_to_mif_storage(
     for (const MifSegmentId& segment_id : mif_storage.segments()) {
       if (mif_storage.has_xy(segment_id)) {
         continue;
+
       }
       mif_storage.set_segment_coord_x(segment_id, coord_x);
       mif_storage.set_segment_coord_y(segment_id, coord_y);

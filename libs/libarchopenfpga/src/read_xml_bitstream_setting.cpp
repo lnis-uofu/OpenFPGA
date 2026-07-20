@@ -207,6 +207,56 @@ static void read_xml_overwrite_bitstream_setting(
 }
 
 /********************************************************************
+ * Parse XML description for a <mif_source> XML node
+ *******************************************************************/
+static void read_xml_mif_source_setting(
+  pugi::xml_node& xml_mif_source, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& pb_type_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE, loc_data)
+      .as_string();
+  const std::string& source_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_SOURCE, loc_data)
+      .as_string();
+  const std::string& content_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_CONTENT, loc_data)
+      .as_string();
+
+  bitstream_setting.add_mif_source_setting(pb_type_attr, source_attr,
+                                           content_attr);
+}
+
+/********************************************************************
+ * Parse XML description for a <mif_address_map> XML node
+ *******************************************************************/
+static void read_xml_mif_address_map_setting(
+  pugi::xml_node& xml_mif_address_map, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& pb_type_attr =
+    get_attribute(xml_mif_address_map, XML_MIF_ADDRESS_MAP_ATTRIBUTE_PB_TYPE,
+                  loc_data)
+      .as_string();
+  const int address_offset =
+    get_attribute(xml_mif_address_map,
+                  XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET, loc_data)
+      .as_int();
+  const int data_offset =
+    get_attribute(xml_mif_address_map, XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET,
+                  loc_data)
+      .as_int();
+
+  if (bitstream_setting.find_mif_address_map_by_pb_type(pb_type_attr)
+        .is_valid()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_address_map),
+                   "Duplicate mif_address_map pb_type '%s'\n",
+                   pb_type_attr.c_str());
+  }
+
+  bitstream_setting.add_mif_address_map_setting(pb_type_attr, address_offset,
+                                                data_offset);
+}
+
+/********************************************************************
  * Parse XML codes about <openfpga_bitstream_setting> to an object
  *******************************************************************/
 int read_xml_bitstream_setting(pugi::xml_node& Node,
@@ -248,11 +298,16 @@ int read_xml_bitstream_setting(pugi::xml_node& Node,
     } else if (xml_child.name() == std::string(XML_NON_FABRIC_NODE_NAME)) {
       read_xml_non_fabric_bitstream_setting(xml_child, loc_data,
                                             bitstream_setting);
-    } else {
-      VTR_ASSERT_SAFE(xml_child.name() ==
-                      std::string(XML_OVERWRITE_BITSTREAM_NODE_NAME));
+    } else if (xml_child.name() ==
+               std::string(XML_OVERWRITE_BITSTREAM_NODE_NAME)) {
       read_xml_overwrite_bitstream_setting(xml_child, loc_data,
                                            bitstream_setting);
+    } else if (xml_child.name() == std::string(XML_MIF_SOURCE_NODE_NAME)) {
+      read_xml_mif_source_setting(xml_child, loc_data, bitstream_setting);
+    } else {
+      VTR_ASSERT_SAFE(xml_child.name() ==
+                      std::string(XML_MIF_ADDRESS_MAP_NODE_NAME));
+      read_xml_mif_address_map_setting(xml_child, loc_data, bitstream_setting);
     }
   }
 

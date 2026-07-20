@@ -23,6 +23,7 @@ namespace openfpga {
 
 constexpr const char* MIF_DIRECTIVE_X = "X";
 constexpr const char* MIF_DIRECTIVE_Y = "Y";
+constexpr const char* MIF_DIRECTIVE_PB_TYPE = "PB_TYPE";
 constexpr const char* MIF_DIRECTIVE_RAM_ID = "RAM_ID";
 constexpr const char* MIF_DIRECTIVE_ADDR_WIDTH = "ADDR_WIDTH";
 constexpr const char* MIF_DIRECTIVE_DATA_WIDTH = "DATA_WIDTH";

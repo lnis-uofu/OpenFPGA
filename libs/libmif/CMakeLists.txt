@@ -18,6 +18,7 @@ target_include_directories(libmif PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libmif PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 target_link_libraries(libmif
                       libopenfpgashell
+                      libarchopenfpga
                       libarchfpga
                       libpugiutil
                       libvtrutil)

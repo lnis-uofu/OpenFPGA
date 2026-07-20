@@ -44,10 +44,23 @@ constexpr const char* XML_OVERWRITE_BITSTREAM_ATTRIBUTE_BIT = "bit";
 constexpr const char* XML_OVERWRITE_BITSTREAM_ATTRIBUTE_PATH = "path";
 constexpr const char* XML_OVERWRITE_BITSTREAM_ATTRIBUTE_VALUE = "value";
 
+/* MIF XML syntax */
+constexpr const char* XML_MIF_SOURCE_NODE_NAME = "mif_source";
+constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE = "pb_type";
+constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_SOURCE = "source";
+constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_CONTENT = "content";
+
+constexpr const char* XML_MIF_ADDRESS_MAP_NODE_NAME = "mif_address_map";
+constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_PB_TYPE = "pb_type";
+constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET =
+  "address_offset";
+constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET = "data_offset";
+
 /* Sanity check constants */
 constexpr const char* XML_VALID_NODE_NAMES[] = {
-  XML_PB_TYPE_NODE_NAME,      XML_DEFAULT_MODE_BITS_NODE_NAME,
-  XML_INTERCONNECT_NODE_NAME, XML_CLOCK_ROUTING_NODE_NAME,
-  XML_NON_FABRIC_NODE_NAME,   XML_OVERWRITE_BITSTREAM_NODE_NAME};
+  XML_PB_TYPE_NODE_NAME,       XML_DEFAULT_MODE_BITS_NODE_NAME,
+  XML_INTERCONNECT_NODE_NAME,  XML_CLOCK_ROUTING_NODE_NAME,
+  XML_NON_FABRIC_NODE_NAME,    XML_OVERWRITE_BITSTREAM_NODE_NAME,
+  XML_MIF_SOURCE_NODE_NAME,    XML_MIF_ADDRESS_MAP_NODE_NAME};
 
 #endif

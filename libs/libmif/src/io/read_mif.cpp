@@ -11,6 +11,7 @@ namespace openfpga {
 /* Read a MIF file line-by-line and append parsed segments to storage. */
 int read_mif(const std::string& file_path, MifStorage& mif_storage) {
   int exec_status = CMD_EXEC_FATAL_ERROR;
+  const size_t seg_count_before = mif_storage.num_segments();
   if (is_init_hex_file(file_path)) {
     exec_status = read_init_hex(file_path, mif_storage);
   } else {
@@ -49,6 +50,10 @@ int read_mif(const std::string& file_path, MifStorage& mif_storage) {
   }
 
   if (CMD_EXEC_SUCCESS == exec_status) {
+    const size_t seg_count_after = mif_storage.num_segments();
+    for (size_t i = seg_count_before; i < seg_count_after; ++i) {
+      mif_storage.set_segment_source_file(MifSegmentId(i), file_path);
+    }
     mif_storage.add_source_file(file_path);
   }
   return exec_status;

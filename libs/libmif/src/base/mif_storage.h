@@ -27,6 +27,7 @@ class MifStorage {
  public: /* Accessors: aggregates */
   segment_range segments() const;
   memory_line_range segment_memory_lines(const MifSegmentId& segment_id) const;
+  size_t num_segments() const;
 
  public: /* Accessors */
   bool has_xy(const MifSegmentId& segment_id) const;
@@ -37,6 +38,10 @@ class MifStorage {
   bool has_ram_id(const MifSegmentId& segment_id) const;
   int ram_id(const MifSegmentId& segment_id) const;
   int id_width(const MifSegmentId& segment_id) const;
+  bool has_source_file(const MifSegmentId& segment_id) const;
+  const std::string& segment_source_file(const MifSegmentId& segment_id) const;
+  bool has_physical_pb(const MifSegmentId& segment_id) const;
+  const std::string& physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
   bool empty() const;
@@ -53,6 +58,10 @@ class MifStorage {
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
   void set_segment_ram_id(const MifSegmentId& segment_id, int ram_id);
   void set_segment_id_width(const MifSegmentId& segment_id, int width);
+  void set_segment_source_file(const MifSegmentId& segment_id,
+                               const std::string& file_path);
+  void set_segment_physical_pb(const MifSegmentId& segment_id,
+                               const std::string& physical_pb);
   void reset_segment(const MifSegmentId& segment_id);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
                                      uint64_t address, uint64_t data);
@@ -71,6 +80,10 @@ class MifStorage {
   vtr::vector<MifSegmentId, bool> segment_has_ram_id_;
   vtr::vector<MifSegmentId, int> segment_ram_id_;
   vtr::vector<MifSegmentId, int> segment_id_width_;
+  vtr::vector<MifSegmentId, bool> segment_has_source_file_;
+  vtr::vector<MifSegmentId, std::string> segment_source_file_;
+  vtr::vector<MifSegmentId, bool> segment_has_physical_pb_;
+  vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;
 
