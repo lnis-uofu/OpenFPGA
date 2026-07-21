@@ -15,11 +15,21 @@ namespace openfpga {
  * For each logical segment:
  *   - resolve Verilog instance via $readmemh source file
  *   - look up index-level pb_type in instance_pb_type_path_map
- *   - apply mif_address_map address_offset / data_offset from bitstream_setting
+ *   - group by index-stripped pb_type from mif_address_map
  *
- * Segments sharing the same index-stripped pb_type are merged:
- *   phys_addr = logical_addr << address_offset
- *   phys_data[phys_addr] |= logical_data << data_offset
+ * Segments sharing the same physical pb are merged at the same logical
+ * address by RAM slice index (last numeric [N] in the pb_type path). Slice [0]
+ * occupies the MSB, higher indices append toward the LSB:
+ *   bit_shift = (max_slice_index - slice_index) * slice_data_width
+ *   aggregated_data[logical_addr] |= logical_data << bit_shift
+ *
+ * address_offset / data_offset in mif_address_map are NOT used here for either
+ * dual (width packing) or dualA (depth packing). Both modes merge slices by RAM
+ * index only. Offsets apply in the later bitstream stage when mapping
+ * aggregated data onto physical configuration address/data ports.
+ *
+ * Slices without MIF contribute zero at each address. aggregated_data_width is
+ * (max_slice_index + 1) * slice_data_width, inferred from mif_address_map.
  */
 int aggregate_mif(
   const MifStorage& logical_storage, const std::string& verilog_path,

@@ -244,6 +244,36 @@ std::string strip_pb_type_indices(const std::string& indexed_pb_type) {
   return result;
 }
 
+int extract_pb_type_leaf_index(const std::string& indexed_pb_type) {
+  int last_index = -1;
+  for (size_t i = 0; i < indexed_pb_type.size(); ++i) {
+    if ('[' != indexed_pb_type[i]) {
+      continue;
+    }
+    const size_t end = indexed_pb_type.find(']', i + 1);
+    if (std::string::npos == end) {
+      continue;
+    }
+    const std::string index_str = indexed_pb_type.substr(i + 1, end - i - 1);
+    if (index_str.empty()) {
+      i = end;
+      continue;
+    }
+    bool all_digit = true;
+    for (const char ch : index_str) {
+      if (!std::isdigit(static_cast<unsigned char>(ch))) {
+        all_digit = false;
+        break;
+      }
+    }
+    if (all_digit) {
+      last_index = std::stoi(index_str);
+    }
+    i = end;
+  }
+  return last_index;
+}
+
 bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
                          uint64_t& addr, uint64_t& data) {
   if (line.empty()) {

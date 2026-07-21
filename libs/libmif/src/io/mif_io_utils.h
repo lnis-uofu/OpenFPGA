@@ -33,6 +33,10 @@ std::string mif_file_basename(const std::string& file_path);
  * dpram8x32[0]{dual}.dpram8x16[1] -> dpram8x32{dual}.dpram8x16 */
 std::string strip_pb_type_indices(const std::string& indexed_pb_type);
 
+/* Return the last numeric [N] index in a pb_type path, e.g.
+ * dpram8x32[0]{dual}.dpram8x16[1] -> 1. Returns -1 if none found. */
+int extract_pb_type_leaf_index(const std::string& indexed_pb_type);
+
 /* Find the Verilog instance that reads init.hex via $readmemh. */
 std::string find_verilog_instance_reading_mif(const std::string& verilog_path,
                                               const std::string& mif_file_name);

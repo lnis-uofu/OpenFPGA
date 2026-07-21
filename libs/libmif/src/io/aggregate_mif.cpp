@@ -15,9 +15,34 @@ namespace {
 
 struct PbAggregateState {
   int addr_width = 0;
-  int data_width = 0;
+  int slice_data_width_hint = 0;
+  int max_slice_index = -1;
   std::map<uint64_t, uint64_t> phys_data_map;
 };
+
+int infer_max_slice_index(const std::string& aggregated_pb_type,
+                          const BitstreamSetting& bitstream_setting) {
+  int max_slice_index = -1;
+  for (const MifAddressMapSettingId& map_id :
+       bitstream_setting.mif_address_map_settings()) {
+    const std::string map_pb_type =
+      bitstream_setting.mif_address_map_pb_type(map_id);
+    if (strip_pb_type_indices(map_pb_type) != aggregated_pb_type) {
+      continue;
+    }
+    const int slice_index = extract_pb_type_leaf_index(map_pb_type);
+    max_slice_index = std::max(max_slice_index, slice_index);
+  }
+  return max_slice_index;
+}
+
+int infer_aggregated_data_width(int max_slice_index,
+                                int slice_data_width_hint) {
+  if (max_slice_index < 0 || slice_data_width_hint <= 0) {
+    return 0;
+  }
+  return (max_slice_index + 1) * slice_data_width_hint;
+}
 
 } /* namespace */
 
@@ -84,10 +109,13 @@ int aggregate_mif(
 
     const std::string aggregated_pb_type =
       strip_pb_type_indices(bitstream_setting.mif_address_map_pb_type(map_id));
-    const int address_offset =
-      bitstream_setting.mif_address_map_address_offset(map_id);
-    const int data_offset =
-      bitstream_setting.mif_address_map_data_offset(map_id);
+    const int slice_index = extract_pb_type_leaf_index(operating_pb_type);
+    if (slice_index < 0) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: cannot extract RAM slice index from pb_type '%s'\n",
+        operating_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
 
     const int op_addr_width = logical_storage.addr_width(segment_id);
     const int op_data_width = logical_storage.data_width(segment_id);
@@ -98,19 +126,43 @@ int aggregate_mif(
     }
 
     PbAggregateState& pb_state = pb_agg_states[aggregated_pb_type];
-    pb_state.addr_width =
-      std::max(pb_state.addr_width, address_offset + op_addr_width);
-    pb_state.data_width =
-      std::max(pb_state.data_width, data_offset + op_data_width);
+    pb_state.addr_width = std::max(pb_state.addr_width, op_addr_width);
+    pb_state.slice_data_width_hint =
+      std::max(pb_state.slice_data_width_hint, op_data_width);
+    pb_state.max_slice_index = std::max(pb_state.max_slice_index, slice_index);
+
+    const int max_slice_index =
+      infer_max_slice_index(aggregated_pb_type, bitstream_setting);
+    if (max_slice_index < 0) {
+      VTR_LOG_ERROR("aggregate_mif: cannot infer max slice index for pb '%s'\n",
+                    aggregated_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    const int aggregated_data_width = infer_aggregated_data_width(
+      max_slice_index, pb_state.slice_data_width_hint);
+    if (aggregated_data_width <= 0) {
+      VTR_LOG_ERROR("aggregate_mif: invalid aggregated data width for '%s'\n",
+                    aggregated_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    const int data_bit_shift = (max_slice_index - slice_index) * op_data_width;
+    if (data_bit_shift < 0 ||
+        data_bit_shift + op_data_width > aggregated_data_width) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: slice index=%d exceeds max=%d for pb '%s'\n",
+        slice_index, max_slice_index, operating_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
 
     for (const MifMemoryLineId& line_id :
          logical_storage.segment_memory_lines(segment_id)) {
       const uint64_t logical_addr =
         logical_storage.memory_line_address(line_id);
       const uint64_t logical_data = logical_storage.memory_line_data(line_id);
-      const uint64_t phys_addr = logical_addr << address_offset;
-      const uint64_t phys_data = logical_data << data_offset;
-      pb_state.phys_data_map[phys_addr] |= phys_data;
+      const uint64_t phys_data = logical_data << data_bit_shift;
+      pb_state.phys_data_map[logical_addr] |= phys_data;
     }
   }
 
@@ -128,10 +180,21 @@ int aggregate_mif(
       return CMD_EXEC_FATAL_ERROR;
     }
 
+    const int max_slice_index =
+      infer_max_slice_index(aggregated_pb_type, bitstream_setting);
+    const int aggregated_data_width = infer_aggregated_data_width(
+      max_slice_index, pb_state.slice_data_width_hint);
+    if (aggregated_data_width <= 0) {
+      VTR_LOG_ERROR("aggregate_mif: invalid aggregated data width for '%s'\n",
+                    aggregated_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
     const MifSegmentId out_seg = out_aggregated_storage.create_segment();
     out_aggregated_storage.set_segment_physical_pb(out_seg, aggregated_pb_type);
     out_aggregated_storage.set_segment_addr_width(out_seg, pb_state.addr_width);
-    out_aggregated_storage.set_segment_data_width(out_seg, pb_state.data_width);
+    out_aggregated_storage.set_segment_data_width(out_seg,
+                                                  aggregated_data_width);
 
     std::vector<uint64_t> phys_addrs;
     phys_addrs.reserve(pb_state.phys_data_map.size());
