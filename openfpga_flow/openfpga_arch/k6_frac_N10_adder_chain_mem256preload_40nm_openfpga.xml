@@ -197,7 +197,7 @@
       <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
       <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="dpram_mm16x16_preload" prefix="dpram_mm16x16_preload" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dpram_mm16x16_preload.v">
+    <circuit_model type="hard_logic" name="frac_mem_256_preload" prefix="frac_mem_256_preload" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/frac_mem_256_preload.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
