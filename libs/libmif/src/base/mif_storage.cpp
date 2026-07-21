@@ -28,6 +28,23 @@ int MifStorage::data_width(const MifSegmentId& segment_id) const {
   return segment_data_width_[segment_id];
 }
 
+bool MifStorage::has_addr_range(const MifSegmentId& segment_id) const {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  return segment_has_addr_range_[segment_id];
+}
+
+uint64_t MifStorage::min_addr(const MifSegmentId& segment_id) const {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  VTR_ASSERT(segment_has_addr_range_[segment_id]);
+  return segment_min_addr_[segment_id];
+}
+
+uint64_t MifStorage::max_addr(const MifSegmentId& segment_id) const {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  VTR_ASSERT(segment_has_addr_range_[segment_id]);
+  return segment_max_addr_[segment_id];
+}
+
 bool MifStorage::has_source_file(const MifSegmentId& segment_id) const {
   VTR_ASSERT(valid_segment_id(segment_id));
   return !segment_source_file_[segment_id].empty();
@@ -72,6 +89,9 @@ void MifStorage::remove_last_segment_if_empty() {
   segment_ids_.pop_back();
   segment_addr_width_.pop_back();
   segment_data_width_.pop_back();
+  segment_has_addr_range_.pop_back();
+  segment_min_addr_.pop_back();
+  segment_max_addr_.pop_back();
   segment_source_file_.pop_back();
   segment_physical_pb_.pop_back();
   segment_memory_line_ids_.pop_back();
@@ -81,6 +101,9 @@ void MifStorage::clear() {
   segment_ids_.clear();
   segment_addr_width_.clear();
   segment_data_width_.clear();
+  segment_has_addr_range_.clear();
+  segment_min_addr_.clear();
+  segment_max_addr_.clear();
   segment_source_file_.clear();
   segment_physical_pb_.clear();
   segment_memory_line_ids_.clear();
@@ -94,6 +117,9 @@ MifSegmentId MifStorage::create_segment() {
   segment_ids_.push_back(segment_id);
   segment_addr_width_.push_back(-1);
   segment_data_width_.push_back(-1);
+  segment_has_addr_range_.push_back(false);
+  segment_min_addr_.push_back(0);
+  segment_max_addr_.push_back(0);
   segment_source_file_.push_back(std::string());
   segment_physical_pb_.push_back(std::string());
   segment_memory_line_ids_.emplace_back();
@@ -110,6 +136,15 @@ void MifStorage::set_segment_data_width(const MifSegmentId& segment_id,
                                         int width) {
   VTR_ASSERT(valid_segment_id(segment_id));
   segment_data_width_[segment_id] = width;
+}
+
+void MifStorage::set_segment_addr_range(const MifSegmentId& segment_id,
+                                        uint64_t min_addr, uint64_t max_addr) {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  VTR_ASSERT(min_addr <= max_addr);
+  segment_has_addr_range_[segment_id] = true;
+  segment_min_addr_[segment_id] = min_addr;
+  segment_max_addr_[segment_id] = max_addr;
 }
 
 void MifStorage::set_segment_source_file(const MifSegmentId& segment_id,

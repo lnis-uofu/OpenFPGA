@@ -184,7 +184,8 @@ int mif_bit_width_for_max_value(uint64_t max_value) {
 }
 
 bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
-                                       int& depth, uint64_t& max_addr) {
+                                       int& depth, uint64_t& min_addr,
+                                       uint64_t& max_addr) {
   if (comment_line.find("depth") == std::string::npos) {
     return false;
   }
@@ -192,6 +193,7 @@ bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
     return false;
   }
 
+  min_addr = 0;
   max_addr = static_cast<uint64_t>(depth - 1);
 
   const size_t from_pos = comment_line.find("from");
@@ -203,7 +205,9 @@ bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
     if (parse_int_after_keyword(comment_line.substr(from_pos), "from",
                                 parsed_min) &&
         parse_int_after_keyword(comment_line.substr(to_pos), "to",
-                                parsed_max)) {
+                                parsed_max) &&
+        parsed_min >= 0 && parsed_max >= parsed_min) {
+      min_addr = static_cast<uint64_t>(parsed_min);
       max_addr = static_cast<uint64_t>(parsed_max);
     }
   }

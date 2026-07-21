@@ -32,6 +32,9 @@ class MifStorage {
  public: /* Accessors */
   int addr_width(const MifSegmentId& segment_id) const;
   int data_width(const MifSegmentId& segment_id) const;
+  bool has_addr_range(const MifSegmentId& segment_id) const;
+  uint64_t min_addr(const MifSegmentId& segment_id) const;
+  uint64_t max_addr(const MifSegmentId& segment_id) const;
   bool has_source_file(const MifSegmentId& segment_id) const;
   const std::string& segment_source_file(const MifSegmentId& segment_id) const;
   const std::string& physical_pb(const MifSegmentId& segment_id) const;
@@ -45,6 +48,8 @@ class MifStorage {
   MifSegmentId create_segment();
   void set_segment_addr_width(const MifSegmentId& segment_id, int width);
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
+  void set_segment_addr_range(const MifSegmentId& segment_id, uint64_t min_addr,
+                              uint64_t max_addr);
   void set_segment_source_file(const MifSegmentId& segment_id,
                                const std::string& file_path);
   void set_segment_physical_pb(const MifSegmentId& segment_id,
@@ -60,6 +65,9 @@ class MifStorage {
   vtr::vector<MifSegmentId, MifSegmentId> segment_ids_;
   vtr::vector<MifSegmentId, int> segment_addr_width_;
   vtr::vector<MifSegmentId, int> segment_data_width_;
+  vtr::vector<MifSegmentId, bool> segment_has_addr_range_;
+  vtr::vector<MifSegmentId, uint64_t> segment_min_addr_;
+  vtr::vector<MifSegmentId, uint64_t> segment_max_addr_;
   vtr::vector<MifSegmentId, std::string> segment_source_file_;
   vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>

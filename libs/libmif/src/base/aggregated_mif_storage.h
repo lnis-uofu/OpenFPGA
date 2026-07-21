@@ -24,6 +24,9 @@ class AggregatedMifStorage {
   size_t num_segments() const;
   int addr_width(const MifSegmentId& segment_id) const;
   int data_width(const MifSegmentId& segment_id) const;
+  bool has_addr_range(const MifSegmentId& segment_id) const;
+  uint64_t min_addr(const MifSegmentId& segment_id) const;
+  uint64_t max_addr(const MifSegmentId& segment_id) const;
   const std::string& physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
@@ -31,6 +34,8 @@ class AggregatedMifStorage {
   MifSegmentId create_segment();
   void set_segment_addr_width(const MifSegmentId& segment_id, int width);
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
+  void set_segment_addr_range(const MifSegmentId& segment_id, uint64_t min_addr,
+                              uint64_t max_addr);
   void set_segment_physical_pb(const MifSegmentId& segment_id,
                                const std::string& physical_pb);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,

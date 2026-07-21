@@ -32,6 +32,19 @@ int AggregatedMifStorage::data_width(const MifSegmentId& segment_id) const {
   return storage_.data_width(segment_id);
 }
 
+bool AggregatedMifStorage::has_addr_range(
+  const MifSegmentId& segment_id) const {
+  return storage_.has_addr_range(segment_id);
+}
+
+uint64_t AggregatedMifStorage::min_addr(const MifSegmentId& segment_id) const {
+  return storage_.min_addr(segment_id);
+}
+
+uint64_t AggregatedMifStorage::max_addr(const MifSegmentId& segment_id) const {
+  return storage_.max_addr(segment_id);
+}
+
 const std::string& AggregatedMifStorage::physical_pb(
   const MifSegmentId& segment_id) const {
   return storage_.physical_pb(segment_id);
@@ -59,6 +72,11 @@ void AggregatedMifStorage::set_segment_addr_width(
 void AggregatedMifStorage::set_segment_data_width(
   const MifSegmentId& segment_id, int width) {
   storage_.set_segment_data_width(segment_id, width);
+}
+
+void AggregatedMifStorage::set_segment_addr_range(
+  const MifSegmentId& segment_id, uint64_t min_addr, uint64_t max_addr) {
+  storage_.set_segment_addr_range(segment_id, min_addr, max_addr);
 }
 
 void AggregatedMifStorage::set_segment_physical_pb(

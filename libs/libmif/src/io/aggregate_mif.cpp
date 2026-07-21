@@ -17,6 +17,9 @@ struct PbAggregateState {
   int addr_width = 0;
   int slice_data_width_hint = 0;
   int max_slice_index = -1;
+  bool has_addr_range = false;
+  uint64_t min_addr = 0;
+  uint64_t max_addr = 0;
   std::map<uint64_t, uint64_t> phys_data_map;
 };
 
@@ -131,6 +134,19 @@ int aggregate_mif(
       std::max(pb_state.slice_data_width_hint, op_data_width);
     pb_state.max_slice_index = std::max(pb_state.max_slice_index, slice_index);
 
+    if (logical_storage.has_addr_range(segment_id)) {
+      const uint64_t seg_min = logical_storage.min_addr(segment_id);
+      const uint64_t seg_max = logical_storage.max_addr(segment_id);
+      if (!pb_state.has_addr_range) {
+        pb_state.min_addr = seg_min;
+        pb_state.max_addr = seg_max;
+        pb_state.has_addr_range = true;
+      } else {
+        pb_state.min_addr = std::min(pb_state.min_addr, seg_min);
+        pb_state.max_addr = std::max(pb_state.max_addr, seg_max);
+      }
+    }
+
     const int max_slice_index =
       infer_max_slice_index(aggregated_pb_type, bitstream_setting);
     if (max_slice_index < 0) {
@@ -195,6 +211,15 @@ int aggregate_mif(
     out_aggregated_storage.set_segment_addr_width(out_seg, pb_state.addr_width);
     out_aggregated_storage.set_segment_data_width(out_seg,
                                                   aggregated_data_width);
+    if (pb_state.has_addr_range) {
+      out_aggregated_storage.set_segment_addr_range(out_seg, pb_state.min_addr,
+                                                    pb_state.max_addr);
+    } else {
+      const uint64_t observed_min = pb_state.phys_data_map.begin()->first;
+      const uint64_t observed_max = pb_state.phys_data_map.rbegin()->first;
+      out_aggregated_storage.set_segment_addr_range(out_seg, observed_min,
+                                                    observed_max);
+    }
 
     std::vector<uint64_t> phys_addrs;
     phys_addrs.reserve(pb_state.phys_data_map.size());

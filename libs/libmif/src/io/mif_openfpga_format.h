@@ -11,7 +11,8 @@
 /********************************************************************
  * Aggregated preload .mem output (Verilog $readmemh compatible):
  *   // Aggregated MIF for memory preloading interface
- *   // Address width: 6
+ *   // addr[0:7]
+ *   // Address width: 3
  *   // Data width: 32
  *   0 0x00000000138F0000
  *

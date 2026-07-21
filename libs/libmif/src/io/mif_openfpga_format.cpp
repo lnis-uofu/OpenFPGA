@@ -36,6 +36,10 @@ static void serialize_preload_mem_segment(const AggregatedMifStorage& storage,
                                           const MifSegmentId& segment_id,
                                           std::ostream& os) {
   os << "// " << MIF_PRELOAD_MEM_TITLE << "\n";
+  if (storage.has_addr_range(segment_id)) {
+    os << "// addr[" << storage.min_addr(segment_id) << ":"
+       << storage.max_addr(segment_id) << "]\n";
+  }
   os << "// Address width: " << storage.addr_width(segment_id) << "\n";
   os << "// Data width: " << storage.data_width(segment_id) << "\n";
   os << "// PB_TYPE " << storage.physical_pb(segment_id) << "\n";
@@ -85,11 +89,14 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
   const MifSegmentId segment_id = mif_storage.create_segment();
   size_t line_no = 0;
   size_t total_words = 0;
+  uint64_t min_addr = 0;
   uint64_t max_addr = 0;
   uint64_t max_data = 0;
   uint64_t next_addr = 0;
+  bool has_observed_addr = false;
   bool has_depth_metadata = false;
   bool has_width_metadata = false;
+  uint64_t depth_min_addr = 0;
   uint64_t depth_max_addr = 0;
   int declared_data_width = 0;
 
@@ -103,10 +110,12 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     }
     if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
       int parsed_depth = 0;
+      uint64_t parsed_min_addr = 0;
       uint64_t parsed_max_addr = 0;
-      if (try_parse_init_hex_depth_metadata(line, parsed_depth,
+      if (try_parse_init_hex_depth_metadata(line, parsed_depth, parsed_min_addr,
                                             parsed_max_addr)) {
         has_depth_metadata = true;
+        depth_min_addr = parsed_min_addr;
         depth_max_addr = parsed_max_addr;
       }
       int parsed_width = 0;
@@ -128,8 +137,17 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
 
     mif_storage.create_memory_line(segment_id, addr, data);
     ++total_words;
-    if (addr > max_addr) {
+    if (!has_observed_addr) {
+      min_addr = addr;
       max_addr = addr;
+      has_observed_addr = true;
+    } else {
+      if (addr < min_addr) {
+        min_addr = addr;
+      }
+      if (addr > max_addr) {
+        max_addr = addr;
+      }
     }
     if (data > max_data) {
       max_data = data;
@@ -150,9 +168,12 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
   }
 
   if (has_depth_metadata) {
+    mif_storage.set_segment_addr_range(segment_id, depth_min_addr,
+                                       depth_max_addr);
     mif_storage.set_segment_addr_width(
       segment_id, mif_bit_width_for_max_value(depth_max_addr));
   } else {
+    mif_storage.set_segment_addr_range(segment_id, min_addr, max_addr);
     mif_storage.set_segment_addr_width(segment_id,
                                        mif_bit_width_for_max_value(max_addr));
   }
