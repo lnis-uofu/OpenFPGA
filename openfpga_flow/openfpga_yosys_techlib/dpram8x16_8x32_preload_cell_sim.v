@@ -1,21 +1,21 @@
 //-----------------------------
-// Dual-port RAM 8x32 bit (1Kbit)
+// Dual-port RAM 8x16 bit (1Kbit)
 // Core logic
 //-----------------------------
-module dpram_8x32_core #(
-  parameter [0:255]INIT = 256'bx
+module dpram_8x16_core #(
+  parameter [0:127]INIT = 128'bx
 )(
   input wclk,
   input wen,
   input [0:2] waddr,
-  input [0:31] data_in,
+  input [0:15] data_in,
   input rclk,
   input ren,
   input [0:2] raddr,
-  output [0:31] data_out );
+  output [0:15] data_out );
 
-  reg [0:31] ram[0:2];
-  reg [0:31] internal;
+  reg [0:15] ram[0:2];
+  reg [0:15] internal;
 
   // Loop index for initialization
   integer i;
@@ -24,11 +24,11 @@ module dpram_8x32_core #(
   initial begin
     for (i = 0; i < 8; i = i + 1) begin
       // 1. Shift the target word to the lowest bits
-      shifted_vector = MEM_INIT_VECTOR >> (i * 32);
+      shifted_vector = MEM_INIT_VECTOR >> (i * 16);
       
       // 2. Assign the lowest 16 bits to the RAM row
       // (Verilog allows truncation automatically here)
-      ram[i] = shifted_vector[31:0];
+      ram[i] = shifted_vector[15:0];
     end
   end
 
@@ -53,18 +53,18 @@ endmodule
 // where the read clock and write clock
 // are combined to a unified clock
 //-----------------------------
-module dpram_8x32 #(
-  parameter [0:255] INIT = 256'bx
+module dpram_8x16 #(
+  parameter [0:127] INIT = 128'bx
 )(
   input clk,
   input wen,
   input ren,
   input [0:2] waddr,
   input [0:2] raddr,
-  input [0:31] data_in,
-  output [0:31] data_out );
+  input [0:15] data_in,
+  output [0:15] data_out );
 
-    dpram_8x32_core #(
+    dpram_8x16_core #(
       .INIT(INIT)
     )memory_0 (
       .wclk    (clk),
