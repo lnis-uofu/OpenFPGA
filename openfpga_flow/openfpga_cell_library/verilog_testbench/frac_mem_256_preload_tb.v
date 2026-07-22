@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_frac_mem_256_preload;
+module frac_mem_256_preload_tb;
     reg clk = 0, preload_clk = 0, rst_n = 0;
     reg init_start = 0;
     wire init_done;
@@ -108,5 +108,10 @@ module tb_frac_mem_256_preload;
             $display("%0d TEST(S) FAILED", errors);
 
         $finish;
+    end
+
+    initial begin
+      $dumpfile("frac_mem_256_preload_tb.vcd");
+      $dumpvars(0, frac_mem_256_preload_tb);
     end
 endmodule
