@@ -25,7 +25,7 @@ module frac_mem_256 (
   reg [0:31] internal;
   assign d_out = internal;
 
-  always @(posedge clk) begin
+  always @(posedge wclk) begin
     // Operating mode: dual port RAM 16 x 16
     if (2'b00 == mode) begin 
       if (wen) begin
@@ -38,20 +38,28 @@ module frac_mem_256 (
     // Operating mode: dual port RAM 8x32
     end else if (2'b01 == mode) begin
       if (wen) begin
-        ram[waddr[0:1]][0:15] <= d_in[0:15];
-        ram[waddr[0:1]][0:15] <= d_in[16:31];
+        ram[{waddr[0:2], 1'b0}][0:15] <= d_in[0:15];
+        ram[{waddr[0:2], 1'b1}][0:15] <= d_in[16:31];
       end
       if (ren) begin
-        internal[0:15] = ram[raddr[0:3]][0:15];
-        internal[16:31] = ram[raddr[0:3]][0:15];
+        internal[0:15] = ram[{raddr[0:2], 1'b0}][0:15];
+        internal[16:31] = ram[{raddr[0:2], 1'b0}][0:15];
      // Operating mode: dual port RAM 32x8
     end else if (2'b10 == mode) begin
       if (wen) begin
-        ram[waddr[0:1]][0:7] <= d_in[0:7];
+        if (waddr[4] == 1'b0) begin
+          ram[waddr[0:3] >> 2][0:7] <= d_in[0:7];
+        end else begin
+          ram[waddr[0:3] >> 2][8:15] <= d_in[0:7];
+        end
       end
       if (ren) begin
-        internal[0:15] = ram[raddr[0:3]][0:15];
-        internal[16:31] = ram[raddr[0:3]][0:15];
+        if (raddr[4] == 1'b0) begin
+          internal[0:7] = ram[raddr[0:3]][0:7];
+        end else begin
+          internal[0:7] = ram[raddr[0:3]][8:15];
+        end
+        internal[8:31] = 24'b0;
       end
      end
     end
