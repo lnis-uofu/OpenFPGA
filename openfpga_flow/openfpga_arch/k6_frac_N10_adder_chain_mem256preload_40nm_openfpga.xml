@@ -280,7 +280,7 @@
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
     <!-- End physical pb_type binding in complex block clb -->
     <!-- physical pb_type binding in complex block memory -->
-    <pb_type name="memory[mem_16x16_phy].mem_16x16_phy" circuit_model_name="dpram_mm16x16_preload"/>
+    <pb_type name="memory[mem_16x16_phy].mem_16x16_phy" circuit_model_name="frac_mem_256_preload"/>
     <pb_type name="memory[mem_16x16_dp].mem_16x16_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="00"/>
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="waddr" physical_mode_port="waddr[0:3]"/>
