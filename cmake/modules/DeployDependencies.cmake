@@ -66,7 +66,19 @@ function(deploy_runtime_dependencies)
         )
     endif()
 
-    # 2. Iterate through each target to configure RPATH and target installations
+    # 2. For MSVC builds, add default search directories if not explicitly provided
+    if(MSVC AND NOT DEPLOY_ADDITIONAL_DIRECTORIES)
+        set(DEPLOY_ADDITIONAL_DIRECTORIES
+            ${CMAKE_BINARY_DIR}/libs/libopenfpgashell/Release
+            ${CMAKE_BINARY_DIR}/libs/libpcf/Release
+            ${CMAKE_BINARY_DIR}/vtr-verilog-to-routing/vpr/Release
+            ${CMAKE_BINARY_DIR}/vtr-verilog-to-routing/libs/libvtr/Release
+            ${CMAKE_PREFIX_PATH}/bin
+        )
+        message(STATUS "DeployDependencies: Added default MSVC search directories")
+    endif()
+
+    # 3. Iterate through each target to configure RPATH and target installations
     foreach(current_target ${DEPLOY_TARGETS})
         if(NOT TARGET ${current_target})
             message(FATAL_ERROR "deploy_runtime_dependencies: '${current_target}' is not a valid CMake target.")
@@ -97,7 +109,7 @@ function(deploy_runtime_dependencies)
         )
     endforeach()
 
-    # 3. Process and install the single unified dependency pool
+    # 4. Process and install the single unified dependency pool
     install(RUNTIME_DEPENDENCY_SET ${DEPLOY_RUNTIME_SET_NAME}
         DESTINATION ${DEPLOY_DESTINATION}
         COMPONENT ${DEPLOY_COMPONENT}
