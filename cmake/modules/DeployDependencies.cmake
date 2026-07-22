@@ -52,17 +52,34 @@ function(deploy_runtime_dependencies)
         )
         # Robust check for MSYS2 contexts (MinGW, UCRT64, Clang64)
         if(MINGW OR CYGWIN OR DEFINED ENV{MSYSTEM})
+            get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
             list(APPEND SYSTEM_EXCLUDE_REGEXES
                 "^/usr/lib"
                 "^/lib"
                 "msys-.*"
             )
+            set(DEPLOY_ADDITIONAL_DIRECTORIES
+                ${MINGW_BIN_DIR}
+                "/mingw64/bin"
+                "/usr/bin"
+            )
+        message(STATUS "DeployDependencies: Added default Mingw64 search directories")
+
         endif()
     else()
         set(SYSTEM_EXCLUDE_REGEXES
             "^/usr/lib"
             "^/lib"
             "^/lib64"
+            "libc\\.so.*"
+            "libpthread\\.so.*"
+            "libglib-.*"
+            "libdl\\.so.*"
+            "libm\\.so.*"
+            "librt\\.so.*"
+            "libstdc\\+\\+\\.so.*"
+            "libgcc_s\\.so.*"
+            "libz\\.so.*$"
         )
     endif()
 
