@@ -8,6 +8,7 @@ verilog/dpram16k.v
 verilog/dpram1k.v
 verilog/dpram8k.v
 verilog/dpram_2048x8.v
+verilog/frac_mem_256.v
 verilog/frac_mem_32k.v
 verilog/frac_mult_16x16.v
 verilog/gpio.v
