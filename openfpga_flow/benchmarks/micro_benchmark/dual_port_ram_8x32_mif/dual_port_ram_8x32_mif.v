@@ -1,23 +1,23 @@
 //-----------------------------------------------------
-// Design Name : dual_port_ram_4x32
-// File Name   : dual_port_ram_4x32.v
-// Function    : Dual port RAM 4x32bit with memory initialization file (MIF)
+// Design Name : dual_port_ram_8x32
+// File Name   : dual_port_ram_8x32.v
+// Function    : Dual port RAM 8x32bit with memory initialization file (MIF)
 // Coder       : Xifan Tang
 //-----------------------------------------------------
 
-module dual_port_ram_4x32 #(
+module dual_port_ram_8x32 #(
   parameter MEM_FILE = "init.hex" // provide a name of MIF file in HEX format
 )(
   input clk,
   input wen,
   input ren,
-  input [1:0] waddr,
-  input [1:0] raddr,
+  input [2:0] waddr,
+  input [2:0] raddr,
   input [31:0] din,
   output [31:0] dout
 );
 
-    dual_port_sram_4x32_core #(
+    dual_port_sram_8x32_core #(
       .MEM_FILE(MEM_FILE)
     ) memory_0 (
       .wclk    (clk),
@@ -31,20 +31,20 @@ module dual_port_ram_4x32 #(
 
 endmodule
 
-module dual_port_sram_4x32_core #(
+module dual_port_sram_8x32_core #(
   parameter MEM_FILE = "init.hex" // provide a name of MIF file in HEX format
 )(
   input wclk,
   input wen,
-  input [1:0] waddr,
+  input [2:0] waddr,
   input [31:0] data_in,
   input rclk,
   input ren,
-  input [1:0] raddr,
+  input [2:0] raddr,
   output [31:0] data_out
 );
 
-  reg [31:0] ram[3:0];
+  reg [31:0] ram[2:0];
   reg [31:0] internal;
 
   initial $readmemh(MEM_FILE, ram);
