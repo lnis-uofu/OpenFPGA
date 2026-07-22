@@ -7,6 +7,8 @@ read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+# Read OpenFPGA bitstream setting files
+read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
