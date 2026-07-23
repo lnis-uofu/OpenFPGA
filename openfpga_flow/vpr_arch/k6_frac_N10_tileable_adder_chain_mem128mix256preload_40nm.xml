@@ -278,10 +278,10 @@
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
-          <loc side="left">memory.clk</loc>
+          <loc side="left">memory256.clk</loc>
           <loc side="top"/>
-          <loc side="right">memory.wen memory.waddr[0:2] memory.raddr[0:2] memory.data_in[0:15] memory.data_out[0:15]</loc>
-          <loc side="bottom">memory.ren memory.waddr[3:4] memory.raddr[3:4] memory.data_in[16:31] memory.data_out[16:31]</loc>
+          <loc side="right">memory256.wen memory256.waddr[0:2] memory256.raddr[0:2] memory256.data_in[0:15] memory256.data_out[0:15]</loc>
+          <loc side="bottom">memory256.ren memory256.waddr[3:4] memory256.raddr[3:4] memory256.data_in[16:31] memory256.data_out[16:31]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
@@ -301,10 +301,10 @@
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
-          <loc side="left">memory.clk</loc>
+          <loc side="left">memory128.clk</loc>
           <loc side="top"/>
-          <loc side="right">memory.wen memory.waddr[0:1] memory.raddr[0:1] memory.data_in[0:7] memory.data_out[0:7]</loc>
-          <loc side="bottom">memory.ren memory.waddr[2:2] memory.raddr[2:2] memory.data_in[8:15] memory.data_out[8:15]</loc>
+          <loc side="right">memory128.wen memory128.waddr[0:1] memory128.raddr[0:1] memory128.data_in[0:7] memory128.data_out[0:7]</loc>
+          <loc side="bottom">memory128.ren memory128.waddr[2:2] memory128.raddr[2:2] memory128.data_in[8:15] memory128.data_out[8:15]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
@@ -916,7 +916,7 @@
           </power>
         </pb_type>
         <interconnect>
-          <direct name="waddress" input="memory256.waddr[2:0]" output="mem_8x32_dp.waddr[2:0]r">
+          <direct name="waddress" input="memory256.waddr[2:0]" output="mem_8x32_dp.waddr[2:0]">
             <delay_constant max="132e-12" in_port="memory256.waddr[2:0]" out_port="mem_8x32_dp.waddr[2:0]"/>
           </direct>
           <direct name="raddress" input="memory256.raddr[2:0]" output="mem_8x32_dp.raddr[2:0]">
