@@ -50,6 +50,18 @@ function(deploy_runtime_dependencies)
             ".*[Ss]ystem32.*"
             ".*[Ss]ys[Ww][Oo][Ww]64.*"
         )
+        # Fetch paths from environment variables if set, otherwise fallback to defaults
+        if(DEFINED ENV{TCL_ROOT})
+            set(TCL_BIN_DIR "$ENV{TCL_ROOT}/bin")
+        else()
+            set(TCL_BIN_DIR "C:/Tcl/bin")
+        endif()
+        
+        if(DEFINED ENV{MSYSTEM_PREFIX})
+            set(MSYS_BIN_DIR "$ENV{MSYSTEM_PREFIX}/bin")
+        else()
+            set(MSYS_BIN_DIR "C:/msys64/mingw64/bin")
+        endif()
         # Robust check for MSYS2 contexts (MinGW, UCRT64, Clang64)
         if(MINGW OR CYGWIN OR DEFINED ENV{MSYSTEM})
             get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
@@ -60,11 +72,18 @@ function(deploy_runtime_dependencies)
             )
             set(DEPLOY_ADDITIONAL_DIRECTORIES
                 ${MINGW_BIN_DIR}
-                "/mingw64/bin"
+                ${MSYS_BIN_DIR}
+                ${TCL_BIN_DIR}      # Adds ActiveTcl (C:/Tcl/bin)
                 "/usr/bin"
             )
-        message(STATUS "DeployDependencies: Added default Mingw64 search directories")
-
+            message(STATUS "DeployDependencies: Added default Mingw64 search directories")
+        endif()
+        # In MSVC build, tcl is installed by ActiveTcl
+        # Adds ActiveTcl (C:/Tcl/bin)
+        if (MSVC)
+            set(DEPLOY_ADDITIONAL_DIRECTORIES
+                ${TCL_BIN_DIR}
+            )
         endif()
     else()
         set(SYSTEM_EXCLUDE_REGEXES
