@@ -50,12 +50,42 @@ function(deploy_runtime_dependencies)
             ".*[Ss]ystem32.*"
             ".*[Ss]ys[Ww][Oo][Ww]64.*"
         )
+        # Fetch paths from environment variables if set, otherwise fallback to defaults
+        if(DEFINED ENV{TCL_ROOT})
+            set(TCL_BIN_DIR "$ENV{TCL_ROOT}/bin")
+        else()
+            set(TCL_BIN_DIR "C:/Tcl/bin")
+        endif()
+        
+        if(DEFINED ENV{MSYSTEM_PREFIX})
+            set(MSYS_BIN_DIR "$ENV{MSYSTEM_PREFIX}/bin")
+        else()
+            set(MSYS_BIN_DIR "C:/msys64/mingw64/bin")
+        endif()
         # Robust check for MSYS2 contexts (MinGW, UCRT64, Clang64)
         if(MINGW OR CYGWIN OR DEFINED ENV{MSYSTEM})
+            get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
             list(APPEND SYSTEM_EXCLUDE_REGEXES
                 "^/usr/lib"
                 "^/lib"
                 "msys-.*"
+            )
+            set(DEPLOY_ADDITIONAL_DIRECTORIES
+                ${MINGW_BIN_DIR}
+                ${MSYS_BIN_DIR}
+                ${TCL_BIN_DIR}      # Adds ActiveTcl (C:/Tcl/bin)
+                "/usr/bin"
+            )
+            message(STATUS "DeployDependencies: Added default Mingw64 search directories")
+        endif()
+        # In MSVC build, tcl is installed by ActiveTcl
+        # Adds ActiveTcl (C:/Tcl/bin)
+        if (MSVC)
+            set(DEPLOY_ADDITIONAL_DIRECTORIES
+                ${TCL_BIN_DIR}
+                # Magicsplat Tcl/Tk default installation locations
+                "C:/Program Files/Tcl/bin"
+                "C:/Program Files (x86)/Tcl/bin"
             )
         endif()
     else()
@@ -63,6 +93,15 @@ function(deploy_runtime_dependencies)
             "^/usr/lib"
             "^/lib"
             "^/lib64"
+            "libc\\.so.*"
+            "libpthread\\.so.*"
+            "libglib-.*"
+            "libdl\\.so.*"
+            "libm\\.so.*"
+            "librt\\.so.*"
+            "libstdc\\+\\+\\.so.*"
+            "libgcc_s\\.so.*"
+            "libz\\.so.*$"
         )
     endif()
 
