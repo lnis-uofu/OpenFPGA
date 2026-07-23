@@ -83,6 +83,9 @@ function(deploy_runtime_dependencies)
         if (MSVC)
             set(DEPLOY_ADDITIONAL_DIRECTORIES
                 ${TCL_BIN_DIR}
+                # Magicsplat Tcl/Tk default installation locations
+                "C:/Program Files/Tcl/bin"
+                "C:/Program Files (x86)/Tcl/bin"
             )
         endif()
     else()
