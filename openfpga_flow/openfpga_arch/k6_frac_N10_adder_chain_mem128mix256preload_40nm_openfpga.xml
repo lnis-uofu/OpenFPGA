@@ -301,21 +301,21 @@
     <!-- End physical pb_type binding in complex block clb -->
     <!-- physical pb_type binding in complex block memory -->
     <pb_type name="memory[mem_16x16_phy].mem_16x16_phy" circuit_model_name="frac_mem_256_preload"/>
-    <pb_type name="memory[mem_16x16_dp].mem_16x16_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="00"/>
+    <pb_type name="memory[mem_16x16_dp].mem_16x16_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="00">
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="waddr" physical_mode_port="waddr[0:3]"/>
       <port name="raddr" physical_mode_port="raddr[0:3]"/>
       <port name="data_in" physical_mode_port="data_in[0:15]"/>
       <port name="data_out" physical_mode_port="data_out[0:15]"/>
     </pb_type>
-    <pb_type name="memory[mem_8x32_dp].mem_8x32_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="01"/>
+    <pb_type name="memory[mem_8x32_dp].mem_8x32_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="01">
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="waddr" physical_mode_port="waddr[0:2]"/>
       <port name="raddr" physical_mode_port="raddr[0:2]"/>
       <port name="data_in" physical_mode_port="data_in[0:31]"/>
       <port name="data_out" physical_mode_port="data_out[0:31]"/>
     </pb_type>
-    <pb_type name="memory[mem_32x8_dp].mem_32x8_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="10"/>
+    <pb_type name="memory[mem_32x8_dp].mem_32x8_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="10">
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="waddr" physical_mode_port="waddr[0:4]"/>
       <port name="raddr" physical_mode_port="raddr[0:4]"/>

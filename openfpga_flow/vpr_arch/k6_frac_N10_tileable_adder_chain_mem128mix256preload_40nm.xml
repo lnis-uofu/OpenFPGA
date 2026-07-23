@@ -267,8 +267,8 @@
         <equivalent_sites>
           <site pb_type="memory256"/>
         </equivalent_sites>
-        <input name="waddr" num_pins="3"/>
-        <input name="raddr" num_pins="3"/>
+        <input name="waddr" num_pins="5"/>
+        <input name="raddr" num_pins="5"/>
         <input name="data_in" num_pins="32"/>
         <input name="wen" num_pins="1"/>
         <input name="ren" num_pins="1"/>
@@ -280,8 +280,8 @@
         <pinlocations pattern="custom">
           <loc side="left">memory.clk</loc>
           <loc side="top"/>
-          <loc side="right">memory.wen memory.waddr[0:1] memory.raddr[0:1] memory.data_in[0:15] memory.data_out[0:15]</loc>
-          <loc side="bottom">memory.ren memory.waddr[2:2] memory.raddr[2:2] memory.data_in[16:31] memory.data_out[16:31]</loc>
+          <loc side="right">memory.wen memory.waddr[0:2] memory.raddr[0:2] memory.data_in[0:15] memory.data_out[0:15]</loc>
+          <loc side="bottom">memory.ren memory.waddr[3:4] memory.raddr[3:4] memory.data_in[16:31] memory.data_out[16:31]</loc>
         </pinlocations>
       </sub_tile>
     </tile>
@@ -916,7 +916,7 @@
           </power>
         </pb_type>
         <interconnect>
-          <direct name="waddress" input="memory256.waddr[2:0]" output="mem_8x32_dp.wadd[2:0]r">
+          <direct name="waddress" input="memory256.waddr[2:0]" output="mem_8x32_dp.waddr[2:0]r">
             <delay_constant max="132e-12" in_port="memory256.waddr[2:0]" out_port="mem_8x32_dp.waddr[2:0]"/>
           </direct>
           <direct name="raddress" input="memory256.raddr[2:0]" output="mem_8x32_dp.raddr[2:0]">
