@@ -25,7 +25,7 @@ wire [0:79] gfpga_pad_GPIO_PAD;
 wire [0:31] gfpga_pad_dpram_8x16_preload_mem_init_data;
 
 wire [0:1] gfpga_pad_dpram_8x16_preload_mem_init_done;
-wire [0:3] gfpga_pad_dpram_8x16_preload_mem_init_addr;
+wire [0:5] gfpga_pad_dpram_8x16_preload_mem_init_addr;
 
 reg [0:0] __config_done__;
 wire [0:0] __config_all_done__;
@@ -239,7 +239,7 @@ always wait(~__greset__)
 		.mem_init_start(mem_init_start[0]),
 		.gfpga_pad_dpram_8x16_preload_mem_init_data(gfpga_pad_dpram_8x16_preload_mem_init_data[0:31]),
 		.gfpga_pad_dpram_8x16_preload_mem_init_done(gfpga_pad_dpram_8x16_preload_mem_init_done[0:1]),
-		.gfpga_pad_dpram_8x16_preload_mem_init_addr(gfpga_pad_dpram_8x16_preload_mem_init_addr[0:3]),
+		.gfpga_pad_dpram_8x16_preload_mem_init_addr(gfpga_pad_dpram_8x16_preload_mem_init_addr[0:5]),
 		.gfpga_pad_GPIO_PAD(gfpga_pad_GPIO_PAD[0:79]),
 		.ccff_head(ccff_head[0:15]),
 		.ccff_tail(ccff_tail[0:15]));
