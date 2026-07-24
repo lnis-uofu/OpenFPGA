@@ -17,6 +17,10 @@ bool is_memory_model_name(const std::string& model_name) {
          model_name.find("memory") != std::string::npos;
 }
 
+/* Match OpenFPGA bitstream / annotation pb_type path style:
+ *   <pb_type>[<mode>].<sub_pb_type>[<mode>]... .<leaf_pb_type>
+ * e.g. memory[mem_8x16_dp].mem_8x16_dp
+ */
 std::string compose_pb_type_path(const t_pb* leaf_pb) {
   if (nullptr == leaf_pb) {
     return std::string();
@@ -38,16 +42,13 @@ std::string compose_pb_type_path(const t_pb* leaf_pb) {
       pb_type_path += ".";
     }
     pb_type_path += cur_pb->pb_graph_node->pb_type->name;
-    pb_type_path += "[";
-    pb_type_path += std::to_string(cur_pb->pb_graph_node->placement_index);
-    pb_type_path += "]";
 
     if (!cur_pb->is_primitive()) {
       t_mode* mode = cur_pb->get_mode();
       if (nullptr != mode) {
-        pb_type_path += "{";
+        pb_type_path += "[";
         pb_type_path += mode->name;
-        pb_type_path += "}";
+        pb_type_path += "]";
       }
     }
   }

@@ -47,10 +47,9 @@ int main(int argc, const char** argv) {
       "memory[mem_16x16_phy].mem_16x16_dp_phy");
   VTR_ASSERT(phy_source.is_valid());
   VTR_ASSERT(bitstream_setting.mif_source_source(phy_source) == "eblif");
-  VTR_ASSERT(bitstream_setting.mif_source_content(phy_source) ==
-             ".param INIT");
-  VTR_ASSERT(range_eq(bitstream_setting.mif_source_address_range(phy_source),
-                      0, 15));
+  VTR_ASSERT(bitstream_setting.mif_source_content(phy_source) == ".param INIT");
+  VTR_ASSERT(
+    range_eq(bitstream_setting.mif_source_address_range(phy_source), 0, 15));
   VTR_ASSERT(
     range_eq(bitstream_setting.mif_source_data_range(phy_source), 0, 15));
 
@@ -86,19 +85,17 @@ int main(int argc, const char** argv) {
   VTR_ASSERT(range_eq(
     bitstream_setting.mif_address_map_rule_src_addr_range(rules_8x32[0]), 0,
     7));
-  VTR_ASSERT(0 == bitstream_setting.mif_address_map_rule_des_addr_offset(
-                    rules_8x32[0]));
+  VTR_ASSERT(
+    0 == bitstream_setting.mif_address_map_rule_des_addr_offset(rules_8x32[0]));
   VTR_ASSERT(range_eq(
-    bitstream_setting.mif_address_map_rule_src_mif_bits(rules_8x32[0]), 0,
-    15));
+    bitstream_setting.mif_address_map_rule_src_mif_bits(rules_8x32[0]), 0, 15));
   VTR_ASSERT(range_eq(
-    bitstream_setting.mif_address_map_rule_des_mif_bits(rules_8x32[0]), 0,
-    15));
-  VTR_ASSERT(8 == bitstream_setting.mif_address_map_rule_des_addr_offset(
-                    rules_8x32[1]));
-  VTR_ASSERT(range_eq(
-    bitstream_setting.mif_address_map_rule_src_mif_bits(rules_8x32[1]), 16,
-    31));
+    bitstream_setting.mif_address_map_rule_des_mif_bits(rules_8x32[0]), 0, 15));
+  VTR_ASSERT(
+    8 == bitstream_setting.mif_address_map_rule_des_addr_offset(rules_8x32[1]));
+  VTR_ASSERT(
+    range_eq(bitstream_setting.mif_address_map_rule_src_mif_bits(rules_8x32[1]),
+             16, 31));
 
   const MifAddressMapSettingId map_32x8 =
     bitstream_setting.find_mif_address_map_by_src_pb_type(
@@ -116,8 +113,7 @@ int main(int argc, const char** argv) {
   VTR_ASSERT(-16 == bitstream_setting.mif_address_map_rule_des_addr_offset(
                       rules_32x8[1]));
   VTR_ASSERT(range_eq(
-    bitstream_setting.mif_address_map_rule_des_mif_bits(rules_32x8[1]), 8,
-    15));
+    bitstream_setting.mif_address_map_rule_des_mif_bits(rules_32x8[1]), 8, 15));
 
   if (3 <= argc) {
     write_xml_openfpga_bitstream_settings(argv[2], bitstream_setting);

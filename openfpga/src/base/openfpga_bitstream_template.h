@@ -13,7 +13,6 @@
 #include "command_exit_codes.h"
 #include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
-#include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
 #include "openfpga_mif_bitstream.h"
 #include "openfpga_naming.h"
@@ -43,7 +42,6 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
   CommandOptionId opt_write_mif = cmd.option("write_mif");
-  CommandOptionId opt_verilog = cmd.option("verilog");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(
@@ -99,20 +97,8 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
     }
 
     if (!mem_file_path.empty()) {
-      if (false == cmd_context.option_enable(cmd, opt_verilog) ||
-          cmd_context.option_value(cmd, opt_verilog).empty()) {
-        VTR_LOG_ERROR(
-          "build_architecture_bitstream: --verilog is required to aggregate "
-          "MIF data into preload .mem\n");
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      const std::map<std::string, std::string> inst_pb_type_path_map =
-        get_instance_pb_type_path_from_placement();
-
       const int mem_status = aggregate_mif_storage_and_write_preload_mem(
         openfpga_ctx.mif_storage(), openfpga_ctx.bitstream_setting(),
-        inst_pb_type_path_map, cmd_context.option_value(cmd, opt_verilog),
         openfpga_ctx.mutable_aggregated_mif_storage(), mem_file_path);
       if (CMD_EXEC_SUCCESS != mem_status) {
         return mem_status;

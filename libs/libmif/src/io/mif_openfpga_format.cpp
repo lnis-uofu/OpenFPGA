@@ -88,16 +88,10 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
   const MifSegmentId segment_id = mif_storage.create_segment();
   size_t line_no = 0;
   size_t total_words = 0;
-  uint64_t min_addr = 0;
-  uint64_t max_addr = 0;
-  uint64_t max_data = 0;
   uint64_t next_addr = 0;
-  bool has_observed_addr = false;
   bool has_depth_metadata = false;
-  bool has_width_metadata = false;
   uint64_t depth_min_addr = 0;
   uint64_t depth_max_addr = 0;
-  int declared_data_width = 0;
 
   std::string raw_line;
   while (std::getline(ifs, raw_line)) {
@@ -117,11 +111,7 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
         depth_min_addr = parsed_min_addr;
         depth_max_addr = parsed_max_addr;
       }
-      int parsed_width = 0;
-      if (try_parse_init_hex_width_metadata(line, parsed_width)) {
-        declared_data_width = parsed_width;
-        has_width_metadata = true;
-      }
+      /* width comments are ignored; mif_source.data_range is authoritative. */
       continue;
     }
 
@@ -136,21 +126,6 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
 
     mif_storage.create_memory_line(segment_id, addr, data);
     ++total_words;
-    if (!has_observed_addr) {
-      min_addr = addr;
-      max_addr = addr;
-      has_observed_addr = true;
-    } else {
-      if (addr < min_addr) {
-        min_addr = addr;
-      }
-      if (addr > max_addr) {
-        max_addr = addr;
-      }
-    }
-    if (data > max_data) {
-      max_data = data;
-    }
   }
 
   if (ifs.bad()) {
@@ -166,23 +141,13 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* depth/width comments are optional. Without them, leave range/width unset
-   * (-1 / has_addr_range=false); aggregate uses mif_source instead. */
+  /* depth comment is optional. Without it, leave has_addr_range=false;
+   * aggregate uses mif_source.address_range as authoritative.
+   * Logical segments do not store addr_width/data_width; those are set only
+   * on aggregated segments for .mem headers. */
   if (has_depth_metadata) {
     mif_storage.set_segment_addr_range(segment_id, depth_min_addr,
                                        depth_max_addr);
-    mif_storage.set_segment_addr_width(
-      segment_id, mif_bit_width_for_max_value(depth_max_addr));
-  } else if (has_observed_addr) {
-    mif_storage.set_segment_addr_width(segment_id,
-                                       mif_bit_width_for_max_value(max_addr));
-  }
-
-  if (has_width_metadata) {
-    mif_storage.set_segment_data_width(segment_id, declared_data_width);
-  } else {
-    mif_storage.set_segment_data_width(segment_id,
-                                       mif_bit_width_for_max_value(max_data));
   }
 
   return CMD_EXEC_SUCCESS;

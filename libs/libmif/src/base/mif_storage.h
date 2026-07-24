@@ -12,6 +12,14 @@
  *   - logical init.hex data from read_mif()
  *   - aggregated preload data from aggregate_mif()
  * Distinguish stages by variable naming / comments at call sites.
+ *
+ * Logical segment typically has:
+ *   - memory lines (required)
+ *   - optional addr_range from init.hex depth comment
+ *
+ * Aggregated segment typically has:
+ *   - memory lines
+ *   - physical_pb, addr_width, data_width, addr_range (for .mem header)
  *******************************************************************/
 namespace openfpga {
 
@@ -38,8 +46,6 @@ class MifStorage {
   bool has_addr_range(const MifSegmentId& segment_id) const;
   uint64_t min_addr(const MifSegmentId& segment_id) const;
   uint64_t max_addr(const MifSegmentId& segment_id) const;
-  bool has_source_file(const MifSegmentId& segment_id) const;
-  const std::string& segment_source_file(const MifSegmentId& segment_id) const;
   const std::string& physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
@@ -53,8 +59,6 @@ class MifStorage {
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
   void set_segment_addr_range(const MifSegmentId& segment_id, uint64_t min_addr,
                               uint64_t max_addr);
-  void set_segment_source_file(const MifSegmentId& segment_id,
-                               const std::string& file_path);
   void set_segment_physical_pb(const MifSegmentId& segment_id,
                                const std::string& physical_pb);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
@@ -71,7 +75,6 @@ class MifStorage {
   vtr::vector<MifSegmentId, bool> segment_has_addr_range_;
   vtr::vector<MifSegmentId, uint64_t> segment_min_addr_;
   vtr::vector<MifSegmentId, uint64_t> segment_max_addr_;
-  vtr::vector<MifSegmentId, std::string> segment_source_file_;
   vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;

@@ -272,11 +272,10 @@ static void write_xml_mif_source_setting(
     format_mif_range(
       bitstream_setting.mif_source_address_range(mif_source_setting_id))
       .c_str());
-  write_xml_attribute(
-    fp, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE,
-    format_mif_range(
-      bitstream_setting.mif_source_data_range(mif_source_setting_id))
-      .c_str());
+  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE,
+                      format_mif_range(bitstream_setting.mif_source_data_range(
+                                         mif_source_setting_id))
+                        .c_str());
   fp << "/>"
      << "\n";
 }
