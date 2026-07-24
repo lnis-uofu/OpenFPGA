@@ -6,8 +6,8 @@
 //-----------------------------------------------------
 
 module dual_port_ram_8x16_8x32 #(
-  parameter MEM8x16_FILE = "init_8x16.hex" // provide a name of MIF file in HEX format
-  parameter MEM4x32_FILE = "init_8x32.hex" // provide a name of MIF file in HEX format
+  parameter MEM8x16_FILE = "init_8x16.hex", // provide a name of MIF file in HEX format
+  parameter MEM8x32_FILE = "init_8x32.hex" // provide a name of MIF file in HEX format
 )(
   input clk,
   input wen,
@@ -15,7 +15,7 @@ module dual_port_ram_8x16_8x32 #(
   input [2:0] waddr8x16,
   input [2:0] raddr8x16,
   input [15:0] din8x16,
-  output [15:0] dout8x16
+  output [15:0] dout8x16,
   input [2:0] waddr8x32,
   input [2:0] raddr8x32,
   input [31:0] din8x32,
@@ -31,14 +31,14 @@ module dual_port_ram_8x16_8x32 #(
       .waddr    (waddr8x16),
       .data_in  (din8x16),
       .rclk    (clk),
-      .ren    (ren8x16),
+      .ren    (ren),
       .raddr    (raddr8x16),
       .data_out    (dout8x16) );
 
 
     dual_port_sram_8x32_core #(
       .MEM_FILE(MEM8x32_FILE)
-    ) memory_0 (
+    ) memory_1 (
       .wclk    (clk),
       .wen    (wen),
       .waddr    (waddr8x32),
@@ -51,7 +51,7 @@ module dual_port_ram_8x16_8x32 #(
 endmodule
 
 module dual_port_sram_8x32_core #(
-  parameter MEM_FILE = "init.hex" // provide a name of MIF file in HEX format
+  parameter MEM_FILE = "init_8x32.hex" // provide a name of MIF file in HEX format
 )(
   input wclk,
   input wen,
@@ -85,7 +85,7 @@ module dual_port_sram_8x32_core #(
 endmodule
 
 module dual_port_sram_8x16_core #(
-  parameter MEM_FILE = "init.hex" // provide a name of MIF file in HEX format
+  parameter MEM_FILE = "init_8x16.hex" // provide a name of MIF file in HEX format
 )(
   input wclk,
   input wen,
