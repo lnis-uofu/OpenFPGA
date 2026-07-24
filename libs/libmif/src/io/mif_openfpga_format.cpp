@@ -167,13 +167,14 @@ int read_init_hex(const std::string& file_path, MifStorage& mif_storage) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  /* depth/width comments are optional. Without them, leave range/width unset
+   * (-1 / has_addr_range=false); aggregate uses mif_source instead. */
   if (has_depth_metadata) {
     mif_storage.set_segment_addr_range(segment_id, depth_min_addr,
                                        depth_max_addr);
     mif_storage.set_segment_addr_width(
       segment_id, mif_bit_width_for_max_value(depth_max_addr));
-  } else {
-    mif_storage.set_segment_addr_range(segment_id, min_addr, max_addr);
+  } else if (has_observed_addr) {
     mif_storage.set_segment_addr_width(segment_id,
                                        mif_bit_width_for_max_value(max_addr));
   }

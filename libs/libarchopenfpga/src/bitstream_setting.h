@@ -81,6 +81,8 @@ class BitstreamSetting {
   typedef vtr::vector<MifAddressMapSettingId,
                       MifAddressMapSettingId>::const_iterator
     mif_address_map_setting_iterator;
+  typedef vtr::vector<MifAddressMapRuleId, MifAddressMapRuleId>::const_iterator
+    mif_address_map_rule_iterator;
   /* Create range */
   typedef vtr::Range<bitstream_pb_type_setting_iterator>
     bitstream_pb_type_setting_range;
@@ -97,6 +99,7 @@ class BitstreamSetting {
   typedef vtr::Range<mif_source_setting_iterator> mif_source_setting_range;
   typedef vtr::Range<mif_address_map_setting_iterator>
     mif_address_map_setting_range;
+  typedef vtr::Range<mif_address_map_rule_iterator> mif_address_map_rule_range;
 
  public: /* Constructors */
   BitstreamSetting();
@@ -182,13 +185,29 @@ class BitstreamSetting {
   std::string mif_source_pb_type(const MifSourceSettingId& id) const;
   std::string mif_source_source(const MifSourceSettingId& id) const;
   std::string mif_source_content(const MifSourceSettingId& id) const;
+  BasicPort mif_source_address_range(const MifSourceSettingId& id) const;
+  BasicPort mif_source_data_range(const MifSourceSettingId& id) const;
+  MifSourceSettingId find_mif_source_by_pb_type(
+    const std::string& pb_type) const;
 
   /* MIF address map settings */
-  std::string mif_address_map_pb_type(const MifAddressMapSettingId& id) const;
-  int mif_address_map_address_offset(const MifAddressMapSettingId& id) const;
-  int mif_address_map_data_offset(const MifAddressMapSettingId& id) const;
-  MifAddressMapSettingId find_mif_address_map_by_pb_type(
-    const std::string& pb_type) const;
+  std::string mif_address_map_src_pb_type(
+    const MifAddressMapSettingId& id) const;
+  std::string mif_address_map_des_pb_type(
+    const MifAddressMapSettingId& id) const;
+  mif_address_map_rule_range mif_address_map_rules(
+    const MifAddressMapSettingId& id) const;
+  MifAddressMapSettingId find_mif_address_map_by_src_pb_type(
+    const std::string& src_pb_type) const;
+
+  /* MIF address map rule settings (<map> children) */
+  BasicPort mif_address_map_rule_src_addr_range(
+    const MifAddressMapRuleId& id) const;
+  int mif_address_map_rule_des_addr_offset(const MifAddressMapRuleId& id) const;
+  BasicPort mif_address_map_rule_src_mif_bits(
+    const MifAddressMapRuleId& id) const;
+  BasicPort mif_address_map_rule_des_mif_bits(
+    const MifAddressMapRuleId& id) const;
 
  public: /* Public Mutators */
   /* pb_type settings */
@@ -239,10 +258,15 @@ class BitstreamSetting {
   /* MIF settings */
   MifSourceSettingId add_mif_source_setting(const std::string& pb_type,
                                             const std::string& source,
-                                            const std::string& content);
-  MifAddressMapSettingId add_mif_address_map_setting(const std::string& pb_type,
-                                                     int address_offset,
-                                                     int data_offset);
+                                            const std::string& content,
+                                            const BasicPort& address_range,
+                                            const BasicPort& data_range);
+  MifAddressMapSettingId add_mif_address_map_setting(
+    const std::string& src_pb_type, const std::string& des_pb_type);
+  MifAddressMapRuleId add_mif_address_map_rule(
+    const MifAddressMapSettingId& map_id, const BasicPort& src_addr_range,
+    int des_addr_offset, const BasicPort& src_mif_bits,
+    const BasicPort& des_mif_bits);
 
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
@@ -258,6 +282,7 @@ class BitstreamSetting {
   bool valid_overwrite_bitstream_id(const OverwriteBitstreamId& id) const;
   bool valid_mif_source_setting_id(const MifSourceSettingId& id) const;
   bool valid_mif_address_map_setting_id(const MifAddressMapSettingId& id) const;
+  bool valid_mif_address_map_rule_id(const MifAddressMapRuleId& id) const;
   void clear();
 
  private: /* Internal data */
@@ -338,12 +363,27 @@ class BitstreamSetting {
   vtr::vector<MifSourceSettingId, std::string> mif_source_pb_types_;
   vtr::vector<MifSourceSettingId, std::string> mif_source_sources_;
   vtr::vector<MifSourceSettingId, std::string> mif_source_contents_;
+  vtr::vector<MifSourceSettingId, BasicPort> mif_source_address_ranges_;
+  vtr::vector<MifSourceSettingId, BasicPort> mif_source_data_ranges_;
 
   vtr::vector<MifAddressMapSettingId, MifAddressMapSettingId>
     mif_address_map_setting_ids_;
-  vtr::vector<MifAddressMapSettingId, std::string> mif_address_map_pb_types_;
-  vtr::vector<MifAddressMapSettingId, int> mif_address_map_address_offsets_;
-  vtr::vector<MifAddressMapSettingId, int> mif_address_map_data_offsets_;
+  vtr::vector<MifAddressMapSettingId, std::string>
+    mif_address_map_src_pb_types_;
+  vtr::vector<MifAddressMapSettingId, std::string>
+    mif_address_map_des_pb_types_;
+  vtr::vector<MifAddressMapSettingId, std::vector<MifAddressMapRuleId>>
+    mif_address_map_rule_ids_;
+
+  vtr::vector<MifAddressMapRuleId, MifAddressMapRuleId>
+    mif_address_map_rule_ids_storage_;
+  vtr::vector<MifAddressMapRuleId, BasicPort>
+    mif_address_map_rule_src_addr_ranges_;
+  vtr::vector<MifAddressMapRuleId, int> mif_address_map_rule_des_addr_offsets_;
+  vtr::vector<MifAddressMapRuleId, BasicPort>
+    mif_address_map_rule_src_mif_bits_;
+  vtr::vector<MifAddressMapRuleId, BasicPort>
+    mif_address_map_rule_des_mif_bits_;
 };
 
 }  // namespace openfpga

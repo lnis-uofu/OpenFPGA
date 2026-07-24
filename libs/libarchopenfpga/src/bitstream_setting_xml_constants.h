@@ -49,12 +49,22 @@ constexpr const char* XML_MIF_SOURCE_NODE_NAME = "mif_source";
 constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE = "pb_type";
 constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_SOURCE = "source";
 constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_CONTENT = "content";
+constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE = "address_range";
+constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE = "data_range";
 
 constexpr const char* XML_MIF_ADDRESS_MAP_NODE_NAME = "mif_address_map";
-constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_PB_TYPE = "pb_type";
-constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_ADDRESS_OFFSET =
-  "address_offset";
-constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_DATA_OFFSET = "data_offset";
+constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_SRC_PB_TYPE = "src_pb_type";
+constexpr const char* XML_MIF_ADDRESS_MAP_ATTRIBUTE_DES_PB_TYPE = "des_pb_type";
+
+constexpr const char* XML_MIF_ADDRESS_MAP_RULE_NODE_NAME = "map";
+constexpr const char* XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE =
+  "src_addr_range";
+constexpr const char* XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_ADDR_OFFSET =
+  "des_addr_offset";
+constexpr const char* XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_MIF_BITS =
+  "src_mif_bits";
+constexpr const char* XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_MIF_BITS =
+  "des_mif_bits";
 
 /* Sanity check constants */
 constexpr const char* XML_VALID_NODE_NAMES[] = {

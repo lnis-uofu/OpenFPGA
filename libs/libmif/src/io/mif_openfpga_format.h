@@ -16,10 +16,16 @@
  *   // Data width: 32
  *   0 0x00000000138F0000
  *
- * init.hex input parsing (depth/width from comments):
+ * init.hex input parsing:
  *   <data>           sequential address
  *   <addr> <data>    explicit address/data pair
  *   @<addr> <data>   address jump
+ *
+ * Optional comment metadata (NOT required):
+ *   // depth: 8 (indexed from 0 to 7)
+ *   // width: 16
+ * Address/data widths for aggregation and output headers come from bitstream
+ * setting (mif_source / mif_address_map), not from init.hex comments.
  *******************************************************************/
 namespace openfpga {
 

@@ -1,8 +1,18 @@
 <openfpga_bitstream_setting>
-  <mif_source pb_type="dpram8x32[dual].dpram8x16" source="eblif" content=".param INIT"/>
-  <mif_source pb_type="dpram8x32[dualA].dpram4x32" source="eblif" content=".param INIT"/>
-  <mif_address_map pb_type="dpram8x32[0]{dual}.dpram8x16[0]" address_offset="0" data_offset="0"/>
-  <mif_address_map pb_type="dpram8x32[0]{dual}.dpram8x16[1]" address_offset="0" data_offset="16"/>
-  <mif_address_map pb_type="dpram8x32[0]{dualA}.dpram4x32[0]" address_offset="0" data_offset="0"/>
-  <mif_address_map pb_type="dpram8x32[0]{dualA}.dpram4x32[1]" address_offset="4" data_offset="0"/>
+  <mif_source pb_type="memory[mem_16x16_phy].mem_16x16_dp_phy" source="eblif" content=".param INIT" address_range="[0:15]" data_range="[0:15]"/>
+  <!-- physical pb_type does not need mapping rules of address -->
+  <mif_source pb_type="memory[mem_16x16_dp].mem_16x16_dp" source="eblif" content=".param INIT" address_range="[0:15]" data_range="[0:15]"/>
+  <mif_address_map src_pb_type="memory[mem_16x16_dp].mem_16x16_dp" des_pb_type="memory[mem_16x16_phy].mem_16x16_dp_phy">
+    <map src_addr_range="[0:15]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[0:15]"/>
+  </mif_address_map>
+  <mif_source pb_type="memory[mem_8x32_dp].mem_8x32_dp" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:31]"/>
+  <mif_address_map src_pb_type="memory[mem_8x32_dp].mem_8x32_dp" des_pb_type="memory[mem_16x16_phy].mem_16x16_dp_phy">
+    <map src_addr_range="[0:7]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[0:15]"/>
+    <map src_addr_range="[0:7]" des_addr_offset="8" src_mif_bits="[16:31]" des_mif_bits="[0:15]"/>
+  </mif_address_map>
+  <mif_source pb_type="memory[mem_32x8_dp].mem_32x8_dp" source="eblif" content=".param INIT" address_range="[0:31]" data_range="[0:7]"/>
+  <mif_address_map src_pb_type="memory[mem_32x8_dp].mem_32x8_dp" des_pb_type="memory[mem_16x16_phy].mem_16x16_dp_phy">
+    <map src_addr_range="[0:15]" des_addr_offset="0" src_mif_bits="[0:7]" des_mif_bits="[0:7]"/>
+    <map src_addr_range="[16:31]" des_addr_offset="-16" src_mif_bits="[0:7]" des_mif_bits="[8:15]"/>
+  </mif_address_map>
 </openfpga_bitstream_setting>

@@ -14,22 +14,24 @@ namespace openfpga {
  *
  * For each logical segment:
  *   - resolve Verilog instance via $readmemh source file
- *   - look up index-level pb_type in instance_pb_type_path_map
- *   - group by index-stripped pb_type from mif_address_map
+ *   - look up src_pb_type in instance_pb_type_path_map
+ *   - resolve mif_address_map by src_pb_type and group by des_pb_type
+ *   - sanity-check every logical address against mif_source.address_range
+ *     (and optional init.hex depth comment range if present)
+ *   - sanity-check data against mif_source.data_range width
+ *     (init.hex width comments are optional and not required)
  *
- * Segments sharing the same physical pb are merged at the same logical
- * address by RAM slice index (last numeric [N] in the pb_type path). Slice [0]
- * occupies the MSB, higher indices append toward the LSB:
- *   bit_shift = (max_slice_index - slice_index) * slice_data_width
- *   aggregated_data[logical_addr] |= logical_data << bit_shift
+ * Output .mem header addr/data metadata is derived from <map> rules for the
+ * des_pb_type:
+ *   addr[min:max]  = union of (src_addr_range + des_addr_offset)
+ *   data width     = max(des_mif_bits.msb) + 1
+ *   address width  = bit width of max mapped address
+ * src_mif_bits / des_mif_bits widths must match.
  *
- * address_offset / data_offset in mif_address_map are NOT used here for either
- * dual (width packing) or dualA (depth packing). Both modes merge slices by RAM
- * index only. Offsets apply in the later bitstream stage when mapping
- * aggregated data onto physical configuration address/data ports.
- *
- * Slices without MIF contribute zero at each address. aggregated_data_width is
- * (max_slice_index + 1) * slice_data_width, inferred from mif_address_map.
+ * Segments sharing the same des_pb_type are merged at the same logical
+ * address. When a leaf RAM index is present in the src path, slices are
+ * appended by index. Full map-rule remapping of addr/data bits is left to the
+ * later bitstream stage.
  */
 int aggregate_mif(
   const MifStorage& logical_storage, const std::string& verilog_path,
