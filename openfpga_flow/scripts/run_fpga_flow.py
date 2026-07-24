@@ -710,6 +710,16 @@ def clean_up_and_exit(msg, clean=False):
     exit(1)
 
 
+def yosys_output_blif_filename(top_module):
+    """BLIF netlist written by Yosys for VPR (no .param)."""
+    return f"{top_module}_yosys_out.blif"
+
+
+def yosys_output_eblif_filename(top_module):
+    """EBLIF netlist written by Yosys with cell .param (e.g. INIT) for MIF."""
+    return f"{top_module}_yosys_out.eblif"
+
+
 def create_yosys_params():
     tree = ET.parse(args.arch_file)
     root = tree.getroot()
@@ -863,7 +873,9 @@ def create_yosys_params():
 
     ys_params["TOP_MODULE"] = args.top_module
     ys_params["LUT_SIZE"] = lut_size
-    ys_params["OUTPUT_BLIF"] = args.top_module + "_yosys_out.blif"
+    ys_params["OUTPUT_BLIF"] = yosys_output_blif_filename(args.top_module)
+    # Optional second netlist with .param (MIF / source=eblif); used by yosys_bram_mif_flow.ys
+    ys_params["OUTPUT_EBLIF"] = yosys_output_eblif_filename(args.top_module)
     ys_params["OUTPUT_VERILOG"] = args.top_module + "_output_verilog.v"
 
     return ys_params
@@ -1046,6 +1058,13 @@ def run_openfpga_shell():
     )
 
     update_template_vars_from_extra_args(path_variables)
+
+    # OPENFPGA_MIF_FILE: task.conf --openfpga_mif_file, else Yosys eblif with .param
+    if "OPENFPGA_MIF_FILE" not in path_variables:
+        path_variables["OPENFPGA_MIF_FILE"] = yosys_output_eblif_filename(args.top_module)
+    path_variables["OPENFPGA_MIF_FILE"] = normalize_template_path_for_windows(
+        path_variables["OPENFPGA_MIF_FILE"]
+    )
 
     if os.name == "nt" and "OPENFPGA_VERILOG_OUTPUT_DIR" in path_variables:
         path_variables["OPENFPGA_VERILOG_OUTPUT_DIR"] = shorten_windows_output_path(

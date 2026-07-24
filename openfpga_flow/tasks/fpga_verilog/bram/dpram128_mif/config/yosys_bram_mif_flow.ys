@@ -91,4 +91,4 @@ opt_clean -purge
 # Standard BLIF for VPR (no .param)
 write_blif ${OUTPUT_BLIF}
 # Extended BLIF with .param (e.g. INIT) for MIF / bitstream setting source=eblif
-write_blif -param ${TOP_MODULE}_yosys_out.eblif
+write_blif -param ${OUTPUT_EBLIF}
