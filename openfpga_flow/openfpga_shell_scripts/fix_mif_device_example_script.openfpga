@@ -1,5 +1,3 @@
-# Support pcf to fix pins
-pcf2place --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --fpga_fix_pins ${OPENFPGA_VPR_FIX_PINS_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION} --reduce_error_to_warning
 # Support bus group generation
 ext_exec --command "python3 ${OPENFPGA_BUS_GROUP_GEN_SCRIPT} --task ${OPENFPGA_BUS_GROUP_TASK_FILE}"
 # Run VPR for the 'and' design
