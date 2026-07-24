@@ -2,16 +2,14 @@
  * Unit test: read init.hex formats and parse new bitstream MIF syntax
  *
  * Usage:
- *   test_mif <bitstream_setting.xml> <benchmark.v> <init.hex> <init1.hex>
+ *   test_mif <bitstream_setting.xml> <init.hex> <init1.hex>
  *            <init_addr_data.hex>
  *******************************************************************/
 #include <cstdint>
-#include <map>
 #include <string>
 
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
-#include "mif_io_utils.h"
 #include "mif_storage.h"
 #include "mif_storage_fwd.h"
 #include "read_mif.h"
@@ -20,10 +18,10 @@
 #include "vtr_log.h"
 
 int main(int argc, const char** argv) {
-  if (argc < 6) {
+  if (argc < 5) {
     VTR_LOG_ERROR(
-      "Usage: %s <bitstream_setting.xml> <benchmark.v> <init.hex> "
-      "<init1.hex> <init_addr_data.hex>\n",
+      "Usage: %s <bitstream_setting.xml> <init.hex> <init1.hex> "
+      "<init_addr_data.hex>\n",
       argv[0]);
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
@@ -56,7 +54,7 @@ int main(int argc, const char** argv) {
              "memory[mem_16x16_phy].mem_16x16_dp_phy");
 
   openfpga::MifStorage addr_data_storage;
-  status = openfpga::read_mif(argv[5], addr_data_storage);
+  status = openfpga::read_mif(argv[4], addr_data_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
@@ -66,25 +64,16 @@ int main(int argc, const char** argv) {
   VTR_ASSERT(7 == addr_data_storage.max_addr(MifSegmentId(0)));
 
   openfpga::MifStorage logical_storage;
-  status = openfpga::read_mif(argv[3], logical_storage);
+  status = openfpga::read_mif(argv[2], logical_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
-  status = openfpga::read_mif(argv[4], logical_storage);
+  status = openfpga::read_mif(argv[3], logical_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
   VTR_ASSERT(2 == logical_storage.num_segments());
 
-  const std::string instance_0 = openfpga::find_verilog_instance_reading_mif(
-    argv[2], openfpga::mif_file_basename(argv[3]));
-  const std::string instance_1 = openfpga::find_verilog_instance_reading_mif(
-    argv[2], openfpga::mif_file_basename(argv[4]));
-  VTR_ASSERT(!instance_0.empty() && !instance_1.empty());
-
-  VTR_LOG(
-    "Parsed new bitstream MIF syntax, init.hex formats, and verilog "
-    "instances '%s' / '%s'.\n",
-    instance_0.c_str(), instance_1.c_str());
+  VTR_LOG("Parsed new bitstream MIF syntax and init.hex formats.\n");
   return openfpga::CMD_EXEC_SUCCESS;
 }

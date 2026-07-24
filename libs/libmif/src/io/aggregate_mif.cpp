@@ -16,7 +16,6 @@ namespace {
 struct PbAggregateState {
   int addr_width = 0;
   int aggregated_data_width = 0;
-  bool has_addr_range = false;
   uint64_t min_addr = 0;
   uint64_t max_addr = 0;
   std::map<uint64_t, uint64_t> phys_data_map;
@@ -216,7 +215,6 @@ int aggregate_mif(const MifStorage& logical_storage,
   pb_state.aggregated_data_width = aggregated_data_width;
   pb_state.min_addr = header_meta.min_addr;
   pb_state.max_addr = header_meta.max_addr;
-  pb_state.has_addr_range = true;
 
   const uint64_t data_mask =
     (op_data_width >= 64) ? ~uint64_t(0) : ((uint64_t(1) << op_data_width) - 1);
