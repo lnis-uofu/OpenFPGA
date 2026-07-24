@@ -1,6 +1,3 @@
-Netlist_File: dual_port_ram_128.net Netlist_ID: SHA256:5c765cd0bf91b9a9bb783aff6b13c51cdb12fd251a56db8d39b2f2fe67e7c1cb
-Array size: 5 x 4 logic blocks
-
 #block name	x	y	subblk	layer	block number
 #----------	--	--	------	-----	------------
 out:dout[4]	2	3	2	0	#1
