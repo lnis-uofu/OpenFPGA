@@ -13,9 +13,9 @@ bram $__MY_DPRAM_8x32
 endbram
 
 match $__MY_DPRAM_8x32
-  max waste 120
-  min efficiency 80
+  min efficiency 0
   make_transp
+  or_next_if_better # If a subsequent block definition maps more efficiently, skip this
 endmatch
 
 

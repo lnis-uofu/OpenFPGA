@@ -332,7 +332,6 @@
       <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
       <single type="memory128" x="2" y="1" priority="20"/>
       <single type="memory256" x="2" y="2" priority="20"/>
-      <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </fixed_layout>
   </layout>
   <device>
