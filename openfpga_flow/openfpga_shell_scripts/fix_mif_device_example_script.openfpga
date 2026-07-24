@@ -1,6 +1,10 @@
+# Support pcf to fix pins
+pcf2place --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --fpga_fix_pins ${OPENFPGA_VPR_FIX_PINS_FILE} --pin_table_direction_convention ${OPENFPGA_PIN_TABLE_DIRECTION_CONVENTION} --reduce_error_to_warning
+# Support bus group generation
+ext_exec --command "python3 ${OPENFPGA_BUS_GROUP_GEN_SCRIPT} --task ${OPENFPGA_BUS_GROUP_TASK_FILE}"
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --constant_net_method route
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --constant_net_method route --pack --place --route --analysis --fix_clusters ${OPENFPGA_VPR_FIX_PINS_FILE}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
@@ -57,9 +61,7 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --ver
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit
-write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ./SRC 
-write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} 
+write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --bus_group_file ${OPENFPGA_BUS_GROUP_FILE}
 
 # Finish and exit OpenFPGA
 exit
