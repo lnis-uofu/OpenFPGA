@@ -23,8 +23,8 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
-  const int exec_status =
-    read_mif(mif_path, openfpga_context.mutable_mif_storage());
+  const int exec_status = read_mif(mif_path, openfpga_context.mutable_mif_storage(),
+                                   openfpga_context.bitstream_setting());
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }

@@ -11,8 +11,8 @@ read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 # Read OpenFPGA bitstream settings (mif_source / mif_address_map)
 read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
 
-# Read logical init.hex into MIF storage (aggregation runs later)
-read_mif -f ${OPENFPGA_MIF_FILE}
+# Read logical MIF from Yosys eblif (.param INIT via mif_source source=eblif)
+read_mif -f ${TOP_MODULE}_yosys_out.eblif
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
