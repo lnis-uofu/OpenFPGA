@@ -207,11 +207,11 @@ initial
 	assign pReset[0] = __prog_reset__[0];
 // ----- mem_init_rst_n mirrors the "rst_n" stimulus of dpram_8x16_preload_tb.v: -----
 // ----- held low (asserted) while the fabric is in global reset, released once reset drops -----
-	assign mem_init_rst_n[0] = ~__greset__[0];
+	assign mem_init_rst_n[0] = ~__prog_reset__[0];
 	assign set[0] = __gset__[0];
 // ----- mem_init_clk mirrors the "preload_clk" stimulus of dpram_8x16_preload_tb.v: -----
 // ----- a free-running clock, half the frequency of the op clock, gated on bitstream config-done (NOT __config_all_done__, which now also depends on mem_init_done -- gating on it here would deadlock) -----
-	assign mem_init_clk[0] = mem_init_clk_reg[0] & __config_done__[0];
+	assign mem_init_clk[0] = mem_init_clk_reg[0] & (~__config_done__[0]);
 // ----- mem_init_start mirrors the "init_start" stimulus of dpram_8x16_preload_tb.v -----
 	assign mem_init_start[0] = mem_init_start_reg[0];
 // ----- End connecting global ports of FPGA fabric to stimuli -----
@@ -222,7 +222,7 @@ initial
 	begin
 		mem_init_clk_reg[0] = 1'b0;
 	end
-always wait(~__greset__)
+always 
 	begin
 		#2	mem_init_clk_reg[0] = ~mem_init_clk_reg[0];
 	end
@@ -519,8 +519,7 @@ end
 	reg [0:0] mem_init_start_reg;
 initial begin
 	mem_init_start_reg[0] = 1'b0;
-	wait (__config_done__[0] === 1'b1);
-	wait (__greset__[0] === 1'b0);
+	wait (__prog_reset__[0] === 1'b0);
 	$display("[TB] Triggering preload memory initialization for both embedded RAMs (mem_init_clk running)...");
 	mem_init_start_reg[0] = 1'b1;
 	wait (gfpga_pad_dpram_8x16_preload_mem_init_done[0] === 1'b1 && gfpga_pad_dpram_8x16_preload_mem_init_done[1] === 1'b1);
