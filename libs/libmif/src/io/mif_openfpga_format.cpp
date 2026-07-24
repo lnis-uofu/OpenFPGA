@@ -32,7 +32,7 @@ static std::string format_hex_word(uint64_t value, int width_bits) {
   return hex_ss.str();
 }
 
-static void serialize_preload_mem_segment(const AggregatedMifStorage& storage,
+static void serialize_preload_mem_segment(const MifStorage& storage,
                                           const MifSegmentId& segment_id,
                                           std::ostream& os) {
   os << "// " << MIF_PRELOAD_MEM_TITLE << "\n";
@@ -66,8 +66,7 @@ static void serialize_preload_mem_segment(const AggregatedMifStorage& storage,
   }
 }
 
-void serialize_preload_mem(const AggregatedMifStorage& storage,
-                           std::ostream& os) {
+void serialize_preload_mem(const MifStorage& storage, std::ostream& os) {
   bool first = true;
   for (const MifSegmentId& segment_id : storage.segments()) {
     if (!first) {

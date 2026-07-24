@@ -123,7 +123,7 @@ int aggregate_mif(
   const MifStorage& logical_storage, const std::string& verilog_path,
   const std::map<std::string, std::string>& instance_pb_type_path_map,
   const BitstreamSetting& bitstream_setting,
-  AggregatedMifStorage& out_aggregated_storage) {
+  MifStorage& out_aggregated_storage) {
   if (logical_storage.empty()) {
     VTR_LOG_ERROR("aggregate_mif: empty logical MIF storage\n");
     return CMD_EXEC_FATAL_ERROR;

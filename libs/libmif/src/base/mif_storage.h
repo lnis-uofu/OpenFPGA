@@ -8,7 +8,10 @@
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory logical MIF data read from init.hex via read_mif.
+ * In-memory MIF storage used for both:
+ *   - logical init.hex data from read_mif()
+ *   - aggregated preload data from aggregate_mif()
+ * Distinguish stages by variable naming / comments at call sites.
  *******************************************************************/
 namespace openfpga {
 

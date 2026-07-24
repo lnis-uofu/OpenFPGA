@@ -20,7 +20,7 @@ int aggregate_mif_storage(
   const MifStorage& mif_storage, const BitstreamSetting& bitstream_setting,
   const std::map<std::string, std::string>& instance_pb_type_path_map,
   const std::string& verilog_path,
-  AggregatedMifStorage& aggregated_mif_storage) {
+  MifStorage& aggregated_mif_storage) {
   aggregated_mif_storage.clear();
 
   if (mif_storage.empty()) {
@@ -40,7 +40,7 @@ int aggregate_mif_storage(
 int aggregate_mif_storage_and_write_preload_mem(
   const MifStorage& mif_storage, const BitstreamSetting& bitstream_setting,
   const std::map<std::string, std::string>& instance_pb_type_path_map,
-  const std::string& verilog_path, AggregatedMifStorage& aggregated_mif_storage,
+  const std::string& verilog_path, MifStorage& aggregated_mif_storage,
   const std::string& mem_file_path) {
   const int agg_status = aggregate_mif_storage(
     mif_storage, bitstream_setting, instance_pb_type_path_map, verilog_path,

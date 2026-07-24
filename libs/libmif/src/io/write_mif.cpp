@@ -2,14 +2,13 @@
 
 #include <fstream>
 
-#include "aggregated_mif_storage.h"
 #include "mif_openfpga_format.h"
 #include "vtr_log.h"
 
 namespace openfpga {
 
 int write_mif(const std::string& file_path,
-              const AggregatedMifStorage& aggregated_mif_storage) {
+              const MifStorage& aggregated_mif_storage) {
   if (aggregated_mif_storage.empty()) {
     VTR_LOG_ERROR("No aggregated MIF data to write\n");
     return CMD_EXEC_FATAL_ERROR;

@@ -39,7 +39,8 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
-  const AggregatedMifStorage& aggregated_mif_storage =
+  /* Aggregated preload result from build_architecture_bitstream / aggregate. */
+  const MifStorage& aggregated_mif_storage =
     openfpga_context.aggregated_mif_storage();
   if (aggregated_mif_storage.empty()) {
     VTR_LOG_ERROR(

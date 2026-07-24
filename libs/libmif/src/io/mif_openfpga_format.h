@@ -4,7 +4,6 @@
 #include <ostream>
 #include <string>
 
-#include "aggregated_mif_storage.h"
 #include "command_exit_codes.h"
 #include "mif_storage.h"
 
@@ -32,8 +31,8 @@ namespace openfpga {
 constexpr const char* MIF_PRELOAD_MEM_TITLE =
   "Aggregated MIF for memory preloading interface";
 
-void serialize_preload_mem(const AggregatedMifStorage& storage,
-                           std::ostream& os);
+/* Serialize aggregated preload MIF (output of aggregate_mif). */
+void serialize_preload_mem(const MifStorage& storage, std::ostream& os);
 
 int read_init_hex(const std::string& file_path, MifStorage& mif_storage);
 

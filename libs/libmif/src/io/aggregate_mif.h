@@ -3,7 +3,6 @@
 #include <map>
 #include <string>
 
-#include "aggregated_mif_storage.h"
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
 #include "mif_storage.h"
@@ -32,11 +31,14 @@ namespace openfpga {
  * address. When a leaf RAM index is present in the src path, slices are
  * appended by index. Full map-rule remapping of addr/data bits is left to the
  * later bitstream stage.
+ *
+ * logical_storage: from read_mif (init.hex)
+ * out_aggregated_storage: aggregated preload result for write_mif
  */
 int aggregate_mif(
   const MifStorage& logical_storage, const std::string& verilog_path,
   const std::map<std::string, std::string>& instance_pb_type_path_map,
   const BitstreamSetting& bitstream_setting,
-  AggregatedMifStorage& out_aggregated_storage);
+  MifStorage& out_aggregated_storage);
 
 } /* namespace openfpga */

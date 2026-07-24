@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#include "aggregated_mif_storage.h"
 #include "bitstream_manager.h"
 #include "bitstream_setting.h"
 #include "clock_network.h"
@@ -68,8 +67,10 @@ class OpenfpgaContext : public Context {
   const openfpga::BitstreamSetting& bitstream_setting() const {
     return bitstream_setting_;
   }
+  /* Logical MIF from read_mif (init.hex). */
   const openfpga::MifStorage& mif_storage() const { return mif_storage_; }
-  const openfpga::AggregatedMifStorage& aggregated_mif_storage() const {
+  /* Aggregated preload MIF from aggregate_mif. */
+  const openfpga::MifStorage& aggregated_mif_storage() const {
     return aggregated_mif_storage_;
   }
   const openfpga::ClockNetwork& clock_arch() const { return clock_arch_; }
@@ -137,7 +138,7 @@ class OpenfpgaContext : public Context {
     return bitstream_setting_;
   }
   openfpga::MifStorage& mutable_mif_storage() { return mif_storage_; }
-  openfpga::AggregatedMifStorage& mutable_aggregated_mif_storage() {
+  openfpga::MifStorage& mutable_aggregated_mif_storage() {
     return aggregated_mif_storage_;
   }
   openfpga::ClockNetwork& mutable_clock_arch() { return clock_arch_; }
@@ -199,7 +200,7 @@ class OpenfpgaContext : public Context {
   openfpga::SimulationSetting sim_setting_;
   openfpga::BitstreamSetting bitstream_setting_;
   openfpga::MifStorage mif_storage_;
-  openfpga::AggregatedMifStorage aggregated_mif_storage_;
+  openfpga::MifStorage aggregated_mif_storage_;
   openfpga::ClockNetwork clock_arch_;
   openfpga::RRClockSpatialLookup clock_rr_lookup_;
 
