@@ -6,12 +6,21 @@
 #include <string>
 #include <vector>
 
-#include "mif_io_utils.h"
 #include "vtr_log.h"
 
 namespace openfpga {
 
-namespace {
+static int mif_bit_width_for_max_value(uint64_t max_value) {
+  if (max_value == 0) {
+    return 1;
+  }
+  int width = 0;
+  while (max_value > 0) {
+    ++width;
+    max_value >>= 1;
+  }
+  return width;
+}
 
 struct PbAggregateState {
   int addr_width = 0;
@@ -29,15 +38,15 @@ struct DesHeaderMeta {
   int data_width = 0;
 };
 
-bool address_in_range(uint64_t addr, const BasicPort& address_range) {
+static bool address_in_range(uint64_t addr, const BasicPort& address_range) {
   return address_range.is_valid() && addr >= address_range.get_lsb() &&
          addr <= address_range.get_msb();
 }
 
 /* Derive output .mem header addr/data width from <map> rules targeting des. */
-bool infer_des_header_from_map_rules(const std::string& des_pb_type,
-                                     const BitstreamSetting& bitstream_setting,
-                                     DesHeaderMeta& out_meta) {
+static bool infer_des_header_from_map_rules(
+  const std::string& des_pb_type, const BitstreamSetting& bitstream_setting,
+  DesHeaderMeta& out_meta) {
   bool found = false;
   int64_t min_addr = 0;
   int64_t max_addr = 0;
@@ -114,8 +123,6 @@ bool infer_des_header_from_map_rules(const std::string& des_pb_type,
   out_meta.addr_width = mif_bit_width_for_max_value(out_meta.max_addr);
   return true;
 }
-
-} /* namespace */
 
 int aggregate_mif(const MifStorage& logical_storage,
                   const BitstreamSetting& bitstream_setting,
