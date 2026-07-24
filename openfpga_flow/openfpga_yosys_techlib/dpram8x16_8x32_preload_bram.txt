@@ -13,7 +13,8 @@ bram $__MY_DPRAM_8x32
 endbram
 
 match $__MY_DPRAM_8x32
-  min efficiency 0
+  max waste 120
+  min efficiency 80
   make_transp
 endmatch
 
