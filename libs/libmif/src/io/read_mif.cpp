@@ -258,10 +258,10 @@ static bool ends_with_ci(const std::string& s, const std::string& suffix) {
     return false;
   }
   for (size_t i = 0; i < suffix.size(); ++i) {
-    const char a = static_cast<char>(
-      std::tolower(static_cast<unsigned char>(s[s.size() - suffix.size() + i])));
-    const char b = static_cast<char>(
-      std::tolower(static_cast<unsigned char>(suffix[i])));
+    const char a = static_cast<char>(std::tolower(
+      static_cast<unsigned char>(s[s.size() - suffix.size() + i])));
+    const char b =
+      static_cast<char>(std::tolower(static_cast<unsigned char>(suffix[i])));
     if (a != b) {
       return false;
     }
