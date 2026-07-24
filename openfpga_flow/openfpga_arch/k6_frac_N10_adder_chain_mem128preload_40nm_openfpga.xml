@@ -218,7 +218,7 @@
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="DFFR"/>
+    <organization type="scan_chain" circuit_model_name="DFFR" num_regions="16"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
