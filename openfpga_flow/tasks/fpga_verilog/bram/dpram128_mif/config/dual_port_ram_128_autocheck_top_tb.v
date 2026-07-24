@@ -248,7 +248,7 @@ always wait(~__greset__)
 // ----- fpga_top embeds TWO physical dpram_8x16_preload memories, but they share ONE 32-bit init data bus looked up by the shared 4-bit mem_init_addr -----
 // ----- NOTE: update the file name/path below to match your actual generated MIF file. It is expected to hold 16 lines of 32-bit hex content ($readmemh format), one line per address 0 to 15. -----
 `define MEM_INIT_MIF "dual_port_ram_128_mem_init.mif"
-	reg [0:31] mem_init_rom [0:15];
+	reg [0:31] mem_init_rom [0:31];
 initial begin
 	$readmemh(`MEM_INIT_MIF, mem_init_rom);
 end
