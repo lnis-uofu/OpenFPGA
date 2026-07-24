@@ -2,7 +2,7 @@
 ext_exec --command "python3 ${OPENFPGA_BUS_GROUP_GEN_SCRIPT} --task ${OPENFPGA_BUS_GROUP_TASK_FILE}"
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --constant_net_method route --pack --place --route --analysis --fix_clusters ${OPENFPGA_VPR_FIX_PINS_FILE}
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --constant_net_method route --pack --place --route --analysis #--fix_clusters ${OPENFPGA_VPR_FIX_PINS_FILE}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
