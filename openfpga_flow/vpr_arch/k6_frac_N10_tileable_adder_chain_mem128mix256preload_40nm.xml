@@ -222,7 +222,7 @@
   </models>
   <tiles>
     <tile name="io" area="0">
-      <sub_tile name="io" capacity="8">
+      <sub_tile name="io" capacity="16">
         <equivalent_sites>
           <site pb_type="io"/>
         </equivalent_sites>
