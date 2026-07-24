@@ -6,6 +6,8 @@ include(FilesToDirs)
 include(SwigLib)
 # Auto-enable ccache
 include(SupportCcache)
+# Auto deps 
+include(DeployDependencies)
 
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
