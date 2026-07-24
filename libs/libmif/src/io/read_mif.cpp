@@ -242,13 +242,14 @@ int read_mif(const std::string& file_path, MifStorage& mif_storage) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* depth comment is optional. Without it, leave has_addr_range=false;
+  /* depth comment is optional. Without it, leave addr_range invalid;
    * aggregate uses mif_source.address_range as authoritative.
-   * Logical segments do not store addr_width/data_width; those are set only
-   * on aggregated segments for .mem headers. */
+   * Logical segments do not store data_width; that is set only on aggregated
+   * segments for .mem headers. */
   if (has_depth_metadata) {
-    mif_storage.set_segment_addr_range(segment_id, depth_min_addr,
-                                       depth_max_addr);
+    mif_storage.set_segment_addr_range(
+      segment_id, BasicPort("address", static_cast<size_t>(depth_min_addr),
+                            static_cast<size_t>(depth_max_addr)));
   }
 
   return CMD_EXEC_SUCCESS;

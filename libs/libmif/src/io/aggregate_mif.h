@@ -17,9 +17,8 @@ namespace openfpga {
  *
  * Output .mem header addr/data metadata is derived from <map> rules for the
  * des_pb_type:
- *   addr[min:max]  = union of (src_addr_range + des_addr_offset)
- *   data width     = max(des_mif_bits.msb) + 1
- *   address width  = bit width of max mapped address
+ *   address[lsb:msb] = union of (src_addr_range + des_addr_offset)
+ *   data width       = max(des_mif_bits.msb) + 1
  * src_mif_bits / des_mif_bits widths must match.
  *
  * Full map-rule remapping of addr/data bits is left to the later bitstream

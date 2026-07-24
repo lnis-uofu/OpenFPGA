@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "mif_storage_fwd.h"
+#include "openfpga_port.h"
 #include "vtr_vector.h"
 
 /********************************************************************
@@ -19,7 +20,7 @@
  *
  * Aggregated segment typically has:
  *   - memory lines
- *   - physical_pb, addr_width, data_width, addr_range (for .mem header)
+ *   - physical_pb, data_width, addr_range (for .mem header)
  *******************************************************************/
 namespace openfpga {
 
@@ -41,11 +42,9 @@ class MifStorage {
   size_t num_segments() const;
 
  public: /* Accessors */
-  int addr_width(const MifSegmentId& segment_id) const;
   int data_width(const MifSegmentId& segment_id) const;
-  bool has_addr_range(const MifSegmentId& segment_id) const;
-  uint64_t min_addr(const MifSegmentId& segment_id) const;
-  uint64_t max_addr(const MifSegmentId& segment_id) const;
+  /* Invalid BasicPort when no address range was set. */
+  const BasicPort& addr_range(const MifSegmentId& segment_id) const;
   const std::string& physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
@@ -55,10 +54,9 @@ class MifStorage {
   void clear();
   void remove_last_segment_if_empty();
   MifSegmentId create_segment();
-  void set_segment_addr_width(const MifSegmentId& segment_id, int width);
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
-  void set_segment_addr_range(const MifSegmentId& segment_id, uint64_t min_addr,
-                              uint64_t max_addr);
+  void set_segment_addr_range(const MifSegmentId& segment_id,
+                              const BasicPort& addr_range);
   void set_segment_physical_pb(const MifSegmentId& segment_id,
                                const std::string& physical_pb);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
@@ -70,11 +68,8 @@ class MifStorage {
 
  private: /* Internal data */
   vtr::vector<MifSegmentId, MifSegmentId> segment_ids_;
-  vtr::vector<MifSegmentId, int> segment_addr_width_;
   vtr::vector<MifSegmentId, int> segment_data_width_;
-  vtr::vector<MifSegmentId, bool> segment_has_addr_range_;
-  vtr::vector<MifSegmentId, uint64_t> segment_min_addr_;
-  vtr::vector<MifSegmentId, uint64_t> segment_max_addr_;
+  vtr::vector<MifSegmentId, BasicPort> segment_addr_range_;
   vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;

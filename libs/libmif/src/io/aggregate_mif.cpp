@@ -10,31 +10,15 @@
 
 namespace openfpga {
 
-static int mif_bit_width_for_max_value(uint64_t max_value) {
-  if (max_value == 0) {
-    return 1;
-  }
-  int width = 0;
-  while (max_value > 0) {
-    ++width;
-    max_value >>= 1;
-  }
-  return width;
-}
-
 struct PbAggregateState {
-  int addr_width = 0;
   int aggregated_data_width = 0;
-  uint64_t min_addr = 0;
-  uint64_t max_addr = 0;
+  BasicPort addr_range;
   std::map<uint64_t, uint64_t> phys_data_map;
 };
 
 struct DesHeaderMeta {
   bool valid = false;
-  uint64_t min_addr = 0;
-  uint64_t max_addr = 0;
-  int addr_width = 0;
+  BasicPort addr_range;
   int data_width = 0;
 };
 
@@ -117,10 +101,9 @@ static bool infer_des_header_from_map_rules(
   }
 
   out_meta.valid = true;
-  out_meta.min_addr = static_cast<uint64_t>(min_addr);
-  out_meta.max_addr = static_cast<uint64_t>(max_addr);
+  out_meta.addr_range = BasicPort("address", static_cast<size_t>(min_addr),
+                                  static_cast<size_t>(max_addr));
   out_meta.data_width = static_cast<int>(max_data_msb) + 1;
-  out_meta.addr_width = mif_bit_width_for_max_value(out_meta.max_addr);
   return true;
 }
 
@@ -218,10 +201,8 @@ int aggregate_mif(const MifStorage& logical_storage,
 
   out_aggregated_storage.clear();
   PbAggregateState pb_state;
-  pb_state.addr_width = header_meta.addr_width;
   pb_state.aggregated_data_width = aggregated_data_width;
-  pb_state.min_addr = header_meta.min_addr;
-  pb_state.max_addr = header_meta.max_addr;
+  pb_state.addr_range = header_meta.addr_range;
 
   const uint64_t data_mask =
     (op_data_width >= 64) ? ~uint64_t(0) : ((uint64_t(1) << op_data_width) - 1);
@@ -229,16 +210,15 @@ int aggregate_mif(const MifStorage& logical_storage,
   for (const MifSegmentId& segment_id : logical_storage.segments()) {
     /* Optional: if init.hex declared a depth range, check it against
      * mif_source.address_range. Per-line checks always apply. */
-    if (logical_storage.has_addr_range(segment_id)) {
-      const uint64_t seg_min = logical_storage.min_addr(segment_id);
-      const uint64_t seg_max = logical_storage.max_addr(segment_id);
-      if (!address_in_range(seg_min, src_address_range) ||
-          !address_in_range(seg_max, src_address_range)) {
+    const BasicPort& seg_addr_range = logical_storage.addr_range(segment_id);
+    if (seg_addr_range.is_valid()) {
+      if (!address_in_range(seg_addr_range.get_lsb(), src_address_range) ||
+          !address_in_range(seg_addr_range.get_msb(), src_address_range)) {
         VTR_LOG_ERROR(
-          "aggregate_mif: segment %zu addr range [%lu:%lu] is outside "
+          "aggregate_mif: segment %zu addr range [%zu:%zu] is outside "
           "mif_source address_range [%zu:%zu] for pb_type '%s'\n",
-          static_cast<size_t>(segment_id), static_cast<unsigned long>(seg_min),
-          static_cast<unsigned long>(seg_max), src_address_range.get_lsb(),
+          static_cast<size_t>(segment_id), seg_addr_range.get_lsb(),
+          seg_addr_range.get_msb(), src_address_range.get_lsb(),
           src_address_range.get_msb(), operating_pb_type.c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -280,11 +260,9 @@ int aggregate_mif(const MifStorage& logical_storage,
 
   const MifSegmentId out_seg = out_aggregated_storage.create_segment();
   out_aggregated_storage.set_segment_physical_pb(out_seg, aggregated_pb_type);
-  out_aggregated_storage.set_segment_addr_width(out_seg, pb_state.addr_width);
   out_aggregated_storage.set_segment_data_width(out_seg,
                                                 pb_state.aggregated_data_width);
-  out_aggregated_storage.set_segment_addr_range(out_seg, pb_state.min_addr,
-                                                pb_state.max_addr);
+  out_aggregated_storage.set_segment_addr_range(out_seg, pb_state.addr_range);
 
   std::vector<uint64_t> phys_addrs;
   phys_addrs.reserve(pb_state.phys_data_map.size());

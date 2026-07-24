@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "mif_storage_fwd.h"
+#include "openfpga_port.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -39,11 +40,10 @@ static void write_mif_segment(const MifStorage& storage,
                               const MifSegmentId& segment_id,
                               std::ostream& os) {
   os << "// " << kPreloadMemTitle << "\n";
-  if (storage.has_addr_range(segment_id)) {
-    os << "// addr[" << storage.min_addr(segment_id) << ":"
-       << storage.max_addr(segment_id) << "]\n";
+  const BasicPort& address_port = storage.addr_range(segment_id);
+  if (address_port.is_valid()) {
+    os << "// " << address_port.to_verilog_string() << "\n";
   }
-  os << "// Address width: " << storage.addr_width(segment_id) << "\n";
   os << "// Data width: " << storage.data_width(segment_id) << "\n";
   os << "// PB_TYPE " << storage.physical_pb(segment_id) << "\n";
 

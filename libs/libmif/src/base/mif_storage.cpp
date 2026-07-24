@@ -18,31 +18,14 @@ MifStorage::memory_line_range MifStorage::segment_memory_lines(
   return vtr::make_range(line_ids.begin(), line_ids.end());
 }
 
-int MifStorage::addr_width(const MifSegmentId& segment_id) const {
-  VTR_ASSERT(valid_segment_id(segment_id));
-  return segment_addr_width_[segment_id];
-}
-
 int MifStorage::data_width(const MifSegmentId& segment_id) const {
   VTR_ASSERT(valid_segment_id(segment_id));
   return segment_data_width_[segment_id];
 }
 
-bool MifStorage::has_addr_range(const MifSegmentId& segment_id) const {
+const BasicPort& MifStorage::addr_range(const MifSegmentId& segment_id) const {
   VTR_ASSERT(valid_segment_id(segment_id));
-  return segment_has_addr_range_[segment_id];
-}
-
-uint64_t MifStorage::min_addr(const MifSegmentId& segment_id) const {
-  VTR_ASSERT(valid_segment_id(segment_id));
-  VTR_ASSERT(segment_has_addr_range_[segment_id]);
-  return segment_min_addr_[segment_id];
-}
-
-uint64_t MifStorage::max_addr(const MifSegmentId& segment_id) const {
-  VTR_ASSERT(valid_segment_id(segment_id));
-  VTR_ASSERT(segment_has_addr_range_[segment_id]);
-  return segment_max_addr_[segment_id];
+  return segment_addr_range_[segment_id];
 }
 
 const std::string& MifStorage::physical_pb(
@@ -74,22 +57,16 @@ void MifStorage::remove_last_segment_if_empty() {
     return;
   }
   segment_ids_.pop_back();
-  segment_addr_width_.pop_back();
   segment_data_width_.pop_back();
-  segment_has_addr_range_.pop_back();
-  segment_min_addr_.pop_back();
-  segment_max_addr_.pop_back();
+  segment_addr_range_.pop_back();
   segment_physical_pb_.pop_back();
   segment_memory_line_ids_.pop_back();
 }
 
 void MifStorage::clear() {
   segment_ids_.clear();
-  segment_addr_width_.clear();
   segment_data_width_.clear();
-  segment_has_addr_range_.clear();
-  segment_min_addr_.clear();
-  segment_max_addr_.clear();
+  segment_addr_range_.clear();
   segment_physical_pb_.clear();
   segment_memory_line_ids_.clear();
   memory_line_ids_.clear();
@@ -100,20 +77,11 @@ void MifStorage::clear() {
 MifSegmentId MifStorage::create_segment() {
   MifSegmentId segment_id(segment_ids_.size());
   segment_ids_.push_back(segment_id);
-  segment_addr_width_.push_back(-1);
   segment_data_width_.push_back(-1);
-  segment_has_addr_range_.push_back(false);
-  segment_min_addr_.push_back(0);
-  segment_max_addr_.push_back(0);
+  segment_addr_range_.emplace_back();
   segment_physical_pb_.push_back(std::string());
   segment_memory_line_ids_.emplace_back();
   return segment_id;
-}
-
-void MifStorage::set_segment_addr_width(const MifSegmentId& segment_id,
-                                        int width) {
-  VTR_ASSERT(valid_segment_id(segment_id));
-  segment_addr_width_[segment_id] = width;
 }
 
 void MifStorage::set_segment_data_width(const MifSegmentId& segment_id,
@@ -123,12 +91,10 @@ void MifStorage::set_segment_data_width(const MifSegmentId& segment_id,
 }
 
 void MifStorage::set_segment_addr_range(const MifSegmentId& segment_id,
-                                        uint64_t min_addr, uint64_t max_addr) {
+                                        const BasicPort& addr_range) {
   VTR_ASSERT(valid_segment_id(segment_id));
-  VTR_ASSERT(min_addr <= max_addr);
-  segment_has_addr_range_[segment_id] = true;
-  segment_min_addr_[segment_id] = min_addr;
-  segment_max_addr_[segment_id] = max_addr;
+  VTR_ASSERT(addr_range.is_valid());
+  segment_addr_range_[segment_id] = addr_range;
 }
 
 void MifStorage::set_segment_physical_pb(const MifSegmentId& segment_id,

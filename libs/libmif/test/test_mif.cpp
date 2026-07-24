@@ -59,9 +59,9 @@ int main(int argc, const char** argv) {
     return status;
   }
   VTR_ASSERT(1 == addr_data_storage.num_segments());
-  VTR_ASSERT(addr_data_storage.has_addr_range(MifSegmentId(0)));
-  VTR_ASSERT(0 == addr_data_storage.min_addr(MifSegmentId(0)));
-  VTR_ASSERT(7 == addr_data_storage.max_addr(MifSegmentId(0)));
+  VTR_ASSERT(addr_data_storage.addr_range(MifSegmentId(0)).is_valid());
+  VTR_ASSERT(0 == addr_data_storage.addr_range(MifSegmentId(0)).get_lsb());
+  VTR_ASSERT(7 == addr_data_storage.addr_range(MifSegmentId(0)).get_msb());
 
   openfpga::MifStorage logical_storage;
   status = openfpga::read_mif(argv[2], logical_storage);
