@@ -1,0 +1,8 @@
+<openfpga_bitstream_setting>
+  <mif_source pb_type="memory[mem_16x16_phy].mem_16x16_dp_phy" source="eblif" content=".param INIT" address_range="[0:15]" data_range="[0:15]"/>
+  <mif_source pb_type="memory[mem_8x32_dp].mem_8x32_dp" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:31]"/>
+  <mif_address_map src_pb_type="memory[mem_8x32_dp].mem_8x32_dp" des_pb_type="memory[mem_16x16_phy].mem_16x16_dp_phy">
+    <map src_addr_range="[0:7]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[0:15]"/>
+    <map src_addr_range="[0:7]" des_addr_offset="8" src_mif_bits="[16:31]" des_mif_bits="[0:15]"/>
+  </mif_address_map>
+</openfpga_bitstream_setting>

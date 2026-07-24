@@ -1,0 +1,13 @@
+<openfpga_bitstream_setting>
+  <!-- Physical 8x32 destination -->
+  <mif_source pb_type="memory[dpram8x32].dpram8x32" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:31]"/>
+  <!-- Sibling logical halves sharing the same physical addresses -->
+  <mif_source pb_type="memory[dpram8x32].dpram8x16[0]" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:15]"/>
+  <mif_source pb_type="memory[dpram8x32].dpram8x16[1]" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:15]"/>
+  <mif_address_map src_pb_type="memory[dpram8x32].dpram8x16[0]" des_pb_type="memory[dpram8x32].dpram8x32">
+    <map src_addr_range="[0:7]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[16:31]"/>
+  </mif_address_map>
+  <mif_address_map src_pb_type="memory[dpram8x32].dpram8x16[1]" des_pb_type="memory[dpram8x32].dpram8x32">
+    <map src_addr_range="[0:7]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[0:15]"/>
+  </mif_address_map>
+</openfpga_bitstream_setting>

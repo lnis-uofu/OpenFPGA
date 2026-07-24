@@ -27,6 +27,23 @@ static bool address_in_range(uint64_t addr, const BasicPort& address_range) {
          addr <= address_range.get_msb();
 }
 
+static uint64_t width_mask(size_t width) {
+  if (width >= 64) {
+    return ~uint64_t(0);
+  }
+  return (uint64_t(1) << width) - 1;
+}
+
+/* Extract contiguous bits [lsb:msb] from a word (lsb = bit 0 of word). */
+static uint64_t extract_mif_bits(uint64_t data, const BasicPort& bits) {
+  return (data >> bits.get_lsb()) & width_mask(bits.get_width());
+}
+
+/* Place extracted bits into [lsb:msb] of a destination word. */
+static uint64_t place_mif_bits(uint64_t extracted, const BasicPort& bits) {
+  return (extracted & width_mask(bits.get_width())) << bits.get_lsb();
+}
+
 /* Derive output .mem header addr/data width from <map> rules targeting des. */
 static bool infer_des_header_from_map_rules(
   const std::string& des_pb_type, const BitstreamSetting& bitstream_setting,
@@ -107,6 +124,135 @@ static bool infer_des_header_from_map_rules(
   return true;
 }
 
+/* Apply all matching <map> rules for one logical (addr, data) word. */
+static bool remap_logical_word_to_physical(
+  uint64_t logical_addr, uint64_t logical_data, int op_data_width,
+  const MifAddressMapSettingId& map_id,
+  const BitstreamSetting& bitstream_setting, PbAggregateState& pb_state) {
+  bool matched = false;
+
+  for (const MifAddressMapRuleId& rule_id :
+       bitstream_setting.mif_address_map_rules(map_id)) {
+    const BasicPort src_addr_range =
+      bitstream_setting.mif_address_map_rule_src_addr_range(rule_id);
+    if (!address_in_range(logical_addr, src_addr_range)) {
+      continue;
+    }
+    matched = true;
+
+    const int des_addr_offset =
+      bitstream_setting.mif_address_map_rule_des_addr_offset(rule_id);
+    const BasicPort src_mif_bits =
+      bitstream_setting.mif_address_map_rule_src_mif_bits(rule_id);
+    const BasicPort des_mif_bits =
+      bitstream_setting.mif_address_map_rule_des_mif_bits(rule_id);
+
+    if (src_mif_bits.get_msb() >= static_cast<size_t>(op_data_width)) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: src_mif_bits [%zu:%zu] exceeds source data width %d "
+        "at logical addr %lu\n",
+        src_mif_bits.get_lsb(), src_mif_bits.get_msb(), op_data_width,
+        static_cast<unsigned long>(logical_addr));
+      return false;
+    }
+    if (des_mif_bits.get_msb() >=
+        static_cast<size_t>(pb_state.aggregated_data_width)) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: des_mif_bits [%zu:%zu] exceeds aggregated data width "
+        "%d at logical addr %lu\n",
+        des_mif_bits.get_lsb(), des_mif_bits.get_msb(),
+        pb_state.aggregated_data_width,
+        static_cast<unsigned long>(logical_addr));
+      return false;
+    }
+
+    const int64_t des_addr_signed =
+      static_cast<int64_t>(logical_addr) + des_addr_offset;
+    if (des_addr_signed < 0) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: des_addr %ld < 0 for logical addr %lu "
+        "(des_addr_offset=%d)\n",
+        static_cast<long>(des_addr_signed),
+        static_cast<unsigned long>(logical_addr), des_addr_offset);
+      return false;
+    }
+    const uint64_t des_addr = static_cast<uint64_t>(des_addr_signed);
+    if (!address_in_range(des_addr, pb_state.addr_range)) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: des_addr %lu outside inferred des address range "
+        "[%zu:%zu] (logical addr %lu, des_addr_offset=%d)\n",
+        static_cast<unsigned long>(des_addr), pb_state.addr_range.get_lsb(),
+        pb_state.addr_range.get_msb(),
+        static_cast<unsigned long>(logical_addr), des_addr_offset);
+      return false;
+    }
+
+    const uint64_t extracted = extract_mif_bits(logical_data, src_mif_bits);
+    const uint64_t placed = place_mif_bits(extracted, des_mif_bits);
+    const uint64_t des_mask =
+      width_mask(des_mif_bits.get_width()) << des_mif_bits.get_lsb();
+
+    auto& phys_word = pb_state.phys_data_map[des_addr];
+    const uint64_t existing = phys_word & des_mask;
+    if (existing != 0 && existing != (placed & des_mask)) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: conflicting writes to des addr %lu bits [%zu:%zu]: "
+        "existing 0x%llx vs new 0x%llx (logical addr %lu)\n",
+        static_cast<unsigned long>(des_addr), des_mif_bits.get_lsb(),
+        des_mif_bits.get_msb(), static_cast<unsigned long long>(existing),
+        static_cast<unsigned long long>(placed & des_mask),
+        static_cast<unsigned long>(logical_addr));
+      return false;
+    }
+    phys_word |= placed;
+  }
+
+  if (!matched) {
+    VTR_LOG_ERROR(
+      "aggregate_mif: logical addr %lu is not covered by any <map> "
+      "src_addr_range\n",
+      static_cast<unsigned long>(logical_addr));
+    return false;
+  }
+  return true;
+}
+
+/* Resolve which mif_address_map applies to a logical segment. */
+static bool resolve_map_for_segment(
+  const MifStorage& logical_storage, const MifSegmentId& segment_id,
+  const BitstreamSetting& bitstream_setting,
+  const std::vector<MifAddressMapSettingId>& map_ids,
+  MifAddressMapSettingId& out_map_id, std::string& out_src_pb_type) {
+  const std::string& seg_pb = logical_storage.physical_pb(segment_id);
+  if (!seg_pb.empty()) {
+    for (const MifAddressMapSettingId& id : map_ids) {
+      if (bitstream_setting.mif_address_map_src_pb_type(id) == seg_pb) {
+        out_map_id = id;
+        out_src_pb_type = seg_pb;
+        return true;
+      }
+    }
+    VTR_LOG_ERROR(
+      "aggregate_mif: segment %zu pb_type '%s' has no matching "
+      "mif_address_map src_pb_type\n",
+      static_cast<size_t>(segment_id), seg_pb.c_str());
+    return false;
+  }
+
+  /* Untagged segment (typical init.hex): only valid with a single map. */
+  if (map_ids.size() != 1) {
+    VTR_LOG_ERROR(
+      "aggregate_mif: segment %zu has no pb_type tag, but %zu "
+      "mif_address_map entries exist; tag segments (eblif mif_source) or "
+      "use a single map\n",
+      static_cast<size_t>(segment_id), map_ids.size());
+    return false;
+  }
+  out_map_id = map_ids[0];
+  out_src_pb_type = bitstream_setting.mif_address_map_src_pb_type(out_map_id);
+  return true;
+}
+
 int aggregate_mif(const MifStorage& logical_storage,
                   const BitstreamSetting& bitstream_setting,
                   MifStorage& out_aggregated_storage) {
@@ -115,62 +261,28 @@ int aggregate_mif(const MifStorage& logical_storage,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  const auto map_ids = bitstream_setting.mif_address_map_settings();
-  size_t map_count = 0;
-  MifAddressMapSettingId map_id = MifAddressMapSettingId::INVALID();
-  for (const MifAddressMapSettingId& id : map_ids) {
-    if (!map_id.is_valid()) {
-      map_id = id;
-    }
-    ++map_count;
+  std::vector<MifAddressMapSettingId> map_ids;
+  for (const MifAddressMapSettingId& id :
+       bitstream_setting.mif_address_map_settings()) {
+    map_ids.push_back(id);
   }
-  if (0 == map_count) {
+  if (map_ids.empty()) {
     VTR_LOG_ERROR("aggregate_mif: no mif_address_map in bitstream setting\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (1 != map_count) {
-    VTR_LOG_ERROR(
-      "aggregate_mif: expected exactly one mif_address_map (got %zu); "
-      "multi-map binding by instance/file is not supported yet\n",
-      map_count);
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  const std::string operating_pb_type =
-    bitstream_setting.mif_address_map_src_pb_type(map_id);
+
   const std::string aggregated_pb_type =
-    bitstream_setting.mif_address_map_des_pb_type(map_id);
-
-  const MifSourceSettingId src_source_id =
-    bitstream_setting.find_mif_source_by_pb_type(operating_pb_type);
-  if (!src_source_id.is_valid()) {
-    VTR_LOG_ERROR(
-      "aggregate_mif: src_pb_type '%s' has no mif_source for address_range "
-      "sanity check\n",
-      operating_pb_type.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  const BasicPort src_address_range =
-    bitstream_setting.mif_source_address_range(src_source_id);
-  if (!src_address_range.is_valid()) {
-    VTR_LOG_ERROR(
-      "aggregate_mif: invalid address_range on mif_source for '%s'\n",
-      operating_pb_type.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  const BasicPort src_data_range =
-    bitstream_setting.mif_source_data_range(src_source_id);
-  if (!src_data_range.is_valid()) {
-    VTR_LOG_ERROR("aggregate_mif: invalid data_range on mif_source for '%s'\n",
-                  operating_pb_type.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  /* Source data width comes from bitstream mif_source, not init.hex. */
-  const int op_data_width = static_cast<int>(src_data_range.get_width());
-  if (op_data_width <= 0) {
-    VTR_LOG_ERROR("aggregate_mif: invalid data_range width for '%s'\n",
-                  operating_pb_type.c_str());
-    return CMD_EXEC_FATAL_ERROR;
+    bitstream_setting.mif_address_map_des_pb_type(map_ids[0]);
+  for (size_t i = 1; i < map_ids.size(); ++i) {
+    const std::string& des =
+      bitstream_setting.mif_address_map_des_pb_type(map_ids[i]);
+    if (des != aggregated_pb_type) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: all mif_address_map entries must share the same "
+        "des_pb_type (got '%s' and '%s')\n",
+        aggregated_pb_type.c_str(), des.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
   }
 
   DesHeaderMeta header_meta;
@@ -186,28 +298,64 @@ int aggregate_mif(const MifStorage& logical_storage,
       aggregated_pb_type.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (op_data_width > aggregated_data_width) {
-    VTR_LOG_ERROR(
-      "aggregate_mif: source data width %d exceeds destination width %d for "
-      "'%s'\n",
-      op_data_width, aggregated_data_width, operating_pb_type.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
 
   VTR_LOG(
-    "aggregate_mif: binding all logical MIF segments via unique "
-    "mif_address_map src='%s' des='%s'\n",
-    operating_pb_type.c_str(), aggregated_pb_type.c_str());
+    "aggregate_mif: remapping %zu logical segment(s) via %zu "
+    "mif_address_map(s) -> des='%s'\n",
+    logical_storage.num_segments(), map_ids.size(),
+    aggregated_pb_type.c_str());
 
   out_aggregated_storage.clear();
   PbAggregateState pb_state;
   pb_state.aggregated_data_width = aggregated_data_width;
   pb_state.addr_range = header_meta.addr_range;
 
-  const uint64_t data_mask =
-    (op_data_width >= 64) ? ~uint64_t(0) : ((uint64_t(1) << op_data_width) - 1);
-
   for (const MifSegmentId& segment_id : logical_storage.segments()) {
+    MifAddressMapSettingId map_id = MifAddressMapSettingId::INVALID();
+    std::string operating_pb_type;
+    if (!resolve_map_for_segment(logical_storage, segment_id, bitstream_setting,
+                                 map_ids, map_id, operating_pb_type)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    const MifSourceSettingId src_source_id =
+      bitstream_setting.find_mif_source_by_pb_type(operating_pb_type);
+    if (!src_source_id.is_valid()) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: src_pb_type '%s' has no mif_source for address_range "
+        "sanity check\n",
+        operating_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    const BasicPort src_address_range =
+      bitstream_setting.mif_source_address_range(src_source_id);
+    if (!src_address_range.is_valid()) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: invalid address_range on mif_source for '%s'\n",
+        operating_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    const BasicPort src_data_range =
+      bitstream_setting.mif_source_data_range(src_source_id);
+    if (!src_data_range.is_valid()) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: invalid data_range on mif_source for '%s'\n",
+        operating_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    const int op_data_width = static_cast<int>(src_data_range.get_width());
+    if (op_data_width <= 0) {
+      VTR_LOG_ERROR("aggregate_mif: invalid data_range width for '%s'\n",
+                    operating_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    const uint64_t data_mask = width_mask(static_cast<size_t>(op_data_width));
+
+    VTR_LOG("aggregate_mif: segment %zu bound src='%s' -> des='%s'\n",
+            static_cast<size_t>(segment_id), operating_pb_type.c_str(),
+            aggregated_pb_type.c_str());
+
     /* Optional: if init.hex declared a depth range, check it against
      * mif_source.address_range. Per-line checks always apply. */
     const BasicPort& seg_addr_range = logical_storage.addr_range(segment_id);
@@ -248,7 +396,11 @@ int aggregate_mif(const MifStorage& logical_storage,
           operating_pb_type.c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
-      pb_state.phys_data_map[logical_addr] |= logical_data;
+      if (!remap_logical_word_to_physical(logical_addr, logical_data,
+                                          op_data_width, map_id,
+                                          bitstream_setting, pb_state)) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
     }
   }
 
