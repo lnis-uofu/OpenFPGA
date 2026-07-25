@@ -148,7 +148,16 @@ always
 	assign __prog_clock__[0] = __prog_clock___reg__[0] & (~__config_done__[0]) & (~__prog_reset__[0]);
 
 // ----- __config_all_done__ requires BOTH embedded dpram_8x16_preload memories to report mem_init_done, in addition to the bitstream configuration finishing -----
-	assign __config_all_done__[0] = __config_done__[0] & gfpga_pad_dpram_8x16_preload_mem_init_done[0] & gfpga_pad_dpram_8x16_preload_mem_init_done[1];
+reg [0:1] mem_init_done_sticky;
+always @(posedge mem_init_clk[0] or negedge mem_init_rst_n[0]) begin
+    if (1'b0 == mem_init_rst_n[0]) begin
+        mem_init_done_sticky <= 2'b00;
+    end else begin
+        if (gfpga_pad_dpram_8x16_preload_mem_init_done[0]) mem_init_done_sticky[0] <= 1'b1;
+        if (gfpga_pad_dpram_8x16_preload_mem_init_done[1]) mem_init_done_sticky[1] <= 1'b1;
+    end
+end
+assign __config_all_done__[0] = __config_done__[0] & mem_init_done_sticky[0] & mem_init_done_sticky[1];
 // ----- Begin raw operating clock signal generation -----
 initial
 	begin
