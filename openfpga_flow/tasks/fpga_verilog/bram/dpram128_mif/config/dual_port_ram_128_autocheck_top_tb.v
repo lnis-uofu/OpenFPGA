@@ -3,7 +3,7 @@
 //	Description: FPGA Verilog full testbench for top-level netlist of design: dual_port_ram_128
 //	Author: Xifan TANG
 //	Organization: University of Utah
-//	Date: Fri Jul 24 10:55:15 2026
+//	Date: Fri Jul 24 17:35:52 2026
 //-------------------------------------------
 //----- Default net type -----
 `default_nettype none
@@ -18,6 +18,7 @@ wire [0:0] reset;
 wire [0:0] mem_init_rst_n;
 wire [0:0] mem_init_clk;
 wire [0:0] mem_init_start;
+wire [0:2] mem_init_addr;
 
 // ----- Local wires for I/Os of FPGA fabric -----
 wire [0:79] gfpga_pad_GPIO_PAD;
@@ -25,7 +26,6 @@ wire [0:79] gfpga_pad_GPIO_PAD;
 wire [0:31] gfpga_pad_dpram_8x16_preload_mem_init_data;
 
 wire [0:1] gfpga_pad_dpram_8x16_preload_mem_init_done;
-wire [0:5] gfpga_pad_dpram_8x16_preload_mem_init_addr;
 
 reg [0:0] __config_done__;
 wire [0:0] __config_all_done__;
@@ -147,7 +147,7 @@ always
 // ----- Actual programming clock is triggered only when __config_done__ and __prog_reset__ are disabled -----
 	assign __prog_clock__[0] = __prog_clock___reg__[0] & (~__config_done__[0]) & (~__prog_reset__[0]);
 
-// ----- __config_all_done__ now also requires BOTH embedded dpram_8x16_preload memories to report mem_init_done, in addition to the bitstream configuration finishing -----
+// ----- __config_all_done__ requires BOTH embedded dpram_8x16_preload memories to report mem_init_done, in addition to the bitstream configuration finishing -----
 	assign __config_all_done__[0] = __config_done__[0] & gfpga_pad_dpram_8x16_preload_mem_init_done[0] & gfpga_pad_dpram_8x16_preload_mem_init_done[1];
 // ----- Begin raw operating clock signal generation -----
 initial
@@ -205,28 +205,28 @@ initial
 	assign clk[0] = __op_clock__[0];
 	assign reset[0] = __greset__[0];
 	assign pReset[0] = __prog_reset__[0];
-// ----- mem_init_rst_n mirrors the "rst_n" stimulus of dpram_8x16_preload_tb.v: -----
-// ----- held low (asserted) while the fabric is in global reset, released once reset drops -----
+// ----- mem_init_rst_n is driven by __prog_reset__ (active-low reset, released once programming reset drops) -----
 	assign mem_init_rst_n[0] = ~__prog_reset__[0];
 	assign set[0] = __gset__[0];
-// ----- mem_init_clk mirrors the "preload_clk" stimulus of dpram_8x16_preload_tb.v: -----
-// ----- a free-running clock, half the frequency of the op clock, gated on bitstream config-done (NOT __config_all_done__, which now also depends on mem_init_done -- gating on it here would deadlock) -----
-	assign mem_init_clk[0] = mem_init_clk_reg[0] & (~__config_done__[0]);
+// ----- mem_init_clk is driven directly by __prog_clock__ -- memory init now runs concurrently with bitstream configuration, using the same clock -----
+	assign mem_init_clk[0] = __prog_clock__[0];
 // ----- mem_init_start mirrors the "init_start" stimulus of dpram_8x16_preload_tb.v -----
 	assign mem_init_start[0] = mem_init_start_reg[0];
+// ----- mem_init_addr is a GLOBAL, TB-driven port (grouped with clk/reset, not with the per-instance gfpga_pad_... data/done pins) -----
+// ----- so the testbench must actively sweep it -- an internal counter, incremented once per mem_init_clk cycle while mem_init_start is asserted -----
+	assign mem_init_addr[0:2] = mem_init_addr_reg;
 // ----- End connecting global ports of FPGA fabric to stimuli -----
 
-// ----- Begin mem_init_clk generation (maps to preload_clk in dpram_8x16_preload_tb.v) -----
-	reg [0:0] mem_init_clk_reg;
-initial
-	begin
-		mem_init_clk_reg[0] = 1'b0;
+// ----- Begin mem_init_addr counter: sweeps 0 to 7 (3-bit, matching the 8-deep RAM), one step per mem_init_clk cycle, while mem_init_start is held -----
+	reg [0:2] mem_init_addr_reg;
+always @(posedge mem_init_clk[0] or negedge mem_init_rst_n[0]) begin
+	if (1'b0 == mem_init_rst_n[0]) begin
+		mem_init_addr_reg <= 3'b000;
+	end else if ((1'b1 == mem_init_start[0]) && (mem_init_addr_reg != 3'b111)) begin
+		mem_init_addr_reg <= mem_init_addr_reg + 3'b001;
 	end
-always 
-	begin
-		#2	mem_init_clk_reg[0] = ~mem_init_clk_reg[0];
-	end
-// ----- End mem_init_clk generation -----
+end
+// ----- End mem_init_addr counter -----
 // ----- FPGA top-level module to be capsulated -----
 	fpga_top FPGA_DUT (
 		.clk(clk[0]),
@@ -237,22 +237,23 @@ always
 		.mem_init_rst_n(mem_init_rst_n[0]),
 		.mem_init_clk(mem_init_clk[0]),
 		.mem_init_start(mem_init_start[0]),
+		.mem_init_addr(mem_init_addr[0:2]),
 		.gfpga_pad_dpram_8x16_preload_mem_init_data(gfpga_pad_dpram_8x16_preload_mem_init_data[0:31]),
 		.gfpga_pad_dpram_8x16_preload_mem_init_done(gfpga_pad_dpram_8x16_preload_mem_init_done[0:1]),
-		.gfpga_pad_dpram_8x16_preload_mem_init_addr(gfpga_pad_dpram_8x16_preload_mem_init_addr[0:5]),
 		.gfpga_pad_GPIO_PAD(gfpga_pad_GPIO_PAD[0:79]),
 		.ccff_head(ccff_head[0:15]),
 		.ccff_tail(ccff_tail[0:15]));
 
 // ----- Initialization memory source, loaded from a single external 32-bit-wide MIF file (maps to init_src_data/init_src_addr in dpram_8x16_preload_tb.v) -----
-// ----- fpga_top embeds TWO physical dpram_8x16_preload memories, but they share ONE 32-bit init data bus looked up by the shared 4-bit mem_init_addr -----
-// ----- NOTE: update the file name/path below to match your actual generated MIF file. It is expected to hold 16 lines of 32-bit hex content ($readmemh format), one line per address 0 to 15. -----
+// ----- fpga_top embeds TWO physical dpram_8x16_preload memories that share ONE 32-bit init data bus, looked up by the TB-driven 3-bit mem_init_addr counter above -----
+// ----- File format is standard $readmemh sparse-address syntax: "@ADDR" on its own token followed by a hex DATA word, e.g. "@0 FFFFFFFF" -- matching dual_port_ram_128_mem_init.mif -----
+// ----- NOTE: update the file name/path below if your generated MIF file is named/located differently. -----
 `define MEM_INIT_MIF "dual_port_ram_128_mem_init.mif"
-	reg [0:31] mem_init_rom [0:31];
+	reg [0:31] mem_init_rom [0:7];
 initial begin
 	$readmemh(`MEM_INIT_MIF, mem_init_rom);
 end
-	assign gfpga_pad_dpram_8x16_preload_mem_init_data[0:31] = mem_init_rom[gfpga_pad_dpram_8x16_preload_mem_init_addr];
+	assign gfpga_pad_dpram_8x16_preload_mem_init_data[0:31] = mem_init_rom[mem_init_addr[0:2]];
 // ----- Link BLIF Benchmark I/Os to FPGA I/Os -----
 // ----- Blif Benchmark input clk is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD[0] -----
 	assign gfpga_pad_GPIO_PAD[0] = clk[0];
@@ -466,6 +467,7 @@ always @(negedge __prog_clock___reg__[0]) begin
 	end
 end
 // ----- End bitstream loading during configuration phase -----
+
 // ----- Begin reset signal generation -----
 // ----- Input Initialization -------
 	initial begin
@@ -520,7 +522,7 @@ end
 initial begin
 	mem_init_start_reg[0] = 1'b0;
 	wait (__prog_reset__[0] === 1'b0);
-	$display("[TB] Triggering preload memory initialization for both embedded RAMs (mem_init_clk running)...");
+	$display("[TB] Triggering preload memory initialization for both embedded RAMs (mem_init_clk running, mem_init_addr sweeping)...");
 	mem_init_start_reg[0] = 1'b1;
 	wait (gfpga_pad_dpram_8x16_preload_mem_init_done[0] === 1'b1 && gfpga_pad_dpram_8x16_preload_mem_init_done[1] === 1'b1);
 	@(posedge mem_init_clk[0]); #1;
@@ -534,61 +536,71 @@ end
 // -----   waddr_*__shared_input  <-> sys_waddr -----
 // -----   raddr_*__shared_input  <-> sys_raddr -----
 // -----   din_*__shared_input    <-> sys_d_in -----
-// ----- Runs once, after __config_done__ is enabled (i.e. once __config_all_done__ is asserted -- bitstream configured AND both embedded RAMs preloaded) -----
+// ----- Runs once __config_all_done__ is asserted (bitstream configured AND both embedded RAMs preloaded). -----
+// ----- KEY TIMING: the checker skips the FIRST negedge clk after __config_all_done__ (sim_start handshake) and compares from the SECOND negedge onwards. -----
+// ----- Therefore ren/raddr must be asserted IMMEDIATELY when __config_all_done__ goes high (before any negedge), so they are stable a full cycle before the first real compare. -----
 	wire [0:15] dout_fpga_bus = {dout_15__fpga, dout_14__fpga, dout_13__fpga, dout_12__fpga, dout_11__fpga, dout_10__fpga, dout_9__fpga, dout_8__fpga, dout_7__fpga, dout_6__fpga, dout_5__fpga, dout_4__fpga, dout_3__fpga, dout_2__fpga, dout_1__fpga, dout_0__fpga};
 
 initial begin
 	wait (__config_all_done__[0] === 1'b1);
 
-	// ---- Brief idle gap before readback (maps to the "#40" gap in dpram_8x16_preload_tb.v) ----
-	repeat (2) @(posedge clk[0]);
-
-	// ---- Step 2: Read back and verify all preloaded values ----
+	// ---- Assert ren + first raddr IMMEDIATELY (no clock edge wait) so they are stable before the checker's sim_start negedge ----
 	$display("[TB] Reading back initialized values via system fabric...");
 	ren_shared_input = 1'b1;
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b000;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b000; @(posedge clk[0]); #1;
+	// ---- negedge #1: checker consumes sim_start (no compare yet); advance raddr for next cycle ----
+	@(negedge clk[0]);
 	$display("Addr 0 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b001;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b001; @(posedge clk[0]); #1;
+	// ---- Step 2: Read back and verify all preloaded values ----
+	@(negedge clk[0]);
 	$display("Addr 1 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b010;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b010; @(posedge clk[0]); #1;
+	@(negedge clk[0]);
 	$display("Addr 2 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b011;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b011; @(posedge clk[0]); #1;
+	@(negedge clk[0]);
 	$display("Addr 3 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b100;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b100; @(posedge clk[0]); #1;
+	@(negedge clk[0]);
 	$display("Addr 4 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b101;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b101; @(posedge clk[0]); #1;
+	@(negedge clk[0]);
 	$display("Addr 5 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b110;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b110; @(posedge clk[0]); #1;
+	@(negedge clk[0]);
 	$display("Addr 6 | Got: %h", dout_fpga_bus);
+	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b111;
 
-	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b111; @(posedge clk[0]); #1;
+	@(negedge clk[0]);
 	$display("Addr 7 | Got: %h", dout_fpga_bus);
-
 	ren_shared_input = 1'b0;
-	repeat (2) @(posedge clk[0]);
+
+	@(negedge clk[0]);
 
 	// ---- Step 3: Normal system write then readback ----
 	$display("[TB] Testing standard system runtime write/read...");
 	wen_shared_input = 1'b1;
 	{waddr_2__shared_input, waddr_1__shared_input, waddr_0__shared_input} = 3'b010;
 	{din_15__shared_input, din_14__shared_input, din_13__shared_input, din_12__shared_input, din_11__shared_input, din_10__shared_input, din_9__shared_input, din_8__shared_input, din_7__shared_input, din_6__shared_input, din_5__shared_input, din_4__shared_input, din_3__shared_input, din_2__shared_input, din_1__shared_input, din_0__shared_input} = 16'hBEEF;
-	@(posedge clk[0]); #1;
-	wen_shared_input = 1'b0;
 
+	@(negedge clk[0]);
+	wen_shared_input = 1'b0;
 	ren_shared_input = 1'b1;
 	{raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input} = 3'b010;
-	@(posedge clk[0]); #1;
+
+	@(negedge clk[0]);
 	$display("Addr 2 (post-write) | Expected: BEEF | Got: %h", dout_fpga_bus);
 	ren_shared_input = 1'b0;
 
-	repeat (5) @(posedge clk[0]);
+	repeat (3) @(negedge clk[0]);
 	$display("[TB] All tests complete.");
 end
 
