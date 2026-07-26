@@ -167,7 +167,8 @@ module frac_mem_256_preload (
     input  wire        init_start,
     output wire         init_done,
     // Initialization data source (raw 16-row indexed buses)
-    output wire [0:3]  init_src_addr,
+    // init_src_addr is INPUT: driven by the external address counter
+    input  wire [0:3]  init_src_addr,
     input  wire [0:15] init_src_data,
     // System functional interface
     input  wire        wen,
@@ -322,7 +323,8 @@ module frac_mem_256_preload_initializer (
     input  wire        init_start,
     output reg          init_done,
     // Interface to external initialization source (raw 16-row indexed buses)
-    output reg  [0:3]  init_src_addr,
+    // init_src_addr is INPUT: driven by the external address counter
+    input  wire [0:3]  init_src_addr,
     input  wire [0:15] init_src_data,
     // Outbound connections to frac_mem_256_core_preload
     output reg          preload_busy,
@@ -369,8 +371,8 @@ module frac_mem_256_preload_initializer (
         counter_en    = 1'b0;
         counter_rst   = 1'b0;
         init_done     = 1'b0;
-        // Match source address mapping to current counter step
-        init_src_addr = addr_counter;
+        // init_src_addr is now an input -- driven by the external counter
+        // preload_waddr still tracks the FSM's own addr_counter (which RAM row to write)
         preload_waddr = addr_counter;
         preload_d_in  = init_src_data;
 
