@@ -3,7 +3,7 @@ module frac_mem_256_preload_tb;
     reg clk = 0, preload_clk = 0, rst_n = 0;
     reg init_start = 0;
     wire init_done;
-    wire [0:3] init_src_addr;
+    reg  [0:3] init_src_addr;  // driven by TB counter -- now an INPUT to DUT
     reg [0:15] init_src_data;
 
     reg wen = 0, ren = 0;
@@ -27,6 +27,24 @@ module frac_mem_256_preload_tb;
 
     // simple ROM: row i -> 16'hA000 + i
     always @(*) init_src_data = 16'hA000 + init_src_addr;
+
+    // Address counter: driven by TB into DUT's init_src_addr input.
+    // preload_d_in = init_src_data is purely combinational in the FSM, so
+    // init_src_addr must equal fsm_waddr (FSM's addr_counter) at every
+    // posedge preload_clk where preload_wen is asserted (WRITE_DATA state).
+    // The FSM takes exactly 2 preload_clk edges after init_start before
+    // the first write fires (IDLE->PREPARE->WRITE_DATA). Initialising to
+    // 4'hE (-2 mod 16) absorbs this fixed latency so the counter reaches 0
+    // exactly when fsm_waddr=0 fires its first write, regardless of when
+    // init_start is asserted relative to preload_clk.
+    always @(posedge preload_clk or negedge rst_n) begin
+        if (!rst_n)
+            init_src_addr <= 4'hE;
+        else if (!init_start)
+            init_src_addr <= 4'hE;   // hold at -2 until init_start kicks off
+        else
+            init_src_addr <= init_src_addr + 1'b1;
+    end
 
     task automatic do_write(input [0:1] m, input [0:4] a, input [0:31] data);
         begin
