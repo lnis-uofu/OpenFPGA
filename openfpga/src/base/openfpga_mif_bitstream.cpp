@@ -16,14 +16,11 @@ std::string default_preload_mem_file_path(const std::string& write_file_path) {
   return write_file_path + "_memory.mem";
 }
 
-int aggregate_mif_storage(const MifStorage& mif_storage,
+int aggregate_mif_storage(const std::string& eblif_file_path,
+                          MifStorage& mif_storage,
                           const BitstreamSetting& bitstream_setting,
                           MifStorage& aggregated_mif_storage) {
   aggregated_mif_storage.clear();
-
-  if (mif_storage.empty()) {
-    return CMD_EXEC_SUCCESS;
-  }
 
   if (bitstream_setting.mif_address_map_settings().empty()) {
     VTR_LOG_ERROR(
@@ -31,14 +28,17 @@ int aggregate_mif_storage(const MifStorage& mif_storage,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  return aggregate_mif(mif_storage, bitstream_setting, aggregated_mif_storage);
+  return aggregate_mif(eblif_file_path, mif_storage, bitstream_setting,
+                       aggregated_mif_storage);
 }
 
 int aggregate_mif_storage_and_write_preload_mem(
-  const MifStorage& mif_storage, const BitstreamSetting& bitstream_setting,
+  const std::string& eblif_file_path, MifStorage& mif_storage,
+  const BitstreamSetting& bitstream_setting,
   MifStorage& aggregated_mif_storage, const std::string& mem_file_path) {
-  const int agg_status = aggregate_mif_storage(mif_storage, bitstream_setting,
-                                               aggregated_mif_storage);
+  const int agg_status =
+    aggregate_mif_storage(eblif_file_path, mif_storage, bitstream_setting,
+                          aggregated_mif_storage);
   if (CMD_EXEC_SUCCESS != agg_status) {
     return agg_status;
   }

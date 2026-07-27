@@ -135,8 +135,14 @@ static bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
   return true;
 }
 
+/* Parse one init.hex data line.
+ * Returns false on syntax error.
+ * When has_data is false, only next_addr was updated (@addr with no data word),
+ * matching Verilog $readmemh address-only directives. */
 static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
-                                uint64_t& addr, uint64_t& data) {
+                                uint64_t& addr, uint64_t& data,
+                                bool& has_data) {
+  has_data = false;
   if (line.empty()) {
     return false;
   }
@@ -158,13 +164,18 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
   std::string extra;
   if (!(iss >> second)) {
     if (has_at_jump) {
-      return false;
+      /* @<addr> alone: set next write address ($readmemh). */
+      if (!parse_mif_init_hex_value_token(first, next_addr)) {
+        return false;
+      }
+      return true;
     }
     if (!parse_mif_init_hex_value_token(first, data)) {
       return false;
     }
     addr = next_addr;
     ++next_addr;
+    has_data = true;
     return true;
   }
 
@@ -177,6 +188,7 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
     return false;
   }
   next_addr = addr + 1;
+  has_data = true;
   return true;
 }
 
@@ -220,11 +232,15 @@ static int read_mif_from_init_hex(const std::string& file_path,
 
     uint64_t addr = 0;
     uint64_t data = 0;
-    if (!parse_init_hex_line(line, next_addr, addr, data)) {
+    bool has_data = false;
+    if (!parse_init_hex_line(line, next_addr, addr, data, has_data)) {
       VTR_LOG_ERROR("%s:%lu: cannot parse init.hex line: %s\n",
                     file_path.c_str(), static_cast<unsigned long>(line_no),
                     line.c_str());
       return CMD_EXEC_FATAL_ERROR;
+    }
+    if (!has_data) {
+      continue;
     }
 
     mif_storage.create_memory_line(segment_id, addr, data);

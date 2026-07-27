@@ -1,0 +1,13 @@
+<openfpga_bitstream_setting>
+  <!-- Two INIT params in dual_port_ram_8x16_mif_yosys_out.eblif (memory_0, memory_1) -->
+  <mif_source pb_type="memory[mem_8x16_dp].mem_8x16_dp[0]" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:15]"/>
+  <mif_source pb_type="memory[mem_8x16_dp].mem_8x16_dp[1]" source="eblif" content=".param INIT" address_range="[0:7]" data_range="[0:15]"/>
+  <!-- Destination pb metadata only (not read from eblif) -->
+  <mif_source pb_type="memory[dpram8x32].dpram8x32" source="none" content=".param INIT" address_range="[0:7]" data_range="[0:31]"/>
+  <mif_address_map src_pb_type="memory[mem_8x16_dp].mem_8x16_dp[0]" des_pb_type="memory[dpram8x32].dpram8x32">
+    <map src_addr_range="[0:7]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[16:31]"/>
+  </mif_address_map>
+  <mif_address_map src_pb_type="memory[mem_8x16_dp].mem_8x16_dp[1]" des_pb_type="memory[dpram8x32].dpram8x32">
+    <map src_addr_range="[0:7]" des_addr_offset="0" src_mif_bits="[0:15]" des_mif_bits="[0:15]"/>
+  </mif_address_map>
+</openfpga_bitstream_setting>

@@ -11,9 +11,6 @@ read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 # Read OpenFPGA bitstream settings (mif_source / mif_address_map)
 read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
 
-# Read logical MIF from Yosys eblif (.param INIT via mif_source source=eblif)
-read_mif -f ${OPENFPGA_MIF_FILE}
-
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
 link_openfpga_arch --sort_gsb_chan_node_in_edges
@@ -41,10 +38,7 @@ repack #--verbose
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
 #  - Aggregate logical MIF into physical preload .mem (--write_mif + --verilog)
-build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml --write_mif fabric_independent_bitstream_memory.mem
-
-# Write aggregated preload MIF again via dedicated shell command
-write_mif -f aggregated_preload.mem
+build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml --eblif ${VPR_TESTBENCH_BLIF} --write_mif fabric_independent_bitstream_memory.mem
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
