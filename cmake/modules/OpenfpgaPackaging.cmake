@@ -49,6 +49,17 @@ if (CPACK_GENERATOR STREQUAL "IFW")
   set(CPACK_IFW_PACKAGE_LOGO ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/overview/figures/OpenFPGA_logo.png)
 endif() 
 
+# Skip or exclude system API-sets from runtime dependency resolution
+if(WIN32) 
+  set(CPACK_GET_RUNTIME_DEPENDENCIES_EXCLUDE_REGEX "api-ms-.;ext-ms-.")
+endif()
+# Disable automatic runtime dependency resolution on MSVC
+# This prevents CPack from trying to include Windows API stub DLLs (api-ms-win-*.dll)
+if (MSVC)
+  set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS "")
+  set(CMAKE_INSTALL_DEBUG_LIBRARIES FALSE)
+endif()
+
 # Variables must be defined before including the CPACK module
 set(CPACK_BUILD_CONFIG ${CMAKE_BUILD_TYPE})
 include(CPack)
