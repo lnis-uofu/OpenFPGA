@@ -63,7 +63,7 @@ write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VE
 
 # Copy external hand-crafted testbench 
 #ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH} SRC/"
-ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH_MIF} ."
+#ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH_MIF} ."
 
 # Finish and exit OpenFPGA
 exit
