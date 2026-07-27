@@ -655,8 +655,8 @@ end
 		.clk(clk),
 		.wen(wen_shared_input),
 		.ren(ren_shared_input),
-		.waddr({waddr_2__shared_input, waddr_1__shared_input, waddr_0__shared_input}),
-		.raddr({raddr_2__shared_input, raddr_1__shared_input, raddr_0__shared_input}),
+		.waddr({waddr_1__shared_input, waddr_0__shared_input}),
+		.raddr({raddr_1__shared_input, raddr_0__shared_input}),
 		.din({din_31__shared_input, din_30__shared_input, din_29__shared_input, din_28__shared_input, din_27__shared_input, din_26__shared_input, din_25__shared_input, din_24__shared_input, din_23__shared_input, din_22__shared_input, din_21__shared_input, din_20__shared_input, din_19__shared_input, din_18__shared_input, din_17__shared_input, din_16__shared_input, din_15__shared_input, din_14__shared_input, din_13__shared_input, din_12__shared_input, din_11__shared_input, din_10__shared_input, din_9__shared_input, din_8__shared_input, din_7__shared_input, din_6__shared_input, din_5__shared_input, din_4__shared_input, din_3__shared_input, din_2__shared_input, din_1__shared_input, din_0__shared_input}),
 		.dout({dout_31__benchmark, dout_30__benchmark, dout_29__benchmark, dout_28__benchmark, dout_27__benchmark, dout_26__benchmark, dout_25__benchmark, dout_24__benchmark, dout_23__benchmark, dout_22__benchmark, dout_21__benchmark, dout_20__benchmark, dout_19__benchmark, dout_18__benchmark, dout_17__benchmark, dout_16__benchmark, dout_15__benchmark, dout_14__benchmark, dout_13__benchmark, dout_12__benchmark, dout_11__benchmark, dout_10__benchmark, dout_9__benchmark, dout_8__benchmark, dout_7__benchmark, dout_6__benchmark, dout_5__benchmark, dout_4__benchmark, dout_3__benchmark, dout_2__benchmark, dout_1__benchmark, dout_0__benchmark})
 	);
