@@ -235,7 +235,6 @@
       <port type="input" prefix="mem128_init_addr" lib_name="init_src_addr" size="3" is_global="true" default_val="0"/>
       <port type="input" prefix="mem_init_data" lib_name="init_src_data" size="16" is_global="true" default_val="0" is_io="true"/>
     </circuit_model>
-
   </circuit_library>
   <configuration_protocol>
     <organization type="scan_chain" circuit_model_name="DFFR" num_regions="16"/>
@@ -327,6 +326,5 @@
     <!-- physical pb_type binding in complex block memory -->
     <pb_type name="memory128[mem_8x16_dp].mem_8x16_dp" circuit_model_name="dpram_8x16_preload"/>
     <!-- END physical pb_type binding in complex block memory -->
-
   </pb_type_annotations>
 </openfpga_architecture>

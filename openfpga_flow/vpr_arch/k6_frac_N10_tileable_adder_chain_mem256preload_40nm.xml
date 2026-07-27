@@ -199,7 +199,6 @@
         <port name="data_out" clock="clk"/>
       </output_ports>
     </model>
-
   </models>
   <tiles>
     <tile name="io" area="0">
