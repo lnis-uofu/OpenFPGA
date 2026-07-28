@@ -11,6 +11,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "aggregate_mif.h"
 #include "command_exit_codes.h"
@@ -60,7 +61,12 @@ int main(int argc, const char** argv) {
 
   /* ---- read_mif (eblif) ---- */
   openfpga::MifStorage logical_storage;
-  status = openfpga::read_mif(argv[2], logical_storage, bitstream_setting);
+  const std::vector<std::string> input_pb_types = {
+    "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
+  status = openfpga::read_mif(argv[2], logical_storage,
+                              [&input_pb_types](size_t init_index) {
+                                return input_pb_types.at(init_index);
+                              });
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
@@ -75,34 +81,23 @@ int main(int argc, const char** argv) {
   VTR_ASSERT(logical_storage.physical_pb(seg1) ==
              "memory[mem_8x16_dp].mem_8x16_dp[1]");
 
-  const auto mem0 = collect_segment_lines(logical_storage, seg0);
-  const auto mem1 = collect_segment_lines(logical_storage, seg1);
+  /* read_mif preserves raw INIT; aggregate_mif applies source dimensions. */
+  VTR_ASSERT(128 == logical_storage.raw_data(seg0).size());
+  VTR_ASSERT(128 == logical_storage.raw_data(seg1).size());
 
-  /* Matches libs/libmif/example/init.hex (memory_0) */
-  VTR_ASSERT(mem0.at(0) == 0x138Full);
-  VTR_ASSERT(mem0.at(1) == 0x0020ull);
-  VTR_ASSERT(mem0.at(2) == 0x37EAull);
-  VTR_ASSERT(mem0.at(7) == 0x42FBull);
-
-  /* Matches libs/libmif/example/init1.hex (memory_1) */
-  VTR_ASSERT(mem1.at(0) == 0xABCDull);
-  VTR_ASSERT(mem1.at(1) == 0x1111ull);
-  VTR_ASSERT(mem1.at(2) == 0x2222ull);
-  VTR_ASSERT(mem1.at(7) == 0xDEADull);
-
-  /* ---- aggregate_mif reads the Yosys eblif, then packs into 32-bit des ---- */
+  /* ---- aggregate_mif reads the Yosys eblif, then packs into 32-bit des ----
+   */
   openfpga::MifStorage aggregated;
   logical_storage.clear();
-  status = openfpga::aggregate_mif(argv[2], logical_storage,
-                                   bitstream_setting, aggregated);
+  status = openfpga::aggregate_mif(argv[2], logical_storage, bitstream_setting,
+                                   aggregated);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
 
   VTR_ASSERT(1 == aggregated.num_segments());
   const MifSegmentId out_seg(0);
-  VTR_ASSERT(aggregated.physical_pb(out_seg) ==
-             "memory[dpram8x32].dpram8x32");
+  VTR_ASSERT(aggregated.physical_pb(out_seg) == "memory[dpram8x32].dpram8x32");
   VTR_ASSERT(32 == aggregated.data_width(out_seg));
   VTR_ASSERT(aggregated.addr_range(out_seg).is_valid());
   VTR_ASSERT(0 == aggregated.addr_range(out_seg).get_lsb());

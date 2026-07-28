@@ -1,5 +1,5 @@
 // Aggregated MIF for memory preloading interface
-// address[0:7]
+// [0:7]
 // Data width: 32
 // PB_TYPE memory[dpram8x32].dpram8x32
 0 0x138fabcd

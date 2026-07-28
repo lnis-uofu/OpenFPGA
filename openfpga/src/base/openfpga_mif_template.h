@@ -24,8 +24,7 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
 
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
   const int exec_status =
-    read_mif(mif_path, openfpga_context.mutable_mif_storage(),
-             openfpga_context.bitstream_setting());
+    read_mif(mif_path, openfpga_context.mutable_mif_storage());
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }

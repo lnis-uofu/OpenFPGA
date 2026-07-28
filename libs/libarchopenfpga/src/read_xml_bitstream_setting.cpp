@@ -3,6 +3,7 @@
  * which reads an XML modeling OpenFPGA architecture to the associated
  * data structures
  *******************************************************************/
+#include <cstdint>
 #include <string>
 
 /* Headers from pugi XML library */
@@ -253,6 +254,12 @@ static void read_xml_mif_source_setting(
   const openfpga::BasicPort data_range =
     parse_mif_range_attribute(data_range_attr, xml_mif_source, loc_data,
                               XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE);
+  if (data_range.get_lsb() != 0 || data_range.get_width() > 64) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+      "mif_source data_range='%s' must start at 0 and be at most 64 bits\n",
+      data_range_attr.c_str());
+  }
 
   bitstream_setting.add_mif_source_setting(
     pb_type_attr, source_attr, content_attr, address_range, data_range);
@@ -265,7 +272,10 @@ static void read_xml_mif_address_map_rule(
   pugi::xml_node& xml_map_rule, const pugiutil::loc_data& loc_data,
   openfpga::BitstreamSetting& bitstream_setting,
   const MifAddressMapSettingId& map_id,
-  const openfpga::BasicPort& src_address_range) {
+  const openfpga::BasicPort& src_address_range,
+  const openfpga::BasicPort& src_data_range,
+  const openfpga::BasicPort& des_address_range,
+  const openfpga::BasicPort& des_data_range) {
   const std::string& src_addr_range_attr =
     get_attribute(xml_map_rule,
                   XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE, loc_data)
@@ -300,6 +310,29 @@ static void read_xml_mif_address_map_rule(
       "by mif_source for the same src_pb_type\n",
       src_addr_range_attr.c_str(), src_address_range.get_lsb(),
       src_address_range.get_msb());
+  }
+  if (!src_data_range.contained(src_mif_bits) ||
+      !des_data_range.contained(des_mif_bits) ||
+      src_mif_bits.get_width() != des_mif_bits.get_width()) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_map_rule),
+      "src_mif_bits='%s' and des_mif_bits='%s' must have equal widths and "
+      "fit their mif_source data ranges\n",
+      src_mif_bits_attr.c_str(), des_mif_bits_attr.c_str());
+  }
+
+  const int64_t mapped_lsb =
+    static_cast<int64_t>(src_addr_range.get_lsb()) + des_addr_offset;
+  const int64_t mapped_msb =
+    static_cast<int64_t>(src_addr_range.get_msb()) + des_addr_offset;
+  if (mapped_lsb < 0 || mapped_msb < 0 ||
+      mapped_lsb < static_cast<int64_t>(des_address_range.get_lsb()) ||
+      mapped_msb > static_cast<int64_t>(des_address_range.get_msb())) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_map_rule),
+                   "src_addr_range='%s' with des_addr_offset='%d' maps outside "
+                   "destination address_range='[%zu:%zu]'\n",
+                   src_addr_range_attr.c_str(), des_addr_offset,
+                   des_address_range.get_lsb(), des_address_range.get_msb());
   }
 
   bitstream_setting.add_mif_address_map_rule(
@@ -340,12 +373,25 @@ static void read_xml_mif_address_map_setting(
                    "mif_source definition\n",
                    des_pb_type_attr.c_str());
   }
+  if (bitstream_setting.find_mif_address_map_by_src_pb_type(src_pb_type_attr)
+        .is_valid()) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "multiple mif_address_map entries use src_pb_type='%s'\n",
+                   src_pb_type_attr.c_str());
+  }
 
   const MifAddressMapSettingId map_id =
     bitstream_setting.add_mif_address_map_setting(src_pb_type_attr,
                                                   des_pb_type_attr);
   const openfpga::BasicPort src_address_range =
     bitstream_setting.mif_source_address_range(src_source_id);
+  const openfpga::BasicPort src_data_range =
+    bitstream_setting.mif_source_data_range(src_source_id);
+  const openfpga::BasicPort des_address_range =
+    bitstream_setting.mif_source_address_range(des_source_id);
+  const openfpga::BasicPort des_data_range =
+    bitstream_setting.mif_source_data_range(des_source_id);
 
   bool has_map_rule = false;
   for (pugi::xml_node xml_child : xml_mif_address_map.children()) {
@@ -354,7 +400,8 @@ static void read_xml_mif_address_map_setting(
               {XML_MIF_ADDRESS_MAP_RULE_NODE_NAME});
     }
     read_xml_mif_address_map_rule(xml_child, loc_data, bitstream_setting,
-                                  map_id, src_address_range);
+                                  map_id, src_address_range, src_data_range,
+                                  des_address_range, des_data_range);
     has_map_rule = true;
   }
 

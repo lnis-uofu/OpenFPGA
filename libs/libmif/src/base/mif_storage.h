@@ -46,6 +46,8 @@ class MifStorage {
   /* Invalid BasicPort when no address range was set. */
   const BasicPort& addr_range(const MifSegmentId& segment_id) const;
   const std::string& physical_pb(const MifSegmentId& segment_id) const;
+  const std::string& raw_data(const MifSegmentId& segment_id) const;
+  bool has_physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
   uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
   bool empty() const;
@@ -59,6 +61,8 @@ class MifStorage {
                               const BasicPort& addr_range);
   void set_segment_physical_pb(const MifSegmentId& segment_id,
                                const std::string& physical_pb);
+  void set_segment_raw_data(const MifSegmentId& segment_id,
+                            const std::string& raw_data);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
                                      uint64_t address, uint64_t data);
 
@@ -71,6 +75,7 @@ class MifStorage {
   vtr::vector<MifSegmentId, int> segment_data_width_;
   vtr::vector<MifSegmentId, BasicPort> segment_addr_range_;
   vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
+  vtr::vector<MifSegmentId, std::string> segment_raw_data_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;
 

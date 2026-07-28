@@ -34,6 +34,16 @@ const std::string& MifStorage::physical_pb(
   return segment_physical_pb_[segment_id];
 }
 
+const std::string& MifStorage::raw_data(const MifSegmentId& segment_id) const {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  return segment_raw_data_[segment_id];
+}
+
+bool MifStorage::has_physical_pb(const MifSegmentId& segment_id) const {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  return !segment_physical_pb_[segment_id].empty();
+}
+
 uint64_t MifStorage::memory_line_address(
   const MifMemoryLineId& memory_line_id) const {
   VTR_ASSERT(valid_memory_line_id(memory_line_id));
@@ -60,6 +70,7 @@ void MifStorage::remove_last_segment_if_empty() {
   segment_data_width_.pop_back();
   segment_addr_range_.pop_back();
   segment_physical_pb_.pop_back();
+  segment_raw_data_.pop_back();
   segment_memory_line_ids_.pop_back();
 }
 
@@ -68,6 +79,7 @@ void MifStorage::clear() {
   segment_data_width_.clear();
   segment_addr_range_.clear();
   segment_physical_pb_.clear();
+  segment_raw_data_.clear();
   segment_memory_line_ids_.clear();
   memory_line_ids_.clear();
   memory_line_addresses_.clear();
@@ -80,6 +92,7 @@ MifSegmentId MifStorage::create_segment() {
   segment_data_width_.push_back(-1);
   segment_addr_range_.emplace_back();
   segment_physical_pb_.push_back(std::string());
+  segment_raw_data_.push_back(std::string());
   segment_memory_line_ids_.emplace_back();
   return segment_id;
 }
@@ -101,6 +114,12 @@ void MifStorage::set_segment_physical_pb(const MifSegmentId& segment_id,
                                          const std::string& physical_pb) {
   VTR_ASSERT(valid_segment_id(segment_id));
   segment_physical_pb_[segment_id] = physical_pb;
+}
+
+void MifStorage::set_segment_raw_data(const MifSegmentId& segment_id,
+                                      const std::string& raw_data) {
+  VTR_ASSERT(valid_segment_id(segment_id));
+  segment_raw_data_[segment_id] = raw_data;
 }
 
 MifMemoryLineId MifStorage::create_memory_line(const MifSegmentId& segment_id,

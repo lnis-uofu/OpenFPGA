@@ -1,7 +1,9 @@
 #include "openfpga_mif_bitstream.h"
 
 #include "aggregate_mif.h"
+#include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
+#include "read_mif.h"
 #include "vtr_log.h"
 #include "write_mif.h"
 
@@ -28,17 +30,23 @@ int aggregate_mif_storage(const std::string& eblif_file_path,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  return aggregate_mif(eblif_file_path, mif_storage, bitstream_setting,
-                       aggregated_mif_storage);
+  const int read_status =
+    read_mif(eblif_file_path, mif_storage, [](size_t init_index) {
+      return get_mif_pb_type_from_vpr("INIT", init_index);
+    });
+  if (CMD_EXEC_SUCCESS != read_status) {
+    return read_status;
+  }
+
+  return aggregate_mif(mif_storage, bitstream_setting, aggregated_mif_storage);
 }
 
 int aggregate_mif_storage_and_write_preload_mem(
   const std::string& eblif_file_path, MifStorage& mif_storage,
-  const BitstreamSetting& bitstream_setting,
-  MifStorage& aggregated_mif_storage, const std::string& mem_file_path) {
-  const int agg_status =
-    aggregate_mif_storage(eblif_file_path, mif_storage, bitstream_setting,
-                          aggregated_mif_storage);
+  const BitstreamSetting& bitstream_setting, MifStorage& aggregated_mif_storage,
+  const std::string& mem_file_path) {
+  const int agg_status = aggregate_mif_storage(
+    eblif_file_path, mif_storage, bitstream_setting, aggregated_mif_storage);
   if (CMD_EXEC_SUCCESS != agg_status) {
     return agg_status;
   }

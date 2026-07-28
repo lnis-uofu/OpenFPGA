@@ -14,7 +14,8 @@ int aggregate_mif(const std::string& eblif_file_path,
                   const BitstreamSetting& bitstream_setting,
                   MifStorage& out_aggregated_storage);
 
-/* Aggregate already-loaded logical MIF segments per physical pb.
+/* Bind source metadata, decode raw INIT into logical storage, then aggregate
+ * logical MIF segments per physical pb.
  *
  * Algorithm:
  *   1. clear output
@@ -25,11 +26,10 @@ int aggregate_mif(const std::string& eblif_file_path,
  *   des_addr = addr + des_addr_offset
  *   extract src_mif_bits, place into des_mif_bits (OR into des_addr)
  *
- * Header for each des is inferred from all <map> rules of that des:
- *   address[lsb:msb] = union of (src_addr_range + des_addr_offset)
- *   data width       = max(des_mif_bits.msb) + 1
+ * Destination address range and data width come directly from its mif_source.
+ * Map rules only determine where each logical address/data slice is placed.
  */
-int aggregate_mif(const MifStorage& logical_storage,
+int aggregate_mif(MifStorage& logical_storage,
                   const BitstreamSetting& bitstream_setting,
                   MifStorage& out_aggregated_storage);
 
