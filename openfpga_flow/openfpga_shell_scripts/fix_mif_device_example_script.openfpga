@@ -1,12 +1,16 @@
+# Support bus group generation
+ext_exec --command "python3 ${OPENFPGA_BUS_GROUP_GEN_SCRIPT} --task ${OPENFPGA_BUS_GROUP_TASK_FILE}"
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling ideal
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --constant_net_method route --pack --place --route --analysis --fix_clusters ${OPENFPGA_VPR_FIX_PINS_FILE}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+# Read OpenFPGA bitstream setting files
+read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
@@ -39,6 +43,9 @@ build_architecture_bitstream --verbose --write_file fabric_independent_bitstream
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
 
+# Write out MIF
+#write_mif --file mif_final.mem
+
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 
@@ -46,17 +53,17 @@ write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 #  - Enable the use of explicit port mapping in Verilog netlist
 write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --verbose
 
-# Generate a bus group file by calling an external python script
-ext_exec --command "python3 ${OPENFPGA_BUS_GROUP_GEN_SCRIPT} --task ${OPENFPGA_BUS_GROUP_TASK_FILE}"
-
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
 #  - Must specify the reference benchmark file if you want to output any testbenches
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ./SRC ${OPENFPGA_VERILOG_PORT_MAPPING} --pin_constraints_file ${OPENFPGA_PIN_CONSTRAINTS_FILE} --bus_group_file ${OPENFPGA_BUS_GROUP_FILE}
-write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} ${OPENFPGA_VERILOG_PORT_MAPPING} --pin_constraints_file ${OPENFPGA_PIN_CONSTRAINTS_FILE} --bus_group_file ${OPENFPGA_BUS_GROUP_FILE}
+write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --bus_group_file bus_group.xml --explicit_port_mapping
+
+# Copy external hand-crafted testbench 
+ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH} SRC/"
+ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH_MIF} ."
 
 # Finish and exit OpenFPGA
 exit

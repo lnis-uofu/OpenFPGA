@@ -197,23 +197,23 @@
       <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
       <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="dpram_8x16_preload" prefix="dpram_8x16_preload" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dpram_8x16_preload.v">
+    <circuit_model type="hard_logic" name="frac_mem_256_preload" prefix="frac_mem_256_preload" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/frac_mem_256_preload.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="waddr" size="3"/>
-      <port type="input" prefix="raddr" size="3"/>
-      <port type="input" prefix="data_in" lib_name="d_in" size="16"/>
+      <port type="input" prefix="waddr" size="5"/>
+      <port type="input" prefix="raddr" size="5"/>
+      <port type="input" prefix="data_in" lib_name="d_in" size="32"/>
       <port type="input" prefix="wen" size="1"/>
       <port type="input" prefix="ren" size="1"/>
-      <port type="output" prefix="data_out" lib_name="d_out" size="16"/>
+      <port type="output" prefix="data_out" lib_name="d_out" size="32"/>
       <port type="clock" prefix="clk" size="1"/>
       <!-- Global ports for preload -->
       <port type="input" prefix="mem_init_rst_n" lib_name="rst_n" size="1" is_global="true" default_val="1" is_reset="true"/>
       <port type="input" prefix="mem_init_clk" lib_name="preload_clk" size="1" is_global="true" default_val="0"/>
       <port type="input" prefix="mem_init_start" lib_name="init_start" size="1" is_global="true" default_val="0"/>
       <port type="output" prefix="mem_init_done" lib_name="init_done" size="1" is_global="true" default_val="0" is_io="true"/>
-      <port type="input" prefix="mem_init_addr" lib_name="init_src_addr" size="3" is_global="true" default_val="0"/>
+      <port type="input" prefix="mem_init_addr" lib_name="init_src_addr" size="4" is_global="true" default_val="0"/>
       <port type="input" prefix="mem_init_data" lib_name="init_src_data" size="16" is_global="true" default_val="0" is_io="true"/>
     </circuit_model>
   </circuit_library>
@@ -280,7 +280,28 @@
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
     <!-- End physical pb_type binding in complex block clb -->
     <!-- physical pb_type binding in complex block memory -->
-    <pb_type name="memory[mem_8x16_dp].mem_8x16_dp" circuit_model_name="dpram_8x16_preload"/>
+    <pb_type name="memory[mem_16x16_phy].mem_16x16_phy" circuit_model_name="frac_mem_256_preload"/>
+    <pb_type name="memory[mem_16x16_dp].mem_16x16_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="00">
+      <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
+      <port name="waddr" physical_mode_port="waddr[0:3]"/>
+      <port name="raddr" physical_mode_port="raddr[0:3]"/>
+      <port name="data_in" physical_mode_port="data_in[0:15]"/>
+      <port name="data_out" physical_mode_port="data_out[0:15]"/>
+    </pb_type>
+    <pb_type name="memory[mem_8x32_dp].mem_8x32_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="01">
+      <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
+      <port name="waddr" physical_mode_port="waddr[0:2]"/>
+      <port name="raddr" physical_mode_port="raddr[0:2]"/>
+      <port name="data_in" physical_mode_port="data_in[0:31]"/>
+      <port name="data_out" physical_mode_port="data_out[0:31]"/>
+    </pb_type>
+    <pb_type name="memory[mem_32x8_dp].mem_32x8_dp" physical_pb_type_name="memory[mem_16x16_phy].mem_16x16_phy" mode_bits="10">
+      <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
+      <port name="waddr" physical_mode_port="waddr[0:4]"/>
+      <port name="raddr" physical_mode_port="raddr[0:4]"/>
+      <port name="data_in" physical_mode_port="data_in[0:7]"/>
+      <port name="data_out" physical_mode_port="data_out[0:7]"/>
+    </pb_type>
     <!-- END physical pb_type binding in complex block memory -->
   </pb_type_annotations>
 </openfpga_architecture>
