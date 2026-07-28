@@ -1,11 +1,11 @@
 #include "aggregate_mif.h"
 
+#include <cctype>
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "read_mif.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -105,50 +105,38 @@ static bool remap_logical_word(
   return true;
 }
 
-int aggregate_mif(const std::string& eblif_file_path,
-                  MifStorage& logical_storage,
-                  const BitstreamSetting& bitstream_setting,
-                  MifStorage& out_aggregated_storage) {
-  if (eblif_file_path.empty()) {
-    VTR_LOG_ERROR("aggregate_mif: empty Yosys eblif file path\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  std::vector<std::string> source_pb_types;
-  for (const MifSourceSettingId& source_id :
-       bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(source_id) == "eblif") {
-      source_pb_types.push_back(
-        bitstream_setting.mif_source_pb_type(source_id));
-    }
-  }
-
-  const int read_status = read_mif(
-    eblif_file_path, logical_storage, [&source_pb_types](size_t init_index) {
-      return init_index < source_pb_types.size() ? source_pb_types[init_index]
-                                                 : std::string();
-    });
-  if (CMD_EXEC_SUCCESS != read_status) {
-    return read_status;
-  }
-  return aggregate_mif(logical_storage, bitstream_setting,
-                       out_aggregated_storage);
-}
-
 static bool bind_and_decode_logical_storage(
   MifStorage& logical_storage, const BitstreamSetting& bitstream_setting) {
   /* Bind each VPR pb_type to its mif_source and persist decoded INIT words. */
   for (const MifSegmentId& segment_id : logical_storage.segments()) {
-    const std::string& pb_type = logical_storage.physical_pb(segment_id);
-    const MifSourceSettingId source_id =
-      bitstream_setting.find_mif_source_by_pb_type(pb_type);
+    const std::string vpr_pb_type = logical_storage.physical_pb(segment_id);
+    MifSourceSettingId source_id =
+      bitstream_setting.find_mif_source_by_pb_type(vpr_pb_type);
+    if (!source_id.is_valid() && !vpr_pb_type.empty() &&
+        vpr_pb_type.back() == ']') {
+      const size_t bracket_pos = vpr_pb_type.rfind('[');
+      if (bracket_pos != std::string::npos &&
+          bracket_pos + 1 < vpr_pb_type.size() - 1) {
+        bool numeric_index = true;
+        for (size_t i = bracket_pos + 1; i + 1 < vpr_pb_type.size(); ++i) {
+          numeric_index &=
+            std::isdigit(static_cast<unsigned char>(vpr_pb_type[i])) != 0;
+        }
+        if (numeric_index) {
+          source_id = bitstream_setting.find_mif_source_by_pb_type(
+            vpr_pb_type.substr(0, bracket_pos));
+        }
+      }
+    }
     if (!source_id.is_valid()) {
       VTR_LOG_ERROR(
         "aggregate_mif: segment %zu pb_type '%s' has no mif_source\n",
-        static_cast<size_t>(segment_id), pb_type.c_str());
+        static_cast<size_t>(segment_id), vpr_pb_type.c_str());
       return false;
     }
 
+    logical_storage.set_segment_physical_pb(
+      segment_id, bitstream_setting.mif_source_pb_type(source_id));
     const BasicPort addr_range =
       bitstream_setting.mif_source_address_range(source_id);
     const BasicPort data_range =

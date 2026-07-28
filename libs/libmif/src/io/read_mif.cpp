@@ -303,6 +303,8 @@ static int read_mif_from_eblif(const std::string& file_path,
   std::string raw_line;
   size_t line_no = 0;
   size_t init_index = 0;
+  std::string subckt_model;
+  MifEblifPortConnections subckt_connections;
 
   /* Build each logical segment as its eblif INIT parameter is read. */
   while (std::getline(ifs, raw_line)) {
@@ -310,6 +312,32 @@ static int read_mif_from_eblif(const std::string& file_path,
     std::string line = raw_line;
     trim_mif_line_inplace(line);
     if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    if (line.compare(0, 7, ".subckt") == 0) {
+      std::istringstream subckt_stream(line);
+      std::string dot_subckt;
+      std::string connection;
+      subckt_connections.clear();
+      if (!(subckt_stream >> dot_subckt >> subckt_model) ||
+          dot_subckt != ".subckt") {
+        VTR_LOG_ERROR("%s:%lu: cannot parse .subckt line: %s\n",
+                      file_path.c_str(), static_cast<unsigned long>(line_no),
+                      line.c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      while (subckt_stream >> connection) {
+        const size_t equal_pos = connection.find('=');
+        if (equal_pos == std::string::npos || equal_pos == 0 ||
+            equal_pos + 1 == connection.size()) {
+          VTR_LOG_ERROR("%s:%lu: invalid .subckt connection: %s\n",
+                        file_path.c_str(), static_cast<unsigned long>(line_no),
+                        connection.c_str());
+          return CMD_EXEC_FATAL_ERROR;
+        }
+        subckt_connections.emplace_back(connection.substr(0, equal_pos),
+                                        connection.substr(equal_pos + 1));
+      }
       continue;
     }
     if (line.compare(0, 6, ".param") != 0) {
@@ -332,7 +360,8 @@ static int read_mif_from_eblif(const std::string& file_path,
     }
 
     const std::string pb_type =
-      pb_type_resolver ? pb_type_resolver(init_index) : std::string();
+      pb_type_resolver ? pb_type_resolver(subckt_model, subckt_connections)
+                       : std::string();
     if (pb_type.empty()) {
       VTR_LOG_ERROR(
         "read_mif: cannot resolve VPR pb_type for INIT index %zu in '%s'\n",

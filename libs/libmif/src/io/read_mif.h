@@ -3,18 +3,24 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "command_exit_codes.h"
 #include "mif_storage.h"
 
 namespace openfpga {
 
-using MifPbTypeResolver = std::function<std::string(size_t)>;
+using MifEblifPortConnections =
+  std::vector<std::pair<std::string, std::string>>;
+using MifPbTypeResolver = std::function<std::string(
+  const std::string&, const MifEblifPortConnections&)>;
 
 /* Read memory initialization into storage.
  *
  * Dispatch by file type:
- *   - .eblif/.blif: append raw .param INIT to pre-bound VPR segments
+ *   - .eblif/.blif: resolve each .subckt carrying .param INIT and store its
+ *     pb_type plus raw INIT in a new logical segment
  *   - otherwise: Verilog-style init.hex (addr/data lines)
  */
 int read_mif(const std::string& file_path, MifStorage& mif_storage);

@@ -6,12 +6,15 @@
  *******************************************************************/
 #include <cstdint>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "aggregate_mif.h"
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
 #include "mif_storage.h"
 #include "mif_storage_fwd.h"
+#include "read_mif.h"
 #include "read_xml_openfpga_arch.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -32,7 +35,19 @@ int main(int argc, const char** argv) {
 
   openfpga::MifStorage logical_storage;
   openfpga::MifStorage aggregated_storage;
-  status = openfpga::aggregate_mif(argv[2], logical_storage, bitstream_setting,
+  const std::vector<std::string> input_pb_types = {
+    "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
+  size_t next_pb_type = 0;
+  status = openfpga::read_mif(
+    argv[2], logical_storage,
+    [&input_pb_types, &next_pb_type](const std::string&,
+                                     const openfpga::MifEblifPortConnections&) {
+      return input_pb_types.at(next_pb_type++);
+    });
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+  status = openfpga::aggregate_mif(logical_storage, bitstream_setting,
                                    aggregated_storage);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;

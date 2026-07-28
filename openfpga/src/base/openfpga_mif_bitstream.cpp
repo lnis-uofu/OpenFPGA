@@ -31,9 +31,11 @@ int aggregate_mif_storage(const std::string& eblif_file_path,
   }
 
   const int read_status =
-    read_mif(eblif_file_path, mif_storage, [](size_t init_index) {
-      return get_mif_pb_type_from_vpr("INIT", init_index);
-    });
+    read_mif(eblif_file_path, mif_storage,
+             [](const std::string& model_name,
+                const MifEblifPortConnections& port_connections) {
+               return get_mif_pb_type_from_vpr(model_name, port_connections);
+             });
   if (CMD_EXEC_SUCCESS != read_status) {
     return read_status;
   }

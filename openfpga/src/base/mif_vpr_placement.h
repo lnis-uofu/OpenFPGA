@@ -1,13 +1,15 @@
 #pragma once
 
-#include <cstddef>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace openfpga {
 
-/* Resolve the Nth AtomBlock carrying the requested eblif parameter to its
- * packed pb_type. VPR pack must already be complete. */
-std::string get_mif_pb_type_from_vpr(const std::string& param_name,
-                                     size_t param_index);
+/* Resolve an eblif subckt to its packed pb_type through the output net used
+ * by VPR as the AtomBlock name. VPR pack must already be complete. */
+std::string get_mif_pb_type_from_vpr(
+  const std::string& model_name,
+  const std::vector<std::pair<std::string, std::string>>& port_connections);
 
 } /* namespace openfpga */

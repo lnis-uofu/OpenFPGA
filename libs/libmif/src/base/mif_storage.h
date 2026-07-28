@@ -10,15 +10,20 @@
 
 /********************************************************************
  * In-memory MIF storage used for both:
- *   - logical init.hex data from read_mif()
+ *   - logical memory initialization read from init.hex or eblif
  *   - aggregated preload data from aggregate_mif()
  * Distinguish stages by variable naming / comments at call sites.
  *
- * Logical segment typically has:
- *   - memory lines (required)
- *   - optional addr_range from init.hex depth comment
+ * Eblif read creates each logical segment on demand with:
+ *   - VPR-resolved physical_pb
+ *   - raw .param INIT data
  *
- * Aggregated segment typically has:
+ * Before remapping, aggregate_mif binds each logical segment to its
+ * mif_source, stores data_width/addr_range, decodes raw INIT into memory
+ * lines, and clears the raw data. init.hex segments already contain memory
+ * lines and receive any remaining source metadata during the same step.
+ *
+ * Each aggregated destination segment has:
  *   - memory lines
  *   - physical_pb, data_width, addr_range (for .mem header)
  *******************************************************************/

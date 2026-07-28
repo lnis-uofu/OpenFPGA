@@ -1,0 +1,5 @@
+dual_port_ram_8x16:
+  source:
+    - name: benchmark/dual_port_ram_8x16_mif.v
+  top_module: dual_port_ram_128
+  bus_group_file: bus_group.xml
