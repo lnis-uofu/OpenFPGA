@@ -31,7 +31,7 @@ module dpram_8x16_preload_tb;
     // (init_src_addr is driven by the DUT; init_src_data is supplied
     //  by the testbench ROM below)
     // ----------------------------------------------------------------
-    wire [0:2]  init_src_addr;
+    reg [0:2]  init_src_addr;
     reg  [0:15] init_src_data;
 
     // ----------------------------------------------------------------
@@ -43,6 +43,25 @@ module dpram_8x16_preload_tb;
     reg  [0:2] sys_raddr;
     reg  [0:15] sys_d_in;
     wire [0:15] sys_d_out;
+
+    // Mock ROM: data lookup is still keyed on init_src_addr,
+    // but now the testbench also drives the address itself
+    always @(*) begin
+        case (init_src_addr)
+            3'b000: init_src_data = 16'hA5A5;
+            // ... etc
+        endcase
+    end
+
+    // Address counter: increment init_src_addr every preload_clk cycle
+    // while init_start is asserted, in lock-step with the FSM's addr_counter
+    always @(posedge preload_clk or negedge rst_n) begin
+        if (!rst_n)        init_src_addr <= 3'b000;
+        else if (init_start && !init_done)
+                           init_src_addr <= init_src_addr + 1'b1;
+        else if (!init_start)
+                           init_src_addr <= 3'b000;
+    end
 
     // ----------------------------------------------------------------
     // 1. Mock Initialization Memory Source (Look-up Table Content)

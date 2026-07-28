@@ -1,0 +1,8 @@
+// This MIF is designed for a RAM of
+// depth: 4 (indexed from 0 to 2)
+// width: 32
+// Format: <depth_index> <HEX_data_to_initialize> 
+0 0x138FEFFF
+1 0x0020ABCD
+2 0x37EACCAE
+3 0x42FBDB32
