@@ -4,6 +4,7 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
+#include "aggregate_mif.h"
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
@@ -13,8 +14,8 @@
 #include "command_exit_codes.h"
 #include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
+#include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
-#include "openfpga_mif_bitstream.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "overwrite_bitstream.h"
@@ -86,15 +87,19 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   extract_device_non_fabric_bitstream(
     g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
 
-  /* Aggregate MIF when bitstream setting has mif info. Whether to read_mif
-   * from Yosys eblif is decided inside aggregate_mif. */
+  /* Aggregate MIF when bitstream setting has mif info. Whether to call
+   * read_mif_from_eblif is decided inside aggregate_mif. */
   const bool has_mif_setting =
     !openfpga_ctx.bitstream_setting().mif_source_settings().empty() ||
     !openfpga_ctx.bitstream_setting().mif_address_map_settings().empty();
   if (has_mif_setting) {
-    const int mem_status = aggregate_mif_storage(
+    const int mem_status = aggregate_mif(
       openfpga_ctx.mutable_mif_storage(), openfpga_ctx.bitstream_setting(),
-      openfpga_ctx.mutable_aggregated_mif_storage());
+      openfpga_ctx.mutable_aggregated_mif_storage(),
+      [](const std::string& model_name,
+         const MifEblifPortConnections& port_connections) {
+        return get_mif_pb_type_from_vpr(model_name, port_connections);
+      });
     if (CMD_EXEC_SUCCESS != mem_status) {
       return mem_status;
     }
