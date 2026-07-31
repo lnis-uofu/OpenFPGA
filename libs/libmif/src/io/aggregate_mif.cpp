@@ -178,28 +178,33 @@ static bool bitstream_has_eblif_mif_source(
   return false;
 }
 
-/* True if pb_type matches a mif_source with source="eblif"
- * (exact match, or VPR instance path with trailing numeric [N] stripped). */
-static bool pb_type_is_eblif_mif_source(
-  const std::string& pb_type, const BitstreamSetting& bitstream_setting) {
-  std::string type_only_pb = pb_type;
-  if (!pb_type.empty() && pb_type.back() == ']') {
-    const size_t bracket_pos = pb_type.rfind('[');
-    if (bracket_pos != std::string::npos &&
-        bracket_pos + 1 < pb_type.size() - 1) {
-      bool numeric_index = true;
-      for (size_t i = bracket_pos + 1; i + 1 < pb_type.size(); ++i) {
-        if (!std::isdigit(static_cast<unsigned char>(pb_type[i]))) {
-          numeric_index = false;
-          break;
-        }
-      }
-      if (numeric_index) {
-        type_only_pb = pb_type.substr(0, bracket_pos);
-      }
+/* Strip trailing numeric leaf index: foo.bar[3] -> foo.bar */
+static std::string strip_numeric_pb_index(const std::string& pb_type) {
+  if (pb_type.empty() || pb_type.back() != ']') {
+    return pb_type;
+  }
+  const size_t bracket_pos = pb_type.rfind('[');
+  if (bracket_pos == std::string::npos ||
+      bracket_pos + 1 >= pb_type.size() - 1) {
+    return pb_type;
+  }
+  for (size_t i = bracket_pos + 1; i + 1 < pb_type.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(pb_type[i]))) {
+      return pb_type;
     }
   }
+  return pb_type.substr(0, bracket_pos);
+}
 
+static bool pb_types_match(const std::string& a, const std::string& b) {
+  return a == b || strip_numeric_pb_index(a) == strip_numeric_pb_index(b) ||
+         a == strip_numeric_pb_index(b) || strip_numeric_pb_index(a) == b;
+}
+
+/* True if pb_type matches a mif_source with source="eblif". */
+static bool pb_type_is_eblif_mif_source(
+  const std::string& pb_type, const BitstreamSetting& bitstream_setting) {
+  const std::string type_only_pb = strip_numeric_pb_index(pb_type);
   for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
     if (bitstream_setting.mif_source_source(id) !=
         XML_MIF_SOURCE_SOURCE_EBLIF) {
@@ -213,8 +218,8 @@ static bool pb_type_is_eblif_mif_source(
   return false;
 }
 
-/* Read Yosys eblif and merge into logical_storage:
- * keep source="others"; overwrite source="eblif" pb_types. */
+/* Read Yosys eblif and update logical_storage in place:
+ * overwrite matching eblif pb_types; keep source="others" segments. */
 static int merge_eblif_into_logical_storage(
   MifStorage& logical_storage, const BitstreamSetting& bitstream_setting,
   const MifPbTypeResolver& pb_type_resolver, const std::string& eblif_path) {
@@ -225,33 +230,48 @@ static int merge_eblif_into_logical_storage(
     return read_status;
   }
 
-  MifStorage merged;
-  for (const MifSegmentId& segment_id : logical_storage.segments()) {
-    if (pb_type_is_eblif_mif_source(logical_storage.physical_pb(segment_id),
-                                    bitstream_setting)) {
-      VTR_LOG("aggregate_mif: overwrite logical pb_type '%s' from eblif\n",
-              logical_storage.physical_pb(segment_id).c_str());
-      continue;
-    }
-    merged.append_segment_copy(logical_storage, segment_id);
-  }
-  for (const MifSegmentId& segment_id : eblif_storage.segments()) {
-    if (!pb_type_is_eblif_mif_source(eblif_storage.physical_pb(segment_id),
+  size_t eblif_segment_count = 0;
+  for (const MifSegmentId& eblif_seg : eblif_storage.segments()) {
+    if (!pb_type_is_eblif_mif_source(eblif_storage.physical_pb(eblif_seg),
                                      bitstream_setting)) {
       continue;
     }
-    merged.append_segment_copy(eblif_storage, segment_id);
+    ++eblif_segment_count;
+
+    const std::string& pb = eblif_storage.physical_pb(eblif_seg);
+    const std::string& raw = eblif_storage.raw_data(eblif_seg);
+
+    MifSegmentId matched_seg;
+    bool found = false;
+    for (const MifSegmentId& logical_seg : logical_storage.segments()) {
+      if (!pb_types_match(logical_storage.physical_pb(logical_seg), pb)) {
+        continue;
+      }
+      matched_seg = logical_seg;
+      found = true;
+      break;
+    }
+
+    if (found) {
+      VTR_LOG("aggregate_mif: overwrite logical pb_type '%s' from eblif\n",
+              pb.c_str());
+      logical_storage.clear_segment_memory_lines(matched_seg);
+      logical_storage.set_segment_physical_pb(matched_seg, pb);
+      logical_storage.set_segment_raw_data(matched_seg, raw);
+    } else {
+      const MifSegmentId new_seg = logical_storage.create_segment();
+      logical_storage.set_segment_physical_pb(new_seg, pb);
+      logical_storage.set_segment_raw_data(new_seg, raw);
+    }
   }
 
-  if (merged.empty()) {
+  if (eblif_segment_count == 0) {
     VTR_LOG_ERROR(
       "aggregate_mif: eblif loaded but no segment matches any mif_source with "
       "source='%s'\n",
       XML_MIF_SOURCE_SOURCE_EBLIF);
     return CMD_EXEC_FATAL_ERROR;
   }
-
-  logical_storage = std::move(merged);
   return CMD_EXEC_SUCCESS;
 }
 

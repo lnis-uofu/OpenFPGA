@@ -83,11 +83,10 @@ class MifStorage {
                                const std::string& physical_pb);
   void set_segment_raw_data(const MifSegmentId& segment_id,
                             const std::string& raw_data);
+  /* Drop decoded memory lines for a segment (e.g. before eblif overwrite). */
+  void clear_segment_memory_lines(const MifSegmentId& segment_id);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
                                      uint64_t address, uint64_t data);
-  /* Append a deep copy of one segment (and its memory lines) from src. */
-  MifSegmentId append_segment_copy(const MifStorage& src,
-                                   const MifSegmentId& src_segment_id);
 
  public: /* Validators */
   bool valid_segment_id(const MifSegmentId& segment_id) const;
