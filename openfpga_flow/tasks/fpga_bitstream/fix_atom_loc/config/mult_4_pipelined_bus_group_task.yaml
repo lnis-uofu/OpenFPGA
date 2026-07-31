@@ -1,0 +1,5 @@
+mult_4_pipelined:
+  source:
+    - name: benchmark/mult_4_pipelined.v
+  top_module: mult_4_pipelined
+  bus_group_file: bus_group.xml
