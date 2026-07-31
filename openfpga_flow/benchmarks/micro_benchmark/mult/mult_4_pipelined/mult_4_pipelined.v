@@ -1,10 +1,10 @@
 //-------------------------------------------------------
-//  Functionality: A 2-bit multiply circuit with pipelines
+//  Functionality: A 4-bit multiply circuit with pipelines
 //  Author:        Xifan Tang
 //-------------------------------------------------------
 
-module mult_2_pipelined(clk, a, b, out);
-parameter DATA_WIDTH = 2;  /* declare a parameter. default required */
+module mult_4_pipelined(clk, a, b, out);
+parameter DATA_WIDTH = 4;  /* declare a parameter. default required */
 input [DATA_WIDTH - 1 : 0] a, b;
 input clk;
 output [DATA_WIDTH * 2 - 1 : 0] out;
