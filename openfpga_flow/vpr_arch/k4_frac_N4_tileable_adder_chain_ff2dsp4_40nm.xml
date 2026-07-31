@@ -148,7 +148,7 @@
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-      <col type="mult_8" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="mult_4" startx="2" starty="1" repeatx="8" priority="20"/>
     </fixed_layout>
   </layout>
   <device>
@@ -211,23 +211,23 @@
   <directlist>
     <direct name="adder_carry" from_pin="clb.cout" to_pin="clb.cin" x_offset="0" y_offset="-1" z_offset="0"/>
     <!-- Highway direct connnection between clb and dsp block -->
-    <direct name="ff2mult_a" from_pin="clb.O[0:0]" to_pin="mult_8.a[0:0]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_a" from_pin="clb.O[1:1]" to_pin="mult_8.a[1:1]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_a" from_pin="clb.O[2:2]" to_pin="mult_8.a[2:2]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_a" from_pin="clb.O[3:3]" to_pin="mult_8.a[3:3]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_b" from_pin="clb.O[4:4]" to_pin="mult_8.b[0:0]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_b" from_pin="clb.O[5:5]" to_pin="mult_8.b[1:1]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_b" from_pin="clb.O[6:6]" to_pin="mult_8.b[2:2]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2mult_b" from_pin="clb.O[7:7]" to_pin="mult_8.b[3:3]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_a0" from_pin="clb.O[0:0]" to_pin="mult_8.a[0:0]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_a1" from_pin="clb.O[1:1]" to_pin="mult_8.a[1:1]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_a2" from_pin="clb.O[2:2]" to_pin="mult_8.a[2:2]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_a3" from_pin="clb.O[3:3]" to_pin="mult_8.a[3:3]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_b0" from_pin="clb.O[4:4]" to_pin="mult_8.b[0:0]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_b1" from_pin="clb.O[5:5]" to_pin="mult_8.b[1:1]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_b2" from_pin="clb.O[6:6]" to_pin="mult_8.b[2:2]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2mult_b3" from_pin="clb.O[7:7]" to_pin="mult_8.b[3:3]" x_offset="1" y_offset="0" z_offset="0"/>
     <!-- Highway direct connnection between clb and I/O block -->
-    <direct name="ff2io" from_pin="clb.O[0:0]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="0"/>
-    <direct name="ff2io" from_pin="clb.O[1:1]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="1"/>
-    <direct name="ff2io" from_pin="clb.O[2:2]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="2"/>
-    <direct name="ff2io" from_pin="clb.O[3:3]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="3"/>
-    <direct name="ff2io" from_pin="clb.O[4:4]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="4"/>
-    <direct name="ff2io" from_pin="clb.O[5:5]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="5"/>
-    <direct name="ff2io" from_pin="clb.O[6:6]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="6"/>
-    <direct name="ff2io" from_pin="clb.O[7:7]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="7"/>
+    <direct name="ff2io0" from_pin="clb.O[0:0]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="0"/>
+    <direct name="ff2io1" from_pin="clb.O[1:1]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="1"/>
+    <direct name="ff2io2" from_pin="clb.O[2:2]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="2"/>
+    <direct name="ff2io3" from_pin="clb.O[3:3]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="3"/>
+    <direct name="ff2io4" from_pin="clb.O[4:4]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="4"/>
+    <direct name="ff2io5" from_pin="clb.O[5:5]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="5"/>
+    <direct name="ff2io6" from_pin="clb.O[6:6]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="6"/>
+    <direct name="ff2io7" from_pin="clb.O[7:7]" to_pin="io.outpad[0:0]" x_offset="1" y_offset="0" z_offset="7"/>
   </directlist>
   <complexblocklist>
     <!-- Define I/O pads begin -->
