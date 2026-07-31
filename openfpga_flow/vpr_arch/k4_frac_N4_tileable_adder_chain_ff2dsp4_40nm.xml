@@ -453,13 +453,15 @@
             <interconnect>
               <direct name="direct1" input="lut3inter.in" output="ble3[0:0].in"/>
               <direct name="direct2" input="lut3inter.in" output="ble3[1:1].in"/>
-              <direct name="direct3" input="ble3[1:0].out" output="lut3inter.out"/>
+              <direct name="direct3" input="ble3[0:0].out" output="lut3inter.out[0:0]"/>
+              <direct name="direct4" input="ble3[1:1].out" output="lut3inter.out[1:1]"/>
               <complete name="complete1" input="lut3inter.clk" output="ble3[1:0].clk"/>
             </interconnect>
           </pb_type>
           <interconnect>
             <direct name="direct1" input="fle.in[2:0]" output="lut3inter.in"/>
-            <direct name="direct2" input="lut3inter.out" output="fle.out"/>
+            <direct name="direct2_0" input="lut3inter.out[0:0]" output="fle.out[0:0]"/>
+            <direct name="direct2_1" input="lut3inter.out[1:1]" output="fle.out[1:1]"/>
             <direct name="direct3" input="fle.clk" output="lut3inter.clk"/>
           </interconnect>
         </mode>
