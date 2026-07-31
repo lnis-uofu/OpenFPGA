@@ -1068,9 +1068,7 @@ def run_openfpga_shell():
 
     # OPENFPGA_WRITE_MIF_FILE: task.conf --openfpga_write_mif_file
     if "OPENFPGA_WRITE_MIF_FILE" not in path_variables:
-        path_variables["OPENFPGA_WRITE_MIF_FILE"] = (
-            "fabric_independent_bitstream_memory.mem"
-        )
+        path_variables["OPENFPGA_WRITE_MIF_FILE"] = "fabric_independent_bitstream_memory.mem"
     path_variables["OPENFPGA_WRITE_MIF_FILE"] = normalize_template_path_for_windows(
         path_variables["OPENFPGA_WRITE_MIF_FILE"]
     )
