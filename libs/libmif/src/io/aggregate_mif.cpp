@@ -178,6 +178,83 @@ static bool bitstream_has_eblif_mif_source(
   return false;
 }
 
+/* True if pb_type matches a mif_source with source="eblif"
+ * (exact match, or VPR instance path with trailing numeric [N] stripped). */
+static bool pb_type_is_eblif_mif_source(
+  const std::string& pb_type, const BitstreamSetting& bitstream_setting) {
+  std::string type_only_pb = pb_type;
+  if (!pb_type.empty() && pb_type.back() == ']') {
+    const size_t bracket_pos = pb_type.rfind('[');
+    if (bracket_pos != std::string::npos &&
+        bracket_pos + 1 < pb_type.size() - 1) {
+      bool numeric_index = true;
+      for (size_t i = bracket_pos + 1; i + 1 < pb_type.size(); ++i) {
+        if (!std::isdigit(static_cast<unsigned char>(pb_type[i]))) {
+          numeric_index = false;
+          break;
+        }
+      }
+      if (numeric_index) {
+        type_only_pb = pb_type.substr(0, bracket_pos);
+      }
+    }
+  }
+
+  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
+    if (bitstream_setting.mif_source_source(id) !=
+        XML_MIF_SOURCE_SOURCE_EBLIF) {
+      continue;
+    }
+    const std::string& source_pb = bitstream_setting.mif_source_pb_type(id);
+    if (pb_type == source_pb || type_only_pb == source_pb) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* Read Yosys eblif and merge into logical_storage:
+ * keep source="others"; overwrite source="eblif" pb_types. */
+static int merge_eblif_into_logical_storage(
+  MifStorage& logical_storage, const BitstreamSetting& bitstream_setting,
+  const MifPbTypeResolver& pb_type_resolver, const std::string& eblif_path) {
+  MifStorage eblif_storage;
+  const int read_status =
+    read_mif_from_eblif(eblif_path, eblif_storage, pb_type_resolver);
+  if (CMD_EXEC_SUCCESS != read_status) {
+    return read_status;
+  }
+
+  MifStorage merged;
+  for (const MifSegmentId& segment_id : logical_storage.segments()) {
+    if (pb_type_is_eblif_mif_source(logical_storage.physical_pb(segment_id),
+                                    bitstream_setting)) {
+      VTR_LOG("aggregate_mif: overwrite logical pb_type '%s' from eblif\n",
+              logical_storage.physical_pb(segment_id).c_str());
+      continue;
+    }
+    merged.append_segment_copy(logical_storage, segment_id);
+  }
+  for (const MifSegmentId& segment_id : eblif_storage.segments()) {
+    if (!pb_type_is_eblif_mif_source(eblif_storage.physical_pb(segment_id),
+                                     bitstream_setting)) {
+      continue;
+    }
+    merged.append_segment_copy(eblif_storage, segment_id);
+  }
+
+  if (merged.empty()) {
+    VTR_LOG_ERROR(
+      "aggregate_mif: eblif loaded but no segment matches any mif_source with "
+      "source='%s'\n",
+      XML_MIF_SOURCE_SOURCE_EBLIF);
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  logical_storage = std::move(merged);
+  return CMD_EXEC_SUCCESS;
+}
+
 int aggregate_mif(MifStorage& logical_storage,
                   const BitstreamSetting& bitstream_setting,
                   MifStorage& out_aggregated_storage,
@@ -189,7 +266,7 @@ int aggregate_mif(MifStorage& logical_storage,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* Decide whether to read_mif from Yosys eblif based on bitstream setting. */
+  /* Decide whether to read_mif_from_eblif based on bitstream setting. */
   if (bitstream_has_eblif_mif_source(bitstream_setting)) {
     if (!pb_type_resolver) {
       VTR_LOG_ERROR(
@@ -202,8 +279,8 @@ int aggregate_mif(MifStorage& logical_storage,
     if (path.empty()) {
       return CMD_EXEC_FATAL_ERROR;
     }
-    const int read_status =
-      read_mif(path, logical_storage, pb_type_resolver, bitstream_setting);
+    const int read_status = merge_eblif_into_logical_storage(
+      logical_storage, bitstream_setting, pb_type_resolver, path);
     if (CMD_EXEC_SUCCESS != read_status) {
       return read_status;
     }

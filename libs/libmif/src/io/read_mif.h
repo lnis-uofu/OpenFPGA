@@ -5,7 +5,6 @@
 #include <utility>
 #include <vector>
 
-#include "bitstream_setting.h"
 #include "command_exit_codes.h"
 #include "mif_storage.h"
 
@@ -20,23 +19,23 @@ using MifPbTypeResolver = std::function<std::string(
  * Returns empty string if none / multiple matches. */
 std::string find_yosys_eblif_file_path();
 
-/* Read memory initialization into storage.
- *
- * Dispatch by file type:
- *   - .eblif/.blif: resolve each .subckt carrying .param INIT and store its
- *     pb_type plus raw INIT in a new logical segment (clears storage first)
- *   - otherwise: Verilog-style init.hex (addr/data lines) bound to pb_type
- */
-int read_mif(const std::string& file_path, MifStorage& mif_storage,
-             const MifPbTypeResolver& pb_type_resolver,
-             const std::string& pb_type = "");
+/* Read Verilog-style init.hex into one logical segment (shell read_mif). */
+int read_mif_from_init_hex(const std::string& file_path,
+                           MifStorage& mif_storage, const std::string& pb_type);
 
-/* Read Yosys eblif and merge into logical storage using bitstream setting:
- *   - source="eblif": overwrite matching pb_type segments
- *   - source="others": keep existing logical segments
- */
-int read_mif(const std::string& file_path, MifStorage& mif_storage,
-             const MifPbTypeResolver& pb_type_resolver,
-             const BitstreamSetting& bitstream_setting);
+/********************************************************************
+ * Read Yosys eblif memory INIT into logical MIF storage.
+ * Called by aggregate_mif when bitstream setting has source="eblif".
+ *
+ * For each .subckt with .param INIT:
+ *   - resolve pb_type via pb_type_resolver (VPR binding)
+ *   - create one segment with physical_pb + raw INIT bit-string
+ *
+ * Clears mif_storage first. Addr/data ranges are filled later in
+ * aggregate_mif from bitstream setting. Decode of raw INIT also happens
+ * there.
+ *******************************************************************/
+int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
+                        const MifPbTypeResolver& pb_type_resolver);
 
 } /* namespace openfpga */

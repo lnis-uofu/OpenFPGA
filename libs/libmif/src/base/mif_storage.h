@@ -26,6 +26,21 @@
  * Each aggregated destination segment has:
  *   - memory lines
  *   - physical_pb, data_width, addr_range (for .mem header)
+ *
+ * Data members (indexed by MifSegmentId unless noted):
+ *   segment_ids_             - Valid segment id list (StrongId table)
+ *   segment_data_width_      - Data width in bits (-1 if unset)
+ *   segment_addr_range_      - Address range as BasicPort [lsb:msb];
+ *                              invalid BasicPort if unset
+ *   segment_physical_pb_     - Bound pb_type path (logical or physical)
+ *   segment_raw_data_        - Undecoded eblif .param INIT bit-string;
+ *                              cleared after decode in aggregate_mif
+ *   segment_memory_line_ids_ - Per-segment list of memory-line ids
+ *
+ * Data members (indexed by MifMemoryLineId):
+ *   memory_line_ids_         - Valid memory-line id list (StrongId table)
+ *   memory_line_addresses_   - Word address of each memory line
+ *   memory_line_data_        - Word data of each memory line
  *******************************************************************/
 namespace openfpga {
 
@@ -79,6 +94,7 @@ class MifStorage {
   bool valid_memory_line_id(const MifMemoryLineId& memory_line_id) const;
 
  private: /* Internal data */
+  /* Per-segment tables (indexed by MifSegmentId) */
   vtr::vector<MifSegmentId, MifSegmentId> segment_ids_;
   vtr::vector<MifSegmentId, int> segment_data_width_;
   vtr::vector<MifSegmentId, BasicPort> segment_addr_range_;
@@ -87,6 +103,7 @@ class MifStorage {
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;
 
+  /* Per-memory-line tables (indexed by MifMemoryLineId) */
   vtr::vector<MifMemoryLineId, MifMemoryLineId> memory_line_ids_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_addresses_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_data_;

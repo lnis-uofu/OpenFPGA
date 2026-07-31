@@ -27,11 +27,8 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
 
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
   const std::string& pb_type = cmd_context.option_value(cmd, opt_pb_type);
-  /* Hex/MIF path: pass pb_type; empty resolver is unused when pb_type is set.
-   */
-  const int exec_status =
-    read_mif(mif_path, openfpga_context.mutable_mif_storage(),
-             MifPbTypeResolver{}, pb_type);
+  const int exec_status = read_mif_from_init_hex(
+    mif_path, openfpga_context.mutable_mif_storage(), pb_type);
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }

@@ -12,7 +12,7 @@ namespace openfpga {
 /* Complete and aggregate logical MIF storage.
  *
  * Algorithm:
- *   0. if any mif_source has source="eblif", read_mif from Yosys eblif
+ *   0. if any mif_source has source="eblif", call read_mif_from_eblif
  *      (overwrite eblif-bound pb_types; keep source="others")
  *   1. clear the aggregated output and validate address-map availability
  *   2. bind each logical segment's VPR pb_type to its mif_source
@@ -22,7 +22,8 @@ namespace openfpga {
  *   6. emit one aggregated segment for each destination pb_type
  *
  * pb_type_resolver / eblif_file_path are required when bitstream setting has
- * source="eblif". Empty eblif_file_path auto-discovers *_yosys_out.eblif in cwd.
+ * source="eblif". Empty eblif_file_path auto-discovers *_yosys_out.eblif in
+ * cwd.
  */
 int aggregate_mif(MifStorage& logical_storage,
                   const BitstreamSetting& bitstream_setting,

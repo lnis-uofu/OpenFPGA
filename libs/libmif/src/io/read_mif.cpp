@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "bitstream_setting_xml_constants.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -35,36 +34,6 @@ static bool parse_mif_u64_token(const std::string& tok, uint64_t& out) {
     return false;
   }
   out = static_cast<uint64_t>(v);
-  return true;
-}
-
-static bool parse_int_after_keyword(const std::string& text,
-                                    const std::string& keyword, int& out) {
-  const size_t pos = text.find(keyword);
-  if (pos == std::string::npos) {
-    return false;
-  }
-  size_t i = pos + keyword.size();
-  while (i < text.size() && std::isspace(static_cast<unsigned char>(text[i]))) {
-    ++i;
-  }
-  if (i >= text.size() || text[i] == ':') {
-    if (i < text.size() && text[i] == ':') {
-      ++i;
-    }
-    while (i < text.size() &&
-           std::isspace(static_cast<unsigned char>(text[i]))) {
-      ++i;
-    }
-  }
-  if (i >= text.size() || !std::isdigit(static_cast<unsigned char>(text[i]))) {
-    return false;
-  }
-  out = 0;
-  while (i < text.size() && std::isdigit(static_cast<unsigned char>(text[i]))) {
-    out = out * 10 + (text[i] - '0');
-    ++i;
-  }
   return true;
 }
 
@@ -104,38 +73,6 @@ static std::string strip_mif_line_comment(const std::string& raw_line) {
   }
   trim_mif_line_inplace(line);
   return line;
-}
-
-static bool try_parse_init_hex_depth_metadata(const std::string& comment_line,
-                                              uint64_t& min_addr,
-                                              uint64_t& max_addr) {
-  if (comment_line.find("depth") == std::string::npos) {
-    return false;
-  }
-  int depth = 0;
-  if (!parse_int_after_keyword(comment_line, "depth", depth) || depth <= 0) {
-    return false;
-  }
-
-  min_addr = 0;
-  max_addr = static_cast<uint64_t>(depth - 1);
-
-  const size_t from_pos = comment_line.find("from");
-  const size_t to_pos =
-    comment_line.find("to", from_pos == std::string::npos ? 0 : from_pos + 4);
-  if (from_pos != std::string::npos && to_pos != std::string::npos) {
-    int parsed_min = 0;
-    int parsed_max = 0;
-    if (parse_int_after_keyword(comment_line.substr(from_pos), "from",
-                                parsed_min) &&
-        parse_int_after_keyword(comment_line.substr(to_pos), "to",
-                                parsed_max) &&
-        parsed_min >= 0 && parsed_max >= parsed_min) {
-      min_addr = static_cast<uint64_t>(parsed_min);
-      max_addr = static_cast<uint64_t>(parsed_max);
-    }
-  }
-  return true;
 }
 
 /* Parse one init.hex data line.
@@ -195,9 +132,16 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
   return true;
 }
 
-static int read_mif_from_init_hex(const std::string& file_path,
-                                  MifStorage& mif_storage,
-                                  const std::string& pb_type) {
+/********************************************************************
+ * Read a Verilog-style init.hex into one logical segment.
+ * Used by shell command: read_mif --file <hex> --pb_type <pb>
+ *
+ * Stores only address/data words and the caller-provided pb_type.
+ * Address/data ranges come later from bitstream setting in aggregate_mif.
+ *******************************************************************/
+int read_mif_from_init_hex(const std::string& file_path,
+                           MifStorage& mif_storage,
+                           const std::string& pb_type) {
   std::ifstream ifs(file_path.c_str());
   if (!ifs.is_open()) {
     VTR_LOG_ERROR("Failed to open init.hex file '%s' for reading\n",
@@ -209,9 +153,6 @@ static int read_mif_from_init_hex(const std::string& file_path,
   size_t line_no = 0;
   size_t total_words = 0;
   uint64_t next_addr = 0;
-  bool has_depth_metadata = false;
-  uint64_t depth_min_addr = 0;
-  uint64_t depth_max_addr = 0;
 
   std::string raw_line;
   while (std::getline(ifs, raw_line)) {
@@ -221,15 +162,8 @@ static int read_mif_from_init_hex(const std::string& file_path,
     if (line.empty()) {
       continue;
     }
+    /* Skip full-line comments; addr/data ranges come from bitstream setting. */
     if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
-      uint64_t parsed_min_addr = 0;
-      uint64_t parsed_max_addr = 0;
-      if (try_parse_init_hex_depth_metadata(line, parsed_min_addr,
-                                            parsed_max_addr)) {
-        has_depth_metadata = true;
-        depth_min_addr = parsed_min_addr;
-        depth_max_addr = parsed_max_addr;
-      }
       continue;
     }
 
@@ -263,18 +197,24 @@ static int read_mif_from_init_hex(const std::string& file_path,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  if (has_depth_metadata) {
-    mif_storage.set_segment_addr_range(
-      segment_id, BasicPort("address", static_cast<size_t>(depth_min_addr),
-                            static_cast<size_t>(depth_max_addr)));
-  }
   mif_storage.set_segment_physical_pb(segment_id, pb_type);
   return CMD_EXEC_SUCCESS;
 }
 
-static int read_mif_from_eblif(const std::string& file_path,
-                               MifStorage& mif_storage,
-                               const MifPbTypeResolver& pb_type_resolver) {
+/********************************************************************
+ * Read Yosys eblif memory INIT into logical MIF storage.
+ * Called by aggregate_mif when bitstream setting has source="eblif".
+ *
+ * For each .subckt with .param INIT:
+ *   - resolve pb_type via pb_type_resolver (VPR internal data)
+ *   - create one segment with physical_pb + raw INIT bit-string
+ *
+ * Clears mif_storage first. Addr/data ranges are filled later in
+ * aggregate_mif from bitstream setting. Decode of raw INIT also happens
+ * there.
+ *******************************************************************/
+int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
+                        const MifPbTypeResolver& pb_type_resolver) {
   std::ifstream ifs(file_path.c_str());
   if (!ifs.is_open()) {
     VTR_LOG_ERROR("Failed to open eblif file '%s' for reading\n",
@@ -347,8 +287,10 @@ static int read_mif_from_eblif(const std::string& file_path,
                        : std::string();
     if (pb_type.empty()) {
       VTR_LOG_ERROR(
-        "read_mif: cannot resolve VPR pb_type for INIT index %zu in '%s'\n",
-        init_index, file_path.c_str());
+        "%s:%lu: read_mif_from_eblif: failed to resolve pb_type for .subckt "
+        "'%s' (.param INIT #%zu)\n",
+        file_path.c_str(), static_cast<unsigned long>(line_no),
+        subckt_model.c_str(), init_index);
       return CMD_EXEC_FATAL_ERROR;
     }
 
@@ -371,17 +313,6 @@ static int read_mif_from_eblif(const std::string& file_path,
     return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
-}
-
-int read_mif(const std::string& file_path, MifStorage& mif_storage,
-             const MifPbTypeResolver& pb_type_resolver,
-             const std::string& pb_type) {
-  if (pb_type.empty()) {
-    /* Eblif path: resolve pb_type via VPR callback. */
-    return read_mif_from_eblif(file_path, mif_storage, pb_type_resolver);
-  }
-  /* Hex/MIF path: one read_mif binds to one explicit pb_type. */
-  return read_mif_from_init_hex(file_path, mif_storage, pb_type);
 }
 
 std::string find_yosys_eblif_file_path() {
@@ -412,82 +343,6 @@ std::string find_yosys_eblif_file_path() {
 
   VTR_LOG("Located Yosys eblif '%s'\n", found.c_str());
   return found;
-}
-
-static bool pb_type_matches_mif_source(const std::string& vpr_pb_type,
-                                       const std::string& source_pb_type) {
-  if (vpr_pb_type == source_pb_type) {
-    return true;
-  }
-  if (vpr_pb_type.empty() || vpr_pb_type.back() != ']') {
-    return false;
-  }
-  const size_t bracket_pos = vpr_pb_type.rfind('[');
-  if (bracket_pos == std::string::npos ||
-      bracket_pos + 1 >= vpr_pb_type.size() - 1) {
-    return false;
-  }
-  for (size_t i = bracket_pos + 1; i + 1 < vpr_pb_type.size(); ++i) {
-    if (!std::isdigit(static_cast<unsigned char>(vpr_pb_type[i]))) {
-      return false;
-    }
-  }
-  return vpr_pb_type.substr(0, bracket_pos) == source_pb_type;
-}
-
-static bool pb_type_is_eblif_mif_source(
-  const std::string& pb_type, const BitstreamSetting& bitstream_setting) {
-  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(id) !=
-        XML_MIF_SOURCE_SOURCE_EBLIF) {
-      continue;
-    }
-    if (pb_type_matches_mif_source(pb_type,
-                                   bitstream_setting.mif_source_pb_type(id))) {
-      return true;
-    }
-  }
-  return false;
-}
-
-int read_mif(const std::string& file_path, MifStorage& mif_storage,
-             const MifPbTypeResolver& pb_type_resolver,
-             const BitstreamSetting& bitstream_setting) {
-  MifStorage eblif_storage;
-  const int read_status =
-    read_mif_from_eblif(file_path, eblif_storage, pb_type_resolver);
-  if (CMD_EXEC_SUCCESS != read_status) {
-    return read_status;
-  }
-
-  MifStorage merged;
-  for (const MifSegmentId& segment_id : mif_storage.segments()) {
-    if (pb_type_is_eblif_mif_source(mif_storage.physical_pb(segment_id),
-                                    bitstream_setting)) {
-      VTR_LOG("read_mif: overwrite logical pb_type '%s' from eblif\n",
-              mif_storage.physical_pb(segment_id).c_str());
-      continue;
-    }
-    merged.append_segment_copy(mif_storage, segment_id);
-  }
-  for (const MifSegmentId& segment_id : eblif_storage.segments()) {
-    if (!pb_type_is_eblif_mif_source(eblif_storage.physical_pb(segment_id),
-                                     bitstream_setting)) {
-      continue;
-    }
-    merged.append_segment_copy(eblif_storage, segment_id);
-  }
-
-  if (merged.empty()) {
-    VTR_LOG_ERROR(
-      "read_mif: eblif loaded but no segment matches any mif_source with "
-      "source='%s'\n",
-      XML_MIF_SOURCE_SOURCE_EBLIF);
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  mif_storage = std::move(merged);
-  return CMD_EXEC_SUCCESS;
 }
 
 } /* namespace openfpga */
