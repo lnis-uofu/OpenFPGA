@@ -625,8 +625,14 @@
                then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                naive specification).
           -->
-        <direct name="clbouts1" input="fle[3:0].out[0:0]" output="clb.O[3:0]"/>
-        <direct name="clbouts2" input="fle[3:0].out[1:1]" output="clb.O[7:4]"/>
+        <direct name="clbouts0" input="fle[0:0].out[0:0]" output="clb.O[0:0]"/>
+        <direct name="clbouts1" input="fle[0:0].out[1:1]" output="clb.O[1:1]"/>
+        <direct name="clbouts2" input="fle[1:1].out[0:0]" output="clb.O[2:2]"/>
+        <direct name="clbouts3" input="fle[1:1].out[1:1]" output="clb.O[3:3]"/>
+        <direct name="clbouts4" input="fle[2:2].out[0:0]" output="clb.O[4:4]"/>
+        <direct name="clbouts5" input="fle[2:2].out[1:1]" output="clb.O[5:5]"/>
+        <direct name="clbouts6" input="fle[3:3].out[0:0]" output="clb.O[6:6]"/>
+        <direct name="clbouts7" input="fle[3:3].out[1:1]" output="clb.O[7:7]"/>
         <!-- Carry chain links -->
         <direct name="carry_in" input="clb.cin" output="fle[0:0].cin">
           <!-- Put all inter-block carry chain delay on this one edge -->
