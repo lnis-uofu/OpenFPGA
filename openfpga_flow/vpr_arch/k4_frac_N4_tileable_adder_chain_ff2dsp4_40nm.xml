@@ -64,7 +64,6 @@
         <port name="Y"/>
       </output_ports>
     </model>
-
   </models>
   <tiles>
     <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
@@ -129,7 +128,7 @@
           <loc side="left">mult_4.a[0:3] mult_4.b[0:3]</loc>
           <loc side="top"/>
           <loc side="right">mult_4.out[0:7]</loc>
-          <loc side="bottom"></loc>
+          <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
     </tile>
