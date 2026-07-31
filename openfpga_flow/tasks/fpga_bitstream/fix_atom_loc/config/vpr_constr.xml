@@ -1,14 +1,14 @@
 <vpr_constraints tool_name="vpr">
   <partition_list>
      <partition name="dsp_ireg">
-        <add_atom name_pattern="a_reg[0]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="a_reg[1]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="a_reg[2]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="a_reg[3]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="b_reg[0]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="b_reg[1]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="b_reg[2]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="b_reg[3]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
+        <add_atom name_pattern="a_reg[0]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
+        <add_atom name_pattern="a_reg[1]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
+        <add_atom name_pattern="a_reg[2]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
+        <add_atom name_pattern="a_reg[3]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
+        <add_atom name_pattern="b_reg[0]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
+        <add_atom name_pattern="b_reg[1]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
+        <add_atom name_pattern="b_reg[2]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
+        <add_atom name_pattern="b_reg[3]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
         <add_region x_low="1" y_low="1" x_high="3" y_high="1"/> 
      </partition>
      <partition name="dsp_oreg0">
