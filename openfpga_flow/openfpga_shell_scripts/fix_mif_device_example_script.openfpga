@@ -45,7 +45,7 @@ build_architecture_bitstream --verbose --write_file fabric_independent_bitstream
 build_fabric_bitstream --verbose
 
 # Write aggregated preload memory
-write_mif --file fabric_independent_bitstream_memory.mem
+write_mif --file ${OPENFPGA_WRITE_MIF_FILE}
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.bit --format plain_text

@@ -50,7 +50,7 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   if (aggregated_mif_storage.empty()) {
     VTR_LOG_ERROR(
       "write_mif: no aggregated MIF data; run build_architecture_bitstream "
-      "first\n");
+      "first (with mif_source / logical MIF)\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 

@@ -249,11 +249,12 @@ static void read_xml_mif_source_setting(
       .as_string();
 
   if (source_attr != XML_MIF_SOURCE_SOURCE_EBLIF &&
-      source_attr != XML_MIF_SOURCE_SOURCE_OTHERS) {
+      source_attr != XML_MIF_SOURCE_SOURCE_OTHERS &&
+      source_attr != XML_MIF_SOURCE_SOURCE_NONE) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
-                   "Invalid mif_source source='%s'. Expect '%s' or '%s'\n",
+                   "Invalid mif_source source='%s'. Expect '%s', '%s' or '%s'\n",
                    source_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
-                   XML_MIF_SOURCE_SOURCE_OTHERS);
+                   XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_NONE);
   }
   if (source_attr == XML_MIF_SOURCE_SOURCE_EBLIF &&
       content_attr != XML_MIF_SOURCE_CONTENT_PARAM_INIT) {
@@ -378,6 +379,14 @@ static void read_xml_mif_address_map_setting(
                    "mif_address_map src_pb_type='%s' has no matching "
                    "mif_source definition\n",
                    src_pb_type_attr.c_str());
+  }
+  if (bitstream_setting.mif_source_source(src_source_id) ==
+      XML_MIF_SOURCE_SOURCE_NONE) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "mif_address_map src_pb_type='%s' cannot use mif_source "
+                   "source='%s' (reserved for des_pb_type range metadata)\n",
+                   src_pb_type_attr.c_str(), XML_MIF_SOURCE_SOURCE_NONE);
   }
 
   const MifSourceSettingId des_source_id =

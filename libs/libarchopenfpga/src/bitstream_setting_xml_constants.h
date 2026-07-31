@@ -55,6 +55,8 @@ constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE = "data_range";
 /* Valid mif_source source= keywords */
 constexpr const char* XML_MIF_SOURCE_SOURCE_EBLIF = "eblif";
 constexpr const char* XML_MIF_SOURCE_SOURCE_OTHERS = "others";
+/* Destination-only: address/data range metadata, no input MIF data. */
+constexpr const char* XML_MIF_SOURCE_SOURCE_NONE = "none";
 
 /* Valid mif_source content= keywords (extensible) */
 constexpr const char* XML_MIF_SOURCE_CONTENT_PARAM_INIT = ".param INIT";

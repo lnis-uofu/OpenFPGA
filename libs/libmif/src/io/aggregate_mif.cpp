@@ -219,15 +219,16 @@ static int bind_and_decode_logical_storage(
   MifStorage& logical_storage, const BitstreamSetting& bitstream_setting,
   const MifPbTypeResolver& pb_type_resolver,
   const std::string& eblif_file_path) {
-  /* source="others" requires logical_storage already filled by read_mif. */
-  if (bitstream_setting.has_other_mif_source()) {
-    if (logical_storage.empty()) {
-      VTR_LOG_ERROR(
-        "aggregate_mif: logical MIF storage is empty and no mif_source has "
-        "source='%s'\n",
-        XML_MIF_SOURCE_SOURCE_EBLIF);
-      return CMD_EXEC_FATAL_ERROR;
-    }
+  /* source="others" (as logical input) needs read_mif data unless eblif
+   * can fill logical_storage. source="none" is des-only metadata and is
+   * ignored here. */
+  if (bitstream_setting.has_other_mif_source() && logical_storage.empty() &&
+      !bitstream_setting.has_eblif_mif_source()) {
+    VTR_LOG_ERROR(
+      "aggregate_mif: logical MIF storage is empty; source='%s' requires "
+      "read_mif, or add a source='%s' mif_source\n",
+      XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_EBLIF);
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   /* continue to process eblif source */
@@ -370,6 +371,12 @@ int aggregate_mif(MifStorage& logical_storage,
     const std::string& des_pb_type = des_data_map.first;
     const MifSourceSettingId des_source_id =
       bitstream_setting.find_mif_source_by_pb_type(des_pb_type);
+    if (!des_source_id.is_valid()) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: des_pb_type '%s' has no matching mif_source\n",
+        des_pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
     const BasicPort des_addr_range =
       bitstream_setting.mif_source_address_range(des_source_id);
     const BasicPort des_data_range =
