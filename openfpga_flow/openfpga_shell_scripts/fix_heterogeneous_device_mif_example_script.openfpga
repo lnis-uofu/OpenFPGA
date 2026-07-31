@@ -37,11 +37,14 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-#  - Aggregate logical MIF into physical preload .mem (--write_mif + --verilog)
-build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml --eblif ${VPR_TESTBENCH_BLIF} --write_mif fabric_independent_bitstream_memory.mem
+#  - Aggregate logical MIF when bitstream setting / logical storage is present
+build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
+
+# Write aggregated preload memory
+write_mif --file fabric_independent_bitstream_memory.mem
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.bit --format plain_text

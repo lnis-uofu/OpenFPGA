@@ -134,6 +134,24 @@ MifMemoryLineId MifStorage::create_memory_line(const MifSegmentId& segment_id,
   return memory_line_id;
 }
 
+MifSegmentId MifStorage::append_segment_copy(
+  const MifStorage& src, const MifSegmentId& src_segment_id) {
+  VTR_ASSERT(src.valid_segment_id(src_segment_id));
+  const MifSegmentId dst_segment_id = create_segment();
+  set_segment_data_width(dst_segment_id, src.data_width(src_segment_id));
+  if (src.addr_range(src_segment_id).is_valid()) {
+    set_segment_addr_range(dst_segment_id, src.addr_range(src_segment_id));
+  }
+  set_segment_physical_pb(dst_segment_id, src.physical_pb(src_segment_id));
+  set_segment_raw_data(dst_segment_id, src.raw_data(src_segment_id));
+  for (const MifMemoryLineId& line_id :
+       src.segment_memory_lines(src_segment_id)) {
+    create_memory_line(dst_segment_id, src.memory_line_address(line_id),
+                       src.memory_line_data(line_id));
+  }
+  return dst_segment_id;
+}
+
 bool MifStorage::valid_segment_id(const MifSegmentId& segment_id) const {
   return (size_t(segment_id) < segment_ids_.size()) &&
          (segment_id == segment_ids_[segment_id]);

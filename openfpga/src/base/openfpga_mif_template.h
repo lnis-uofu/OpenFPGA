@@ -19,16 +19,24 @@ template <class T>
 int read_mif_template(T& openfpga_context, const Command& cmd,
                       const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_pb_type = cmd.option("pb_type");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_pb_type));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_pb_type).empty());
 
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
+  const std::string& pb_type = cmd_context.option_value(cmd, opt_pb_type);
+  /* Hex/MIF path: pass pb_type; empty resolver is unused when pb_type is set.
+   */
   const int exec_status =
-    read_mif(mif_path, openfpga_context.mutable_mif_storage());
+    read_mif(mif_path, openfpga_context.mutable_mif_storage(),
+             MifPbTypeResolver{}, pb_type);
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }
-  VTR_LOG("read_mif: read '%s'\n", mif_path.c_str());
+  VTR_LOG("read_mif: read '%s' (pb_type='%s')\n", mif_path.c_str(),
+          pb_type.c_str());
   return CMD_EXEC_SUCCESS;
 }
 

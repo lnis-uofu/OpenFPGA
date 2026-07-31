@@ -8,18 +8,15 @@
 
 namespace openfpga {
 
-std::string default_preload_mem_file_path(const std::string& write_file_path);
+/* Locate Yosys output *_yosys_out.eblif by scanning the run cwd.
+ * Returns empty string if none / multiple matches. */
+std::string find_yosys_eblif_file_path();
 
-/* Read Yosys eblif INIT parameters, then aggregate logical MIF storage. */
-int aggregate_mif_storage(const std::string& eblif_file_path,
-                          MifStorage& mif_storage,
+/* Aggregate logical MIF into physical preload storage.
+ * If logical storage is empty and bitstream setting has eblif mif_source,
+ * auto-load Yosys eblif first. */
+int aggregate_mif_storage(MifStorage& mif_storage,
                           const BitstreamSetting& bitstream_setting,
                           MifStorage& aggregated_mif_storage);
-
-/* Aggregate into aggregated storage and optionally write preload .mem. */
-int aggregate_mif_storage_and_write_preload_mem(
-  const std::string& eblif_file_path, MifStorage& mif_storage,
-  const BitstreamSetting& bitstream_setting, MifStorage& aggregated_mif_storage,
-  const std::string& mem_file_path);
 
 } /* namespace openfpga */

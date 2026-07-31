@@ -194,7 +194,8 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
 }
 
 static int read_mif_from_init_hex(const std::string& file_path,
-                                  MifStorage& mif_storage) {
+                                  MifStorage& mif_storage,
+                                  const std::string& pb_type) {
   std::ifstream ifs(file_path.c_str());
   if (!ifs.is_open()) {
     VTR_LOG_ERROR("Failed to open init.hex file '%s' for reading\n",
@@ -265,28 +266,8 @@ static int read_mif_from_init_hex(const std::string& file_path,
       segment_id, BasicPort("address", static_cast<size_t>(depth_min_addr),
                             static_cast<size_t>(depth_max_addr)));
   }
-
+  mif_storage.set_segment_physical_pb(segment_id, pb_type);
   return CMD_EXEC_SUCCESS;
-}
-
-static bool ends_with_ci(const std::string& s, const std::string& suffix) {
-  if (s.size() < suffix.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < suffix.size(); ++i) {
-    const char a = static_cast<char>(std::tolower(
-      static_cast<unsigned char>(s[s.size() - suffix.size() + i])));
-    const char b =
-      static_cast<char>(std::tolower(static_cast<unsigned char>(suffix[i])));
-    if (a != b) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static bool looks_like_blif_file(const std::string& file_path) {
-  return ends_with_ci(file_path, ".eblif") || ends_with_ci(file_path, ".blif");
 }
 
 static int read_mif_from_eblif(const std::string& file_path,
@@ -390,16 +371,15 @@ static int read_mif_from_eblif(const std::string& file_path,
   return CMD_EXEC_SUCCESS;
 }
 
-int read_mif(const std::string& file_path, MifStorage& mif_storage) {
-  return read_mif(file_path, mif_storage, MifPbTypeResolver());
-}
-
 int read_mif(const std::string& file_path, MifStorage& mif_storage,
-             const MifPbTypeResolver& pb_type_resolver) {
-  if (looks_like_blif_file(file_path)) {
+             const MifPbTypeResolver& pb_type_resolver,
+             const std::string& pb_type) {
+  if (pb_type.empty()) {
+    /* Eblif path: resolve pb_type via VPR callback. */
     return read_mif_from_eblif(file_path, mif_storage, pb_type_resolver);
   }
-  return read_mif_from_init_hex(file_path, mif_storage);
+  /* Hex/MIF path: one read_mif binds to one explicit pb_type. */
+  return read_mif_from_init_hex(file_path, mif_storage, pb_type);
 }
 
 } /* namespace openfpga */

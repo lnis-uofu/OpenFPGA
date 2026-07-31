@@ -41,8 +41,6 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
-  CommandOptionId opt_write_mif = cmd.option("write_mif");
-  CommandOptionId opt_eblif = cmd.option("eblif");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(
@@ -88,25 +86,17 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   extract_device_non_fabric_bitstream(
     g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
 
-  if (true == cmd_context.option_enable(cmd, opt_eblif)) {
-    const std::string& eblif_file_path =
-      cmd_context.option_value(cmd, opt_eblif);
-    std::string mem_file_path;
-    if (true == cmd_context.option_enable(cmd, opt_write_mif)) {
-      mem_file_path = cmd_context.option_value(cmd, opt_write_mif);
-    } else if (true == cmd_context.option_enable(cmd, opt_write_file)) {
-      mem_file_path = default_preload_mem_file_path(
-        cmd_context.option_value(cmd, opt_write_file));
-    }
-
-    if (!mem_file_path.empty()) {
-      const int mem_status = aggregate_mif_storage_and_write_preload_mem(
-        eblif_file_path, openfpga_ctx.mutable_mif_storage(),
-        openfpga_ctx.bitstream_setting(),
-        openfpga_ctx.mutable_aggregated_mif_storage(), mem_file_path);
-      if (CMD_EXEC_SUCCESS != mem_status) {
-        return mem_status;
-      }
+  /* Aggregate MIF when bitstream setting has mif info, or logical storage
+   * already has data from read_mif. */
+  const bool has_mif_setting =
+    !openfpga_ctx.bitstream_setting().mif_source_settings().empty() ||
+    !openfpga_ctx.bitstream_setting().mif_address_map_settings().empty();
+  if (has_mif_setting || !openfpga_ctx.mif_storage().empty()) {
+    const int mem_status = aggregate_mif_storage(
+      openfpga_ctx.mutable_mif_storage(), openfpga_ctx.bitstream_setting(),
+      openfpga_ctx.mutable_aggregated_mif_storage());
+    if (CMD_EXEC_SUCCESS != mem_status) {
+      return mem_status;
     }
   }
 

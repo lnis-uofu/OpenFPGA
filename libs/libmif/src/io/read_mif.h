@@ -23,10 +23,8 @@ using MifPbTypeResolver = std::function<std::string(
  *     pb_type plus raw INIT in a new logical segment
  *   - otherwise: Verilog-style init.hex (addr/data lines)
  */
-int read_mif(const std::string& file_path, MifStorage& mif_storage);
-
-/* Resolve and set each eblif INIT segment's pb_type while it is read. */
 int read_mif(const std::string& file_path, MifStorage& mif_storage,
-             const MifPbTypeResolver& pb_type_resolver);
+             const MifPbTypeResolver& pb_type_resolver,
+             const std::string& pb_type = "");
 
 } /* namespace openfpga */

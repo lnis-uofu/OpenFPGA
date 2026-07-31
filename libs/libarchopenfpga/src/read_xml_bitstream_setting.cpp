@@ -248,6 +248,22 @@ static void read_xml_mif_source_setting(
     get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE, loc_data)
       .as_string();
 
+  if (source_attr != XML_MIF_SOURCE_SOURCE_EBLIF &&
+      source_attr != XML_MIF_SOURCE_SOURCE_OTHERS) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+                   "Invalid mif_source source='%s'. Expect '%s' or '%s'\n",
+                   source_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
+                   XML_MIF_SOURCE_SOURCE_OTHERS);
+  }
+  if (source_attr == XML_MIF_SOURCE_SOURCE_EBLIF &&
+      content_attr != XML_MIF_SOURCE_CONTENT_PARAM_INIT) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+      "Invalid mif_source content='%s' for source='%s'. Expect '%s'\n",
+      content_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
+      XML_MIF_SOURCE_CONTENT_PARAM_INIT);
+  }
+
   const openfpga::BasicPort address_range =
     parse_mif_range_attribute(address_range_attr, xml_mif_source, loc_data,
                               XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE);

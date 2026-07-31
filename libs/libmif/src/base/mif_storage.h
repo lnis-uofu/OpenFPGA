@@ -70,6 +70,9 @@ class MifStorage {
                             const std::string& raw_data);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
                                      uint64_t address, uint64_t data);
+  /* Append a deep copy of one segment (and its memory lines) from src. */
+  MifSegmentId append_segment_copy(const MifStorage& src,
+                                   const MifSegmentId& src_segment_id);
 
  public: /* Validators */
   bool valid_segment_id(const MifSegmentId& segment_id) const;

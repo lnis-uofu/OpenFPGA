@@ -38,13 +38,14 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml --eblif ${OPENFPGA_MIF_FILE} --write_mif fabric_independent_bitstream_memory.mem
+#  - Aggregate logical MIF when bitstream setting / logical storage is present
+build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
 
-# Write out MIF
-#write_mif --file mif_final.mem
+# Write aggregated preload memory
+write_mif --file fabric_independent_bitstream_memory.mem
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
