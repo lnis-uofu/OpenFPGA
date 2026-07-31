@@ -1,6 +1,5 @@
 #include "aggregate_mif.h"
 
-#include <cctype>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -107,122 +106,17 @@ static bool remap_logical_word(
   return true;
 }
 
-static bool bind_and_decode_logical_storage(
-  MifStorage& logical_storage, const BitstreamSetting& bitstream_setting) {
-  /* Bind each VPR pb_type to its mif_source and persist decoded INIT words. */
-  for (const MifSegmentId& segment_id : logical_storage.segments()) {
-    const std::string vpr_pb_type = logical_storage.physical_pb(segment_id);
-    MifSourceSettingId source_id =
-      bitstream_setting.find_mif_source_by_pb_type(vpr_pb_type);
-    if (!source_id.is_valid() && !vpr_pb_type.empty() &&
-        vpr_pb_type.back() == ']') {
-      const size_t bracket_pos = vpr_pb_type.rfind('[');
-      if (bracket_pos != std::string::npos &&
-          bracket_pos + 1 < vpr_pb_type.size() - 1) {
-        bool numeric_index = true;
-        for (size_t i = bracket_pos + 1; i + 1 < vpr_pb_type.size(); ++i) {
-          numeric_index &=
-            std::isdigit(static_cast<unsigned char>(vpr_pb_type[i])) != 0;
-        }
-        if (numeric_index) {
-          source_id = bitstream_setting.find_mif_source_by_pb_type(
-            vpr_pb_type.substr(0, bracket_pos));
-        }
-      }
-    }
-    if (!source_id.is_valid()) {
-      VTR_LOG_ERROR(
-        "aggregate_mif: segment %zu pb_type '%s' has no mif_source\n",
-        static_cast<size_t>(segment_id), vpr_pb_type.c_str());
-      return false;
-    }
-
-    logical_storage.set_segment_physical_pb(
-      segment_id, bitstream_setting.mif_source_pb_type(source_id));
-    const BasicPort addr_range =
-      bitstream_setting.mif_source_address_range(source_id);
-    const BasicPort data_range =
-      bitstream_setting.mif_source_data_range(source_id);
-    logical_storage.set_segment_addr_range(segment_id, addr_range);
-    logical_storage.set_segment_data_width(
-      segment_id, static_cast<int>(data_range.get_width()));
-
-    if (logical_storage.raw_data(segment_id).empty()) {
-      continue;
-    }
-
-    std::vector<std::pair<uint64_t, uint64_t>> words;
-    if (!unpack_yosys_init_param(logical_storage.raw_data(segment_id),
-                                 data_range.get_width(), addr_range.get_width(),
-                                 words)) {
-      return false;
-    }
-
-    for (const auto& word : words) {
-      logical_storage.create_memory_line(
-        segment_id, word.first + addr_range.get_lsb(), word.second);
-    }
-    logical_storage.set_segment_raw_data(segment_id, std::string());
-  }
-  return true;
-}
-
-static bool bitstream_has_eblif_mif_source(
-  const BitstreamSetting& bitstream_setting) {
-  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(id) ==
-        XML_MIF_SOURCE_SOURCE_EBLIF) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/* Strip trailing numeric leaf index: foo.bar[3] -> foo.bar */
-static std::string strip_numeric_pb_index(const std::string& pb_type) {
-  if (pb_type.empty() || pb_type.back() != ']') {
-    return pb_type;
-  }
-  const size_t bracket_pos = pb_type.rfind('[');
-  if (bracket_pos == std::string::npos ||
-      bracket_pos + 1 >= pb_type.size() - 1) {
-    return pb_type;
-  }
-  for (size_t i = bracket_pos + 1; i + 1 < pb_type.size(); ++i) {
-    if (!std::isdigit(static_cast<unsigned char>(pb_type[i]))) {
-      return pb_type;
-    }
-  }
-  return pb_type.substr(0, bracket_pos);
-}
-
-static bool pb_types_match(const std::string& a, const std::string& b) {
-  return a == b || strip_numeric_pb_index(a) == strip_numeric_pb_index(b) ||
-         a == strip_numeric_pb_index(b) || strip_numeric_pb_index(a) == b;
-}
-
-/* True if pb_type matches a mif_source with source="eblif". */
-static bool pb_type_is_eblif_mif_source(
-  const std::string& pb_type, const BitstreamSetting& bitstream_setting) {
-  const std::string type_only_pb = strip_numeric_pb_index(pb_type);
-  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(id) !=
-        XML_MIF_SOURCE_SOURCE_EBLIF) {
-      continue;
-    }
-    const std::string& source_pb = bitstream_setting.mif_source_pb_type(id);
-    if (pb_type == source_pb || type_only_pb == source_pb) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/* Read Yosys eblif and update logical_storage in place:
- * overwrite matching eblif pb_types; keep source="others" segments. */
+/* Read Yosys eblif into logical_storage.
+ * Empty logical: take eblif result as-is (no merge).
+ * Non-empty: overwrite matching eblif pb_types; keep source="others". */
 static int merge_eblif_into_logical_storage(
   MifStorage& logical_storage, const BitstreamSetting& bitstream_setting,
   const MifPbTypeResolver& pb_type_resolver, const std::string& eblif_path) {
+  /* No prior hex/others data: read eblif directly, skip merge. */
+  if (logical_storage.empty()) {
+    return read_mif_from_eblif(eblif_path, logical_storage, pb_type_resolver);
+  }
+
   MifStorage eblif_storage;
   const int read_status =
     read_mif_from_eblif(eblif_path, eblif_storage, pb_type_resolver);
@@ -231,9 +125,11 @@ static int merge_eblif_into_logical_storage(
   }
 
   size_t eblif_segment_count = 0;
+  /* If read_mif already loaded the same pb_type, but bitstream setting says
+   * source="eblif", the eblif data overwrites the read_mif content. */
   for (const MifSegmentId& eblif_seg : eblif_storage.segments()) {
-    if (!pb_type_is_eblif_mif_source(eblif_storage.physical_pb(eblif_seg),
-                                     bitstream_setting)) {
+    if (!bitstream_setting.pb_type_is_eblif_mif_source(
+          eblif_storage.physical_pb(eblif_seg))) {
       continue;
     }
     ++eblif_segment_count;
@@ -244,7 +140,7 @@ static int merge_eblif_into_logical_storage(
     MifSegmentId matched_seg;
     bool found = false;
     for (const MifSegmentId& logical_seg : logical_storage.segments()) {
-      if (!pb_types_match(logical_storage.physical_pb(logical_seg), pb)) {
+      if (logical_storage.physical_pb(logical_seg) != pb) {
         continue;
       }
       matched_seg = logical_seg;
@@ -275,19 +171,67 @@ static int merge_eblif_into_logical_storage(
   return CMD_EXEC_SUCCESS;
 }
 
-int aggregate_mif(MifStorage& logical_storage,
-                  const BitstreamSetting& bitstream_setting,
-                  MifStorage& out_aggregated_storage,
-                  const MifPbTypeResolver& pb_type_resolver,
-                  const std::string& eblif_file_path) {
-  out_aggregated_storage.clear();
-  if (bitstream_setting.mif_address_map_settings().empty()) {
-    VTR_LOG_ERROR("aggregate_mif: no mif_address_map in bitstream setting\n");
+/* Bind one segment to its mif_source ranges; decode raw INIT if present. */
+static int decode_logical_segment(MifStorage& logical_storage,
+                                  const MifSegmentId& segment_id,
+                                  const BitstreamSetting& bitstream_setting) {
+  const std::string vpr_pb_type = logical_storage.physical_pb(segment_id);
+  const MifSourceSettingId source_id =
+    bitstream_setting.find_mif_source_by_pb_type(vpr_pb_type);
+  if (!source_id.is_valid()) {
+    VTR_LOG_ERROR("aggregate_mif: segment %zu pb_type '%s' has no mif_source\n",
+                  static_cast<size_t>(segment_id), vpr_pb_type.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* Decide whether to read_mif_from_eblif based on bitstream setting. */
-  if (bitstream_has_eblif_mif_source(bitstream_setting)) {
+  logical_storage.set_segment_physical_pb(
+    segment_id, bitstream_setting.mif_source_pb_type(source_id));
+  const BasicPort addr_range =
+    bitstream_setting.mif_source_address_range(source_id);
+  const BasicPort data_range =
+    bitstream_setting.mif_source_data_range(source_id);
+  logical_storage.set_segment_addr_range(segment_id, addr_range);
+  logical_storage.set_segment_data_width(
+    segment_id, static_cast<int>(data_range.get_width()));
+
+  /* Hex segments already have memory lines; eblif still has raw INIT. */
+  if (logical_storage.raw_data(segment_id).empty()) {
+    return CMD_EXEC_SUCCESS;
+  }
+
+  std::vector<std::pair<uint64_t, uint64_t>> words;
+  if (!unpack_yosys_init_param(logical_storage.raw_data(segment_id),
+                               data_range.get_width(), addr_range.get_width(),
+                               words)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  for (const auto& word : words) {
+    logical_storage.create_memory_line(
+      segment_id, word.first + addr_range.get_lsb(), word.second);
+  }
+  logical_storage.set_segment_raw_data(segment_id, std::string());
+  return CMD_EXEC_SUCCESS;
+}
+
+/* Phase 1: merge eblif into logical if needed.
+ * Phase 2: bind every segment and decode remaining raw INIT. */
+static int bind_and_decode_logical_storage(
+  MifStorage& logical_storage, const BitstreamSetting& bitstream_setting,
+  const MifPbTypeResolver& pb_type_resolver,
+  const std::string& eblif_file_path) {
+  /* source="others" requires logical_storage already filled by read_mif. */
+  if (bitstream_setting.has_other_mif_source()) {
+    if (logical_storage.empty()) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: logical MIF storage is empty and no mif_source has "
+        "source='%s'\n",
+        XML_MIF_SOURCE_SOURCE_EBLIF);
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+
+  /* continue to process eblif source */
+  if (bitstream_setting.has_eblif_mif_source()) {
     if (!pb_type_resolver) {
       VTR_LOG_ERROR(
         "aggregate_mif: mif_source source='%s' requires a pb_type resolver\n",
@@ -299,19 +243,43 @@ int aggregate_mif(MifStorage& logical_storage,
     if (path.empty()) {
       return CMD_EXEC_FATAL_ERROR;
     }
-    const int read_status = merge_eblif_into_logical_storage(
+    const int merge_status = merge_eblif_into_logical_storage(
       logical_storage, bitstream_setting, pb_type_resolver, path);
-    if (CMD_EXEC_SUCCESS != read_status) {
-      return read_status;
+    if (CMD_EXEC_SUCCESS != merge_status) {
+      return merge_status;
+    }
+  } 
+
+  /* ---- Phase 2: bind + decode all logical segments ---- */
+  for (const MifSegmentId& segment_id : logical_storage.segments()) {
+    const int decode_status =
+      decode_logical_segment(logical_storage, segment_id, bitstream_setting);
+    if (CMD_EXEC_SUCCESS != decode_status) {
+      return decode_status;
     }
   }
+  return CMD_EXEC_SUCCESS;
+}
 
+int aggregate_mif(MifStorage& logical_storage,
+                  const BitstreamSetting& bitstream_setting,
+                  MifStorage& out_aggregated_storage,
+                  const MifPbTypeResolver& pb_type_resolver,
+                  const std::string& eblif_file_path) {
+  out_aggregated_storage.clear();
+  if (bitstream_setting.mif_address_map_settings().empty()) {
+    VTR_LOG_ERROR("aggregate_mif: no mif_address_map in bitstream setting\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  const int bind_status = bind_and_decode_logical_storage(
+    logical_storage, bitstream_setting, pb_type_resolver, eblif_file_path);
+  if (CMD_EXEC_SUCCESS != bind_status) {
+    return bind_status;
+  }
   if (logical_storage.empty()) {
     VTR_LOG("aggregate_mif: empty logical MIF storage; nothing to aggregate\n");
     return CMD_EXEC_SUCCESS;
-  }
-  if (!bind_and_decode_logical_storage(logical_storage, bitstream_setting)) {
-    return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Aggregated physical data, indexed by destination pb_type and address. */

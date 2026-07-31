@@ -188,7 +188,12 @@ class BitstreamSetting {
   BasicPort mif_source_address_range(const MifSourceSettingId& id) const;
   BasicPort mif_source_data_range(const MifSourceSettingId& id) const;
   MifSourceSettingId find_mif_source_by_pb_type(
-    const std::string& pb_type) const;
+    const std::string& pb_type) const; /* exact, then strip trailing [N] */
+  /* True if any mif_source has source="eblif". */
+  bool has_eblif_mif_source() const;
+  bool has_other_mif_source() const;
+  /* True if pb_type matches a mif_source with source="eblif". */
+  bool pb_type_is_eblif_mif_source(const std::string& pb_type) const;
 
   /* MIF address map settings */
   std::string mif_address_map_src_pb_type(
@@ -198,7 +203,7 @@ class BitstreamSetting {
   mif_address_map_rule_range mif_address_map_rules(
     const MifAddressMapSettingId& id) const;
   MifAddressMapSettingId find_mif_address_map_by_src_pb_type(
-    const std::string& src_pb_type) const;
+    const std::string& src_pb_type) const; /* exact, then strip trailing [N] */
 
   /* MIF address map rule settings (<map> children) */
   BasicPort mif_address_map_rule_src_addr_range(

@@ -209,7 +209,7 @@ int read_mif_from_init_hex(const std::string& file_path,
  *   - resolve pb_type via pb_type_resolver (VPR internal data)
  *   - create one segment with physical_pb + raw INIT bit-string
  *
- * Clears mif_storage first. Addr/data ranges are filled later in
+ * Addr/data ranges are filled later in
  * aggregate_mif from bitstream setting. Decode of raw INIT also happens
  * there.
  *******************************************************************/
