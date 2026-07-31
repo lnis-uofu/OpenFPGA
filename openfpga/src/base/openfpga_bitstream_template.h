@@ -86,12 +86,12 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   extract_device_non_fabric_bitstream(
     g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
 
-  /* Aggregate MIF when bitstream setting has mif info, or logical storage
-   * already has data from read_mif. */
+  /* Aggregate MIF when bitstream setting has mif info. Whether to read_mif
+   * from Yosys eblif is decided inside aggregate_mif. */
   const bool has_mif_setting =
     !openfpga_ctx.bitstream_setting().mif_source_settings().empty() ||
     !openfpga_ctx.bitstream_setting().mif_address_map_settings().empty();
-  if (has_mif_setting || !openfpga_ctx.mif_storage().empty()) {
+  if (has_mif_setting) {
     const int mem_status = aggregate_mif_storage(
       openfpga_ctx.mutable_mif_storage(), openfpga_ctx.bitstream_setting(),
       openfpga_ctx.mutable_aggregated_mif_storage());

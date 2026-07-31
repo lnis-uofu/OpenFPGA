@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "bitstream_setting_xml_constants.h"
+#include "read_mif.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -165,13 +167,46 @@ static bool bind_and_decode_logical_storage(
   return true;
 }
 
+static bool bitstream_has_eblif_mif_source(
+  const BitstreamSetting& bitstream_setting) {
+  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
+    if (bitstream_setting.mif_source_source(id) ==
+        XML_MIF_SOURCE_SOURCE_EBLIF) {
+      return true;
+    }
+  }
+  return false;
+}
+
 int aggregate_mif(MifStorage& logical_storage,
                   const BitstreamSetting& bitstream_setting,
-                  MifStorage& out_aggregated_storage) {
+                  MifStorage& out_aggregated_storage,
+                  const MifPbTypeResolver& pb_type_resolver,
+                  const std::string& eblif_file_path) {
   out_aggregated_storage.clear();
   if (bitstream_setting.mif_address_map_settings().empty()) {
     VTR_LOG_ERROR("aggregate_mif: no mif_address_map in bitstream setting\n");
     return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Decide whether to read_mif from Yosys eblif based on bitstream setting. */
+  if (bitstream_has_eblif_mif_source(bitstream_setting)) {
+    if (!pb_type_resolver) {
+      VTR_LOG_ERROR(
+        "aggregate_mif: mif_source source='%s' requires a pb_type resolver\n",
+        XML_MIF_SOURCE_SOURCE_EBLIF);
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    const std::string path =
+      eblif_file_path.empty() ? find_yosys_eblif_file_path() : eblif_file_path;
+    if (path.empty()) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    const int read_status =
+      read_mif(path, logical_storage, pb_type_resolver, bitstream_setting);
+    if (CMD_EXEC_SUCCESS != read_status) {
+      return read_status;
+    }
   }
 
   if (logical_storage.empty()) {

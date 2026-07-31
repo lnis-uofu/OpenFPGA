@@ -3,12 +3,14 @@
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "bitstream_setting_xml_constants.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -380,6 +382,112 @@ int read_mif(const std::string& file_path, MifStorage& mif_storage,
   }
   /* Hex/MIF path: one read_mif binds to one explicit pb_type. */
   return read_mif_from_init_hex(file_path, mif_storage, pb_type);
+}
+
+std::string find_yosys_eblif_file_path() {
+  constexpr const char* k_suffix = "_yosys_out.eblif";
+  std::string found;
+
+  for (const std::filesystem::directory_entry& entry :
+       std::filesystem::directory_iterator(".")) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    const std::string name = entry.path().filename().string();
+    if (!name.ends_with(k_suffix)) {
+      continue;
+    }
+    if (!found.empty()) {
+      VTR_LOG_ERROR("Cannot locate Yosys eblif: multiple '*%s' in cwd\n",
+                    k_suffix);
+      return std::string();
+    }
+    found = name;
+  }
+
+  if (found.empty()) {
+    VTR_LOG_ERROR("Cannot locate Yosys eblif: no '*%s' in cwd\n", k_suffix);
+    return std::string();
+  }
+
+  VTR_LOG("Located Yosys eblif '%s'\n", found.c_str());
+  return found;
+}
+
+static bool pb_type_matches_mif_source(const std::string& vpr_pb_type,
+                                       const std::string& source_pb_type) {
+  if (vpr_pb_type == source_pb_type) {
+    return true;
+  }
+  if (vpr_pb_type.empty() || vpr_pb_type.back() != ']') {
+    return false;
+  }
+  const size_t bracket_pos = vpr_pb_type.rfind('[');
+  if (bracket_pos == std::string::npos ||
+      bracket_pos + 1 >= vpr_pb_type.size() - 1) {
+    return false;
+  }
+  for (size_t i = bracket_pos + 1; i + 1 < vpr_pb_type.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(vpr_pb_type[i]))) {
+      return false;
+    }
+  }
+  return vpr_pb_type.substr(0, bracket_pos) == source_pb_type;
+}
+
+static bool pb_type_is_eblif_mif_source(
+  const std::string& pb_type, const BitstreamSetting& bitstream_setting) {
+  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
+    if (bitstream_setting.mif_source_source(id) !=
+        XML_MIF_SOURCE_SOURCE_EBLIF) {
+      continue;
+    }
+    if (pb_type_matches_mif_source(pb_type,
+                                   bitstream_setting.mif_source_pb_type(id))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+int read_mif(const std::string& file_path, MifStorage& mif_storage,
+             const MifPbTypeResolver& pb_type_resolver,
+             const BitstreamSetting& bitstream_setting) {
+  MifStorage eblif_storage;
+  const int read_status =
+    read_mif_from_eblif(file_path, eblif_storage, pb_type_resolver);
+  if (CMD_EXEC_SUCCESS != read_status) {
+    return read_status;
+  }
+
+  MifStorage merged;
+  for (const MifSegmentId& segment_id : mif_storage.segments()) {
+    if (pb_type_is_eblif_mif_source(mif_storage.physical_pb(segment_id),
+                                    bitstream_setting)) {
+      VTR_LOG("read_mif: overwrite logical pb_type '%s' from eblif\n",
+              mif_storage.physical_pb(segment_id).c_str());
+      continue;
+    }
+    merged.append_segment_copy(mif_storage, segment_id);
+  }
+  for (const MifSegmentId& segment_id : eblif_storage.segments()) {
+    if (!pb_type_is_eblif_mif_source(eblif_storage.physical_pb(segment_id),
+                                     bitstream_setting)) {
+      continue;
+    }
+    merged.append_segment_copy(eblif_storage, segment_id);
+  }
+
+  if (merged.empty()) {
+    VTR_LOG_ERROR(
+      "read_mif: eblif loaded but no segment matches any mif_source with "
+      "source='%s'\n",
+      XML_MIF_SOURCE_SOURCE_EBLIF);
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  mif_storage = std::move(merged);
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* namespace openfpga */

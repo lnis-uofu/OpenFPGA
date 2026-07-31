@@ -14,9 +14,7 @@
 #include "command_exit_codes.h"
 #include "mif_storage.h"
 #include "mif_storage_fwd.h"
-#include "read_mif.h"
 #include "read_xml_openfpga_arch.h"
-#include "vtr_assert.h"
 #include "vtr_log.h"
 #include "write_mif.h"
 
@@ -38,17 +36,13 @@ int main(int argc, const char** argv) {
   const std::vector<std::string> input_pb_types = {
     "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
   size_t next_pb_type = 0;
-  status = openfpga::read_mif(
-    argv[2], logical_storage,
+  status = openfpga::aggregate_mif(
+    logical_storage, bitstream_setting, aggregated_storage,
     [&input_pb_types, &next_pb_type](const std::string&,
                                      const openfpga::MifEblifPortConnections&) {
       return input_pb_types.at(next_pb_type++);
-    });
-  if (openfpga::CMD_EXEC_SUCCESS != status) {
-    return status;
-  }
-  status = openfpga::aggregate_mif(logical_storage, bitstream_setting,
-                                   aggregated_storage);
+    },
+    argv[2]);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
