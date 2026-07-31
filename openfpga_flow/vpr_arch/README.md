@@ -13,7 +13,7 @@ Please reveal the following architecture features in the names to help quickly s
 - register\_chain: If shift register chain is used inside CLBs
 - scan\_chain: If scan chain testing infrastructure is used inside CLBs
 - <wide>\_<frac>\_mem<mem\_size><preload>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword 'wide' is to specify if the BRAM spans more than 1 column. The keyword 'frac' is to specify if the BRAM is fracturable to operate in different modes. The keyword 'preload' indicates the BRAM supports initialization through a dedicated interface.
-- <wide>\_<frac>\_dsp<dsp\_size>reg: If Digital Signal Processor (DSP) is used or not. If used, the input size should be clarified here.
+- <wide>\_<frac>\_[ff2]dsp<dsp\_size>reg: If Digital Signal Processor (DSP) is used or not. If used, the input size should be clarified here. The [ff2] prefix indicates that there are direct connection (hard-wired routing) between neighbour CLB and DSP blocks, which provides high-speed connection for DSP data paths.
   - The keyword 'wide' is to specify if the DSP spans more than 1 column.
   - The keyword 'frac' is to specify if the DSP is fracturable to operate in different modes.
   - The keyword 'reg' is to specify if the DSP has input and output registers. If only input or output registers are used, the keyword will be 'regin' or 'regout' respectively.
