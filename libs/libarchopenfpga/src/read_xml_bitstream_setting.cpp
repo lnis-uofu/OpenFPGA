@@ -251,10 +251,11 @@ static void read_xml_mif_source_setting(
   if (source_attr != XML_MIF_SOURCE_SOURCE_EBLIF &&
       source_attr != XML_MIF_SOURCE_SOURCE_OTHERS &&
       source_attr != XML_MIF_SOURCE_SOURCE_NONE) {
-    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
-                   "Invalid mif_source source='%s'. Expect '%s', '%s' or '%s'\n",
-                   source_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
-                   XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_NONE);
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+      "Invalid mif_source source='%s'. Expect '%s', '%s' or '%s'\n",
+      source_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
+      XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_NONE);
   }
   if (source_attr == XML_MIF_SOURCE_SOURCE_EBLIF &&
       content_attr != XML_MIF_SOURCE_CONTENT_PARAM_INIT) {

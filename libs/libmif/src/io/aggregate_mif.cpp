@@ -249,7 +249,7 @@ static int bind_and_decode_logical_storage(
     if (CMD_EXEC_SUCCESS != merge_status) {
       return merge_status;
     }
-  } 
+  }
 
   /* ---- Phase 2: bind + decode all logical segments ---- */
   for (const MifSegmentId& segment_id : logical_storage.segments()) {
