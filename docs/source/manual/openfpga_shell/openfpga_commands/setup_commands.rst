@@ -87,6 +87,32 @@ write_openfpga_bitstream_setting
 
     Show verbose log
 
+read_mif
+~~~~~~~~
+
+  Read a Memory Initialization File in the **OpenFPGA MIF** format (see below), parse it, and append the resulting segment(s) to in-memory storage. May be run multiple times; each successful read appends more segments. Intended before ``link_openfpga_arch`` when the flow uses MIF-based BRAM initialization.
+
+  **Format (summary)**
+
+  * Line comments: ``# ...`` or ``// ...`` (``//`` directives are described next).
+  * Optional tile coordinates: ``// X <int>``, ``// Y <int>`` (``#`` may follow on the same line).
+  * Optional widths: ``// ADDR_WIDTH <int>``, ``// DATA_WIDTH <int>``, ``//ID_WIDTH <int>``.
+  * A new RAM block section starts at ``//RAM_ID <int>``; data lines before the first ``//RAM_ID`` belong to the placement-oriented block (X/Y); following lines belong to the RAM_ID block.
+  * Data lines: ``<hex_address> <hex_data>`` (e.g. ``0x2000 0x0000000a``), exactly two tokens per line.
+
+  .. option:: --file <string> or -f <string>
+
+    Path to the MIF file to read.
+
+write_mif
+~~~~~~~~~
+
+  Write the processed in-memory MIF data to one file in the OpenFPGA MIF format. Requires that ``read_mif`` has completed successfully at least once before this command (shell dependency).
+
+  .. option:: --file <string> or -f <string>
+
+    Path to the output file (overwrite).
+
 .. _openfpga_setup_command_read_openfpga_clock_arch:
 
 read_openfpga_clock_arch
@@ -168,9 +194,16 @@ link_openfpga_arch
 
     Sort the OPIN edges in General Switch Blocks (GSBs). Ensure the OPINs come first before channel edges, this is performed after executing `--sort_gsb_chan_node_in_edges` option.
 
+  .. option:: --allow_gsb_dangling_opin
+
+    Allow dangling output ports exist without driving any routing tracks in General Switch Blocks (GSBs). By default, it is disabled to keep netlist clean and maximize the efficiency in uniquifying routing blocks. Enable it to ensure support on legacy devices.
+
   .. option:: --verbose
 
     Show verbose log
+
+
+.. _openfpga_setup_command_write_gsb_to_xml:
 
 write_gsb_to_xml
 ~~~~~~~~~~~~~~~~
@@ -285,6 +318,35 @@ build_fabric
   .. option:: --group_config_block
 
     Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks, as depicted in :numref:`fig_group_config_block_overview`. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module. When enabled, as illustrated in :numref:`fig_group_config_block_hierarchy`, the physical memory block locates under a CLB, driving a number of logical memory blocks which are close to the programmable resources. The logical memory blocks contain only pass-through wires which can be optimized out during physical design phase.
+
+  .. option:: --group_routing
+
+    Adding this option will combine connection block and switch block into a single module (Currently named as `SB_*__*_`). The IPIN and OPIN of the grid makes connection to SB directly instead of going through a connection block. This is helpful, when IPIN is connected to CHANX and CHANY together, or to the both side of the Switchboxes.
+
+  .. code-block:: text
+
+
+            WITHOUT --group_routing            WITH --group_routing
+
+                             │  ▲
+                             ▼  │                            │  ▲
+           ┌───────┐  ┌──────┴──┴──┐                         ▼  │
+      ◄────┤  CBX  ├─►│            ├◄──        ┌─────────────┴──┴───┐
+      ────►│ [x][y]├◄─┤       SB   ├──►   ◄────┤                    │
+           └──┬─┬──┘  └───┐ [x][y] │      ────►│               SB   ├◄──
+              ▼ ▲         │        │           └───┬─┬─────┐ [x][y] ├──►
+           ┌──┴─┴───────┐ │        │               ▼ ▲     │        │
+           │            ├►┤        │            ┌──┴─┴───┐ │        │
+           │            │ └──┬──┬──┘            │        │ │        │
+           │            │    ▼  ▲               │  Grid  ├►┤        │
+           │    Grid    │ ┌──┴──┴──┐            │ [x][y] │ │        │
+           │   [x][y]   ├◄┤  CBY   │            │        ├◄┤        │
+           │            │ │ [x][y] │            └────────┘ │        │
+           └────────────┘ └──┬──┬──┘                       └──┬──┬──┘
+                             ▼  ▲                             ▼  ▲
+                             │  │                             │  │
+
+
 
   .. _fig_group_config_block_overview:
 

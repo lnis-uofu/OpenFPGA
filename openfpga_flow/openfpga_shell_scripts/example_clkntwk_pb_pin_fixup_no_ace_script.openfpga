@@ -1,9 +1,10 @@
 # Run VPR for the 'and' design
-#--write_rr_graph example_rr_graph.xml
+# AP flow does not support reset signals on CLB pins well. Revert to classical flow 
 vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
   --clock_modeling ideal \
   --device ${OPENFPGA_VPR_DEVICE_LAYOUT} \
   --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} \
+  --pack --place --route --analysis \
   --skip_sync_clustering_and_routing_results on
 
 # Read OpenFPGA architecture definition

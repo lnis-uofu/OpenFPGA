@@ -1,0 +1,56 @@
+<rr_cb x="1" y="1" num_sides="4">
+	<IPIN side="left" index="0" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="0" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="top" index="1" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="1" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="2" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" index="1" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="2" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="4" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="top" index="5" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="3" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="6" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" index="5" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="4" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="8" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="top" index="9" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="5" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="10" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" index="9" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="6" mux_size="2">
+		<driver_node type="CHANY" side="bottom" index="36" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="37" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="7" mux_size="4">
+		<driver_node type="CHANY" side="bottom" index="32" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="33" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="bottom" index="34" segment_id="0" tap="1"/>
+		<driver_node type="CHANY" side="top" index="35" segment_id="0" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="8" mux_size="2">
+		<driver_node type="CHANY" side="bottom" index="12" segment_id="1" tap="1"/>
+		<driver_node type="CHANY" side="top" index="13" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="9" mux_size="2">
+		<driver_node type="CHANY" side="bottom" index="14" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" index="13" segment_id="1" tap="2"/>
+	</IPIN>
+</rr_cb>

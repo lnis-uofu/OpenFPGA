@@ -52,7 +52,8 @@ int write_gsb_template(const T& openfpga_ctx, const Command& cmd,
 
   write_device_rr_gsb_to_xml(
     g_vpr_ctx.device().grid, openfpga_ctx.vpr_device_annotation(),
-    g_vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(), options);
+    g_vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(),
+    openfpga_ctx.module_graph(), options);
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

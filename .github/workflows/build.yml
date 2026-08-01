@@ -4,6 +4,11 @@ name: Test
 on:
   workflow_dispatch:
   pull_request:
+    paths-ignore: # prevent from running if only docs are updated
+      - '**.md'
+      - 'docs/**'
+      - '**/*README*'
+      - '**.rst'
   push:
     branches:
       - 'master'
@@ -41,7 +46,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -92,7 +97,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -108,7 +113,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -125,13 +130,15 @@ jobs:
       - name: Install dependencies
         run: |
           ./.github/workflows/build_dependency_win-msys2-${{ matrix.config.os}}.sh
-          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
           python3 -m venv myenv
           source myenv/bin/activate
           python3 -m pip install --upgrade pip setuptools
           python3 -m pip install -r msys2_requirements.txt
           echo "==== Checking python packages ===="
           python -c "import yaml; print('Installed')"      
+          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
+          sleep 10s
+          cp /usr/include/FlexLexer.h /${{ matrix.config.prefix}}/include/
 
       - name: Dump tool versions
         run: |
@@ -153,20 +160,26 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
           restore-keys: |
+            ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-
             ${{ runner.os }}-msys2-${{ github.job }}-
-            ${{ runner.os }}-msys2-
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Create installer
         shell: msys2 {0}
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           make checkout
-          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
-          make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_msys2_installer_log
@@ -175,7 +188,7 @@ jobs:
             _CPack_Packages/win64/IFW/PreinstallOutput.log 
 
       - name: Upload artifact installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: win_msys2_installer
           retention-days: 1
@@ -203,12 +216,12 @@ jobs:
 #            cxx: g++
 #            os: UCRT64
 #            prefix: ucrt64
-          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64)"
+          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64, debug)"
             cc: gcc
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -224,7 +237,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -272,15 +285,21 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
           restore-keys: |
-            ${{ runner.os }}-msys2-${{ github.job }}-
-            ${{ runner.os }}-msys2-
+            ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}
+            ${{ runner.os }}-msys2-${{ github.job }}
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
 
       - name: Build
         shell: msys2 {0}
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make all BUILD_TYPE=DEBUG CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
@@ -408,7 +427,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: vcpkg build
         uses: johnwason/vcpkg-action@v7
@@ -422,7 +441,7 @@ jobs:
       - name: Install WinFlexBison
         shell: powershell
         run: |
-          choco install winflexbison3 wget
+          choco install winflexbison3 wget eigen
           choco install magicsplat-tcl-tk --version=1.16.0
 
       - name: Dump tool versions
@@ -481,11 +500,13 @@ jobs:
 
       - name: Create installer
         shell: powershell
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           mkdir build
           cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF
-          cmake --build . --config Release
+          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -DCMAKE_INSTALL_RPATH="${{ github.workspace }}/vcpkg" -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build . --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
           cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
 
       - name: Create Python virtual environment
@@ -537,7 +558,7 @@ jobs:
           python openfpga_flow\scripts\run_fpga_task.py openfpga_flow\tasks\compilation_verification --debug --show_thread_logs --default_tool_path "${{ github.workspace }}\openfpga_flow\misc\fpgaflow_default_tool_path_win_msvc.conf"
 
       - name: Upload regression logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_win_msvc_installer_regression_log
@@ -546,7 +567,7 @@ jobs:
             openfpga_flow/**/*.log
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_msys2_installer_log
@@ -555,7 +576,7 @@ jobs:
             _CPack_Packages/win64/IFW/PreinstallOutput.log 
 
       - name: Upload artifact installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: win_msvc_installer
           retention-days: 1
@@ -593,7 +614,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -606,7 +627,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -628,7 +653,7 @@ jobs:
       - name: Check ccache size
         run: ccache -s
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ matrix.config.cc == 'gcc-11'}}
         with:
           name: openfpga
@@ -684,6 +709,14 @@ jobs:
             cc: gcc-11
             cxx: g++-11
             cmake_flags: "-DOPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN=ON"
+          - name: "Build with libedit (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            cmake_flags: "-DOPENFPGA_READLINE_MODE=libedit"
+          - name: "Build with std::getline (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            cmake_flags: "-DOPENFPGA_READLINE_MODE=standard"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -695,7 +728,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -708,7 +741,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-${{ matrix.config.cmake_flags}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -741,7 +778,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
@@ -754,7 +791,12 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-${{ matrix.config.dependency_version}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}-
+
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -791,7 +833,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
   
       - name: Install dependencies
         run: |
@@ -808,7 +850,12 @@ jobs:
   
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
+
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -851,7 +898,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -868,7 +915,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -909,7 +960,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -925,7 +976,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -969,7 +1024,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
@@ -982,7 +1037,11 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ github.job }}
+          # Generates a unique key based on the specific job and matrix parameters
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.config.cc}}
+          # Defines the fallback prefix if an exact match is missing
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -1007,7 +1066,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1060,7 +1119,7 @@ jobs:
           access_token: ${{ github.token }}
     
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1076,11 +1135,15 @@ jobs:
           chmod +x build/yosys/bin/yosys-config
           chmod +x build/yosys/bin/yosys-filterlib
           chmod +x build/yosys/bin/yosys-smtbmc
+      - name: linker status
+        run: |
+          ldd build/openfpga/openfpga
+          ldd build/yosys/bin/yosys
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_${{matrix.config.name}}_regression_log
@@ -1118,7 +1181,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
@@ -1129,7 +1192,7 @@ jobs:
           unset OPENFPGA_PATH
           source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
           name: failed_${{matrix.config.name}}_regression_log

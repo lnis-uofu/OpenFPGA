@@ -1,0 +1,34 @@
+<rr_cb x="3" y="2" num_sides="4">
+	<IPIN side="bottom" index="0" node_id="532" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="900" index="0" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="885" index="1" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="1" node_id="533" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="884" index="2" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="901" index="3" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="bottom" index="2" node_id="534" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="902" index="4" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="887" index="5" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="3" node_id="535" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="886" index="6" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="903" index="7" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="bottom" index="4" node_id="536" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="904" index="8" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="889" index="9" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="5" node_id="537" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="888" index="10" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="905" index="11" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="bottom" index="6" node_id="538" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="906" index="12" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="891" index="13" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="bottom" index="7" node_id="539" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="890" index="14" segment_id="1" tap="2"/>
+		<driver_node type="CHANX" side="right" node_id="907" index="15" segment_id="1" tap="2"/>
+	</IPIN>
+</rr_cb>

@@ -733,9 +733,11 @@ def create_yosys_params():
     update_template_vars_from_extra_args(ys_params)
 
     if not args.verific:
-        ys_params["VERILOG_FILES"] = " ".join(
-            [shlex.quote(eachfile) for eachfile in args.benchmark_files]
-        )
+        ys_vlog_files = []
+        for curr_file in args.benchmark_files:
+            if curr_file.endswith(".v") or curr_file.endswith(".sv"):
+                ys_vlog_files.append(shlex.quote(curr_file))
+        ys_params["VERILOG_FILES"] = " ".join(ys_vlog_files)
         if not "READ_VERILOG_OPTIONS" in ys_params:
             ys_params["READ_VERILOG_OPTIONS"] = ""
     else:

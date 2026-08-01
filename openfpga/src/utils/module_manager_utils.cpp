@@ -882,6 +882,48 @@ static void add_module_nets_between_logic_and_memory_sram_ports(
 }
 
 /********************************************************************
+ * Collect the module port ids of the SRAM (or SRAMb) configuration ports of a
+ * logic module, in the canonical order (regular SRAM ports first, then
+ * mode-select SRAM ports). Ports that do not exist on the module are skipped.
+ *
+ * When inverted is true the complementary (SRAMb) ports are returned, i.e. the
+ * port names carry the INV_PORT_POSTFIX suffix.
+ *******************************************************************/
+static std::vector<ModulePortId> find_logic_module_sram_port_ids(
+  ModuleManager& module_manager, const ModuleId& logic_module,
+  const CircuitLibrary& circuit_lib, const CircuitModelId& logic_model,
+  const bool& inverted) {
+  const std::string postfix =
+    inverted ? std::string(INV_PORT_POSTFIX) : std::string();
+
+  /* Regular sram ports go first, then mode-select sram ports */
+  std::vector<std::string> logic_model_sram_port_names;
+  for (CircuitPortId regular_sram_port :
+       find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
+    logic_model_sram_port_names.push_back(
+      circuit_lib.port_prefix(regular_sram_port) + postfix);
+  }
+  for (CircuitPortId mode_select_sram_port :
+       find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
+    logic_model_sram_port_names.push_back(
+      circuit_lib.port_prefix(mode_select_sram_port) + postfix);
+  }
+
+  /* Resolve the names to module port ids, skipping non-existent ports */
+  std::vector<ModulePortId> logic_module_sram_port_ids;
+  for (const std::string& logic_model_sram_port_name :
+       logic_model_sram_port_names) {
+    ModulePortId port_id =
+      module_manager.find_module_port(logic_module, logic_model_sram_port_name);
+    if (ModulePortId::INVALID() == port_id) {
+      continue;
+    }
+    logic_module_sram_port_ids.push_back(port_id);
+  }
+  return logic_module_sram_port_ids;
+}
+
+/********************************************************************
  * Add the port-to-port connection between a logic module
  * and a memory module
  * Create nets to wire SRAM ports between logic module and memory module
@@ -903,98 +945,137 @@ void add_module_nets_between_logic_and_memory_sram_bus(
   const ModuleId& logic_module, const size_t& logic_instance_id,
   const ModuleId& memory_module, const size_t& memory_instance_id,
   const CircuitLibrary& circuit_lib, const CircuitModelId& logic_model) {
-  /* Connect SRAM port */
-  /* Find SRAM ports in the circuit model for logic module */
-  std::vector<std::string> logic_model_sram_port_names;
-  /* Regular sram port goes first */
-  for (CircuitPortId regular_sram_port :
-       find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sram_port_names.push_back(
-      circuit_lib.port_prefix(regular_sram_port));
-  }
-  /* Mode-select sram port goes first */
-  for (CircuitPortId mode_select_sram_port :
-       find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sram_port_names.push_back(
-      circuit_lib.port_prefix(mode_select_sram_port));
-  }
-  /* Find the port ids in the memory */
-  std::vector<ModulePortId> logic_module_sram_port_ids;
-  for (const std::string& logic_model_sram_port_name :
-       logic_model_sram_port_names) {
-    /* Skip non-exist ports */
-    if (ModulePortId::INVALID() ==
-        module_manager.find_module_port(logic_module,
-                                        logic_model_sram_port_name)) {
-      continue;
+  /* Wire the SRAM ports (inverted == false) then the SRAMb ports
+   * (inverted == true) */
+  for (const bool inverted : {false, true}) {
+    std::vector<ModulePortId> logic_module_sram_port_ids =
+      find_logic_module_sram_port_ids(module_manager, logic_module, circuit_lib,
+                                      logic_model, inverted);
+
+    /* Get the matching SRAM/SRAMb port name of the memory model. This should be
+     * a constant expression, the same for all the memory modules. */
+    std::string memory_model_sram_port_name =
+      inverted ? generate_configurable_memory_inverted_data_out_name()
+               : generate_configurable_memory_data_out_name();
+    ModulePortId mem_module_sram_port_id = module_manager.find_module_port(
+      memory_module, memory_model_sram_port_name);
+
+    /* Do wiring only when we have sram ports on both sides */
+    if ((false == logic_module_sram_port_ids.empty()) &&
+        (ModulePortId::INVALID() != mem_module_sram_port_id)) {
+      add_module_nets_between_logic_and_memory_sram_ports(
+        module_manager, parent_module, logic_module, logic_instance_id,
+        memory_module, memory_instance_id, logic_module_sram_port_ids,
+        mem_module_sram_port_id);
     }
-    logic_module_sram_port_ids.push_back(module_manager.find_module_port(
-      logic_module, logic_model_sram_port_name));
+  }
+}
+
+/********************************************************************
+ * Add the port-to-port connection between a shared memory module and a set of
+ * logic modules that are controlled by the same configuration bits. This is
+ * used by bus-based multiplexers, where every bit of the output bus is
+ * implemented as a separate multiplexer instance but all the instances share
+ * a single selector (i.e. a single memory module).
+ *
+ * Unlike add_module_nets_between_logic_and_memory_sram_ports(), here the memory
+ * output is the single driver (net source) that fans out to the SRAM port of
+ * every logic instance (net sinks). This keeps the single-source-per-net
+ * requirement of the netlist writer satisfied while sharing one memory.
+ *******************************************************************/
+static void add_module_nets_between_shared_memory_and_logic_sram_ports(
+  ModuleManager& module_manager, const ModuleId& parent_module,
+  const ModuleId& logic_module, const std::vector<size_t>& logic_instance_ids,
+  const ModuleId& memory_module, const size_t& memory_instance_id,
+  const std::vector<ModulePortId>& logic_module_sram_port_ids,
+  const ModulePortId& mem_module_sram_port_id) {
+  /* Find SRAM ports in logic module */
+  std::vector<BasicPort> logic_module_sram_ports;
+  for (const ModulePortId& logic_module_sram_port_id :
+       logic_module_sram_port_ids) {
+    logic_module_sram_ports.push_back(
+      module_manager.module_port(logic_module, logic_module_sram_port_id));
   }
 
-  /* Get the SRAM port name of memory model */
-  /* This should be a constant expression and it should be the same for all the
-   * memory module! */
-  std::string memory_model_sram_port_name =
-    generate_configurable_memory_data_out_name();
-  /* Find the corresponding ports in memory module */
-  ModulePortId mem_module_sram_port_id =
-    module_manager.find_module_port(memory_module, memory_model_sram_port_name);
+  /* Align the (possibly multiple) SRAM ports of the logic module against the
+   * single SRAM port of the memory module, exactly as the 1-to-1 variant does
+   */
+  BasicPort mem_module_port =
+    module_manager.module_port(memory_module, mem_module_sram_port_id);
+  std::vector<BasicPort> virtual_mem_module_ports;
+  size_t port_lsb = 0;
+  for (const BasicPort& logic_module_sram_port : logic_module_sram_ports) {
+    BasicPort virtual_port;
+    virtual_port.set_name(mem_module_port.get_name());
+    virtual_port.set_width(port_lsb,
+                           port_lsb + logic_module_sram_port.get_width() - 1);
+    virtual_mem_module_ports.push_back(virtual_port);
+    port_lsb = virtual_port.get_msb() + 1;
+  }
+  VTR_ASSERT(port_lsb == mem_module_port.get_msb() + 1);
 
-  /* Do wiring only when we have sram ports */
-  if ((false == logic_module_sram_port_ids.empty()) ||
-      (ModulePortId::INVALID() == mem_module_sram_port_id)) {
-    add_module_nets_between_logic_and_memory_sram_ports(
-      module_manager, parent_module, logic_module, logic_instance_id,
-      memory_module, memory_instance_id, logic_module_sram_port_ids,
-      mem_module_sram_port_id);
-  }
-
-  /* Connect SRAMb port */
-  /* Find SRAM ports in the circuit model for logic module */
-  std::vector<std::string> logic_model_sramb_port_names;
-  /* Regular sram port goes first */
-  for (CircuitPortId regular_sram_port :
-       find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sramb_port_names.push_back(
-      circuit_lib.port_prefix(regular_sram_port) +
-      std::string(INV_PORT_POSTFIX));
-  }
-  /* Mode-select sram port goes first */
-  for (CircuitPortId mode_select_sram_port :
-       find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sramb_port_names.push_back(
-      circuit_lib.port_prefix(mode_select_sram_port) +
-      std::string(INV_PORT_POSTFIX));
-  }
-  /* Find the port ids in the memory */
-  std::vector<ModulePortId> logic_module_sramb_port_ids;
-  for (const std::string& logic_model_sramb_port_name :
-       logic_model_sramb_port_names) {
-    /* Skip non-exist ports */
-    if (ModulePortId::INVALID() ==
-        module_manager.find_module_port(logic_module,
-                                        logic_model_sramb_port_name)) {
-      continue;
+  /* Wire each memory output pin to the matching SRAM pin of every logic
+   * instance. One net per memory pin: source = memory, sinks = all logic
+   * instances */
+  for (size_t port_index = 0; port_index < logic_module_sram_ports.size();
+       ++port_index) {
+    for (size_t pin_id = 0;
+         pin_id < logic_module_sram_ports[port_index].pins().size(); ++pin_id) {
+      ModuleNetId net = module_manager.create_module_net(parent_module);
+      std::string net_name =
+        module_manager.module_name(memory_module) + std::string("_") +
+        std::to_string(memory_instance_id) + std::string("_") +
+        virtual_mem_module_ports[port_index].get_name() + std::string("_") +
+        std::to_string(virtual_mem_module_ports[port_index].pins()[pin_id]);
+      module_manager.set_net_name(parent_module, net, net_name);
+      /* Add net source: the shared memory output pin */
+      module_manager.add_module_net_source(
+        parent_module, net, memory_module, memory_instance_id,
+        mem_module_sram_port_id,
+        virtual_mem_module_ports[port_index].pins()[pin_id]);
+      /* Add net sinks: the corresponding SRAM pin of every logic instance */
+      for (const size_t& logic_instance_id : logic_instance_ids) {
+        module_manager.add_module_net_sink(
+          parent_module, net, logic_module, logic_instance_id,
+          logic_module_sram_port_ids[port_index],
+          logic_module_sram_ports[port_index].pins()[pin_id]);
+      }
     }
-    logic_module_sramb_port_ids.push_back(module_manager.find_module_port(
-      logic_module, logic_model_sramb_port_name));
   }
+}
 
-  /* Get the SRAM port name of memory model */
-  std::string memory_model_sramb_port_name =
-    generate_configurable_memory_inverted_data_out_name();
-  /* Find the corresponding ports in memory module */
-  ModulePortId mem_module_sramb_port_id = module_manager.find_module_port(
-    memory_module, memory_model_sramb_port_name);
+/********************************************************************
+ * Add nets to connect the SRAM/SRAMb ports of a group of logic modules to a
+ * single shared memory module. See
+ * add_module_nets_between_shared_memory_and_logic_sram_ports() for details.
+ * This is the multi-instance counterpart of
+ * add_module_nets_between_logic_and_memory_sram_bus().
+ *******************************************************************/
+void add_module_nets_between_logics_and_shared_memory_sram_bus(
+  ModuleManager& module_manager, const ModuleId& parent_module,
+  const ModuleId& logic_module, const std::vector<size_t>& logic_instance_ids,
+  const ModuleId& memory_module, const size_t& memory_instance_id,
+  const CircuitLibrary& circuit_lib, const CircuitModelId& logic_model) {
+  /* Wire the SRAM ports (inverted == false) then the SRAMb ports
+   * (inverted == true) */
+  for (const bool inverted : {false, true}) {
+    std::vector<ModulePortId> logic_module_sram_port_ids =
+      find_logic_module_sram_port_ids(module_manager, logic_module, circuit_lib,
+                                      logic_model, inverted);
 
-  /* Do wiring only when we have sramb ports */
-  if ((false == logic_module_sramb_port_ids.empty()) &&
-      (ModulePortId::INVALID() != mem_module_sramb_port_id)) {
-    add_module_nets_between_logic_and_memory_sram_ports(
-      module_manager, parent_module, logic_module, logic_instance_id,
-      memory_module, memory_instance_id, logic_module_sramb_port_ids,
-      mem_module_sramb_port_id);
+    std::string memory_model_sram_port_name =
+      inverted ? generate_configurable_memory_inverted_data_out_name()
+               : generate_configurable_memory_data_out_name();
+    ModulePortId mem_module_sram_port_id = module_manager.find_module_port(
+      memory_module, memory_model_sram_port_name);
+
+    if ((false == logic_module_sram_port_ids.empty()) &&
+        (ModulePortId::INVALID() != mem_module_sram_port_id)) {
+      add_module_nets_between_shared_memory_and_logic_sram_ports(
+        module_manager, parent_module, logic_module, logic_instance_ids,
+        memory_module, memory_instance_id, logic_module_sram_port_ids,
+        mem_module_sram_port_id);
+    }
   }
 }
 

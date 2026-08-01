@@ -1,8 +1,10 @@
-# Run VPR for the 'and' design
-#--write_rr_graph example_rr_graph.xml
+# Run VPR
+# Caution: use the classical flow here rather than the analytical placement (AP) flow
+# The AP flow has wrong bitstream generated
 vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
   --clock_modeling ideal \
   --device ${OPENFPGA_VPR_DEVICE_LAYOUT} \
+  --pack --place --route --analysis \
   --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH}
 
 # Read OpenFPGA architecture definition

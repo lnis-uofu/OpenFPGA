@@ -3,10 +3,12 @@ verilog/aib.v
 verilog/buf4.v
 verilog/dff.v
 verilog/dpram.v
+verilog/dpram128preload.v
 verilog/dpram16k.v
 verilog/dpram1k.v
 verilog/dpram8k.v
 verilog/dpram_2048x8.v
+verilog/frac_mem_256_preload.v
 verilog/frac_mem_32k.v
 verilog/frac_mult_16x16.v
 verilog/gpio.v

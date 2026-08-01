@@ -109,6 +109,12 @@ void add_module_nets_between_logic_and_memory_sram_bus(
   const ModuleId& memory_module, const size_t& memory_instance_id,
   const CircuitLibrary& circuit_lib, const CircuitModelId& logic_model);
 
+void add_module_nets_between_logics_and_shared_memory_sram_bus(
+  ModuleManager& module_manager, const ModuleId& parent_module,
+  const ModuleId& logic_module, const std::vector<size_t>& logic_instance_ids,
+  const ModuleId& memory_module, const size_t& memory_instance_id,
+  const CircuitLibrary& circuit_lib, const CircuitModelId& logic_model);
+
 void add_module_nets_cmos_flatten_memory_config_bus(
   ModuleManager& module_manager, const ModuleId& parent_module,
   const e_config_protocol_type& sram_orgz_type,

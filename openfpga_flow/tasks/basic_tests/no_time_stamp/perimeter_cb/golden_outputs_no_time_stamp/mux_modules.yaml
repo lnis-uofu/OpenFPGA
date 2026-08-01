@@ -1,0 +1,61 @@
+sb_0__0_:
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size3
+sb_0__1_:
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size3
+  - mux_2level_tapbuf_size4
+  - mux_2level_tapbuf_size6
+sb_0__2_:
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size3
+  - mux_2level_tapbuf_size6
+sb_1__0_:
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size4
+  - mux_2level_tapbuf_size3
+  - mux_2level_tapbuf_size6
+sb_1__1_:
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size4
+  - mux_2level_tapbuf_size3
+sb_1__2_:
+  - mux_2level_tapbuf_size6
+  - mux_2level_tapbuf_size3
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size4
+sb_2__0_:
+  - mux_2level_tapbuf_size6
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size3
+sb_2__1_:
+  - mux_2level_tapbuf_size6
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size3
+  - mux_2level_tapbuf_size4
+sb_2__2_:
+  - mux_2level_tapbuf_size5
+  - mux_2level_tapbuf_size3
+  - mux_2level_tapbuf_size6
+cbx_0__0_:
+  - mux_2level_tapbuf_size2
+cbx_0__1_:
+  - mux_2level_tapbuf_size2
+cbx_0__2_:
+  - mux_2level_tapbuf_size2
+cbx_1__1_:
+  - mux_2level_tapbuf_size2
+cbx_1__2_:
+  - mux_2level_tapbuf_size2
+cby_0__0_:
+  - mux_2level_tapbuf_size2
+cby_0__1_:
+  - mux_2level_tapbuf_size2
+cby_1__0_:
+  - mux_2level_tapbuf_size2
+cby_1__1_:
+  - mux_2level_tapbuf_size4
+  - mux_2level_tapbuf_size2
+cby_2__1_:
+  - mux_2level_tapbuf_size2
+  - mux_2level_tapbuf_size4

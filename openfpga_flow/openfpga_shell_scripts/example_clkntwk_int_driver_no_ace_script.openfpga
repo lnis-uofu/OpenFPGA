@@ -1,6 +1,7 @@
 # Run VPR for the 'and' design
-#--write_rr_graph example_rr_graph.xml
+# AP flow doesnot work. Restore to classical flow
 vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
+  --pack --place --route --analysis \
   --clock_modeling ideal \
   --device ${OPENFPGA_VPR_DEVICE_LAYOUT} \
   --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} \

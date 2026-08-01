@@ -1,0 +1,66 @@
+<rr_cb x="1" y="3" num_sides="4">
+	<IPIN side="right" index="0" node_id="660" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1060" index="0" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1045" index="1" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="right" index="1" node_id="661" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1044" index="2" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1061" index="3" segment_id="1" tap="3"/>
+	</IPIN>
+	<IPIN side="right" index="2" node_id="662" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1062" index="4" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1047" index="5" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="right" index="3" node_id="663" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1046" index="6" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1063" index="7" segment_id="1" tap="3"/>
+	</IPIN>
+	<IPIN side="right" index="4" node_id="664" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1064" index="8" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1049" index="9" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="right" index="5" node_id="665" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1048" index="10" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1065" index="11" segment_id="1" tap="3"/>
+	</IPIN>
+	<IPIN side="right" index="6" node_id="666" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1066" index="12" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1051" index="13" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="right" index="7" node_id="667" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1050" index="14" segment_id="1" tap="3"/>
+		<driver_node type="CHANY" side="top" node_id="1067" index="15" segment_id="1" tap="3"/>
+	</IPIN>
+	<IPIN side="left" index="0" node_id="604" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1068" index="16" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1053" index="17" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="1" node_id="605" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1052" index="18" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1069" index="19" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="left" index="2" node_id="606" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1070" index="20" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1055" index="21" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="3" node_id="607" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1054" index="22" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1071" index="23" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="left" index="4" node_id="608" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1072" index="24" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1057" index="25" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="5" node_id="609" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1056" index="26" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1073" index="27" segment_id="1" tap="2"/>
+	</IPIN>
+	<IPIN side="left" index="6" node_id="610" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1074" index="28" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1059" index="29" segment_id="1" tap="1"/>
+	</IPIN>
+	<IPIN side="left" index="7" node_id="611" mux_size="2">
+		<driver_node type="CHANY" side="bottom" node_id="1058" index="30" segment_id="1" tap="2"/>
+		<driver_node type="CHANY" side="top" node_id="1075" index="31" segment_id="1" tap="2"/>
+	</IPIN>
+</rr_cb>

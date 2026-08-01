@@ -93,6 +93,18 @@ static void print_verilog_routing_connection_box_unique_module(
       std::string(VERILOG_NETLIST_FILE_POSTFIX));
   }
 
+  /* Create a Verilog Module based on the circuit model, and add to module
+   * manager */
+  std::string cb_module_name = module_name_map.name(orig_module_name);
+  ModuleId cb_module = module_manager.find_module(cb_module_name);
+  if (false == module_manager.valid_module_id(cb_module)) {
+    VTR_LOG(
+      "Skip generating Verilog module for connection block [%d][%d] due to "
+      "invalid module id!\n",
+      rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+    return;
+  }
+
   std::string verilog_fpath(subckt_dir + verilog_fname);
 
   /* Create the file stream */
@@ -107,12 +119,6 @@ static void print_verilog_routing_connection_box_unique_module(
                 std::to_string(rr_gsb.get_cb_x(cb_type)) + "][" +
                 std::to_string(rr_gsb.get_cb_y(cb_type)) + "]"),
     options.time_stamp());
-
-  /* Create a Verilog Module based on the circuit model, and add to module
-   * manager */
-  std::string cb_module_name = module_name_map.name(orig_module_name);
-  ModuleId cb_module = module_manager.find_module(cb_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
   /* Write the verilog module */
   write_verilog_module_to_file(fp, module_manager, cb_module, options);
@@ -353,26 +359,30 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
       subckt_dir_name, unique_mirror, options);
   }
 
-  /* Build unique X-direction connection block modules */
-  for (size_t icb = 0;
-       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX); ++icb) {
-    const RRGSB& unique_mirror =
-      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
+  if (false == module_manager.group_routing()) {
+    /* Build unique X-direction connection block modules */
+    for (size_t icb = 0;
+         icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANX);
+         ++icb) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_cb_unique_module(e_rr_type::CHANX, icb);
 
-    print_verilog_routing_connection_box_unique_module(
-      netlist_manager, module_manager, module_name_map, subckt_dir,
-      subckt_dir_name, unique_mirror, e_rr_type::CHANX, options);
-  }
+      print_verilog_routing_connection_box_unique_module(
+        netlist_manager, module_manager, module_name_map, subckt_dir,
+        subckt_dir_name, unique_mirror, e_rr_type::CHANX, options);
+    }
 
-  /* Build unique X-direction connection block modules */
-  for (size_t icb = 0;
-       icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY); ++icb) {
-    const RRGSB& unique_mirror =
-      device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
+    /* Build unique X-direction connection block modules */
+    for (size_t icb = 0;
+         icb < device_rr_gsb.get_num_cb_unique_module(e_rr_type::CHANY);
+         ++icb) {
+      const RRGSB& unique_mirror =
+        device_rr_gsb.get_cb_unique_module(e_rr_type::CHANY, icb);
 
-    print_verilog_routing_connection_box_unique_module(
-      netlist_manager, module_manager, module_name_map, subckt_dir,
-      subckt_dir_name, unique_mirror, e_rr_type::CHANY, options);
+      print_verilog_routing_connection_box_unique_module(
+        netlist_manager, module_manager, module_name_map, subckt_dir,
+        subckt_dir_name, unique_mirror, e_rr_type::CHANY, options);
+    }
   }
 
   VTR_LOG("\n");

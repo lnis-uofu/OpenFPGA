@@ -40,8 +40,9 @@ int build_device_module_graph(
   const DeviceContext& vpr_device_ctx, const bool& frame_view,
   const bool& compress_routing, const bool& duplicate_grid_pin,
   const FabricKey& fabric_key, const TileConfig& tile_config,
-  const bool& group_config_block, const bool& name_module_using_index,
-  const bool& generate_random_fabric_key, const bool& verbose) {
+  const bool& group_config_block, const bool& group_routing,
+  const bool& name_module_using_index, const bool& generate_random_fabric_key,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   int status = CMD_EXEC_SUCCESS;
@@ -98,6 +99,11 @@ int build_device_module_graph(
 
   RRGraphInEdges in_edges;
   in_edges.init(vpr_device_ctx.rr_graph);
+
+  module_manager.set_group_routing(group_routing);
+  VTR_LOGV(group_routing,
+           "Connection blocks and switch blocks are grouped to a unified "
+           "routing block\n");
 
   if (true == compress_routing) {
     build_unique_routing_modules(module_manager, decoder_lib, vpr_device_ctx,

@@ -57,12 +57,14 @@ pacman -S --noconfirm --needed \
     mingw-w64-x86_64-boost-libs \
     libreadline-devel \
     zlib-devel \
+    mingw-w64-x86_64-eigen3 \
     openssl-devel \
     mingw-w64-x86_64-zlib \
     mingw-w64-x86_64-graphviz \
     mingw-w64-x86_64-qt5 \
     mingw-w64-x86_64-qt-installer-framework \
     mingw-w64-x86_64-capnproto \
+    mingw-w64-x86_64-wineditline \
     mingw-w64-x86_64-openssl
 
 # This is for openfpga regression tests

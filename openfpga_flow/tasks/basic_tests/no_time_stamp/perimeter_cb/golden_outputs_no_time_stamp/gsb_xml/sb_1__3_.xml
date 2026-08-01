@@ -1,0 +1,59 @@
+<rr_sb x="1" y="3" num_sides="4">
+	<CHANY side="bottom" index="1" node_id="1045" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="3" node_id="1045" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="3" node_id="1061" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="3" node_id="1061" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="5" node_id="1047" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="7" node_id="1047" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="7" node_id="1063" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="7" node_id="1063" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="9" node_id="1049" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="11" node_id="1049" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="11" node_id="1065" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="11" node_id="1065" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="13" node_id="1051" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="15" node_id="1051" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="15" node_id="1067" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="15" node_id="1067" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="17" node_id="1053" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="19" node_id="1053" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="19" node_id="1069" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="19" node_id="1069" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="21" node_id="1055" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="23" node_id="1055" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="23" node_id="1071" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="23" node_id="1071" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="25" node_id="1057" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="27" node_id="1057" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="27" node_id="1073" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="27" node_id="1073" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="29" node_id="1059" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="31" node_id="1059" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="31" node_id="1075" segment_id="1" segment_name="L4" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="31" node_id="1075" segment_id="1" segment_name="L4" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="33" node_id="1271" segment_id="0" segment_name="L1" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="33" node_id="1271" segment_id="0" segment_name="L1" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="35" node_id="1273" segment_id="0" segment_name="L1" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="35" node_id="1273" segment_id="0" segment_name="L1" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+	<CHANY side="bottom" index="37" node_id="1275" segment_id="0" segment_name="L1" mux_size="0" sb_module_pin_name="chany_bottom_out">
+		<driver_node type="CHANY" side="top" index="37" node_id="1275" segment_id="0" segment_name="L1" sb_module_pin_name="chany_top_in"/>
+	</CHANY>
+</rr_sb>

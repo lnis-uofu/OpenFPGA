@@ -240,7 +240,7 @@ static void rec_check_vpr_pb_type_circuit_model_annotation(
       VTR_LOG_ERROR(
         "Found an interconnect '%s' under physical mode '%s' of pb_type '%s' "
         "missing circuit model binding!\n",
-        interc->name, physical_mode->name,
+        interc->name.c_str(), physical_mode->name,
         generate_pb_type_hierarchy_path(cur_pb_type).c_str());
       num_err++;
       continue;
@@ -254,7 +254,7 @@ static void rec_check_vpr_pb_type_circuit_model_annotation(
         "Found an interconnect '%s' under physical mode '%s' of pb_type '%s' "
         "linked to a circuit model '%s' with a wrong type!\nExpect: '%s' "
         "Linked: '%s'\n",
-        interc->name, physical_mode->name,
+        interc->name.c_str(), physical_mode->name,
         generate_pb_type_hierarchy_path(cur_pb_type).c_str(),
         circuit_lib.model_name(interc_circuit_model).c_str(),
         CIRCUIT_MODEL_TYPE_STRING[circuit_lib.model_type(interc_circuit_model)],

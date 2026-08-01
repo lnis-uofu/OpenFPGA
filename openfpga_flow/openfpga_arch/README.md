@@ -14,7 +14,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
   - The keyword 'wide' is to specify if the DSP spans more than 1 column. 
   - The keyword 'frac' is to specify if the DSP is fracturable to operate in different modes.
   - The keyword 'reg' is to specify if the DSP has input and output registers. If only input or output registers are used, the keyword will be 'regin' or 'regout' respectively.
-- mem<mem\_size>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword wide is to specify if the BRAM spanns more than 1 column.
+- mem<mem\_size><preload>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword wide is to specify if the BRAM spanns more than 1 column. The keyword 'preload' indicates the BRAM supports initialization through a dedicated interface.
 - aib: If the Advanced Interface Bus (AIB) is used in place of some I/Os.
 - <bank\|cc\|frame\|standalone>: specify the type of configuration protocol used in the architecture.
   - `bank` refers to the memory bank
@@ -44,6 +44,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - pdl: I/O has a *Programmable Delay Line* (PDL) to insert delay to input and output signals. The delay can be configured by bitstream through custom PCF commands
 - GatedIo: Each I/O has a separated enable signal to gate the input/output signals to/from the FPGA to outside
 - 4FlatRouter: Specially designed for flat router where the local routing and connection blocks have the same circuit model
+- ckbuf: Embedded clock buffer cell to constrain clock mapping location. This is to support local clock and reset generation
 
 
 Other features are used in naming should be listed here.
