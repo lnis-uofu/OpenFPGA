@@ -86,7 +86,6 @@ include(CheckCXXCompilerFlag)
 # Options
 ## General options
 option(OPENFPGA_WITH_YOSYS "Enable building Yosys" ON)
-option(OPENFPGA_WITH_SLANG "Enable building Yosys Slang plugin" ON)
 option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
 option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number" ON)
 option(OPENFPGA_WITH_SWIG "Enable SWIG interface when building codebase. Disable when you do not need high-level interfaces, such as Tcl/Python" ON)
@@ -391,7 +390,6 @@ endif()
 if (DEFINED ENV{MSYSTEM})
     message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
     set(YOSYS_DISABLE_THREADS ON CACHE BOOL "Disable threads in yosys" ON)
-    set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
 endif() 
 
 # we will check if yosys already exist. if not then build it
@@ -403,13 +401,6 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
     add_dependencies(yosys patch_abc_makefile)
   endif()  
   # yosys compilation ends
-  # yosys-plugins compilation starts
-  if (OPENFPGA_WITH_SLANG)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang/cmake)
-    set(YOSYS_CONFIG <TARGET_FILE:yosys-config> CACHE STRING "Slang requires the exact location to the yosys-config executable")
-    add_subdirectory(yosys-slang)
-    add_dependencies(yosys-slang yosys)
-  endif()
 endif()
 
 # For installer
