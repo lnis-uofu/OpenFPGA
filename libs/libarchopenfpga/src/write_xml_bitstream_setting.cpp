@@ -240,14 +240,6 @@ static void write_xml_bitstream_interconnect_setting(
 }
 
 /********************************************************************
- * Format a bare decimal range, e.g. [0:15]
- *******************************************************************/
-static std::string format_mif_range(const openfpga::BasicPort& range) {
-  return "[" + std::to_string(range.get_lsb()) + ":" +
-         std::to_string(range.get_msb()) + "]";
-}
-
-/********************************************************************
  * A writer to output a mif_source setting to XML format
  *******************************************************************/
 static void write_xml_mif_source_setting(
@@ -269,13 +261,14 @@ static void write_xml_mif_source_setting(
     bitstream_setting.mif_source_content(mif_source_setting_id).c_str());
   write_xml_attribute(
     fp, XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE,
-    format_mif_range(
-      bitstream_setting.mif_source_address_range(mif_source_setting_id))
+    bitstream_setting.mif_source_address_range(mif_source_setting_id)
+      .to_verilog_string()
       .c_str());
-  write_xml_attribute(fp, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE,
-                      format_mif_range(bitstream_setting.mif_source_data_range(
-                                         mif_source_setting_id))
-                        .c_str());
+  write_xml_attribute(
+    fp, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE,
+    bitstream_setting.mif_source_data_range(mif_source_setting_id)
+      .to_verilog_string()
+      .c_str());
   fp << "/>"
      << "\n";
 }
@@ -308,21 +301,21 @@ static void write_xml_mif_address_map_setting(
        << "<" << XML_MIF_ADDRESS_MAP_RULE_NODE_NAME;
     write_xml_attribute(
       fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE,
-      format_mif_range(
-        bitstream_setting.mif_address_map_rule_src_addr_range(rule_id))
+      bitstream_setting.mif_address_map_rule_src_addr_range(rule_id)
+        .to_verilog_string()
         .c_str());
     write_xml_attribute(
       fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_ADDR_OFFSET,
       bitstream_setting.mif_address_map_rule_des_addr_offset(rule_id));
     write_xml_attribute(
       fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_MIF_BITS,
-      format_mif_range(
-        bitstream_setting.mif_address_map_rule_src_mif_bits(rule_id))
+      bitstream_setting.mif_address_map_rule_src_mif_bits(rule_id)
+        .to_verilog_string()
         .c_str());
     write_xml_attribute(
       fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_MIF_BITS,
-      format_mif_range(
-        bitstream_setting.mif_address_map_rule_des_mif_bits(rule_id))
+      bitstream_setting.mif_address_map_rule_des_mif_bits(rule_id)
+        .to_verilog_string()
         .c_str());
     fp << "/>"
        << "\n";
