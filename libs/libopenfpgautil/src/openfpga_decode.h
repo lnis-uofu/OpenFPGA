@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <stddef.h>
+#include <stdint.h>
 
 #include <string>
 #include <vector>
@@ -54,6 +55,13 @@ std::vector<char> itobin_charvec(const size_t& in_int, const size_t& bin_len);
 size_t bintoi_charvec(const std::vector<char>& bin);
 
 std::vector<std::string> expand_dont_care_bin_str(const std::string& input_str);
+
+/* Number of hex digits needed to cover width_bits (ceil(width/4)). */
+int hex_digits_for_width(const int& width_bits);
+
+/* Format value as zero-padded uppercase hex with width-derived digit count
+ * (Verilog $readmemh style). */
+std::string format_hex_word(const uint64_t& value, const int& width_bits);
 
 }  // namespace openfpga
 

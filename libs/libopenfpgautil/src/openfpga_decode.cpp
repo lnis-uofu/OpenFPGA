@@ -6,6 +6,9 @@
 /* Headers from vtrutil library */
 #include "openfpga_decode.h"
 
+#include <iomanip>
+#include <sstream>
+
 #include "vtr_assert.h"
 
 /* begin namespace openfpga */
@@ -259,6 +262,32 @@ std::vector<std::string> expand_dont_care_bin_str(
   }
 
   return ret;
+}
+
+/********************************************************************
+ * Number of hex digits needed to cover width_bits (ceil(width/4)).
+ ********************************************************************/
+int hex_digits_for_width(const int& width_bits) {
+  if (width_bits <= 0) {
+    return 0;
+  }
+  return (width_bits + 3) / 4;
+}
+
+/********************************************************************
+ * Format value as zero-padded uppercase hex with width-derived digit count
+ * (Verilog $readmemh style).
+ ********************************************************************/
+std::string format_hex_word(const uint64_t& value, const int& width_bits) {
+  const int nd = hex_digits_for_width(width_bits);
+  std::ostringstream hex_ss;
+  hex_ss << std::hex << std::uppercase << std::setfill('0');
+  if (nd > 0) {
+    hex_ss << std::setw(nd) << value;
+  } else {
+    hex_ss << value;
+  }
+  return hex_ss.str();
 }
 
 } /* end namespace openfpga */

@@ -2,36 +2,16 @@
 
 #include <algorithm>
 #include <fstream>
-#include <iomanip>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <vector>
 
 #include "mif_storage_fwd.h"
+#include "openfpga_decode.h"
 #include "openfpga_port.h"
 #include "vtr_log.h"
 
 namespace openfpga {
-
-static int hex_digits_for_width(int width_bits) {
-  if (width_bits <= 0) {
-    return 0;
-  }
-  return (width_bits + 3) / 4;
-}
-
-static std::string format_hex_word(uint64_t value, int width_bits) {
-  const int nd = hex_digits_for_width(width_bits);
-  std::ostringstream hex_ss;
-  hex_ss << std::hex << std::nouppercase << std::setfill('0');
-  if (nd > 0) {
-    hex_ss << std::setw(nd) << value;
-  } else {
-    hex_ss << value;
-  }
-  return hex_ss.str();
-}
 
 static void write_mif_segment(const MifStorage& storage,
                               const MifSegmentId& segment_id,
@@ -57,7 +37,8 @@ static void write_mif_segment(const MifStorage& storage,
       if (storage.memory_line_address(memory_line_id) != addr) {
         continue;
       }
-      os << addr << " 0x"
+      /* Verilog $readmemh sparse format: @<addr> <hex>. */
+      os << "@" << addr << " "
          << format_hex_word(storage.memory_line_data(memory_line_id),
                             storage.data_width(segment_id))
          << "\n";
