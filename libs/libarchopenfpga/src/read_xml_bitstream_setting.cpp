@@ -3,7 +3,6 @@
  * which reads an XML modeling OpenFPGA architecture to the associated
  * data structures
  *******************************************************************/
-#include <cstdint>
 #include <string>
 
 /* Headers from pugi XML library */
@@ -339,13 +338,11 @@ static void read_xml_mif_address_map_rule(
       src_mif_bits_attr.c_str(), des_mif_bits_attr.c_str());
   }
 
-  const int64_t mapped_lsb =
-    static_cast<int64_t>(src_addr_range.get_lsb()) + des_addr_offset;
-  const int64_t mapped_msb =
-    static_cast<int64_t>(src_addr_range.get_msb()) + des_addr_offset;
-  if (mapped_lsb < 0 || mapped_msb < 0 ||
-      mapped_lsb < static_cast<int64_t>(des_address_range.get_lsb()) ||
-      mapped_msb > static_cast<int64_t>(des_address_range.get_msb())) {
+  const openfpga::BasicPort mapped_addr_range(
+    std::string(), src_addr_range.get_lsb() + des_addr_offset,
+    src_addr_range.get_msb() + des_addr_offset);
+  if (!mapped_addr_range.is_valid() ||
+      !des_address_range.contained(mapped_addr_range)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_map_rule),
                    "src_addr_range='%s' with des_addr_offset='%d' maps outside "
                    "destination address_range='[%zu:%zu]'\n",
