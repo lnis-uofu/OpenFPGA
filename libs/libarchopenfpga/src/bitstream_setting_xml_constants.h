@@ -52,10 +52,14 @@ constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_CONTENT = "content";
 constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE = "address_range";
 constexpr const char* XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE = "data_range";
 
-/* Valid mif_source source= keywords */
+/* Valid mif_source source= keywords
+ * - eblif:  src_pb_type input from Yosys eblif (.param INIT / content=).
+ * - others: src_pb_type input from a prior read_mif (hex) command.
+ * - none:   des_pb_type only; not an input. Declares address_range /
+ *           data_range for remapping / aggregation (placeholder shape).
+ */
 constexpr const char* XML_MIF_SOURCE_SOURCE_EBLIF = "eblif";
 constexpr const char* XML_MIF_SOURCE_SOURCE_OTHERS = "others";
-/* Destination-only: address/data range metadata, no input MIF data. */
 constexpr const char* XML_MIF_SOURCE_SOURCE_NONE = "none";
 
 /* Valid mif_source content= keywords (extensible) */
