@@ -349,7 +349,6 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
 }
 
 std::string find_yosys_eblif_file_path() {
-  constexpr const char* k_suffix = "_yosys_out.eblif";
   std::string found;
 
   for (const std::filesystem::directory_entry& entry :
@@ -358,19 +357,20 @@ std::string find_yosys_eblif_file_path() {
       continue;
     }
     const std::string name = entry.path().filename().string();
-    if (!name.ends_with(k_suffix)) {
+    if (!name.ends_with(K_YOSYS_EBLIF_SUFFIX)) {
       continue;
     }
     if (!found.empty()) {
       VTR_LOG_ERROR("Cannot locate Yosys eblif: multiple '*%s' in cwd\n",
-                    k_suffix);
+                    K_YOSYS_EBLIF_SUFFIX);
       return std::string();
     }
     found = name;
   }
 
   if (found.empty()) {
-    VTR_LOG_ERROR("Cannot locate Yosys eblif: no '*%s' in cwd\n", k_suffix);
+    VTR_LOG_ERROR("Cannot locate Yosys eblif: no '*%s' in cwd\n",
+                  K_YOSYS_EBLIF_SUFFIX);
     return std::string();
   }
 

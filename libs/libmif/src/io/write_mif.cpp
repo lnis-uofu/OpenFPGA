@@ -14,9 +14,6 @@
 
 namespace openfpga {
 
-static constexpr const char* kPreloadMemTitle =
-  "Aggregated MIF for memory preloading interface";
-
 static int hex_digits_for_width(int width_bits) {
   if (width_bits <= 0) {
     return 0;
@@ -39,7 +36,7 @@ static std::string format_hex_word(uint64_t value, int width_bits) {
 static void write_mif_segment(const MifStorage& storage,
                               const MifSegmentId& segment_id,
                               std::ostream& os) {
-  os << "// " << kPreloadMemTitle << "\n";
+  os << "// " << K_PRELOAD_MEM_TITLE << "\n";
   const BasicPort& address_port = storage.addr_range(segment_id);
   if (address_port.is_valid()) {
     os << "// " << address_port.to_verilog_string() << "\n";

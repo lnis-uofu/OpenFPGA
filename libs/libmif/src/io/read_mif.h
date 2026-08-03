@@ -15,6 +15,8 @@ using MifEblifPortConnections =
 using MifPbTypeResolver = std::function<std::string(
   const std::string&, const MifEblifPortConnections&)>;
 
+constexpr const char* K_YOSYS_EBLIF_SUFFIX = "_yosys_out.eblif";
+
 /* Locate Yosys output *_yosys_out.eblif by scanning the run cwd.
  * Returns empty string if none / multiple matches. */
 std::string find_yosys_eblif_file_path();
