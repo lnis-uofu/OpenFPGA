@@ -371,7 +371,7 @@ static void read_xml_mif_address_map_setting(
 
   const MifSourceSettingId src_source_id =
     bitstream_setting.find_mif_source_by_pb_type(src_pb_type_attr);
-  if (!src_source_id.is_valid()) {
+  if (!bitstream_setting.valid_mif_source_setting_id(src_source_id)) {
     archfpga_throw(loc_data.filename_c_str(),
                    loc_data.line(xml_mif_address_map),
                    "mif_address_map src_pb_type='%s' has no matching "
@@ -389,15 +389,16 @@ static void read_xml_mif_address_map_setting(
 
   const MifSourceSettingId des_source_id =
     bitstream_setting.find_mif_source_by_pb_type(des_pb_type_attr);
-  if (!des_source_id.is_valid()) {
+  if (!bitstream_setting.valid_mif_source_setting_id(des_source_id)) {
     archfpga_throw(loc_data.filename_c_str(),
                    loc_data.line(xml_mif_address_map),
                    "mif_address_map des_pb_type='%s' has no matching "
                    "mif_source definition\n",
                    des_pb_type_attr.c_str());
   }
-  if (bitstream_setting.find_mif_address_map_by_src_pb_type(src_pb_type_attr)
-        .is_valid()) {
+  if (bitstream_setting.valid_mif_address_map_setting_id(
+        bitstream_setting.find_mif_address_map_by_src_pb_type(
+          src_pb_type_attr))) {
     archfpga_throw(loc_data.filename_c_str(),
                    loc_data.line(xml_mif_address_map),
                    "multiple mif_address_map entries use src_pb_type='%s'\n",
