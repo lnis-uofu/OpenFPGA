@@ -111,7 +111,8 @@ static std::vector<std::string> collect_eblif_mif_contents(
   const BitstreamSetting& bitstream_setting) {
   std::vector<std::string> contents;
   for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(id) != XML_MIF_SOURCE_SOURCE_EBLIF) {
+    if (bitstream_setting.mif_source_source(id) !=
+        XML_MIF_SOURCE_SOURCE_EBLIF) {
       continue;
     }
     const std::string content = bitstream_setting.mif_source_content(id);
@@ -145,8 +146,8 @@ static int merge_eblif_into_logical_storage(
   }
 
   MifStorage eblif_storage;
-  const int read_status = read_mif_from_eblif(
-    eblif_path, eblif_storage, pb_type_resolver, eblif_contents);
+  const int read_status = read_mif_from_eblif(eblif_path, eblif_storage,
+                                              pb_type_resolver, eblif_contents);
   if (CMD_EXEC_SUCCESS != read_status) {
     return read_status;
   }
