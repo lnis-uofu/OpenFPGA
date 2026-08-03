@@ -1,6 +1,6 @@
 [submodule "yosys"]
 	path = yosys
-	url = git@github.com:tangxifan/yosys.git
+	url = https://github.com/tangxifan/yosys.git
 [submodule "vtr-verilog-to-routing"]
 	path = vtr-verilog-to-routing
 	url = https://github.com/verilog-to-routing/vtr-verilog-to-routing.git
