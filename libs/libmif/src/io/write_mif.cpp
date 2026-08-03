@@ -1,10 +1,8 @@
 #include "write_mif.h"
 
-#include <algorithm>
 #include <fstream>
 #include <ostream>
 #include <string>
-#include <vector>
 
 #include "mif_storage_fwd.h"
 #include "openfpga_decode.h"
@@ -24,26 +22,13 @@ static void write_mif_segment(const MifStorage& storage,
   os << "// Data width: " << storage.data_width(segment_id) << "\n";
   os << "// PB_TYPE " << storage.physical_pb(segment_id) << "\n";
 
-  std::vector<uint64_t> addrs;
+  /* $readmemh @addr allows sparse / out-of-order writes; no sort needed. */
   for (const MifMemoryLineId& memory_line_id :
        storage.segment_memory_lines(segment_id)) {
-    addrs.push_back(storage.memory_line_address(memory_line_id));
-  }
-  std::sort(addrs.begin(), addrs.end());
-
-  for (const uint64_t addr : addrs) {
-    for (const MifMemoryLineId& memory_line_id :
-         storage.segment_memory_lines(segment_id)) {
-      if (storage.memory_line_address(memory_line_id) != addr) {
-        continue;
-      }
-      /* Verilog $readmemh sparse format: @<addr> <hex>. */
-      os << "@" << addr << " "
-         << format_hex_word(storage.memory_line_data(memory_line_id),
-                            storage.data_width(segment_id))
-         << "\n";
-      break;
-    }
+    os << "@" << storage.memory_line_address(memory_line_id) << " "
+       << format_hex_word(storage.memory_line_data(memory_line_id),
+                          storage.data_width(segment_id))
+       << "\n";
   }
 }
 
