@@ -338,11 +338,17 @@ static void read_xml_mif_address_map_rule(
       src_mif_bits_attr.c_str(), des_mif_bits_attr.c_str());
   }
 
-  const openfpga::BasicPort mapped_addr_range(
-    std::string(), src_addr_range.get_lsb() + des_addr_offset,
-    src_addr_range.get_msb() + des_addr_offset);
-  if (!mapped_addr_range.is_valid() ||
-      !des_address_range.contained(mapped_addr_range)) {
+  /* Apply des_addr_offset via BasicPort rotate APIs; dummy name for empty ranges. */
+  openfpga::BasicPort mapped_addr_range("tmp_des_addr", src_addr_range.get_lsb(),
+                                        src_addr_range.get_msb());
+  bool rotate_success = true;
+  if (des_addr_offset >= 0) {
+    rotate_success = mapped_addr_range.rotate(static_cast<size_t>(des_addr_offset));
+  } else {
+    rotate_success = mapped_addr_range.counter_rotate(
+      static_cast<size_t>(-des_addr_offset));
+  }
+  if (!rotate_success || !des_address_range.contained(mapped_addr_range)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_map_rule),
                    "src_addr_range='%s' with des_addr_offset='%d' maps outside "
                    "destination address_range='[%zu:%zu]'\n",
