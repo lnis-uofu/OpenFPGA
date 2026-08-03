@@ -24,18 +24,23 @@ int read_mif_from_init_hex(const std::string& file_path,
                            MifStorage& mif_storage, const std::string& pb_type);
 
 /********************************************************************
- * Read Yosys eblif memory INIT into logical MIF storage.
+ * Read eblif memory init fields into logical MIF storage.
  * Called by aggregate_mif when bitstream setting has source="eblif".
  *
- * For each .subckt with .param INIT:
+ * eblif_contents lists free-form field selectors from mif_source content=
+ * (e.g. ".param INIT", ".param INIT_i"); exact names depend on the synth
+ * frontend.
+ *
+ * For each .subckt with a matching content field:
  *   - resolve pb_type via pb_type_resolver (VPR binding)
- *   - create one segment with physical_pb + raw INIT bit-string
+ *   - create one segment with physical_pb + raw bit-string
  *
  * Clears mif_storage first. Addr/data ranges are filled later in
- * aggregate_mif from bitstream setting. Decode of raw INIT also happens
+ * aggregate_mif from bitstream setting. Decode of raw data also happens
  * there.
  *******************************************************************/
 int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
-                        const MifPbTypeResolver& pb_type_resolver);
+                        const MifPbTypeResolver& pb_type_resolver,
+                        const std::vector<std::string>& eblif_contents);
 
 } /* namespace openfpga */

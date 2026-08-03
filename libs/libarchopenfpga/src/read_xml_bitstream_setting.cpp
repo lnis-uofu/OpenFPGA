@@ -256,13 +256,11 @@ static void read_xml_mif_source_setting(
       source_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
       XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_NONE);
   }
-  if (source_attr == XML_MIF_SOURCE_SOURCE_EBLIF &&
-      content_attr != XML_MIF_SOURCE_CONTENT_PARAM_INIT) {
-    archfpga_throw(
-      loc_data.filename_c_str(), loc_data.line(xml_mif_source),
-      "Invalid mif_source content='%s' for source='%s'. Expect '%s'\n",
-      content_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
-      XML_MIF_SOURCE_CONTENT_PARAM_INIT);
+  /* content is a free-form eblif field selector (e.g. ".param INIT",
+   * ".param INIT_i"); exact name depends on the synth frontend. */
+  if (content_attr.empty()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+                   "mif_source content must not be empty\n");
   }
 
   const openfpga::BasicPort address_range =

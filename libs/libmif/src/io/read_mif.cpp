@@ -202,19 +202,49 @@ int read_mif_from_init_hex(const std::string& file_path,
 }
 
 /********************************************************************
- * Read Yosys eblif memory INIT into logical MIF storage.
- * Called by aggregate_mif when bitstream setting has source="eblif".
- *
- * For each .subckt with .param INIT:
- *   - resolve pb_type via pb_type_resolver (VPR internal data)
- *   - create one segment with physical_pb + raw INIT bit-string
- *
- * Addr/data ranges are filled later in
- * aggregate_mif from bitstream setting. Decode of raw INIT also happens
- * there.
+ * Match line against a configured eblif content selector (e.g. ".param INIT").
+ * Requires a whitespace-separated value after the selector so ".param INIT"
+ * does not match ".param INIT_i".
+ *******************************************************************/
+static bool match_eblif_content_field(const std::string& line,
+                                      const std::string& content,
+                                      std::string& value) {
+  if (content.empty() || line.compare(0, content.size(), content) != 0) {
+    return false;
+  }
+  if (line.size() == content.size() ||
+      !std::isspace(static_cast<unsigned char>(line[content.size()]))) {
+    return false;
+  }
+  value = line.substr(content.size());
+  trim_mif_line_inplace(value);
+  if (value.empty()) {
+    return false;
+  }
+  /* Take the first token as the field value. */
+  const size_t space_pos = value.find_first_of(" \t");
+  if (space_pos != std::string::npos) {
+    value.resize(space_pos);
+  }
+  if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+    value = value.substr(1, value.size() - 2);
+  }
+  return !value.empty();
+}
+
+/********************************************************************
+ * Read eblif memory init fields into logical MIF storage.
+ * Field names come from mif_source content= (synth-frontend dependent).
  *******************************************************************/
 int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
-                        const MifPbTypeResolver& pb_type_resolver) {
+                        const MifPbTypeResolver& pb_type_resolver,
+                        const std::vector<std::string>& eblif_contents) {
+  if (eblif_contents.empty()) {
+    VTR_LOG_ERROR(
+      "read_mif_from_eblif: no mif_source content selectors were provided\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
   std::ifstream ifs(file_path.c_str());
   if (!ifs.is_open()) {
     VTR_LOG_ERROR("Failed to open eblif file '%s' for reading\n",
@@ -225,11 +255,10 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
   mif_storage.clear();
   std::string raw_line;
   size_t line_no = 0;
-  size_t init_index = 0;
+  size_t field_index = 0;
   std::string subckt_model;
   MifEblifPortConnections subckt_connections;
 
-  /* Build each logical segment as its eblif INIT parameter is read. */
   while (std::getline(ifs, raw_line)) {
     ++line_no;
     std::string line = raw_line;
@@ -263,22 +292,16 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
       }
       continue;
     }
-    if (line.compare(0, 6, ".param") != 0) {
-      continue;
-    }
-    std::istringstream iss(line);
-    std::string dot_param;
-    std::string name;
+
     std::string value;
-    if (!(iss >> dot_param >> name >> value) || dot_param != ".param") {
-      VTR_LOG_ERROR("%s:%lu: cannot parse .param line: %s\n", file_path.c_str(),
-                    static_cast<unsigned long>(line_no), line.c_str());
-      return CMD_EXEC_FATAL_ERROR;
+    std::string matched_content;
+    for (const std::string& content : eblif_contents) {
+      if (match_eblif_content_field(line, content, value)) {
+        matched_content = content;
+        break;
+      }
     }
-    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-      value = value.substr(1, value.size() - 2);
-    }
-    if (name != "INIT") {
+    if (matched_content.empty()) {
       continue;
     }
 
@@ -288,18 +311,18 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
     if (pb_type.empty()) {
       VTR_LOG_ERROR(
         "%s:%lu: read_mif_from_eblif: failed to resolve pb_type for .subckt "
-        "'%s' (.param INIT #%zu)\n",
+        "'%s' (%s #%zu)\n",
         file_path.c_str(), static_cast<unsigned long>(line_no),
-        subckt_model.c_str(), init_index);
+        subckt_model.c_str(), matched_content.c_str(), field_index);
       return CMD_EXEC_FATAL_ERROR;
     }
 
     const MifSegmentId segment_id = mif_storage.create_segment();
     mif_storage.set_segment_physical_pb(segment_id, pb_type);
     mif_storage.set_segment_raw_data(segment_id, value);
-    VTR_LOG("read_mif: eblif .param INIT -> VPR pb_type '%s'\n",
+    VTR_LOG("read_mif: eblif %s -> VPR pb_type '%s'\n", matched_content.c_str(),
             pb_type.c_str());
-    ++init_index;
+    ++field_index;
   }
   if (ifs.bad()) {
     VTR_LOG_ERROR("I/O error while reading eblif file '%s'\n",
@@ -307,9 +330,19 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  if (init_index == 0) {
-    VTR_LOG_ERROR("read_mif: no .param INIT found in '%s'\n",
-                  file_path.c_str());
+  if (field_index == 0) {
+    std::string expected;
+    for (size_t i = 0; i < eblif_contents.size(); ++i) {
+      if (i > 0) {
+        expected += ", ";
+      }
+      expected += "'";
+      expected += eblif_contents[i];
+      expected += "'";
+    }
+    VTR_LOG_ERROR(
+      "read_mif: no eblif fields matching configured content(s) [%s] in '%s'\n",
+      expected.c_str(), file_path.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
