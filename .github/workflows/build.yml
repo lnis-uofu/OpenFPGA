@@ -97,7 +97,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -114,6 +114,8 @@ jobs:
           
       - name: Checkout repo
         uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -221,7 +223,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -686,7 +688,6 @@ jobs:
         run: |
           sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
           # To use gcc-12 in the current step and export paths for subsequent steps:
-          echo "source /opt/rh/gcc-toolset-12/enable" >> $GITHUB_ENV
           echo "CC=/opt/rh/gcc-toolset-12/root/usr/bin/gcc" >> $GITHUB_ENV
           echo "CXX=/opt/rh/gcc-toolset-12/root/usr/bin/g++" >> $GITHUB_ENV
       
@@ -712,6 +713,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          source /opt/rh/gcc-toolset-12/enable
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           git config --global --add safe.directory '*'
           make all BUILD_TYPE=$BUILD_TYPE  -j${{ steps.cpu-cores.outputs.count}}
@@ -1037,15 +1039,15 @@ jobs:
           chmod +x build/vtr-verilog-to-routing/ace2/ace
           chmod +x build/vtr-verilog-to-routing/vpr/vpr
           chmod +x build/openfpga/openfpga
-          chmod +x build/yosys/bin/yosys
-          chmod +x build/yosys/bin/yosys-abc
-          chmod +x build/yosys/bin/yosys-config
-          chmod +x build/yosys/bin/yosys-filterlib
-          chmod +x build/yosys/bin/yosys-smtbmc
+          chmod +x build/yosys/yosys
+          chmod +x build/yosys/yosys-abc
+          chmod +x build/yosys/yosys-config
+          chmod +x build/yosys/yosys-filterlib
+          chmod +x build/yosys/yosys-smtbmc
       - name: linker status
         run: |
           ldd build/openfpga/openfpga
-          ldd build/yosys/bin/yosys
+          ldd build/yosys/yosys
       - name: ${{matrix.config.name}}_GCC-12_(Ubuntu 22.04)
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
