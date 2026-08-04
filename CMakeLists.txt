@@ -369,6 +369,13 @@ endif()
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
   add_subdirectory(yosys)
+  #Since Yosys is an externally developed tool, we suppress all compiler warnings
+  CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
+  if(CXX_COMPILER_SUPPORTS_-w)
+      target_compile_options(libyosys PRIVATE "-w")
+      target_compile_options(yosys PRIVATE "-w")
+  endif()
+
 endif()
 
 # For installer
