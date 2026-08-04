@@ -365,43 +365,10 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
     target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
 endif()
 
-# Only patch abc makefile on Msys2 where linker complains
-# Find the Python 3 interpreter
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-if (DEFINED ENV{MSYSTEM})
-    set(PY_PATCH_ABC_MAKEFILE "${CMAKE_CURRENT_SOURCE_DIR}/dev/patch_abc_makefile.py")
-    set(ABC_MAKEFILE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yosys/abc")
-    set(ABC_MAKEFILE_FPATH "Makefile")
-    set(ABC_MAKEFILE_PATCH_FPATH "Makefile.patched")
-    message(STATUS "Patching ${ABC_MAKEFILE_DIR}/${ABC_MAKEFILE_FPATH}")
-    add_custom_command(
-        OUTPUT ${ABC_MAKEFILE_PATCH_FPATH}
-        COMMAND "${Python3_EXECUTABLE}" "${PY_PATCH_ABC_MAKEFILE}" "${ABC_MAKEFILE_FPATH}"
-        COMMAND ${CMAKE_COMMAND} -E touch ${ABC_MAKEFILE_PATCH_FPATH}
-        COMMENT "Apply sed patch to ${ABC_MAKEFILE_DIR}/${ABC_MAKEFILE_FPATH} for long linker command fix"
-        DEPENDS "${PY_PATCH_ABC_MAKEFILE}"
-        VERBATIM
-        WORKING_DIRECTORY "${ABC_MAKEFILE_DIR}"
-    )
-    add_custom_target(patch_abc_makefile ALL DEPENDS ${ABC_MAKEFILE_PATCH_FPATH})
-endif()
-
-# Once Yosys adapts to CMake. This will be much simplified
-# Yosys build options
-if (DEFINED ENV{MSYSTEM})
-    message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
-    set(YOSYS_DISABLE_THREADS ON CACHE BOOL "Disable threads in yosys" ON)
-endif() 
-
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
   add_subdirectory(yosys)
-  # Add dependency on patched Makefile if on MinGW
-  if (DEFINED ENV{MSYSTEM})
-    add_dependencies(yosys patch_abc_makefile)
-  endif()  
-  # yosys compilation ends
 endif()
 
 # For installer
