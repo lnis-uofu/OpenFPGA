@@ -374,6 +374,8 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   if(CXX_COMPILER_SUPPORTS_-w)
       target_compile_options(libyosys PRIVATE "-w")
       target_compile_options(yosys PRIVATE "-w")
+      target_compile_options(libyosys-abc PRIVATE "-w")
+      target_compile_options(yosys-abc PRIVATE "-w")
   endif()
 
 endif()
