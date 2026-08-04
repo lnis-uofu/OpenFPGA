@@ -42,7 +42,7 @@ In general, please follow the steps to compile
   cd OpenFPGA
   make all
 
-.. note:: OpenFPGA requires gcc/g++ version >= 11 or clang version >= 17 or MSVC version >= 14.
+.. note:: OpenFPGA requires gcc/g++ version >= 12 or clang version >= 17 or MSVC version >= 14.
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
@@ -102,7 +102,6 @@ The following options are available for a custom build
 
   - ``DOPENFPGA_WITH_TEST=[ON|OFF]``: Enable/Disable the test build
   - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
-  - ``DOPENFPGA_WITH_SLANG=[ON|OFF]``: Enable/Disable the build of yosys-plugin Slang. If disabled, system verilog will not be supported. By default, it is enabled.
   - ``DOPENFPGA_WITH_VERSION=[ON|OFF]``: Enable/Disable the build of version number. When disabled, version number will be displayed as an empty string.
   - ``DOPENFPGA_WITH_SWIG=[ON|OFF]``: Enable/Disable the build of SWIG, which is required for integrating to high-level interface.
   - ``OPENFPGA_ENABLE_STRICT_COMPILE=[ON|OFF]``: Specifies whether compiler warnings should be treated as errors (e.g. -Werror)
