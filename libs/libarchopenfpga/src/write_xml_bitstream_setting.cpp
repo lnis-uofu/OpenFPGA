@@ -2,8 +2,10 @@
  * This file includes functions that outputs a bitstream setting to XML format
  *******************************************************************/
 /* Headers from system goes first */
-#include <algorithm>
 #include <string>
+
+/* Headers from pugi XML library */
+#include "pugixml.hpp"
 
 /* Headers from vtr util library */
 #include "openfpga_digest.h"
@@ -13,7 +15,6 @@
 /* Headers from readarchopenfpga library */
 #include "bitstream_setting_xml_constants.h"
 #include "write_xml_bitstream_setting.h"
-#include "write_xml_utils.h"
 
 /********************************************************************
  * Generate the full hierarchy name for a pb_type in bitstream setting
@@ -122,208 +123,153 @@ static std::string generate_bitstream_setting_interconnect_hierarchy_name(
  * A writer to output a bitstream pb_type setting to XML format
  *******************************************************************/
 static void write_xml_bitstream_pb_type_setting(
-  std::fstream& fp, const char* fname,
+  pugi::xml_node& root_node,
   const openfpga::BitstreamSetting& bitstream_setting,
   const BitstreamPbTypeSettingId& bitstream_pb_type_setting_id) {
-  /* Validate the file stream */
-  openfpga::check_file_stream(fname, fp);
+  pugi::xml_node xml_pb_type = root_node.append_child(XML_PB_TYPE_NODE_NAME);
 
-  fp << "\t"
-     << "<" << XML_PB_TYPE_NODE_NAME;
-
-  /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, XML_PB_TYPE_ATTRIBUTE_NAME,
-                      generate_bitstream_setting_pb_type_hierarchy_name(
-                        bitstream_setting, bitstream_pb_type_setting_id)
-                        .c_str());
-
-  write_xml_attribute(
-    fp, XML_PB_TYPE_ATTRIBUTE_SOURCE,
+  xml_pb_type.append_attribute(XML_PB_TYPE_ATTRIBUTE_NAME) =
+    generate_bitstream_setting_pb_type_hierarchy_name(
+      bitstream_setting, bitstream_pb_type_setting_id)
+      .c_str();
+  xml_pb_type.append_attribute(XML_PB_TYPE_ATTRIBUTE_SOURCE) =
     bitstream_setting.pb_type_bitstream_source(bitstream_pb_type_setting_id)
-      .c_str());
-  write_xml_attribute(
-    fp, XML_PB_TYPE_ATTRIBUTE_CONTENT,
+      .c_str();
+  xml_pb_type.append_attribute(XML_PB_TYPE_ATTRIBUTE_CONTENT) =
     bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id)
-      .c_str());
-  write_xml_attribute(
-    fp, XML_PB_TYPE_ATTRIBUTE_IS_MODE_SELECT_BITSTREAM,
-    bitstream_setting.is_mode_select_bitstream(bitstream_pb_type_setting_id));
-  write_xml_attribute(
-    fp, XML_PB_TYPE_ATTRIBUTE_BITSTREAM_OFFSET,
-    bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
-
-  fp << "/>"
-     << "\n";
+      .c_str();
+  xml_pb_type.append_attribute(XML_PB_TYPE_ATTRIBUTE_IS_MODE_SELECT_BITSTREAM) =
+    bitstream_setting.is_mode_select_bitstream(bitstream_pb_type_setting_id)
+      ? "true"
+      : "false";
+  xml_pb_type.append_attribute(XML_PB_TYPE_ATTRIBUTE_BITSTREAM_OFFSET) =
+    static_cast<int>(
+      bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
 }
 
 /********************************************************************
- * A writer to output a bitstream pb_type setting to XML format
+ * A writer to output a bitstream default_mode setting to XML format
  *******************************************************************/
 static void write_xml_bitstream_default_mode_setting(
-  std::fstream& fp, const char* fname,
+  pugi::xml_node& root_node,
   const openfpga::BitstreamSetting& bitstream_setting,
   const BitstreamDefaultModeSettingId& bitstream_default_mode_setting_id) {
-  /* Validate the file stream */
-  openfpga::check_file_stream(fname, fp);
+  pugi::xml_node xml_default_mode =
+    root_node.append_child(XML_DEFAULT_MODE_BITS_NODE_NAME);
 
-  fp << "\t"
-     << "<" << XML_DEFAULT_MODE_BITS_NODE_NAME;
-
-  /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, XML_DEFAULT_MODE_BITS_ATTRIBUTE_NAME,
-                      generate_bitstream_setting_pb_type_hierarchy_name(
-                        bitstream_setting, bitstream_default_mode_setting_id)
-                        .c_str());
-
-  write_xml_attribute(
-    fp, XML_DEFAULT_MODE_BITS_ATTRIBUTE_MODE_BITS,
+  xml_default_mode.append_attribute(XML_DEFAULT_MODE_BITS_ATTRIBUTE_NAME) =
+    generate_bitstream_setting_pb_type_hierarchy_name(
+      bitstream_setting, bitstream_default_mode_setting_id)
+      .c_str();
+  xml_default_mode.append_attribute(XML_DEFAULT_MODE_BITS_ATTRIBUTE_MODE_BITS) =
     bitstream_setting
       .default_mode_bits_to_string(bitstream_default_mode_setting_id)
-      .c_str());
-  fp << "/>"
-     << "\n";
+      .c_str();
 }
 
 /********************************************************************
  * A writer to output a bitstream clock_routing setting to XML format
  *******************************************************************/
 static void write_xml_bitstream_clock_routing_setting(
-  std::fstream& fp, const char* fname,
+  pugi::xml_node& root_node,
   const openfpga::BitstreamSetting& bitstream_setting,
   const BitstreamClockRoutingSettingId& bitstream_clock_routing_setting_id) {
-  /* Validate the file stream */
-  openfpga::check_file_stream(fname, fp);
+  pugi::xml_node xml_clock_routing =
+    root_node.append_child(XML_CLOCK_ROUTING_NODE_NAME);
 
-  fp << "\t"
-     << "<" << XML_CLOCK_ROUTING_NODE_NAME;
-
-  /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(
-    fp, XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK,
+  xml_clock_routing.append_attribute(XML_CLOCK_ROUTING_ATTRIBUTE_NETWORK) =
     bitstream_setting.clock_routing_network(bitstream_clock_routing_setting_id)
-      .c_str());
-
-  write_xml_attribute(
-    fp, XML_CLOCK_ROUTING_ATTRIBUTE_PIN,
+      .c_str();
+  xml_clock_routing.append_attribute(XML_CLOCK_ROUTING_ATTRIBUTE_PIN) =
     bitstream_setting.clock_routing_pin(bitstream_clock_routing_setting_id)
       .to_verilog_string()
-      .c_str());
-  fp << "/>"
-     << "\n";
+      .c_str();
 }
 
 /********************************************************************
  * A writer to output a bitstream interconnect setting to XML format
  *******************************************************************/
 static void write_xml_bitstream_interconnect_setting(
-  std::fstream& fp, const char* fname,
+  pugi::xml_node& root_node,
   const openfpga::BitstreamSetting& bitstream_setting,
   const BitstreamInterconnectSettingId& bitstream_interc_setting_id) {
-  /* Validate the file stream */
-  openfpga::check_file_stream(fname, fp);
+  pugi::xml_node xml_interconnect =
+    root_node.append_child(XML_INTERCONNECT_NODE_NAME);
 
-  fp << "\t"
-     << "<" << XML_INTERCONNECT_NODE_NAME;
-
-  /* Generate the full hierarchy name of the pb_type */
-  write_xml_attribute(fp, XML_INTERCONNECT_ATTRIBUTE_NAME,
-                      generate_bitstream_setting_interconnect_hierarchy_name(
-                        bitstream_setting, bitstream_interc_setting_id)
-                        .c_str());
-
-  write_xml_attribute(
-    fp, XML_INTERCONNECT_ATTRIBUTE_DEFAULT_PATH,
-    bitstream_setting.default_path(bitstream_interc_setting_id).c_str());
-
-  fp << "/>"
-     << "\n";
+  xml_interconnect.append_attribute(XML_INTERCONNECT_ATTRIBUTE_NAME) =
+    generate_bitstream_setting_interconnect_hierarchy_name(
+      bitstream_setting, bitstream_interc_setting_id)
+      .c_str();
+  xml_interconnect.append_attribute(XML_INTERCONNECT_ATTRIBUTE_DEFAULT_PATH) =
+    bitstream_setting.default_path(bitstream_interc_setting_id).c_str();
 }
 
 /********************************************************************
  * A writer to output a mif_source setting to XML format
  *******************************************************************/
 static void write_xml_mif_source_setting(
-  std::fstream& fp, const char* fname,
+  pugi::xml_node& root_node,
   const openfpga::BitstreamSetting& bitstream_setting,
   const MifSourceSettingId& mif_source_setting_id) {
-  openfpga::check_file_stream(fname, fp);
+  pugi::xml_node xml_mif_source =
+    root_node.append_child(XML_MIF_SOURCE_NODE_NAME);
 
-  fp << "\t"
-     << "<" << XML_MIF_SOURCE_NODE_NAME;
-  write_xml_attribute(
-    fp, XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE,
-    bitstream_setting.mif_source_pb_type(mif_source_setting_id).c_str());
-  write_xml_attribute(
-    fp, XML_MIF_SOURCE_ATTRIBUTE_SOURCE,
-    bitstream_setting.mif_source_source(mif_source_setting_id).c_str());
-  write_xml_attribute(
-    fp, XML_MIF_SOURCE_ATTRIBUTE_CONTENT,
-    bitstream_setting.mif_source_content(mif_source_setting_id).c_str());
-  write_xml_attribute(
-    fp, XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE,
+  xml_mif_source.append_attribute(XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE) =
+    bitstream_setting.mif_source_pb_type(mif_source_setting_id).c_str();
+  xml_mif_source.append_attribute(XML_MIF_SOURCE_ATTRIBUTE_SOURCE) =
+    bitstream_setting.mif_source_source(mif_source_setting_id).c_str();
+  xml_mif_source.append_attribute(XML_MIF_SOURCE_ATTRIBUTE_CONTENT) =
+    bitstream_setting.mif_source_content(mif_source_setting_id).c_str();
+  xml_mif_source.append_attribute(XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE) =
     bitstream_setting.mif_source_address_range(mif_source_setting_id)
       .to_verilog_string()
-      .c_str());
-  write_xml_attribute(
-    fp, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE,
+      .c_str();
+  xml_mif_source.append_attribute(XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE) =
     bitstream_setting.mif_source_data_range(mif_source_setting_id)
       .to_verilog_string()
-      .c_str());
-  fp << "/>"
-     << "\n";
+      .c_str();
 }
 
 /********************************************************************
  * A writer to output a mif_address_map setting to XML format
  *******************************************************************/
 static void write_xml_mif_address_map_setting(
-  std::fstream& fp, const char* fname,
+  pugi::xml_node& root_node,
   const openfpga::BitstreamSetting& bitstream_setting,
   const MifAddressMapSettingId& mif_address_map_setting_id) {
-  openfpga::check_file_stream(fname, fp);
+  pugi::xml_node xml_mif_address_map =
+    root_node.append_child(XML_MIF_ADDRESS_MAP_NODE_NAME);
 
-  fp << "\t"
-     << "<" << XML_MIF_ADDRESS_MAP_NODE_NAME;
-  write_xml_attribute(
-    fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_SRC_PB_TYPE,
+  xml_mif_address_map.append_attribute(
+    XML_MIF_ADDRESS_MAP_ATTRIBUTE_SRC_PB_TYPE) =
     bitstream_setting.mif_address_map_src_pb_type(mif_address_map_setting_id)
-      .c_str());
-  write_xml_attribute(
-    fp, XML_MIF_ADDRESS_MAP_ATTRIBUTE_DES_PB_TYPE,
+      .c_str();
+  xml_mif_address_map.append_attribute(
+    XML_MIF_ADDRESS_MAP_ATTRIBUTE_DES_PB_TYPE) =
     bitstream_setting.mif_address_map_des_pb_type(mif_address_map_setting_id)
-      .c_str());
-  fp << ">"
-     << "\n";
+      .c_str();
 
   for (const MifAddressMapRuleId& rule_id :
        bitstream_setting.mif_address_map_rules(mif_address_map_setting_id)) {
-    fp << "\t\t"
-       << "<" << XML_MIF_ADDRESS_MAP_RULE_NODE_NAME;
-    write_xml_attribute(
-      fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE,
+    pugi::xml_node xml_map =
+      xml_mif_address_map.append_child(XML_MIF_ADDRESS_MAP_RULE_NODE_NAME);
+    xml_map.append_attribute(
+      XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE) =
       bitstream_setting.mif_address_map_rule_src_addr_range(rule_id)
         .to_verilog_string()
-        .c_str());
-    write_xml_attribute(
-      fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_ADDR_OFFSET,
-      bitstream_setting.mif_address_map_rule_des_addr_offset(rule_id));
-    write_xml_attribute(
-      fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_MIF_BITS,
+        .c_str();
+    xml_map.append_attribute(
+      XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_ADDR_OFFSET) =
+      bitstream_setting.mif_address_map_rule_des_addr_offset(rule_id);
+    xml_map.append_attribute(XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_MIF_BITS) =
       bitstream_setting.mif_address_map_rule_src_mif_bits(rule_id)
         .to_verilog_string()
-        .c_str());
-    write_xml_attribute(
-      fp, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_MIF_BITS,
+        .c_str();
+    xml_map.append_attribute(XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_MIF_BITS) =
       bitstream_setting.mif_address_map_rule_des_mif_bits(rule_id)
         .to_verilog_string()
-        .c_str());
-    fp << "/>"
-       << "\n";
+        .c_str();
   }
-
-  fp << "\t"
-     << "</" << XML_MIF_ADDRESS_MAP_NODE_NAME << ">"
-     << "\n";
 }
 
 /********************************************************************
@@ -335,52 +281,45 @@ void write_xml_bitstream_setting(
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
-  /* Write the root node <openfpga_bitstream_setting>
-   */
-  fp << "<" << XML_BITSTREAM_SETTING_ROOT_NAME << ">"
-     << "\n";
+  pugi::xml_document out_xml;
+  pugi::xml_node root_node =
+    out_xml.append_child(XML_BITSTREAM_SETTING_ROOT_NAME);
 
-  /* Write pb_type -related settings */
   for (const auto& bitstream_pb_type_setting_id :
        bitstream_setting.pb_type_settings()) {
-    write_xml_bitstream_pb_type_setting(fp, fname, bitstream_setting,
+    write_xml_bitstream_pb_type_setting(root_node, bitstream_setting,
                                         bitstream_pb_type_setting_id);
   }
 
-  /* Write default_mode -related settings */
   for (const auto& bitstream_default_mode_setting_id :
        bitstream_setting.default_mode_settings()) {
-    write_xml_bitstream_default_mode_setting(fp, fname, bitstream_setting,
+    write_xml_bitstream_default_mode_setting(root_node, bitstream_setting,
                                              bitstream_default_mode_setting_id);
   }
 
-  /* Write clock_routing -related settings */
   for (const auto& bitstream_clock_routing_setting_id :
        bitstream_setting.clock_routing_settings()) {
     write_xml_bitstream_clock_routing_setting(
-      fp, fname, bitstream_setting, bitstream_clock_routing_setting_id);
+      root_node, bitstream_setting, bitstream_clock_routing_setting_id);
   }
 
-  /* Write interconnect -related settings */
   for (const auto& bitstream_interc_setting_id :
        bitstream_setting.interconnect_settings()) {
-    write_xml_bitstream_interconnect_setting(fp, fname, bitstream_setting,
+    write_xml_bitstream_interconnect_setting(root_node, bitstream_setting,
                                              bitstream_interc_setting_id);
   }
 
   for (const auto& mif_source_setting_id :
        bitstream_setting.mif_source_settings()) {
-    write_xml_mif_source_setting(fp, fname, bitstream_setting,
+    write_xml_mif_source_setting(root_node, bitstream_setting,
                                  mif_source_setting_id);
   }
 
   for (const auto& mif_address_map_setting_id :
        bitstream_setting.mif_address_map_settings()) {
-    write_xml_mif_address_map_setting(fp, fname, bitstream_setting,
+    write_xml_mif_address_map_setting(root_node, bitstream_setting,
                                       mif_address_map_setting_id);
   }
 
-  /* Write the root node <openfpga_bitstream_setting> */
-  fp << "</" << XML_BITSTREAM_SETTING_ROOT_NAME << ">"
-     << "\n";
+  out_xml.save(fp, "\t");
 }
