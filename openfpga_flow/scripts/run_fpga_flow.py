@@ -355,12 +355,13 @@ def main():
             run_pro_blif_3arg()
         else:
             # Prefer standard blif; fall back to eblif (e.g. MIF flows that only
-            # emit write_blif -param). VPR reads it with --circuit_format eblif.
+            # emit write_blif -param). VPR may read eblif via --circuit_format eblif.
             yosys_blif = args.top_module + "_yosys_out.blif"
             yosys_eblif = args.top_module + "_yosys_out.eblif"
             if os.path.isfile(yosys_blif):
                 shutil.copy(yosys_blif, args.top_module + ".blif")
             elif os.path.isfile(yosys_eblif):
+                # Keep a .blif alias for legacy rewrite/verify helpers.
                 shutil.copy(yosys_eblif, args.top_module + ".blif")
             else:
                 clean_up_and_exit(
@@ -1067,6 +1068,13 @@ def run_openfpga_shell():
     )
 
     update_template_vars_from_extra_args(path_variables)
+
+    # When task asks for eblif, pass Yosys *.eblif to VPR (not the .blif alias).
+    circuit_format = path_variables.get("OPENFPGA_VPR_CIRCUIT_FORMAT", "blif")
+    yosys_eblif = yosys_output_eblif_filename(args.top_module)
+    if circuit_format == "eblif" and os.path.isfile(yosys_eblif):
+        path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(yosys_eblif)
+        logger.info("VPR netlist set to eblif: %s", yosys_eblif)
 
     # OPENFPGA_MIF_FILE: task.conf --openfpga_mif_file, else Yosys eblif with .param
     if "OPENFPGA_MIF_FILE" not in path_variables:
