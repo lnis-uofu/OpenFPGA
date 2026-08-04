@@ -720,16 +720,6 @@ def clean_up_and_exit(msg, clean=False):
     exit(1)
 
 
-def yosys_output_blif_filename(top_module):
-    """BLIF netlist written by Yosys for VPR (no .param)."""
-    return f"{top_module}_yosys_out.blif"
-
-
-def yosys_output_eblif_filename(top_module):
-    """EBLIF netlist written by Yosys with cell .param (e.g. INIT) for MIF."""
-    return f"{top_module}_yosys_out.eblif"
-
-
 def create_yosys_params():
     tree = ET.parse(args.arch_file)
     root = tree.getroot()
@@ -883,9 +873,9 @@ def create_yosys_params():
 
     ys_params["TOP_MODULE"] = args.top_module
     ys_params["LUT_SIZE"] = lut_size
-    ys_params["OUTPUT_BLIF"] = yosys_output_blif_filename(args.top_module)
-    # Optional second netlist with .param (MIF / source=eblif); used by yosys_bram_mif_flow.ys
-    ys_params["OUTPUT_EBLIF"] = yosys_output_eblif_filename(args.top_module)
+    ys_params["OUTPUT_BLIF"] = f"{args.top_module}_yosys_out.blif"
+    # EBLIF with .param (e.g. INIT) for MIF / --circuit_format eblif
+    ys_params["OUTPUT_EBLIF"] = f"{args.top_module}_yosys_out.eblif"
     ys_params["OUTPUT_VERILOG"] = args.top_module + "_output_verilog.v"
 
     return ys_params
@@ -1069,23 +1059,20 @@ def run_openfpga_shell():
 
     update_template_vars_from_extra_args(path_variables)
 
-    # When task asks for eblif, pass Yosys *.eblif to VPR (not the .blif alias).
-    circuit_format = path_variables.get("OPENFPGA_VPR_CIRCUIT_FORMAT", "blif")
-    yosys_eblif = yosys_output_eblif_filename(args.top_module)
-    if circuit_format == "eblif" and os.path.isfile(yosys_eblif):
-        path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(yosys_eblif)
-        logger.info("VPR netlist set to eblif: %s", yosys_eblif)
+    # Prefer Yosys eblif when task sets --circuit_format eblif (keeps .param for VPR/MIF).
+    yosys_eblif = f"{args.top_module}_yosys_out.eblif"
+    if (
+        path_variables.get("OPENFPGA_VPR_CIRCUIT_FORMAT", "blif") == "eblif"
+        and os.path.isfile(yosys_eblif)
+    ):
+        path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(
+            yosys_eblif
+        )
 
-    # OPENFPGA_MIF_FILE: task.conf --openfpga_mif_file, else Yosys eblif with .param
-    if "OPENFPGA_MIF_FILE" not in path_variables:
-        path_variables["OPENFPGA_MIF_FILE"] = yosys_output_eblif_filename(args.top_module)
-    path_variables["OPENFPGA_MIF_FILE"] = normalize_template_path_for_windows(
-        path_variables["OPENFPGA_MIF_FILE"]
+    # write_mif --file; override via task.conf --openfpga_write_mif_file
+    path_variables.setdefault(
+        "OPENFPGA_WRITE_MIF_FILE", "fabric_independent_bitstream_memory.mem"
     )
-
-    # OPENFPGA_WRITE_MIF_FILE: task.conf --openfpga_write_mif_file
-    if "OPENFPGA_WRITE_MIF_FILE" not in path_variables:
-        path_variables["OPENFPGA_WRITE_MIF_FILE"] = "fabric_independent_bitstream_memory.mem"
     path_variables["OPENFPGA_WRITE_MIF_FILE"] = normalize_template_path_for_windows(
         path_variables["OPENFPGA_WRITE_MIF_FILE"]
     )
