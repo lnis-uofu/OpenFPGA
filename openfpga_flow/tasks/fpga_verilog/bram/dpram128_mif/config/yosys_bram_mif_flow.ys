@@ -88,5 +88,8 @@ stat
 # Output netlists
 #########################
 opt_clean -purge
+# VPR eblif .param accepts only binary 0/1 (not x). Sparse $readmemh leaves
+# uninitialized INIT bits as x; zero-fill them so VPR and MIF see defined bits.
+setundef -zero -params
 # Extended BLIF (.eblif) with .param INIT for VPR (--circuit_format eblif) and MIF
 write_blif -param ${OUTPUT_EBLIF}
