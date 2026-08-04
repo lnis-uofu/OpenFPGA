@@ -354,9 +354,18 @@ def main():
             run_ace2()
             run_pro_blif_3arg()
         else:
-            # Make a copy of the blif file to be compatible with vpr flow
-            shutil.copy(args.top_module + "_yosys_out.blif", args.top_module + ".blif")
-
+            # Prefer standard blif; fall back to eblif (e.g. MIF flows that only
+            # emit write_blif -param). VPR reads it with --circuit_format eblif.
+            yosys_blif = args.top_module + "_yosys_out.blif"
+            yosys_eblif = args.top_module + "_yosys_out.eblif"
+            if os.path.isfile(yosys_blif):
+                shutil.copy(yosys_blif, args.top_module + ".blif")
+            elif os.path.isfile(yosys_eblif):
+                shutil.copy(yosys_eblif, args.top_module + ".blif")
+            else:
+                clean_up_and_exit(
+                    "Neither '%s' nor '%s' found after Yosys" % (yosys_blif, yosys_eblif)
+                )
         # Always Generate the post-synthesis verilog files
         run_rewrite_verilog()
 
