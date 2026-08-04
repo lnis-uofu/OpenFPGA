@@ -6,9 +6,6 @@
 /* Headers from vtrutil library */
 #include "openfpga_decode.h"
 
-#include <iomanip>
-#include <sstream>
-
 #include "vtr_assert.h"
 
 /* begin namespace openfpga */
@@ -274,20 +271,87 @@ int hex_digits_for_width(const int& width_bits) {
   return (width_bits + 3) / 4;
 }
 
-/********************************************************************
- * Format value as zero-padded uppercase hex with width-derived digit count
- * (Verilog $readmemh style).
- ********************************************************************/
-std::string format_hex_word(const uint64_t& value, const int& width_bits) {
-  const int nd = hex_digits_for_width(width_bits);
-  std::ostringstream hex_ss;
-  hex_ss << std::hex << std::uppercase << std::setfill('0');
-  if (nd > 0) {
-    hex_ss << std::setw(nd) << value;
-  } else {
-    hex_ss << value;
+static int hex_digit_value(const char& c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
   }
-  return hex_ss.str();
+  if (c >= 'a' && c <= 'f') {
+    return c - 'a' + 10;
+  }
+  if (c >= 'A' && c <= 'F') {
+    return c - 'A' + 10;
+  }
+  return -1;
+}
+
+/********************************************************************
+ * Convert hex digits to a bit string with LSB at index 0.
+ ********************************************************************/
+std::string hex_to_bit_string(const std::string& hex_digits,
+                              const size_t& width_bits) {
+  if (width_bits == 0 || hex_digits.empty()) {
+    return std::string();
+  }
+
+  std::string hex = hex_digits;
+  if (hex.size() >= 2 && hex[0] == '0' && (hex[1] == 'x' || hex[1] == 'X')) {
+    hex = hex.substr(2);
+  }
+  if (hex.empty()) {
+    return std::string();
+  }
+  for (const char c : hex) {
+    if (hex_digit_value(c) < 0) {
+      return std::string();
+    }
+  }
+
+  std::string bits(width_bits, '0');
+  size_t bit = 0;
+  for (int i = static_cast<int>(hex.size()) - 1; i >= 0 && bit < width_bits;
+       --i) {
+    const int nibble = hex_digit_value(hex[static_cast<size_t>(i)]);
+    for (int b = 0; b < 4 && bit < width_bits; ++b, ++bit) {
+      bits[bit] = ((nibble >> b) & 0x1) ? '1' : '0';
+    }
+  }
+  /* Reject truncating non-zero high bits beyond width_bits. */
+  size_t bit_check = 0;
+  for (int i = static_cast<int>(hex.size()) - 1; i >= 0; --i) {
+    const int nibble = hex_digit_value(hex[static_cast<size_t>(i)]);
+    for (int b = 0; b < 4; ++b, ++bit_check) {
+      if (bit_check >= width_bits && ((nibble >> b) & 0x1)) {
+        return std::string();
+      }
+    }
+  }
+  return bits;
+}
+
+/********************************************************************
+ * Format a bit string (LSB at index 0) as zero-padded uppercase hex.
+ ********************************************************************/
+std::string format_hex_word(const std::string& bits_lsb0,
+                            const int& width_bits) {
+  const size_t width =
+    width_bits > 0 ? static_cast<size_t>(width_bits) : bits_lsb0.size();
+  const int nd = hex_digits_for_width(static_cast<int>(width));
+  if (nd <= 0) {
+    return std::string();
+  }
+
+  std::string hex(static_cast<size_t>(nd), '0');
+  for (int d = 0; d < nd; ++d) {
+    int nibble = 0;
+    for (int b = 0; b < 4; ++b) {
+      const size_t bit = static_cast<size_t>(d * 4 + b);
+      if (bit < bits_lsb0.size() && bits_lsb0[bit] == '1') {
+        nibble |= (1 << b);
+      }
+    }
+    hex[static_cast<size_t>(nd - 1 - d)] = "0123456789ABCDEF"[nibble];
+  }
+  return hex;
 }
 
 } /* end namespace openfpga */

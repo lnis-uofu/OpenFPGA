@@ -269,11 +269,10 @@ static void read_xml_mif_source_setting(
   const openfpga::BasicPort data_range =
     parse_mif_range_attribute(data_range_attr, xml_mif_source, loc_data,
                               XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE);
-  if (data_range.get_lsb() != 0 || data_range.get_width() > 64) {
-    archfpga_throw(
-      loc_data.filename_c_str(), loc_data.line(xml_mif_source),
-      "mif_source data_range='%s' must start at 0 and be at most 64 bits\n",
-      data_range_attr.c_str());
+  if (data_range.get_lsb() != 0) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+                   "mif_source data_range='%s' must start at 0\n",
+                   data_range_attr.c_str());
   }
 
   bitstream_setting.add_mif_source_setting(

@@ -48,7 +48,7 @@ int main(int argc, const char** argv) {
   }
   const MifSegmentId out_segment(0);
 
-  std::map<uint64_t, uint64_t> words;
+  std::map<uint64_t, std::string> words;
   for (const MifMemoryLineId& line_id :
        aggregated_storage.segment_memory_lines(out_segment)) {
     words[aggregated_storage.memory_line_address(line_id)] =

@@ -40,7 +40,7 @@
  * Data members (indexed by MifMemoryLineId):
  *   memory_line_ids_         - Valid memory-line id list (StrongId table)
  *   memory_line_addresses_   - Word address of each memory line
- *   memory_line_data_        - Word data of each memory line
+ *   memory_line_data_        - Word data as bit string, LSB at index 0
  *******************************************************************/
 namespace openfpga {
 
@@ -69,7 +69,9 @@ class MifStorage {
   const std::string& raw_data(const MifSegmentId& segment_id) const;
   bool has_physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
-  uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
+  /* Bit string with LSB at index 0 ('0'/'1'). */
+  const std::string& memory_line_data(
+    const MifMemoryLineId& memory_line_id) const;
   bool empty() const;
 
  public: /* Mutators */
@@ -86,7 +88,10 @@ class MifStorage {
   /* Drop decoded memory lines for a segment (e.g. before eblif overwrite). */
   void clear_segment_memory_lines(const MifSegmentId& segment_id);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
-                                     uint64_t address, uint64_t data);
+                                     uint64_t address,
+                                     const std::string& data_bits);
+  void set_memory_line_data(const MifMemoryLineId& memory_line_id,
+                            const std::string& data_bits);
 
  public: /* Validators */
   bool valid_segment_id(const MifSegmentId& segment_id) const;
@@ -105,7 +110,7 @@ class MifStorage {
   /* Per-memory-line tables (indexed by MifMemoryLineId) */
   vtr::vector<MifMemoryLineId, MifMemoryLineId> memory_line_ids_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_addresses_;
-  vtr::vector<MifMemoryLineId, uint64_t> memory_line_data_;
+  vtr::vector<MifMemoryLineId, std::string> memory_line_data_;
 };
 
 } /* namespace openfpga */

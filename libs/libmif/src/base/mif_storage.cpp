@@ -50,7 +50,7 @@ uint64_t MifStorage::memory_line_address(
   return memory_line_addresses_[memory_line_id];
 }
 
-uint64_t MifStorage::memory_line_data(
+const std::string& MifStorage::memory_line_data(
   const MifMemoryLineId& memory_line_id) const {
   VTR_ASSERT(valid_memory_line_id(memory_line_id));
   return memory_line_data_[memory_line_id];
@@ -129,14 +129,20 @@ void MifStorage::clear_segment_memory_lines(const MifSegmentId& segment_id) {
 
 MifMemoryLineId MifStorage::create_memory_line(const MifSegmentId& segment_id,
                                                uint64_t address,
-                                               uint64_t data) {
+                                               const std::string& data_bits) {
   VTR_ASSERT(valid_segment_id(segment_id));
   MifMemoryLineId memory_line_id(memory_line_ids_.size());
   memory_line_ids_.push_back(memory_line_id);
   memory_line_addresses_.push_back(address);
-  memory_line_data_.push_back(data);
+  memory_line_data_.push_back(data_bits);
   segment_memory_line_ids_[segment_id].push_back(memory_line_id);
   return memory_line_id;
+}
+
+void MifStorage::set_memory_line_data(const MifMemoryLineId& memory_line_id,
+                                      const std::string& data_bits) {
+  VTR_ASSERT(valid_memory_line_id(memory_line_id));
+  memory_line_data_[memory_line_id] = data_bits;
 }
 
 bool MifStorage::valid_segment_id(const MifSegmentId& segment_id) const {

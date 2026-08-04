@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "openfpga_decode.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -38,8 +39,8 @@ static bool parse_mif_u64_token(const std::string& tok, uint64_t& out) {
 }
 
 /* Bare hex digits use base 16 (not octal); 0x / other forms use auto base. */
-static bool parse_mif_init_hex_value_token(const std::string& tok,
-                                           uint64_t& out) {
+static bool parse_mif_init_hex_addr_token(const std::string& tok,
+                                          uint64_t& out) {
   if (tok.empty()) {
     return false;
   }
@@ -58,6 +59,28 @@ static bool parse_mif_init_hex_value_token(const std::string& tok,
     return false;
   }
   out = static_cast<uint64_t>(v);
+  return true;
+}
+
+/* Accept arbitrary-width hex data words (optional 0x prefix). */
+static bool parse_mif_init_hex_data_token(const std::string& tok,
+                                          std::string& hex_out) {
+  if (tok.empty()) {
+    return false;
+  }
+  std::string hex = tok;
+  if (hex.size() >= 2 && hex[0] == '0' && (hex[1] == 'x' || hex[1] == 'X')) {
+    hex = hex.substr(2);
+  }
+  if (hex.empty()) {
+    return false;
+  }
+  for (const char c : hex) {
+    if (!std::isxdigit(static_cast<unsigned char>(c))) {
+      return false;
+    }
+  }
+  hex_out = hex;
   return true;
 }
 
@@ -80,9 +103,10 @@ static std::string strip_mif_line_comment(const std::string& raw_line) {
  * When has_data is false, only next_addr was updated (@addr with no data word),
  * matching Verilog $readmemh address-only directives. */
 static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
-                                uint64_t& addr, uint64_t& data,
+                                uint64_t& addr, std::string& data_hex,
                                 bool& has_data) {
   has_data = false;
+  data_hex.clear();
   if (line.empty()) {
     return false;
   }
@@ -105,12 +129,12 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
   if (!(iss >> second)) {
     if (has_at_jump) {
       /* @<addr> alone: set next write address ($readmemh). */
-      if (!parse_mif_init_hex_value_token(first, next_addr)) {
+      if (!parse_mif_init_hex_addr_token(first, next_addr)) {
         return false;
       }
       return true;
     }
-    if (!parse_mif_init_hex_value_token(first, data)) {
+    if (!parse_mif_init_hex_data_token(first, data_hex)) {
       return false;
     }
     addr = next_addr;
@@ -123,8 +147,8 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
     return false;
   }
 
-  if (!parse_mif_init_hex_value_token(first, addr) ||
-      !parse_mif_init_hex_value_token(second, data)) {
+  if (!parse_mif_init_hex_addr_token(first, addr) ||
+      !parse_mif_init_hex_data_token(second, data_hex)) {
     return false;
   }
   next_addr = addr + 1;
@@ -168,9 +192,9 @@ int read_mif_from_init_hex(const std::string& file_path,
     }
 
     uint64_t addr = 0;
-    uint64_t data = 0;
+    std::string data_hex;
     bool has_data = false;
-    if (!parse_init_hex_line(line, next_addr, addr, data, has_data)) {
+    if (!parse_init_hex_line(line, next_addr, addr, data_hex, has_data)) {
       VTR_LOG_ERROR("%s:%lu: cannot parse init.hex line: %s\n",
                     file_path.c_str(), static_cast<unsigned long>(line_no),
                     line.c_str());
@@ -180,7 +204,15 @@ int read_mif_from_init_hex(const std::string& file_path,
       continue;
     }
 
-    mif_storage.create_memory_line(segment_id, addr, data);
+    const size_t width_bits = data_hex.size() * 4;
+    const std::string data_bits = hex_to_bit_string(data_hex, width_bits);
+    if (data_bits.empty()) {
+      VTR_LOG_ERROR("%s:%lu: invalid hex data word: %s\n", file_path.c_str(),
+                    static_cast<unsigned long>(line_no), data_hex.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    mif_storage.create_memory_line(segment_id, addr, data_bits);
     ++total_words;
   }
 

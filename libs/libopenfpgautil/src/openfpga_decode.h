@@ -59,9 +59,22 @@ std::vector<std::string> expand_dont_care_bin_str(const std::string& input_str);
 /* Number of hex digits needed to cover width_bits (ceil(width/4)). */
 int hex_digits_for_width(const int& width_bits);
 
-/* Format value as zero-padded uppercase hex with width-derived digit count
- * (Verilog $readmemh style). */
-std::string format_hex_word(const uint64_t& value, const int& width_bits);
+/********************************************************************
+ * Convert a hex digit string (optional 0x prefix) into a bit string with
+ * LSB at index 0. width_bits selects how many bits to produce (zero-extend
+ * or truncate high bits that must be 0 when truncating).
+ * Returns empty string on invalid input.
+ ********************************************************************/
+std::string hex_to_bit_string(const std::string& hex_digits,
+                              const size_t& width_bits);
+
+/********************************************************************
+ * Format a bit string (LSB at index 0) as zero-padded uppercase hex
+ * (Verilog $readmemh style, no 0x prefix). width_bits selects digit count;
+ * if <= 0, bits.size() is used.
+ ********************************************************************/
+std::string format_hex_word(const std::string& bits_lsb0,
+                            const int& width_bits);
 
 }  // namespace openfpga
 
