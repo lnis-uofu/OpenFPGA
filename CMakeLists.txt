@@ -377,7 +377,6 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(yosys PRIVATE "-w")
       target_compile_options(libyosys-abc PRIVATE "-w")
       target_compile_options(yosys-abc PRIVATE "-w")
-      target_compile_options(kernel PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
   endif()
 
