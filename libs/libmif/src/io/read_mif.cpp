@@ -161,7 +161,7 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
  * Used by shell command: read_mif --file <hex> --pb_type <pb>
  *
  * Stores only address/data words and the caller-provided pb_type.
- * Address/data ranges come later from bitstream setting in aggregate_mif.
+ * Address/data ranges come later from bitstream setting in MifPipeline.
  *******************************************************************/
 int read_mif_from_init_hex(const std::string& file_path,
                            MifStorage& mif_storage,

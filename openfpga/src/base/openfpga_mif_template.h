@@ -5,6 +5,7 @@
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
+#include "mif_pipeline.h"
 #include "mif_storage.h"
 #include "read_mif.h"
 #include "shell.h"
@@ -28,7 +29,10 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
   const std::string& pb_type = cmd_context.option_value(cmd, opt_pb_type);
   const int exec_status = read_mif_from_init_hex(
-    mif_path, openfpga_context.mutable_mif_storage(), pb_type);
+    mif_path,
+    openfpga_context.mutable_mif_pipeline().mutable_storage(
+      openfpga::MifPipeline::Stage::HEX),
+    pb_type);
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }
@@ -46,7 +50,8 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
 
   /* Aggregated preload result from build_architecture_bitstream / aggregate. */
   const MifStorage& aggregated_mif_storage =
-    openfpga_context.aggregated_mif_storage();
+    openfpga_context.mif_pipeline().storage(
+      openfpga::MifPipeline::Stage::PHYSICAL);
   if (aggregated_mif_storage.empty()) {
     VTR_LOG_ERROR(
       "write_mif: no aggregated MIF data; run build_architecture_bitstream "

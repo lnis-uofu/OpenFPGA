@@ -1,5 +1,5 @@
 /********************************************************************
- * Unit test: Yosys eblif .param INIT -> aggregate_mif
+ * Unit test: Yosys eblif .param INIT -> MifPipeline
  *
  * Usage:
  *   test_aggregate_mif <bitstream_setting.xml> <yosys_output.eblif>
@@ -9,10 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "aggregate_mif.h"
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
-#include "mif_storage.h"
+#include "mif_pipeline.h"
 #include "mif_storage_fwd.h"
 #include "read_xml_openfpga_arch.h"
 #include "vtr_log.h"
@@ -31,13 +30,12 @@ int main(int argc, const char** argv) {
     return status;
   }
 
-  openfpga::MifStorage logical_storage;
-  openfpga::MifStorage aggregated_storage;
+  openfpga::MifPipeline pipeline;
   const std::vector<std::string> input_pb_types = {
     "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
   size_t next_pb_type = 0;
-  status = openfpga::aggregate_mif(
-    logical_storage, bitstream_setting, aggregated_storage,
+  status = pipeline.run(
+    bitstream_setting,
     [&input_pb_types, &next_pb_type](const std::string&,
                                      const openfpga::MifEblifPortConnections&) {
       return input_pb_types.at(next_pb_type++);
@@ -50,16 +48,20 @@ int main(int argc, const char** argv) {
 
   std::map<uint64_t, std::string> words;
   for (const MifMemoryLineId& line_id :
-       aggregated_storage.segment_memory_lines(out_segment)) {
-    words[aggregated_storage.memory_line_address(line_id)] =
-      aggregated_storage.memory_line_data(line_id);
+       pipeline.storage(openfpga::MifPipeline::Stage::PHYSICAL)
+         .segment_memory_lines(out_segment)) {
+    words[pipeline.storage(openfpga::MifPipeline::Stage::PHYSICAL)
+            .memory_line_address(line_id)] =
+      pipeline.storage(openfpga::MifPipeline::Stage::PHYSICAL)
+        .memory_line_data(line_id);
   }
 
-  status = openfpga::write_mif("aggregated_preload.mem", aggregated_storage);
+  status = pipeline.write_stage("aggregated_preload.mem",
+                                openfpga::MifPipeline::Stage::PHYSICAL);
 
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
-  VTR_LOG("aggregate_mif eblif-source test passed.\n");
+  VTR_LOG("MifPipeline eblif-source test passed.\n");
   return openfpga::CMD_EXEC_SUCCESS;
 }

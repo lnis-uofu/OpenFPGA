@@ -27,7 +27,7 @@ int read_mif_from_init_hex(const std::string& file_path,
 
 /********************************************************************
  * Read eblif memory init fields into logical MIF storage.
- * Called by aggregate_mif when bitstream setting has source="eblif".
+ * Called by MifPipeline when bitstream setting has source="eblif".
  *
  * eblif_contents lists free-form field selectors from mif_source content=
  * (e.g. ".param INIT", ".param INIT_i"); exact names depend on the synth
@@ -38,8 +38,7 @@ int read_mif_from_init_hex(const std::string& file_path,
  *   - create one segment with physical_pb + raw bit-string
  *
  * Clears mif_storage first. Addr/data ranges are filled later in
- * aggregate_mif from bitstream setting. Decode of raw data also happens
- * there.
+ * MifPipeline from bitstream setting. Decode of raw data also happens there.
  *******************************************************************/
 int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
                         const MifPbTypeResolver& pb_type_resolver,

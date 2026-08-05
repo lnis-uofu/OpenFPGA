@@ -4,7 +4,6 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
-#include "aggregate_mif.h"
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
@@ -14,6 +13,7 @@
 #include "command_exit_codes.h"
 #include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
+#include "mif_pipeline.h"
 #include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
@@ -87,8 +87,7 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   extract_device_non_fabric_bitstream(
     g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
 
-  /* Aggregate MIF when bitstream setting has mif info. Whether to call
-   * read_mif_from_eblif is decided inside aggregate_mif. */
+  /* Run MifPipeline when bitstream setting has mif info. */
   const bool has_mif_setting =
     !openfpga_ctx.bitstream_setting().mif_source_settings().empty() ||
     !openfpga_ctx.bitstream_setting().mif_address_map_settings().empty();
@@ -99,9 +98,8 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
         return get_mif_pb_type_from_vpr(model_name, port_connections);
       };
 
-    const int mem_status = aggregate_mif(
-      openfpga_ctx.mutable_mif_storage(), openfpga_ctx.bitstream_setting(),
-      openfpga_ctx.mutable_aggregated_mif_storage(), pb_type_resolver);
+    const int mem_status = openfpga_ctx.mutable_mif_pipeline().run(
+      openfpga_ctx.bitstream_setting(), pb_type_resolver);
     if (CMD_EXEC_SUCCESS != mem_status) {
       return mem_status;
     }

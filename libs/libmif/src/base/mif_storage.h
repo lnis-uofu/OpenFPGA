@@ -9,16 +9,15 @@
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory MIF storage used for both:
- *   - logical memory initialization read from init.hex or eblif
- *   - aggregated preload data from aggregate_mif()
- * Distinguish stages by variable naming / comments at call sites.
+ * In-memory MifStorage for one pipeline stage (see MifPipeline).
+ * Stages: HEX, EBLIF, LOGICAL, PHYSICAL — each holds segments/lines
+ * for that step; use MifPipeline transforms to move between stages.
  *
  * Eblif read creates each logical segment on demand with:
  *   - VPR-resolved physical_pb
  *   - raw .param INIT data
  *
- * Before remapping, aggregate_mif binds each logical segment to its
+ * Before remapping, MifPipeline binds each logical segment to its
  * mif_source, stores data_width/addr_range, decodes raw INIT into memory
  * lines, and clears the raw data. init.hex segments already contain memory
  * lines and receive any remaining source metadata during the same step.
@@ -34,7 +33,7 @@
  *                              invalid BasicPort if unset
  *   segment_physical_pb_     - Bound pb_type path (logical or physical)
  *   segment_raw_data_        - Undecoded eblif .param INIT bit-string;
- *                              cleared after decode in aggregate_mif
+ *                              cleared after decode in MifPipeline
  *   segment_memory_line_ids_ - Per-segment list of memory-line ids
  *
  * Data members (indexed by MifMemoryLineId):
