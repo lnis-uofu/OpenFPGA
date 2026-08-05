@@ -1295,7 +1295,9 @@ ShellCommandId add_read_mif_command_template(
 
   CommandOptionId opt_pb_type = shell_cmd.add_option(
     "pb_type", true,
-    "pb_type for which the Memory Initialization File (MIF) binds to");
+    "VPR pb_type path for this MIF segment (must match mif_address_map "
+    "src_pb_type in bitstream setting when source=\"others\"). "
+    "Example: memory[mem_8x16_dp].mem_8x16_dp");
   shell_cmd.set_option_require_value(opt_pb_type, openfpga::OPT_STRING);
 
   ShellCommandId shell_cmd_id =
