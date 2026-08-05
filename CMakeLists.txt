@@ -8,6 +8,7 @@ include(SwigLib)
 include(SupportCcache)
 # Auto deps 
 include(DeployDependencies)
+include(GetAllProjectTargets)
 
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
@@ -372,15 +373,35 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   add_subdirectory(yosys)
   #Since Yosys is an externally developed tool, we suppress all compiler warnings
   CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
+  # Collect all targets starting from the root source directory
+  set(ALL_TARGETS "")
+  get_all_project_targets(ALL_TARGETS "${CMAKE_SOURCE_DIR}")
+  # Filter targets that start with your prefix (e.g., "my_prefix_")
+  set(PREFIX_PATTERN "^yosys_")
+  set(MATCHING_TARGETS ${ALL_TARGETS})
+  list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
+  # Output result
+  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
   if(CXX_COMPILER_SUPPORTS_-w)
+      foreach (target_name IN LISTS MATCHING_TARGETS)
+        # 1. Fetch the exact target type
+        get_target_property(target_type ${target_name} TYPE)
+        # Skip completely non-compilable utility and alias metadata
+        if(target_type STREQUAL "UTILITY" OR target_type MATCHES "ALIAS")
+          message(STATUS "Skipping non-compilable target: ${target_name} [${target_type}]")
+          continue()
+        endif()
+        if(target_type STREQUAL "INTERFACE_LIBRARY")
+           # Interface targets only accept INTERFACE flags
+           target_compile_options(${target_name} INTERFACE "-w")
+        else()
+           target_compile_options(${target_name} PRIVATE "-w")
+        endif()
+      endforeach()
       target_compile_options(libyosys PRIVATE "-w")
-      target_compile_options(yosys PRIVATE "-w")
       target_compile_options(libyosys-abc PRIVATE "-w")
-      target_compile_options(yosys-abc PRIVATE "-w")
-      target_compile_options(yosys_kernel PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
   endif()
-
 endif()
 
 # For installer
