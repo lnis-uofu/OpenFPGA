@@ -125,6 +125,7 @@ set(YOSYS_F4PGA_PLUGINS OFF CACHE BOOL "Enable building and installing Yosys Sys
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
 set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
+set(VPR_USE_SERVER OFF CACHE BOOL "Specify whether vpr enables the server mode")
 # TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
 #set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
 
