@@ -577,6 +577,7 @@ jobs:
             build/openfpga/openfpga_shell.so
             build/openfpga/openfpga
             build/yosys
+            build/share
             openfpga_flow
             openfpga.sh
 
