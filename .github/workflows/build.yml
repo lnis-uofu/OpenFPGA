@@ -578,8 +578,11 @@ jobs:
             build/openfpga/openfpga
             build/yosys/yosys
             build/yosys/yosys-abc
+            build/yosys/yosys-config
             build/yosys/libyosys-abc.a
             build/share
+            build/yosys-smtbmc
+            build/yosys-witness
             openfpga_flow
             openfpga.sh
 
