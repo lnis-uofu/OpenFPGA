@@ -415,7 +415,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G Ninja ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -DCMAKE_INSTALL_RPATH="${{ github.workspace }}/vcpkg" -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake -G Ninja ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -DCMAKE_INSTALL_RPATH="${{ github.workspace }}/vcpkg" -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DOPENFPGA_WITH_YOSYS=OFF
           cmake --build . --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
           cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
 
@@ -576,7 +576,9 @@ jobs:
             build/openfpga/libopenfpga.a
             build/openfpga/openfpga_shell.so
             build/openfpga/openfpga
-            build/yosys
+            build/yosys/yosys
+            build/yosys/yosys-abc
+            build/yosys/libyosys-abc.a
             build/share
             openfpga_flow
             openfpga.sh
@@ -856,8 +858,8 @@ jobs:
       matrix:
         config:
           - name: "No-warning Build (Ubuntu 22.04)"
-            cc: gcc-12
-            cxx: g++-12
+            cc: gcc-11
+            cxx: g++-11
             build_type: release
     # Define the steps to run the build job
     env:
@@ -900,7 +902,7 @@ jobs:
         shell: bash
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
+          make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON -DOPENFPGA_WITH_YOSYS=OFF"
 
       - name: Quick Test
         shell: bash
