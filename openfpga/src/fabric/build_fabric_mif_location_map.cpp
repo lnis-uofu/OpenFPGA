@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "arch_util.h"
 #include "openfpga_naming.h"
 #include "openfpga_pb_parser.h"
 #include "openfpga_reserved_words.h"
@@ -32,11 +33,10 @@ static bool tile_matches_mif_pb(t_physical_tile_type_ptr phy_tile_type,
   if (phy_tile_type->name == top_name) {
     return true;
   }
-  for (const t_sub_tile& sub_tile : phy_tile_type->sub_tiles) {
-    for (t_logical_block_type_ptr site : sub_tile.equivalent_sites) {
-      if (site != nullptr && site->name == top_name) {
-        return true;
-      }
+  for (t_logical_block_type_ptr site :
+       get_equivalent_sites_set(phy_tile_type)) {
+    if (site != nullptr && site->name == top_name) {
+      return true;
     }
   }
   return false;
@@ -56,19 +56,17 @@ static std::vector<std::string> matching_mif_pb_paths(
 
 static bool skip_non_root_grid_cell(const DeviceGrid& grids, const int& x,
                                     const int& y, const size_t& layer) {
-  if ((0 > x) || (0 > y) || (size_t(x) >= grids.width()) ||
-      (size_t(y) >= grids.height())) {
+  const t_physical_tile_loc phy_tile_loc(x, y, layer);
+  if (!grids.is_valid_tile_loc(phy_tile_loc)) {
     return true;
   }
-  t_physical_tile_loc phy_tile_loc(x, y, layer);
   t_physical_tile_type_ptr phy_tile_type =
     grids.get_physical_type(phy_tile_loc);
   if (true == is_empty_type(phy_tile_type)) {
     return true;
   }
   /* Skip non-root cells of multi-width/height tiles. */
-  return (0 < grids.get_width_offset(phy_tile_loc)) ||
-         (0 < grids.get_height_offset(phy_tile_loc));
+  return !grids.is_root_location(phy_tile_loc);
 }
 
 static std::map<std::string, size_t> collect_mif_data_bus_ports(
