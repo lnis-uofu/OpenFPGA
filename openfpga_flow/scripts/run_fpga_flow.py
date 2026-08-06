@@ -1061,18 +1061,13 @@ def run_openfpga_shell():
 
     # Prefer Yosys eblif when task sets --circuit_format eblif (keeps .param for VPR/MIF).
     yosys_eblif = f"{args.top_module}_yosys_out.eblif"
-    if (
-        path_variables.get("OPENFPGA_VPR_CIRCUIT_FORMAT", "blif") == "eblif"
-        and os.path.isfile(yosys_eblif)
+    if path_variables.get("OPENFPGA_VPR_CIRCUIT_FORMAT", "blif") == "eblif" and os.path.isfile(
+        yosys_eblif
     ):
-        path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(
-            yosys_eblif
-        )
+        path_variables["VPR_TESTBENCH_BLIF"] = normalize_template_path_for_windows(yosys_eblif)
 
     # write_mif --file; override via task.conf --openfpga_write_mif_file
-    path_variables.setdefault(
-        "OPENFPGA_WRITE_MIF_FILE", "fabric_independent_bitstream_memory.mem"
-    )
+    path_variables.setdefault("OPENFPGA_WRITE_MIF_FILE", "fabric_independent_bitstream_memory.mem")
     path_variables["OPENFPGA_WRITE_MIF_FILE"] = normalize_template_path_for_windows(
         path_variables["OPENFPGA_WRITE_MIF_FILE"]
     )
