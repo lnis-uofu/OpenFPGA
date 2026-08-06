@@ -12,6 +12,9 @@ namespace openfpga {
 /********************************************************************
  * Build LOGICAL then PHYSICAL MIF for the given bitstream setting.
  *
+ * Aggregated physical MIF is stored as physical_ in MifPipeline.
+ * Its corresponding placement coords are also stored in MifPipeline.
+ *
  * Stage pb semantics:
  *   EBLIF/LOGICAL - operating pb paths (match mif_source /
  *                   mif_address_map src_pb_type strings)
@@ -74,12 +77,13 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
     return status;
   }
 
-  /*aggregate to physical pb*/
+  /*aggregate to physical_; result stored in mif_pipeline.physical_ */
   status = mif_pipeline.aggregate_to_physical(bitstream_setting);
   if (CMD_EXEC_SUCCESS != status) {
     return status;
   }
 
+  /* Annotate placement coords into the same MifPipeline as physical_. */
   status = annotate_physical_mif_grid_coordinates(
     mif_pipeline, bitstream_setting, atom_ctx, place_ctx);
   return status;

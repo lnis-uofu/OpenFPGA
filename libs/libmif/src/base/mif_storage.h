@@ -25,6 +25,7 @@
  * Each aggregated destination segment has:
  *   - memory lines
  *   - physical_pb, data_width, addr_range (for .mem header)
+ * Placement coords for PHYSICAL segments live on MifPipeline, not here.
  *
  * Data members (indexed by MifSegmentId unless noted):
  *   segment_ids_             - Valid segment id list (StrongId table)

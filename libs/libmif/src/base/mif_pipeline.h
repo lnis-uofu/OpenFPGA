@@ -26,6 +26,11 @@ struct MifGridCoord {
  *   EBLIF     - raw .param INIT from Yosys eblif
  *   LOGICAL   - merged + decoded logical words per mif_source
  *   PHYSICAL  - remapped aggregated preload per destination pb_type
+ *
+ * Aggregated physical MIF is stored as physical_. Its corresponding
+ * placement coordinates (x, y, sub_tile) are also stored in this
+ * pipeline (physical_segment_grid_coords_), parallel to physical_
+ * segments.
  ********************************************************************/
 class MifPipeline {
  public:
@@ -54,13 +59,13 @@ class MifPipeline {
   /* Zero-fill undefined address slots in LOGICAL (sparse init / x bits). */
   int pad_logical_zeros(const BitstreamSetting& bitstream_setting);
 
-  /* Remap LOGICAL through mif_address_map into PHYSICAL. */
+  /* Remap LOGICAL through mif_address_map into physical_. */
   int aggregate_to_physical(const BitstreamSetting& bitstream_setting);
 
   /* Debug dump of any stage via write_mif. */
   int write_stage(const std::string& file_path, Stage stage) const;
 
-  /* PHYSICAL-stage VPR grid coordinates (parallel to physical_ segments). */
+  /* Placement coords for physical_ segments (must pass physical_ ids). */
   bool physical_segment_has_grid_coord(const MifSegmentId& segment_id) const;
   int physical_segment_grid_x(const MifSegmentId& segment_id) const;
   int physical_segment_grid_y(const MifSegmentId& segment_id) const;
@@ -74,7 +79,10 @@ class MifPipeline {
   MifStorage hex_;
   MifStorage eblif_;
   MifStorage logical_;
-  MifStorage physical_;
+  MifStorage physical_; /* Aggregated physical MIF */
+  /* Parallel to physical_ only; indexed by physical_ segment id.
+   * Do not index with HEX/EBLIF/LOGICAL segment ids (same StrongId type,
+   * but each stage has its own id space). */
   vtr::vector<MifSegmentId, MifGridCoord> physical_segment_grid_coords_;
 };
 

@@ -18,6 +18,21 @@
 #include "vtr_log.h"
 #include "write_mif.h"
 
+namespace {
+
+/* Stub resolver: unit test has no packed VPR netlist. */
+const std::vector<std::string> k_stub_pb_types = {
+  "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
+size_t g_next_stub_pb_type = 0;
+
+std::string stub_mif_pb_type_from_vpr(
+  const AtomContext&, const DeviceContext&, const std::string&,
+  const openfpga::MifEblifPortConnections&) {
+  return k_stub_pb_types.at(g_next_stub_pb_type++);
+}
+
+} /* namespace */
+
 int main(int argc, const char** argv) {
   if (argc != 3) {
     VTR_LOG_ERROR("Usage: %s <bitstream_setting.xml> <yosys_output.eblif>\n",
@@ -32,19 +47,10 @@ int main(int argc, const char** argv) {
   }
 
   openfpga::MifPipeline pipeline;
-  const std::vector<std::string> input_pb_types = {
-    "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
-  size_t next_pb_type = 0;
   AtomContext atom_ctx;
   DeviceContext device_ctx;
-  const openfpga::MifPbTypeResolver pb_type_resolver =
-    [&input_pb_types, &next_pb_type](const AtomContext&, const DeviceContext&,
-                                     const std::string&,
-                                     const openfpga::MifEblifPortConnections&) {
-      return input_pb_types.at(next_pb_type++);
-    };
   status = pipeline.load_eblif(argv[2], bitstream_setting, atom_ctx, device_ctx,
-                               pb_type_resolver);
+                               stub_mif_pb_type_from_vpr);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }
