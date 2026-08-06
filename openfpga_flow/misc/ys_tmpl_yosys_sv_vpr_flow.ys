@@ -1,6 +1,5 @@
 # Yosys synthesis script for ${TOP_MODULE}
 # Read verilog files
-plugin -i slang
 read_slang ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
 
 # Technology mapping
