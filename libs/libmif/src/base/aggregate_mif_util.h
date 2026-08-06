@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "bitstream_setting.h"
-#include "command_exit_codes.h"
 #include "mif_storage.h"
 #include "openfpga_port.h"
 
@@ -19,11 +18,6 @@ void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
 /* Unique eblif mif_source content= selectors from bitstream setting. */
 std::vector<std::string> collect_eblif_mif_contents(
   const BitstreamSetting& bitstream_setting);
-
-/* Bind mif_source metadata and decode raw INIT / normalize hex lines. */
-int decode_logical_segment(MifStorage& logical_storage,
-                           const MifSegmentId& segment_id,
-                           const BitstreamSetting& bitstream_setting);
 
 bool address_in_range(uint64_t addr, const BasicPort& address_range);
 
