@@ -15,23 +15,6 @@ namespace openfpga {
 
 namespace {
 
-MifStorage& stage_storage(MifPipeline::Stage stage, MifStorage& hex,
-                          MifStorage& eblif, MifStorage& logical,
-                          MifStorage& physical) {
-  switch (stage) {
-    case MifPipeline::Stage::HEX:
-      return hex;
-    case MifPipeline::Stage::EBLIF:
-      return eblif;
-    case MifPipeline::Stage::LOGICAL:
-      return logical;
-    case MifPipeline::Stage::PHYSICAL:
-      return physical;
-    default:
-      return logical;
-  }
-}
-
 void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
                       MifStorage& dest) {
   const MifSegmentId new_seg = dest.create_segment();
@@ -48,17 +31,6 @@ void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
                             src.memory_line_data(line_id));
   }
 }
-
-} /* namespace */
-
-void copy_mif_storage(const MifStorage& src, MifStorage& dest) {
-  dest.clear();
-  for (const MifSegmentId& seg : src.segments()) {
-    copy_mif_segment(src, seg, dest);
-  }
-}
-
-namespace {
 
 bool address_in_range(uint64_t addr, const BasicPort& address_range) {
   return address_range.is_valid() && addr >= address_range.get_lsb() &&
@@ -264,10 +236,6 @@ int decode_logical_segment(MifStorage& logical_storage,
 
 } /* namespace */
 
-void MifPipeline::clear_physical_grid_coords() {
-  physical_segment_grid_coords_.clear();
-}
-
 bool MifPipeline::physical_segment_has_grid_coord(
   const MifSegmentId& segment_id) const {
   VTR_ASSERT(physical_.valid_segment_id(segment_id));
@@ -275,19 +243,10 @@ bool MifPipeline::physical_segment_has_grid_coord(
   return physical_segment_grid_coords_[segment_id].is_valid();
 }
 
-int MifPipeline::physical_segment_grid_x(const MifSegmentId& segment_id) const {
+const MifGridCoord& MifPipeline::physical_segment_grid_coord(
+  const MifSegmentId& segment_id) const {
   VTR_ASSERT(physical_segment_has_grid_coord(segment_id));
-  return physical_segment_grid_coords_[segment_id].x;
-}
-
-int MifPipeline::physical_segment_grid_y(const MifSegmentId& segment_id) const {
-  VTR_ASSERT(physical_segment_has_grid_coord(segment_id));
-  return physical_segment_grid_coords_[segment_id].y;
-}
-
-int MifPipeline::physical_segment_grid_z(const MifSegmentId& segment_id) const {
-  VTR_ASSERT(physical_segment_has_grid_coord(segment_id));
-  return physical_segment_grid_coords_[segment_id].z;
+  return physical_segment_grid_coords_[segment_id];
 }
 
 void MifPipeline::set_physical_segment_grid_coord(
@@ -313,7 +272,8 @@ const MifStorage& MifPipeline::storage(Stage stage) const {
 }
 
 MifStorage& MifPipeline::mutable_storage(Stage stage) {
-  return stage_storage(stage, hex_, eblif_, logical_, physical_);
+  return const_cast<MifStorage&>(
+    static_cast<const MifPipeline*>(this)->storage(stage));
 }
 
 void MifPipeline::clear() {
@@ -321,13 +281,13 @@ void MifPipeline::clear() {
   eblif_.clear();
   logical_.clear();
   physical_.clear();
-  clear_physical_grid_coords();
+  physical_segment_grid_coords_.clear();
 }
 
 void MifPipeline::clear(Stage stage) {
   mutable_storage(stage).clear();
   if (Stage::PHYSICAL == stage) {
-    clear_physical_grid_coords();
+    physical_segment_grid_coords_.clear();
   }
 }
 
@@ -402,40 +362,10 @@ int MifPipeline::decode_logical(const BitstreamSetting& bitstream_setting) {
   return CMD_EXEC_SUCCESS;
 }
 
-int MifPipeline::pad_logical_zeros(
-  const BitstreamSetting& /*bitstream_setting*/) {
-  for (const MifSegmentId& segment_id : logical_.segments()) {
-    const BasicPort& addr_range = logical_.addr_range(segment_id);
-    if (!addr_range.is_valid()) {
-      continue;
-    }
-    const size_t data_width =
-      static_cast<size_t>(logical_.data_width(segment_id));
-    if (data_width == 0) {
-      continue;
-    }
-
-    std::map<uint64_t, bool> has_addr;
-    for (const MifMemoryLineId& line_id :
-         logical_.segment_memory_lines(segment_id)) {
-      has_addr[logical_.memory_line_address(line_id)] = true;
-    }
-
-    const std::string zero_word(data_width, '0');
-    for (uint64_t addr = addr_range.get_lsb(); addr <= addr_range.get_msb();
-         ++addr) {
-      if (!has_addr[addr]) {
-        logical_.create_memory_line(segment_id, addr, zero_word);
-      }
-    }
-  }
-  return CMD_EXEC_SUCCESS;
-}
-
 int MifPipeline::aggregate_to_physical(
   const BitstreamSetting& bitstream_setting) {
   physical_.clear();
-  clear_physical_grid_coords();
+  physical_segment_grid_coords_.clear();
   if (bitstream_setting.mif_address_map_settings().empty()) {
     VTR_LOG_ERROR("mif_pipeline: no mif_address_map in bitstream setting\n");
     return CMD_EXEC_FATAL_ERROR;

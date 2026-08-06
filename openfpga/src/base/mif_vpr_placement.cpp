@@ -180,16 +180,14 @@ int annotate_physical_mif_grid_coordinates(
 
     const t_pl_loc& pl_loc = place_ctx.block_locs()[cluster_blk].loc;
     if (mif_pipeline.physical_segment_has_grid_coord(segment_id)) {
-      if (mif_pipeline.physical_segment_grid_x(segment_id) != pl_loc.x ||
-          mif_pipeline.physical_segment_grid_y(segment_id) != pl_loc.y ||
-          mif_pipeline.physical_segment_grid_z(segment_id) != pl_loc.sub_tile) {
+      const MifGridCoord& grid =
+        mif_pipeline.physical_segment_grid_coord(segment_id);
+      if (grid.x != pl_loc.x || grid.y != pl_loc.y ||
+          grid.z != pl_loc.sub_tile) {
         VTR_LOG_WARN(
           "annotate_physical_mif_grid_coordinates: PHYSICAL segment %zu "
           "already has grid (%d,%d,%d); skip AtomBlock '%s' at (%d,%d,%d)\n",
-          static_cast<size_t>(segment_id),
-          mif_pipeline.physical_segment_grid_x(segment_id),
-          mif_pipeline.physical_segment_grid_y(segment_id),
-          mif_pipeline.physical_segment_grid_z(segment_id),
+          static_cast<size_t>(segment_id), grid.x, grid.y, grid.z,
           atom_ctx.netlist().block_name(atom_block).c_str(), pl_loc.x, pl_loc.y,
           pl_loc.sub_tile);
         continue;

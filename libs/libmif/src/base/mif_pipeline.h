@@ -56,9 +56,6 @@ class MifPipeline {
   /* Bind mif_source metadata and decode raw INIT into memory lines. */
   int decode_logical(const BitstreamSetting& bitstream_setting);
 
-  /* Zero-fill undefined address slots in LOGICAL (sparse init / x bits). */
-  int pad_logical_zeros(const BitstreamSetting& bitstream_setting);
-
   /* Remap LOGICAL through mif_address_map into physical_. */
   int aggregate_to_physical(const BitstreamSetting& bitstream_setting);
 
@@ -67,15 +64,12 @@ class MifPipeline {
 
   /* Placement coords for physical_ segments (must pass physical_ ids). */
   bool physical_segment_has_grid_coord(const MifSegmentId& segment_id) const;
-  int physical_segment_grid_x(const MifSegmentId& segment_id) const;
-  int physical_segment_grid_y(const MifSegmentId& segment_id) const;
-  int physical_segment_grid_z(const MifSegmentId& segment_id) const;
+  const MifGridCoord& physical_segment_grid_coord(
+    const MifSegmentId& segment_id) const;
   void set_physical_segment_grid_coord(const MifSegmentId& segment_id, int x,
                                        int y, int z);
 
  private:
-  void clear_physical_grid_coords();
-
   MifStorage hex_;
   MifStorage eblif_;
   MifStorage logical_;
@@ -85,8 +79,5 @@ class MifPipeline {
    * but each stage has its own id space). */
   vtr::vector<MifSegmentId, MifGridCoord> physical_segment_grid_coords_;
 };
-
-/* Deep-copy all segments/lines between two MifStorage objects. */
-void copy_mif_storage(const MifStorage& src, MifStorage& dest);
 
 } /* namespace openfpga */
