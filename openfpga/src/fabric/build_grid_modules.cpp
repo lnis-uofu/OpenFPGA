@@ -439,7 +439,8 @@ static void build_primitive_block_module(
         module_manager, primitive_module, logic_module, logic_instance_id,
         ModuleManager::MODULE_GPIO_PORT, circuit_lib, primitive_model, port);
     } else if ((CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port)) &&
-               (true == circuit_lib.port_is_io(port))) {
+               ((true == circuit_lib.port_is_io(port)) ||
+                (true == circuit_lib.port_is_mif_data_bus(port)))) {
       add_primitive_module_fpga_global_io_port(
         module_manager, primitive_module, logic_module, logic_instance_id,
         ModuleManager::MODULE_GPIN_PORT, circuit_lib, primitive_model, port);

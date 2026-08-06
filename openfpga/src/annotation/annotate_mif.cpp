@@ -1,0 +1,93 @@
+#include "annotate_mif.h"
+
+#include "bitstream_setting_xml_constants.h"
+#include "command_exit_codes.h"
+#include "mif_vpr_placement.h"
+#include "read_mif.h"
+#include "vtr_log.h"
+
+/* begin namespace openfpga */
+namespace openfpga {
+
+/********************************************************************
+ * Build LOGICAL then PHYSICAL MIF for the given bitstream setting.
+ *
+ * Stage pb semantics:
+ *   EBLIF/LOGICAL - operating pb paths (match mif_source /
+ *                   mif_address_map src_pb_type strings)
+ *   PHYSICAL      - OpenFPGA physical pb paths
+ *
+ * Why eblif binding does NOT use VprDeviceAnnotation:
+ *   VprDeviceAnnotation maps operating t_pb_type* -> physical t_pb_type*.
+ *   Eblif load needs packed operating instances from VPR atom/pack
+ *   (get_mif_pb_type_from_vpr) so segments can match XML mif_source and
+ *   address-map keys. Device annotation has no atom->pb instance binding.
+ *
+ * Why VprDeviceAnnotation is applied only after aggregate:
+ *   mif_address_map remaps words using operating/src and des strings.
+ *   Only the aggregated destination should become the fabric physical pb;
+ *   rewriting earlier would break source matching in the pipeline.
+ *******************************************************************/
+int build_physical_mif(const BitstreamSetting& bitstream_setting,
+                       MifPipeline& mif_pipeline,
+                       const DeviceContext& vpr_device_ctx,
+                       const VprDeviceAnnotation& vpr_device_annotation) {
+  const bool has_mif_setting =
+    !bitstream_setting.mif_source_settings().empty() ||
+    !bitstream_setting.mif_address_map_settings().empty();
+  if (!has_mif_setting) {
+    return CMD_EXEC_SUCCESS;
+  }
+
+  if (bitstream_setting.has_other_mif_source() &&
+      mif_pipeline.storage(MifPipeline::Stage::HEX).empty() &&
+      !bitstream_setting.has_eblif_mif_source()) {
+    VTR_LOG_ERROR(
+      "build_physical_mif: hex MIF storage is empty; source='%s' requires "
+      "read_mif, or add a source='%s' mif_source\n",
+      XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_EBLIF);
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Operating pb from VPR pack (not VprDeviceAnnotation). */
+  if (bitstream_setting.has_eblif_mif_source()) {
+    const std::string eblif_path = find_yosys_eblif_file_path();
+    if (eblif_path.empty()) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    const int load_status = mif_pipeline.load_eblif(
+      eblif_path, bitstream_setting, get_mif_pb_type_from_vpr);
+    if (CMD_EXEC_SUCCESS != load_status) {
+      return load_status;
+    }
+  }
+  /* merge mif collected from two sources: read_mif command and eblif source */
+  int status = mif_pipeline.merge_to_logical(bitstream_setting);
+  if (CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+  if (mif_pipeline.storage(MifPipeline::Stage::LOGICAL).empty()) {
+    VTR_LOG(
+      "build_physical_mif: empty logical MIF storage; nothing to "
+      "aggregate\n");
+    return CMD_EXEC_SUCCESS;
+  }
+
+  status = mif_pipeline.decode_logical(bitstream_setting);
+  if (CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+
+  /*aggregate to physical pb*/
+  status = mif_pipeline.aggregate_to_physical(bitstream_setting);
+  if (CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+
+  /* PHYSICAL only: des_pb_type -> OpenFPGA physical via device annotation. */
+  return rewrite_aggregated_mif_physical_pb(
+    mif_pipeline.mutable_storage(MifPipeline::Stage::PHYSICAL), vpr_device_ctx,
+    vpr_device_annotation);
+}
+
+} /* end namespace openfpga */

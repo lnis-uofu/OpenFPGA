@@ -14,6 +14,7 @@
 #include "io_location_map.h"
 #include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
+#include "mif_location_map.h"
 #include "mif_pipeline.h"
 #include "module_manager.h"
 #include "module_name_map.h"
@@ -110,6 +111,9 @@ class OpenfpgaContext : public Context {
   const openfpga::IoLocationMap& io_location_map() const {
     return io_location_map_;
   }
+  const openfpga::MifLocationMap& mif_location_map() const {
+    return mif_location_map_;
+  }
   const openfpga::IoNameMap& io_name_map() const { return io_name_map_; }
   const openfpga::ModuleNameMap& module_name_map() const {
     return module_name_map_;
@@ -174,6 +178,9 @@ class OpenfpgaContext : public Context {
   openfpga::IoLocationMap& mutable_io_location_map() {
     return io_location_map_;
   }
+  openfpga::MifLocationMap& mutable_mif_location_map() {
+    return mif_location_map_;
+  }
   openfpga::IoNameMap& mutable_io_name_map() { return io_name_map_; }
   openfpga::ModuleNameMap& mutable_module_name_map() {
     return module_name_map_;
@@ -234,6 +241,7 @@ class OpenfpgaContext : public Context {
   /* Fabric module graph */
   openfpga::ModuleManager module_graph_;
   openfpga::IoLocationMap io_location_map_;
+  openfpga::MifLocationMap mif_location_map_;
   openfpga::IoNameMap io_name_map_;
   openfpga::ModuleNameMap module_name_map_;
   openfpga::FabricTile fabric_tile_;

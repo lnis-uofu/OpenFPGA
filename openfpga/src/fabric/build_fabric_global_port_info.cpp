@@ -11,6 +11,7 @@
 #include "build_fabric_global_port_info.h"
 #include "circuit_library_utils.h"
 #include "openfpga_naming.h"
+#include "openfpga_reserved_words.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -41,9 +42,18 @@ FabricGlobalPortInfo build_fabric_global_port_info(
   /* Add the global ports from circuit library */
   for (const CircuitPortId& global_port :
        find_circuit_library_global_ports(circuit_lib)) {
+    /* I/O and MIF data buses are renamed to gfpga_pad_<model>_<prefix> on
+     * fabric top; other global ports keep the circuit port prefix. */
+    std::string port_name = circuit_lib.port_prefix(global_port);
+    if ((true == circuit_lib.port_is_io(global_port)) ||
+        (true == circuit_lib.port_is_mif_data_bus(global_port))) {
+      port_name = generate_fpga_global_io_port_name(
+        std::string(GIO_INOUT_PREFIX), circuit_lib,
+        circuit_lib.port_parent_model(global_port), global_port);
+    }
     /* We should find a port in the top module */
-    ModulePortId module_port = module_manager.find_module_port(
-      top_module, circuit_lib.port_prefix(global_port));
+    ModulePortId module_port =
+      module_manager.find_module_port(top_module, port_name);
     /* Only add those ports have been defined in top-level module */
     if (false == module_manager.valid_module_port_id(top_module, module_port)) {
       continue;
@@ -64,6 +74,10 @@ FabricGlobalPortInfo build_fabric_global_port_info(
       fabric_port, circuit_lib.port_is_shift_register(global_port));
     fabric_global_port_info.set_global_port_is_config_enable(
       fabric_port, circuit_lib.port_is_config_enable(global_port));
+    fabric_global_port_info.set_global_port_is_io(
+      fabric_port, circuit_lib.port_is_io(global_port));
+    fabric_global_port_info.set_global_port_is_mif_data(
+      fabric_port, circuit_lib.port_is_mif_data_bus(global_port));
     fabric_global_port_info.set_global_port_default_value(
       fabric_port, circuit_lib.port_default_value(global_port));
 

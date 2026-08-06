@@ -1,6 +1,5 @@
 #include "bitstream_setting.h"
 
-#include <cctype>
 #include <string>
 
 #include "bitstream_setting_xml_constants.h"
@@ -9,24 +8,6 @@
 
 /* namespace openfpga begins */
 namespace openfpga {
-
-/* Strip trailing numeric leaf index: foo.bar[3] -> foo.bar */
-static std::string strip_numeric_pb_index(const std::string& pb_type) {
-  if (pb_type.empty() || pb_type.back() != ']') {
-    return pb_type;
-  }
-  const size_t bracket_pos = pb_type.rfind('[');
-  if (bracket_pos == std::string::npos ||
-      bracket_pos + 1 >= pb_type.size() - 1) {
-    return pb_type;
-  }
-  for (size_t i = bracket_pos + 1; i + 1 < pb_type.size(); ++i) {
-    if (!std::isdigit(static_cast<unsigned char>(pb_type[i]))) {
-      return pb_type;
-    }
-  }
-  return pb_type.substr(0, bracket_pos);
-}
 
 /************************************************************************
  * Member functions for class BitstreamSetting
