@@ -159,10 +159,9 @@ void register_grid_module_mif_locations(
     const vtr::Point<int>& subchild_coord =
       module_manager.io_child_coordinates(grid_module)[isubchild];
     register_subchild_mif_locations(
-      mif_location_map, module_manager, subchild,
-      static_cast<size_t>(x), static_cast<size_t>(y),
-      static_cast<size_t>(subchild_coord.x()), pb_paths, mif_data_ports,
-      offset_counter);
+      mif_location_map, module_manager, subchild, static_cast<size_t>(x),
+      static_cast<size_t>(y), static_cast<size_t>(subchild_coord.x()), pb_paths,
+      mif_data_ports, offset_counter);
   }
 }
 
