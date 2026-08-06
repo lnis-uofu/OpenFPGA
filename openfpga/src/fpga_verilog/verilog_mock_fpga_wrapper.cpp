@@ -306,7 +306,6 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
 
   for (const FabricGlobalPortId& global_port_id :
        fabric_global_ports.global_ports()) {
-
     ModulePortId module_global_port_id =
       fabric_global_ports.global_module_port(global_port_id);
     VTR_ASSERT(ModuleManager::MODULE_GLOBAL_PORT ==
