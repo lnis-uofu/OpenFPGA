@@ -45,6 +45,57 @@ bool is_valid_bit_string(const std::string& bits) {
   return true;
 }
 
+bool normalize_bit_string_width(std::string& bits, const size_t target_width) {
+  if (bits.size() == target_width) {
+    return true;
+  }
+  if (bits.size() < target_width) {
+    bits.append(target_width - bits.size(), '0');
+    return true;
+  }
+  for (size_t i = target_width; i < bits.size(); ++i) {
+    if (bits[i] == '1') {
+      return false;
+    }
+  }
+  bits.resize(target_width);
+  return true;
+}
+
+bool unpack_yosys_init_param(
+  const std::string& bits, size_t data_width, size_t depth,
+  std::vector<std::pair<uint64_t, std::string>>& words) {
+  words.clear();
+  if (data_width == 0 || depth == 0 || bits.size() != data_width * depth) {
+    VTR_LOG_ERROR(
+      "mif_pipeline: INIT length %zu does not match depth %zu x width %zu\n",
+      bits.size(), depth, data_width);
+    return false;
+  }
+
+  for (size_t addr = 0; addr < depth; ++addr) {
+    const size_t end = bits.size() - addr * data_width;
+    const std::string word_bits_msb = bits.substr(end - data_width, data_width);
+    bool all_undefined = true;
+    std::string word_bits_lsb(data_width, '0');
+    for (size_t i = 0; i < data_width; ++i) {
+      const char bit = word_bits_msb[i];
+      if (bit == '0' || bit == '1') {
+        all_undefined = false;
+        word_bits_lsb[data_width - 1 - i] = bit;
+      } else if (bit != 'x' && bit != 'X' && bit != 'z' && bit != 'Z') {
+        VTR_LOG_ERROR("mif_pipeline: invalid bit in INIT at address %zu\n",
+                      addr);
+        return false;
+      }
+    }
+    if (!all_undefined) {
+      words.emplace_back(static_cast<uint64_t>(addr), word_bits_lsb);
+    }
+  }
+  return true;
+}
+
 bool remap_logical_word(uint64_t logical_addr, const std::string& logical_data,
                         int des_addr_offset, const BasicPort& src_mif_bits,
                         const BasicPort& des_mif_bits, size_t des_word_width,

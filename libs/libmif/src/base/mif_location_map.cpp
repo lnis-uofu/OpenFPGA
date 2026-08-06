@@ -8,7 +8,6 @@
 #include <string>
 
 #include "command_exit_codes.h"
-#include "mif_location_map_xml_constants.h"
 #include "openfpga_digest.h"
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"

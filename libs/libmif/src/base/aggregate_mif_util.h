@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "mif_storage.h"
 #include "openfpga_port.h"
@@ -14,6 +16,12 @@ void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
                       MifStorage& dest);
 
 bool is_valid_bit_string(const std::string& bits);
+
+bool normalize_bit_string_width(std::string& bits, size_t target_width);
+
+bool unpack_yosys_init_param(
+  const std::string& bits, size_t data_width, size_t depth,
+  std::vector<std::pair<uint64_t, std::string>>& words);
 
 /* Remap one logical word into destination physical addr/data maps. */
 bool remap_logical_word(uint64_t logical_addr, const std::string& logical_data,
