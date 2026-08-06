@@ -306,11 +306,7 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
 
   for (const FabricGlobalPortId& global_port_id :
        fabric_global_ports.global_ports()) {
-    /* I/O and MIF data buses are GPIN/GPOUT pads, not shorted global ports. */
-    if ((true == fabric_global_ports.global_port_is_io(global_port_id)) ||
-        (true == fabric_global_ports.global_port_is_mif_data(global_port_id))) {
-      continue;
-    }
+
     ModulePortId module_global_port_id =
       fabric_global_ports.global_module_port(global_port_id);
     VTR_ASSERT(ModuleManager::MODULE_GLOBAL_PORT ==
