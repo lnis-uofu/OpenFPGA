@@ -62,8 +62,13 @@ std::vector<std::string> matching_mif_pb_paths(
   return matched;
 }
 
-bool skip_non_root_grid_cell(const DeviceGrid& grids,
-                             const t_physical_tile_loc& phy_tile_loc) {
+bool skip_non_root_grid_cell(const DeviceGrid& grids, const int& x,
+                             const int& y, const size_t& layer) {
+  if ((0 > x) || (0 > y) || (size_t(x) >= grids.width()) ||
+      (size_t(y) >= grids.height())) {
+    return true;
+  }
+  t_physical_tile_loc phy_tile_loc(x, y, layer);
   t_physical_tile_type_ptr phy_tile_type =
     grids.get_physical_type(phy_tile_loc);
   if (true == is_empty_type(phy_tile_type)) {
@@ -132,15 +137,14 @@ void register_subchild_mif_locations(
 void register_grid_module_mif_locations(
   MifLocationMap& mif_location_map, const ModuleManager& module_manager,
   const DeviceGrid& grids, const size_t& layer, const ModuleId& grid_module,
-  const size_t& x, const size_t& y,
-  const std::vector<std::string>& mif_pb_paths,
+  const int& x, const int& y, const std::vector<std::string>& mif_pb_paths,
   const std::map<std::string, size_t>& mif_data_ports,
   std::map<std::string, size_t>& offset_counter) {
-  t_physical_tile_loc phy_tile_loc(x, y, layer);
-  if (true == skip_non_root_grid_cell(grids, phy_tile_loc)) {
+  if (true == skip_non_root_grid_cell(grids, x, y, layer)) {
     return;
   }
 
+  t_physical_tile_loc phy_tile_loc(x, y, layer);
   const std::vector<std::string> pb_paths =
     matching_mif_pb_paths(grids.get_physical_type(phy_tile_loc), mif_pb_paths);
   if (pb_paths.empty()) {
@@ -154,10 +158,11 @@ void register_grid_module_mif_locations(
       module_manager.io_children(grid_module)[isubchild];
     const vtr::Point<int>& subchild_coord =
       module_manager.io_child_coordinates(grid_module)[isubchild];
-    register_subchild_mif_locations(mif_location_map, module_manager, subchild,
-                                    x, y,
-                                    static_cast<size_t>(subchild_coord.x()),
-                                    pb_paths, mif_data_ports, offset_counter);
+    register_subchild_mif_locations(
+      mif_location_map, module_manager, subchild,
+      static_cast<size_t>(x), static_cast<size_t>(y),
+      static_cast<size_t>(subchild_coord.x()), pb_paths, mif_data_ports,
+      offset_counter);
   }
 }
 
@@ -178,9 +183,8 @@ MifLocationMap build_fabric_fine_grained_mif_location_map(
     const vtr::Point<int>& coord =
       module_manager.io_child_coordinates(top_module)[ichild];
     register_grid_module_mif_locations(
-      mif_location_map, module_manager, grids, layer, grid_module,
-      static_cast<size_t>(coord.x()), static_cast<size_t>(coord.y()),
-      mif_pb_paths, mif_data_ports, offset_counter);
+      mif_location_map, module_manager, grids, layer, grid_module, coord.x(),
+      coord.y(), mif_pb_paths, mif_data_ports, offset_counter);
   }
 
   return mif_location_map;
@@ -208,8 +212,7 @@ MifLocationMap build_fabric_tiled_mif_location_map(
         module_manager.io_child_coordinates(tile_module)[igrid];
       register_grid_module_mif_locations(
         mif_location_map, module_manager, grids, layer, grid_module,
-        static_cast<size_t>(grid_coord.x()),
-        static_cast<size_t>(grid_coord.y()), mif_pb_paths, mif_data_ports,
+        grid_coord.x(), grid_coord.y(), mif_pb_paths, mif_data_ports,
         offset_counter);
     }
   }
