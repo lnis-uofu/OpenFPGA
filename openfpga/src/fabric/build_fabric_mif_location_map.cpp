@@ -100,8 +100,8 @@ void register_subchild_mif_locations(
   }
 
   for (const ModulePortId& gpin_port_id :
-       module_manager.module_port_ids_by_type(subchild,
-                                              ModuleManager::MODULE_GPIN_PORT)) {
+       module_manager.module_port_ids_by_type(
+         subchild, ModuleManager::MODULE_GPIN_PORT)) {
     const BasicPort& gpin_port =
       module_manager.module_port(subchild, gpin_port_id);
     auto port_info = mif_data_ports.find(gpin_port.get_name());
@@ -150,13 +150,14 @@ void register_grid_module_mif_locations(
   for (size_t isubchild = 0;
        isubchild < module_manager.io_children(grid_module).size();
        ++isubchild) {
-    const ModuleId subchild = module_manager.io_children(grid_module)[isubchild];
+    const ModuleId subchild =
+      module_manager.io_children(grid_module)[isubchild];
     const vtr::Point<int>& subchild_coord =
       module_manager.io_child_coordinates(grid_module)[isubchild];
-    register_subchild_mif_locations(
-      mif_location_map, module_manager, subchild, x, y,
-      static_cast<size_t>(subchild_coord.x()), pb_paths, mif_data_ports,
-      offset_counter);
+    register_subchild_mif_locations(mif_location_map, module_manager, subchild,
+                                    x, y,
+                                    static_cast<size_t>(subchild_coord.x()),
+                                    pb_paths, mif_data_ports, offset_counter);
   }
 }
 
@@ -244,11 +245,10 @@ MifLocationMap build_fabric_mif_location_map(
   }
 
   MifLocationMap mif_location_map =
-    tiled_fabric
-      ? build_fabric_tiled_mif_location_map(module_manager, grids, 0,
-                                            mif_data_ports, mif_pb_paths)
-      : build_fabric_fine_grained_mif_location_map(
-          module_manager, grids, 0, mif_data_ports, mif_pb_paths);
+    tiled_fabric ? build_fabric_tiled_mif_location_map(
+                     module_manager, grids, 0, mif_data_ports, mif_pb_paths)
+                 : build_fabric_fine_grained_mif_location_map(
+                     module_manager, grids, 0, mif_data_ports, mif_pb_paths);
 
   VTR_LOG(
     "Built MIF location map: %zu location(s) across %zu mif_data_bus "
