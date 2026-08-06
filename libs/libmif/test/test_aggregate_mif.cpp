@@ -14,6 +14,7 @@
 #include "mif_pipeline.h"
 #include "mif_storage_fwd.h"
 #include "read_xml_openfpga_arch.h"
+#include "vpr_context.h"
 #include "vtr_log.h"
 #include "write_mif.h"
 
@@ -34,13 +35,28 @@ int main(int argc, const char** argv) {
   const std::vector<std::string> input_pb_types = {
     "memory[mem_8x16_dp].mem_8x16_dp[0]", "memory[mem_8x16_dp].mem_8x16_dp[1]"};
   size_t next_pb_type = 0;
-  status = pipeline.run(
-    bitstream_setting,
-    [&input_pb_types, &next_pb_type](const std::string&,
+  AtomContext atom_ctx;
+  DeviceContext device_ctx;
+  const openfpga::MifPbTypeResolver pb_type_resolver =
+    [&input_pb_types, &next_pb_type](const AtomContext&, const DeviceContext&,
+                                     const std::string&,
                                      const openfpga::MifEblifPortConnections&) {
       return input_pb_types.at(next_pb_type++);
-    },
-    argv[2]);
+    };
+  status = pipeline.load_eblif(argv[2], bitstream_setting, atom_ctx, device_ctx,
+                               pb_type_resolver);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+  status = pipeline.merge_to_logical(bitstream_setting);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+  status = pipeline.decode_logical(bitstream_setting);
+  if (openfpga::CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+  status = pipeline.aggregate_to_physical(bitstream_setting);
   if (openfpga::CMD_EXEC_SUCCESS != status) {
     return status;
   }

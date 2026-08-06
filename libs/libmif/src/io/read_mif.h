@@ -7,13 +7,15 @@
 
 #include "command_exit_codes.h"
 #include "mif_storage.h"
+#include "vpr_context.h"
 
 namespace openfpga {
 
 using MifEblifPortConnections =
   std::vector<std::pair<std::string, std::string>>;
 using MifPbTypeResolver = std::function<std::string(
-  const std::string&, const MifEblifPortConnections&)>;
+  const AtomContext&, const DeviceContext&, const std::string&,
+  const MifEblifPortConnections&)>;
 
 constexpr const char* K_YOSYS_EBLIF_SUFFIX = "_yosys_out.eblif";
 
@@ -41,6 +43,8 @@ int read_mif_from_init_hex(const std::string& file_path,
  * MifPipeline from bitstream setting. Decode of raw data also happens there.
  *******************************************************************/
 int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
+                        const AtomContext& atom_ctx,
+                        const DeviceContext& device_ctx,
                         const MifPbTypeResolver& pb_type_resolver,
                         const std::vector<std::string>& eblif_contents);
 

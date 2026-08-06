@@ -210,9 +210,9 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   }
 
   if (CMD_EXEC_FATAL_ERROR ==
-      build_physical_mif(
-        openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
-        g_vpr_ctx.device(), openfpga_ctx.vpr_device_annotation())) {
+      build_physical_mif(openfpga_ctx.bitstream_setting(),
+                         openfpga_ctx.mutable_mif_pipeline(), g_vpr_ctx.atom(),
+                         g_vpr_ctx.device(), g_vpr_ctx.placement())) {
     return CMD_EXEC_FATAL_ERROR;
   }
 

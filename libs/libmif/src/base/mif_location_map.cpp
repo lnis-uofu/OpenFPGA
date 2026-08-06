@@ -157,12 +157,7 @@ int MifLocationMap::write_to_xml_file(const std::string& fname,
 
 bool MifLocationMap::is_valid_coord(const int& x, const int& y,
                                     const int& z) const {
-  if (size_t(-1) == static_cast<size_t>(x) ||
-      size_t(-1) == static_cast<size_t>(y) ||
-      size_t(-1) == static_cast<size_t>(z)) {
-    return false;
-  }
-  return true;
+  return (0 <= x) && (0 <= y) && (0 <= z);
 }
 
 } /* end namespace openfpga */

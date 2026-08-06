@@ -4,23 +4,25 @@
 #include <utility>
 #include <vector>
 
-#include "command_exit_codes.h"
-#include "mif_storage.h"
+#include "mif_pipeline.h"
+#include "read_mif.h"
 #include "vpr_context.h"
-#include "vpr_device_annotation.h"
 
 namespace openfpga {
+
+class BitstreamSetting;
 
 /* Resolve an eblif subckt to its packed operating pb_type through the output
  * net used by VPR as the AtomBlock name. VPR pack must already be complete. */
 std::string get_mif_pb_type_from_vpr(
+  const AtomContext& atom_ctx, const DeviceContext& device_ctx,
   const std::string& model_name,
-  const std::vector<std::pair<std::string, std::string>>& port_connections);
+  const MifEblifPortConnections& port_connections);
 
-/* Rewrite PHYSICAL-stage segment pb paths via VprDeviceAnnotation
- * (operating/des path -> OpenFPGA physical hierarchy path). */
-int rewrite_aggregated_mif_physical_pb(
-  MifStorage& physical_storage, const DeviceContext& vpr_device_ctx,
-  const VprDeviceAnnotation& vpr_device_annotation);
+/* After aggregate_to_physical: stamp VPR grid (x,y,sub_tile) on PHYSICAL
+ * segments. */
+int annotate_physical_mif_grid_coordinates(
+  MifPipeline& mif_pipeline, const BitstreamSetting& bitstream_setting,
+  const AtomContext& atom_ctx, const PlacementContext& place_ctx);
 
 } /* namespace openfpga */

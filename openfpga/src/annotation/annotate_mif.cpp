@@ -15,23 +15,18 @@ namespace openfpga {
  * Stage pb semantics:
  *   EBLIF/LOGICAL - operating pb paths (match mif_source /
  *                   mif_address_map src_pb_type strings)
- *   PHYSICAL      - OpenFPGA physical pb paths
+ *   PHYSICAL      - aggregated des_pb_type from mif_address_map
  *
  * Why eblif binding does NOT use VprDeviceAnnotation:
  *   VprDeviceAnnotation maps operating t_pb_type* -> physical t_pb_type*.
  *   Eblif load needs packed operating instances from VPR atom/pack
  *   (get_mif_pb_type_from_vpr) so segments can match XML mif_source and
  *   address-map keys. Device annotation has no atom->pb instance binding.
- *
- * Why VprDeviceAnnotation is applied only after aggregate:
- *   mif_address_map remaps words using operating/src and des strings.
- *   Only the aggregated destination should become the fabric physical pb;
- *   rewriting earlier would break source matching in the pipeline.
  *******************************************************************/
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
-                       MifPipeline& mif_pipeline,
-                       const DeviceContext& vpr_device_ctx,
-                       const VprDeviceAnnotation& vpr_device_annotation) {
+                       MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
+                       const DeviceContext& device_ctx,
+                       const PlacementContext& place_ctx) {
   const bool has_mif_setting =
     !bitstream_setting.mif_source_settings().empty() ||
     !bitstream_setting.mif_address_map_settings().empty();
@@ -55,8 +50,9 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
     if (eblif_path.empty()) {
       return CMD_EXEC_FATAL_ERROR;
     }
-    const int load_status = mif_pipeline.load_eblif(
-      eblif_path, bitstream_setting, get_mif_pb_type_from_vpr);
+    const int load_status =
+      mif_pipeline.load_eblif(eblif_path, bitstream_setting, atom_ctx,
+                              device_ctx, get_mif_pb_type_from_vpr);
     if (CMD_EXEC_SUCCESS != load_status) {
       return load_status;
     }
@@ -84,10 +80,9 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
     return status;
   }
 
-  /* PHYSICAL only: des_pb_type -> OpenFPGA physical via device annotation. */
-  return rewrite_aggregated_mif_physical_pb(
-    mif_pipeline.mutable_storage(MifPipeline::Stage::PHYSICAL), vpr_device_ctx,
-    vpr_device_annotation);
+  status = annotate_physical_mif_grid_coordinates(
+    mif_pipeline, bitstream_setting, atom_ctx, place_ctx);
+  return status;
 }
 
 } /* end namespace openfpga */

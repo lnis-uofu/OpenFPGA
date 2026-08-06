@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "atom_netlist.h"
-#include "globals.h"
+#include "bitstream_setting.h"
+#include "command_exit_codes.h"
 #include "openfpga_pb_parser.h"
-#include "pb_type_utils.h"
 #include "vpr_types.h"
 #include "vtr_log.h"
 
@@ -61,11 +61,11 @@ static bool is_model_output_port(const t_model& model,
 }
 
 std::string get_mif_pb_type_from_vpr(
+  const AtomContext& atom_ctx, const DeviceContext& device_ctx,
   const std::string& model_name,
-  const std::vector<std::pair<std::string, std::string>>& port_connections) {
-  const AtomContext& atom_ctx = g_vpr_ctx.atom();
+  const MifEblifPortConnections& port_connections) {
   const AtomPBBimap& atom_pb_bimap = atom_ctx.lookup().atom_pb_bimap();
-  const auto& models = g_vpr_ctx.device().arch->models;
+  const auto& models = device_ctx.arch->models;
   const LogicalModelId model_id = models.get_model_by_name(model_name);
   if (!model_id.is_valid()) {
     VTR_LOG_ERROR("MIF/VPR binding: eblif model '%s' is unknown to VPR\n",
@@ -112,72 +112,110 @@ std::string get_mif_pb_type_from_vpr(
   return pb_path;
 }
 
-static t_pb_type* find_pb_type_by_mif_path(const DeviceContext& vpr_device_ctx,
-                                           const std::string& pb_path) {
-  const std::string type_only_path = strip_numeric_pb_index(pb_path);
-  const PbParser parser(type_only_path);
-
-  std::vector<std::string> target_pb_type_names = parser.parents();
-  target_pb_type_names.push_back(parser.leaf());
-  const std::vector<std::string> target_pb_mode_names = parser.modes();
-
-  for (const t_logical_block_type& lb_type :
-       vpr_device_ctx.logical_block_types) {
-    if (lb_type.pb_type == nullptr) {
-      continue;
-    }
-    if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
-      continue;
-    }
-    t_pb_type* found = try_find_pb_type_with_given_path(
-      lb_type.pb_type, target_pb_type_names, target_pb_mode_names);
-    if (found != nullptr) {
-      return found;
-    }
+int annotate_physical_mif_grid_coordinates(
+  MifPipeline& mif_pipeline, const BitstreamSetting& bitstream_setting,
+  const AtomContext& atom_ctx, const PlacementContext& place_ctx) {
+  MifStorage& physical_storage =
+    mif_pipeline.mutable_storage(MifPipeline::Stage::PHYSICAL);
+  if (physical_storage.empty()) {
+    return CMD_EXEC_SUCCESS;
   }
-  return nullptr;
-}
 
-int rewrite_aggregated_mif_physical_pb(
-  MifStorage& physical_storage, const DeviceContext& vpr_device_ctx,
-  const VprDeviceAnnotation& vpr_device_annotation) {
+  const AtomPBBimap& atom_pb_bimap = atom_ctx.lookup().atom_pb_bimap();
+
+  for (const AtomBlockId atom_block : atom_ctx.netlist().blocks()) {
+    const AtomBlockType block_type = atom_ctx.netlist().block_type(atom_block);
+    if ((AtomBlockType::INPAD == block_type) ||
+        (AtomBlockType::OUTPAD == block_type)) {
+      continue;
+    }
+
+    const t_pb* leaf_pb = atom_pb_bimap.atom_pb(atom_block);
+    if (leaf_pb == nullptr) {
+      continue;
+    }
+
+    const std::string operating_pb = generate_mif_pb_path(leaf_pb);
+    if (operating_pb.empty()) {
+      continue;
+    }
+    if (!bitstream_setting.find_mif_source_by_pb_type(operating_pb)
+           .is_valid()) {
+      continue;
+    }
+
+    std::string target_pb = operating_pb;
+    const MifAddressMapSettingId map_id =
+      bitstream_setting.find_mif_address_map_by_src_pb_type(operating_pb);
+    if (map_id.is_valid()) {
+      target_pb = bitstream_setting.mif_address_map_des_pb_type(map_id);
+    }
+    const std::string type_target = strip_numeric_pb_index(target_pb);
+
+    MifSegmentId segment_id = MifSegmentId::INVALID();
+    for (const MifSegmentId& candidate : physical_storage.segments()) {
+      if (strip_numeric_pb_index(physical_storage.physical_pb(candidate)) ==
+          type_target) {
+        segment_id = candidate;
+        break;
+      }
+    }
+    if (!segment_id.is_valid()) {
+      VTR_LOG_ERROR(
+        "annotate_physical_mif_grid_coordinates: no PHYSICAL segment for "
+        "packed pb '%s' (AtomBlock '%s')\n",
+        operating_pb.c_str(),
+        atom_ctx.netlist().block_name(atom_block).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    const ClusterBlockId cluster_blk = atom_ctx.lookup().atom_clb(atom_block);
+    if (!cluster_blk.is_valid()) {
+      VTR_LOG_ERROR(
+        "annotate_physical_mif_grid_coordinates: AtomBlock '%s' has no "
+        "cluster placement\n",
+        atom_ctx.netlist().block_name(atom_block).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    const t_pl_loc& pl_loc = place_ctx.block_locs()[cluster_blk].loc;
+    if (mif_pipeline.physical_segment_has_grid_coord(segment_id)) {
+      if (mif_pipeline.physical_segment_grid_x(segment_id) != pl_loc.x ||
+          mif_pipeline.physical_segment_grid_y(segment_id) != pl_loc.y ||
+          mif_pipeline.physical_segment_grid_z(segment_id) != pl_loc.sub_tile) {
+        VTR_LOG_WARN(
+          "annotate_physical_mif_grid_coordinates: PHYSICAL segment %zu "
+          "already has grid (%d,%d,%d); skip AtomBlock '%s' at (%d,%d,%d)\n",
+          static_cast<size_t>(segment_id),
+          mif_pipeline.physical_segment_grid_x(segment_id),
+          mif_pipeline.physical_segment_grid_y(segment_id),
+          mif_pipeline.physical_segment_grid_z(segment_id),
+          atom_ctx.netlist().block_name(atom_block).c_str(), pl_loc.x, pl_loc.y,
+          pl_loc.sub_tile);
+        continue;
+      }
+      continue;
+    }
+
+    mif_pipeline.set_physical_segment_grid_coord(segment_id, pl_loc.x, pl_loc.y,
+                                                 pl_loc.sub_tile);
+    VTR_LOG(
+      "annotate_physical_mif_grid_coordinates: segment %zu grid (%d,%d,%d) "
+      "pb '%s'\n",
+      static_cast<size_t>(segment_id), pl_loc.x, pl_loc.y, pl_loc.sub_tile,
+      operating_pb.c_str());
+  }
+
   for (const MifSegmentId& segment_id : physical_storage.segments()) {
-    if (!physical_storage.has_physical_pb(segment_id)) {
-      VTR_LOG_ERROR(
-        "rewrite_aggregated_mif_physical_pb: segment %zu has no pb_type\n",
-        static_cast<size_t>(segment_id));
-      return CMD_EXEC_FATAL_ERROR;
-    }
-
-    const std::string& des_pb_path = physical_storage.physical_pb(segment_id);
-    t_pb_type* des_pb_type =
-      find_pb_type_by_mif_path(vpr_device_ctx, des_pb_path);
-    if (des_pb_type == nullptr) {
-      VTR_LOG_ERROR(
-        "rewrite_aggregated_mif_physical_pb: cannot find pb_type for "
-        "aggregated path '%s'\n",
-        des_pb_path.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-
-    t_pb_type* physical_pb_type =
-      vpr_device_annotation.physical_pb_type(des_pb_type);
-    if (physical_pb_type == nullptr) {
-      VTR_LOG_ERROR(
-        "rewrite_aggregated_mif_physical_pb: no physical mapping for "
-        "pb_type '%s'\n",
-        des_pb_path.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-
-    const std::string physical_path =
-      generate_pb_type_hierarchy_path(physical_pb_type);
-    if (physical_path != des_pb_path) {
-      VTR_LOG("rewrite_aggregated_mif_physical_pb: '%s' -> physical '%s'\n",
-              des_pb_path.c_str(), physical_path.c_str());
-      physical_storage.set_segment_physical_pb(segment_id, physical_path);
+    if (!mif_pipeline.physical_segment_has_grid_coord(segment_id)) {
+      VTR_LOG_WARN(
+        "annotate_physical_mif_grid_coordinates: PHYSICAL segment %zu "
+        "(pb '%s') has no packed MIF instance placement\n",
+        static_cast<size_t>(segment_id),
+        physical_storage.physical_pb(segment_id).c_str());
     }
   }
+
   return CMD_EXEC_SUCCESS;
 }
 

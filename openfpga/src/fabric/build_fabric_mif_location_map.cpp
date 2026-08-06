@@ -96,11 +96,14 @@ std::map<std::string, size_t> collect_mif_data_bus_ports(
 
 void register_subchild_mif_locations(
   MifLocationMap& mif_location_map, const ModuleManager& module_manager,
-  const ModuleId& subchild, const size_t& x, const size_t& y, const size_t& z,
+  const ModuleId& subchild, const int& x, const int& y, const int& z,
   const std::vector<std::string>& pb_paths,
   const std::map<std::string, size_t>& mif_data_ports,
   std::map<std::string, size_t>& offset_counter) {
   if (pb_paths.empty()) {
+    return;
+  }
+  if (false == mif_location_map.is_valid_coord(x, y, z)) {
     return;
   }
 
@@ -125,8 +128,9 @@ void register_subchild_mif_locations(
 
     /* One physical instance on the bus; associate all matching pb paths. */
     for (const std::string& pb_path : pb_paths) {
-      mif_location_map.set_mif_location(x, y, z, pb_path, port_name, offset,
-                                        width);
+      mif_location_map.set_mif_location(
+        static_cast<size_t>(x), static_cast<size_t>(y), static_cast<size_t>(z),
+        pb_path, port_name, offset, width);
     }
     offset_counter[port_name] += width;
   }
@@ -145,10 +149,19 @@ void register_grid_module_mif_locations(
   }
 
   t_physical_tile_loc phy_tile_loc(x, y, layer);
+  t_physical_tile_type_ptr phy_tile_type =
+    grids.get_physical_type(phy_tile_loc);
   const std::vector<std::string> pb_paths =
-    matching_mif_pb_paths(grids.get_physical_type(phy_tile_loc), mif_pb_paths);
+    matching_mif_pb_paths(phy_tile_type, mif_pb_paths);
   if (pb_paths.empty()) {
     return;
+  }
+
+  if (size_t(phy_tile_type->capacity) !=
+      module_manager.io_children(grid_module).size()) {
+    VTR_LOG("%s[%d][%d] capacity: %d while io_child number is %zu\n",
+            phy_tile_type->name.c_str(), x, y, phy_tile_type->capacity,
+            module_manager.io_children(grid_module).size());
   }
 
   for (size_t isubchild = 0;
@@ -158,10 +171,18 @@ void register_grid_module_mif_locations(
       module_manager.io_children(grid_module)[isubchild];
     const vtr::Point<int>& subchild_coord =
       module_manager.io_child_coordinates(grid_module)[isubchild];
-    register_subchild_mif_locations(
-      mif_location_map, module_manager, subchild, static_cast<size_t>(x),
-      static_cast<size_t>(y), static_cast<size_t>(subchild_coord.x()), pb_paths,
-      mif_data_ports, offset_counter);
+    /* subchild_coord.x() is tile capacity index (VPR subblk); default (-1,-1)
+     * when unset — fall back to io_children order index. */
+    int z = subchild_coord.x();
+    if (0 > z) {
+      z = static_cast<int>(isubchild);
+    }
+    if (z < 0 || size_t(z) >= size_t(phy_tile_type->capacity)) {
+      continue;
+    }
+    register_subchild_mif_locations(mif_location_map, module_manager, subchild,
+                                    x, y, z, pb_paths, mif_data_ports,
+                                    offset_counter);
   }
 }
 

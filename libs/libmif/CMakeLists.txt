@@ -21,6 +21,7 @@ target_link_libraries(libmif
                       libarchopenfpga
                       libarchfpga
                       libpugiutil
+                      libvpr
                       libvtrutil)
 
 #Create the test executable

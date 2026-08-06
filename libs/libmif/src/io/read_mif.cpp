@@ -269,6 +269,8 @@ static bool match_eblif_content_field(const std::string& line,
  * Field names come from mif_source content= (synth-frontend dependent).
  *******************************************************************/
 int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
+                        const AtomContext& atom_ctx,
+                        const DeviceContext& device_ctx,
                         const MifPbTypeResolver& pb_type_resolver,
                         const std::vector<std::string>& eblif_contents) {
   if (eblif_contents.empty()) {
@@ -338,7 +340,8 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
     }
 
     const std::string pb_type =
-      pb_type_resolver ? pb_type_resolver(subckt_model, subckt_connections)
+      pb_type_resolver ? pb_type_resolver(atom_ctx, device_ctx, subckt_model,
+                                          subckt_connections)
                        : std::string();
     if (pb_type.empty()) {
       VTR_LOG_ERROR(
