@@ -669,8 +669,11 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
       continue;
     }
 
-    /* Bypass io signals, they do not need any drivers */
-    if (true == fabric_global_port_info.global_port_is_io(fabric_global_port)) {
+    /* Bypass io / MIF data-bus pads; they do not need constant drivers */
+    if ((true ==
+         fabric_global_port_info.global_port_is_io(fabric_global_port)) ||
+        (true ==
+         fabric_global_port_info.global_port_is_mif_data(fabric_global_port))) {
       continue;
     }
 
@@ -678,6 +681,8 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
     std::string port_name;
     VTR_ASSERT_SAFE(
       false == fabric_global_port_info.global_port_is_io(fabric_global_port));
+    VTR_ASSERT_SAFE(false == fabric_global_port_info.global_port_is_mif_data(
+                               fabric_global_port));
 
     /* Reach here, it means we have a port to deal with */
     /* Find the module port and wire it to constant values */
