@@ -26,10 +26,8 @@ target_link_libraries(libmif
 
 #Create the test executable
 foreach(testsourcefile ${EXEC_SOURCES})
-    # Use a simple string replace, to cut off .cpp.
     get_filename_component(testname ${testsourcefile} NAME_WE)
     add_executable(${testname} ${testsourcefile})
-    # Make sure the library is linked to each test executable
     target_link_libraries(${testname} libmif)
 endforeach(testsourcefile ${EXEC_SOURCES})
 

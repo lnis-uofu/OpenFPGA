@@ -3,9 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
-#include <vector>
 
-#include "bitstream_setting.h"
 #include "mif_storage.h"
 #include "openfpga_port.h"
 
@@ -14,12 +12,6 @@ namespace openfpga {
 /* Copy one segment (metadata + memory lines) from src into dest. */
 void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
                       MifStorage& dest);
-
-/* Unique eblif mif_source content= selectors from bitstream setting. */
-std::vector<std::string> collect_eblif_mif_contents(
-  const BitstreamSetting& bitstream_setting);
-
-bool address_in_range(uint64_t addr, const BasicPort& address_range);
 
 bool is_valid_bit_string(const std::string& bits);
 

@@ -1,6 +1,5 @@
 #include "aggregate_mif_util.h"
 
-#include "bitstream_setting_xml_constants.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -35,11 +34,6 @@ void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
     dest.create_memory_line(new_seg, src.memory_line_address(line_id),
                             src.memory_line_data(line_id));
   }
-}
-
-bool address_in_range(uint64_t addr, const BasicPort& address_range) {
-  return address_range.is_valid() && addr >= address_range.get_lsb() &&
-         addr <= address_range.get_msb();
 }
 
 bool is_valid_bit_string(const std::string& bits) {
@@ -96,29 +90,6 @@ bool remap_logical_word(uint64_t logical_addr, const std::string& logical_data,
     des_written[des_bit] = '1';
   }
   return true;
-}
-
-std::vector<std::string> collect_eblif_mif_contents(
-  const BitstreamSetting& bitstream_setting) {
-  std::vector<std::string> contents;
-  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(id) !=
-        XML_MIF_SOURCE_SOURCE_EBLIF) {
-      continue;
-    }
-    const std::string content = bitstream_setting.mif_source_content(id);
-    bool exists = false;
-    for (const std::string& existing : contents) {
-      if (existing == content) {
-        exists = true;
-        break;
-      }
-    }
-    if (!exists) {
-      contents.push_back(content);
-    }
-  }
-  return contents;
 }
 
 } /* namespace openfpga */

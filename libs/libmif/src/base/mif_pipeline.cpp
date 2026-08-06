@@ -1,5 +1,6 @@
 #include "mif_pipeline.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -139,8 +140,20 @@ int MifPipeline::load_eblif(const std::string& eblif_path,
       XML_MIF_SOURCE_SOURCE_EBLIF);
     return CMD_EXEC_FATAL_ERROR;
   }
-  const std::vector<std::string> eblif_contents =
-    collect_eblif_mif_contents(bitstream_setting);
+  /* Collect unique content selectors used by EBLIF-backed MIF sources. */
+  std::vector<std::string> eblif_contents;
+  for (const MifSourceSettingId& source_id :
+       bitstream_setting.mif_source_settings()) {
+    if (bitstream_setting.mif_source_source(source_id) !=
+        XML_MIF_SOURCE_SOURCE_EBLIF) {
+      continue;
+    }
+    const std::string content = bitstream_setting.mif_source_content(source_id);
+    if (std::find(eblif_contents.begin(), eblif_contents.end(), content) ==
+        eblif_contents.end()) {
+      eblif_contents.push_back(content);
+    }
+  }
   return read_mif_from_eblif(eblif_path, eblif_, atom_ctx, device_ctx,
                              pb_type_resolver, eblif_contents);
 }
@@ -299,7 +312,9 @@ int MifPipeline::aggregate_to_physical(
          logical_.segment_memory_lines(segment_id)) {
       const uint64_t logical_addr = logical_.memory_line_address(line_id);
       const std::string& logical_data = logical_.memory_line_data(line_id);
-      if (!address_in_range(logical_addr, src_addr_range) ||
+      if (!src_addr_range.is_valid() ||
+          logical_addr < src_addr_range.get_lsb() ||
+          logical_addr > src_addr_range.get_msb() ||
           logical_data.size() != src_word_width ||
           !is_valid_bit_string(logical_data)) {
         VTR_LOG_ERROR(
@@ -314,7 +329,9 @@ int MifPipeline::aggregate_to_physical(
            bitstream_setting.mif_address_map_rules(map_id)) {
         const BasicPort rule_src_addr_range =
           bitstream_setting.mif_address_map_rule_src_addr_range(rule_id);
-        if (!address_in_range(logical_addr, rule_src_addr_range)) {
+        if (!rule_src_addr_range.is_valid() ||
+            logical_addr < rule_src_addr_range.get_lsb() ||
+            logical_addr > rule_src_addr_range.get_msb()) {
           continue;
         }
         matched = true;
