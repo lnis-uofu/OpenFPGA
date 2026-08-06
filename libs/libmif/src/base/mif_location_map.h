@@ -67,7 +67,6 @@ class MifLocationMap {
   int write_to_xml_file(const std::string& fname,
                         const bool& include_time_stamp,
                         const bool& verbose) const;
-  bool is_valid_coord(const int& x, const int& y, const int& z) const;
 
  private: /* Internal helpers */
   /* Returns index into mif_locations_, or size_t(-1) if missing. */

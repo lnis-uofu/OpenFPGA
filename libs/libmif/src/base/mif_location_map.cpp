@@ -166,9 +166,4 @@ int MifLocationMap::write_to_xml_file(const std::string& fname,
   return CMD_EXEC_SUCCESS;
 }
 
-bool MifLocationMap::is_valid_coord(const int& x, const int& y,
-                                    const int& z) const {
-  return (0 <= x) && (0 <= y) && (0 <= z);
-}
-
 } /* end namespace openfpga */

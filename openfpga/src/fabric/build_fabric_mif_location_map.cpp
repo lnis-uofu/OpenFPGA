@@ -21,19 +21,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-namespace {
-
-std::string mif_pb_top_name(const std::string& pb_type_path) {
+static bool tile_matches_mif_pb(t_physical_tile_type_ptr phy_tile_type,
+                                const std::string& pb_type_path) {
   const PbParser parser(strip_numeric_pb_index(pb_type_path));
-  if (!parser.parents().empty()) {
-    return parser.parents().front();
-  }
-  return parser.leaf();
-}
-
-bool tile_matches_mif_pb(t_physical_tile_type_ptr phy_tile_type,
-                         const std::string& pb_type_path) {
-  const std::string top_name = mif_pb_top_name(pb_type_path);
+  const std::string top_name =
+    parser.parents().empty() ? parser.leaf() : parser.parents().front();
   if (top_name.empty()) {
     return false;
   }
@@ -50,7 +42,7 @@ bool tile_matches_mif_pb(t_physical_tile_type_ptr phy_tile_type,
   return false;
 }
 
-std::vector<std::string> matching_mif_pb_paths(
+static std::vector<std::string> matching_mif_pb_paths(
   t_physical_tile_type_ptr phy_tile_type,
   const std::vector<std::string>& mif_pb_paths) {
   std::vector<std::string> matched;
@@ -62,8 +54,8 @@ std::vector<std::string> matching_mif_pb_paths(
   return matched;
 }
 
-bool skip_non_root_grid_cell(const DeviceGrid& grids, const int& x,
-                             const int& y, const size_t& layer) {
+static bool skip_non_root_grid_cell(const DeviceGrid& grids, const int& x,
+                                    const int& y, const size_t& layer) {
   if ((0 > x) || (0 > y) || (size_t(x) >= grids.width()) ||
       (size_t(y) >= grids.height())) {
     return true;
@@ -79,7 +71,7 @@ bool skip_non_root_grid_cell(const DeviceGrid& grids, const int& x,
          (0 < grids.get_height_offset(phy_tile_loc));
 }
 
-std::map<std::string, size_t> collect_mif_data_bus_ports(
+static std::map<std::string, size_t> collect_mif_data_bus_ports(
   const CircuitLibrary& circuit_lib) {
   std::map<std::string, size_t> mif_data_ports;
   for (const CircuitPortId& port : circuit_lib.ports()) {
@@ -94,19 +86,12 @@ std::map<std::string, size_t> collect_mif_data_bus_ports(
   return mif_data_ports;
 }
 
-void register_subchild_mif_locations(
+static void register_subchild_mif_locations(
   MifLocationMap& mif_location_map, const ModuleManager& module_manager,
   const ModuleId& subchild, const int& x, const int& y, const int& z,
   const std::vector<std::string>& pb_paths,
   const std::map<std::string, size_t>& mif_data_ports,
   std::map<std::string, size_t>& offset_counter) {
-  if (pb_paths.empty()) {
-    return;
-  }
-  if (false == mif_location_map.is_valid_coord(x, y, z)) {
-    return;
-  }
-
   for (const ModulePortId& gpin_port_id :
        module_manager.module_port_ids_by_type(
          subchild, ModuleManager::MODULE_GPIN_PORT)) {
@@ -121,10 +106,7 @@ void register_subchild_mif_locations(
     const size_t width = gpin_port.get_width();
     VTR_ASSERT(width == port_info->second);
 
-    if (offset_counter.find(port_name) == offset_counter.end()) {
-      offset_counter[port_name] = 0;
-    }
-    const size_t offset = offset_counter[port_name];
+    size_t& offset = offset_counter[port_name];
 
     /* One physical instance on the bus; associate all matching pb paths. */
     for (const std::string& pb_path : pb_paths) {
@@ -132,13 +114,13 @@ void register_subchild_mif_locations(
         static_cast<size_t>(x), static_cast<size_t>(y), static_cast<size_t>(z),
         pb_path, port_name, offset, width);
     }
-    offset_counter[port_name] += width;
+    offset += width;
   }
 }
 
 /* Shared by fine-grained and tiled builders: register MIF offsets for one
  * grid-level module and its capacity (z) io_children. */
-void register_grid_module_mif_locations(
+static void register_grid_module_mif_locations(
   MifLocationMap& mif_location_map, const ModuleManager& module_manager,
   const DeviceGrid& grids, const size_t& layer, const ModuleId& grid_module,
   const int& x, const int& y, const std::vector<std::string>& mif_pb_paths,
@@ -186,62 +168,6 @@ void register_grid_module_mif_locations(
   }
 }
 
-MifLocationMap build_fabric_fine_grained_mif_location_map(
-  const ModuleManager& module_manager, const DeviceGrid& grids,
-  const size_t& layer, const std::map<std::string, size_t>& mif_data_ports,
-  const std::vector<std::string>& mif_pb_paths) {
-  MifLocationMap mif_location_map;
-  std::map<std::string, size_t> offset_counter;
-
-  const ModuleId top_module =
-    module_manager.find_module(generate_fpga_top_module_name());
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
-
-  for (size_t ichild = 0;
-       ichild < module_manager.io_children(top_module).size(); ++ichild) {
-    const ModuleId grid_module = module_manager.io_children(top_module)[ichild];
-    const vtr::Point<int>& coord =
-      module_manager.io_child_coordinates(top_module)[ichild];
-    register_grid_module_mif_locations(
-      mif_location_map, module_manager, grids, layer, grid_module, coord.x(),
-      coord.y(), mif_pb_paths, mif_data_ports, offset_counter);
-  }
-
-  return mif_location_map;
-}
-
-MifLocationMap build_fabric_tiled_mif_location_map(
-  const ModuleManager& module_manager, const DeviceGrid& grids,
-  const size_t& layer, const std::map<std::string, size_t>& mif_data_ports,
-  const std::vector<std::string>& mif_pb_paths) {
-  MifLocationMap mif_location_map;
-  std::map<std::string, size_t> offset_counter;
-
-  const ModuleId top_module =
-    module_manager.find_module(generate_fpga_top_module_name());
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
-
-  for (size_t ichild = 0;
-       ichild < module_manager.io_children(top_module).size(); ++ichild) {
-    const ModuleId tile_module = module_manager.io_children(top_module)[ichild];
-    for (size_t igrid = 0;
-         igrid < module_manager.io_children(tile_module).size(); ++igrid) {
-      const ModuleId grid_module =
-        module_manager.io_children(tile_module)[igrid];
-      const vtr::Point<int>& grid_coord =
-        module_manager.io_child_coordinates(tile_module)[igrid];
-      register_grid_module_mif_locations(
-        mif_location_map, module_manager, grids, layer, grid_module,
-        grid_coord.x(), grid_coord.y(), mif_pb_paths, mif_data_ports,
-        offset_counter);
-    }
-  }
-
-  return mif_location_map;
-}
-
-} /* namespace */
-
 MifLocationMap build_fabric_mif_location_map(
   const ModuleManager& module_manager, const DeviceGrid& grids,
   const CircuitLibrary& circuit_lib, const BitstreamSetting& bitstream_setting,
@@ -267,11 +193,39 @@ MifLocationMap build_fabric_mif_location_map(
     return MifLocationMap();
   }
 
-  MifLocationMap mif_location_map =
-    tiled_fabric ? build_fabric_tiled_mif_location_map(
-                     module_manager, grids, 0, mif_data_ports, mif_pb_paths)
-                 : build_fabric_fine_grained_mif_location_map(
-                     module_manager, grids, 0, mif_data_ports, mif_pb_paths);
+  MifLocationMap mif_location_map;
+  std::map<std::string, size_t> offset_counter;
+  const size_t layer = 0;
+  const ModuleId top_module =
+    module_manager.find_module(generate_fpga_top_module_name());
+  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
+  for (size_t ichild = 0;
+       ichild < module_manager.io_children(top_module).size(); ++ichild) {
+    const ModuleId child_module =
+      module_manager.io_children(top_module)[ichild];
+    if (tiled_fabric) {
+      for (size_t igrid = 0;
+           igrid < module_manager.io_children(child_module).size(); ++igrid) {
+        const ModuleId grid_module =
+          module_manager.io_children(child_module)[igrid];
+        const vtr::Point<int>& grid_coord =
+          module_manager.io_child_coordinates(child_module)[igrid];
+        register_grid_module_mif_locations(
+          mif_location_map, module_manager, grids, layer, grid_module,
+          grid_coord.x(), grid_coord.y(), mif_pb_paths, mif_data_ports,
+          offset_counter);
+      }
+      continue;
+    }
+
+    const vtr::Point<int>& grid_coord =
+      module_manager.io_child_coordinates(top_module)[ichild];
+    register_grid_module_mif_locations(mif_location_map, module_manager, grids,
+                                       layer, child_module, grid_coord.x(),
+                                       grid_coord.y(), mif_pb_paths,
+                                       mif_data_ports, offset_counter);
+  }
 
   VTR_LOG(
     "Built MIF location map: %zu location(s) across %zu mif_data_bus "
