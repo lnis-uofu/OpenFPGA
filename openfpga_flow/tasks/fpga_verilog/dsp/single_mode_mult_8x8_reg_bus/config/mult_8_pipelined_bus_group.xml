@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<bus_group>
+	<bus name="a[0:7]" big_endian="true">
+		<pin id="0" name="a_0_"/>
+		<pin id="1" name="a_1_"/>
+		<pin id="2" name="a_2_"/>
+		<pin id="3" name="a_3_"/>
+		<pin id="4" name="a_4_"/>
+		<pin id="5" name="a_5_"/>
+		<pin id="6" name="a_6_"/>
+		<pin id="7" name="a_7_"/>
+	</bus>
+	<bus name="b[0:7]" big_endian="true">
+		<pin id="0" name="b_0_"/>
+		<pin id="1" name="b_1_"/>
+		<pin id="2" name="b_2_"/>
+		<pin id="3" name="b_3_"/>
+		<pin id="4" name="b_4_"/>
+		<pin id="5" name="b_5_"/>
+		<pin id="6" name="b_6_"/>
+		<pin id="7" name="b_7_"/>
+	</bus>
+	<bus name="out[0:15]" big_endian="true">
+		<pin id="0" name="out_0_"/>
+		<pin id="1" name="out_1_"/>
+		<pin id="2" name="out_2_"/>
+		<pin id="3" name="out_3_"/>
+		<pin id="4" name="out_4_"/>
+		<pin id="5" name="out_5_"/>
+		<pin id="6" name="out_6_"/>
+		<pin id="7" name="out_7_"/>
+		<pin id="8" name="out_8_"/>
+		<pin id="9" name="out_9_"/>
+		<pin id="10" name="out_10_"/>
+		<pin id="11" name="out_11_"/>
+		<pin id="12" name="out_12_"/>
+		<pin id="13" name="out_13_"/>
+		<pin id="14" name="out_14_"/>
+		<pin id="15" name="out_15_"/>
+	</bus>
+</bus_group>
