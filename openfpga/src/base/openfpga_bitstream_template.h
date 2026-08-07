@@ -13,6 +13,8 @@
 #include "command_exit_codes.h"
 #include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
+#include "mif_pipeline.h"
+#include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"

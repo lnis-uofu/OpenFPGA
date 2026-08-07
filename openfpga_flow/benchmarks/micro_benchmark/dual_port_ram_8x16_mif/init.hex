@@ -1,8 +1,10 @@
 // This MIF is designed for a RAM of
 // depth: 8 (indexed from 0 to 7)
 // width: 16
-// Format: <depth_index> <HEX_data_to_initialize> 
-0 0x138F
-1 0x0020
-2 0x37EA
-@7 0x42FB // Jump to depth index 7
+// Verilog $readmemh format: @<addr> then hex data words
+@0
+138F
+0020
+37EA
+@7
+42FB

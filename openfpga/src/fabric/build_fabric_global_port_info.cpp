@@ -11,6 +11,7 @@
 #include "build_fabric_global_port_info.h"
 #include "circuit_library_utils.h"
 #include "openfpga_naming.h"
+#include "openfpga_reserved_words.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -64,6 +65,10 @@ FabricGlobalPortInfo build_fabric_global_port_info(
       fabric_port, circuit_lib.port_is_shift_register(global_port));
     fabric_global_port_info.set_global_port_is_config_enable(
       fabric_port, circuit_lib.port_is_config_enable(global_port));
+    fabric_global_port_info.set_global_port_is_io(
+      fabric_port, circuit_lib.port_is_io(global_port));
+    fabric_global_port_info.set_global_port_is_mif_data(
+      fabric_port, circuit_lib.port_is_mif_data_bus(global_port));
     fabric_global_port_info.set_global_port_default_value(
       fabric_port, circuit_lib.port_default_value(global_port));
 

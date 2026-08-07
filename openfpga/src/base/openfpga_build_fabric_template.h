@@ -6,6 +6,7 @@
 #include "build_device_module.h"
 #include "build_fabric_global_port_info.h"
 #include "build_fabric_io_location_map.h"
+#include "build_fabric_mif_location_map.h"
 #include "build_fpga_core_wrapper_module.h"
 #include "command.h"
 #include "command_context.h"
@@ -225,6 +226,12 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   /* Build I/O location map */
   openfpga_ctx.mutable_io_location_map() = build_fabric_io_location_map(
     openfpga_ctx.module_graph(), g_vpr_ctx.device().grid,
+    cmd_context.option_enable(cmd, opt_group_tile));
+
+  /* Build MIF location map (fabric coord + data-bus offset; not MifPipeline) */
+  openfpga_ctx.mutable_mif_location_map() = build_fabric_mif_location_map(
+    openfpga_ctx.module_graph(), g_vpr_ctx.device().grid,
+    openfpga_ctx.arch().circuit_lib, openfpga_ctx.bitstream_setting(),
     cmd_context.option_enable(cmd, opt_group_tile));
 
   /* update vpr bitstream annotation with io location map */

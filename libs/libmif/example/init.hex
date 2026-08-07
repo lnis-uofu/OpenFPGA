@@ -1,0 +1,12 @@
+// depth: 8 (indexed from 0 to 7)
+// width: 16
+// Verilog $readmemh format for memory_0
+@0
+138F
+0020
+37EA
+0000
+0000
+0000
+0000
+42FB

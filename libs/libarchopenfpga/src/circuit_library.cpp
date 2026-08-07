@@ -1016,6 +1016,12 @@ bool CircuitLibrary::port_is_data_io(
   return port_is_data_io_[circuit_port_id];
 }
 
+bool CircuitLibrary::port_is_mif_data_bus(
+  const CircuitPortId& circuit_port_id) const {
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_mif_data_bus_[circuit_port_id];
+}
+
 /* Return a flag if the port is used in mode-selection purpuse of a circuit
  * model */
 bool CircuitLibrary::port_is_mode_select(
@@ -1559,6 +1565,7 @@ CircuitPortId CircuitLibrary::add_model_port(
   port_default_values_.push_back(-1);
   port_is_io_.push_back(false);
   port_is_data_io_.push_back(false);
+  port_is_mif_data_bus_.push_back(false);
   port_is_mode_select_.push_back(false);
   port_is_global_.push_back(false);
   port_is_reset_.push_back(false);
@@ -1647,6 +1654,12 @@ void CircuitLibrary::set_port_is_data_io(const CircuitPortId& circuit_port_id,
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   port_is_data_io_[circuit_port_id] = is_data_io;
   return;
+}
+
+void CircuitLibrary::set_port_is_mif_data_bus(
+  const CircuitPortId& circuit_port_id, const bool& is_mif_data_bus) {
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_mif_data_bus_[circuit_port_id] = is_mif_data_bus;
 }
 
 /* Set the is_mode_select for a port of a circuit model */

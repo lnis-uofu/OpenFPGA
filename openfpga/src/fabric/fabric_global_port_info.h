@@ -47,6 +47,7 @@ class FabricGlobalPortInfo {
   bool global_port_is_config_enable(
     const FabricGlobalPortId& global_port_id) const;
   bool global_port_is_io(const FabricGlobalPortId& global_port_id) const;
+  bool global_port_is_mif_data(const FabricGlobalPortId& global_port_id) const;
   size_t global_port_default_value(
     const FabricGlobalPortId& global_port_id) const;
 
@@ -73,6 +74,8 @@ class FabricGlobalPortInfo {
     const FabricGlobalPortId& global_port_id, const bool& is_config_enable);
   void set_global_port_is_io(const FabricGlobalPortId& global_port_id,
                              const bool& is_io);
+  void set_global_port_is_mif_data(const FabricGlobalPortId& global_port_id,
+                                   const bool& is_mif_data);
   void set_global_port_default_value(const FabricGlobalPortId& global_port_id,
                                      const size_t& default_value);
 
@@ -92,6 +95,7 @@ class FabricGlobalPortInfo {
   vtr::vector<FabricGlobalPortId, bool> global_port_is_wl_;
   vtr::vector<FabricGlobalPortId, bool> global_port_is_config_enable_;
   vtr::vector<FabricGlobalPortId, bool> global_port_is_io_;
+  vtr::vector<FabricGlobalPortId, bool> global_port_is_mif_data_;
   vtr::vector<FabricGlobalPortId, size_t> global_port_default_values_;
 };
 

@@ -174,14 +174,16 @@ ModuleId add_circuit_model_to_module_manager(
     ModulePortId module_port = ModulePortId::INVALID();
 
     if ((CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port)) &&
-        (false == circuit_lib.port_is_io(port))) {
+        (false == circuit_lib.port_is_io(port)) &&
+        (false == circuit_lib.port_is_mif_data_bus(port))) {
       module_port = module_manager.add_port(module, port_info,
                                             ModuleManager::MODULE_GLOBAL_PORT);
     } else if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(port)) {
       module_port = module_manager.add_port(module, port_info,
                                             ModuleManager::MODULE_GLOBAL_PORT);
     } else if ((CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port)) &&
-               (true == circuit_lib.port_is_io(port))) {
+               ((true == circuit_lib.port_is_io(port)) ||
+                (true == circuit_lib.port_is_mif_data_bus(port)))) {
       module_port = module_manager.add_port(module, port_info,
                                             ModuleManager::MODULE_GPIN_PORT);
     } else if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) {

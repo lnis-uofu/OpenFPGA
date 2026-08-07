@@ -7,7 +7,12 @@
 
 namespace openfpga {
 
-/* Write all segments in storage to a MIF file (overwrite). */
-int write_mif(const std::string& file_path, const MifStorage& mif_storage);
+constexpr const char* K_PRELOAD_MEM_TITLE =
+  "Aggregated MIF for memory preloading interface";
+
+/* Write aggregated preload MIF (from MifPipeline PHYSICAL stage) to a .mem
+ * file. */
+int write_mif(const std::string& file_path,
+              const MifStorage& aggregated_mif_storage);
 
 } /* namespace openfpga */
