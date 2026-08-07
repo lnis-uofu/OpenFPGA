@@ -1,25 +1,25 @@
 <vpr_constraints tool_name="vpr">
   <partition_list>
      <partition name="dsp_ireg">
-        <add_atom name_pattern="a_reg[0]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="a_reg[1]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="a_reg[2]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="a_reg[3]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="b_reg[0]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="b_reg[1]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="b_reg[2]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="b_reg[3]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
+        <add_atom name_pattern="a_reg[0]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_A[0]"/>
+        <add_atom name_pattern="a_reg[1]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_A[1]"/>
+        <add_atom name_pattern="a_reg[2]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_A[2]"/>
+        <add_atom name_pattern="a_reg[3]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_A[3]"/>
+        <add_atom name_pattern="b_reg[0]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[0]"/>
+        <add_atom name_pattern="b_reg[1]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[1]"/>
+        <add_atom name_pattern="b_reg[2]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[2]"/>
+        <add_atom name_pattern="b_reg[3]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[3]"/>
         <add_region x_low="1" y_low="1" x_high="3" y_high="1"/> 
      </partition>
      <partition name="dsp_oreg0">
-        <add_atom name_pattern="out[0]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="out[1]" logical_block_location="clb[0].fle[0]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="out[2]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="out[3]" logical_block_location="clb[0].fle[1]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="out[4]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="out[5]" logical_block_location="clb[0].fle[2]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
-        <add_atom name_pattern="out[6]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[0].ff[0]"/>
-        <add_atom name_pattern="out[7]" logical_block_location="clb[0].fle[3]{n2_lut3}.lut3inter[0].ble3[1].ff[0]"/>
+        <add_atom name_pattern="out[0]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[0]"/>
+        <add_atom name_pattern="out[1]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[1]"/>
+        <add_atom name_pattern="out[2]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[2]"/>
+        <add_atom name_pattern="out[3]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[3]"/>
+        <add_atom name_pattern="out[4]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[4]"/>
+        <add_atom name_pattern="out[5]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[5]"/>
+        <add_atom name_pattern="out[6]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[6]"/>
+        <add_atom name_pattern="out[7]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[7]"/>
         <add_region x_low="1" y_low="1" x_high="3" y_high="1"/> 
      </partition>
   </partition_list>
