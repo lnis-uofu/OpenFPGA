@@ -416,7 +416,7 @@ jobs:
         run: |
           cd yosys
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSYS_COMPILER_LAUNCHER=ccache
-          cmake --build --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
+          cmake --build build --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
           cmake --install build --prefix ${{ github.workspace }}/yosys_installed
 
       - name: Create installer
