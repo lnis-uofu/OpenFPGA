@@ -388,11 +388,6 @@
             <complete name="clk_ff_B" input="mult_8x8_slice.clk" output="ff_B.clk"/>
             <complete name="clk_ff_Y" input="mult_8x8_slice.clk" output="ff_Y.clk"/>
           </interconnect>
-          <power method="pin-toggle">
-            <port name="A_cfg" energy_per_toggle="2.13e-12"/>
-            <port name="B_cfg" energy_per_toggle="2.13e-12"/>
-            <static_power power_per_instance="0.0"/>
-          </power>
         </pb_type>
         <interconnect>
           <!-- Stratix IV input delay of 207ps is conservative for this architecture because this architecture does not have an input crossbar in the multiplier. 
@@ -412,8 +407,6 @@
           <complete name="clk" input="mult_8.clk" output="mult_8x8_slice.clk"/>
         </interconnect>
       </mode>
-      <!-- Place this multiplier block every 8 columns from (and including) the sixth column -->
-      <power method="sum-of-children"/>
     </pb_type>
     <!-- Define fracturable multiplier end -->
   </complexblocklist>
