@@ -65,6 +65,7 @@ pacman -S --noconfirm --needed \
     mingw-w64-x86_64-qt-installer-framework \
     mingw-w64-x86_64-capnproto \
     mingw-w64-x86_64-wineditline \
+    mingw-w64-x86_64-gtest \
     mingw-w64-x86_64-openssl
 
 # This is for openfpga regression tests

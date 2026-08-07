@@ -8,6 +8,7 @@ include(SwigLib)
 include(SupportCcache)
 # Auto deps 
 include(DeployDependencies)
+include(GetAllProjectTargets)
 
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
@@ -86,7 +87,6 @@ include(CheckCXXCompilerFlag)
 # Options
 ## General options
 option(OPENFPGA_WITH_YOSYS "Enable building Yosys" ON)
-option(OPENFPGA_WITH_SLANG "Enable building Yosys Slang plugin" ON)
 option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
 option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number" ON)
 option(OPENFPGA_WITH_SWIG "Enable SWIG interface when building codebase. Disable when you do not need high-level interfaces, such as Tcl/Python" ON)
@@ -126,6 +126,7 @@ set(YOSYS_F4PGA_PLUGINS OFF CACHE BOOL "Enable building and installing Yosys Sys
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
 set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
+set(VPR_USE_SERVER OFF CACHE BOOL "Specify whether vpr enables the server mode")
 # TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
 #set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
 
@@ -338,23 +339,22 @@ add_subdirectory(openfpga)
 # Compilation options for yosys
 include(CMakeParseArguments)
 
-##project(yosys)
-
-# Options to enable/disable dependencies
-option(YOSYS_ENABLE_TCL, "Enable TCL parser integrated in yosys" ON)
-option(YOSYS_ENABLE_ABC, "Enable ABC library integrated in yosys" ON)
-option(YOSYS_ENABLE_PLUGINS, "Enable plug-in in yosys" ON)
-option(YOSYS_ENABLE_READLINE, "Enable readline library in yosys" ON)
-option(YOSYS_ENABLE_VERIFIC, "Enable verification library in yosys" OFF)
-option(YOSYS_ENABLE_COVER, "Enable coverage test in yosys" ON)
-option(YOSYS_ENABLE_LIBYOSYS, "Enable static library compiled yosys" OFF)
-option(YOSYS_ENABLE_GPROF, "Enable profiling in compiled yosys" OFF)
-option(YOSYS_ENABLE_NDEBUG, "Enable non-debugging feature in compiled yosys" OFF)
+# Options to enable/disable dependencies for yosys
+set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
+set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
+set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
+set(YOSYS_SKIP_ABC_SUBMODULE_CHECK ON CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
+set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
+set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
+set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
+set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
+set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
+set(YOSYS_BUILD_WITH_TEST OFF CACHE BOOL "Disable unit tests in compiled yosys")
 
 #
 ## Search and link dependent packages
 ## We need readline to compile 
-if (YOSYS_ENABLE_READLINE)
+if (YOSYS_WITHOUT_READLINE)
   find_package(Readline REQUIRED)
 endif()
 
@@ -367,72 +367,41 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
     target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
 endif()
 
-# Only patch abc makefile on Msys2 where linker complains
-# Find the Python 3 interpreter
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-if (DEFINED ENV{MSYSTEM})
-    set(PY_PATCH_ABC_MAKEFILE "${CMAKE_CURRENT_SOURCE_DIR}/dev/patch_abc_makefile.py")
-    set(ABC_MAKEFILE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yosys/abc")
-    set(ABC_MAKEFILE_FPATH "Makefile")
-    set(ABC_MAKEFILE_PATCH_FPATH "Makefile.patched")
-    message(STATUS "Patching ${ABC_MAKEFILE_DIR}/${ABC_MAKEFILE_FPATH}")
-    add_custom_command(
-        OUTPUT ${ABC_MAKEFILE_PATCH_FPATH}
-        COMMAND "${Python3_EXECUTABLE}" "${PY_PATCH_ABC_MAKEFILE}" "${ABC_MAKEFILE_FPATH}"
-        COMMAND ${CMAKE_COMMAND} -E touch ${ABC_MAKEFILE_PATCH_FPATH}
-        COMMENT "Apply sed patch to ${ABC_MAKEFILE_DIR}/${ABC_MAKEFILE_FPATH} for long linker command fix"
-        DEPENDS "${PY_PATCH_ABC_MAKEFILE}"
-        VERBATIM
-        WORKING_DIRECTORY "${ABC_MAKEFILE_DIR}"
-    )
-    add_custom_target(patch_abc_makefile ALL DEPENDS ${ABC_MAKEFILE_PATCH_FPATH})
-endif()
-
-# Once Yosys adapts to CMake. This will be much simplified
-# Yosys build options
-set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
-set(YOSYS_BUILD_OPTION "ENABLE_CCACHE=1" CACHE STRING "Yosys build options") 
-set(SLANG_BUILD_CONFIG "" CACHE STRING "Slang build configuration on environment") 
-set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
-if (DEFINED ENV{MSYSTEM})
-    message(STATUS "Build Yosys in an MSYS2 MinGW-w64 environment")
-    set(YOSYS_CONFIG_OPTION "config-msys2-64" CACHE STRING "Yosys configuration on environment" FORCE) 
-    set(YOSYS_BUILD_OPTION "DISABLE_ABC_THREADS=1 ENABLE_CCACHE=1" CACHE STRING "Yosys build options on environment" FORCE) 
-    set(SLANG_BUILD_CONFIG "-Wl,--exclude-all-symbols" CACHE STRING "Slang build configuration on environment" FORCE) 
-    set(SLANG_CMAKE_CONFIG "" CACHE STRING "Slang cmake configuration on environment") 
-endif() 
-
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
-    if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys)
-        message(STATUS "Yosys pre-build exist so skipping it")
-    else ()
-        # run makefile provided, we pass-on the options to the local make file 
-        add_custom_target(
-            yosys ALL
-            # add step to remove the 'built-in' quicklogic plugins code in yosys
-            COMMAND $(MAKE) ${YOSYS_CONFIG_OPTION}
-            COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/ ${YOSYS_BUILD_OPTION}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-            COMMENT "Compile Yosys with given Makefile"
-        )
-        # Add dependency on patched Makefile if on MinGW
-        if (DEFINED ENV{MSYSTEM})
-          add_dependencies(yosys patch_abc_makefile)
-        endif()  
-        # yosys compilation ends
-        # yosys-plugins compilation starts
-        if (OPENFPGA_WITH_SLANG)
-          add_custom_target(
-              yosys-slang ALL
-              COMMAND $(MAKE) install YOSYS_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/ CMAKE_FLAGS+="-DPASS_NAME=read_slang ${SLANG_CMAKE_CONFIG}" LDFLAGS+="${SLANG_BUILD_CONFIG}"
-              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-slang
-              DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/yosys/bin/yosys
-              COMMENT "Compile Yosys-Slang with given Makefile"
-          )
-          add_dependencies(yosys-slang yosys)
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
+  add_subdirectory(yosys)
+  #Since Yosys is an externally developed tool, we suppress all compiler warnings
+  CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
+  # Collect all targets starting from the root source directory
+  set(ALL_TARGETS "")
+  get_all_project_targets(ALL_TARGETS "${CMAKE_SOURCE_DIR}")
+  # Filter targets that start with your prefix (e.g., "my_prefix_")
+  set(PREFIX_PATTERN "^yosys_")
+  set(MATCHING_TARGETS ${ALL_TARGETS})
+  list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
+  # Output result
+  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
+  if(CXX_COMPILER_SUPPORTS_-w)
+      foreach (target_name IN LISTS MATCHING_TARGETS)
+        # 1. Fetch the exact target type
+        get_target_property(target_type ${target_name} TYPE)
+        # Skip completely non-compilable utility and alias metadata
+        if(target_type STREQUAL "UTILITY" OR target_type MATCHES "ALIAS")
+          message(STATUS "Skipping non-compilable target: ${target_name} [${target_type}]")
+          continue()
         endif()
-    endif()
+        if(target_type STREQUAL "INTERFACE_LIBRARY")
+           # Interface targets only accept INTERFACE flags
+           target_compile_options(${target_name} INTERFACE "-w")
+        else()
+           target_compile_options(${target_name} PRIVATE "-w")
+        endif()
+      endforeach()
+      target_compile_options(libyosys PRIVATE "-w")
+      target_compile_options(libyosys-abc PRIVATE "-w")
+      target_compile_options(slang_slang PRIVATE "-w")
+  endif()
 endif()
 
 # For installer
