@@ -1,4 +1,5 @@
 <vpr_constraints tool_name="vpr">
+<!--
   <partition_list>
      <partition name="dsp_ireg">
         <add_atom name_pattern="a_reg[0]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_A[0]"/>
@@ -9,7 +10,7 @@
         <add_atom name_pattern="b_reg[1]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[1]"/>
         <add_atom name_pattern="b_reg[2]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[2]"/>
         <add_atom name_pattern="b_reg[3]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_B[3]"/>
-        <add_region x_low="1" y_low="1" x_high="3" y_high="1"/> 
+        <add_region x_low="1" y_low="1" x_high="3" y_high="2"/> 
      </partition>
      <partition name="dsp_oreg0">
         <add_atom name_pattern="out[0]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[0]"/>
@@ -20,7 +21,8 @@
         <add_atom name_pattern="out[5]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[5]"/>
         <add_atom name_pattern="out[6]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[6]"/>
         <add_atom name_pattern="out[7]" logical_block_location="mult_8[0]{mult_8x8}.mult_8x8_slice[0].ff_Y[7]"/>
-        <add_region x_low="1" y_low="1" x_high="3" y_high="1"/> 
+        <add_region x_low="1" y_low="1" x_high="3" y_high="2"/> 
      </partition>
   </partition_list>
+-->
 </vpr_constraints>
