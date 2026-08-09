@@ -566,8 +566,7 @@ void print_verilog_testbench_connect_fpga_ios(
  * Note that: these codes are tuned for Icarus simulator!!!
  *******************************************************************/
 void print_verilog_timeout_and_vcd(
-  mmostream& fp, const std::string& module_name,
-  const std::string& vcd_fname,
+  mmostream& fp, const std::string& module_name, const std::string& vcd_fname,
   const std::string& simulation_start_counter_name,
   const std::string& error_counter_name, const float& simulation_time,
   const bool& no_self_checking, const bool& little_endian) {
@@ -1254,8 +1253,8 @@ void print_verilog_testbench_shared_ports(
  * in the graph of modules
  *******************************************************************/
 static void rec_print_verilog_testbench_primitive_module_signal_initialization(
-  mmostream& fp, const std::string& hie_path,
-  const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
+  mmostream& fp, const std::string& hie_path, const CircuitLibrary& circuit_lib,
+  const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& circuit_input_ports,
   const ModuleManager& module_manager, const ModuleId& parent_module,
   const ModuleId& primitive_module, const bool& deposit_random_values,

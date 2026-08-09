@@ -137,8 +137,8 @@ static void print_verilog_top_random_testbench_benchmark_instance(
  * Instanciate the FPGA fabric module
  *******************************************************************/
 static void print_verilog_random_testbench_fpga_instance(
-  mmostream& fp, const std::string& circuit_name,
-  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
+  mmostream& fp, const std::string& circuit_name, const AtomContext& atom_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const bool& explicit_port_mapping) {
   /* Validate the file stream */

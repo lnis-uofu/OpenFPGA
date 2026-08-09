@@ -14,8 +14,8 @@
 
 #include "circuit_library.h"
 #include "module_manager.h"
-#include "openfpga_port.h"
 #include "openfpga_mmfstream.h"
+#include "openfpga_port.h"
 #include "verilog_port_types.h"
 
 /********************************************************************
@@ -65,18 +65,18 @@ void print_verilog_module_definition(mmostream& fp,
                                      const ModuleId& module_id);
 
 void print_verilog_module_ports(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type,
   const bool& little_endian);
 
 void print_verilog_module_declaration(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type,
   const bool& little_endian);
 
 void print_verilog_module_instance(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const std::string& instance_name,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const std::string& instance_name,
   const std::map<std::string, BasicPort>& port2port_name_map,
   const bool& use_explicit_port_map, const bool& little_endian);
 
@@ -143,8 +143,7 @@ void print_verilog_force_wire_constant_values(
   mmostream& fp, const BasicPort& output_port,
   const std::vector<size_t>& const_values, const bool& little_endian);
 
-void print_verilog_wire_connection(mmostream& fp,
-                                   const BasicPort& output_port,
+void print_verilog_wire_connection(mmostream& fp, const BasicPort& output_port,
                                    const BasicPort& input_port,
                                    const bool& inverted,
                                    const bool& little_endian);
@@ -155,11 +154,13 @@ void print_verilog_register_connection(mmostream& fp,
                                        const bool& little_endian,
                                        const bool& inverted);
 
-void print_verilog_buffer_instance(
-  mmostream& fp, ModuleManager& module_manager,
-  const CircuitLibrary& circuit_lib, const ModuleId& parent_module_id,
-  const CircuitModelId& buffer_model, const BasicPort& instance_input_port,
-  const BasicPort& instance_output_port, const bool& little_endian);
+void print_verilog_buffer_instance(mmostream& fp, ModuleManager& module_manager,
+                                   const CircuitLibrary& circuit_lib,
+                                   const ModuleId& parent_module_id,
+                                   const CircuitModelId& buffer_model,
+                                   const BasicPort& instance_input_port,
+                                   const BasicPort& instance_output_port,
+                                   const bool& little_endian);
 
 void print_verilog_local_sram_wires(mmostream& fp,
                                     const CircuitLibrary& circuit_lib,
@@ -186,8 +187,7 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(
   const size_t& mux_instance_id, const size_t& num_conf_bits,
   const BasicPort& fm_config_bus, const bool& little_endian);
 
-void print_verilog_shifted_clock_stimuli(mmostream& fp,
-                                         const BasicPort& port,
+void print_verilog_shifted_clock_stimuli(mmostream& fp, const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
                                          const size_t& initial_value,

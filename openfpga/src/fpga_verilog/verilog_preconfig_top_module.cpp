@@ -32,9 +32,8 @@ namespace openfpga {
  * The module ports do exactly match the input benchmark
  *******************************************************************/
 static void print_verilog_preconfig_top_module_ports(
-  mmostream &fp, const std::string &circuit_name,
-  const AtomContext &atom_ctx, const VprNetlistAnnotation &netlist_annotation,
-  const BusGroup &bus_group) {
+  mmostream &fp, const std::string &circuit_name, const AtomContext &atom_ctx,
+  const VprNetlistAnnotation &netlist_annotation, const BusGroup &bus_group) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
 

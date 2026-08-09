@@ -14,12 +14,12 @@
 #include "io_location_map.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
+#include "openfpga_mmfstream.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
 #include "verilog_testbench_options.h"
 #include "vpr_context.h"
 #include "vpr_netlist_annotation.h"
-#include "openfpga_mmfstream.h"
 
 /********************************************************************
  * Function declaration

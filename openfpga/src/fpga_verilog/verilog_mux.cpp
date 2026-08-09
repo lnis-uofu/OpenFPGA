@@ -247,11 +247,10 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
  *********************************************************************/
 static void generate_verilog_rram_mux_branch_body_structural(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  mmostream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const BasicPort& input_port,
-  const BasicPort& output_port, const BasicPort& blb_port,
-  const BasicPort& wl_port, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const BasicPort& input_port, const BasicPort& output_port,
+  const BasicPort& blb_port, const BasicPort& wl_port,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   std::string progTE_module_name("PROG_TE");
   std::string progBE_module_name("PROG_BE");
 
@@ -748,9 +747,8 @@ static void generate_verilog_mux_branch_module(
  *******************************************************************/
 static void generate_verilog_cmos_mux_module_input_buffers(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  mmostream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -864,9 +862,8 @@ static void generate_verilog_cmos_mux_module_input_buffers(
  *******************************************************************/
 static void generate_verilog_cmos_mux_module_output_buffers(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  mmostream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -967,9 +964,8 @@ static void generate_verilog_cmos_mux_module_output_buffers(
  *******************************************************************/
 static void generate_verilog_rram_mux_module_multiplexing_structure(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  mmostream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_mmostream(fp));
 

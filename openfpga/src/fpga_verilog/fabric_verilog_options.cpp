@@ -48,9 +48,7 @@ bool FabricVerilogOption::explicit_port_mapping() const {
   return explicit_port_mapping_;
 }
 
-bool FabricVerilogOption::compress_output() const {
-  return compress_output_;
-}
+bool FabricVerilogOption::compress_output() const { return compress_output_; }
 
 bool FabricVerilogOption::compress_routing() const { return compress_routing_; }
 

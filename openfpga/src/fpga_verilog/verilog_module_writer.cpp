@@ -281,9 +281,8 @@ find_verilog_module_local_wires(const ModuleManager& module_manager,
  * For each module output (except the first one), we print a wire connection
  *******************************************************************/
 static void print_verilog_module_output_short_connection(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const ModuleNetId& module_net,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const ModuleNetId& module_net, const bool& little_endian) {
   /* Ensure a valid file stream */
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -331,9 +330,8 @@ static void print_verilog_module_output_short_connection(
  * If we find such a pair, we print a wire connection
  *******************************************************************/
 static void print_verilog_module_local_short_connection(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const ModuleNetId& module_net,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const ModuleNetId& module_net, const bool& little_endian) {
   /* Ensure a valid file stream */
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -402,8 +400,8 @@ static void print_verilog_module_local_short_connection(
  *            +-----------------------------+
  *******************************************************************/
 static void print_verilog_module_local_short_connections(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const bool& little_endian) {
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
     /* We only care the nets that indicate short connections */
@@ -436,8 +434,8 @@ static void print_verilog_module_local_short_connections(
  *            +-----------------------------+
  *******************************************************************/
 static void print_verilog_module_output_short_connections(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const bool& little_endian) {
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
     /* We only care the nets that indicate short connections */

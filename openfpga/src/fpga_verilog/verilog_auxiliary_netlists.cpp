@@ -31,7 +31,7 @@ namespace openfpga {
  *******************************************************************/
 void print_verilog_mock_fabric_include_netlist(
   const NetlistManager& netlist_manager, const std::string& src_dir_path,
-  const VerilogTestbenchOption &options) {
+  const VerilogTestbenchOption& options) {
   /* If we force the use of relative path, the src dir path should NOT be
    * included in any output */
   std::string src_dir = src_dir_path;
@@ -73,7 +73,7 @@ void print_verilog_mock_fabric_include_netlist(
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
                                           const std::string& src_dir_path,
                                           const CircuitLibrary& circuit_lib,
-                                          const FabricVerilogOption &options) {
+                                          const FabricVerilogOption& options) {
   /* If we force the use of relative path, the src dir path should NOT be
    * included in any output */
   std::string src_dir = src_dir_path;

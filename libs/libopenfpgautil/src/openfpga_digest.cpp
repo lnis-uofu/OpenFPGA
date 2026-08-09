@@ -56,7 +56,6 @@ bool valid_file_stream(std::fstream& fp) {
   return true;
 }
 
-
 /********************************************************************
  * A most utilized function to validate the file stream
  * This function will error out for a valid/invalid file stream

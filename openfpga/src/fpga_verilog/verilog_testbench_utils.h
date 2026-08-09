@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "openfpga_mmfstream.h"
 #include "bus_group.h"
 #include "circuit_library.h"
 #include "fabric_global_port_info.h"
@@ -14,6 +13,7 @@
 #include "io_name_map.h"
 #include "module_manager.h"
 #include "module_name_map.h"
+#include "openfpga_mmfstream.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
 #include "vpr_context.h"
@@ -57,8 +57,7 @@ void print_verilog_testbench_connect_fpga_ios(
   const size_t& unused_io_value, const bool& little_endian);
 
 void print_verilog_timeout_and_vcd(
-  mmostream& fp, const std::string& module_name,
-  const std::string& vcd_fname,
+  mmostream& fp, const std::string& module_name, const std::string& vcd_fname,
   const std::string& simulation_start_counter_name,
   const std::string& error_counter_name, const float& simulation_time,
   const bool& no_self_checking, const bool& little_endian);

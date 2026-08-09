@@ -344,8 +344,8 @@ void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
  */
 static void
 print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(
-  mmostream& fp, const BasicPort& start_sr_port,
-  const BasicPort& sr_clock_port, const float& sr_clock_period,
+  mmostream& fp, const BasicPort& start_sr_port, const BasicPort& sr_clock_port,
+  const float& sr_clock_period,
   const VerilogTestbenchOption::e_simulator_type sim_type,
   const bool& little_endian) {
   /* Validate the file stream */
@@ -401,9 +401,8 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generat
  */
 static void
 print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
-  mmostream& fp, const BasicPort& start_sr_port,
-  const BasicPort& sr_clock_port, const float& sr_clock_period,
-  const bool& little_endian) {
+  mmostream& fp, const BasicPort& start_sr_port, const BasicPort& sr_clock_port,
+  const float& sr_clock_period, const bool& little_endian) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
 

@@ -28,8 +28,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_constant_undriven_inputs =
     cmd.option("constant_undriven_inputs");
   CommandOptionId opt_include_timing = cmd.option("include_timing");
@@ -106,8 +105,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_reference_benchmark =
     cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -195,8 +193,7 @@ int write_preconfigured_fabric_wrapper_template(
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -273,8 +270,7 @@ int write_testbench_template_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_top_module = cmd.option("top_module");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -325,8 +321,7 @@ int write_testbench_io_connection_template(const T& openfpga_ctx,
   CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -378,8 +373,7 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_top_module = cmd.option("top_module");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
@@ -448,8 +442,7 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark =
     cmd.option("reference_benchmark_file_path");
-  CommandOptionId opt_compress_output =
-    cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");

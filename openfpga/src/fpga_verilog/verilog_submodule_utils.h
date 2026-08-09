@@ -8,8 +8,8 @@
 #include "circuit_library.h"
 #include "fabric_verilog_options.h"
 #include "module_manager.h"
-#include "verilog_port_types.h"
 #include "openfpga_mmfstream.h"
+#include "verilog_port_types.h"
 
 /********************************************************************
  * Function declaration

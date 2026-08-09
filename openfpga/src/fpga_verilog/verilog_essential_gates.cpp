@@ -517,8 +517,8 @@ static void print_verilog_gate_module(
  * i.e., either VDD or GND
  ***********************************************/
 static void print_verilog_constant_generator_module(
-  const ModuleManager& module_manager, mmostream& fp,
-  const size_t& const_value, const ModuleNameMap& module_name_map,
+  const ModuleManager& module_manager, mmostream& fp, const size_t& const_value,
+  const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   /* Find the module in module manager */

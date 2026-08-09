@@ -43,8 +43,9 @@ ShellCommandId add_write_fabric_verilog_command_template(
                                      openfpga::OPT_STRING);
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
@@ -163,8 +164,9 @@ ShellCommandId add_write_full_testbench_command_template(
     "reduce the period of configuration by skip certain data points");
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
@@ -261,8 +263,9 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
   shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
@@ -349,8 +352,9 @@ ShellCommandId add_write_testbench_template_command_template(
   shell_cmd.set_option_require_value(dut_module_opt, openfpga::OPT_STRING);
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
@@ -429,8 +433,9 @@ ShellCommandId add_write_testbench_io_connection_command_template(
   shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
@@ -505,8 +510,9 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
     "Force to use relative path in netlists when including other netlists");
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
@@ -591,8 +597,9 @@ ShellCommandId add_write_preconfigured_testbench_command_template(
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
   /* Add an option '--compress_output' */
-  shell_cmd.add_option("compress_output", false,
-                       "Verilog netlists will be outputted in compressed format (.gz)");
+  shell_cmd.add_option(
+    "compress_output", false,
+    "Verilog netlists will be outputted in compressed format (.gz)");
 
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,

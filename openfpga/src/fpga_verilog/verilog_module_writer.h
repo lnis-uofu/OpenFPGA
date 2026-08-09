@@ -3,10 +3,9 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "openfpga_mmfstream.h"
-
 #include "fabric_verilog_options.h"
 #include "module_manager.h"
+#include "openfpga_mmfstream.h"
 #include "verilog_port_types.h"
 
 /********************************************************************

@@ -4,6 +4,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <fstream>
+
 #include "openfpga_mmfstream.h"
 
 /********************************************************************

@@ -224,8 +224,8 @@ void print_verilog_module_definition(mmostream& fp,
  * Print a Verilog module ports based on the module id
  ***********************************************/
 void print_verilog_module_ports(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -351,8 +351,8 @@ void print_verilog_module_ports(
  * <tab><port definition with direction>
  ***********************************************/
 void print_verilog_module_declaration(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -388,8 +388,8 @@ void print_verilog_module_declaration(
  * mapping will be output by the module port name.
  *******************************************************************/
 void print_verilog_module_instance(
-  mmostream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const std::string& instance_name,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const std::string& instance_name,
   const std::map<std::string, BasicPort>& port2port_name_map,
   const bool& use_explicit_port_map, const bool& little_endian) {
   VTR_ASSERT(true == valid_file_mmostream(fp));
@@ -931,8 +931,7 @@ void print_verilog_force_wire_constant_values(
  * Generate a wire connection for two Verilog ports
  * using "assign" syntax
  *******************************************************************/
-void print_verilog_wire_connection(mmostream& fp,
-                                   const BasicPort& output_port,
+void print_verilog_wire_connection(mmostream& fp, const BasicPort& output_port,
                                    const BasicPort& input_port,
                                    const bool& inverted,
                                    const bool& little_endian) {
@@ -1000,11 +999,13 @@ void print_verilog_register_connection(mmostream& fp,
  *    Buffer must have only 1 input (non-global) port and 1 output (non-global)
  *port
  *******************************************************************/
-void print_verilog_buffer_instance(
-  mmostream& fp, ModuleManager& module_manager,
-  const CircuitLibrary& circuit_lib, const ModuleId& parent_module_id,
-  const CircuitModelId& buffer_model, const BasicPort& instance_input_port,
-  const BasicPort& instance_output_port, const bool& little_endian) {
+void print_verilog_buffer_instance(mmostream& fp, ModuleManager& module_manager,
+                                   const CircuitLibrary& circuit_lib,
+                                   const ModuleId& parent_module_id,
+                                   const CircuitModelId& buffer_model,
+                                   const BasicPort& instance_input_port,
+                                   const BasicPort& instance_output_port,
+                                   const bool& little_endian) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_mmostream(fp));
 
@@ -1571,8 +1572,7 @@ void print_verilog_pulse_stimuli(mmostream& fp, const BasicPort& port,
  *  initial_value --------------------------------------------+
  *
  *******************************************************************/
-void print_verilog_shifted_clock_stimuli(mmostream& fp,
-                                         const BasicPort& port,
+void print_verilog_shifted_clock_stimuli(mmostream& fp, const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
                                          const size_t& initial_value,
