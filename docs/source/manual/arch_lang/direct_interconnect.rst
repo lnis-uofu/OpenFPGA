@@ -8,9 +8,11 @@ This section introduces extensions on the architecture description file about di
 Syntax
 ~~~~~~
 
-The original direct connections in the directlist section are documented here_. Its description is given below:
+The original direct connections in the VPR architecture file are documented here_. Its description is given below:
 
 .. _here: http://docs.verilogtorouting.org/en/latest/arch/reference/?highlight=directlist#direct-inter-block-connections
+
+In the **VPR architecture file**, define point-to-point direct connections using ``<directlist>``:
 
 .. code-block:: xml
 
@@ -18,19 +20,19 @@ The original direct connections in the directlist section are documented here_. 
     <direct name="string" from_pin="string" to_pin="string" x_offset="int" y_offset="int" z_offset="int" switch_name="string"/>
   </directlist>
 
-.. note:: These options are required
+.. note:: These attributes are required in the VPR architecture file. Do **not** add OpenFPGA-specific attributes (``type``, ``x_dir``, ``y_dir``, ``circuit_model_name``) here.
 
-In the OpenFPGA architecture file, you may define additional attributes for each VPR's direct connection:
+In the **OpenFPGA architecture file**, annotate each VPR direct connection in a separate ``<direct_connection>`` section. The ``name`` attribute must match a direct defined in the VPR ``<directlist>``:
 
 .. code-block:: xml
 
   <direct_connection>
-    <direct name="string" circuit_model_name="string" interconnection_type="string" x_dir="string" y_dir="string"/>
-  </directlist>
+    <direct name="string" circuit_model_name="string" type="string" x_dir="string" y_dir="string"/>
+  </direct_connection>
 
-.. note:: these options are optional. However, if ``interconnection_type`` is set to ``inter_column`` or ``inter_row``, then ``x_dir`` and ``y_dir`` are required.
+.. note:: ``circuit_model_name`` is required. ``type``, ``x_dir``, and ``y_dir`` are optional. If ``type`` is ``inter_column`` or ``inter_row``, then ``x_dir`` and ``y_dir`` are required.
 
-.. option:: interconnection_type="<string>"
+.. option:: type="<string>"
 
   Available types are ``inner_column_or_row`` | ``part_of_cb`` | ``inter_column`` | ``inter_row``
 
@@ -48,32 +50,32 @@ In the OpenFPGA architecture file, you may define additional attributes for each
 
     - x_dir="positive": 
 
-        - interconnection_type="inter_column": a column will be connected to a column on the ``right``, if it exists.
+        - type="inter_column": a column will be connected to a column on the ``right``, if it exists.
 
-        - interconnection_type="inter_row": the most on the ``right`` cell from a row connection will connect the most on the ``left`` cell of next row, if it exists.
+        - type="inter_row": the most on the ``right`` cell from a row connection will connect the most on the ``left`` cell of next row, if it exists.
 
     - x_dir="negative": 
 
-        - interconnection_type="inter_column": a column will be connected to a column on the ``left``, if it exists.
+        - type="inter_column": a column will be connected to a column on the ``left``, if it exists.
 
-        - interconnection_type="inter_row": the most on the ``left`` cell from a row connection will connect the most on the ``right`` cell of next row, if it exists.
+        - type="inter_row": the most on the ``left`` cell from a row connection will connect the most on the ``right`` cell of next row, if it exists.
 
 .. option:: y_dir="<string>"
 
-  Available directionalities are ``positive`` | ``negative``, specifies if the next cell to connect has a bigger or lower x value.
+  Available directionalities are ``positive`` | ``negative``, specifies if the next cell to connect has a bigger or lower ``y`` value.
   Considering a coordinate system where (0,0) is the origin at the bottom left and `x` and `y` are positives:
 
     - y_dir="positive": 
 
-        - interconnection_type="inter_column": the ``bottom`` cell of a column will be connected to the next column ``top`` cell, if it exists.
+        - type="inter_column": the ``bottom`` cell of a column will be connected to the next column ``top`` cell, if it exists.
 
-        - interconnection_type="inter_row": a row will be connected on an ``above`` row, if it exists.
+        - type="inter_row": a row will be connected on an ``above`` row, if it exists.
 
     - y_dir="negative": 
 
-        - interconnection_type="inter_column": the ``top`` cell of a column will be connected to the next column ``bottom`` cell, if it exists.
+        - type="inter_column": the ``top`` cell of a column will be connected to the next column ``bottom`` cell, if it exists.
 
-        - interconnection_type="inter_row": a row will be connected on a row ``below``, if it exists.
+        - type="inter_row": a row will be connected on a row ``below``, if it exists.
 
 Enhanced Connection Block
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,7 +156,7 @@ In OpenFPGA architecture:
 .. code-block:: xml
 
   <direct_connection>
-    <direct name="scff_chain" interconnection_type="column" x_dir="positive" y_dir="positive"/>
+    <direct name="scff_chain" circuit_model_name="direct_interc" type="inter_column" x_dir="positive" y_dir="positive"/>
   </direct_connection>
 
 :numref:`fig_p2p_exple` is the graphical representation of the above scan-chain description on a 4x4 FPGA.
