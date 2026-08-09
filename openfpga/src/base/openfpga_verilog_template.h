@@ -28,6 +28,8 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
+  CommandOptionId opt_compress_output =
+    cmd.option("compress_output");
   CommandOptionId opt_constant_undriven_inputs =
     cmd.option("constant_undriven_inputs");
   CommandOptionId opt_include_timing = cmd.option("include_timing");
@@ -44,6 +46,8 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
    */
   FabricVerilogOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
   options.set_explicit_port_mapping(
     cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_include_timing(

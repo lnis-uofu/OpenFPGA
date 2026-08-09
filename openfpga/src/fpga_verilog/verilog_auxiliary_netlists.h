@@ -1,5 +1,4 @@
-#ifndef VERILOG_AUXILIARY_NETLISTS_H
-#define VERILOG_AUXILIARY_NETLISTS_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -25,8 +24,7 @@ void print_verilog_mock_fabric_include_netlist(
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
                                           const std::string& src_dir_path,
                                           const CircuitLibrary& circuit_lib,
-                                          const bool& use_relative_path,
-                                          const bool& include_time_stamp);
+                                          const FabricVerilogOption& options);
 
 void print_verilog_full_testbench_include_netlists(
   const std::string& src_dir_path, const std::string& circuit_name,

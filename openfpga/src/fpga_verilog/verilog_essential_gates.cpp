@@ -517,7 +517,7 @@ static void print_verilog_gate_module(
  * i.e., either VDD or GND
  ***********************************************/
 static void print_verilog_constant_generator_module(
-  const ModuleManager& module_manager, std::fstream& fp,
+  const ModuleManager& module_manager, mmostream& fp,
   const size_t& const_value, const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
@@ -528,7 +528,7 @@ static void print_verilog_constant_generator_module(
   VTR_ASSERT(true == module_manager.valid_module_id(const_val_module));
 
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, const_val_module,
@@ -563,12 +563,10 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
   std::string verilog_fname(ESSENTIALS_VERILOG_FILE_NAME);
   std::string verilog_fpath = submodule_dir + verilog_fname;
 
-  std::fstream fp;
-
   /* Create the file stream */
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-  /* Check if the file stream if valid or not */
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Create file */
   VTR_LOG("Generating Verilog netlist '%s' for essential gates...",

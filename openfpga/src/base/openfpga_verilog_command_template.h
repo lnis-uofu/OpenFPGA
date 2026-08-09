@@ -42,6 +42,10 @@ ShellCommandId add_write_fabric_verilog_command_template(
   shell_cmd.set_option_require_value(const_undriven_inputs_opt,
                                      openfpga::OPT_STRING);
 
+  /* Add an option '--compress_output' */
+  shell_cmd.add_option("compress_output", false,
+                       "Verilog netlists will be outputted in compressed format (.gz)");
+
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
                        "Use explicit port mapping in Verilog netlists");

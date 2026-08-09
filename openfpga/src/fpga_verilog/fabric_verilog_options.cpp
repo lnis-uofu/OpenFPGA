@@ -15,6 +15,7 @@ namespace openfpga {
 FabricVerilogOption::FabricVerilogOption() {
   output_directory_.clear();
   include_timing_ = false;
+  compress_output_ = false;
   explicit_port_mapping_ = false;
   compress_routing_ = false;
   print_user_defined_template_ = false;
@@ -45,6 +46,10 @@ bool FabricVerilogOption::use_relative_path() const {
 
 bool FabricVerilogOption::explicit_port_mapping() const {
   return explicit_port_mapping_;
+}
+
+bool FabricVerilogOption::compress_output() const {
+  return compress_output_;
 }
 
 bool FabricVerilogOption::compress_routing() const { return compress_routing_; }
@@ -112,6 +117,10 @@ void FabricVerilogOption::set_use_relative_path(const bool& enabled) {
 
 void FabricVerilogOption::set_time_stamp(const bool& enabled) {
   time_stamp_ = enabled;
+}
+
+void FabricVerilogOption::set_compress_output(const bool& enabled) {
+  compress_output_ = enabled;
 }
 
 void FabricVerilogOption::set_explicit_port_mapping(const bool& enabled) {

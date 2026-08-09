@@ -118,10 +118,9 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */

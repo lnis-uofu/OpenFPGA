@@ -88,10 +88,8 @@ static void print_verilog_primitive_block(
   VTR_LOGV(verbose, "\n");
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(
     fp,
@@ -206,10 +204,8 @@ static void rec_print_verilog_logical_tile(
   VTR_LOGV(verbose, "\n");
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(fp,
                             std::string("Verilog modules for pb_type: " +
@@ -324,10 +320,8 @@ static void print_verilog_physical_tile_netlist(
   }
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(
     fp,

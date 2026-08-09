@@ -1,10 +1,10 @@
-#ifndef OPENFPGA_DIGEST_H
-#define OPENFPGA_DIGEST_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <fstream>
+#include "openfpga_mmfstream.h"
 
 /********************************************************************
  * Function declaration
@@ -15,6 +15,10 @@ namespace openfpga {
 bool valid_file_stream(std::fstream& fp);
 
 void check_file_stream(const char* fname, std::fstream& fp);
+
+bool valid_file_mmostream(mmostream& fp);
+
+void check_file_mmostream(const char* fname, mmostream& fp);
 
 std::string format_dir_path(const std::string& dir_path_to_format);
 
