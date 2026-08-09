@@ -215,7 +215,7 @@ void print_verilog_clock_stimuli(mmostream& fp, const BasicPort& port,
 void print_verilog_netlist_include_header_file(
   const std::vector<std::string>& netlists_to_be_included,
   const char* subckt_dir, const char* header_file_name,
-  const bool& include_time_stamp);
+  const bool& include_time_stamp, const bool& compressed);
 
 } /* end namespace openfpga */
 
