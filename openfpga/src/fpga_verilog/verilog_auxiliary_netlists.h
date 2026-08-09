@@ -38,5 +38,3 @@ void print_verilog_preprocessing_flags_netlist(
   const std::string& src_dir, const FabricVerilogOption& fabric_verilog_opts);
 
 } /* end namespace openfpga */
-
-#endif

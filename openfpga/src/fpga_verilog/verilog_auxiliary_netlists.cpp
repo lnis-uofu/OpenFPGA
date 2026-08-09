@@ -42,8 +42,8 @@ void print_verilog_mock_fabric_include_netlist(
     src_dir_path + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
+  mmostream fp;
+  fp.open(verilog_fpath, mmostream::out | mmostream::trunc);
 
   /* Validate the file stream */
   check_file_stream(verilog_fpath.c_str(), fp);
@@ -182,8 +182,8 @@ void print_verilog_full_testbench_include_netlists(
   bool no_self_checking = options.no_self_checking();
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp;
+  fp.open(verilog_fname, mmostream::out | mmostream::trunc);
 
   /* Validate the file stream */
   check_file_stream(verilog_fname.c_str(), fp);
@@ -244,11 +244,10 @@ void print_verilog_preconfigured_testbench_include_netlists(
   bool no_self_checking = options.no_self_checking();
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Netlist Summary"),

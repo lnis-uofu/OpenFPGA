@@ -39,7 +39,7 @@ constexpr int FLOAT_PRECISION = 6;
  * This function print all the timing edges available
  * in the circuit model (any pin-to-pin delay)
  ***********************************************/
-void print_verilog_submodule_timing(std::fstream& fp,
+void print_verilog_submodule_timing(mmostream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model,
                                     const bool& little_endian) {
@@ -54,7 +54,7 @@ void print_verilog_submodule_timing(std::fstream& fp,
   }
 
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << std::endl;
   fp << "`ifdef " << VERILOG_TIMING_PREPROC_FLAG << std::endl;

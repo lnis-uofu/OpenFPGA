@@ -8,7 +8,7 @@
 #include <cstring>
 #include <zlib.h>
 
-namespace openfpga {
+namespace openfpga { 
 
 class dynamic_streambuf : public std::streambuf {
 private:
@@ -18,19 +18,18 @@ private:
     bool is_compressed = false;
     std::vector<char> buffer;
 
-    // Modified to return false explicitly on any I/O failure
     bool flush_buffer() {
         ptrdiff_t num_bytes = pptr() - pbase();
         if (num_bytes <= 0) return true;
 
         if (is_compressed && gz_file) {
             int written = gzwrite(gz_file, pbase(), static_cast<unsigned int>(num_bytes));
-            if (written != num_bytes) return false; // zlib write failure!
+            if (written != num_bytes) return false;
         } else if (!is_compressed && raw_file.is_open()) {
             raw_file.write(pbase(), num_bytes);
-            if (!raw_file) return false; // std::ofstream write failure!
+            if (!raw_file) return false;
         } else {
-            return false; // No file open
+            return false; 
         }
 
         setp(buffer.data(), buffer.data() + buffer.size());
@@ -106,13 +105,11 @@ public:
         sbuf = std::make_unique<dynamic_streambuf>(filename, initial_compress);
         init(sbuf.get());
         
-        // If the initial file open fails, mark the stream state immediately
         if (!sbuf->is_open()) {
             setstate(std::ios_base::badbit);
         }
     }
 
-    // Intercept mode shifts: if they fail, trip the error flag
     void set_compression(bool compress) {
         sbuf->set_compression(compress);
         if (!sbuf->is_open()) {
@@ -126,15 +123,30 @@ public:
         }
     }
 
-    // Overriding the stream insertion operator ensures that if an internal 
-    // buffer flush fails during a standard << operation, the stream is marked bad.
+    bool is_open() const { 
+        return sbuf && sbuf->is_open(); 
+    }
+
+    // Explicit overload to catch standard stream manipulators like std::endl or std::flush
+    mmostream& operator<<(std::ostream& (*pf)(std::ostream&)) {
+        // 1. Pass the manipulator down to the base class execution engine
+        static_cast<std::ostream&>(*this) << pf;
+        
+        // 2. Perform your standard zlib error health tracking check
+        if (this->bad() || this->fail()) {
+            // Already flagged
+        } else if (sbuf && sbuf->pubsync() != 0) {
+            setstate(std::ios_base::badbit);
+        }
+        return *this;
+    }
+
     template<typename T>
     mmostream& operator<<(const T& val) {
         static_cast<std::ostream&>(*this) << val;
         if (this->bad() || this->fail()) {
-            // Already flagged
-        } else if (sbuf && sync() != 0) { 
-            // If flushing failed under the hood, flag the stream state
+            // State already flagged
+        } else if (sbuf && sbuf->pubsync() != 0) { // FIXED: Use pubsync() from streambuf
             setstate(std::ios_base::badbit);
         }
         return *this;
@@ -151,4 +163,4 @@ inline mmostream& use_raw(mmostream& os) {
     return os;
 }
 
-} // namespace openfpga ends
+} // namespace openfpga

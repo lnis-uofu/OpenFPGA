@@ -218,5 +218,3 @@ void print_verilog_netlist_include_header_file(
   const bool& include_time_stamp, const bool& compressed);
 
 } /* end namespace openfpga */
-
-#endif

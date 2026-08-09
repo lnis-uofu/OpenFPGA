@@ -37,7 +37,7 @@ bool valid_file_mmostream(mmostream& fp) {
  * This function will error out for a valid/invalid file stream
  *******************************************************************/
 void check_file_mmostream(const char* fname, mmostream& fp) {
-  if (false == valid_file_hybrid_ostream(fp)) {
+  if (false == valid_file_mmostream(fp)) {
     VTR_LOG("Invalid file output stream for file: %s\n", fname);
     exit(1);
   }

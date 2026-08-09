@@ -29,12 +29,12 @@ namespace openfpga {
  * This function does NOT generate any port map !
  ***********************************************/
 static void print_verilog_power_gated_invbuf_body(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model, const CircuitPortId& input_port,
   const CircuitPortId& output_port,
   const std::vector<CircuitPortId>& power_gate_ports) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   print_verilog_comment(
     fp, std::string("----- Verilog codes of a power-gated inverter -----"));
@@ -114,13 +114,13 @@ static void print_verilog_power_gated_invbuf_body(
  * Print Verilog body codes of a regular inverter
  * This function does NOT generate any port map !
  ***********************************************/
-static void print_verilog_invbuf_body(std::fstream& fp,
+static void print_verilog_invbuf_body(mmostream& fp,
                                       const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& circuit_model,
                                       const CircuitPortId& input_port,
                                       const CircuitPortId& output_port) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   print_verilog_comment(
     fp, std::string("----- Verilog codes of a regular inverter -----"));
@@ -149,13 +149,13 @@ static void print_verilog_invbuf_body(std::fstream& fp,
  * or tapered buffer to a file
  ***********************************************/
 static void print_verilog_invbuf_module(
-  const ModuleManager& module_manager, std::fstream& fp,
+  const ModuleManager& module_manager, mmostream& fp,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Find the input port, output port and global inputs*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(
@@ -220,13 +220,13 @@ static void print_verilog_invbuf_module(
  * either transmission-gate or pass-transistor
  ***********************************************/
 static void print_verilog_passgate_module(
-  const ModuleManager& module_manager, std::fstream& fp,
+  const ModuleManager& module_manager, mmostream& fp,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Find the input port, output port*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(
@@ -303,12 +303,12 @@ static void print_verilog_passgate_module(
  * Print Verilog body codes of an N-input AND gate
  ***********************************************/
 static void print_verilog_and_or_gate_body(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& input_ports,
   const std::vector<CircuitPortId>& output_ports, const bool& little_endian) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Find the logic operator for the gate */
   std::string gate_verilog_operator;
@@ -368,12 +368,12 @@ static void print_verilog_and_or_gate_body(
  * Print Verilog body codes of an 2-input MUX gate
  ***********************************************/
 static void print_verilog_mux2_gate_body(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& input_ports,
   const std::vector<CircuitPortId>& output_ports, const bool& little_endian) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* TODO: Move the check codes to check_circuit_library.cpp */
   size_t num_err = 0;
@@ -451,13 +451,13 @@ static void print_verilog_mux2_gate_body(
  * 3. 2-input MUX
  ***********************************************/
 static void print_verilog_gate_module(
-  const ModuleManager& module_manager, std::fstream& fp,
+  const ModuleManager& module_manager, mmostream& fp,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Find the input port, output port*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(
