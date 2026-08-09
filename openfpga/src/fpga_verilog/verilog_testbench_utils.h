@@ -1,13 +1,12 @@
-#ifndef VERILOG_TESTBENCH_UTILS_H
-#define VERILOG_TESTBENCH_UTILS_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <fstream>
 #include <string>
 #include <vector>
 
+#include "openfpga_mmfstream.h"
 #include "bus_group.h"
 #include "circuit_library.h"
 #include "fabric_global_port_info.h"
@@ -28,14 +27,14 @@
 namespace openfpga {
 
 void print_verilog_testbench_fpga_instance(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ModuleId& core_module,
   const std::string& top_instance_name, const std::string& net_postfix,
   const IoNameMap& io_name_map, const bool& explicit_port_mapping,
   const bool& little_endian);
 
 void print_verilog_testbench_benchmark_instance(
-  std::fstream& fp, const std::string& module_name,
+  mmostream& fp, const std::string& module_name,
   const std::string& instance_name,
   const std::string& module_input_port_postfix,
   const std::string& module_output_port_postfix,
@@ -47,7 +46,7 @@ void print_verilog_testbench_benchmark_instance(
   const bool& use_explicit_port_map);
 
 void print_verilog_testbench_connect_fpga_ios(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
   const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
@@ -58,7 +57,7 @@ void print_verilog_testbench_connect_fpga_ios(
   const size_t& unused_io_value, const bool& little_endian);
 
 void print_verilog_timeout_and_vcd(
-  std::fstream& fp, const std::string& module_name,
+  mmostream& fp, const std::string& module_name,
   const std::string& vcd_fname,
   const std::string& simulation_start_counter_name,
   const std::string& error_counter_name, const float& simulation_time,
@@ -69,7 +68,7 @@ std::vector<BasicPort> generate_verilog_testbench_clock_port(
   const std::string& default_clock_name);
 
 void print_verilog_testbench_check(
-  std::fstream& fp, const std::string& simulation_start_counter_name,
+  mmostream& fp, const std::string& simulation_start_counter_name,
   const std::string& benchmark_port_postfix,
   const std::string& fpga_port_postfix,
   const std::string& check_flag_port_postfix,
@@ -79,12 +78,12 @@ void print_verilog_testbench_check(
   const std::string& default_clock_name, const bool& little_endian);
 
 void print_verilog_testbench_clock_stimuli(
-  std::fstream& fp, const PinConstraints& pin_constraints,
+  mmostream& fp, const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
   const std::vector<BasicPort>& clock_ports, const bool& little_endian);
 
 void print_verilog_testbench_random_stimuli(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
@@ -96,7 +95,7 @@ void print_verilog_testbench_random_stimuli(
   const bool& little_endian);
 
 void print_verilog_testbench_shared_input_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
@@ -106,22 +105,22 @@ void print_verilog_testbench_shared_input_ports(
   const bool& use_reg_port, const bool& little_endian);
 
 void print_verilog_testbench_shared_fpga_output_ports(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& fpga_output_port_postfix, const bool& little_endian);
 
 void print_verilog_testbench_shared_benchmark_output_ports(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& benchmark_output_port_postfix, const bool& little_endian);
 
 void print_verilog_testbench_shared_check_flags(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& check_flag_port_postfix, const bool& little_endian);
 
 void print_verilog_testbench_shared_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
@@ -134,15 +133,13 @@ void print_verilog_testbench_shared_ports(
   const bool& little_endian);
 
 void print_verilog_testbench_signal_initialization(
-  std::fstream& fp, const std::string& top_instance_name,
+  mmostream& fp, const std::string& top_instance_name,
   const CircuitLibrary& circuit_lib, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& deposit_random_values,
   const bool& little_endian);
 
-void print_verilog_testbench_dump_waveform(std::fstream& fp,
+void print_verilog_testbench_dump_waveform(mmostream& fp,
                                            const std::string& circuit_name,
                                            const std::string& uut_name);
 
 } /* end namespace openfpga */
-
-#endif

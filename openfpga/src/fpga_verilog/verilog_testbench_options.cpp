@@ -23,7 +23,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   print_formal_verification_top_netlist_ = false;
   print_top_testbench_ = false;
   simulation_ini_path_.clear();
-  compress_output = false;
+  compress_output_ = false;
   explicit_port_mapping_ = false;
   include_signal_init_ = false;
   default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;

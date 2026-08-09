@@ -33,4 +33,6 @@ bool write_space_to_file(std::fstream& fp, const size_t& num_space);
 
 bool write_tab_to_file(std::fstream& fp, const size_t& num_tab);
 
+bool write_tab_to_file(mmostream& fp, const size_t& num_tab);
+
 }  // namespace openfpga

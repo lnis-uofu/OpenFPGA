@@ -35,13 +35,13 @@ namespace openfpga {
                    );
  *******************************************************************/
 void print_verilog_testbench_fpga_instance(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ModuleId& core_module,
   const std::string& top_instance_name, const std::string& net_postfix,
   const IoNameMap& io_name_map, const bool& explicit_port_mapping,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Include defined top-level module */
   print_verilog_comment(
@@ -122,7 +122,7 @@ void print_verilog_testbench_fpga_instance(
  * Instanciate the input benchmark module
  *******************************************************************/
 void print_verilog_testbench_benchmark_instance(
-  std::fstream& fp, const std::string& module_name,
+  mmostream& fp, const std::string& module_name,
   const std::string& instance_name,
   const std::string& module_input_port_postfix,
   const std::string& module_output_port_postfix,
@@ -133,7 +133,7 @@ void print_verilog_testbench_benchmark_instance(
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const bool& use_explicit_port_map) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   fp << "\t" << module_name << " " << instance_name << "(" << std::endl;
 
@@ -314,7 +314,7 @@ void print_verilog_testbench_benchmark_instance(
  *    by default
  *******************************************************************/
 void print_verilog_testbench_connect_fpga_ios(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
   const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
@@ -324,7 +324,7 @@ void print_verilog_testbench_connect_fpga_ios(
   const std::vector<std::string>& clock_port_names,
   const size_t& unused_io_value, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* For non-mappable GPIN, set an initial value */
   for (const ModulePortId& gpio_port_id :
@@ -566,13 +566,13 @@ void print_verilog_testbench_connect_fpga_ios(
  * Note that: these codes are tuned for Icarus simulator!!!
  *******************************************************************/
 void print_verilog_timeout_and_vcd(
-  std::fstream& fp, const std::string& module_name,
+  mmostream& fp, const std::string& module_name,
   const std::string& vcd_fname,
   const std::string& simulation_start_counter_name,
   const std::string& error_counter_name, const float& simulation_time,
   const bool& no_self_checking, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp, std::string("----- Begin output waveform to VCD file-------"));
@@ -652,7 +652,7 @@ std::vector<BasicPort> generate_verilog_testbench_clock_port(
  * Restriction: this function only supports single clock benchmarks!
  *******************************************************************/
 void print_verilog_testbench_check(
-  std::fstream& fp, const std::string& simulation_start_counter_name,
+  mmostream& fp, const std::string& simulation_start_counter_name,
   const std::string& benchmark_port_postfix,
   const std::string& fpga_port_postfix,
   const std::string& check_flag_port_postfix,
@@ -661,7 +661,7 @@ void print_verilog_testbench_check(
   const std::vector<std::string>& clock_port_names,
   const std::string& default_clock_name, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Add output autocheck */
   print_verilog_comment(
@@ -783,11 +783,11 @@ void print_verilog_testbench_check(
  * but be only used as a synchronizer in verification
  *******************************************************************/
 void print_verilog_testbench_clock_stimuli(
-  std::fstream& fp, const PinConstraints& pin_constraints,
+  mmostream& fp, const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
   const std::vector<BasicPort>& clock_ports, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   for (const BasicPort& clock_port : clock_ports) {
     print_verilog_comment(fp, std::string("----- Clock '") +
@@ -854,7 +854,7 @@ void print_verilog_testbench_clock_stimuli(
  * For clock signals, please use print_verilog_testbench_clock_stimuli
  *******************************************************************/
 void print_verilog_testbench_random_stimuli(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
@@ -865,7 +865,7 @@ void print_verilog_testbench_random_stimuli(
   const std::vector<BasicPort>& clock_ports, const bool& no_self_checking,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(fp, std::string("----- Input Initialization -------"));
 
@@ -1012,7 +1012,7 @@ void print_verilog_testbench_random_stimuli(
  *    same input vectors
  *******************************************************************/
 void print_verilog_testbench_shared_input_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
@@ -1021,7 +1021,7 @@ void print_verilog_testbench_shared_input_ports(
   const bool& include_clock_ports, const std::string& shared_input_port_postfix,
   const bool& use_reg_port, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Instantiate register for inputs stimulis */
   print_verilog_comment(fp, std::string("----- Shared inputs -------"));
@@ -1082,11 +1082,11 @@ void print_verilog_testbench_shared_input_ports(
  * 2. the output ports (wires) for FPGA fabric
  *******************************************************************/
 void print_verilog_testbench_shared_fpga_output_ports(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& fpga_output_port_postfix, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Instantiate wires for FPGA fabric outputs */
   print_verilog_comment(fp, std::string("----- FPGA fabric outputs -------"));
@@ -1124,11 +1124,11 @@ void print_verilog_testbench_shared_fpga_output_ports(
  * 2. the output ports (wires) for benchmark instance
  *******************************************************************/
 void print_verilog_testbench_shared_benchmark_output_ports(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& benchmark_output_port_postfix, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Instantiate wire for benchmark output */
   print_verilog_comment(fp, std::string("----- Benchmark outputs -------"));
@@ -1169,11 +1169,11 @@ void print_verilog_testbench_shared_benchmark_output_ports(
  *    same input vectors
  *******************************************************************/
 void print_verilog_testbench_shared_check_flags(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& check_flag_port_postfix, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Instantiate register for output comparison */
   print_verilog_comment(
@@ -1214,7 +1214,7 @@ void print_verilog_testbench_shared_check_flags(
  *    same input vectors
  *******************************************************************/
 void print_verilog_testbench_shared_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
@@ -1254,14 +1254,14 @@ void print_verilog_testbench_shared_ports(
  * in the graph of modules
  *******************************************************************/
 static void rec_print_verilog_testbench_primitive_module_signal_initialization(
-  std::fstream& fp, const std::string& hie_path,
+  mmostream& fp, const std::string& hie_path,
   const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
   const std::vector<CircuitPortId>& circuit_input_ports,
   const ModuleManager& module_manager, const ModuleId& parent_module,
   const ModuleId& primitive_module, const bool& deposit_random_values,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Return if the current module has no children */
   if (0 == module_manager.child_modules(parent_module).size()) {
@@ -1338,12 +1338,12 @@ static void rec_print_verilog_testbench_primitive_module_signal_initialization(
  * - Logic gates (ONLY for MUX2)
  *******************************************************************/
 void print_verilog_testbench_signal_initialization(
-  std::fstream& fp, const std::string& top_instance_name,
+  mmostream& fp, const std::string& top_instance_name,
   const CircuitLibrary& circuit_lib, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& deposit_random_values,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Collect circuit models that need signal initialization */
   std::vector<CircuitModelId> signal_init_circuit_models;
@@ -1405,11 +1405,11 @@ void print_verilog_testbench_signal_initialization(
 /********************************************************************
  * Print waveform output commands: support both VCD and FSDB
  *******************************************************************/
-void print_verilog_testbench_dump_waveform(std::fstream& fp,
+void print_verilog_testbench_dump_waveform(mmostream& fp,
                                            const std::string& circuit_name,
                                            const std::string& uut_name) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp, std::string("------ Use " + std::string(VERILOG_FSDB_PREPROC_FLAG) +

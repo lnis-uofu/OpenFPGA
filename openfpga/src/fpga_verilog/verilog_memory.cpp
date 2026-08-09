@@ -41,7 +41,7 @@ namespace openfpga {
  ********************************************************************/
 static void print_verilog_mux_memory_module(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  mmostream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
   const ModuleNameMap& module_name_map, const FabricVerilogOption& options) {
   /* Multiplexers built with different technology is in different organization
    */

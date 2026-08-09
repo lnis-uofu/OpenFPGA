@@ -373,8 +373,7 @@ int fpga_verilog_mock_fpga_wrapper(
 
   /* Generate an netlist including all the fabric-related netlists */
   print_verilog_mock_fabric_include_netlist(netlist_manager, src_dir_path,
-                                            options.use_relative_path(),
-                                            options.time_stamp());
+                                            options);
 
   return status;
 }

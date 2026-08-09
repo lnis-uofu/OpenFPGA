@@ -1,5 +1,4 @@
-#ifndef VERILOG_TOP_TESTBENCH_MEMORY_BANK
-#define VERILOG_TOP_TESTBENCH_MEMORY_BANK
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -20,6 +19,7 @@
 #include "verilog_testbench_options.h"
 #include "vpr_context.h"
 #include "vpr_netlist_annotation.h"
+#include "openfpga_mmfstream.h"
 
 /********************************************************************
  * Function declaration
@@ -32,7 +32,7 @@ namespace openfpga {
  * @brief Print local wires for memory bank configuration protocols
  */
 void print_verilog_top_testbench_ql_memory_bank_port(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ConfigProtocol& config_protocol,
   const bool& little_endian);
 
@@ -41,7 +41,7 @@ void print_verilog_top_testbench_ql_memory_bank_port(
  * to FPGA ports
  */
 void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const bool& little_endian);
@@ -51,7 +51,7 @@ void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
  * protocols
  */
 int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
-  std::fstream& fp, const ConfigProtocol& config_protocol,
+  mmostream& fp, const ConfigProtocol& config_protocol,
   const SimulationSetting& sim_settings, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
@@ -65,12 +65,10 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
  * protocol where configuration bits are programming in serial (one by one)
  */
 void print_verilog_full_testbench_ql_memory_bank_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const ConfigProtocol& config_protocol, const bool& fast_configuration,
   const bool& bit_value_to_skip, const ModuleManager& module_manager,
   const ModuleId& top_module, const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks, const bool& little_endian);
 
 } /* end namespace openfpga */
-
-#endif
