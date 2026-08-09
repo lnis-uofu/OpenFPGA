@@ -13,6 +13,7 @@ dnf install -y \
 
 dnf install -y \
     gcc \
+    gcc-toolset-12 \
     gcc-c++ \
     make \
     cmake \

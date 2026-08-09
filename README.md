@@ -61,4 +61,4 @@ A list of related publications can be found [here](https://openfpga.readthedocs.
 
 ## Contributing to OpenFPGA
 
-Please read the [contributor guidelines](https://openfpga.readthedocs.io/en/master/dev_manual/contributor_guide/) if you would like to contribute to OpenFPGA.
+Please read the [contributor guidelines](https://openfpga.readthedocs.io/en/master/dev_manual/contributor_guidelines/) if you would like to contribute to OpenFPGA.

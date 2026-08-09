@@ -1,9 +1,7 @@
 [submodule "yosys"]
 	path = yosys
-	url = https://github.com/YosysHQ/yosys
+	url = https://github.com/tangxifan/yosys.git
+    branch = xt_openfpga_cmake
 [submodule "vtr-verilog-to-routing"]
 	path = vtr-verilog-to-routing
 	url = https://github.com/verilog-to-routing/vtr-verilog-to-routing.git
-[submodule "yosys-slang"]
-	path = yosys-slang
-	url = https://github.com/povik/yosys-slang.git
