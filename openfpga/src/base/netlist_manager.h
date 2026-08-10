@@ -18,9 +18,6 @@
  *   +---------+               +---------+
  *
  ******************************************************************************/
-#ifndef NETLIST_MANAGER_H
-#define NETLIST_MANAGER_H
-
 #include <map>
 #include <string>
 #include <vector>
@@ -84,6 +81,8 @@ class NetlistManager {
   /* Add a pre-processing flag to a netlist */
   void add_netlist_preprocessing_flag(const NetlistId& netlist,
                                       const std::string& preprocessing_flag);
+  /* Reset everything */
+  void clear();
 
  public: /* Public validators/invalidators */
   bool valid_netlist_id(const NetlistId& netlist) const;
@@ -112,5 +111,3 @@ class NetlistManager {
 };
 
 } /* end namespace openfpga */
-
-#endif
