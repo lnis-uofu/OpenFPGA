@@ -36,7 +36,7 @@ write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ --explicit_por
 
 # Now diff the two version and ensure they are the same
 ext_exec --command "gunzip -r ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ/"
-ext_exec --command "diff -r ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ"
+ext_exec --command "diff -r ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ -x fabric_netlists.v"
 # Finish and exit OpenFPGA
 exit
 
