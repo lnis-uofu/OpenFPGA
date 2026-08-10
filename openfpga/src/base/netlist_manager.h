@@ -1,3 +1,4 @@
+#pragma once
 /******************************************************************************
  * This files includes data structures for netlist management.
  * It keeps a list of netlists that have been created
