@@ -2,6 +2,33 @@ cmake_minimum_required(VERSION 3.9)
 
 project("libopenfpgautil")
 
+# 1. Try finding system-installed ZLIB first
+find_package(ZLIB QUIET)
+
+# 2. Fallback: Download and build ZLIB automatically if not found (e.g., on Windows)
+if(NOT ZLIB_FOUND)
+    message(STATUS "ZLIB not found on system. Fetching from source...")
+    
+    include(FetchContent)
+    FetchContent_Declare(
+        zlib
+        GIT_REPOSITORY https://github.com
+        GIT_TAG        v1.3.1 # Use the latest stable version tag
+    )
+    
+    # Ensure zlib builds correctly as a dependency without installing globally
+    set(ZLIB_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+    
+    FetchContent_MakeAvailable(zlib)
+    
+    # Align the fetched target name with CMake's standard ZLIB::ZLIB alias
+    if(TARGET zlibstatic AND NOT TARGET ZLIB::ZLIB)
+        add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    elseif(TARGET zlib AND NOT TARGET ZLIB::ZLIB)
+        add_library(ZLIB::ZLIB ALIAS zlib)
+    endif()
+endif()
+
 #Version info
 set(OPENFPGA_VERSION_FILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/openfpga_version.cpp.in)
 set(OPENFPGA_VERSION_FILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/openfpga_version.cpp)
@@ -86,7 +113,8 @@ endif()
 #Specify link-time dependancies
 target_link_libraries(libopenfpgautil
                       libarchfpga
-                      libvtrutil)
+                      libvtrutil
+                      ZLIB::ZLIB)
 
 install(TARGETS libopenfpgautil
         DESTINATION bin

@@ -1,10 +1,8 @@
-#ifndef VERILOG_WIRE_H
-#define VERILOG_WIRE_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <fstream>
 #include <vector>
 
 #include "circuit_library.h"
@@ -30,5 +28,3 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
-
-#endif

@@ -23,6 +23,30 @@ namespace openfpga {
  * A most utilized function to validate the file stream
  * This function will return true or false for a valid/invalid file stream
  *******************************************************************/
+bool valid_file_mmostream(mmostream& fp) {
+  /* Validate the file stream */
+  if (!fp.is_open() || !fp.good()) {
+    return false;
+  }
+
+  return true;
+}
+
+/********************************************************************
+ * A most utilized function to validate the file stream
+ * This function will error out for a valid/invalid file stream
+ *******************************************************************/
+void check_file_mmostream(const char* fname, mmostream& fp) {
+  if (false == valid_file_mmostream(fp)) {
+    VTR_LOG("Invalid file output stream for file: %s\n", fname);
+    exit(1);
+  }
+}
+
+/********************************************************************
+ * A most utilized function to validate the file stream
+ * This function will return true or false for a valid/invalid file stream
+ *******************************************************************/
 bool valid_file_stream(std::fstream& fp) {
   /* Validate the file stream */
   if (!fp.is_open() || !fp.good()) {
@@ -261,6 +285,21 @@ bool write_space_to_file(std::fstream& fp, const size_t& num_space) {
  ********************************************************************/
 bool write_tab_to_file(std::fstream& fp, const size_t& num_tab) {
   if (false == valid_file_stream(fp)) {
+    return false;
+  }
+
+  for (size_t i = 0; i < num_tab; ++i) {
+    fp << "\t";
+  }
+
+  return true;
+}
+
+/********************************************************************
+ * Write a number of tab to a file
+ ********************************************************************/
+bool write_tab_to_file(mmostream& fp, const size_t& num_tab) {
+  if (false == valid_file_mmostream(fp)) {
     return false;
   }
 

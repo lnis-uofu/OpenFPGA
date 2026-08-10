@@ -52,13 +52,13 @@ constexpr const char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
  * 4. the error checking ports
  *******************************************************************/
 static void print_verilog_top_random_testbench_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map, const std::string& circuit_name,
   const std::vector<std::string>& clock_port_names, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const VerilogTestbenchOption& options) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   bool little_endian = options.little_endian();
 
@@ -108,12 +108,12 @@ static void print_verilog_top_random_testbench_ports(
  * Instanciate the input benchmark module
  *******************************************************************/
 static void print_verilog_top_random_testbench_benchmark_instance(
-  std::fstream& fp, const std::string& reference_verilog_top_name,
+  mmostream& fp, const std::string& reference_verilog_top_name,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const bool& explicit_port_mapping) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Instanciate benchmark */
   print_verilog_comment(
@@ -137,12 +137,12 @@ static void print_verilog_top_random_testbench_benchmark_instance(
  * Instanciate the FPGA fabric module
  *******************************************************************/
 static void print_verilog_random_testbench_fpga_instance(
-  std::fstream& fp, const std::string& circuit_name,
-  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
+  mmostream& fp, const std::string& circuit_name, const AtomContext& atom_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const bool& explicit_port_mapping) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(fp,
                         std::string("----- FPGA fabric instanciation -------"));
@@ -170,14 +170,14 @@ static void print_verilog_random_testbench_fpga_instance(
  * - disabled in the rest of clock cycles
  *******************************************************************/
 static void print_verilog_random_testbench_reset_stimuli(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
   const std::vector<std::string>& clock_port_names, const BasicPort& clock_port,
   const bool& little_endian) {
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(fp, "----- Begin reset signal generation -----");
 
@@ -293,11 +293,9 @@ void print_verilog_random_top_testbench(
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
-
+  mmostream fp(verilog_fname, options.compress_output());
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Generate a brief description on the Verilog file*/
   std::string title =

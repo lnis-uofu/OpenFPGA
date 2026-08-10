@@ -40,11 +40,11 @@ namespace openfpga {
  * for a multiplexer with the given size
  *********************************************************************/
 static void generate_verilog_cmos_mux_branch_body_behavioral(
-  std::fstream& fp, const BasicPort& input_port, const BasicPort& output_port,
+  mmostream& fp, const BasicPort& input_port, const BasicPort& output_port,
   const BasicPort& mem_port, const MuxGraph& mux_graph,
   const size_t& default_mem_val, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Verilog Behavior description for a MUX */
   print_verilog_comment(fp,
@@ -141,7 +141,7 @@ static void generate_verilog_cmos_mux_branch_body_behavioral(
  *********************************************************************/
 static void print_verilog_cmos_mux_branch_module_behavioral(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& mux_model,
+  mmostream& fp, const CircuitModelId& mux_model,
   const std::string& module_name, const MuxGraph& mux_graph,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
@@ -156,7 +156,7 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
   }
 
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Generate the Verilog netlist according to the mux_graph */
   /* Find out the number of inputs */
@@ -247,16 +247,15 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
  *********************************************************************/
 static void generate_verilog_rram_mux_branch_body_structural(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const BasicPort& input_port,
-  const BasicPort& output_port, const BasicPort& blb_port,
-  const BasicPort& wl_port, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const BasicPort& input_port, const BasicPort& output_port,
+  const BasicPort& blb_port, const BasicPort& wl_port,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   std::string progTE_module_name("PROG_TE");
   std::string progBE_module_name("PROG_BE");
 
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Verilog Behavior description for a MUX */
   print_verilog_comment(
@@ -449,13 +448,13 @@ static void generate_verilog_rram_mux_branch_body_structural(
  * following the mux_graph!
  *********************************************************************/
 static void generate_verilog_rram_mux_branch_body_behavioral(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& circuit_model, const BasicPort& input_port,
   const BasicPort& output_port, const BasicPort& blb_port,
   const BasicPort& wl_port, const MuxGraph& mux_graph,
   const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Verilog Behavior description for a MUX */
   print_verilog_comment(
@@ -585,12 +584,12 @@ static void generate_verilog_rram_mux_branch_body_behavioral(
  *********************************************************************/
 static void generate_verilog_rram_mux_branch_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& circuit_model,
+  mmostream& fp, const CircuitModelId& circuit_model,
   const std::string& module_name, const MuxGraph& mux_graph,
   const e_verilog_default_net_type& default_net_type,
   const bool& use_structural_verilog, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(
@@ -669,7 +668,7 @@ static void generate_verilog_rram_mux_branch_module(
  **********************************************/
 static void generate_verilog_mux_branch_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  mmostream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
   const ModuleNameMap& module_name_map, const FabricVerilogOption& options,
   std::map<std::string, bool>& branch_mux_module_is_outputted) {
   std::string module_name = generate_mux_branch_subckt_name(
@@ -748,11 +747,10 @@ static void generate_verilog_mux_branch_module(
  *******************************************************************/
 static void generate_verilog_cmos_mux_module_input_buffers(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(
@@ -864,11 +862,10 @@ static void generate_verilog_cmos_mux_module_input_buffers(
  *******************************************************************/
 static void generate_verilog_cmos_mux_module_output_buffers(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Get the output ports from the mux */
   std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(
@@ -967,11 +964,10 @@ static void generate_verilog_cmos_mux_module_output_buffers(
  *******************************************************************/
 static void generate_verilog_rram_mux_module_multiplexing_structure(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const ModuleId& module_id,
-  const CircuitModelId& circuit_model, const MuxGraph& mux_graph,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleId& module_id, const CircuitModelId& circuit_model,
+  const MuxGraph& mux_graph, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Get the BL and WL ports from the mux */
   std::vector<CircuitPortId> mux_blb_ports = circuit_lib.model_ports_by_type(
@@ -1309,7 +1305,7 @@ static void generate_verilog_rram_mux_module_multiplexing_structure(
  *********************************************************************/
 static void generate_verilog_rram_mux_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& circuit_model,
+  mmostream& fp, const CircuitModelId& circuit_model,
   const std::string& module_name, const MuxGraph& mux_graph,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
@@ -1339,7 +1335,7 @@ static void generate_verilog_rram_mux_module(
     circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_WL, true);
 
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Generate the Verilog netlist according to the mux_graph */
   /* Find out the number of data-path inputs */
@@ -1443,7 +1439,7 @@ static void generate_verilog_rram_mux_module(
  **********************************************/
 static void generate_verilog_mux_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  mmostream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
   const ModuleNameMap& module_name_map, const FabricVerilogOption& options) {
   std::string module_name =
     generate_mux_subckt_name(circuit_lib, mux_model,
@@ -1501,10 +1497,9 @@ static void print_verilog_submodule_mux_primitives(
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */
@@ -1565,10 +1560,9 @@ static void print_verilog_submodule_mux_top_modules(
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */

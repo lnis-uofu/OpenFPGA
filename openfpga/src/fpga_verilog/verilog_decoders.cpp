@@ -40,7 +40,7 @@ namespace openfpga {
  *encoded. Therefore, the number of inputs is ceil(log(num_of_outputs)/log(2))
  ***************************************************************************************/
 static void print_verilog_mux_local_decoder_module(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const DecoderLibrary& decoder_lib, const DecoderId& decoder,
   const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
@@ -50,7 +50,7 @@ static void print_verilog_mux_local_decoder_module(
   size_t data_size = decoder_lib.data_size(decoder);
 
   /* Validate the FILE handler */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* TODO: create a name for the local encoder */
   std::string module_name = module_name_map.name(
@@ -199,10 +199,9 @@ void print_verilog_submodule_mux_local_decoders(
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */
@@ -292,7 +291,7 @@ void print_verilog_submodule_mux_local_decoders(
  *port Otherwise, the data output port will be always all-zero
  ***************************************************************************************/
 static void print_verilog_arch_decoder_module(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const DecoderLibrary& decoder_lib, const DecoderId& decoder,
   const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
@@ -302,7 +301,7 @@ static void print_verilog_arch_decoder_module(
   size_t data_size = decoder_lib.data_size(decoder);
 
   /* Validate the FILE handler */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Create a name for the decoder */
   std::string module_name = module_name_map.name(
@@ -676,7 +675,7 @@ static void print_verilog_arch_decoder_module(
  *port Otherwise, the data output port will be always all-zero
  ***************************************************************************************/
 static void print_verilog_arch_decoder_with_data_in_module(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const DecoderLibrary& decoder_lib, const DecoderId& decoder,
   const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type,
@@ -687,7 +686,7 @@ static void print_verilog_arch_decoder_with_data_in_module(
   VTR_ASSERT(true == decoder_lib.use_data_in(decoder));
 
   /* Validate the FILE handler */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Create a name for the decoder */
   std::string module_name = module_name_map.name(
@@ -893,10 +892,9 @@ void print_verilog_submodule_arch_decoders(
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */

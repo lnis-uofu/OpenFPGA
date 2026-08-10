@@ -4,7 +4,6 @@
  * `include user-defined or auto-generated netlists in Verilog format
  *******************************************************************/
 #include <filesystem>
-#include <fstream>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -32,26 +31,25 @@ namespace openfpga {
  *******************************************************************/
 void print_verilog_mock_fabric_include_netlist(
   const NetlistManager& netlist_manager, const std::string& src_dir_path,
-  const bool& use_relative_path, const bool& include_time_stamp) {
+  const VerilogTestbenchOption& options) {
   /* If we force the use of relative path, the src dir path should NOT be
    * included in any output */
   std::string src_dir = src_dir_path;
-  if (use_relative_path) {
+  if (options.use_relative_path()) {
     src_dir.clear();
   }
   std::string verilog_fpath =
     src_dir_path + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fpath, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fpath.c_str(), fp);
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Mock Fabric Netlist Summary"),
-                            include_time_stamp);
+                            options.time_stamp());
 
   /* Include FPGA top module */
   print_verilog_comment(
@@ -75,27 +73,23 @@ void print_verilog_mock_fabric_include_netlist(
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
                                           const std::string& src_dir_path,
                                           const CircuitLibrary& circuit_lib,
-                                          const bool& use_relative_path,
-                                          const bool& include_time_stamp) {
+                                          const FabricVerilogOption& options) {
   /* If we force the use of relative path, the src dir path should NOT be
    * included in any output */
   std::string src_dir = src_dir_path;
-  if (use_relative_path) {
+  if (options.use_relative_path()) {
     src_dir.clear();
   }
   std::string verilog_fpath =
     src_dir_path + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  /* Validate the file stream */
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Fabric Netlist Summary"),
-                            include_time_stamp);
+                            options.time_stamp());
 
   /* Print preprocessing flags */
   print_verilog_comment(
@@ -113,7 +107,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
       std::filesystem::absolute(std::filesystem::path(src_dir_path));
     std::filesystem::path curr_nlist_fpath = user_defined_netlist;
     /* User defined netlist may contain directories */
-    if (use_relative_path && curr_nlist_fpath.is_absolute()) {
+    if (options.use_relative_path() && curr_nlist_fpath.is_absolute()) {
       curr_nlist_fpath =
         std::filesystem::relative(curr_nlist_fpath, src_dir_fpath);
     }
@@ -187,11 +181,10 @@ void print_verilog_full_testbench_include_netlists(
   bool no_self_checking = options.no_self_checking();
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Netlist Summary"),
@@ -249,11 +242,10 @@ void print_verilog_preconfigured_testbench_include_netlists(
   bool no_self_checking = options.no_self_checking();
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Netlist Summary"),
@@ -307,11 +299,9 @@ void print_verilog_preprocessing_flags_netlist(
   std::string verilog_fname = src_dir + std::string(DEFINES_VERILOG_FILE_NAME);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
-
+  mmostream fp(verilog_fname, fabric_verilog_opts.compress_output());
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(
