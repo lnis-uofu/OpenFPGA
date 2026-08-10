@@ -79,8 +79,10 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
         "connection blocks are seen in FPGA fabric\n");
     }
   }
- 
-  /* Reset verilog netlist manager to ensure a clean start. Otherwise, calling two times the command will cause netlist manager contains duplcated netlists  */
+
+  /* Reset verilog netlist manager to ensure a clean start. Otherwise, calling
+   * two times the command will cause netlist manager contains duplcated
+   * netlists  */
   openfpga_ctx.mutable_verilog_netlists().clear();
 
   return fpga_fabric_verilog(
