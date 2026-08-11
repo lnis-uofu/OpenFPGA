@@ -27,6 +27,7 @@ class RRGSBWriterOption {
   bool include_cb_content(const e_rr_type& cb_type) const;
   bool include_sb_content() const;
   std::vector<std::string> include_gsb_names() const;
+  bool compress_output() const;
   bool verbose_output() const;
 
  public: /* Public mutators */
@@ -40,6 +41,7 @@ class RRGSBWriterOption {
    */
   void set_exclude_content(const std::string& content);
   void set_include_gsb_names(const std::string& gsb_names);
+  void set_compress_output(const bool& enabled);
   void set_verbose_output(const bool& enabled);
 
  public: /* Public validators */
@@ -61,6 +63,7 @@ class RRGSBWriterOption {
   std::array<bool, 4> exclude_content_;
 
   std::vector<std::string> include_gsb_names_;
+  bool compress_output_;
   bool verbose_output_;
 
   /* A flag to indicate if the data parse is invalid or not */
