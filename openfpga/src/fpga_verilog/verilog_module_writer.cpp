@@ -281,11 +281,10 @@ find_verilog_module_local_wires(const ModuleManager& module_manager,
  * For each module output (except the first one), we print a wire connection
  *******************************************************************/
 static void print_verilog_module_output_short_connection(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const ModuleNetId& module_net,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const ModuleNetId& module_net, const bool& little_endian) {
   /* Ensure a valid file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   bool first_port = true;
   BasicPort src_port;
@@ -331,11 +330,10 @@ static void print_verilog_module_output_short_connection(
  * If we find such a pair, we print a wire connection
  *******************************************************************/
 static void print_verilog_module_local_short_connection(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const ModuleNetId& module_net,
-  const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const ModuleNetId& module_net, const bool& little_endian) {
   /* Ensure a valid file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   for (ModuleNetSrcId net_src :
        module_manager.module_net_sources(module_id, module_net)) {
@@ -402,8 +400,8 @@ static void print_verilog_module_local_short_connection(
  *            +-----------------------------+
  *******************************************************************/
 static void print_verilog_module_local_short_connections(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const bool& little_endian) {
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
     /* We only care the nets that indicate short connections */
@@ -436,8 +434,8 @@ static void print_verilog_module_local_short_connections(
  *            +-----------------------------+
  *******************************************************************/
 static void print_verilog_module_output_short_connections(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const bool& little_endian) {
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const bool& little_endian) {
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
     /* We only care the nets that indicate short connections */
@@ -467,7 +465,7 @@ static void print_verilog_module_output_short_connections(
  *    +-----------------------------+
  *
  *******************************************************************/
-static void write_verilog_instance_to_file(std::fstream& fp,
+static void write_verilog_instance_to_file(mmostream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& parent_module,
                                            const ModuleId& child_module,
@@ -475,7 +473,7 @@ static void write_verilog_instance_to_file(std::fstream& fp,
                                            const bool& use_explicit_port_map,
                                            const bool& little_endian) {
   /* Ensure a valid file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Print module name */
   fp << "\t" << module_manager.module_name(child_module) << " ";
@@ -578,11 +576,11 @@ static void write_verilog_instance_to_file(std::fstream& fp,
  * This is a key function, maybe most frequently called in our Verilog writer
  * Note that file stream must be valid
  *******************************************************************/
-void write_verilog_module_to_file(std::fstream& fp,
+void write_verilog_module_to_file(mmostream& fp,
                                   const ModuleManager& module_manager,
                                   const ModuleId& module_id,
                                   const FabricVerilogOption& options) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Ensure we have a valid module_id */
   VTR_ASSERT(module_manager.valid_module_id(module_id));

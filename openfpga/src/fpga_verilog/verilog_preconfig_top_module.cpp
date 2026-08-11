@@ -32,11 +32,10 @@ namespace openfpga {
  * The module ports do exactly match the input benchmark
  *******************************************************************/
 static void print_verilog_preconfig_top_module_ports(
-  std::fstream &fp, const std::string &circuit_name,
-  const AtomContext &atom_ctx, const VprNetlistAnnotation &netlist_annotation,
-  const BusGroup &bus_group) {
+  mmostream &fp, const std::string &circuit_name, const AtomContext &atom_ctx,
+  const VprNetlistAnnotation &netlist_annotation, const BusGroup &bus_group) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Module declaration */
   fp << "module " << generate_preconfig_top_module_name(circuit_name);
@@ -140,11 +139,11 @@ static void print_verilog_preconfig_top_module_ports(
  * while uses 'force' syntax to impost the bitstream at mem_inv port
  *******************************************************************/
 static void print_verilog_preconfig_top_module_force_bitstream(
-  std::fstream &fp, const std::string &top_block_name,
+  mmostream &fp, const std::string &top_block_name,
   const BitstreamManager &bitstream_manager, const bool &output_datab_bits,
   const bool &little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp, std::string(
@@ -217,11 +216,11 @@ static void print_verilog_preconfig_top_module_force_bitstream(
  * This function uses '$deposit' syntax to do so
  *******************************************************************/
 static void print_verilog_preconfig_top_module_deposit_bitstream(
-  std::fstream &fp, const std::string &top_block_name,
+  mmostream &fp, const std::string &top_block_name,
   const BitstreamManager &bitstream_manager, const bool &output_datab_bits,
   const bool &little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp, std::string(
@@ -301,7 +300,7 @@ static void print_verilog_preconfig_top_module_deposit_bitstream(
  * 2. Mentor Modelsim prefers using '$deposit' syntax to do so
  *******************************************************************/
 static void print_verilog_preconfig_top_module_load_bitstream(
-  std::fstream &fp, const std::string &top_block_name,
+  mmostream &fp, const std::string &top_block_name,
   const CircuitLibrary &circuit_lib, const CircuitModelId &mem_model,
   const BitstreamManager &bitstream_manager,
   const e_embedded_bitstream_hdl_type &embedded_bitstream_hdl_type,
@@ -392,11 +391,10 @@ int print_verilog_preconfig_top_module(
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Generate a brief description on the Verilog file*/
   std::string title =

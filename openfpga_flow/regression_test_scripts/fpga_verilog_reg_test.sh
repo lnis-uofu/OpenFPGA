@@ -158,6 +158,9 @@ run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus1 $@
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit0 $@
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit1 $@
 
+echo -e "Testing Verilog gz output";
+run-task fpga_verilog/verilog_netlist_formats/verilog_gz $@
+
 echo -e "Testing Verilog generation with flatten routing modules";
 run-task fpga_verilog/flatten_routing $@
 

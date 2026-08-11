@@ -153,7 +153,7 @@ int fpga_fabric_verilog(
   /* Generate an netlist including all the fabric-related netlists */
   print_verilog_fabric_include_netlist(
     const_cast<const NetlistManager &>(netlist_manager), src_dir_path,
-    circuit_lib, options.use_relative_path(), options.time_stamp());
+    circuit_lib, options);
 
   /* Given a brief stats on how many Verilog modules have been written to files
    */
@@ -373,8 +373,7 @@ int fpga_verilog_mock_fpga_wrapper(
 
   /* Generate an netlist including all the fabric-related netlists */
   print_verilog_mock_fabric_include_netlist(netlist_manager, src_dir_path,
-                                            options.use_relative_path(),
-                                            options.time_stamp());
+                                            options);
 
   return status;
 }

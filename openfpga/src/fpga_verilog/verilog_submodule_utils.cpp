@@ -39,7 +39,7 @@ constexpr int FLOAT_PRECISION = 6;
  * This function print all the timing edges available
  * in the circuit model (any pin-to-pin delay)
  ***********************************************/
-void print_verilog_submodule_timing(std::fstream& fp,
+void print_verilog_submodule_timing(mmostream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model,
                                     const bool& little_endian) {
@@ -54,7 +54,7 @@ void print_verilog_submodule_timing(std::fstream& fp,
   }
 
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << std::endl;
   fp << "`ifdef " << VERILOG_TIMING_PREPROC_FLAG << std::endl;
@@ -148,12 +148,12 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
  * port mapping) in the FPGA fabric
  ********************************************************************/
 static void print_one_verilog_template_module(
-  const ModuleManager& module_manager, std::fstream& fp,
+  const ModuleManager& module_manager, mmostream& fp,
   const std::string& module_name,
   const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
   /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   print_verilog_comment(fp, std::string("----- Template Verilog module for " +
                                         module_name + " -----"));
@@ -199,10 +199,9 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
                             USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fname.c_str(), fp);
+  mmostream fp(verilog_fname, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */

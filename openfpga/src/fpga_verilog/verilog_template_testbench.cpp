@@ -65,11 +65,10 @@ int print_verilog_template_testbench(const ModuleManager &module_manager,
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Generate a brief description on the Verilog file*/
   std::string title =

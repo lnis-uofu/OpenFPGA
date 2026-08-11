@@ -223,4 +223,16 @@ void NetlistManager::invalidate_module2netlist_map() {
   module_netlist_map_.clear();
 }
 
+void NetlistManager::clear() {
+  netlist_ids_.clear();
+  netlist_names_.clear();
+  netlist_types_.clear();
+  included_module_ids_.clear();
+  included_preprocessing_flag_ids_.clear();
+  preprocessing_flag_ids_.clear();
+  preprocessing_flag_names_.clear();
+  name_id_map_.clear();
+  module_netlist_map_.clear();
+}
+
 } /* end namespace openfpga */

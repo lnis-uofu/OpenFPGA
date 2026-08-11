@@ -52,10 +52,8 @@ void print_verilog_core_module(NetlistManager& netlist_manager,
           verilog_fpath.c_str());
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(fp, std::string("Wrapper Verilog module for FPGA"),
                             options.time_stamp());
@@ -116,10 +114,8 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
           verilog_fpath.c_str());
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(
     fp, std::string("Top-level Verilog module for FPGA"), options.time_stamp());

@@ -57,6 +57,7 @@ class VerilogTestbenchOption {
   bool print_top_testbench() const;
   bool print_simulation_ini() const;
   std::string simulation_ini_path() const;
+  bool compress_output() const;
   bool explicit_port_mapping() const;
   bool include_signal_init() const;
   bool dump_waveform() const;
@@ -98,6 +99,7 @@ class VerilogTestbenchOption {
   void set_fast_configuration(const bool& enabled);
   void set_print_top_testbench(const bool& enabled);
   void set_print_simulation_ini(const std::string& simulation_ini_path);
+  void set_compress_output(const bool& enabled);
   void set_explicit_port_mapping(const bool& enabled);
   void set_include_signal_init(const bool& enabled);
   void set_dump_waveform(const bool& enabled);
@@ -134,6 +136,7 @@ class VerilogTestbenchOption {
   bool print_top_testbench_;
   /* Print simulation ini is enabled only when the path is not empty */
   std::string simulation_ini_path_;
+  bool compress_output_;
   bool explicit_port_mapping_;
   bool include_signal_init_;
   bool dump_waveform_;

@@ -27,11 +27,11 @@ namespace openfpga {
  * which will be different in various configuration protocols
  *******************************************************************/
 void print_verilog_preconfig_top_module_internal_wires(
-  std::fstream &fp, const ModuleManager &module_manager,
+  mmostream &fp, const ModuleManager &module_manager,
   const ModuleId &top_module, const std::string &port_postfix,
   const bool &little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Global ports of top-level module  */
   print_verilog_comment(fp,
@@ -57,14 +57,14 @@ void print_verilog_preconfig_top_module_internal_wires(
  * this pre-configured FPGA top module
  *******************************************************************/
 int print_verilog_preconfig_top_module_connect_global_ports(
-  std::fstream &fp, const ModuleManager &module_manager,
+  mmostream &fp, const ModuleManager &module_manager,
   const ModuleId &top_module, const PinConstraints &pin_constraints,
   const AtomContext &atom_ctx, const VprNetlistAnnotation &netlist_annotation,
   const FabricGlobalPortInfo &fabric_global_ports,
   const std::vector<std::string> &benchmark_clock_port_names,
   const std::string &port_postfix, const bool &little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp,
