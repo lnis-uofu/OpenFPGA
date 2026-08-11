@@ -33,7 +33,7 @@ int write_gsb_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_exclude_rr_info = cmd.option("exclude_rr_info");
   CommandOptionId opt_exclude = cmd.option("exclude");
   CommandOptionId opt_gsb_names = cmd.option("gsb_names");
-  CommandOptionId opt_compress_output= cmd.option("compress_output");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Build the options for the writer */
@@ -44,7 +44,8 @@ int write_gsb_template(const T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_exclude_rr_info));
   options.set_exclude_content(cmd_context.option_value(cmd, opt_exclude));
   options.set_include_gsb_names(cmd_context.option_value(cmd, opt_gsb_names));
-  options.set_compress_output(cmd_context.option_enable(cmd, opt_compress_output));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
 
   if (!options.valid()) {

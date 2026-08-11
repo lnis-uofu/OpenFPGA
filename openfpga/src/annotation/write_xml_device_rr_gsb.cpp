@@ -2,11 +2,11 @@
  * Output internal structure of DeviceRRGSB to XML format
  ***************************************************************************************/
 /* Headers from vtrutil library */
+#include "command_exit_codes.h"
+#include "openfpga_gz_xml_writer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "openfpga_gz_xml_writer.h"
-#include "command_exit_codes.h"
 
 /* Headers from openfpgautil library */
 #include "build_routing_module_utils.h"
@@ -74,24 +74,31 @@ static int calculate_manhattan_distance(const RRGraphView& rr_graph,
  * Output the input pin of Programmable Blocks, e.g., CLBs inside a GSB to XML
  * format
  ***************************************************************************************/
-static void write_rr_gsb_ipin_connection_to_xml(
-  pugi::xml_node& parent, const RRGraphView& rr_graph, const RRGraphInEdges& in_edges,
-  const RRGSB& rr_gsb, const RRGSBEdges& gsb_edges, const enum e_side& gsb_side,
-  const bool& include_rr_info) {
+static void write_rr_gsb_ipin_connection_to_xml(pugi::xml_node& parent,
+                                                const RRGraphView& rr_graph,
+                                                const RRGraphInEdges& in_edges,
+                                                const RRGSB& rr_gsb,
+                                                const RRGSBEdges& gsb_edges,
+                                                const enum e_side& gsb_side,
+                                                const bool& include_rr_info) {
   SideManager gsb_side_manager(gsb_side);
 
   for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(gsb_side); ++inode) {
     const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(gsb_side, inode);
     /* General information of this IPIN */
-    pugi::xml_node xml_rr_node = parent.append_child(rr_node_typename[rr_graph.node_type(cur_rr_node)]);
+    pugi::xml_node xml_rr_node =
+      parent.append_child(rr_node_typename[rr_graph.node_type(cur_rr_node)]);
     xml_rr_node.append_attribute("side").set_value(gsb_side_manager.c_str());
-    xml_rr_node.append_attribute("index").set_value(static_cast<unsigned long long>(inode));
+    xml_rr_node.append_attribute("index").set_value(
+      static_cast<unsigned long long>(inode));
     if (include_rr_info) {
-      xml_rr_node.append_attribute("node_id").set_value(static_cast<unsigned long long>(size_t(cur_rr_node)));
+      xml_rr_node.append_attribute("node_id").set_value(
+        static_cast<unsigned long long>(size_t(cur_rr_node)));
     }
     const std::vector<RREdgeId>& driver_rr_edges =
       gsb_edges.get_ipin_node_in_edges(rr_gsb, in_edges, gsb_side, inode);
-    xml_rr_node.append_attribute("mux_size").set_value(static_cast<unsigned long long>(driver_rr_edges.size()));
+    xml_rr_node.append_attribute("mux_size")
+      .set_value(static_cast<unsigned long long>(driver_rr_edges.size()));
     /* General information of each driving nodes */
     for (const RREdgeId& edge : driver_rr_edges) {
       RRNodeId driver_node = rr_graph.edge_src_node(edge);
@@ -133,13 +140,17 @@ static void write_rr_gsb_ipin_connection_to_xml(
       // <driver_node type="CHANX" side="TOP" index="0" node_id="0"
       // segment_id="0"/>
       pugi::xml_node xml_driver_node = xml_rr_node.append_child("driver_node");
-      xml_driver_node.append_attribute("type").set_value(rr_node_typename[rr_graph.node_type(driver_node)]);
-      xml_driver_node.append_attribute("side").set_value(chan_side_manager.c_str());
+      xml_driver_node.append_attribute("type").set_value(
+        rr_node_typename[rr_graph.node_type(driver_node)]);
+      xml_driver_node.append_attribute("side").set_value(
+        chan_side_manager.c_str());
       if (include_rr_info) {
-        xml_driver_node.append_attribute("node_id").set_value(static_cast<unsigned long long>(size_t(driver_node)));
+        xml_driver_node.append_attribute("node_id").set_value(
+          static_cast<unsigned long long>(size_t(driver_node)));
       }
       xml_driver_node.append_attribute("index").set_value(driver_node_index);
-      xml_driver_node.append_attribute("segment_id").set_value(static_cast<unsigned long long>(size_t(des_segment_id)));
+      xml_driver_node.append_attribute("segment_id")
+        .set_value(static_cast<unsigned long long>(size_t(des_segment_id)));
       xml_driver_node.append_attribute("tap").set_value(manhattan_distance);
     }
   }
@@ -154,7 +165,6 @@ static void write_rr_gsb_chan_connection_to_xml(
   const RRGraphInEdges& in_edges, const RRGSB& rr_gsb,
   const RRGSBEdges& gsb_edges, const enum e_side& gsb_side,
   const bool& include_rr_info) {
-
   SideManager gsb_side_manager(gsb_side);
 
   /* Output chan nodes */
@@ -180,36 +190,48 @@ static void write_rr_gsb_chan_connection_to_xml(
 
     e_rr_type cur_node_type = rr_graph.node_type(cur_rr_node);
 
-    pugi::xml_node xml_rr_node = parent.append_child(rr_node_typename[cur_node_type]);
+    pugi::xml_node xml_rr_node =
+      parent.append_child(rr_node_typename[cur_node_type]);
     xml_rr_node.append_attribute("side").set_value(gsb_side_manager.c_str());
-    xml_rr_node.append_attribute("index").set_value(static_cast<unsigned long long>(inode));
+    xml_rr_node.append_attribute("index").set_value(
+      static_cast<unsigned long long>(inode));
     if (include_rr_info) {
-      xml_rr_node.append_attribute("node_id").set_value(static_cast<unsigned long long>(size_t(cur_rr_node)));
-      xml_rr_node.append_attribute("segment_id").set_value(static_cast<unsigned long long>(size_t(src_segment_id)));
-      xml_rr_node.append_attribute("segment_name").set_value(rr_graph.rr_segments(src_segment_id).name.c_str());
+      xml_rr_node.append_attribute("node_id").set_value(
+        static_cast<unsigned long long>(size_t(cur_rr_node)));
+      xml_rr_node.append_attribute("segment_id")
+        .set_value(static_cast<unsigned long long>(size_t(src_segment_id)));
+      xml_rr_node.append_attribute("segment_name")
+        .set_value(rr_graph.rr_segments(src_segment_id).name.c_str());
     }
-    xml_rr_node.append_attribute("mux_size").set_value(static_cast<unsigned long long>(driver_rr_edges.size()));
+    xml_rr_node.append_attribute("mux_size")
+      .set_value(static_cast<unsigned long long>(driver_rr_edges.size()));
     if (include_rr_info) {
-	  xml_rr_node.append_attribute("sb_module_pin_name").set_value(
-        generate_sb_module_track_port_name(cur_node_type, gsb_side,
-                                           OUT_PORT).c_str());
+      xml_rr_node.append_attribute("sb_module_pin_name")
+        .set_value(
+          generate_sb_module_track_port_name(cur_node_type, gsb_side, OUT_PORT)
+            .c_str());
     }
 
     /* Direct connection: output the node on the opposite side */
     if (0 == driver_rr_edges.size()) {
       SideManager oppo_side = gsb_side_manager.get_opposite();
       pugi::xml_node xml_driver_node = xml_rr_node.append_child("driver_node");
-      xml_driver_node.append_attribute("type").set_value(rr_node_typename[cur_node_type]);
+      xml_driver_node.append_attribute("type").set_value(
+        rr_node_typename[cur_node_type]);
       xml_driver_node.append_attribute("side").set_value(oppo_side.c_str());
-      xml_driver_node.append_attribute("index").set_value(rr_graph.node_track_num(cur_rr_node));
+      xml_driver_node.append_attribute("index").set_value(
+        rr_graph.node_track_num(cur_rr_node));
       if (include_rr_info) {
-        xml_driver_node.append_attribute("node_id").set_value(static_cast<unsigned long long>(size_t(cur_rr_node)));
-        xml_driver_node.append_attribute("segment_id").set_value(static_cast<unsigned long long>(size_t(src_segment_id)));
-        xml_driver_node.append_attribute("segment_name").set_value(
-           rr_graph.rr_segments(src_segment_id).name.c_str());
-        xml_driver_node.append_attribute("sb_module_pin_name").set_value(
-           generate_sb_module_track_port_name(cur_node_type,
-                                              oppo_side.get_side(), IN_PORT).c_str());
+        xml_driver_node.append_attribute("node_id").set_value(
+          static_cast<unsigned long long>(size_t(cur_rr_node)));
+        xml_driver_node.append_attribute("segment_id")
+          .set_value(static_cast<unsigned long long>(size_t(src_segment_id)));
+        xml_driver_node.append_attribute("segment_name")
+          .set_value(rr_graph.rr_segments(src_segment_id).name.c_str());
+        xml_driver_node.append_attribute("sb_module_pin_name")
+          .set_value(generate_sb_module_track_port_name(
+                       cur_node_type, oppo_side.get_side(), IN_PORT)
+                       .c_str());
       }
     } else {
       for (const RREdgeId& driver_rr_edge : driver_rr_edges) {
@@ -227,36 +249,52 @@ static void write_rr_gsb_chan_connection_to_xml(
           SideManager grid_side(
             get_rr_graph_single_node_side(rr_graph, driver_rr_node));
 
-          pugi::xml_node xml_driver_node = xml_rr_node.append_child("driver_node");
-          xml_driver_node.append_attribute("type").set_value(rr_node_typename[e_rr_type::OPIN]);
-          xml_driver_node.append_attribute("side").set_value(driver_side.c_str());
-          xml_driver_node.append_attribute("index").set_value(driver_node_index);
+          pugi::xml_node xml_driver_node =
+            xml_rr_node.append_child("driver_node");
+          xml_driver_node.append_attribute("type").set_value(
+            rr_node_typename[e_rr_type::OPIN]);
+          xml_driver_node.append_attribute("side").set_value(
+            driver_side.c_str());
+          xml_driver_node.append_attribute("index").set_value(
+            driver_node_index);
           xml_driver_node.append_attribute("tap").set_value(manhattan_distance);
           if (include_rr_info) {
-            xml_driver_node.append_attribute("node_id").set_value(static_cast<unsigned long long>(size_t(driver_rr_node)));
-            xml_driver_node.append_attribute("grid_side").set_value(grid_side.c_str());
-            xml_driver_node.append_attribute("sb_module_pin_name").set_value(
-               generate_sb_module_grid_port_name(
-                 gsb_side, grid_side.get_side(), vpr_device_grid,
-                 vpr_device_annotation, rr_graph, driver_rr_node).c_str());
+            xml_driver_node.append_attribute("node_id").set_value(
+              static_cast<unsigned long long>(size_t(driver_rr_node)));
+            xml_driver_node.append_attribute("grid_side")
+              .set_value(grid_side.c_str());
+            xml_driver_node.append_attribute("sb_module_pin_name")
+              .set_value(generate_sb_module_grid_port_name(
+                           gsb_side, grid_side.get_side(), vpr_device_grid,
+                           vpr_device_annotation, rr_graph, driver_rr_node)
+                           .c_str());
           }
         } else {
           const RRSegmentId& des_segment_id =
             rr_graph.node_segment(driver_rr_node);
 
-          pugi::xml_node xml_driver_node = xml_rr_node.append_child("driver_node");
-          xml_driver_node.append_attribute("type").set_value(rr_node_typename[rr_graph.node_type(driver_rr_node)]);
-          xml_driver_node.append_attribute("side").set_value(driver_side.c_str());
-          xml_driver_node.append_attribute("index").set_value(driver_node_index);
+          pugi::xml_node xml_driver_node =
+            xml_rr_node.append_child("driver_node");
+          xml_driver_node.append_attribute("type").set_value(
+            rr_node_typename[rr_graph.node_type(driver_rr_node)]);
+          xml_driver_node.append_attribute("side").set_value(
+            driver_side.c_str());
+          xml_driver_node.append_attribute("index").set_value(
+            driver_node_index);
           xml_driver_node.append_attribute("tap").set_value(manhattan_distance);
           if (include_rr_info) {
-            xml_driver_node.append_attribute("node_id").set_value(static_cast<unsigned long long>(size_t(driver_rr_node)));
-            xml_driver_node.append_attribute("segment_id").set_value(static_cast<unsigned long long>(size_t(des_segment_id)));
-            xml_driver_node.append_attribute("segment_name").set_value(rr_graph.rr_segments(des_segment_id).name.c_str());
-            xml_driver_node.append_attribute("sb_module_pin_name").set_value(
-              generate_sb_module_track_port_name(
-                rr_graph.node_type(driver_rr_node), driver_side.get_side(),
-                IN_PORT).c_str());
+            xml_driver_node.append_attribute("node_id").set_value(
+              static_cast<unsigned long long>(size_t(driver_rr_node)));
+            xml_driver_node.append_attribute("segment_id")
+              .set_value(
+                static_cast<unsigned long long>(size_t(des_segment_id)));
+            xml_driver_node.append_attribute("segment_name")
+              .set_value(rr_graph.rr_segments(des_segment_id).name.c_str());
+            xml_driver_node.append_attribute("sb_module_pin_name")
+              .set_value(generate_sb_module_track_port_name(
+                           rr_graph.node_type(driver_rr_node),
+                           driver_side.get_side(), IN_PORT)
+                           .c_str());
           }
         }
       }
@@ -297,9 +335,12 @@ static int write_rr_switch_block_to_xml(
   pugi::xml_document doc;
   /* Output location of the Switch Block */
   pugi::xml_node root = doc.append_child("rr_sb");
-  root.append_attribute("x").set_value(static_cast<unsigned long long>(rr_gsb.get_x()));
-  root.append_attribute("y").set_value(static_cast<unsigned long long>(rr_gsb.get_y()));
-  root.append_attribute("num_sides").set_value(static_cast<unsigned long long>(rr_gsb.get_num_sides()));
+  root.append_attribute("x").set_value(
+    static_cast<unsigned long long>(rr_gsb.get_x()));
+  root.append_attribute("y").set_value(
+    static_cast<unsigned long long>(rr_gsb.get_y()));
+  root.append_attribute("num_sides")
+    .set_value(static_cast<unsigned long long>(rr_gsb.get_num_sides()));
 
   /* Output each side */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
@@ -334,7 +375,8 @@ static int write_rr_switch_block_to_xml(
     output_success = doc.save_file(fname.c_str());
   }
   if (output_success) {
-    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n", fname.c_str());
+    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n",
+             fname.c_str());
   } else {
     VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
   }
@@ -346,12 +388,12 @@ static int write_rr_switch_block_to_xml(
  *format
  ***************************************************************************************/
 static int write_rr_connection_block_to_xml(const std::string fname_prefix,
-                                             const RRGraphView& rr_graph,
-                                             const RRGraphInEdges& in_edges,
-                                             const RRGSB& rr_gsb,
-                                             const RRGSBEdges& gsb_edges,
-                                             const e_rr_type& cb_type,
-                                             const RRGSBWriterOption& options) {
+                                            const RRGraphView& rr_graph,
+                                            const RRGraphInEdges& in_edges,
+                                            const RRGSB& rr_gsb,
+                                            const RRGSBEdges& gsb_edges,
+                                            const e_rr_type& cb_type,
+                                            const RRGSBWriterOption& options) {
   /* Prepare file name */
   std::string fname(fname_prefix);
   vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type),
@@ -377,13 +419,15 @@ static int write_rr_connection_block_to_xml(const std::string fname_prefix,
            "Output internal structure of Connection Block to '%s'\n",
            fname.c_str());
 
-
   pugi::xml_document doc;
   /* Output location of the Switch Block */
   pugi::xml_node root = doc.append_child("rr_cb");
-  root.append_attribute("x").set_value(static_cast<unsigned long long>(rr_gsb.get_x()));
-  root.append_attribute("y").set_value(static_cast<unsigned long long>(rr_gsb.get_y()));
-  root.append_attribute("num_sides").set_value(static_cast<unsigned long long>(rr_gsb.get_num_sides()));
+  root.append_attribute("x").set_value(
+    static_cast<unsigned long long>(rr_gsb.get_x()));
+  root.append_attribute("y").set_value(
+    static_cast<unsigned long long>(rr_gsb.get_y()));
+  root.append_attribute("num_sides")
+    .set_value(static_cast<unsigned long long>(rr_gsb.get_num_sides()));
 
   /* Output each side */
   for (e_side side : rr_gsb.get_cb_ipin_sides(cb_type)) {
@@ -398,14 +442,15 @@ static int write_rr_connection_block_to_xml(const std::string fname_prefix,
   if (options.compress_output()) {
     GzXmlWriter writer(fname.c_str());
     if (writer.isValid()) {
-        doc.save(writer);
-        output_success = true;
+      doc.save(writer);
+      output_success = true;
     }
   } else {
     output_success = doc.save_file(fname.c_str());
   }
   if (output_success) {
-    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n", fname.c_str());
+    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n",
+             fname.c_str());
   } else {
     VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
   }
@@ -416,11 +461,12 @@ static int write_rr_connection_block_to_xml(const std::string fname_prefix,
  * Output internal structure (only the switch block part) of all the RRGSBs
  * in a DeviceRRGSB  to XML format
  ***************************************************************************************/
-int write_device_rr_gsb_to_xml(
-  const DeviceGrid& vpr_device_grid,
-  const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const ModuleManager& module_manager,
-  const RRGSBWriterOption& options) {
+int write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
+                               const VprDeviceAnnotation& vpr_device_annotation,
+                               const RRGraphView& rr_graph,
+                               const DeviceRRGSB& device_rr_gsb,
+                               const ModuleManager& module_manager,
+                               const RRGSBWriterOption& options) {
   std::string xml_dir_name = format_dir_path(options.output_directory());
 
   /* Create directories */
@@ -467,9 +513,9 @@ int write_device_rr_gsb_to_xml(
           vtr::Point<size_t> gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
           const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(gsb_coord);
           if (options.include_cb_content(cb_type)) {
-            num_err += write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
-                                             rr_gsb, gsb_edges, cb_type,
-                                             options);
+            num_err += write_rr_connection_block_to_xml(
+              xml_dir_name, rr_graph, in_edges, rr_gsb, gsb_edges, cb_type,
+              options);
             cb_counters[cb_type]++;
           }
         }
@@ -484,18 +530,18 @@ int write_device_rr_gsb_to_xml(
         const RRGSBEdges& gsb_edges = device_rr_gsb.get_gsb_edges(ix, iy);
         /* Write CBx, CBy, SB on need */
         if (options.include_sb_content()) {
-          num_err += write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid,
-                                       vpr_device_annotation, rr_graph,
-                                       in_edges, rr_gsb, gsb_edges,
-                                       module_manager.group_routing(), options);
+          num_err += write_rr_switch_block_to_xml(
+            xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph,
+            in_edges, rr_gsb, gsb_edges, module_manager.group_routing(),
+            options);
           sb_counter++;
         }
         if (false == module_manager.group_routing()) {
           for (e_rr_type cb_type : {e_rr_type::CHANX, e_rr_type::CHANY}) {
             if (options.include_cb_content(cb_type)) {
-              num_err += write_rr_connection_block_to_xml(xml_dir_name, rr_graph, in_edges,
-                                               rr_gsb, gsb_edges, cb_type,
-                                               options);
+              num_err += write_rr_connection_block_to_xml(
+                xml_dir_name, rr_graph, in_edges, rr_gsb, gsb_edges, cb_type,
+                options);
               cb_counters[cb_type]++;
             }
           }

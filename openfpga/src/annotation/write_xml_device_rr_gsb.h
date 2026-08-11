@@ -14,10 +14,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int write_device_rr_gsb_to_xml(
-  const DeviceGrid& vpr_device_grid,
-  const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const ModuleManager& module_manager,
-  const RRGSBWriterOption& options);
+int write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
+                               const VprDeviceAnnotation& vpr_device_annotation,
+                               const RRGraphView& rr_graph,
+                               const DeviceRRGSB& device_rr_gsb,
+                               const ModuleManager& module_manager,
+                               const RRGSBWriterOption& options);
 
 } /* end namespace openfpga */
