@@ -1,6 +1,4 @@
-#ifndef RR_GSB_WRITER_OPTION_H
-#define RR_GSB_WRITER_OPTION_H
-
+#pragma once
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
@@ -71,5 +69,3 @@ class RRGSBWriterOption {
 };
 
 } /* End namespace openfpga*/
-
-#endif
