@@ -26,4 +26,3 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
                        const PlacementContext& place_ctx);
 
 } /* end namespace openfpga */
-
