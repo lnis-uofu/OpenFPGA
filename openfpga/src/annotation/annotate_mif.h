@@ -1,5 +1,4 @@
-#ifndef ANNOTATE_MIF_H
-#define ANNOTATE_MIF_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
