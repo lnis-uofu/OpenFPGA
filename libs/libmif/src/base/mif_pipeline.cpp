@@ -73,9 +73,7 @@ void MifPipeline::clear(Stage stage) {
 int MifPipeline::load_eblif(const BitstreamSetting& bitstream_setting,
                             const AtomContext& atom_ctx) {
   eblif_.clear();
-  if (!bitstream_setting.has_eblif_mif_source()) {
-    return CMD_EXEC_SUCCESS;
-  }
+
   /* Collect unique content selectors used by EBLIF-backed MIF sources. */
   std::vector<std::string> eblif_contents;
   for (const MifSourceSettingId& source_id :

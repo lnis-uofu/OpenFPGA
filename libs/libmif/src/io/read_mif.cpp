@@ -242,8 +242,8 @@ struct MifEblifContentSelector {
   std::string field_name;
 };
 
-static bool parse_eblif_content_selector(
-  const std::string& content, MifEblifContentSelector& selector) {
+static bool parse_eblif_content_selector(const std::string& content,
+                                         MifEblifContentSelector& selector) {
   std::istringstream content_stream(content);
   std::string extra;
   if (!(content_stream >> selector.field_type >> selector.field_name) ||
@@ -340,19 +340,7 @@ int read_mif_from_atom_context(MifStorage& mif_storage,
   }
 
   if (field_index == 0) {
-    std::string expected;
-    for (size_t i = 0; i < eblif_contents.size(); ++i) {
-      if (i > 0) {
-        expected += ", ";
-      }
-      expected += "'";
-      expected += eblif_contents[i];
-      expected += "'";
-    }
-    VTR_LOG_ERROR(
-      "read_mif: no AtomBlock parameters matching configured content(s) "
-      "[%s]\n",
-      expected.c_str());
+    VTR_LOG_ERROR("read_mif: no matching AtomBlock fields found\n");
     return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
