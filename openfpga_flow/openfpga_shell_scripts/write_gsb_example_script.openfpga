@@ -24,11 +24,11 @@ lut_truth_table_fixup
 build_fabric ${OPENFPGA_BUILD_FABRIC_OPTION} #--verbose
 
 # Write gsb to XML
-write_gsb_to_xml --file gsb_xml --verbose ${OPENFPGA_WRITE_GSB_OPTION}
-write_gsb_to_xml --file gsb_xml_gz --compress_output --verbose ${OPENFPGA_WRITE_GSB_OPTION}
+write_gsb_to_xml --file ${OPENFPGA_GSB_XML_PATH} --verbose ${OPENFPGA_WRITE_GSB_OPTION}
+write_gsb_to_xml --file ${OPENFPGA_GSB_XML_PATH}_gz --compress_output --verbose ${OPENFPGA_WRITE_GSB_OPTION}
 # Diff gsb outputs between xml and xml_gz 
-ext_exec --command "gunzip -r gsb_xml_gz"
-ext_exec --command "diff -r gsb_xml gsb_xml_gz"
+ext_exec --command "gunzip -r ${OPENFPGA_GSB_XML_PATH}"
+ext_exec --command "diff -r ${OPENFPGA_GSB_XML_PATH} ${OPENFPGA_GSB_XML_PATH}_gz"
 
 # Finish and exit OpenFPGA
 exit
