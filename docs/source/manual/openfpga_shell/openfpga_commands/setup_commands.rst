@@ -244,6 +244,10 @@ write_gsb_to_xml
       - ``--gsb_names gsb_2__4_,gsb_3__2_``
       - ``--gsb_names gsb_2__4_``
 
+  .. option:: --compress_output
+
+    All the GSB XML outputs will be outputted in a compressed format (.xml.gz). Useful in reduce disk space when file sizes are large. 
+
   .. option:: --verbose
 
     Show verbose log
