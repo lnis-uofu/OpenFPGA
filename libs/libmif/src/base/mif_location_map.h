@@ -36,7 +36,9 @@ struct MifLocation {
   size_t y = 0;
   size_t z = 0;
   std::string pb_type_path;
+  /* Top-level MIF data bus associated with this physical memory instance. */
   std::string port_name;
+  /* Bit offset within port_name; each top-level bus has independent offsets. */
   size_t data_offset = 0;
   size_t data_width = 0;
 };
