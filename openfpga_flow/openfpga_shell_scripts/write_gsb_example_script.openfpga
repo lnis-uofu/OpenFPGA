@@ -25,6 +25,10 @@ build_fabric ${OPENFPGA_BUILD_FABRIC_OPTION} #--verbose
 
 # Write gsb to XML
 write_gsb_to_xml --file gsb_xml --verbose ${OPENFPGA_WRITE_GSB_OPTION}
+write_gsb_to_xml --file gsb_xml_gz --compress_output --verbose ${OPENFPGA_WRITE_GSB_OPTION}
+# Diff gsb outputs between xml and xml_gz 
+ext_exec --command "gunzip -r gsb_xml_gz"
+ext_exec --comand "diff -r gsb_xml gsb_xml_gz"
 
 # Finish and exit OpenFPGA
 exit
