@@ -10,6 +10,7 @@
  * - repack : create physical pbs and redo packing
  *******************************************************************/
 #include "openfpga_bitstream_template.h"
+#include "openfpga_mif_template.h"
 #include "openfpga_repack_template.h"
 #include "shell.h"
 
@@ -99,6 +100,29 @@ ShellCommandId add_build_arch_bitstream_command_template(
   shell.set_command_execute_function(shell_cmd_id, fpga_bitstream_template<T>);
 
   /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * Command 'write_mif'
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_mif_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_mif");
+
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to write aggregated preload memory (.mem)");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Write aggregated MIF storage to a preload .mem file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_mif_template<T>);
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -329,6 +353,16 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell,
     add_build_arch_bitstream_command_template(
       shell, openfpga_bitstream_cmd_class, cmd_dependency_build_arch_bitstream,
       hidden);
+
+  /********************************
+   * Command 'write_mif'
+   */
+  /* The 'write_mif' command should NOT be executed before
+   * 'build_architecture_bitstream' */
+  std::vector<ShellCommandId> cmd_dependency_write_mif;
+  cmd_dependency_write_mif.push_back(shell_cmd_build_arch_bitstream_id);
+  add_write_mif_command_template(shell, openfpga_bitstream_cmd_class,
+                                 cmd_dependency_write_mif, hidden);
 
   /********************************
    * Command 'report_bitstream_distribution'

@@ -1311,29 +1311,6 @@ ShellCommandId add_read_mif_command_template(
   return shell_cmd_id;
 }
 
-/********************************************************************
- * Command 'write_mif'
- *******************************************************************/
-template <class T>
-ShellCommandId add_write_mif_command_template(
-  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
-  Command shell_cmd("write_mif");
-
-  CommandOptionId opt_file = shell_cmd.add_option(
-    "file", true, "file path to write aggregated preload memory (.mem)");
-  shell_cmd.set_option_short_name(opt_file, "f");
-  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
-
-  ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "Write aggregated MIF storage to a preload .mem file", hidden);
-  shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, write_mif_template<T>);
-  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
-
-  return shell_cmd_id;
-}
-
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -1407,13 +1384,6 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
    * Command 'read_mif'
    */
   add_read_mif_command_template<T>(shell, openfpga_setup_cmd_class, hidden);
-
-  /********************************
-   * Command 'write_mif'
-   * (aggregated data comes from build_architecture_bitstream)
-   */
-  add_write_mif_command_template<T>(shell, openfpga_setup_cmd_class,
-                                    std::vector<ShellCommandId>(), hidden);
 
   /********************************
    * Command 'read_openfpga_clock_arch'
