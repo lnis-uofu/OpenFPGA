@@ -24,7 +24,6 @@ namespace openfpga {
  * PHYSICAL keeps mif_address_map des_pb_type for location-map binding. */
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
                        MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
-                       const DeviceContext& device_ctx,
                        const PlacementContext& place_ctx);
 
 } /* end namespace openfpga */

@@ -70,20 +70,11 @@ void MifPipeline::clear(Stage stage) {
   }
 }
 
-int MifPipeline::load_eblif(const std::string& eblif_path,
-                            const BitstreamSetting& bitstream_setting,
-                            const AtomContext& atom_ctx,
-                            const DeviceContext& device_ctx,
-                            const MifPbTypeResolver& pb_type_resolver) {
+int MifPipeline::load_eblif(const BitstreamSetting& bitstream_setting,
+                            const AtomContext& atom_ctx) {
   eblif_.clear();
   if (!bitstream_setting.has_eblif_mif_source()) {
     return CMD_EXEC_SUCCESS;
-  }
-  if (!pb_type_resolver) {
-    VTR_LOG_ERROR(
-      "mif_pipeline: mif_source source='%s' requires a pb_type resolver\n",
-      XML_MIF_SOURCE_SOURCE_EBLIF);
-    return CMD_EXEC_FATAL_ERROR;
   }
   /* Collect unique content selectors used by EBLIF-backed MIF sources. */
   std::vector<std::string> eblif_contents;
@@ -99,8 +90,7 @@ int MifPipeline::load_eblif(const std::string& eblif_path,
       eblif_contents.push_back(content);
     }
   }
-  return read_mif_from_eblif(eblif_path, eblif_, atom_ctx, device_ctx,
-                             pb_type_resolver, eblif_contents);
+  return read_mif_from_atom_context(eblif_, atom_ctx, eblif_contents);
 }
 
 int MifPipeline::merge_to_logical(const BitstreamSetting& bitstream_setting) {

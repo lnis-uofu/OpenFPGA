@@ -43,11 +43,9 @@ class MifPipeline {
   void clear();
   void clear(Stage stage);
 
-  /* Load Yosys eblif .param INIT into the EBLIF stage. */
-  int load_eblif(const std::string& eblif_path,
-                 const BitstreamSetting& bitstream_setting,
-                 const AtomContext& atom_ctx, const DeviceContext& device_ctx,
-                 const MifPbTypeResolver& pb_type_resolver);
+  /* Load VTR-parsed EBLIF parameters into the EBLIF stage. */
+  int load_eblif(const BitstreamSetting& bitstream_setting,
+                 const AtomContext& atom_ctx);
 
   /* Merge HEX/EBLIF into LOGICAL by mif_source: eblif pb_types use EBLIF
    * only; others use HEX only (no concatenation or overwrite). */

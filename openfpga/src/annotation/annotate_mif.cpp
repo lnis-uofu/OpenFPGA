@@ -3,7 +3,6 @@
 #include "bitstream_setting_xml_constants.h"
 #include "command_exit_codes.h"
 #include "mif_vpr_placement.h"
-#include "read_mif.h"
 #include "vtr_log.h"
 
 /* begin namespace openfpga */
@@ -23,12 +22,11 @@ namespace openfpga {
  * Why eblif binding does NOT use VprDeviceAnnotation:
  *   VprDeviceAnnotation maps operating t_pb_type* -> physical t_pb_type*.
  *   Eblif load needs packed operating instances from VPR atom/pack
- *   (get_mif_pb_type_from_vpr) so segments can match XML mif_source and
- *   address-map keys. Device annotation has no atom->pb instance binding.
+ *   so segments can match XML mif_source and address-map keys. Device
+ *   annotation has no atom->pb instance binding.
  *******************************************************************/
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
                        MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
-                       const DeviceContext& device_ctx,
                        const PlacementContext& place_ctx) {
   const bool has_mif_setting =
     !bitstream_setting.mif_source_settings().empty() ||
@@ -49,13 +47,8 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
 
   /* Operating pb from VPR pack (not VprDeviceAnnotation). */
   if (bitstream_setting.has_eblif_mif_source()) {
-    const std::string eblif_path = find_yosys_eblif_file_path();
-    if (eblif_path.empty()) {
-      return CMD_EXEC_FATAL_ERROR;
-    }
     const int load_status =
-      mif_pipeline.load_eblif(eblif_path, bitstream_setting, atom_ctx,
-                              device_ctx, get_mif_pb_type_from_vpr);
+      mif_pipeline.load_eblif(bitstream_setting, atom_ctx);
     if (CMD_EXEC_SUCCESS != load_status) {
       return load_status;
     }

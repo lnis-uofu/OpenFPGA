@@ -1,5 +1,8 @@
 #include "aggregate_mif_util.h"
 
+#include <algorithm>
+
+#include "vpr_types.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -18,6 +21,35 @@ std::string extract_mif_bits(const std::string& data, const BasicPort& bits) {
 }
 
 } /* namespace */
+
+std::string generate_mif_pb_path(const t_pb* leaf_pb) {
+  std::vector<std::string> path;
+  for (const t_pb* pb = leaf_pb; pb != nullptr; pb = pb->parent_pb) {
+    if (pb->pb_graph_node == nullptr) {
+      return std::string();
+    }
+
+    const t_pb_type* pb_type = pb->pb_graph_node->pb_type;
+    std::string component(pb_type->name);
+    if (pb->is_primitive()) {
+      component +=
+        "[" + std::to_string(pb->pb_graph_node->placement_index) + "]";
+    } else {
+      component += "[" + std::string(pb_type->modes[pb->mode].name) + "]";
+    }
+    path.push_back(component);
+  }
+
+  std::reverse(path.begin(), path.end());
+  std::string result;
+  for (const std::string& component : path) {
+    if (!result.empty()) {
+      result += ".";
+    }
+    result += component;
+  }
+  return result;
+}
 
 void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
                       MifStorage& dest) {

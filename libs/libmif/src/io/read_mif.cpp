@@ -3,13 +3,13 @@
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
-#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
+#include "aggregate_mif_util.h"
+#include "atom_netlist.h"
 #include "openfpga_decode.h"
 #include "vtr_log.h"
 
@@ -233,136 +233,110 @@ int read_mif_from_init_hex(const std::string& file_path,
   return CMD_EXEC_SUCCESS;
 }
 
-/********************************************************************
- * Match line against a configured eblif content selector (e.g. ".param INIT").
- * Requires a whitespace-separated value after the selector so ".param INIT"
- * does not match ".param INIT_i".
- *******************************************************************/
-static bool match_eblif_content_field(const std::string& line,
-                                      const std::string& content,
-                                      std::string& value) {
-  if (content.empty() || line.compare(0, content.size(), content) != 0) {
+struct MifEblifContentSelector {
+  /* Supported selectors:
+   *   .param <name> - read an AtomBlock parameter
+   *   .attr  <name> - read an AtomBlock attribute
+   * Both tokens come from mif_source content in the bitstream setting. */
+  std::string field_type;
+  std::string field_name;
+};
+
+static bool parse_eblif_content_selector(
+  const std::string& content, MifEblifContentSelector& selector) {
+  std::istringstream content_stream(content);
+  std::string extra;
+  if (!(content_stream >> selector.field_type >> selector.field_name) ||
+      (content_stream >> extra)) {
     return false;
   }
-  if (line.size() == content.size() ||
-      !std::isspace(static_cast<unsigned char>(line[content.size()]))) {
-    return false;
-  }
-  value = line.substr(content.size());
-  trim_mif_line_inplace(value);
-  if (value.empty()) {
-    return false;
-  }
-  /* Take the first token as the field value. */
-  const size_t space_pos = value.find_first_of(" \t");
-  if (space_pos != std::string::npos) {
-    value.resize(space_pos);
-  }
-  if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-    value = value.substr(1, value.size() - 2);
-  }
-  return !value.empty();
+  return true;
 }
 
-/********************************************************************
- * Read eblif memory init fields into logical MIF storage.
- * Field names come from mif_source content= (synth-frontend dependent).
- *******************************************************************/
-int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
-                        const AtomContext& atom_ctx,
-                        const DeviceContext& device_ctx,
-                        const MifPbTypeResolver& pb_type_resolver,
-                        const std::vector<std::string>& eblif_contents) {
+int read_mif_from_atom_context(MifStorage& mif_storage,
+                               const AtomContext& atom_ctx,
+                               const std::vector<std::string>& eblif_contents) {
   if (eblif_contents.empty()) {
     VTR_LOG_ERROR(
-      "read_mif_from_eblif: no mif_source content selectors were provided\n");
+      "read_mif_from_atom_context: no mif_source content selectors were "
+      "provided\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-
-  std::ifstream ifs(file_path.c_str());
-  if (!ifs.is_open()) {
-    VTR_LOG_ERROR("Failed to open eblif file '%s' for reading\n",
-                  file_path.c_str());
-    return CMD_EXEC_FATAL_ERROR;
+  std::vector<MifEblifContentSelector> selectors;
+  selectors.reserve(eblif_contents.size());
+  for (const std::string& content : eblif_contents) {
+    MifEblifContentSelector selector;
+    if (!parse_eblif_content_selector(content, selector)) {
+      VTR_LOG_ERROR(
+        "read_mif_from_atom_context: invalid mif_source content '%s'; "
+        "expected '<field_type> <field_name>'\n",
+        content.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    if (selector.field_type != ".param" && selector.field_type != ".attr") {
+      VTR_LOG_ERROR(
+        "read_mif_from_atom_context: unsupported EBLIF field type '%s' in "
+        "mif_source content '%s'\n",
+        selector.field_type.c_str(), content.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    selectors.push_back(selector);
   }
 
   mif_storage.clear();
-  std::string raw_line;
-  size_t line_no = 0;
   size_t field_index = 0;
-  std::string subckt_model;
-  MifEblifPortConnections subckt_connections;
+  for (const AtomBlockId atom_block : atom_ctx.netlist().blocks()) {
+    for (const MifEblifContentSelector& selector : selectors) {
+      std::string value;
+      bool field_found = false;
+      if (selector.field_type == ".param") {
+        for (const auto& parameter :
+             atom_ctx.netlist().block_params(atom_block)) {
+          if (parameter.first == selector.field_name) {
+            value = parameter.second;
+            field_found = true;
+            break;
+          }
+        }
+      } else {
+        for (const auto& attribute :
+             atom_ctx.netlist().block_attrs(atom_block)) {
+          if (attribute.first == selector.field_name) {
+            value = attribute.second;
+            field_found = true;
+            break;
+          }
+        }
+      }
+      if (!field_found) {
+        continue;
+      }
 
-  while (std::getline(ifs, raw_line)) {
-    ++line_no;
-    std::string line = raw_line;
-    trim_mif_line_inplace(line);
-    if (line.empty() || line[0] == '#') {
-      continue;
-    }
-    if (line.compare(0, 7, ".subckt") == 0) {
-      std::istringstream subckt_stream(line);
-      std::string dot_subckt;
-      std::string connection;
-      subckt_connections.clear();
-      if (!(subckt_stream >> dot_subckt >> subckt_model) ||
-          dot_subckt != ".subckt") {
-        VTR_LOG_ERROR("%s:%lu: cannot parse .subckt line: %s\n",
-                      file_path.c_str(), static_cast<unsigned long>(line_no),
-                      line.c_str());
+      const t_pb* leaf_pb =
+        atom_ctx.lookup().atom_pb_bimap().atom_pb(atom_block);
+      const std::string pb_type = generate_mif_pb_path(leaf_pb);
+      if (pb_type.empty()) {
+        VTR_LOG_ERROR(
+          "read_mif_from_atom_context: AtomBlock '%s' has no valid packed pb "
+          "path (%s %s #%zu); run this after VPR pack\n",
+          atom_ctx.netlist().block_name(atom_block).c_str(),
+          selector.field_type.c_str(), selector.field_name.c_str(),
+          field_index);
         return CMD_EXEC_FATAL_ERROR;
       }
-      while (subckt_stream >> connection) {
-        const size_t equal_pos = connection.find('=');
-        if (equal_pos == std::string::npos || equal_pos == 0 ||
-            equal_pos + 1 == connection.size()) {
-          VTR_LOG_ERROR("%s:%lu: invalid .subckt connection: %s\n",
-                        file_path.c_str(), static_cast<unsigned long>(line_no),
-                        connection.c_str());
-          return CMD_EXEC_FATAL_ERROR;
-        }
-        subckt_connections.emplace_back(connection.substr(0, equal_pos),
-                                        connection.substr(equal_pos + 1));
+
+      if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.size() - 2);
       }
-      continue;
+      const MifSegmentId segment_id = mif_storage.create_segment();
+      mif_storage.set_segment_physical_pb(segment_id, pb_type);
+      mif_storage.set_segment_raw_data(segment_id, value);
+      VTR_LOG("read_mif: AtomBlock '%s' %s %s -> VPR pb_type '%s'\n",
+              atom_ctx.netlist().block_name(atom_block).c_str(),
+              selector.field_type.c_str(), selector.field_name.c_str(),
+              pb_type.c_str());
+      ++field_index;
     }
-
-    std::string value;
-    std::string matched_content;
-    for (const std::string& content : eblif_contents) {
-      if (match_eblif_content_field(line, content, value)) {
-        matched_content = content;
-        break;
-      }
-    }
-    if (matched_content.empty()) {
-      continue;
-    }
-
-    const std::string pb_type =
-      pb_type_resolver ? pb_type_resolver(atom_ctx, device_ctx, subckt_model,
-                                          subckt_connections)
-                       : std::string();
-    if (pb_type.empty()) {
-      VTR_LOG_ERROR(
-        "%s:%lu: read_mif_from_eblif: failed to resolve pb_type for .subckt "
-        "'%s' (%s #%zu)\n",
-        file_path.c_str(), static_cast<unsigned long>(line_no),
-        subckt_model.c_str(), matched_content.c_str(), field_index);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-
-    const MifSegmentId segment_id = mif_storage.create_segment();
-    mif_storage.set_segment_physical_pb(segment_id, pb_type);
-    mif_storage.set_segment_raw_data(segment_id, value);
-    VTR_LOG("read_mif: eblif %s -> VPR pb_type '%s'\n", matched_content.c_str(),
-            pb_type.c_str());
-    ++field_index;
-  }
-  if (ifs.bad()) {
-    VTR_LOG_ERROR("I/O error while reading eblif file '%s'\n",
-                  file_path.c_str());
-    return CMD_EXEC_FATAL_ERROR;
   }
 
   if (field_index == 0) {
@@ -376,41 +350,12 @@ int read_mif_from_eblif(const std::string& file_path, MifStorage& mif_storage,
       expected += "'";
     }
     VTR_LOG_ERROR(
-      "read_mif: no eblif fields matching configured content(s) [%s] in '%s'\n",
-      expected.c_str(), file_path.c_str());
+      "read_mif: no AtomBlock parameters matching configured content(s) "
+      "[%s]\n",
+      expected.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
-}
-
-std::string find_yosys_eblif_file_path() {
-  std::string found;
-
-  for (const std::filesystem::directory_entry& entry :
-       std::filesystem::directory_iterator(".")) {
-    if (!entry.is_regular_file()) {
-      continue;
-    }
-    const std::string name = entry.path().filename().string();
-    if (!name.ends_with(K_YOSYS_EBLIF_SUFFIX)) {
-      continue;
-    }
-    if (!found.empty()) {
-      VTR_LOG_ERROR("Cannot locate Yosys eblif: multiple '*%s' in cwd\n",
-                    K_YOSYS_EBLIF_SUFFIX);
-      return std::string();
-    }
-    found = name;
-  }
-
-  if (found.empty()) {
-    VTR_LOG_ERROR("Cannot locate Yosys eblif: no '*%s' in cwd\n",
-                  K_YOSYS_EBLIF_SUFFIX);
-    return std::string();
-  }
-
-  VTR_LOG("Located Yosys eblif '%s'\n", found.c_str());
-  return found;
 }
 
 } /* namespace openfpga */
