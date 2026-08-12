@@ -27,4 +27,3 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
 
 } /* end namespace openfpga */
 
-#endif
