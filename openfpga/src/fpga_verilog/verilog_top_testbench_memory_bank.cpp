@@ -55,11 +55,11 @@ constexpr const char* TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE =
   "BITSTREAM_WL_WORD_SIZE";
 
 void print_verilog_top_testbench_ql_memory_bank_port(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ConfigProtocol& config_protocol,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Print the address port for the Bit-Line decoder here */
   if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
@@ -284,12 +284,12 @@ void print_verilog_top_testbench_ql_memory_bank_port(
 }
 
 void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Connect global clock ports to shift-register programming clock signal */
   for (const FabricGlobalPortId& fabric_global_port :
@@ -344,12 +344,12 @@ void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
  */
 static void
 print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(
-  std::fstream& fp, const BasicPort& start_sr_port,
-  const BasicPort& sr_clock_port, const float& sr_clock_period,
+  mmostream& fp, const BasicPort& start_sr_port, const BasicPort& sr_clock_port,
+  const float& sr_clock_period,
   const VerilogTestbenchOption::e_simulator_type sim_type,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   fp << "always";
   fp << " @(posedge "
@@ -401,11 +401,10 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generat
  */
 static void
 print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
-  std::fstream& fp, const BasicPort& start_sr_port,
-  const BasicPort& sr_clock_port, const float& sr_clock_period,
-  const bool& little_endian) {
+  mmostream& fp, const BasicPort& start_sr_port, const BasicPort& sr_clock_port,
+  const float& sr_clock_period, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   fp << "always";
   fp << " @(posedge "
@@ -497,7 +496,7 @@ static int constrain_blwl_shift_register_clock_period_from_simulation_settings(
 }
 
 int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
-  std::fstream& fp, const ConfigProtocol& config_protocol,
+  mmostream& fp, const ConfigProtocol& config_protocol,
   const SimulationSetting& sim_settings, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
@@ -612,12 +611,12 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
 /* Verilog codes to load bitstream from a bit file for memory bank using flatten
  * BL/WLs */
 static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const FabricBitstream& fabric_bitstream, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   // New way to get the effective WL addr size.
@@ -804,14 +803,14 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
  * BL/WLs */
 static void
 print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   MemoryBankShiftRegisterFabricBitstream fabric_bits_by_addr =
@@ -1214,12 +1213,12 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(
 /* Verilog codes to load bitstream from a bit file for memory bank using BL/WL
  * decoders */
 static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const FabricBitstream& fabric_bitstream, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   MemoryBankFabricBitstream fabric_bits_by_addr =
@@ -1403,7 +1402,7 @@ static void print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(
 }
 
 void print_verilog_full_testbench_ql_memory_bank_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const ConfigProtocol& config_protocol, const bool& fast_configuration,
   const bool& bit_value_to_skip, const ModuleManager& module_manager,
   const ModuleId& top_module, const FabricBitstream& fabric_bitstream,

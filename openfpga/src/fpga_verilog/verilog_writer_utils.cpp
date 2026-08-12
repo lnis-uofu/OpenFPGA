@@ -4,7 +4,6 @@
  ***********************************************/
 #include <chrono>
 #include <ctime>
-#include <fstream>
 #include <iomanip>
 #include <string>
 
@@ -37,8 +36,8 @@ std::string generate_verilog_default_net_type_declaration(
 /* Using fstream is not flexible enough. Sometime downstream tool prefer
  * ofstream. So, an API to generate string is developed here. */
 void print_verilog_default_net_type_declaration(
-  std::fstream& fp, const e_verilog_default_net_type& default_net_type) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  mmostream& fp, const e_verilog_default_net_type& default_net_type) {
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "//----- Default net type -----" << std::endl;
   fp << generate_verilog_default_net_type_declaration(default_net_type)
@@ -50,10 +49,10 @@ void print_verilog_default_net_type_declaration(
  * Generate header comments for a Verilog netlist
  * include the description
  ***********************************************/
-void print_verilog_file_header(std::fstream& fp, const std::string& usage,
+void print_verilog_file_header(mmostream& fp, const std::string& usage,
                                const bool& include_time_stamp,
                                const bool& include_time_scale) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "//-------------------------------------------" << std::endl;
   fp << "//\tFPGA Synthesizable Verilog Netlist" << std::endl;
@@ -79,9 +78,9 @@ void print_verilog_file_header(std::fstream& fp, const std::string& usage,
 /********************************************************************
  * Print Verilog codes to include a netlist
  *******************************************************************/
-void print_verilog_include_netlist(std::fstream& fp,
+void print_verilog_include_netlist(mmostream& fp,
                                    const std::string& netlist_name) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "`include \"" << netlist_name << "\"" << std::endl;
 }
@@ -97,9 +96,9 @@ std::string generate_verilog_define_flag(const std::string& flag_name,
 
 /* Using fstream is not flexible enough. Sometime downstream tool prefer
  * ofstream. So, an API to generate string is developed here. */
-void print_verilog_define_flag(std::fstream& fp, const std::string& flag_name,
+void print_verilog_define_flag(mmostream& fp, const std::string& flag_name,
                                const int& flag_value) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << generate_verilog_define_flag(flag_name, flag_value) << std::endl;
 }
@@ -108,7 +107,7 @@ void print_verilog_define_flag(std::fstream& fp, const std::string& flag_name,
  * Generate include files for a Verilog netlist
  ***********************************************/
 void print_verilog_include_defines_preproc_file(
-  std::fstream& fp, const std::string& verilog_dir) {
+  mmostream& fp, const std::string& verilog_dir) {
   /* Generate the file name */
   std::string include_file_path = format_dir_path(verilog_dir);
   include_file_path += std::string(DEFINES_VERILOG_FILE_NAME);
@@ -119,8 +118,8 @@ void print_verilog_include_defines_preproc_file(
 /************************************************
  * Print a Verilog comment line
  ***********************************************/
-void print_verilog_comment(std::fstream& fp, const std::string& comment) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+void print_verilog_comment(mmostream& fp, const std::string& comment) {
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "// " << comment << std::endl;
 }
@@ -128,9 +127,9 @@ void print_verilog_comment(std::fstream& fp, const std::string& comment) {
 /************************************************
  * Print the declaration of a Verilog preprocessing flag
  ***********************************************/
-void print_verilog_preprocessing_flag(std::fstream& fp,
+void print_verilog_preprocessing_flag(mmostream& fp,
                                       const std::string& preproc_flag) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "`ifdef " << preproc_flag << std::endl;
 }
@@ -138,8 +137,8 @@ void print_verilog_preprocessing_flag(std::fstream& fp,
 /************************************************
  * Print the endif of a Verilog preprocessing flag
  ***********************************************/
-void print_verilog_endif(std::fstream& fp) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+void print_verilog_endif(mmostream& fp) {
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "`endif" << std::endl;
 }
@@ -149,10 +148,10 @@ void print_verilog_endif(std::fstream& fp) {
  * We use the following format:
  * module <module_name> (<ports without directions>);
  ***********************************************/
-void print_verilog_module_definition(std::fstream& fp,
+void print_verilog_module_definition(mmostream& fp,
                                      const ModuleManager& module_manager,
                                      const ModuleId& module_id) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   print_verilog_comment(
     fp, std::string("----- Verilog module for " +
@@ -225,10 +224,10 @@ void print_verilog_module_definition(std::fstream& fp,
  * Print a Verilog module ports based on the module id
  ***********************************************/
 void print_verilog_module_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* port type2type mapping */
   std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type>
@@ -352,10 +351,10 @@ void print_verilog_module_ports(
  * <tab><port definition with direction>
  ***********************************************/
 void print_verilog_module_declaration(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const e_verilog_default_net_type& default_net_type,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type,
   const bool& little_endian) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Apply default net type from user's option */
   if (default_net_type != VERILOG_DEFAULT_NET_TYPE_WIRE) {
@@ -389,11 +388,11 @@ void print_verilog_module_declaration(
  * mapping will be output by the module port name.
  *******************************************************************/
 void print_verilog_module_instance(
-  std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleId& module_id, const std::string& instance_name,
+  mmostream& fp, const ModuleManager& module_manager, const ModuleId& module_id,
+  const std::string& instance_name,
   const std::map<std::string, BasicPort>& port2port_name_map,
   const bool& use_explicit_port_map, const bool& little_endian) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Check: all the key ports in the port2port_name_map does exist in the child
    * module */
@@ -475,7 +474,7 @@ void print_verilog_module_instance(
  * of the child module in its parent module
  ***********************************************/
 void print_verilog_module_instance(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& parent_module_id, const ModuleId& child_module_id,
   const std::map<std::string, BasicPort>& port2port_name_map,
   const bool& use_explicit_port_map, const bool& little_endian) {
@@ -495,9 +494,9 @@ void print_verilog_module_instance(
  * Print an end line for a Verilog module
  ***********************************************/
 void print_verilog_module_end(
-  std::fstream& fp, const std::string& module_name,
+  mmostream& fp, const std::string& module_name,
   const e_verilog_default_net_type& default_net_type) {
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "endmodule" << std::endl;
   print_verilog_comment(
@@ -855,12 +854,12 @@ std::string generate_verilog_ports_constant_values(
  * Generate a wire connection, that assigns constant values to a
  * Verilog port
  *******************************************************************/
-void print_verilog_wire_constant_values(std::fstream& fp,
+void print_verilog_wire_constant_values(mmostream& fp,
                                         const BasicPort& output_port,
                                         const std::vector<size_t>& const_values,
                                         const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "\t";
   fp << "assign ";
@@ -874,10 +873,10 @@ void print_verilog_wire_constant_values(std::fstream& fp,
  * Verilog port
  *******************************************************************/
 void print_verilog_wire_constant_values_bit_blast(
-  std::fstream& fp, const BasicPort& output_port,
+  mmostream& fp, const BasicPort& output_port,
   const std::vector<size_t>& const_values, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   for (size_t ipin : output_port.pins()) {
     BasicPort curr_pin(output_port.get_name(), ipin, ipin);
@@ -893,10 +892,10 @@ void print_verilog_wire_constant_values_bit_blast(
  * Deposit constant values to a Verilog port
  *******************************************************************/
 void print_verilog_deposit_wire_constant_values(
-  std::fstream& fp, const BasicPort& output_port,
+  mmostream& fp, const BasicPort& output_port,
   const std::vector<size_t>& const_values, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "\t";
   fp << "$deposit(";
@@ -916,10 +915,10 @@ void print_verilog_deposit_wire_constant_values(
  * Verilog port
  *******************************************************************/
 void print_verilog_force_wire_constant_values(
-  std::fstream& fp, const BasicPort& output_port,
+  mmostream& fp, const BasicPort& output_port,
   const std::vector<size_t>& const_values, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   fp << "\t";
   fp << "force ";
@@ -932,13 +931,12 @@ void print_verilog_force_wire_constant_values(
  * Generate a wire connection for two Verilog ports
  * using "assign" syntax
  *******************************************************************/
-void print_verilog_wire_connection(std::fstream& fp,
-                                   const BasicPort& output_port,
+void print_verilog_wire_connection(mmostream& fp, const BasicPort& output_port,
                                    const BasicPort& input_port,
                                    const bool& inverted,
                                    const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Must check: the port width matches */
   VTR_ASSERT(input_port.get_width() == output_port.get_width());
@@ -962,13 +960,13 @@ void print_verilog_wire_connection(std::fstream& fp,
  * Generate a wire connection for two Verilog ports
  * using "assign" syntax
  *******************************************************************/
-void print_verilog_register_connection(std::fstream& fp,
+void print_verilog_register_connection(mmostream& fp,
                                        const BasicPort& output_port,
                                        const BasicPort& input_port,
                                        const bool& little_endian,
                                        const bool& inverted) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Must check: the port width matches */
   VTR_ASSERT(input_port.get_width() == output_port.get_width());
@@ -1001,13 +999,15 @@ void print_verilog_register_connection(std::fstream& fp,
  *    Buffer must have only 1 input (non-global) port and 1 output (non-global)
  *port
  *******************************************************************/
-void print_verilog_buffer_instance(
-  std::fstream& fp, ModuleManager& module_manager,
-  const CircuitLibrary& circuit_lib, const ModuleId& parent_module_id,
-  const CircuitModelId& buffer_model, const BasicPort& instance_input_port,
-  const BasicPort& instance_output_port, const bool& little_endian) {
+void print_verilog_buffer_instance(mmostream& fp, ModuleManager& module_manager,
+                                   const CircuitLibrary& circuit_lib,
+                                   const ModuleId& parent_module_id,
+                                   const CircuitModelId& buffer_model,
+                                   const BasicPort& instance_input_port,
+                                   const BasicPort& instance_output_port,
+                                   const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* To match the context, Buffer should have only 2 non-global ports: 1 input
    * port and 1 output port */
@@ -1130,14 +1130,14 @@ void print_verilog_buffer_instance(
  *            +-------------------------------------------------+
  *
  ********************************************************************/
-void print_verilog_local_sram_wires(std::fstream& fp,
+void print_verilog_local_sram_wires(mmostream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& sram_model,
                                     const e_config_protocol_type sram_orgz_type,
                                     const size_t& port_size,
                                     const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Port size must be at least one! */
   if (0 == port_size) {
@@ -1261,11 +1261,11 @@ void print_verilog_local_sram_wires(std::fstream& fp,
  *
  *********************************************************************/
 void print_verilog_local_config_bus(
-  std::fstream& fp, const std::string& prefix,
+  mmostream& fp, const std::string& prefix,
   const e_config_protocol_type& sram_orgz_type, const size_t& instance_id,
   const size_t& num_conf_bits, const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   switch (sram_orgz_type) {
     case CONFIG_MEM_STANDALONE:
@@ -1332,13 +1332,13 @@ void print_verilog_local_config_bus(
  *
  *********************************************************************/
 static void print_verilog_rram_mux_config_bus(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
   const size_t& mux_size, const size_t& mux_instance_id,
   const size_t& num_reserved_conf_bits, const size_t& num_conf_bits,
   const bool& little_endian) {
   /* Make sure we have a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   switch (sram_orgz_type) {
     case CONFIG_MEM_STANDALONE:
@@ -1450,7 +1450,7 @@ static void print_verilog_rram_mux_config_bus(
  * etc. This helps us to keep clean and simple Verilog generation
  *********************************************************************/
 void print_verilog_mux_config_bus(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
   const size_t& mux_size, const size_t& mux_instance_id,
   const size_t& num_reserved_conf_bits, const size_t& num_conf_bits,
@@ -1493,7 +1493,7 @@ void print_verilog_mux_config_bus(
  * before running this function !!!!
  *********************************************************************/
 void print_verilog_formal_verification_mux_sram_ports_wiring(
-  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  mmostream& fp, const CircuitLibrary& circuit_lib,
   const CircuitModelId& mux_model, const size_t& mux_size,
   const size_t& mux_instance_id, const size_t& num_conf_bits,
   const BasicPort& fm_config_bus, const bool& little_endian) {
@@ -1526,13 +1526,13 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(
  *  initial_value ----------------------+
  *
  *******************************************************************/
-void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
+void print_verilog_pulse_stimuli(mmostream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
                                  const size_t& flip_value,
                                  const bool& little_endian) {
   /* Validate the file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Config_done signal: indicate when configuration is finished */
   fp << "initial" << std::endl;
@@ -1572,14 +1572,13 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
  *  initial_value --------------------------------------------+
  *
  *******************************************************************/
-void print_verilog_shifted_clock_stimuli(std::fstream& fp,
-                                         const BasicPort& port,
+void print_verilog_shifted_clock_stimuli(mmostream& fp, const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
                                          const size_t& initial_value,
                                          const bool& little_endian) {
   /* Validate the file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Config_done signal: indicate when configuration is finished */
   fp << "initial" << std::endl;
@@ -1627,14 +1626,14 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
  *  initial_value -------  ...  --------------------------------+
  *
  *******************************************************************/
-void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
+void print_verilog_pulse_stimuli(mmostream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const std::vector<float>& pulse_widths,
                                  const std::vector<size_t>& flip_values,
                                  const std::string& wait_condition,
                                  const bool& little_endian) {
   /* Validate the file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Config_done signal: indicate when configuration is finished */
   fp << "initial" << std::endl;
@@ -1681,13 +1680,13 @@ void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
  *           |<--wait_condition-->|
  *
  *******************************************************************/
-void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
+void print_verilog_clock_stimuli(mmostream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
                                  const std::string& wait_condition,
                                  const bool& little_endian) {
   /* Validate the file stream */
-  VTR_ASSERT(true == valid_file_stream(fp));
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Config_done signal: indicate when configuration is finished */
   fp << "initial" << std::endl;
@@ -1733,15 +1732,13 @@ void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
 void print_verilog_netlist_include_header_file(
   const std::vector<std::string>& netlists_to_be_included,
   const char* subckt_dir, const char* header_file_name,
-  const bool& include_time_stamp) {
+  const bool& include_time_stamp, const bool& compressed) {
   std::string verilog_fname(std::string(subckt_dir) +
                             std::string(header_file_name));
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
-
-  VTR_ASSERT(true == valid_file_stream(fp));
+  mmostream fp(verilog_fname, compressed);
+  VTR_ASSERT(true == valid_file_mmostream(fp));
 
   /* Generate the descriptions*/
   print_verilog_file_header(fp, "Header file to include other Verilog netlists",

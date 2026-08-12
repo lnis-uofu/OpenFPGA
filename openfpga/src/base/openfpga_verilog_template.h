@@ -28,6 +28,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_constant_undriven_inputs =
     cmd.option("constant_undriven_inputs");
   CommandOptionId opt_include_timing = cmd.option("include_timing");
@@ -44,6 +45,8 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
    */
   FabricVerilogOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
   options.set_explicit_port_mapping(
     cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_include_timing(
@@ -77,6 +80,11 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
     }
   }
 
+  /* Reset verilog netlist manager to ensure a clean start. Otherwise, calling
+   * two times the command will cause netlist manager contains duplcated
+   * netlists  */
+  openfpga_ctx.mutable_verilog_netlists().clear();
+
   return fpga_fabric_verilog(
     openfpga_ctx.mutable_module_graph(),
     openfpga_ctx.mutable_verilog_netlists(),
@@ -102,6 +110,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_reference_benchmark =
     cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -141,6 +150,9 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   }
 
   options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
+
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
@@ -186,6 +198,7 @@ int write_preconfigured_fabric_wrapper_template(
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -212,6 +225,8 @@ int write_preconfigured_fabric_wrapper_template(
   options.set_dump_waveform(cmd_context.option_enable(cmd, opt_dump_waveform));
   options.set_print_formal_verification_top_netlist(true);
   options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
@@ -260,6 +275,7 @@ int write_testbench_template_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_top_module = cmd.option("top_module");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -277,6 +293,8 @@ int write_testbench_template_template(const T& openfpga_ctx, const Command& cmd,
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
 
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(
@@ -308,6 +326,7 @@ int write_testbench_io_connection_template(const T& openfpga_ctx,
   CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_little_endian = cmd.option("little_endian");
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -320,6 +339,8 @@ int write_testbench_io_connection_template(const T& openfpga_ctx,
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
@@ -357,6 +378,7 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_top_module = cmd.option("top_module");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
@@ -377,6 +399,8 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
 
   if (true == cmd_context.option_enable(cmd, opt_top_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_top_module));
@@ -423,6 +447,7 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark =
     cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_compress_output = cmd.option("compress_output");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
@@ -452,6 +477,8 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
       cmd_context.option_value(cmd, opt_default_net_type));
   }
   options.set_little_endian(cmd_context.option_enable(cmd, opt_little_endian));
+  options.set_compress_output(
+    cmd_context.option_enable(cmd, opt_compress_output));
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;

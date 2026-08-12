@@ -41,7 +41,7 @@ constexpr const char* APP_INSTANCE_NAME = "MAPPED_DESIGN";
  *    by default
  *******************************************************************/
 static void print_verilog_mock_fpga_wrapper_connect_ios(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
   const IoNameMap& io_name_map, const ModuleNameMap& module_name_map,
@@ -54,7 +54,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   const std::vector<std::string>& clock_port_names,
   const size_t& unused_io_value, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Only mappable i/o ports can be considered */
   std::vector<ModulePortId> module_io_ports;
@@ -291,13 +291,13 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
  * this pre-configured FPGA top module
  *******************************************************************/
 static int print_verilog_mock_fpga_wrapper_connect_global_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& fabric_global_ports, const IoNameMap& io_name_map,
   const std::vector<std::string>& benchmark_clock_port_names,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp,
@@ -466,11 +466,10 @@ int print_verilog_mock_fpga_wrapper(
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Generate a brief description on the Verilog file*/
   std::string title =

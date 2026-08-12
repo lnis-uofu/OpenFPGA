@@ -87,7 +87,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-#          - name: "Build Compatibility (GCC, Windows Msys2-UCRT64)"
+#          - name: "Build (GCC, Windows Msys2-UCRT64)"
 #            cc: gcc
 #            cxx: g++
 #            os: UCRT64
@@ -97,7 +97,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -114,6 +114,8 @@ jobs:
           
       - name: Checkout repo
         uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -211,17 +213,17 @@ jobs:
       fail-fast: false
       matrix:
         config:
-#          - name: "Build Compatibility (GCC, Windows Msys2-UCRT64)"
+#          - name: "Build (GCC, Windows Msys2-UCRT64)"
 #            cc: gcc
 #            cxx: g++
 #            os: UCRT64
 #            prefix: ucrt64
-          - name: "Build Compatibility (GCC, Windows Msys2-MINGW64, debug)"
+          - name: "Build (GCC, Windows Msys2-MINGW64, debug)"
             cc: gcc
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=ON -DWITH_ABC=OFF -DOPENFPGA_WITH_SLANG=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -321,94 +323,8 @@ jobs:
           echo "==== Run a quick test ===="
           python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path "${DEFAULT_TOOL_PATH}"
 
-  # This step is adapted from the Yosys MSVC build CI workflow at
-  #     http://github.com/YosysHQ/yosys/blob/2dc69a75783b00e151e500d036c7bf4add26a93b/.github/workflows/extra-builds.yml
-  yosys-win-vs-prep:
-    name: Prepare Visual Studio build
-    runs-on: ubuntu-latest
-    needs: change_detect
-    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
-    steps:
-      - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-          
-      # Force checkout all the submodules recursively as yosys require submodules to be checked out before build MSVC project 
-      - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          persist-credentials: false
-
-      - name: Install dep required by Yosys windows build preparation
-        run: sudo apt-get install bison clang flex libffi-dev libfl-dev libreadline-dev pkg-config tcl-dev zlib1g-dev libgtest-dev libgmock-dev
-#sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
-
-      - name: Check tool version
-        run: |
-          bison --version
-          flex --version
-          gcc --version
-
-      # Use -j1 to overwrite the default -j8 in this build.yaml. To ensure the verilog_parser.output can be built successfully 
-      - name: Build
-        run: |
-          cd yosys
-          ls
-          make vcxsrc YOSYS_COMPILER="Visual Studio" VCX_DIR_NAME=yosys-win32-vcxsrc-latest -j1
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: vcxsrc
-          path: yosys/yosys-win32-vcxsrc-latest.zip
-
-  # Test the compilation compatibility on Windows
-  win_yosys_msbuild:
-    needs: yosys-win-vs-prep
-    name: ${{ matrix.config.name }}
-    runs-on: windows-latest
-    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
-    # Comment the line out when base image is built again
-    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
-    # Branch on different OS and settings
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - name: "Prebuild Yosys (Windows-latest)"
-    steps:
-      - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Fetch Yosys MSVC artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: vcxsrc
-          path: .
-
-      - name: Unzip Yosys MSVC artifact
-        run: |
-          unzip yosys-win32-vcxsrc-latest.zip
-
-      - name: setup-msbuild for Yosys
-        uses: microsoft/setup-msbuild@v2
-
-      - name: MSBuild for Yosys
-        run: |
-          cd yosys-win32-vcxsrc-latest
-          msbuild YosysVS.sln /p:PlatformToolset=v142 /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.26100.0
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: prebuilt_yosys_win
-          path: yosys-win32-vcxsrc-latest/
-
   # Add an installer creation for MSVC build
   win_msvc_installer:
-    needs: win_yosys_msbuild
     name: ${{ matrix.config.name }}
     runs-on: windows-2025
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
@@ -476,12 +392,6 @@ jobs:
           }
           echo "CURL_PATH=$curlPath" >> $env:GITHUB_ENV
 
-      - name: Fetch Prebuilt Yosys MSVC artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: prebuilt_yosys_win
-          path: yosys/
-
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
       
@@ -498,6 +408,17 @@ jobs:
         uses: SimenB/github-actions-cpu-cores@v3
         id: cpu-cores
 
+# Adapt from https://github.com/tangxifan/yosys/blob/41a4b5a039d1f6e04d9c577d3f186ba85f6f1f01/.github/workflows/extra-builds.yml#L60-L80
+      - name: Build yosys
+        shell: powershell
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: |
+          cd yosys
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSYS_COMPILER_LAUNCHER=ccache
+          cmake --build build --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
+          cmake --install build --prefix ${{ github.workspace }}/yosys_installed
+
       - name: Create installer
         shell: powershell
         env:
@@ -507,7 +428,7 @@ jobs:
           cd build
           cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -DCMAKE_INSTALL_RPATH="${{ github.workspace }}/vcpkg" -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build . --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
-          cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release
+          cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release -DOPENFPGA_WITH_YOSYS=OFF
 
       - name: Create Python virtual environment
         shell: powershell
@@ -532,6 +453,7 @@ jobs:
 
           echo "==== Add DLL directories to PATH ===="
           $dllPaths = @(
+            "${{ github.workspace }}\yosys_installed",
             "${{ github.workspace }}\build\openfpga\Release",
             "${{ github.workspace }}\build\libs\libopenfpgashell\Release",
             "${{ github.workspace }}\build\libs\libpcf\Release",
@@ -597,10 +519,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-11 (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
-          - name: "Build Compatibility: GCC-12 (Ubuntu 22.04)"
+          - name: "Build: GCC-13 (Ubuntu 22.04)"
+            cc: gcc-13
+            cxx: g++-13
+          - name: "Build: GCC-12 (Ubuntu 22.04)"
             cc: gcc-12
             cxx: g++-12
     # Define the steps to run the build job
@@ -654,7 +576,7 @@ jobs:
         run: ccache -s
       - name: Upload artifact
         uses: actions/upload-artifact@v7
-        if: ${{ matrix.config.cc == 'gcc-11'}}
+        if: ${{ matrix.config.cc == 'gcc-12'}}
         with:
           name: openfpga
           path: |
@@ -666,11 +588,15 @@ jobs:
             build/openfpga/libopenfpga.a
             build/openfpga/openfpga_shell.so
             build/openfpga/openfpga
+            build/yosys/yosys
+            build/yosys/yosys-abc
+            build/yosys/yosys-config
+            build/yosys/libyosys-abc.a
             build/yosys/share
-            build/yosys/bin
+            build/yosys-smtbmc
+            build/yosys-witness
             openfpga_flow
             openfpga.sh
-
 
   linux_build_opt:
     needs: change_detect
@@ -686,36 +612,32 @@ jobs:
       matrix:
         config:
           - name: "Build w/o Yosys (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF"
-          - name: "Build w/o Yosys Slang (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
-            cmake_flags: "-DOPENFPGA_WITH_SLANG=OFF"
           - name: "Build w/o test (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_WITH_TEST=OFF"
           - name: "Build w/o version number (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_WITH_VERSION=OFF"
           - name: "Build w/o SWIG support (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF"
           - name: "Build with capnproto update (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN=ON"
           - name: "Build with libedit (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_READLINE_MODE=libedit"
           - name: "Build with std::getline (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
             cmake_flags: "-DOPENFPGA_READLINE_MODE=standard"
     # Define the steps to run the build job
     env:
@@ -781,7 +703,11 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+        run: |
+          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+          # To use gcc-12 in the current step and export paths for subsequent steps:
+          echo "CC=/opt/rh/gcc-toolset-12/root/usr/bin/gcc" >> $GITHUB_ENV
+          echo "CXX=/opt/rh/gcc-toolset-12/root/usr/bin/g++" >> $GITHUB_ENV
       
       - name: Dump tool versions
         run: |
@@ -805,6 +731,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          source /opt/rh/gcc-toolset-12/enable
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           git config --global --add safe.directory '*'
           make all BUILD_TYPE=$BUILD_TYPE  -j${{ steps.cpu-cores.outputs.count}}
@@ -990,7 +917,7 @@ jobs:
         shell: bash
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
+          make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON -DOPENFPGA_WITH_YOSYS=OFF"
 
       - name: Quick Test
         shell: bash
@@ -1011,8 +938,8 @@ jobs:
       matrix:
         config:
           - name: "Installer w/o doc (Ubuntu 22.04)"
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-12
+            cxx: g++-12
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -1130,16 +1057,17 @@ jobs:
           chmod +x build/vtr-verilog-to-routing/ace2/ace
           chmod +x build/vtr-verilog-to-routing/vpr/vpr
           chmod +x build/openfpga/openfpga
-          chmod +x build/yosys/bin/yosys
-          chmod +x build/yosys/bin/yosys-abc
-          chmod +x build/yosys/bin/yosys-config
-          chmod +x build/yosys/bin/yosys-filterlib
-          chmod +x build/yosys/bin/yosys-smtbmc
+          chmod +x build/yosys/yosys
+          chmod +x build/yosys/yosys-abc
+          chmod +x build/yosys/yosys-config
+      - name: file tree
+        run: |
+          tree build/
       - name: linker status
         run: |
           ldd build/openfpga/openfpga
-          ldd build/yosys/bin/yosys
-      - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
+          ldd build/yosys/yosys
+      - name: ${{matrix.config.name}}_GCC-12_(Ubuntu 22.04)
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
@@ -1183,7 +1111,7 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
 
-      - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
+      - name: ${{matrix.config.name}}_GCC-12_(Ubuntu 22.04)
         shell: bash
         run: |
           bash .github/workflows/install_dependencies_run_ubuntu.sh

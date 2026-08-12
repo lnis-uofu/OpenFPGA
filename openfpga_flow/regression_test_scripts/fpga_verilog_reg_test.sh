@@ -63,6 +63,7 @@ run-task fpga_verilog/dsp/wide_multi_mode_mult_16x16 $@
 
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode registerable multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8_reg $@
+run-task fpga_verilog/dsp/single_mode_mult_8x8_reg_bus $@
 
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit multiplier + dual port ram 1k ";
 run-task fpga_verilog/dsp/mult_8x8_chain_dpram16k $@
@@ -156,6 +157,9 @@ run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus0 $@
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_bus1 $@
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit0 $@
 run-task fpga_verilog/verilog_netlist_formats/undriven_input_bit1 $@
+
+echo -e "Testing Verilog gz output";
+run-task fpga_verilog/verilog_netlist_formats/verilog_gz $@
 
 echo -e "Testing Verilog generation with flatten routing modules";
 run-task fpga_verilog/flatten_routing $@

@@ -63,10 +63,10 @@ static size_t find_config_protocol_num_prog_clocks(
  * Print local wires for flatten memory (standalone) configuration protocols
  *******************************************************************/
 static void print_verilog_top_testbench_flatten_memory_port(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Print the port for Bit-Line */
   print_verilog_comment(fp, std::string("---- Bit Line ports -----"));
@@ -89,10 +89,10 @@ static void print_verilog_top_testbench_flatten_memory_port(
  * Print local wires for configuration chain protocols
  *******************************************************************/
 static void print_verilog_top_testbench_config_chain_port(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Print the head of configuraion-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain head -----"));
@@ -119,10 +119,10 @@ static void print_verilog_top_testbench_config_chain_port(
  * Print local wires for memory bank configuration protocols
  *******************************************************************/
 static void print_verilog_top_testbench_memory_bank_port(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Print the address port for the Bit-Line decoder here */
   print_verilog_comment(
@@ -211,10 +211,10 @@ static void print_verilog_top_testbench_memory_bank_port(
  * Print local wires for frame-based decoder protocols
  *******************************************************************/
 static void print_verilog_top_testbench_frame_decoder_port(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Print the address port for the frame-based decoder here */
   print_verilog_comment(
@@ -272,7 +272,7 @@ static void print_verilog_top_testbench_frame_decoder_port(
  * Print local wires for different types of configuration protocols
  *******************************************************************/
 static void print_verilog_top_testbench_config_protocol_port(
-  std::fstream& fp, const ConfigProtocol& config_protocol,
+  mmostream& fp, const ConfigProtocol& config_protocol,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const bool& little_endian) {
   switch (config_protocol.type()) {
@@ -307,12 +307,12 @@ static void print_verilog_top_testbench_config_protocol_port(
  * Wire the global clock ports of FPGA fabric to local wires
  *******************************************************************/
 static void print_verilog_top_testbench_global_clock_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const SimulationSetting& simulation_parameters, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Connect global clock ports to operating or programming clock signal */
   for (const FabricGlobalPortId& fabric_global_port :
@@ -397,12 +397,12 @@ static void print_verilog_top_testbench_global_clock_ports_stimuli(
  * Wire the global config done ports of FPGA fabric to local wires
  *******************************************************************/
 static void print_verilog_top_testbench_global_config_done_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Connect global configuration done ports to configuration done signal */
   for (const FabricGlobalPortId& fabric_global_port :
@@ -442,12 +442,12 @@ static void print_verilog_top_testbench_global_config_done_ports_stimuli(
  * Wire the global reset ports of FPGA fabric to local wires
  *******************************************************************/
 static void print_verilog_top_testbench_global_reset_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const bool& active_global_prog_reset, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Connect global reset ports to operating or programming reset signal */
   for (const FabricGlobalPortId& fabric_global_port :
@@ -557,12 +557,12 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
  * Wire the global set ports of FPGA fabric to local wires
  *******************************************************************/
 static void print_verilog_top_testbench_global_set_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const bool& active_global_prog_set, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Connect global set ports to operating or programming set signal */
   for (const FabricGlobalPortId& fabric_global_port :
@@ -636,12 +636,12 @@ static void print_verilog_top_testbench_global_set_ports_stimuli(
  * Wire the regular global ports of FPGA fabric to local wires
  *******************************************************************/
 static void print_verilog_top_testbench_regular_global_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* For the rest of global ports, wire them to constant signals */
   for (const FabricGlobalPortId& fabric_global_port :
@@ -705,7 +705,7 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
  * Wire the global ports of FPGA fabric to local wires
  *******************************************************************/
 static void print_verilog_top_testbench_global_ports_stimuli(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
   const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& fabric_global_port_info,
@@ -713,7 +713,7 @@ static void print_verilog_top_testbench_global_ports_stimuli(
   const bool& active_global_prog_reset, const bool& active_global_prog_set,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp,
@@ -756,7 +756,7 @@ static void print_verilog_top_testbench_global_ports_stimuli(
  * - connect this clock to the default clock port
  *******************************************************************/
 static void print_verilog_top_testbench_benchmark_clock_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const std::vector<std::string>& clock_port_names,
   const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
@@ -842,7 +842,7 @@ static void print_verilog_top_testbench_benchmark_clock_ports(
  *        configuration bits
  *******************************************************************/
 static void print_verilog_top_testbench_ports(
-  std::fstream& fp, const ModuleManager& module_manager,
+  mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map, const ModuleId& top_module,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
@@ -853,7 +853,7 @@ static void print_verilog_top_testbench_ports(
   const VerilogTestbenchOption& options) {
   bool little_endian = options.little_endian();
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_default_net_type_declaration(fp, options.default_net_type());
 
@@ -1199,13 +1199,13 @@ static size_t calculate_num_config_clock_cycles(
  * Instanciate the input benchmark module
  *******************************************************************/
 static void print_verilog_top_testbench_benchmark_instance(
-  std::fstream& fp, const std::string& reference_verilog_top_name,
+  mmostream& fp, const std::string& reference_verilog_top_name,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const std::vector<std::string>& clock_port_names,
   const bool& explicit_port_mapping) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Instanciate benchmark */
   print_verilog_comment(
@@ -1238,13 +1238,13 @@ static void print_verilog_top_testbench_benchmark_instance(
  * 7. set signal
  *******************************************************************/
 static void print_verilog_top_testbench_generic_stimulus(
-  std::fstream& fp, const ConfigProtocol& config_protocol,
+  mmostream& fp, const ConfigProtocol& config_protocol,
   const SimulationSetting& simulation_parameters,
   const size_t& num_config_clock_cycles, const float& prog_clock_period,
   const float& op_clock_period, const float& timescale,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp, std::string("----- Number of clock cycles in configuration phase: " +
@@ -1496,7 +1496,7 @@ static void print_verilog_top_testbench_generic_stimulus(
  *   1. the enable signal
  *******************************************************************/
 static int print_verilog_top_testbench_configuration_protocol_stimulus(
-  std::fstream& fp, const ConfigProtocol& config_protocol,
+  mmostream& fp, const ConfigProtocol& config_protocol,
   const SimulationSetting& sim_settings, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
@@ -1505,7 +1505,7 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
   const VerilogTestbenchOption::e_simulator_type sim_type,
   const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Branch on the type of configuration protocol */
   switch (config_protocol.type()) {
@@ -1551,11 +1551,11 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
  *right after the first reset cycle
  *******************************************************************/
 static void print_verilog_full_testbench_vanilla_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const FabricBitstream& fabric_bitstream, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Find Bit-Line and Word-Line port */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
@@ -1678,14 +1678,14 @@ static void print_verilog_full_testbench_vanilla_bitstream(
  *    we should create voltage waveforms only after programming phase
  *******************************************************************/
 static void print_verilog_full_testbench_configuration_chain_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
   const ConfigProtocol& config_protocol, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp, "----- Begin bitstream loading during configuration phase -----");
@@ -2120,12 +2120,12 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
  * where configuration bits are programming in serial (one by one)
  *******************************************************************/
 static void print_verilog_full_testbench_memory_bank_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const FabricBitstream& fabric_bitstream, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   MemoryBankFabricBitstream fabric_bits_by_addr =
@@ -2287,12 +2287,12 @@ static void print_verilog_full_testbench_memory_bank_bitstream(
  * where configuration bits are programming in serial (one by one)
  *******************************************************************/
 static void print_verilog_full_testbench_frame_decoder_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const bool& fast_configuration, const bool& bit_value_to_skip,
   const ModuleManager& module_manager, const ModuleId& top_module,
   const FabricBitstream& fabric_bitstream, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   FrameFabricBitstream fabric_bits_by_addr =
@@ -2438,7 +2438,7 @@ static void print_verilog_full_testbench_frame_decoder_bitstream(
  *a physical FPGA
  *******************************************************************/
 static void print_verilog_full_testbench_bitstream(
-  std::fstream& fp, const std::string& bitstream_file,
+  mmostream& fp, const std::string& bitstream_file,
   const ConfigProtocol& config_protocol, const bool& fast_configuration,
   const bool& bit_value_to_skip, const ModuleManager& module_manager,
   const ModuleId& top_module, const BitstreamManager& bitstream_manager,
@@ -2488,13 +2488,13 @@ static void print_verilog_full_testbench_bitstream(
  * This function is designed to drive the reset port of a benchmark module
  *******************************************************************/
 static void print_verilog_top_testbench_reset_stimuli(
-  std::fstream& fp, const AtomContext& atom_ctx,
+  mmostream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const std::string& port_name_postfix,
   const std::vector<std::string>& clock_port_names, const bool& little_endian) {
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(fp, "----- Begin reset signal generation -----");
 
@@ -2547,10 +2547,10 @@ static void print_verilog_top_testbench_reset_stimuli(
  *   that the configuration phase is finished
  *******************************************************************/
 static void print_verilog_top_testbench_check(
-  std::fstream& fp, const std::string& config_done_port_name,
+  mmostream& fp, const std::string& config_done_port_name,
   const std::string& error_counter_name, const bool& little_endian) {
   /* Validate the file stream */
-  valid_file_stream(fp);
+  valid_file_mmostream(fp);
 
   print_verilog_comment(
     fp,
@@ -2622,11 +2622,10 @@ int print_verilog_full_testbench(
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  mmostream fp(verilog_fname, options.compress_output());
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_mmostream(verilog_fname.c_str(), fp);
 
   /* Generate a brief description on the Verilog file*/
   std::string title =

@@ -49,10 +49,8 @@ static int print_verilog_tile_module_netlist(
           verilog_fpath.c_str(), tile_module_name.c_str());
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(fp, std::string("Tile Verilog module for FPGA"),
                             options.time_stamp());

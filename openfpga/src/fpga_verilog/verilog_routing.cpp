@@ -108,10 +108,8 @@ static void print_verilog_routing_connection_box_unique_module(
   std::string verilog_fpath(subckt_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(
     fp,
@@ -221,10 +219,8 @@ static void print_verilog_routing_switch_box_unique_module(
   std::string verilog_fpath(subckt_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(
     fp,

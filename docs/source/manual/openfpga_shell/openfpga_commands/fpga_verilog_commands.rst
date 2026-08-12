@@ -48,6 +48,10 @@ write_fabric_verilog
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
+  .. option:: --compress_output
+
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
+
   .. option:: --no_time_stamp
 
     Do not print time stamp in Verilog netlists
@@ -126,6 +130,10 @@ write_full_testbench
     Use the little endian in Verilog netlists, e.g., portA[3:0]. If not specified, use the big endian as default, i.e., portA[0:3].
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
+
+  .. option:: --compress_output
+
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
 
   .. option:: --no_time_stamp
 
@@ -206,6 +214,10 @@ __ iverilog_website_
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
+  .. option:: --compress_output
+
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
+
  .. option:: --no_time_stamp
 
     Do not print time stamp in Verilog netlists
@@ -254,7 +266,9 @@ write_testbench_template
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
+  .. option:: --compress_output
 
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
 
   .. option:: --no_time_stamp
 
@@ -297,7 +311,9 @@ write_testbench_io_connection
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
+  .. option:: --compress_output
 
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
 
   .. option:: --no_time_stamp
 
@@ -348,7 +364,9 @@ write_mock_fpga_wrapper
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
+  .. option:: --compress_output
 
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
 
   .. option:: --no_time_stamp
 
@@ -401,7 +419,9 @@ write_preconfigured_testbench
 
     .. note:: To ensure the consistency between Verilog netlists and testbenches, please ensure the little endian is applied to all the commands releated.
 
+  .. option:: --compress_output
 
+    All the Verilog netlists will be outputted in a compressed format (.v.gz). Useful in reduce disk space when netlist sizes are large. 
 
   .. option:: --no_time_stamp
 

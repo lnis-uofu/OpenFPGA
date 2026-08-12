@@ -41,7 +41,7 @@ namespace openfpga {
  ********************************************************************/
 static void print_verilog_mux_memory_module(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  mmostream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
   const ModuleNameMap& module_name_map, const FabricVerilogOption& options) {
   /* Multiplexers built with different technology is in different organization
    */
@@ -130,10 +130,9 @@ void print_verilog_submodule_memories(
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fpath.c_str(), fp);
+  mmostream fp(verilog_fpath, options.compress_output());
+  /* Validate the file stream */
+  check_file_mmostream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created
    * properly */

@@ -1,15 +1,14 @@
-#ifndef VERILOG_SUBMODULE_UTILS_H
-#define VERILOG_SUBMODULE_UTILS_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <fstream>
 #include <string>
 
 #include "circuit_library.h"
 #include "fabric_verilog_options.h"
 #include "module_manager.h"
+#include "openfpga_mmfstream.h"
 #include "verilog_port_types.h"
 
 /********************************************************************
@@ -19,7 +18,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_submodule_timing(std::fstream& fp,
+void print_verilog_submodule_timing(mmostream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model,
                                     const bool& little_endian);
@@ -33,5 +32,3 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
-
-#endif

@@ -77,12 +77,10 @@ elif [ "$(lsb_release -rs)" = "22.04" ]; then
     apt-get install -y \
         exuberant-ctags \
         qtbase5-dev \
-        g++-9 \
-        gcc-9 \
-        g++-10 \
-        gcc-10 \
-        g++-11 \
-        gcc-11 \
+        g++-12 \
+        gcc-12 \
+        g++-13 \
+        gcc-13 \
         clang-11 \
         clang-12 \
         clang-13 \
