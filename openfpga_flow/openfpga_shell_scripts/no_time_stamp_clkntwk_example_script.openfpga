@@ -46,7 +46,9 @@ write_fabric_pin_physical_location --file ${OPENFPGA_OUTPUT_DIR}/fabric_pin_phy_
 
 # Write gsb to XML
 write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml --verbose
-write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_no_rr_info --verbose --exclude_rr_info
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_no_rr_info ----verbose --exclude_rr_info
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_gz --compress_output --verbose
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_gz_no_rr_info --compress_output --verbose --exclude_rr_info
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
