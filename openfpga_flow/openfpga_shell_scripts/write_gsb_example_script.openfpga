@@ -27,6 +27,7 @@ build_fabric ${OPENFPGA_BUILD_FABRIC_OPTION} #--verbose
 write_gsb_to_xml --file ${OPENFPGA_GSB_XML_PATH} --verbose ${OPENFPGA_WRITE_GSB_OPTION}
 write_gsb_to_xml --file ${OPENFPGA_GSB_XML_PATH}_gz --compress_output --verbose ${OPENFPGA_WRITE_GSB_OPTION}
 # Diff gsb outputs between xml and xml_gz 
+ext_exec --command "rm -rf ${OPENFPGA_GSB_XML_PATH}_gz_tmp"
 ext_exec --command "cp -rf ${OPENFPGA_GSB_XML_PATH}_gz ${OPENFPGA_GSB_XML_PATH}_gz_tmp"
 ext_exec --command "gunzip -r ${OPENFPGA_GSB_XML_PATH}_gz_tmp"
 ext_exec --command "diff -r ${OPENFPGA_GSB_XML_PATH} ${OPENFPGA_GSB_XML_PATH}_gz_tmp"
