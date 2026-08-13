@@ -30,9 +30,9 @@ write_fabric_io_info --file ./fabric_io_location.xml --verbose
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC --explicit_port_mapping --include_timing --use_relative_path --print_user_defined_template --verbose
+write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC --explicit_port_mapping --include_timing --use_relative_path --print_user_defined_template --no_time_stamp --verbose
 # Write the gz version of netlists 
-write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ --explicit_port_mapping --include_timing --use_relative_path --print_user_defined_template --compress_output --verbose
+write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ --explicit_port_mapping --include_timing --use_relative_path --print_user_defined_template --compress_output --no_time_stamp --verbose
 
 # Now diff the two version and ensure they are the same
 ext_exec --command "gunzip -r ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC_GZ/"

@@ -1,9 +1,4 @@
-#ifndef WRITE_XML_DEVICE_RR_GSB_H
-#define WRITE_XML_DEVICE_RR_GSB_H
-
-/********************************************************************
- * Include header files that are required by function declaration
- *******************************************************************/
+#pragma once
 #include <string>
 
 #include "device_grid.h"
@@ -19,12 +14,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_device_rr_gsb_to_xml(
-  const DeviceGrid& vpr_device_grid,
-  const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const ModuleManager& module_manager,
-  const RRGSBWriterOption& options);
+int write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
+                               const VprDeviceAnnotation& vpr_device_annotation,
+                               const RRGraphView& rr_graph,
+                               const DeviceRRGSB& device_rr_gsb,
+                               const ModuleManager& module_manager,
+                               const RRGSBWriterOption& options);
 
 } /* end namespace openfpga */
-
-#endif
