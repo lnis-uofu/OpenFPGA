@@ -5,6 +5,7 @@
 
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "openfpga_digest.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -39,6 +40,10 @@ BitstreamWriterOption::e_bitfile_type BitstreamWriterOption::output_file_type()
 
 std::string BitstreamWriterOption::output_file_name() const {
   return output_file_;
+}
+
+bool BitstreamWriterOption::compress_output() const {
+  return file_require_gz(output_file_);
 }
 
 bool BitstreamWriterOption::time_stamp() const { return time_stamp_; }

@@ -598,10 +598,8 @@ int write_fabric_bitstream_to_text_file(
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
-  std::fstream fp;
-  fp.open(fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(fname.c_str(), fp);
+  mmostream fp(fname, options.compress_output());
+  check_file_mmostream(fname.c_str(), fp);
 
   bool apply_fast_configuration =
     is_fast_configuration_applicable(global_ports) &&
