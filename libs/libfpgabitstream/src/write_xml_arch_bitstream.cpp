@@ -7,17 +7,17 @@
 #include <sstream>
 
 /* Headers from vtrutil library */
+#include "pugixml.hpp"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "pugixml.hpp"
 
 /* Headers from openfpgautil library */
-#include "command_exit_codes.h"
 #include "bitstream_manager_utils.h"
-#include "openfpga_port.h"
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_gz_xml_writer.h"
+#include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_tokenizer.h"
 #include "write_xml_arch_bitstream.h"
@@ -44,7 +44,8 @@ static void write_bitstream_xml_file_head(pugi::xml_node& parent_node,
 
   ss << "-->" << std::endl;
   ss << std::endl;
-  pugi::xml_node cmt_node = parent_node.insert_child_before(pugi::node_comment, parent_node.first_child());
+  pugi::xml_node cmt_node = parent_node.insert_child_before(
+    pugi::node_comment, parent_node.first_child());
   cmt_node.set_value(ss.str().c_str());
 }
 
@@ -59,16 +60,19 @@ static void write_bitstream_xml_file_head(pugi::xml_node& parent_node,
 static void rec_write_block_bitstream_to_xml_file(
   pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const ConfigBlockId& block, const size_t& hierarchy_level) {
-  /* Write the bits of this block. The block name has been created before entering this function */
-  parent_node.append_attribute("name").set_value(bitstream_manager.block_name(block).c_str());
-  parent_node.append_attribute("hierarchy_level").set_value(static_cast<unsigned long long>(hierarchy_level));
-  
+  /* Write the bits of this block. The block name has been created before
+   * entering this function */
+  parent_node.append_attribute("name").set_value(
+    bitstream_manager.block_name(block).c_str());
+  parent_node.append_attribute("hierarchy_level")
+    .set_value(static_cast<unsigned long long>(hierarchy_level));
+
   /* Dive to child blocks if this block has any */
   for (const ConfigBlockId& child_block :
        bitstream_manager.block_children(block)) {
     pugi::xml_node blk_node = parent_node.append_child("bitstream_block");
-    rec_write_block_bitstream_to_xml_file(blk_node, bitstream_manager, child_block,
-                                          hierarchy_level + 1);
+    rec_write_block_bitstream_to_xml_file(blk_node, bitstream_manager,
+                                          child_block, hierarchy_level + 1);
   }
 
   if (0 == bitstream_manager.block_bits(block).size()) {
@@ -83,8 +87,10 @@ static void rec_write_block_bitstream_to_xml_file(
   size_t hierarchy_counter = 0;
   for (const ConfigBlockId& temp_block : block_hierarchy) {
     pugi::xml_node inst_node = hie_node.append_child("instance");
-    inst_node.append_attribute("level").set_value(static_cast<unsigned long long>(hierarchy_counter));
-    inst_node.append_attribute("name").set_value(bitstream_manager.block_name(temp_block).c_str());
+    inst_node.append_attribute("level").set_value(
+      static_cast<unsigned long long>(hierarchy_counter));
+    inst_node.append_attribute("name").set_value(
+      bitstream_manager.block_name(temp_block).c_str());
     hierarchy_counter++;
   }
 
@@ -97,7 +103,8 @@ static void rec_write_block_bitstream_to_xml_file(
       bitstream_manager.block_input_net_ids(block));
     for (const std::string& net : input_net_tokenizer.split(std::string(" "))) {
       pugi::xml_node path_node = input_nets_node.append_child("path");
-      path_node.append_attribute("id").set_value(static_cast<unsigned long long>(path_counter));
+      path_node.append_attribute("id").set_value(
+        static_cast<unsigned long long>(path_counter));
       path_node.append_attribute("net_name").set_value(net.c_str());
       path_counter++;
     }
@@ -112,7 +119,8 @@ static void rec_write_block_bitstream_to_xml_file(
     for (const std::string& net :
          output_net_tokenizer.split(std::string(" "))) {
       pugi::xml_node path_node = output_nets_node.append_child("path");
-      path_node.append_attribute("id").set_value(static_cast<unsigned long long>(path_counter));
+      path_node.append_attribute("id").set_value(
+        static_cast<unsigned long long>(path_counter));
       path_node.append_attribute("net_name").set_value(net.c_str());
       path_counter++;
     }
@@ -124,17 +132,17 @@ static void rec_write_block_bitstream_to_xml_file(
   /* Output path id only when it is valid */
   if (true == bitstream_manager.valid_block_path_id(block)) {
     bits_node.append_attribute("path_id").set_value(
-      bitstream_manager.block_path_id(block)
-    );
+      bitstream_manager.block_path_id(block));
   }
 
   for (const ConfigBitId& child_bit : bitstream_manager.block_bits(block)) {
     pugi::xml_node bit_node = bits_node.append_child("bit");
-    BasicPort mem_port(CONFIGURABLE_MEMORY_DATA_OUT_NAME, bit_counter, bit_counter);
-    bit_node.append_attribute("memory_port").set_value(mem_port.to_simple_verilog_string().c_str());
+    BasicPort mem_port(CONFIGURABLE_MEMORY_DATA_OUT_NAME, bit_counter,
+                       bit_counter);
+    bit_node.append_attribute("memory_port")
+      .set_value(mem_port.to_simple_verilog_string().c_str());
     bit_node.append_attribute("value").set_value(
-      bitstream_manager.bit_value(child_bit) ? "1" : "0"
-    );
+      bitstream_manager.bit_value(child_bit) ? "1" : "0");
     bit_counter++;
   }
 }
@@ -154,8 +162,8 @@ static void rec_write_block_bitstream_to_xml_file(
  * 3. TODO: support FASM format
  *******************************************************************/
 int write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
-                                      const std::string& fname,
-                                      const bool& include_time_stamp) {
+                                     const std::string& fname,
+                                     const bool& include_time_stamp) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR(
@@ -171,7 +179,7 @@ int write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
 
   pugi::xml_document doc;
   pugi::xml_node root_node = doc.append_child("bitstream_block");
-  
+
   /* Put down a brief introduction */
   write_bitstream_xml_file_head(root_node, include_time_stamp);
 
@@ -188,7 +196,8 @@ int write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
   }
 
   /* Write bitstream, block by block, in a recursive way */
-  rec_write_block_bitstream_to_xml_file(root_node, bitstream_manager, top_block[0], 0);
+  rec_write_block_bitstream_to_xml_file(root_node, bitstream_manager,
+                                        top_block[0], 0);
 
   /* Output to xml file */
   bool output_success = false;

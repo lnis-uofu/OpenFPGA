@@ -15,7 +15,7 @@
 namespace openfpga {
 
 int write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
-                                      const std::string& fname,
-                                      const bool& include_time_stamp);
+                                     const std::string& fname,
+                                     const bool& include_time_stamp);
 
 } /* end namespace openfpga */

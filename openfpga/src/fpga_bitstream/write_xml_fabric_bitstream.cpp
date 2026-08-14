@@ -7,15 +7,15 @@
 #include <sstream>
 
 /* Headers from vtrutil library */
+#include "pugixml.hpp"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "pugixml.hpp"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_gz_xml_writer.h"
-#include "command_exit_codes.h"
 
 /* Headers from archopenfpga library */
 #include "bitstream_manager_utils.h"
@@ -85,11 +85,13 @@ static int write_fabric_config_bit_to_xml_file(
   }
 
   pugi::xml_node bit_node = parent_node.append_child("bit");
-  bit_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(fabric_bit)));
+  bit_node.append_attribute("id").set_value(
+    static_cast<unsigned long long>(size_t(fabric_bit)));
   if (options.output_value()) {
     bit_node.append_attribute("value").set_value(
-      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)) ? "1" : "0"
-    );
+      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit))
+        ? "1"
+        : "0");
   }
 
   /* Output hierarchy of this parent*/
@@ -226,7 +228,8 @@ static int write_fabric_regional_config_bit_to_xml_file(
   std::string bl_addr = "";
   std::string wl_addr = "";
   pugi::xml_node region_node = parent_node.append_child("region");
-  region_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(fabric_region)));
+  region_node.append_attribute("id").set_value(
+    static_cast<unsigned long long>(size_t(fabric_region)));
 
   size_t bit_index = 0;
   size_t total_bits = fabric_bitstream.region_bits(fabric_region).size();
@@ -293,7 +296,8 @@ int write_fabric_bitstream_to_xml_file(
   int status = 0;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     status = write_fabric_regional_config_bit_to_xml_file(
-      root_node, bitstream_manager, fabric_bitstream, region, config_protocol.type(),
+      root_node, bitstream_manager, fabric_bitstream, region,
+      config_protocol.type(),
       BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
         BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type(),
       xml_hierarchy_depth + 1, options);
@@ -303,7 +307,8 @@ int write_fabric_bitstream_to_xml_file(
   }
 
   if (CMD_EXEC_FATAL_ERROR == status) {
-    VTR_LOG_ERROR("Error occurs when fabric bitstream data is organized in XML nodes\n");
+    VTR_LOG_ERROR(
+      "Error occurs when fabric bitstream data is organized in XML nodes\n");
     return status;
   }
 
@@ -323,7 +328,8 @@ int write_fabric_bitstream_to_xml_file(
     output_success = doc.save_file(fname.c_str());
   }
   if (output_success) {
-    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n", fname.c_str());
+    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n",
+             fname.c_str());
   } else {
     VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
   }

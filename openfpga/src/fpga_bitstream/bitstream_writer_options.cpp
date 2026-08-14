@@ -3,9 +3,9 @@
  ******************************************************************************/
 #include "bitstream_writer_options.h"
 
+#include "openfpga_digest.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-#include "openfpga_digest.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

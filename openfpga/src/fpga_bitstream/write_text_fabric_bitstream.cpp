@@ -75,8 +75,8 @@ static int write_flatten_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_config_chain_fabric_bitstream_to_text_file(
-  mmostream& fp, const bool& fast_configuration,
-  const bool& bit_value_to_skip, const BitstreamManager& bitstream_manager,
+  mmostream& fp, const bool& fast_configuration, const bool& bit_value_to_skip,
+  const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
@@ -129,8 +129,8 @@ static int write_config_chain_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_memory_bank_fabric_bitstream_to_text_file(
-  mmostream& fp, const bool& fast_configuration,
-  const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream) {
+  mmostream& fp, const bool& fast_configuration, const bool& bit_value_to_skip,
+  const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
   MemoryBankFabricBitstream fabric_bits_by_addr =
@@ -203,9 +203,8 @@ static int write_memory_bank_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_memory_bank_flatten_fabric_bitstream_to_text_file(
-  mmostream& fp, const bool& fast_configuration,
-  const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
-  const bool& keep_dont_care_bits) {
+  mmostream& fp, const bool& fast_configuration, const bool& bit_value_to_skip,
+  const FabricBitstream& fabric_bitstream, const bool& keep_dont_care_bits) {
   int status = 0;
 
   char dont_care_bit = '0';
@@ -273,9 +272,9 @@ static int write_memory_bank_flatten_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
-  mmostream& fp, const bool& fast_configuration,
-  const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
-  const bool& keep_dont_care_bits, const bool& wl_incremental_order) {
+  mmostream& fp, const bool& fast_configuration, const bool& bit_value_to_skip,
+  const FabricBitstream& fabric_bitstream, const bool& keep_dont_care_bits,
+  const bool& wl_incremental_order) {
   int status = 0;
 
   std::string dont_care_bit = "0";
@@ -441,8 +440,8 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_memory_bank_shift_register_fabric_bitstream_to_text_file(
-  mmostream& fp, const bool& fast_configuration,
-  const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
+  mmostream& fp, const bool& fast_configuration, const bool& bit_value_to_skip,
+  const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const bool& keep_dont_care_bits) {
   int status = 0;
@@ -501,8 +500,8 @@ static int write_memory_bank_shift_register_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_frame_based_fabric_bitstream_to_text_file(
-  mmostream& fp, const bool& fast_configuration,
-  const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream) {
+  mmostream& fp, const bool& fast_configuration, const bool& bit_value_to_skip,
+  const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
   FrameFabricBitstream fabric_bits_by_addr =
