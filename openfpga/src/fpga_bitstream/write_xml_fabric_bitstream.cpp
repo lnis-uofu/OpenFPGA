@@ -14,7 +14,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
-#include "openfpga_xml_gz_writer.h"
+#include "openfpga_gz_xml_writer.h"
 #include "command_exit_codes.h"
 
 /* Headers from archopenfpga library */
@@ -88,7 +88,7 @@ static int write_fabric_config_bit_to_xml_file(
   bit_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(fabric_bit)));
   if (options.output_value()) {
     bit_node.append_attribute("value").set_value(
-      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit) ? "1", "0")
+      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit) ? "1" : "0")
     );
   }
 
@@ -138,7 +138,6 @@ static int write_fabric_config_bit_to_xml_file(
         const FabricBitstreamMemoryBank& memory_bank =
           fabric_bitstream.memory_bank_info();
         /* Bit line address */
-        write_tab_to_file(fp, xml_hierarchy_depth + 1);
         const fabric_bit_data& bit =
           memory_bank.fabric_bit_datas[(size_t)(fabric_bit)];
         const fabric_blwl_length& lengths =
@@ -188,7 +187,7 @@ static int write_fabric_config_bit_to_xml_file(
       for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
         addr_bit_str += addr_bit;
       }
-      wl_node.append_attribute("address").set_value(addr_bit_str.c_str());
+      frame_node.append_attribute("address").set_value(addr_bit_str.c_str());
       break;
     }
     default:
