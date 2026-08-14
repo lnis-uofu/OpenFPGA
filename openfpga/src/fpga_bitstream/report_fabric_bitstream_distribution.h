@@ -1,11 +1,10 @@
-#ifndef REPORT_FABRIC_BITSTREAM_DISTRIBUTION_H
-#define REPORT_FABRIC_BITSTREAM_DISTRIBUTION_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
-
+#include "pugixml.hpp"
 #include "fabric_bitstream.h"
 
 /********************************************************************
@@ -16,9 +15,6 @@
 namespace openfpga {
 
 int report_fabric_bitstream_distribution(
-  std::fstream& fp, const FabricBitstream& fabric_bitstream,
-  const int& hierarchy_level);
+  pugi::xml_node& parent_node, const FabricBitstream& fabric_bitstream);
 
 } /* end namespace openfpga */
-
-#endif

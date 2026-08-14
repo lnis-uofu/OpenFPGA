@@ -11,6 +11,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "bitstream_manager_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
@@ -83,7 +84,7 @@ int report_architecture_bitstream_distribution(
   /* Write bitstream, block by block, in a recursive way */
   rec_report_block_bitstream_distribution_to_xml_file(
     blks_node, bitstream_manager, top_block[0], max_hierarchy_level + 2,
-    curr_level + 1);
+    hierarchy_level + 1);
 
   return CMD_EXEC_SUCCESS;
 }

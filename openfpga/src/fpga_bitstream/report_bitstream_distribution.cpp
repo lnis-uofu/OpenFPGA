@@ -9,6 +9,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "pugixml.hpp"
 
 /* Headers from openfpgautil library */
 #include "command_exit_codes.h"
@@ -29,8 +30,8 @@ namespace openfpga {
  *distribution
  *******************************************************************/
 static void report_bitstream_distribution_xml_file_head(
-  pugi::xml_node& root, const bool& include_time_stamp) {
-  std::stringstgream ss;
+  pugi::xml_node& root_node, const bool& include_time_stamp) {
+  std::stringstream ss;
   ss << "\t- Report Bitstream Distribution" << std::endl;
 
   if (include_time_stamp) {
@@ -59,7 +60,7 @@ int report_bitstream_distribution(const std::string& fname,
     VTR_LOG_ERROR(
       "Received empty file name to report bitstream!\n\tPlease specify a valid "
       "file name.\n");
-    return 1;
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   std::string timer_message =
@@ -68,14 +69,14 @@ int report_bitstream_distribution(const std::string& fname,
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   pugi::xml_document doc;
-  pugi::xml_node root = doc.append_child("bitstream_distribution");
+  pugi::xml_node root_node = doc.append_child("bitstream_distribution");
 
   /* Put down a brief introduction */
-  report_bitstream_distribution_xml_file_head(root, include_time_stamp);
+  report_bitstream_distribution_xml_file_head(root_node, include_time_stamp);
 
   int status = CMD_EXEC_FATAL_ERROR;
   status =
-    report_fabric_bitstream_distribution(root, fabric_bitstream);
+    report_fabric_bitstream_distribution(root_node, fabric_bitstream);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }
@@ -95,7 +96,7 @@ int report_bitstream_distribution(const std::string& fname,
     output_success = doc.save_file(fname.c_str());
   }
   if (output_success) {
-    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n",
+    VTR_LOGV("Succeed to output XML file: %s\n",
              fname.c_str());
   } else {
     VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());

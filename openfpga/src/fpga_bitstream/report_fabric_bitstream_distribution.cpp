@@ -11,6 +11,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "bitstream_manager_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
@@ -49,7 +50,6 @@ int report_fabric_bitstream_distribution(
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Write bitstream, region by region, in a recursive way */
-  int curr_level = hierarchy_level;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     pugi::xml_node regions_node = parent_node.append_child("regions");
     report_region_bitstream_distribution_to_xml_file(regions_node, fabric_bitstream,
