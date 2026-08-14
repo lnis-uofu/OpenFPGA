@@ -4,7 +4,6 @@
  *******************************************************************/
 #include <chrono>
 #include <ctime>
-#include <fstream>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -28,8 +27,8 @@ namespace openfpga {
  * This function write header information to a bitstream file
  *******************************************************************/
 static void write_fabric_bitstream_text_file_head(
-  std::fstream& fp, const bool& include_time_stamp) {
-  valid_file_stream(fp);
+  mmostream& fp, const bool& include_time_stamp) {
+  valid_file_mmostream(fp);
 
   fp << "// Fabric bitstream" << std::endl;
 
@@ -50,9 +49,9 @@ static void write_fabric_bitstream_text_file_head(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_flatten_fabric_bitstream_to_text_file(
-  std::fstream& fp, const BitstreamManager& bitstream_manager,
+  mmostream& fp, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream) {
-  if (false == valid_file_stream(fp)) {
+  if (false == valid_file_mmostream(fp)) {
     return 1;
   }
 
@@ -76,7 +75,7 @@ static int write_flatten_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_config_chain_fabric_bitstream_to_text_file(
-  std::fstream& fp, const bool& fast_configuration,
+  mmostream& fp, const bool& fast_configuration,
   const bool& bit_value_to_skip, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream) {
   int status = 0;
@@ -130,7 +129,7 @@ static int write_config_chain_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_memory_bank_fabric_bitstream_to_text_file(
-  std::fstream& fp, const bool& fast_configuration,
+  mmostream& fp, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
@@ -204,7 +203,7 @@ static int write_memory_bank_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_memory_bank_flatten_fabric_bitstream_to_text_file(
-  std::fstream& fp, const bool& fast_configuration,
+  mmostream& fp, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
   const bool& keep_dont_care_bits) {
   int status = 0;
@@ -274,7 +273,7 @@ static int write_memory_bank_flatten_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
-  std::fstream& fp, const bool& fast_configuration,
+  mmostream& fp, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
   const bool& keep_dont_care_bits, const bool& wl_incremental_order) {
   int status = 0;
@@ -442,7 +441,7 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_memory_bank_shift_register_fabric_bitstream_to_text_file(
-  std::fstream& fp, const bool& fast_configuration,
+  mmostream& fp, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const bool& keep_dont_care_bits) {
@@ -502,7 +501,7 @@ static int write_memory_bank_shift_register_fabric_bitstream_to_text_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_frame_based_fabric_bitstream_to_text_file(
-  std::fstream& fp, const bool& fast_configuration,
+  mmostream& fp, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
