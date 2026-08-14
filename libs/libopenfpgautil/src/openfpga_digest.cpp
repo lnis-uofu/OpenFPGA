@@ -314,7 +314,7 @@ bool write_tab_to_file(mmostream& fp, const size_t& num_tab) {
 bool file_require_gz(const std::string& fname) {
   std::string suffix = ".gz";
   if (fname.length() >= suffix.length()) {
-    return (0 == str.compare(fname.length() - suffix.length(), suffix.length(), suffix));
+    return (0 == fname.compare(fname.length() - suffix.length(), suffix.length(), suffix));
   }
   return false;
 }
