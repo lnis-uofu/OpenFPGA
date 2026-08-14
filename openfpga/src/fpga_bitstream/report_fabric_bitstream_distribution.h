@@ -4,8 +4,9 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
-#include "pugixml.hpp"
+
 #include "fabric_bitstream.h"
+#include "pugixml.hpp"
 
 /********************************************************************
  * Function declaration

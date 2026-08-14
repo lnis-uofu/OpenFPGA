@@ -11,8 +11,8 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include "command_exit_codes.h"
 #include "bitstream_manager_utils.h"
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_tokenizer.h"
@@ -34,7 +34,6 @@ static void rec_report_block_bitstream_distribution_to_xml_file(
   pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const ConfigBlockId& block, const size_t& max_hierarchy_level,
   const size_t& hierarchy_level) {
-
   if (hierarchy_level > max_hierarchy_level) {
     return;
   }
@@ -43,8 +42,9 @@ static void rec_report_block_bitstream_distribution_to_xml_file(
   pugi::xml_node blk_node = parent_node.append_child("block");
   blk_node.append_attribute("name").set_value(
     bitstream_manager.block_name(block).c_str());
-  blk_node.append_attribute("number_of_bits").set_value(
-    static_cast<unsigned long long>(rec_find_bitstream_manager_block_sum_of_bits(bitstream_manager, block)));
+  blk_node.append_attribute("number_of_bits")
+    .set_value(static_cast<unsigned long long>(
+      rec_find_bitstream_manager_block_sum_of_bits(bitstream_manager, block)));
 
   /* Dive to child blocks if this block has any */
   for (const ConfigBlockId& child_block :
@@ -77,7 +77,10 @@ int report_architecture_bitstream_distribution(
     find_bitstream_manager_top_blocks(bitstream_manager);
   /* Make sure we have only 1 top block */
   if (1 != top_block.size()) {
-    VTR_LOG_ERROR("Expect only 1 top-level block in FPGA fabric but found %lu\n\tThis is an internal error. Please report\n", top_block.size());
+    VTR_LOG_ERROR(
+      "Expect only 1 top-level block in FPGA fabric but found %lu\n\tThis is "
+      "an internal error. Please report\n",
+      top_block.size());
     return CMD_EXEC_FATAL_ERROR;
   }
 

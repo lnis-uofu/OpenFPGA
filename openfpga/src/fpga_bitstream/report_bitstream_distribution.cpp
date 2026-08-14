@@ -4,12 +4,13 @@
 #include <chrono>
 #include <ctime>
 #include <fstream>
+#include <sstream>
 
 /* Headers from vtrutil library */
+#include "pugixml.hpp"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "pugixml.hpp"
 
 /* Headers from openfpgautil library */
 #include "command_exit_codes.h"
@@ -75,8 +76,7 @@ int report_bitstream_distribution(const std::string& fname,
   report_bitstream_distribution_xml_file_head(root_node, include_time_stamp);
 
   int status = CMD_EXEC_FATAL_ERROR;
-  status =
-    report_fabric_bitstream_distribution(root_node, fabric_bitstream);
+  status = report_fabric_bitstream_distribution(root_node, fabric_bitstream);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }
@@ -96,8 +96,7 @@ int report_bitstream_distribution(const std::string& fname,
     output_success = doc.save_file(fname.c_str());
   }
   if (output_success) {
-    VTR_LOGV("Succeed to output XML file: %s\n",
-             fname.c_str());
+    VTR_LOGV("Succeed to output XML file: %s\n", fname.c_str());
   } else {
     VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
   }

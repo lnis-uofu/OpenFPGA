@@ -68,10 +68,10 @@ class BitstreamManager {
    public:
     // Explicitly define the 5 standard types required by std::iterator_traits
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type        = ID; // Must be non-const, even for const iterators
-    using difference_type   = std::ptrdiff_t;
-    using pointer           = ID*;
-    using reference         = ID&;
+    using value_type = ID;  // Must be non-const, even for const iterators
+    using difference_type = std::ptrdiff_t;
+    using pointer = ID*;
+    using reference = ID&;
     // Constructor
     lazy_id_iterator(value_type init, const std::unordered_set<ID>& invalid_ids)
       : value_(init), invalid_ids_(invalid_ids) {}
@@ -83,9 +83,9 @@ class BitstreamManager {
     }
     // 3. Added Postfix increment (it++)
     lazy_id_iterator operator++(int) {
-        lazy_id_iterator temp = *this;
-        ++(*this);
-        return temp;
+      lazy_id_iterator temp = *this;
+      ++(*this);
+      return temp;
     }
 
     // Advance to the previous ID value
@@ -95,28 +95,31 @@ class BitstreamManager {
     }
     // 5. Added Postfix decrement (it--)
     lazy_id_iterator operator--(int) {
-        lazy_id_iterator temp = *this;
-        --(*this);
-        return temp;
+      lazy_id_iterator temp = *this;
+      --(*this);
+      return temp;
     }
     // 6. Fixed Dereference operator
-    value_type operator*() const { 
-        return (invalid_ids_.count(value_)) ? ID::INVALID() : value_; 
-    } 
+    value_type operator*() const {
+      return (invalid_ids_.count(value_)) ? ID::INVALID() : value_;
+    }
 
     // 7. Non-member comparison operators (Optimized by-reference)
-    friend bool operator==(const lazy_id_iterator<ID>& lhs, const lazy_id_iterator<ID>& rhs) { 
-        return lhs.value_ == rhs.value_; 
-    } 
-    
-    friend bool operator!=(const lazy_id_iterator<ID>& lhs, const lazy_id_iterator<ID>& rhs) { 
-        return !(lhs == rhs); 
-    } 
+    friend bool operator==(const lazy_id_iterator<ID>& lhs,
+                           const lazy_id_iterator<ID>& rhs) {
+      return lhs.value_ == rhs.value_;
+    }
+
+    friend bool operator!=(const lazy_id_iterator<ID>& lhs,
+                           const lazy_id_iterator<ID>& rhs) {
+      return !(lhs == rhs);
+    }
 
    private:
     value_type value_;
     const std::unordered_set<ID>& invalid_ids_;
   };
+
  public: /* Public constructor */
   BitstreamManager();
 

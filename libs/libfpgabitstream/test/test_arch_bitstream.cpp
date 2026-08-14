@@ -43,8 +43,8 @@ int main(int argc, const char** argv) {
     pugi::xml_document doc;
     pugi::xml_node root = doc.append_child("bitstream_distribution");
 
-    openfpga::report_architecture_bitstream_distribution(root, test_bitstream, 1,
-                                                         0);
+    openfpga::report_architecture_bitstream_distribution(root, test_bitstream,
+                                                         1, 0);
     VTR_LOG("Echo the bitstream distribution to an XML file: %s.\n", argv[3]);
     /* Output to xml file */
     bool output_success = false;
@@ -58,8 +58,7 @@ int main(int argc, const char** argv) {
       output_success = doc.save_file(fname.c_str());
     }
     if (output_success) {
-      VTR_LOG("Succeed to output XML file: %s\n",
-               fname.c_str());
+      VTR_LOG("Succeed to output XML file: %s\n", fname.c_str());
     } else {
       VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
     }

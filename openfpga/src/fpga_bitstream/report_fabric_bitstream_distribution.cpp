@@ -11,8 +11,8 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include "command_exit_codes.h"
 #include "bitstream_manager_utils.h"
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_tokenizer.h"
@@ -35,8 +35,11 @@ static void report_region_bitstream_distribution_to_xml_file(
   const FabricBitRegionId& region) {
   /* Write the bitstream distribution of this block */
   pugi::xml_node region_node = parent_node.append_child("region");
-  region_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(region)));
-  region_node.append_attribute("number_of_bits").set_value(static_cast<unsigned long long>(fabric_bitstream.region_bits(region).size()));
+  region_node.append_attribute("id").set_value(
+    static_cast<unsigned long long>(size_t(region)));
+  region_node.append_attribute("number_of_bits")
+    .set_value(static_cast<unsigned long long>(
+      fabric_bitstream.region_bits(region).size()));
 }
 
 /********************************************************************
@@ -52,8 +55,8 @@ int report_fabric_bitstream_distribution(
   /* Write bitstream, region by region, in a recursive way */
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     pugi::xml_node regions_node = parent_node.append_child("regions");
-    report_region_bitstream_distribution_to_xml_file(regions_node, fabric_bitstream,
-                                                     region);
+    report_region_bitstream_distribution_to_xml_file(regions_node,
+                                                     fabric_bitstream, region);
   }
 
   return CMD_EXEC_SUCCESS;

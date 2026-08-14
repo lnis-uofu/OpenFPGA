@@ -117,7 +117,9 @@ ShellCommandId add_report_bitstream_distribution_command_template(
 
   /* Add an option '--file' */
   CommandOptionId opt_file = shell_cmd.add_option(
-    "file", true, "file path to output the bitstream distribution. If the file name ends with .gz, a compressed file format will be applied");
+    "file", true,
+    "file path to output the bitstream distribution. If the file name ends "
+    "with .gz, a compressed file format will be applied");
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
