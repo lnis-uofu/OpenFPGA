@@ -11,7 +11,9 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
+#include "openfpga_gz_xml_writer.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_tokenizer.h"
 #include "openfpga_version.h"
@@ -27,22 +29,20 @@ namespace openfpga {
  *distribution
  *******************************************************************/
 static void report_bitstream_distribution_xml_file_head(
-  std::fstream& fp, const bool& include_time_stamp) {
-  valid_file_stream(fp);
-
-  fp << "<!-- " << std::endl;
-  fp << "\t- Report Bitstream Distribution" << std::endl;
+  pugi::xml_node& root, const bool& include_time_stamp) {
+  std::stringstgream ss;
+  ss << "\t- Report Bitstream Distribution" << std::endl;
 
   if (include_time_stamp) {
     auto end = std::chrono::system_clock::now();
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
     /* Note that version is also a type of time stamp */
-    fp << "\t- Version: " << openfpga::VERSION << std::endl;
-    fp << "\t- Date: " << std::ctime(&end_time);
+    ss << "\t- Version: " << openfpga::VERSION << std::endl;
+    ss << "\t- Date: " << std::ctime(&end_time);
   }
 
-  fp << "--> " << std::endl;
-  fp << std::endl;
+  pugi::xml_node cmt_node = root_node.append_child(pugi::node_comment);
+  cmt_node.set_value(ss.str().c_str());
 }
 
 /********************************************************************
@@ -67,34 +67,40 @@ int report_bitstream_distribution(const std::string& fname,
     std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
-  /* Create the file stream */
-  std::fstream fp;
-  fp.open(fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(fname.c_str(), fp);
+  pugi::xml_document doc;
+  pugi::xml_node root = doc.append_child("bitstream_distribution");
 
   /* Put down a brief introduction */
-  report_bitstream_distribution_xml_file_head(fp, include_time_stamp);
+  report_bitstream_distribution_xml_file_head(root, include_time_stamp);
 
-  int curr_level = 0;
-  write_tab_to_file(fp, curr_level);
-  fp << "<bitstream_distribution>" << std::endl;
-
-  int status = 0;
+  int status = CMD_EXEC_FATAL_ERROR;
   status =
-    report_fabric_bitstream_distribution(fp, fabric_bitstream, curr_level + 1);
-  if (status == 1) {
+    report_fabric_bitstream_distribution(root, fabric_bitstream);
+  if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }
+  int curr_level = 0;
   status = report_architecture_bitstream_distribution(
-    fp, bitstream_manager, max_hierarchy_level, curr_level + 1);
+    root_node, bitstream_manager, max_hierarchy_level, curr_level + 1);
 
-  fp << "</bitstream_distribution>" << std::endl;
-
-  /* Close file handler */
-  fp.close();
-
-  return status;
+  /* Output to xml file */
+  bool output_success = false;
+  if (file_require_gz(fname)) {
+    GzXmlWriter writer(fname.c_str());
+    if (writer.isValid()) {
+      doc.save(writer);
+      output_success = true;
+    }
+  } else {
+    output_success = doc.save_file(fname.c_str());
+  }
+  if (output_success) {
+    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n",
+             fname.c_str());
+  } else {
+    VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
+  }
+  return output_success ? CMD_EXEC_SUCCESS : CMD_EXEC_FATAL_ERROR;
 }
 
 } /* end namespace openfpga */
