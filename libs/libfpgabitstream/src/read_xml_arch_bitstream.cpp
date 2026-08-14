@@ -160,7 +160,7 @@ int read_xml_architecture_bitstream(const char* fname,
   pugiutil::loc_data loc_data;
 
   try {
-    loc_data = openfpga_load_xml(doc, fname);
+    loc_data = load_xml(doc, fname);
 
     /* Count the child <bitstream_block> */
 

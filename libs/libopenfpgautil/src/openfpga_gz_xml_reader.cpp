@@ -34,14 +34,14 @@ static bool load_gz_to_buffer(const std::filesystem::path& path, std::vector<cha
 }
 
 // Modernized: Automatically detects regular XML vs GZ via magic bytes
-loc_data load_xml(pugi::xml_document& doc, std::string_view filename) {
+pugiutil::loc_data load_xml(pugi::xml_document& doc, std::string_view filename) {
     std::filesystem::path file_path(filename);
     
     if (!std::filesystem::exists(file_path)) {
-        throw XmlError("XML file does not exist: " + std::string(filename), std::string(filename).c_str(), 0);
+        throw pugiutil::XmlError("XML file does not exist: " + std::string(filename), std::string(filename).c_str(), 0);
     }
 
-    auto location_data = loc_data(std::string(filename));
+    auto location_data = pugiutil::loc_data(std::string(filename));
     pugi::xml_parse_result load_result;
     std::vector<char> xml_data;
 
@@ -54,7 +54,7 @@ loc_data load_xml(pugi::xml_document& doc, std::string_view filename) {
             // Check for GZIP identification signature (0x1F, 0x8B)
             if (magic[0] == std::byte{0x1F} && magic[1] == std::byte{0x8B}) {
                 if (!load_gz_to_buffer(file_path, xml_data)) {
-                    throw XmlError("Failed to decompress GZ file: " + std::string(filename), std::string(filename).c_str(), 0);
+                    throw pugiutil::XmlError("Failed to decompress GZ file: " + std::string(filename), std::string(filename).c_str(), 0);
                 }
                 // Fast in-place DOM generation (destructive to xml_data)
                 load_result = doc.load_buffer_inplace(xml_data.data(), xml_data.size());
@@ -73,7 +73,7 @@ loc_data load_xml(pugi::xml_document& doc, std::string_view filename) {
         auto line = location_data.line(load_result.offset);
         auto col = location_data.col(load_result.offset);
         
-        throw XmlError("Unable to load XML file '" + std::string(filename) + "', " + msg
+        throw pugiutil::XmlError("Unable to load XML file '" + std::string(filename) + "', " + msg
                        + " (line: " + std::to_string(line) + " col: " + std::to_string(col) + ")",
                        std::string(filename).c_str(), line);
     }

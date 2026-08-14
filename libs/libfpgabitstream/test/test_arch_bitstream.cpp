@@ -20,8 +20,11 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc) || (4 == argc) || (5 == argc));
 
   /* Parse the bitstream from an XML file */
-  openfpga::BitstreamManager test_bitstream =
-    openfpga::read_xml_architecture_bitstream(argv[1]);
+  openfpga::BitstreamManager test_bitstream;
+  int status = openfpga::read_xml_architecture_bitstream(argv[1], test_bitstream, true);
+  if (status != 0) {
+    return status;
+  }
   VTR_LOG("Read the bitstream from an XML file: %s.\n", argv[1]);
 
   /* Output the bitstream database to an XML file
