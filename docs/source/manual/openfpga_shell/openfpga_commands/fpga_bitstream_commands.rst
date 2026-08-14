@@ -171,6 +171,7 @@ report_bitstream_distribution
   .. option:: --file <string> or -f <string>
 
     Specify the file name where the bitstream distribution will be outputted to.
+    When the file name ends with ".gz", the output file will be automatically compressed.
     See file formats in :ref:`file_format_bitstream_distribution_file`.
 
   .. option:: --depth <int> or -d <int>

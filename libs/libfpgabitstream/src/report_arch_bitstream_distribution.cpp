@@ -12,6 +12,7 @@
 
 /* Headers from openfpgautil library */
 #include "bitstream_manager_utils.h"
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_tokenizer.h"
@@ -30,34 +31,28 @@ namespace openfpga {
  * which is used to limit the length of the report
  *******************************************************************/
 static void rec_report_block_bitstream_distribution_to_xml_file(
-  std::fstream& fp, const BitstreamManager& bitstream_manager,
+  pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const ConfigBlockId& block, const size_t& max_hierarchy_level,
   const size_t& hierarchy_level) {
-  valid_file_stream(fp);
-
   if (hierarchy_level > max_hierarchy_level) {
     return;
   }
 
   /* Write the bitstream distribution of this block */
-  write_tab_to_file(fp, hierarchy_level);
-  fp << "<block";
-  fp << " name=\"" << bitstream_manager.block_name(block) << "\"";
-  fp << " number_of_bits=\""
-     << rec_find_bitstream_manager_block_sum_of_bits(bitstream_manager, block)
-     << "\"";
-  fp << ">" << std::endl;
+  pugi::xml_node blk_node = parent_node.append_child("block");
+  blk_node.append_attribute("name").set_value(
+    bitstream_manager.block_name(block).c_str());
+  blk_node.append_attribute("number_of_bits")
+    .set_value(static_cast<unsigned long long>(
+      rec_find_bitstream_manager_block_sum_of_bits(bitstream_manager, block)));
 
   /* Dive to child blocks if this block has any */
   for (const ConfigBlockId& child_block :
        bitstream_manager.block_children(block)) {
     rec_report_block_bitstream_distribution_to_xml_file(
-      fp, bitstream_manager, child_block, max_hierarchy_level,
+      blk_node, bitstream_manager, child_block, max_hierarchy_level,
       hierarchy_level + 1);
   }
-
-  write_tab_to_file(fp, hierarchy_level);
-  fp << "</block>" << std::endl;
 }
 
 /********************************************************************
@@ -69,34 +64,32 @@ static void rec_report_block_bitstream_distribution_to_xml_file(
  *   - The output format is a table whose format is compatible with RST files
  *******************************************************************/
 int report_architecture_bitstream_distribution(
-  std::fstream& fp, const BitstreamManager& bitstream_manager,
+  pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const size_t& max_hierarchy_level, const size_t& hierarchy_level) {
   std::string timer_message =
     std::string("Report architecture bitstream distribution");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
-  /* Check the file stream */
-  valid_file_stream(fp);
-
-  int curr_level = hierarchy_level;
-  write_tab_to_file(fp, curr_level);
-  fp << "<blocks>" << std::endl;
+  pugi::xml_node blks_node = parent_node.append_child("blocks");
 
   /* Find the top block, which has not parents */
   std::vector<ConfigBlockId> top_block =
     find_bitstream_manager_top_blocks(bitstream_manager);
   /* Make sure we have only 1 top block */
-  VTR_ASSERT(1 == top_block.size());
+  if (1 != top_block.size()) {
+    VTR_LOG_ERROR(
+      "Expect only 1 top-level block in FPGA fabric but found %lu\n\tThis is "
+      "an internal error. Please report\n",
+      top_block.size());
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   /* Write bitstream, block by block, in a recursive way */
   rec_report_block_bitstream_distribution_to_xml_file(
-    fp, bitstream_manager, top_block[0], max_hierarchy_level + 2,
-    curr_level + 1);
+    blks_node, bitstream_manager, top_block[0], max_hierarchy_level + 2,
+    hierarchy_level + 1);
 
-  write_tab_to_file(fp, curr_level);
-  fp << "</blocks>" << std::endl;
-
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

@@ -42,7 +42,11 @@ write_fabric_bitstream --file fabric_bitstream.txt --format plain_text
 write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
 # Report bitstream distribution to a file
-report_bitstream_distribution ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_OPTIONS}
+report_bitstream_distribution --file ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_FILE} ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_OPTIONS}
+report_bitstream_distribution --file ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_FILE}.gz ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_OPTIONS}
+# Diff gsb outputs between xml and xml_gz 
+ext_exec --command "zdiff ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_FILE}.gz ${OPENFPGA_REPORT_BITSTREAM_DISTRIBUTION_FILE}"
+
 
 # Finish and exit OpenFPGA
 exit
