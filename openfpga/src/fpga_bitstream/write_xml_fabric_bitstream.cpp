@@ -77,7 +77,7 @@ static int write_fabric_config_bit_to_xml_file(
   pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream, const FabricBitId& fabric_bit,
   const e_config_protocol_type& config_type, bool fast_xml,
-  const int& xml_hierarchy_depth, std::string& bl_addr, std::string& wl_addr,
+  std::string& bl_addr, std::string& wl_addr,
   const BitstreamWriterOption& options) {
   if (options.value_to_skip(
         bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
@@ -213,7 +213,7 @@ static int write_fabric_regional_config_bit_to_xml_file(
   const FabricBitstream& fabric_bitstream,
   const FabricBitRegionId& fabric_region,
   const e_config_protocol_type& config_type, bool fast_xml,
-  const int& xml_hierarchy_depth, const BitstreamWriterOption& options) {
+  const BitstreamWriterOption& options) {
   int status = CMD_EXEC_SUCCESS;
   // Use string to print, instead of char by char
   // This is for Flatten BL/WL protocol
@@ -238,7 +238,7 @@ static int write_fabric_regional_config_bit_to_xml_file(
        fabric_bitstream.region_bits(fabric_region)) {
     status = write_fabric_config_bit_to_xml_file(
       region_node, bitstream_manager, fabric_bitstream, fabric_bit, config_type,
-      fast_xml, xml_hierarchy_depth + 1, bl_addr, wl_addr, options);
+      fast_xml, bl_addr, wl_addr, options);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
@@ -290,8 +290,6 @@ int write_fabric_bitstream_to_xml_file(
   /* Write XML head */
   write_fabric_bitstream_xml_file_head(root_node, options.time_stamp());
 
-  int xml_hierarchy_depth = 0;
-
   /* Output fabric bitstream to the file */
   int status = 0;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
@@ -300,7 +298,7 @@ int write_fabric_bitstream_to_xml_file(
       config_protocol.type(),
       BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
         BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type(),
-      xml_hierarchy_depth + 1, options);
+      options);
     if (CMD_EXEC_FATAL_ERROR == status) {
       break;
     }
