@@ -88,7 +88,7 @@ static int write_fabric_config_bit_to_xml_file(
   bit_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(fabric_bit)));
   if (options.output_value()) {
     bit_node.append_attribute("value").set_value(
-      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit) ? "1" : "0")
+      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)) ? "1" : "0"
     );
   }
 
