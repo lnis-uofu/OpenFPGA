@@ -58,6 +58,7 @@ write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml --form
 write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.bit --format plain_text --no_time_stamp
 write_io_mapping --file ${OPENFPGA_OUTPUT_DIR}/pin_mapping.xml --no_time_stamp
 report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml --no_time_stamp
+report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml.gz --no_time_stamp
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
