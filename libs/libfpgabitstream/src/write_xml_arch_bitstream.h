@@ -1,5 +1,4 @@
-#ifndef WRITE_XML_ARCH_BITSTREAM_H
-#define WRITE_XML_ARCH_BITSTREAM_H
+#pragma once
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -15,7 +14,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
+int write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
                                       const std::string& fname,
                                       const bool& include_time_stamp);
 
