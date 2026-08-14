@@ -19,5 +19,3 @@ int write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
                                       const bool& include_time_stamp);
 
 } /* end namespace openfpga */
-
-#endif

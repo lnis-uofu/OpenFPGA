@@ -15,6 +15,7 @@
 /* Headers from openfpgautil library */
 #include "command_exit_codes.h"
 #include "bitstream_manager_utils.h"
+#include "openfpga_port.h"
 #include "openfpga_digest.h"
 #include "openfpga_gz_xml_writer.h"
 #include "openfpga_reserved_words.h"
@@ -43,7 +44,7 @@ static void write_bitstream_xml_file_head(pugi::xml_node& parent_node,
 
   ss << "-->" << std::endl;
   ss << std::endl;
-  pugi::xml_node cmt_node = root_node.insert_child_before(pugi::node_comment);
+  pugi::xml_node cmt_node = parent_node.insert_child_before(pugi::node_comment, parent_node.first_child());
   cmt_node.set_value(ss.str().c_str());
 }
 
