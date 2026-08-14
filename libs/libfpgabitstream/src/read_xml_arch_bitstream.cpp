@@ -16,9 +16,9 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "command_exit_codes.h"
-#include "openfpga_reserved_words.h"
 #include "openfpga_digest.h"
 #include "openfpga_gz_xml_reader.h"
+#include "openfpga_reserved_words.h"
 #include "read_xml_arch_bitstream.h"
 #include "read_xml_util.h"
 

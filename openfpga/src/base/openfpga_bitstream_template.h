@@ -45,8 +45,7 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
     int status = read_xml_architecture_bitstream(
       cmd_context.option_value(cmd, opt_read_file).c_str(),
       openfpga_ctx.mutable_bitstream_manager(),
-      cmd_context.option_enable(cmd, opt_verbose)
-      );
+      cmd_context.option_enable(cmd, opt_verbose));
     if (status != CMD_EXEC_SUCCESS) {
       return status;
     }

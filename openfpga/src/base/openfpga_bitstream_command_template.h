@@ -73,8 +73,10 @@ ShellCommandId add_build_arch_bitstream_command_template(
   shell_cmd.set_option_require_value(opt_write_file, openfpga::OPT_STRING);
 
   /* Add an option '--read_file' */
-  CommandOptionId opt_read_file = shell_cmd.add_option(
-    "read_file", false, "file path to read the bitstream database. Support compressed version (.xml.gz)");
+  CommandOptionId opt_read_file =
+    shell_cmd.add_option("read_file", false,
+                         "file path to read the bitstream database. Support "
+                         "compressed version (.xml.gz)");
   shell_cmd.set_option_require_value(opt_read_file, openfpga::OPT_STRING);
 
   /* Add an option '--unused_mux_config' */

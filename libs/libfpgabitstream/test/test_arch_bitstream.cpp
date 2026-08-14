@@ -21,7 +21,8 @@ int main(int argc, const char** argv) {
 
   /* Parse the bitstream from an XML file */
   openfpga::BitstreamManager test_bitstream;
-  int status = openfpga::read_xml_architecture_bitstream(argv[1], test_bitstream, true);
+  int status =
+    openfpga::read_xml_architecture_bitstream(argv[1], test_bitstream, true);
   if (status != 0) {
     return status;
   }
