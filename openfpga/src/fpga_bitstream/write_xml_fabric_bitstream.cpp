@@ -4,18 +4,20 @@
  *******************************************************************/
 #include <chrono>
 #include <ctime>
-#include <fstream>
+#include <sstream>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "pugixml.hpp"
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_xml_gz_writer.h"
+#include "command_exit_codes.h"
 
 /* Headers from archopenfpga library */
-
 #include "bitstream_manager_utils.h"
 #include "openfpga_naming.h"
 #include "write_xml_fabric_bitstream.h"
@@ -27,22 +29,25 @@ namespace openfpga {
  * This function write header information to a bitstream file
  *******************************************************************/
 static void write_fabric_bitstream_xml_file_head(
-  std::fstream& fp, const bool& include_time_stamp) {
-  valid_file_stream(fp);
+  pugi::xml_node& root_node, const bool& include_time_stamp) {
+  std::stringstream ss;
 
-  fp << "<!--" << std::endl;
-  fp << "\t- Fabric bitstream" << std::endl;
-  fp << "\t- Author: Xifan TANG" << std::endl;
-  fp << "\t- Organization: University of Utah" << std::endl;
+  ss << "<!--" << std::endl;
+  ss << "\t- Fabric bitstream" << std::endl;
+  ss << "\t- Author: Xifan TANG" << std::endl;
+  ss << "\t- Organization: University of Utah" << std::endl;
 
   auto end = std::chrono::system_clock::now();
   std::time_t end_time = std::chrono::system_clock::to_time_t(end);
   if (include_time_stamp) {
-    fp << "\t- Date: " << std::ctime(&end_time);
+    ss << "\t- Date: " << std::ctime(&end_time);
   }
 
-  fp << "-->" << std::endl;
-  fp << std::endl;
+  ss << "-->" << std::endl;
+  ss << std::endl;
+
+  pugi::xml_node cmt_node = root_node.append_child(pugi::node_comment);
+  cmt_node.set_value(ss.str().c_str());
 }
 
 /********************************************************************
@@ -69,25 +74,22 @@ static void write_fabric_bitstream_xml_file_head(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_fabric_config_bit_to_xml_file(
-  std::fstream& fp, const BitstreamManager& bitstream_manager,
+  pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream, const FabricBitId& fabric_bit,
   const e_config_protocol_type& config_type, bool fast_xml,
   const int& xml_hierarchy_depth, std::string& bl_addr, std::string& wl_addr,
   const BitstreamWriterOption& options) {
-  if (false == valid_file_stream(fp)) {
-    return 1;
-  }
   if (options.value_to_skip(
         bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
-    return 0;
+    return CMD_EXEC_SUCCESS;
   }
 
-  write_tab_to_file(fp, xml_hierarchy_depth);
-  fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
+  pugi::xml_node bit_node = parent_node.append_child("bit");
+  bit_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(fabric_bit)));
   if (options.output_value()) {
-    fp << " value=\"";
-    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-    fp << "\"";
+    bit_node.append_attribute("value").set_value(
+      bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit) ? "1", "0")
+    );
   }
 
   /* Output hierarchy of this parent*/
@@ -120,9 +122,8 @@ static int write_fabric_config_bit_to_xml_file(
     hie_path += std::to_string(bit_idx_in_parent_block);
     hie_path += std::string("]");
 
-    fp << " path=\"" << hie_path << "\"";
+    bit_node.append_attribute("path").set_value(hie_path.c_str());
   }
-  fp << ">\n";
 
   switch (config_type) {
     case CONFIG_MEM_STANDALONE:
@@ -152,57 +153,51 @@ static int write_fabric_config_bit_to_xml_file(
           VTR_ASSERT((fabric_size_t)(bl_addr.size()) == lengths.bl);
           VTR_ASSERT((fabric_size_t)(wl_addr.size()) == lengths.wl);
         }
-        fp << "<bl address=\"";
         bl_addr.replace(bit.bl, 1, "1");
-        fp << bl_addr.c_str();
+        pugi::xml_node bl_node = bit_node.append_child("bl");
+        bl_node.append_attribute("address").set_value(bl_addr.c_str());
         bl_addr.replace(bit.bl, 1, "x");
-        fp << "\"/>\n";
         /* Word line address */
-        write_tab_to_file(fp, xml_hierarchy_depth + 1);
-        fp << "<wl address=\"";
         wl_addr.replace(bit.wl, 1, "1");
-        fp << wl_addr.c_str();
+        pugi::xml_node wl_node = bit_node.append_child("wl");
+        wl_node.append_attribute("address").set_value(wl_addr.c_str());
         wl_addr.replace(bit.wl, 1, "0");
-        fp << "\"/>\n";
       } else {
         /* Bit line address */
-        write_tab_to_file(fp, xml_hierarchy_depth + 1);
-        fp << "<bl address=\"";
+        pugi::xml_node bl_node = bit_node.append_child("bl");
+        std::string bl_addr_bit_str;
         for (const char& addr_bit :
              fabric_bitstream.bit_bl_address(fabric_bit)) {
-          fp << addr_bit;
+          bl_addr_bit_str += addr_bit;
         }
-        fp << "\"/>\n";
+        bl_node.append_attribute("address").set_value(bl_addr_bit_str.c_str());
 
-        write_tab_to_file(fp, xml_hierarchy_depth + 1);
-        fp << "<wl address=\"";
+        pugi::xml_node wl_node = bit_node.append_child("wl");
+        std::string wl_addr_bit_str;
         for (const char& addr_bit :
              fabric_bitstream.bit_wl_address(fabric_bit)) {
-          fp << addr_bit;
+          wl_addr_bit_str += addr_bit;
         }
-        fp << "\"/>\n";
+        wl_node.append_attribute("address").set_value(wl_addr_bit_str.c_str());
       }
       break;
     }
     case CONFIG_MEM_FRAME_BASED: {
-      write_tab_to_file(fp, xml_hierarchy_depth + 1);
-      fp << "<frame address=\"";
+      pugi::xml_node frame_node = bit_node.append_child("frame");
+      std::string addr_bit_str;
       for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
-        fp << addr_bit;
+        addr_bit_str += addr_bit;
       }
-      fp << "\"/>\n";
+      wl_node.append_attribute("address").set_value(addr_bit_str.c_str());
       break;
     }
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
                      "Invalid configuration protocol type!\n");
-      return 1;
+      return CMD_EXEC_FATAL_ERROR;
   }
 
-  write_tab_to_file(fp, xml_hierarchy_depth);
-  fp << "</bit>\n";
-
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 /********************************************************************
@@ -213,16 +208,12 @@ static int write_fabric_config_bit_to_xml_file(
  *  - 1 if critical errors occured
  *******************************************************************/
 static int write_fabric_regional_config_bit_to_xml_file(
-  std::fstream& fp, const BitstreamManager& bitstream_manager,
+  pugi::xml_node& parent_node, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
   const FabricBitRegionId& fabric_region,
   const e_config_protocol_type& config_type, bool fast_xml,
   const int& xml_hierarchy_depth, const BitstreamWriterOption& options) {
-  if (false == valid_file_stream(fp)) {
-    return 1;
-  }
-
-  int status = 0;
+  int status = CMD_EXEC_SUCCESS;
   // Use string to print, instead of char by char
   // This is for Flatten BL/WL protocol
   // You will find this much more faster than char by char
@@ -235,12 +226,8 @@ static int write_fabric_regional_config_bit_to_xml_file(
   // New way only needs 80seconds to write identical XML
   std::string bl_addr = "";
   std::string wl_addr = "";
-  write_tab_to_file(fp, xml_hierarchy_depth);
-  fp << "<region ";
-  fp << "id=\"";
-  fp << size_t(fabric_region);
-  fp << "\"";
-  fp << ">\n";
+  pugi::xml_node region_node = parent_node.append_child("region");
+  region_node.append_attribute("id").set_value(static_cast<unsigned long long>(size_t(fabric_region)));
 
   size_t bit_index = 0;
   size_t total_bits = fabric_bitstream.region_bits(fabric_region).size();
@@ -248,22 +235,19 @@ static int write_fabric_regional_config_bit_to_xml_file(
   for (const FabricBitId& fabric_bit :
        fabric_bitstream.region_bits(fabric_region)) {
     status = write_fabric_config_bit_to_xml_file(
-      fp, bitstream_manager, fabric_bitstream, fabric_bit, config_type,
+      region_node, bitstream_manager, fabric_bitstream, fabric_bit, config_type,
       fast_xml, xml_hierarchy_depth + 1, bl_addr, wl_addr, options);
-    if (1 == status) {
+    if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
     // Misc to print percentage of the process
     bit_index++;
     size_t temp = (bit_index * 100) / total_bits;
     if (temp != percentage) {
-      VTR_LOG("  Progress: %lu%\r", percentage);
+      VTR_LOGV(options.verbose_output(), "\tProgress: %lu%\r", percentage);
       percentage = temp;
     }
   }
-
-  write_tab_to_file(fp, xml_hierarchy_depth);
-  fp << "</region>\n";
 
   return status;
 }
@@ -291,6 +275,7 @@ int write_fabric_bitstream_to_xml_file(
     VTR_LOG_ERROR(
       "Received empty file name to output bitstream!\n\tPlease specify a valid "
       "file name.\n");
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   std::string timer_message =
@@ -298,42 +283,52 @@ int write_fabric_bitstream_to_xml_file(
     std::string(" fabric bitstream into xml file '") + fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
-  /* Create the file stream */
-  std::fstream fp;
-  fp.open(fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(fname.c_str(), fp);
-
+  pugi::xml_document doc;
+  pugi::xml_node root_node = doc.append_child("fabric_bitstream");
   /* Write XML head */
-  write_fabric_bitstream_xml_file_head(fp, options.time_stamp());
+  write_fabric_bitstream_xml_file_head(root_node, options.time_stamp());
 
   int xml_hierarchy_depth = 0;
-  fp << "<fabric_bitstream>\n";
 
   /* Output fabric bitstream to the file */
   int status = 0;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     status = write_fabric_regional_config_bit_to_xml_file(
-      fp, bitstream_manager, fabric_bitstream, region, config_protocol.type(),
+      root_node, bitstream_manager, fabric_bitstream, region, config_protocol.type(),
       BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
         BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type(),
       xml_hierarchy_depth + 1, options);
-    if (1 == status) {
+    if (CMD_EXEC_FATAL_ERROR == status) {
       break;
     }
   }
 
-  /* Print an end to the file here */
-  fp << "</fabric_bitstream>\n";
-
-  /* Close file handler */
-  fp.close();
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    VTR_LOG_ERROR("Error occurs when fabric bitstream data is organized in XML nodes\n");
+    return status;
+  }
 
   VTR_LOGV(options.verbose_output(),
-           "Outputted %lu configuration bits to XML file: %s\n",
+           "Outputting %lu configuration bits to XML file: %s\n",
            fabric_bitstream.bits().size(), fname.c_str());
 
-  return status;
+  /* Output to xml file */
+  bool output_success = false;
+  if (file_require_gz(fname)) {
+    GzXmlWriter writer(fname.c_str());
+    if (writer.isValid()) {
+      doc.save(writer);
+      output_success = true;
+    }
+  } else {
+    output_success = doc.save_file(fname.c_str());
+  }
+  if (output_success) {
+    VTR_LOGV(options.verbose_output(), "Succeed to output XML file: %s\n", fname.c_str());
+  } else {
+    VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
+  }
+  return output_success ? CMD_EXEC_SUCCESS : CMD_EXEC_FATAL_ERROR;
 }
 
 } /* end namespace openfpga */
