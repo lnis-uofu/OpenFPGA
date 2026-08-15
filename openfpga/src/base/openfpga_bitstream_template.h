@@ -42,8 +42,13 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
-    openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(
-      cmd_context.option_value(cmd, opt_read_file).c_str());
+    int status = read_xml_architecture_bitstream(
+      cmd_context.option_value(cmd, opt_read_file).c_str(),
+      openfpga_ctx.mutable_bitstream_manager(),
+      cmd_context.option_enable(cmd, opt_verbose));
+    if (status != CMD_EXEC_SUCCESS) {
+      return status;
+    }
   } else {
     std::string unused_mux_config;
     unused_mux_config = cmd_context.option_enable(cmd, opt_unused_mux_config)

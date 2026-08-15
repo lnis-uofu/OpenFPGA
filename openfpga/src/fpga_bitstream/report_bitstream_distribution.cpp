@@ -96,7 +96,7 @@ int report_bitstream_distribution(const std::string& fname,
     output_success = doc.save_file(fname.c_str());
   }
   if (output_success) {
-    VTR_LOGV("Succeed to output XML file: %s\n", fname.c_str());
+    VTR_LOG("Succeed to output XML file: %s\n", fname.c_str());
   } else {
     VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
   }

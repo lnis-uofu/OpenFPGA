@@ -15,6 +15,9 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "command_exit_codes.h"
+#include "openfpga_digest.h"
+#include "openfpga_gz_xml_reader.h"
 #include "openfpga_reserved_words.h"
 #include "read_xml_arch_bitstream.h"
 #include "read_xml_util.h"
@@ -148,17 +151,16 @@ static void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
 /********************************************************************
  * Parse XML codes about <bitstream> to an object of Bitstream
  *******************************************************************/
-BitstreamManager read_xml_architecture_bitstream(const char* fname) {
+int read_xml_architecture_bitstream(const char* fname,
+                                    BitstreamManager& bitstream_manager,
+                                    const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Read Architecture Bitstream file");
-
-  BitstreamManager bitstream_manager;
-
   /* Parse the file */
   pugi::xml_document doc;
   pugiutil::loc_data loc_data;
 
   try {
-    loc_data = pugiutil::load_xml(doc, fname);
+    loc_data = load_xml(doc, fname);
 
     /* Count the child <bitstream_block> */
 
@@ -173,6 +175,7 @@ BitstreamManager read_xml_architecture_bitstream(const char* fname) {
       archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_root),
                      "Top-level block must be named as '%s'!\n",
                      FPGA_TOP_MODULE_NAME);
+      return CMD_EXEC_FATAL_ERROR;
     }
 
     /* Create the top-level block */
@@ -191,15 +194,17 @@ BitstreamManager read_xml_architecture_bitstream(const char* fname) {
       /* Error out if the XML child has an invalid name! */
       if (xml_blk.name() != std::string("bitstream_block")) {
         bad_tag(xml_blk, loc_data, xml_root, {"bitstream_block"});
+        return CMD_EXEC_FATAL_ERROR;
       }
       rec_read_xml_bitstream_block(xml_blk, loc_data, bitstream_manager,
                                    top_block);
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(fname, e.line(), "%s", e.what());
+    return CMD_EXEC_FATAL_ERROR;
   }
-
-  return bitstream_manager;
+  VTR_LOGV(verbose, "Successfully loaded bitstream from file: %s\n", fname);
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
