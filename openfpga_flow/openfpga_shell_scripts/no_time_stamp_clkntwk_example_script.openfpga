@@ -47,6 +47,8 @@ write_fabric_pin_physical_location --file ${OPENFPGA_OUTPUT_DIR}/fabric_pin_phy_
 # Write gsb to XML
 write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml --verbose
 write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_no_rr_info --verbose --exclude_rr_info
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_gz --compress_output --verbose
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_gz_no_rr_info --compress_output --verbose --exclude_rr_info
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
@@ -55,7 +57,7 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --verbose --write_file ${OPENFPGA_OUTPUT_DIR}/fabric_independent_bitstream.xml --no_time_stamp
+build_architecture_bitstream --verbose --write_file ${OPENFPGA_OUTPUT_DIR}/fabric_independent_bitstream.xml.gz --no_time_stamp
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
@@ -63,8 +65,11 @@ build_fabric_bitstream --verbose
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml --format xml --no_time_stamp
 write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.bit --format plain_text --no_time_stamp
+write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml.gz --format xml --no_time_stamp
+write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.bit.gz --format plain_text --no_time_stamp
 write_io_mapping --file ${OPENFPGA_OUTPUT_DIR}/pin_mapping.xml --no_time_stamp
 report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml --no_time_stamp
+report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml.gz --no_time_stamp
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist

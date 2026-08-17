@@ -137,44 +137,54 @@ class FabricBitstream {
    * RRGraph::invalid_edge_ids_).
    */
   template <class ID>
-  class lazy_id_iterator
-    : public std::iterator<std::bidirectional_iterator_tag, ID> {
+  class lazy_id_iterator {
    public:
-    // Since we pass ID as a template to std::iterator we need to use an
-    // explicit 'typename' to bring the value_type and iterator names into scope
-    typedef
-      typename std::iterator<std::bidirectional_iterator_tag, ID>::value_type
-        value_type;
-    typedef
-      typename std::iterator<std::bidirectional_iterator_tag, ID>::iterator
-        iterator;
-
+    // Explicitly define the 5 standard types required by std::iterator_traits
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = ID;  // Must be non-const, even for const iterators
+    using difference_type = std::ptrdiff_t;
+    using pointer = ID*;
+    using reference = ID&;
+    // Constructor
     lazy_id_iterator(value_type init, const std::unordered_set<ID>& invalid_ids)
       : value_(init), invalid_ids_(invalid_ids) {}
 
     // Advance to the next ID value
-    iterator operator++() {
+    lazy_id_iterator operator++() {
       value_ = ID(size_t(value_) + 1);
       return *this;
     }
+    // 3. Added Postfix increment (it++)
+    lazy_id_iterator operator++(int) {
+      lazy_id_iterator temp = *this;
+      ++(*this);
+      return temp;
+    }
 
     // Advance to the previous ID value
-    iterator operator--() {
+    lazy_id_iterator operator--() {
       value_ = ID(size_t(value_) - 1);
       return *this;
     }
-
-    // Dereference the iterator
+    // 5. Added Postfix decrement (it--)
+    lazy_id_iterator operator--(int) {
+      lazy_id_iterator temp = *this;
+      --(*this);
+      return temp;
+    }
+    // 6. Fixed Dereference operator
     value_type operator*() const {
       return (invalid_ids_.count(value_)) ? ID::INVALID() : value_;
     }
 
-    friend bool operator==(const lazy_id_iterator<ID> lhs,
-                           const lazy_id_iterator<ID> rhs) {
+    // 7. Non-member comparison operators (Optimized by-reference)
+    friend bool operator==(const lazy_id_iterator<ID>& lhs,
+                           const lazy_id_iterator<ID>& rhs) {
       return lhs.value_ == rhs.value_;
     }
-    friend bool operator!=(const lazy_id_iterator<ID> lhs,
-                           const lazy_id_iterator<ID> rhs) {
+
+    friend bool operator!=(const lazy_id_iterator<ID>& lhs,
+                           const lazy_id_iterator<ID>& rhs) {
       return !(lhs == rhs);
     }
 

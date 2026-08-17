@@ -278,6 +278,11 @@ ShellCommandId add_write_gsb_command_template(
                          "specify multiple GSBs by using a splitter ``,``");
   shell_cmd.set_option_require_value(opt_gsb_names, openfpga::OPT_STRING);
 
+  /* Add an option '--compress_output' */
+  shell_cmd.add_option(
+    "compress_output", false,
+    "When enabled, the output files will be in compressed format (.gz)");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 

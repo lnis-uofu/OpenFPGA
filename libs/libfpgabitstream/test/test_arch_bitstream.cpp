@@ -9,6 +9,8 @@
 #include "vtr_log.h"
 
 /* Headers from fabric key */
+#include "openfpga_digest.h"
+#include "openfpga_gz_xml_writer.h"
 #include "read_xml_arch_bitstream.h"
 #include "report_arch_bitstream_distribution.h"
 #include "write_xml_arch_bitstream.h"
@@ -18,8 +20,12 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc) || (4 == argc) || (5 == argc));
 
   /* Parse the bitstream from an XML file */
-  openfpga::BitstreamManager test_bitstream =
-    openfpga::read_xml_architecture_bitstream(argv[1]);
+  openfpga::BitstreamManager test_bitstream;
+  int status =
+    openfpga::read_xml_architecture_bitstream(argv[1], test_bitstream, true);
+  if (status != 0) {
+    return status;
+  }
   VTR_LOG("Read the bitstream from an XML file: %s.\n", argv[1]);
 
   /* Output the bitstream database to an XML file
@@ -37,12 +43,29 @@ int main(int argc, const char** argv) {
    * This is optional only used when there is a third argument
    */
   if (4 <= argc) {
-    /* Create the file stream */
-    std::fstream fp;
-    fp.open(argv[3], std::fstream::out | std::fstream::trunc);
+    std::string fname(argv[3]);
+    pugi::xml_document doc;
+    pugi::xml_node root = doc.append_child("bitstream_distribution");
 
-    openfpga::report_architecture_bitstream_distribution(fp, test_bitstream, 1,
-                                                         0);
+    openfpga::report_architecture_bitstream_distribution(root, test_bitstream,
+                                                         1, 0);
     VTR_LOG("Echo the bitstream distribution to an XML file: %s.\n", argv[3]);
+    /* Output to xml file */
+    bool output_success = false;
+    if (openfpga::file_require_gz(fname)) {
+      openfpga::GzXmlWriter writer(fname.c_str());
+      if (writer.isValid()) {
+        doc.save(writer);
+        output_success = true;
+      }
+    } else {
+      output_success = doc.save_file(fname.c_str());
+    }
+    if (output_success) {
+      VTR_LOG("Succeed to output XML file: %s\n", fname.c_str());
+    } else {
+      VTR_LOG_ERROR("Failed to output XML file: %s\n", fname.c_str());
+    }
+    return output_success ? 0 : 1;
   }
 }

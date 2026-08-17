@@ -45,11 +45,11 @@ build_architecture_bitstream
 
   .. option:: --read_file <string>
 
-    Read the fabric-independent bitstream from an XML file. When this is enabled, bitstream generation will NOT consider VPR results. See details at :ref:`file_formats_architecture_bitstream`.
+    Read the fabric-independent bitstream from an XML file. Accept compressed version if the file name ends with '.gz'. When this is enabled, bitstream generation will NOT consider VPR results. See details at :ref:`file_formats_architecture_bitstream`.
 
   .. option:: --write_file <string>
 
-    Output the fabric-independent bitstream to an XML file. See details at :ref:`file_formats_architecture_bitstream`.
+    Output the fabric-independent bitstream to an XML file. See details at :ref:`file_formats_architecture_bitstream`. If the file name ends with '.gz', the output file will be automatically compressed.
 
   .. option:: --unused_mux_config  <string>
 
@@ -84,7 +84,7 @@ write_fabric_bitstream
 
   .. option:: --file <string> or -f <string>
 
-    Output the fabric bitstream to an plain text file (only ``0`` or ``1``)
+    Output the fabric bitstream to a file. If the file name ends with '.gz', the output file will be automatically compressed.
 
   .. option:: --format <string>
 
@@ -171,6 +171,7 @@ report_bitstream_distribution
   .. option:: --file <string> or -f <string>
 
     Specify the file name where the bitstream distribution will be outputted to.
+    When the file name ends with ".gz", the output file will be automatically compressed.
     See file formats in :ref:`file_format_bitstream_distribution_file`.
 
   .. option:: --depth <int> or -d <int>

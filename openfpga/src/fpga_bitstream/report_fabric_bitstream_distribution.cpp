@@ -12,6 +12,7 @@
 
 /* Headers from openfpgautil library */
 #include "bitstream_manager_utils.h"
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_tokenizer.h"
@@ -30,20 +31,15 @@ namespace openfpga {
  * which is used to limit the length of the report
  *******************************************************************/
 static void report_region_bitstream_distribution_to_xml_file(
-  std::fstream& fp, const FabricBitstream& fabric_bitstream,
-  const FabricBitRegionId& region, const int& hierarchy_level) {
-  valid_file_stream(fp);
-
+  pugi::xml_node& parent_node, const FabricBitstream& fabric_bitstream,
+  const FabricBitRegionId& region) {
   /* Write the bitstream distribution of this block */
-  write_tab_to_file(fp, hierarchy_level);
-  fp << "<region";
-  fp << " id=\"" << size_t(region) << "\"";
-  fp << " number_of_bits=\"" << fabric_bitstream.region_bits(region).size()
-     << "\"";
-  fp << ">" << std::endl;
-
-  write_tab_to_file(fp, hierarchy_level);
-  fp << "</region>" << std::endl;
+  pugi::xml_node region_node = parent_node.append_child("region");
+  region_node.append_attribute("id").set_value(
+    static_cast<unsigned long long>(size_t(region)));
+  region_node.append_attribute("number_of_bits")
+    .set_value(static_cast<unsigned long long>(
+      fabric_bitstream.region_bits(region).size()));
 }
 
 /********************************************************************
@@ -51,26 +47,19 @@ static void report_region_bitstream_distribution_to_xml_file(
  * This function can generate a report to a file
  *******************************************************************/
 int report_fabric_bitstream_distribution(
-  std::fstream& fp, const FabricBitstream& fabric_bitstream,
-  const int& hierarchy_level) {
+  pugi::xml_node& parent_node, const FabricBitstream& fabric_bitstream) {
   std::string timer_message =
     std::string("Report fabric bitstream distribution");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
-  valid_file_stream(fp);
-
   /* Write bitstream, region by region, in a recursive way */
-  int curr_level = hierarchy_level;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
-    write_tab_to_file(fp, curr_level);
-    fp << "<regions>" << std::endl;
-    report_region_bitstream_distribution_to_xml_file(fp, fabric_bitstream,
-                                                     region, curr_level + 1);
-    write_tab_to_file(fp, curr_level);
-    fp << "</regions>" << std::endl;
+    pugi::xml_node regions_node = parent_node.append_child("regions");
+    report_region_bitstream_distribution_to_xml_file(regions_node,
+                                                     fabric_bitstream, region);
   }
 
-  return 0;
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
