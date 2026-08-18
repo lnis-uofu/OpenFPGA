@@ -31,7 +31,7 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --write_file fabric_independent_bitstream.xml
+build_architecture_bitstream --write_file fabric_independent_bitstream.xml.gz
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream
@@ -41,12 +41,12 @@ build_fabric_bitstream
 # deterministic and structural. For a bus-based mux the shared configuration
 # memory appears once and is referenced by every per-bit mux path, so this
 # golden verifies the shared config bit in the actual fabric bitstream.
-write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml --format xml --path_only --no_time_stamp
+write_fabric_bitstream --file ${OPENFPGA_OUTPUT_DIR}/fabric_bitstream.xml.gz --format xml --path_only --no_time_stamp
 
 # Report bitstream distribution to a golden file (no time stamp so it can be
 # diffed in CI). This captures the per-block configuration-bit counts; a
 # bus-based mux that lost its shared config bit would change these counts.
-report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml --no_time_stamp
+report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distribution.xml.gz --no_time_stamp
 
 # Write the fabric Verilog netlists into the golden output directory. Only the
 # DSP tile module is tracked as golden (see the .gitignore in the golden dir);
