@@ -25,6 +25,7 @@ class BitstreamWriterOption {
  public: /* Public accessors */
   e_bitfile_type output_file_type() const;
   std::string output_file_name() const;
+  bool compress_output() const;
   bool time_stamp() const;
   bool verbose_output() const;
 
