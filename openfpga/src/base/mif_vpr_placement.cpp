@@ -1,5 +1,6 @@
 #include "mif_vpr_placement.h"
 
+#include <algorithm>
 #include <string>
 
 #include "aggregate_mif_util.h"
@@ -7,14 +8,30 @@
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
 #include "openfpga_pb_parser.h"
+#include "physical_pb.h"
+#include "vpr_clustering_annotation.h"
 #include "vpr_types.h"
 #include "vtr_log.h"
 
 namespace openfpga {
 
+static PhysicalPbId find_physical_mif_instance(const PhysicalPb& physical_pb,
+                                               const AtomBlockId& atom_block) {
+  for (const PhysicalPbId& physical_pb_id : physical_pb.primitive_pbs()) {
+    const std::vector<AtomBlockId> atom_blocks =
+      physical_pb.atom_blocks(physical_pb_id);
+    if (std::find(atom_blocks.begin(), atom_blocks.end(), atom_block) !=
+        atom_blocks.end()) {
+      return physical_pb_id;
+    }
+  }
+  return PhysicalPbId::INVALID();
+}
+
 int annotate_physical_mif_grid_coordinates(
   MifPipeline& mif_pipeline, const BitstreamSetting& bitstream_setting,
-  const AtomContext& atom_ctx, const PlacementContext& place_ctx) {
+  const AtomContext& atom_ctx, const PlacementContext& place_ctx,
+  const VprClusteringAnnotation& clustering_annotation) {
   MifStorage& physical_storage =
     mif_pipeline.mutable_storage(MifPipeline::Stage::PHYSICAL);
   if (physical_storage.empty()) {
@@ -78,6 +95,18 @@ int annotate_physical_mif_grid_coordinates(
       return CMD_EXEC_FATAL_ERROR;
     }
 
+    const PhysicalPb physical_pb =
+      clustering_annotation.physical_pb(cluster_blk);
+    const PhysicalPbId physical_pb_id =
+      find_physical_mif_instance(physical_pb, atom_block);
+    if (!physical_pb_id.is_valid()) {
+      VTR_LOG_ERROR(
+        "annotate_physical_mif_grid_coordinates: AtomBlock '%s' has no "
+        "repacked PhysicalPb instance; run this after repack\n",
+        atom_ctx.netlist().block_name(atom_block).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
     const t_pl_loc& pl_loc = place_ctx.block_locs()[cluster_blk].loc;
     if (mif_pipeline.physical_segment_has_grid_coord(segment_id)) {
       const MifGridCoord& grid =
@@ -99,9 +128,9 @@ int annotate_physical_mif_grid_coordinates(
                                                  pl_loc.sub_tile);
     VTR_LOG(
       "annotate_physical_mif_grid_coordinates: segment %zu grid (%d,%d,%d) "
-      "pb '%s'\n",
+      "pb '%s', PhysicalPb '%s'\n",
       static_cast<size_t>(segment_id), pl_loc.x, pl_loc.y, pl_loc.sub_tile,
-      operating_pb.c_str());
+      operating_pb.c_str(), physical_pb.name(physical_pb_id).c_str());
   }
 
   for (const MifSegmentId& segment_id : physical_storage.segments()) {

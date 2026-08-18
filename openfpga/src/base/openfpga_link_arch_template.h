@@ -6,7 +6,6 @@
  *******************************************************************/
 #include "annotate_bitstream_setting.h"
 #include "annotate_clustering.h"
-#include "annotate_mif.h"
 #include "annotate_pb_graph.h"
 #include "annotate_pb_types.h"
 #include "annotate_physical_tiles.h"
@@ -209,14 +208,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  if (CMD_EXEC_FATAL_ERROR ==
-      build_physical_mif(openfpga_ctx.bitstream_setting(),
-                         openfpga_ctx.mutable_mif_pipeline(), g_vpr_ctx.atom(),
-                         g_vpr_ctx.placement())) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 }
 

@@ -27,7 +27,8 @@ namespace openfpga {
  *******************************************************************/
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
                        MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
-                       const PlacementContext& place_ctx) {
+                       const PlacementContext& place_ctx,
+                       const VprClusteringAnnotation& clustering_annotation) {
   const bool has_mif_setting =
     !bitstream_setting.mif_source_settings().empty() ||
     !bitstream_setting.mif_address_map_settings().empty();
@@ -78,7 +79,8 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
 
   /* Annotate placement coords into the same MifPipeline as physical_. */
   status = annotate_physical_mif_grid_coordinates(
-    mif_pipeline, bitstream_setting, atom_ctx, place_ctx);
+    mif_pipeline, bitstream_setting, atom_ctx, place_ctx,
+    clustering_annotation);
   return status;
 }
 

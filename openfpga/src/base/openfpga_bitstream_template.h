@@ -4,6 +4,7 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
+#include "annotate_mif.h"
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
@@ -13,8 +14,6 @@
 #include "command_exit_codes.h"
 #include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
-#include "mif_pipeline.h"
-#include "mif_vpr_placement.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
@@ -42,6 +41,17 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
+
+  /* Repack has created PhysicalPb before this command. Build the MIF here so
+   * EBLIF values still come from AtomContext while physical instances can be
+   * checked against the repacked clustering annotation. */
+  const int mif_status = build_physical_mif(
+    openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
+    g_vpr_ctx.atom(), g_vpr_ctx.placement(),
+    openfpga_ctx.vpr_clustering_annotation());
+  if (CMD_EXEC_SUCCESS != mif_status) {
+    return mif_status;
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     int status = read_xml_architecture_bitstream(
