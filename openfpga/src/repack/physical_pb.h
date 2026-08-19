@@ -43,18 +43,20 @@ class PhysicalPb {
     FixedBitstreamInfo(const std::string& cont, const size_t& ofs)
       : content(cont), offset(ofs) {}
   };
+  /* Pointer back to the atom that owns the raw INIT; selector is the
+   * eblif field name (e.g. ".param INIT"). Value is not copied. */
   struct MifDataInfo {
+    AtomBlockId atom_block = AtomBlockId::INVALID();
     std::string operating_pb_path;
     std::string source;
     std::string selector;
-    std::string value;
-    MifDataInfo(const std::string& pb_path, const std::string& source_type,
-                const std::string& field_selector,
-                const std::string& field_value)
-      : operating_pb_path(pb_path),
+    MifDataInfo(const AtomBlockId& atom, const std::string& pb_path,
+                const std::string& source_type,
+                const std::string& field_selector)
+      : atom_block(atom),
+        operating_pb_path(pb_path),
         source(source_type),
-        selector(field_selector),
-        value(field_value) {}
+        selector(field_selector) {}
   };
 
  public: /* Public aggregators */
@@ -102,10 +104,9 @@ class PhysicalPb {
   void add_fixed_mode_select_bitstream(const PhysicalPbId& pb,
                                        const std::string& fixed_bitstream,
                                        const size_t& offset);
-  void add_mif_data(const PhysicalPbId& pb,
+  void add_mif_data(const PhysicalPbId& pb, const AtomBlockId& atom_block,
                     const std::string& operating_pb_path,
-                    const std::string& source, const std::string& selector,
-                    const std::string& value);
+                    const std::string& source, const std::string& selector);
 
  public: /* Public validators/invalidators */
   bool valid_pb_id(const PhysicalPbId& pb_id) const;

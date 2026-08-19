@@ -7,6 +7,7 @@
 #include "mif_location_map.h"
 #include "mif_pipeline.h"
 #include "vpr_clustering_annotation.h"
+#include "vpr_context.h"
 #include "vpr_placement_annotation.h"
 
 /********************************************************************
@@ -16,21 +17,18 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-/* Load eblif/hex into MifPipeline and build PHYSICAL MIF.
- * Must run after repack so PhysicalPb is available.
+/* Decode atom INIT into logical_mifs_, aggregate per placed physical
+ * primitive into physical_mifs_. Must run after repack.
  *
- * Aggregated physical MIF lands in MifPipeline::physical_; placement
- * coords for those segments are annotated into the same pipeline.
- *
- * EBLIF/LOGICAL keep operating pb paths to match bitstream-setting keys;
- * PHYSICAL keeps mif_address_map des_pb_type for location-map binding. */
+ * Raw INIT stays in the atom netlist; PhysicalPb only stores AtomBlockId
+ * and the parameter selector. */
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
-                       MifPipeline& mif_pipeline,
+                       MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
                        const VprClusteringAnnotation& clustering_annotation,
                        const VprPlacementAnnotation& placement_annotation);
 
 /* Concatenate every destination PB on the FPGA-top MIF location map into
- * UNIFIED storage. A location uses PHYSICAL data when the pipeline has a
+ * top_mif_. A location uses physical_mifs_ data when the pipeline has a
  * matching PB at that grid; otherwise the slice is filled with 0. */
 int aggregate_unified_mif(const BitstreamSetting& bitstream_setting,
                           MifPipeline& mif_pipeline,

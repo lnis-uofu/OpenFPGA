@@ -272,12 +272,12 @@ void PhysicalPb::add_fixed_mode_select_bitstream(
 }
 
 void PhysicalPb::add_mif_data(const PhysicalPbId& pb,
+                              const AtomBlockId& atom_block,
                               const std::string& operating_pb_path,
                               const std::string& source,
-                              const std::string& selector,
-                              const std::string& value) {
+                              const std::string& selector) {
   VTR_ASSERT(true == valid_pb_id(pb));
-  mif_data_[pb].emplace_back(operating_pb_path, source, selector, value);
+  mif_data_[pb].emplace_back(atom_block, operating_pb_path, source, selector);
 }
 
 /******************************************************************************

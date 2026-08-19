@@ -9,23 +9,26 @@
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory MifStorage for one pipeline stage (see MifPipeline).
- * Stages: HEX, EBLIF, LOGICAL, PHYSICAL — each holds segments/lines
- * for that step; use MifPipeline transforms to move between stages.
+ * In-memory MIF payload used by MifPipeline at every hierarchy:
+ *   - hex input from read_mif
+ *   - one logical MIF per AtomBlockId
+ *   - one physical MIF per (t_pl_loc, t_pb_graph_node*)
+ *   - the FPGA-top unified MIF
  *
- * Eblif read creates each logical segment on demand with:
- *   - VPR-resolved physical_pb
- *   - raw .param INIT data
+ * A logical segment is created with:
+ *   - VPR-resolved operating pb_type path
+ *   - raw .param INIT data (copied only for decode; source of truth is
+ *     the atom netlist)
  *
- * Before remapping, MifPipeline binds each logical segment to its
- * mif_source, stores data_width/addr_range, decodes raw INIT into memory
- * lines, and clears the raw data. init.hex segments already contain memory
- * lines and receive any remaining source metadata during the same step.
+ * Decode binds each segment to its mif_source, stores data_width /
+ * addr_range, unpacks raw INIT into memory lines, and clears raw data.
+ * init.hex segments already contain memory lines and receive remaining
+ * source metadata during the same step.
  *
  * Each aggregated destination segment has:
  *   - memory lines
  *   - physical_pb, data_width, addr_range (for .mem header)
- * Placement coords for PHYSICAL segments live on MifPipeline, not here.
+ * Placement is the map key on MifPipeline, not a field here.
  *
  * Data members (indexed by MifSegmentId unless noted):
  *   segment_ids_             - Valid segment id list (StrongId table)

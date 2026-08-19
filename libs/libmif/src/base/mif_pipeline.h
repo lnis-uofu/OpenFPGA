@@ -1,79 +1,75 @@
 #pragma once
 
+#include <map>
 #include <string>
 
+#include "atom_netlist_fwd.h"
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
 #include "mif_storage.h"
+#include "physical_types.h"
+#include "vpr_types.h"
 
 namespace openfpga {
 
-/* VPR grid location for a PHYSICAL-stage segment (sub_tile = z). */
-struct MifGridCoord {
-  int x = -1;
-  int y = -1;
-  int z = -1;
-
-  bool is_valid() const { return x >= 0 && y >= 0 && z >= 0; }
-};
-
 /********************************************************************
- * Unified MIF pipeline with staged MifStorage and explicit transforms.
+ * Three MIF storages keyed by hierarchy (reviewer layout).
  *
- * Stages:
- *   HEX       - init.hex from read_mif (source="others")
- *   EBLIF     - raw .param INIT from Yosys eblif
- *   LOGICAL   - merged + decoded logical words per mif_source
- *   PHYSICAL  - remapped aggregated preload per destination pb_type
- *   UNIFIED   - FPGA-top concatenation of all destination PBs on each
- *               MIF data port (location-map order; missing PBs are 0)
+ *   // Traceback logical mif from atom blocks
+ *   std::map<AtomBlockId, MifStorage> logical_mifs_;
  *
- * Aggregated physical MIF is stored as physical_. Its corresponding
- * placement coordinates (x, y, sub_tile) are also stored in this
- * pipeline (physical_segment_grid_coords_), parallel to physical_
- * segments.
+ *   // Each (x, y, sub_tile, layer) may have several physical
+ *   // pb_graph_nodes; each can hold a MIF aggregated from logical MIFs.
+ *   // VPR type is t_pl_loc (x, y, sub_tile, layer).
+ *   std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>> physical_mifs_;
+ *
+ *   // The one unified MIF for top-level fabric
+ *   MifStorage top_mif_;
+ *
+ * hex_ is only the read_mif (source="others") input buffer, not a
+ * hierarchy level.
  ********************************************************************/
 class MifPipeline {
  public:
-  enum class Stage { HEX, EBLIF, LOGICAL, PHYSICAL, UNIFIED };
-
- public:
-  const MifStorage& storage(Stage stage) const;
-  MifStorage& mutable_storage(Stage stage);
-
   void clear();
-  void clear(Stage stage);
 
-  /* Merge HEX/EBLIF into LOGICAL by mif_source: eblif pb_types use EBLIF
-   * only; others use HEX only (no concatenation or overwrite). */
-  int merge_to_logical(const BitstreamSetting& bitstream_setting);
+  const MifStorage& hex() const;
+  MifStorage& mutable_hex();
 
-  /* Bind mif_source metadata and decode raw INIT into memory lines. */
-  int decode_logical(const BitstreamSetting& bitstream_setting);
+  const std::map<AtomBlockId, MifStorage>& logical_mifs() const;
+  std::map<AtomBlockId, MifStorage>& mutable_logical_mifs();
 
-  /* Remap LOGICAL through mif_address_map into physical_. */
-  int aggregate_to_physical(const BitstreamSetting& bitstream_setting);
+  const std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>>&
+  physical_mifs() const;
+  std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>>&
+  mutable_physical_mifs();
 
-  /* Debug dump of any stage via write_mif. */
-  int write_stage(const std::string& file_path, Stage stage) const;
+  const MifStorage& top_mif() const;
+  MifStorage& mutable_top_mif();
 
-  /* Placement coords for physical_ segments (must pass physical_ ids). */
-  bool physical_segment_has_grid_coord(const MifSegmentId& segment_id) const;
-  const MifGridCoord& physical_segment_grid_coord(
-    const MifSegmentId& segment_id) const;
-  void set_physical_segment_grid_coord(const MifSegmentId& segment_id, int x,
-                                       int y, int z);
+  /* physical_mifs_[phy_loc][pb_graph_node]; empty storage if missing. */
+  const MifStorage& physical_mif(const t_pl_loc& phy_loc,
+                                 t_pb_graph_node* pb_graph_node) const;
+
+  /* Flatten every placed physical MIF into one storage (write_mif
+   * fallback when top_mif_ was not built). */
+  MifStorage copy_all_physical_mifs() const;
+
+  /* Bind mif_source metadata and decode raw INIT / hex words in place. */
+  int decode_storage(MifStorage& storage,
+                     const BitstreamSetting& bitstream_setting) const;
+
+  /* Remap every segment of logical through mif_address_map into dest.
+   * Existing dest lines for the same des_pb_type are merged (OR). */
+  int aggregate_logical_into_physical(const MifStorage& logical,
+                                      const BitstreamSetting& bitstream_setting,
+                                      MifStorage& dest) const;
 
  private:
   MifStorage hex_;
-  MifStorage eblif_;
-  MifStorage logical_;
-  MifStorage physical_; /* Aggregated physical MIF */
-  MifStorage unified_;  /* FPGA-top MIF, one segment per data port */
-  /* Parallel to physical_ only; indexed by physical_ segment id.
-   * Do not index with HEX/EBLIF/LOGICAL segment ids (same StrongId type,
-   * but each stage has its own id space). */
-  vtr::vector<MifSegmentId, MifGridCoord> physical_segment_grid_coords_;
+  std::map<AtomBlockId, MifStorage> logical_mifs_;
+  std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>> physical_mifs_;
+  MifStorage top_mif_;
 };
 
 } /* namespace openfpga */

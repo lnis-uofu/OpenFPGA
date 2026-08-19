@@ -7,113 +7,79 @@
 #include <vector>
 
 #include "aggregate_mif_util.h"
-#include "bitstream_setting_xml_constants.h"
-#include "vtr_assert.h"
 #include "vtr_log.h"
-#include "write_mif.h"
 
 namespace openfpga {
 
-bool MifPipeline::physical_segment_has_grid_coord(
-  const MifSegmentId& segment_id) const {
-  VTR_ASSERT(physical_.valid_segment_id(segment_id));
-  VTR_ASSERT(physical_segment_grid_coords_.size() > size_t(segment_id));
-  return physical_segment_grid_coords_[segment_id].is_valid();
+const MifStorage& MifPipeline::hex() const { return hex_; }
+
+MifStorage& MifPipeline::mutable_hex() { return hex_; }
+
+const std::map<AtomBlockId, MifStorage>& MifPipeline::logical_mifs() const {
+  return logical_mifs_;
 }
 
-const MifGridCoord& MifPipeline::physical_segment_grid_coord(
-  const MifSegmentId& segment_id) const {
-  VTR_ASSERT(physical_segment_has_grid_coord(segment_id));
-  return physical_segment_grid_coords_[segment_id];
+std::map<AtomBlockId, MifStorage>& MifPipeline::mutable_logical_mifs() {
+  return logical_mifs_;
 }
 
-void MifPipeline::set_physical_segment_grid_coord(
-  const MifSegmentId& segment_id, int x, int y, int z) {
-  VTR_ASSERT(physical_.valid_segment_id(segment_id));
-  VTR_ASSERT(physical_segment_grid_coords_.size() == physical_.num_segments());
-  physical_segment_grid_coords_[segment_id] = MifGridCoord{x, y, z};
+const MifStorage& MifPipeline::top_mif() const { return top_mif_; }
+
+MifStorage& MifPipeline::mutable_top_mif() { return top_mif_; }
+
+const std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>>&
+MifPipeline::physical_mifs() const {
+  return physical_mifs_;
 }
 
-const MifStorage& MifPipeline::storage(Stage stage) const {
-  switch (stage) {
-    case Stage::HEX:
-      return hex_;
-    case Stage::EBLIF:
-      return eblif_;
-    case Stage::LOGICAL:
-      return logical_;
-    case Stage::PHYSICAL:
-      return physical_;
-    case Stage::UNIFIED:
-      return unified_;
-    default:
-      return logical_;
+std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>>&
+MifPipeline::mutable_physical_mifs() {
+  return physical_mifs_;
+}
+
+const MifStorage& MifPipeline::physical_mif(
+  const t_pl_loc& phy_loc, t_pb_graph_node* pb_graph_node) const {
+  static const MifStorage empty;
+  auto loc_it = physical_mifs_.find(phy_loc);
+  if (loc_it == physical_mifs_.end()) {
+    return empty;
   }
-}
-
-MifStorage& MifPipeline::mutable_storage(Stage stage) {
-  return const_cast<MifStorage&>(
-    static_cast<const MifPipeline*>(this)->storage(stage));
+  const auto& by_node = loc_it->second;
+  auto node_it = by_node.find(pb_graph_node);
+  if (node_it != by_node.end()) {
+    return node_it->second;
+  }
+  /* One primitive at this loc: accept even if graph-node pointers differ. */
+  if (1 == by_node.size()) {
+    return by_node.begin()->second;
+  }
+  return empty;
 }
 
 void MifPipeline::clear() {
   hex_.clear();
-  eblif_.clear();
-  logical_.clear();
-  physical_.clear();
-  unified_.clear();
-  physical_segment_grid_coords_.clear();
+  logical_mifs_.clear();
+  physical_mifs_.clear();
+  top_mif_.clear();
 }
 
-void MifPipeline::clear(Stage stage) {
-  mutable_storage(stage).clear();
-  if (Stage::PHYSICAL == stage) {
-    physical_segment_grid_coords_.clear();
-  }
-}
-
-int MifPipeline::merge_to_logical(const BitstreamSetting& bitstream_setting) {
-  logical_.clear();
-
-  /* HEX: only for pb_types not configured as source="eblif". */
-  for (const MifSegmentId& hex_seg : hex_.segments()) {
-    const std::string& pb = hex_.physical_pb(hex_seg);
-    if (bitstream_setting.pb_type_is_eblif_mif_source(pb)) {
-      VTR_LOG(
-        "mif_pipeline: skip hex segment for eblif mif_source pb_type '%s'\n",
-        pb.c_str());
-      continue;
+MifStorage MifPipeline::copy_all_physical_mifs() const {
+  MifStorage combined;
+  for (const auto& loc_entry : physical_mifs_) {
+    for (const auto& node_entry : loc_entry.second) {
+      const MifStorage& storage = node_entry.second;
+      for (const MifSegmentId& segment_id : storage.segments()) {
+        copy_mif_segment(storage, segment_id, combined);
+      }
     }
-    copy_mif_segment(hex_, hex_seg, logical_);
   }
-
-  if (eblif_.empty()) {
-    return CMD_EXEC_SUCCESS;
-  }
-
-  size_t eblif_segment_count = 0;
-  for (const MifSegmentId& eblif_seg : eblif_.segments()) {
-    if (!bitstream_setting.pb_type_is_eblif_mif_source(
-          eblif_.physical_pb(eblif_seg))) {
-      continue;
-    }
-    ++eblif_segment_count;
-    copy_mif_segment(eblif_, eblif_seg, logical_);
-  }
-
-  if (bitstream_setting.has_eblif_mif_source() && eblif_segment_count == 0) {
-    VTR_LOG_ERROR(
-      "mif_pipeline: eblif loaded but no segment matches any mif_source with "
-      "source='%s'\n",
-      XML_MIF_SOURCE_SOURCE_EBLIF);
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  return CMD_EXEC_SUCCESS;
+  return combined;
 }
 
-int MifPipeline::decode_logical(const BitstreamSetting& bitstream_setting) {
-  for (const MifSegmentId& segment_id : logical_.segments()) {
-    const std::string vpr_pb_type = logical_.physical_pb(segment_id);
+int MifPipeline::decode_storage(
+  MifStorage& storage, const BitstreamSetting& bitstream_setting) const {
+  for (const MifSegmentId& segment_id : storage.segments()) {
+    const std::string vpr_pb_type = storage.physical_pb(segment_id);
     const MifSourceSettingId source_id =
       bitstream_setting.find_mif_source_by_pb_type(vpr_pb_type);
     if (!source_id.is_valid()) {
@@ -123,74 +89,83 @@ int MifPipeline::decode_logical(const BitstreamSetting& bitstream_setting) {
       return CMD_EXEC_FATAL_ERROR;
     }
 
-    logical_.set_segment_physical_pb(
+    storage.set_segment_physical_pb(
       segment_id, bitstream_setting.mif_source_pb_type(source_id));
     const BasicPort addr_range =
       bitstream_setting.mif_source_address_range(source_id);
     const BasicPort data_range =
       bitstream_setting.mif_source_data_range(source_id);
-    logical_.set_segment_addr_range(segment_id, addr_range);
-    logical_.set_segment_data_width(segment_id,
-                                    static_cast<int>(data_range.get_width()));
+    storage.set_segment_addr_range(segment_id, addr_range);
+    storage.set_segment_data_width(segment_id,
+                                   static_cast<int>(data_range.get_width()));
 
-    if (logical_.raw_data(segment_id).empty()) {
+    if (storage.raw_data(segment_id).empty()) {
       for (const MifMemoryLineId& line_id :
-           logical_.segment_memory_lines(segment_id)) {
-        std::string data_bits = logical_.memory_line_data(line_id);
+           storage.segment_memory_lines(segment_id)) {
+        std::string data_bits = storage.memory_line_data(line_id);
         if (!is_valid_bit_string(data_bits) ||
             !normalize_bit_string_width(data_bits, data_range.get_width())) {
           VTR_LOG_ERROR(
             "mif_pipeline: cannot fit hex word at addr %lu into data_range "
             "width %zu for pb_type '%s'\n",
-            static_cast<unsigned long>(logical_.memory_line_address(line_id)),
+            static_cast<unsigned long>(storage.memory_line_address(line_id)),
             data_range.get_width(),
             bitstream_setting.mif_source_pb_type(source_id).c_str());
           return CMD_EXEC_FATAL_ERROR;
         }
-        logical_.set_memory_line_data(line_id, data_bits);
+        storage.set_memory_line_data(line_id, data_bits);
       }
       continue;
     }
 
     std::vector<std::pair<uint64_t, std::string>> words;
-    if (!unpack_yosys_init_param(logical_.raw_data(segment_id),
+    if (!unpack_yosys_init_param(storage.raw_data(segment_id),
                                  data_range.get_width(), addr_range.get_width(),
                                  words)) {
       return CMD_EXEC_FATAL_ERROR;
     }
     for (const auto& word : words) {
-      logical_.create_memory_line(segment_id, word.first + addr_range.get_lsb(),
-                                  word.second);
+      storage.create_memory_line(segment_id, word.first + addr_range.get_lsb(),
+                                 word.second);
     }
-    logical_.set_segment_raw_data(segment_id, std::string());
+    storage.set_segment_raw_data(segment_id, std::string());
   }
   return CMD_EXEC_SUCCESS;
 }
 
-int MifPipeline::aggregate_to_physical(
-  const BitstreamSetting& bitstream_setting) {
-  physical_.clear();
-  physical_segment_grid_coords_.clear();
+int MifPipeline::aggregate_logical_into_physical(
+  const MifStorage& logical, const BitstreamSetting& bitstream_setting,
+  MifStorage& dest) const {
   if (bitstream_setting.mif_address_map_settings().empty()) {
     VTR_LOG_ERROR("mif_pipeline: no mif_address_map in bitstream setting\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (logical_.empty()) {
-    VTR_LOG("mif_pipeline: empty logical MIF storage; nothing to aggregate\n");
+  if (logical.empty()) {
     return CMD_EXEC_SUCCESS;
   }
 
   std::map<std::string, std::map<uint64_t, std::string>> des_data_maps;
   std::map<std::string, std::map<uint64_t, std::string>> des_written_masks;
 
-  for (const MifSegmentId& segment_id : logical_.segments()) {
-    if (!logical_.has_physical_pb(segment_id)) {
+  for (const MifSegmentId& dest_seg : dest.segments()) {
+    auto& phys_data_map = des_data_maps[dest.physical_pb(dest_seg)];
+    auto& phys_written_mask = des_written_masks[dest.physical_pb(dest_seg)];
+    for (const MifMemoryLineId& line_id : dest.segment_memory_lines(dest_seg)) {
+      const std::string& bits = dest.memory_line_data(line_id);
+      phys_data_map[dest.memory_line_address(line_id)] = bits;
+      phys_written_mask[dest.memory_line_address(line_id)] =
+        std::string(bits.size(), '1');
+    }
+  }
+
+  for (const MifSegmentId& segment_id : logical.segments()) {
+    if (!logical.has_physical_pb(segment_id)) {
       VTR_LOG_ERROR(
         "mif_pipeline: segment %zu has no pb_type from its mif_source\n",
         static_cast<size_t>(segment_id));
       return CMD_EXEC_FATAL_ERROR;
     }
-    const std::string& src_pb_type = logical_.physical_pb(segment_id);
+    const std::string& src_pb_type = logical.physical_pb(segment_id);
     const MifAddressMapSettingId map_id =
       bitstream_setting.find_mif_address_map_by_src_pb_type(src_pb_type);
     if (!map_id.is_valid()) {
@@ -212,9 +187,9 @@ int MifPipeline::aggregate_to_physical(
     }
     const size_t des_word_width =
       bitstream_setting.mif_source_data_range(des_source_id).get_width();
-    const BasicPort& src_addr_range = logical_.addr_range(segment_id);
+    const BasicPort& src_addr_range = logical.addr_range(segment_id);
     const size_t src_word_width =
-      static_cast<size_t>(logical_.data_width(segment_id));
+      static_cast<size_t>(logical.data_width(segment_id));
     auto& phys_data_map = des_data_maps[des_pb_type];
     auto& phys_written_mask = des_written_masks[des_pb_type];
 
@@ -223,9 +198,9 @@ int MifPipeline::aggregate_to_physical(
             des_pb_type.c_str());
 
     for (const MifMemoryLineId& line_id :
-         logical_.segment_memory_lines(segment_id)) {
-      const uint64_t logical_addr = logical_.memory_line_address(line_id);
-      const std::string& logical_data = logical_.memory_line_data(line_id);
+         logical.segment_memory_lines(segment_id)) {
+      const uint64_t logical_addr = logical.memory_line_address(line_id);
+      const std::string& logical_data = logical.memory_line_data(line_id);
       if (!src_addr_range.is_valid() ||
           logical_addr < src_addr_range.get_lsb() ||
           logical_addr > src_addr_range.get_msb() ||
@@ -268,6 +243,7 @@ int MifPipeline::aggregate_to_physical(
     }
   }
 
+  dest.clear();
   for (const auto& des_data_map : des_data_maps) {
     if (des_data_map.second.empty()) {
       continue;
@@ -285,27 +261,22 @@ int MifPipeline::aggregate_to_physical(
       bitstream_setting.mif_source_address_range(des_source_id);
     const BasicPort des_data_range =
       bitstream_setting.mif_source_data_range(des_source_id);
-    const MifSegmentId out_seg = physical_.create_segment();
-    physical_segment_grid_coords_.emplace_back();
-    physical_.set_segment_physical_pb(out_seg, des_pb_type);
-    physical_.set_segment_data_width(
-      out_seg, static_cast<int>(des_data_range.get_width()));
-    physical_.set_segment_addr_range(out_seg, des_addr_range);
+    const MifSegmentId out_seg = dest.create_segment();
+    dest.set_segment_physical_pb(out_seg, des_pb_type);
+    dest.set_segment_data_width(out_seg,
+                                static_cast<int>(des_data_range.get_width()));
+    dest.set_segment_addr_range(out_seg, des_addr_range);
 
     for (const auto& addr_data : des_data_map.second) {
-      physical_.create_memory_line(out_seg, addr_data.first, addr_data.second);
+      dest.create_memory_line(out_seg, addr_data.first, addr_data.second);
     }
   }
 
-  if (physical_.empty()) {
+  if (dest.empty()) {
     VTR_LOG_ERROR("mif_pipeline: no aggregated data produced\n");
     return CMD_EXEC_FATAL_ERROR;
   }
   return CMD_EXEC_SUCCESS;
-}
-
-int MifPipeline::write_stage(const std::string& file_path, Stage stage) const {
-  return write_mif(file_path, storage(stage));
 }
 
 } /* namespace openfpga */

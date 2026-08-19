@@ -29,10 +29,7 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
   const std::string& pb_type = cmd_context.option_value(cmd, opt_pb_type);
   const int exec_status = read_mif_from_init_hex(
-    mif_path,
-    openfpga_context.mutable_mif_pipeline().mutable_storage(
-      openfpga::MifPipeline::Stage::HEX),
-    pb_type);
+    mif_path, openfpga_context.mutable_mif_pipeline().mutable_hex(), pb_type);
   if (CMD_EXEC_SUCCESS != exec_status) {
     return exec_status;
   }
@@ -48,16 +45,20 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
-  /* FPGA-top unified MIF when location-map aggregation ran; else per-PB
-   * PHYSICAL result from build_architecture_bitstream. */
-  const openfpga::MifStorage& unified_mif_storage =
-    openfpga_context.mif_pipeline().storage(
-      openfpga::MifPipeline::Stage::UNIFIED);
-  const openfpga::MifStorage& aggregated_mif_storage =
-    unified_mif_storage.empty() ? openfpga_context.mif_pipeline().storage(
-                                    openfpga::MifPipeline::Stage::PHYSICAL)
-                                : unified_mif_storage;
-  if (aggregated_mif_storage.empty()) {
+  /* FPGA-top unified MIF when location-map aggregation ran; else flatten
+   * every placed physical MIF from build_architecture_bitstream. */
+  const openfpga::MifPipeline& mif_pipeline = openfpga_context.mif_pipeline();
+  const openfpga::MifStorage* aggregated_mif_storage = nullptr;
+  openfpga::MifStorage physical_fallback;
+  if (!mif_pipeline.top_mif().empty()) {
+    aggregated_mif_storage = &mif_pipeline.top_mif();
+  } else {
+    physical_fallback = mif_pipeline.copy_all_physical_mifs();
+    if (!physical_fallback.empty()) {
+      aggregated_mif_storage = &physical_fallback;
+    }
+  }
+  if (nullptr == aggregated_mif_storage) {
     VTR_LOG_ERROR(
       "write_mif: no aggregated MIF data; run build_architecture_bitstream "
       "first (with mif_source / logical MIF)\n");
@@ -65,7 +66,7 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   }
 
   const int exec_status =
-    write_mif(cmd_context.option_value(cmd, opt_file), aggregated_mif_storage);
+    write_mif(cmd_context.option_value(cmd, opt_file), *aggregated_mif_storage);
   if (CMD_EXEC_SUCCESS == exec_status) {
     VTR_LOG("write_mif: wrote '%s'\n",
             cmd_context.option_value(cmd, opt_file).c_str());

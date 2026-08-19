@@ -42,11 +42,11 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
 
-  /* Repack has cached MIF data in PhysicalPb before this command. Build the
-   * MIF exclusively from clustering and placement annotations. */
+  /* Repack recorded AtomBlockId + param name on PhysicalPb. Read INIT from
+   * the atom netlist and aggregate per placed physical primitive. */
   const int mif_status = build_physical_mif(
     openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
-    openfpga_ctx.vpr_clustering_annotation(),
+    g_vpr_ctx.atom(), openfpga_ctx.vpr_clustering_annotation(),
     openfpga_ctx.vpr_placement_annotation());
   if (CMD_EXEC_SUCCESS != mif_status) {
     return mif_status;

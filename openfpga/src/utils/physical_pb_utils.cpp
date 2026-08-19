@@ -337,10 +337,9 @@ static void mark_physical_pb_wired_lut_outputs(
 /************************************************************************
  * Synchronize mapping results from an operating pb to a physical pb
  ***********************************************************************/
-static bool read_atom_block_field(const AtomContext& atom_ctx,
-                                  const AtomBlockId& atom_block,
-                                  const std::string& selector,
-                                  std::string& value) {
+bool read_atom_block_field(const AtomContext& atom_ctx,
+                           const AtomBlockId& atom_block,
+                           const std::string& selector, std::string& value) {
   StringToken tokenizer(selector);
   const std::vector<std::string> tokens = tokenizer.split(" ");
   if (tokens.size() != 2) {
@@ -412,8 +411,8 @@ void rec_update_physical_pb_from_operating_pb(
         bitstream_annotation.mif_source_source(mif_source_id);
       const std::string content =
         bitstream_annotation.mif_source_content(mif_source_id);
-      std::string value;
       if (source == XML_MIF_SOURCE_SOURCE_EBLIF) {
+        std::string value;
         if (!read_atom_block_field(atom_ctx, atom_blk, content, value)) {
           VTR_LOG_ERROR(
             "MIF field '%s' was not found on AtomBlock '%s' for pb '%s'\n",
@@ -421,12 +420,9 @@ void rec_update_physical_pb_from_operating_pb(
             operating_pb_path.c_str());
           exit(openfpga::CMD_EXEC_FATAL_ERROR);
         }
-        if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-          value = value.substr(1, value.size() - 2);
-        }
       }
-      phy_pb.add_mif_data(physical_pb, operating_pb_path, source, content,
-                          value);
+      phy_pb.add_mif_data(physical_pb, atom_blk, operating_pb_path, source,
+                          content);
     }
 
     /* if the operating pb type has bitstream annotation,
