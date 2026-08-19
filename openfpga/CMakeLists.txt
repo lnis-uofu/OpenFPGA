@@ -28,15 +28,6 @@ add_library(libopenfpga STATIC
             ${LIB_SOURCES})
 target_include_directories(libopenfpga PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
-# For yosys header files
-target_include_directories(libopenfpga PRIVATE 
-    ${YOSYS_CMAKE_SOURCE_DIR}
-    ${YOSYS_CMAKE_BINARY_DIR}
-)
-# 2. Bind the macros directly to that exact target name:
-target_compile_definitions(libopenfpga PRIVATE 
-    _YOSYS_
-)
 
 #Specify link-time dependancies
 target_link_libraries(libopenfpga
@@ -58,28 +49,45 @@ target_link_libraries(libopenfpga
                       libopenfpgacapnproto
                       libyosys
                       )
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  # For yosys header files
+  target_include_directories(libopenfpga PRIVATE 
+      ${YOSYS_CMAKE_SOURCE_DIR}
+      ${YOSYS_CMAKE_BINARY_DIR}
+  )
+  # 2. Bind the macros directly to that exact target name:
+  target_compile_definitions(libopenfpga PRIVATE 
+      _YOSYS_
+      OPENFPGA_INCLUDE_YOSYS_COMMAND
+  )
+  target_link_libraries(libopenfpga
+                        libyosys
+                        )
+endif()
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})
-add_dependencies(openfpga yosys)
 target_link_libraries(openfpga libopenfpga)
-# Define required directory and executable for yosys
-set(YOSYS_BUILD_SHARE_DIR    "${YOSYS_CMAKE_BINARY_DIR}/share")
-set(OPENFPGA_BUILD_SHARE_DIR "${CMAKE_CURRENT_BINARY_DIR}/share")
-# Path to the yosys-abc source and output locations
-set(YOSYS_SRC_ABC_EXE        "${YOSYS_CMAKE_BINARY_DIR}/yosys-abc")
-set(OPENFPGA_BUILD_ABC_EXE   "${CMAKE_CURRENT_BINARY_DIR}/yosys-abc")
-# Must copy/link after openfpga executable is built
-add_custom_command(
-    TARGET openfpga
-    POST_BUILD
-    # Symlink Rule 1: Share folder directory
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${YOSYS_BUILD_SHARE_DIR}" "${OPENFPGA_BUILD_SHARE_DIR}"
-    # Symlink Rule 2: Yosys-ABC executable engine
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${YOSYS_SRC_ABC_EXE}" "${OPENFPGA_BUILD_ABC_EXE}"
-    COMMENT "Post-build: Creating necessary symlinks for Yosys and ABC environment"
-    VERBATIM
-)
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  add_dependencies(openfpga yosys)
+  # Define required directory and executable for yosys
+  set(YOSYS_BUILD_SHARE_DIR    "${YOSYS_CMAKE_BINARY_DIR}/share")
+  set(OPENFPGA_BUILD_SHARE_DIR "${CMAKE_CURRENT_BINARY_DIR}/share")
+  # Path to the yosys-abc source and output locations
+  set(YOSYS_SRC_ABC_EXE        "${YOSYS_CMAKE_BINARY_DIR}/yosys-abc")
+  set(OPENFPGA_BUILD_ABC_EXE   "${CMAKE_CURRENT_BINARY_DIR}/yosys-abc")
+  # Must copy/link after openfpga executable is built
+  add_custom_command(
+      TARGET openfpga
+      POST_BUILD
+      # Symlink Rule 1: Share folder directory
+      COMMAND ${CMAKE_COMMAND} -E create_symlink "${YOSYS_BUILD_SHARE_DIR}" "${OPENFPGA_BUILD_SHARE_DIR}"
+      # Symlink Rule 2: Yosys-ABC executable engine
+      COMMAND ${CMAKE_COMMAND} -E create_symlink "${YOSYS_SRC_ABC_EXE}" "${OPENFPGA_BUILD_ABC_EXE}"
+      COMMENT "Post-build: Creating necessary symlinks for Yosys and ABC environment"
+      VERBATIM
+  )
+endif()
 
 if (OPENFPGA_ENABLE_STRICT_COMPILE)
     message(STATUS "OpenFPGA: building with strict flags")

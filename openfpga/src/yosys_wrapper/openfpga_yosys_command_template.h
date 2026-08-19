@@ -1,3 +1,5 @@
+#ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
+
 #pragma once
 #include "openfpga_windows_compatibility.h"
 
@@ -60,3 +62,5 @@ void add_yosys_command_templates(openfpga::Shell<T>& shell,
 }
 
 } /* end namespace openfpga */
+
+#endif

@@ -5,6 +5,8 @@
  * - generate_fabric_verilog : generate Verilog netlists about FPGA fabric
  * - generate_fabric_verilog_testbench : TODO: generate Verilog testbenches
  *******************************************************************/
+#ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
+
 #include "openfpga_yosys_command.h"
 
 #include "openfpga_yosys_command_template.h"
@@ -17,3 +19,5 @@ void add_openfpga_yosys_commands(openfpga::Shell<OpenfpgaContext>& shell) {
 }
 
 } /* end namespace openfpga */
+
+#endif

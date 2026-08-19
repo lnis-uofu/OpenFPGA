@@ -1,3 +1,5 @@
+#ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
+
 #include "yosys_main.h"
 
 #include "command_exit_codes.h"
@@ -49,3 +51,5 @@ int yosys_script_mode_wrapper(const std::string& script_path) {
 }
 
 }  // namespace openfpga
+
+#endif

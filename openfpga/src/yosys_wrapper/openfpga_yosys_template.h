@@ -1,3 +1,5 @@
+#ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
+
 #pragma once
 
 #include "command.h"
@@ -20,3 +22,5 @@ int yosys_synth_template(T& openfpga_ctx, const Command& cmd,
 }
 
 }  // namespace openfpga
+
+#endif
