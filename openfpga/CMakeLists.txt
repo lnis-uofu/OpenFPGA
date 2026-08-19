@@ -47,6 +47,7 @@ target_link_libraries(libopenfpga
                       libpugixml
                       libvpr
                       libopenfpgacapnproto
+                      libyosys
                       )
 
 #Create the test executable
