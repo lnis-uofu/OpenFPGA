@@ -62,6 +62,25 @@ target_link_libraries(libopenfpga
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})
 target_link_libraries(openfpga libopenfpga)
+# Define required directory and executable for yosys
+set(YOSYS_BUILD_SHARE_DIR    "${YOSYS_CMAKE_BINARY_DIR}/share")
+set(OPENFPGA_BUILD_SHARE_DIR "${CMAKE_CURRENT_BINARY_DIR}/share")
+# Path to the yosys-abc source and output locations
+set(YOSYS_SRC_ABC_EXE        "${YOSYS_CURRENT_BINARY_DIR}/yosys-abc")
+set(OPENFPGA_BUILD_ABC_EXE   "${CMAKE_CURRENT_BINARY_DIR}/yosys-abc")
+# Must copy/link after openfpga executable is built
+add_custom_command(
+    TARGET openfpga
+    POST_BUILD
+    # Make sure the openfpga build folder directory exists
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/openfpga"
+    # Symlink Rule 1: Share folder directory
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${YOSYS_BUILD_SHARE_DIR}" "${OPENFPGA_BUILD_SHARE_DIR}"
+    # Symlink Rule 2: Yosys-ABC executable engine
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${YOSYS_SRC_ABC_EXE}" "${OPENFPGA_BUILD_ABC_EXE}"
+    COMMENT "Post-build: Creating necessary symlinks for Yosys and ABC environment"
+    VERBATIM
+)
 
 if (OPENFPGA_ENABLE_STRICT_COMPILE)
     message(STATUS "OpenFPGA: building with strict flags")
