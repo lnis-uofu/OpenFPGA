@@ -67,7 +67,7 @@ target_link_libraries(openfpga libopenfpga)
 set(YOSYS_BUILD_SHARE_DIR    "${YOSYS_CMAKE_BINARY_DIR}/share")
 set(OPENFPGA_BUILD_SHARE_DIR "${CMAKE_CURRENT_BINARY_DIR}/share")
 # Path to the yosys-abc source and output locations
-set(YOSYS_SRC_ABC_EXE        "${YOSYS_CURRENT_BINARY_DIR}/yosys-abc")
+set(YOSYS_SRC_ABC_EXE        "${YOSYS_CMAKE_BINARY_DIR}/yosys-abc")
 set(OPENFPGA_BUILD_ABC_EXE   "${CMAKE_CURRENT_BINARY_DIR}/yosys-abc")
 # Must copy/link after openfpga executable is built
 add_custom_command(
