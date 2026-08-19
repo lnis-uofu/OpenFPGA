@@ -43,8 +43,8 @@ class PhysicalPb {
     FixedBitstreamInfo(const std::string& cont, const size_t& ofs)
       : content(cont), offset(ofs) {}
   };
-  /* Pointer back to the atom that owns the raw INIT; selector is the
-   * eblif field name (e.g. ".param INIT"). Value is not copied. */
+  /* Mapped AtomBlock used as eblif_ key.
+   * selector is the eblif field (e.g. ".param INIT") when source="eblif". */
   struct MifDataInfo {
     AtomBlockId atom_block = AtomBlockId::INVALID();
     std::string operating_pb_path;

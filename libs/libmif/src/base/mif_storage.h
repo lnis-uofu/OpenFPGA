@@ -9,21 +9,13 @@
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory MIF payload used by MifPipeline at every hierarchy:
- *   - hex input from read_mif
- *   - one logical MIF per AtomBlockId
- *   - one physical MIF per (t_pl_loc, t_pb_graph_node*)
+ * In-memory MIF payload used by MifPipeline:
+ *   - decoded logical MIF (temporary during aggregation)
+ *   - physical MIF per (t_pl_loc, t_pb_graph_node*)
  *   - the FPGA-top unified MIF
- *
- * A logical segment is created with:
- *   - VPR-resolved operating pb_type path
- *   - raw .param INIT data (copied only for decode; source of truth is
- *     the atom netlist)
  *
  * Decode binds each segment to its mif_source, stores data_width /
  * addr_range, unpacks raw INIT into memory lines, and clears raw data.
- * init.hex segments already contain memory lines and receive remaining
- * source metadata during the same step.
  *
  * Each aggregated destination segment has:
  *   - memory lines

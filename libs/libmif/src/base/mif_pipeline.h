@@ -13,31 +13,22 @@
 namespace openfpga {
 
 /********************************************************************
- * Three MIF storages keyed by hierarchy (reviewer layout).
+ * MIF pipeline. hex_ / eblif_ are metadata maps only.
  *
- *   // Traceback logical mif from atom blocks
- *   std::map<AtomBlockId, MifStorage> logical_mifs_;
- *
- *   // Each (x, y, sub_tile, layer) may have several physical
- *   // pb_graph_nodes; each can hold a MIF aggregated from logical MIFs.
- *   // VPR type is t_pl_loc (x, y, sub_tile, layer).
- *   std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>> physical_mifs_;
- *
- *   // The one unified MIF for top-level fabric
- *   MifStorage top_mif_;
- *
- * hex_ is only the read_mif (source="others") input buffer, not a
- * hierarchy level.
+ *   hex_           pb_type -> path of the .hex file (from read_mif)
+ *   eblif_         AtomBlockId -> operating pb_type (from repack)
+ *   physical_mifs_ (t_pl_loc, t_pb_graph_node*) -> aggregated dest
+ *   top_mif_       one FPGA-top MIF
  ********************************************************************/
 class MifPipeline {
  public:
   void clear();
 
-  const MifStorage& hex() const;
-  MifStorage& mutable_hex();
+  const std::map<std::string, std::string>& hex() const;
+  std::map<std::string, std::string>& mutable_hex();
 
-  const std::map<AtomBlockId, MifStorage>& logical_mifs() const;
-  std::map<AtomBlockId, MifStorage>& mutable_logical_mifs();
+  const std::map<AtomBlockId, std::string>& eblif() const;
+  std::map<AtomBlockId, std::string>& mutable_eblif();
 
   const std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>>&
   physical_mifs() const;
@@ -66,8 +57,8 @@ class MifPipeline {
                                       MifStorage& dest) const;
 
  private:
-  MifStorage hex_;
-  std::map<AtomBlockId, MifStorage> logical_mifs_;
+  std::map<std::string, std::string> hex_;
+  std::map<AtomBlockId, std::string> eblif_;
   std::map<t_pl_loc, std::map<t_pb_graph_node*, MifStorage>> physical_mifs_;
   MifStorage top_mif_;
 };

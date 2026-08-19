@@ -11,16 +11,18 @@
 
 namespace openfpga {
 
-const MifStorage& MifPipeline::hex() const { return hex_; }
-
-MifStorage& MifPipeline::mutable_hex() { return hex_; }
-
-const std::map<AtomBlockId, MifStorage>& MifPipeline::logical_mifs() const {
-  return logical_mifs_;
+const std::map<std::string, std::string>& MifPipeline::hex() const {
+  return hex_;
 }
 
-std::map<AtomBlockId, MifStorage>& MifPipeline::mutable_logical_mifs() {
-  return logical_mifs_;
+std::map<std::string, std::string>& MifPipeline::mutable_hex() { return hex_; }
+
+const std::map<AtomBlockId, std::string>& MifPipeline::eblif() const {
+  return eblif_;
+}
+
+std::map<AtomBlockId, std::string>& MifPipeline::mutable_eblif() {
+  return eblif_;
 }
 
 const MifStorage& MifPipeline::top_mif() const { return top_mif_; }
@@ -58,7 +60,7 @@ const MifStorage& MifPipeline::physical_mif(
 
 void MifPipeline::clear() {
   hex_.clear();
-  logical_mifs_.clear();
+  eblif_.clear();
   physical_mifs_.clear();
   top_mif_.clear();
 }
@@ -89,8 +91,6 @@ int MifPipeline::decode_storage(
       return CMD_EXEC_FATAL_ERROR;
     }
 
-    storage.set_segment_physical_pb(
-      segment_id, bitstream_setting.mif_source_pb_type(source_id));
     const BasicPort addr_range =
       bitstream_setting.mif_source_address_range(source_id);
     const BasicPort data_range =

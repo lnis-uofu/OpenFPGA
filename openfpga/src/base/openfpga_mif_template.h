@@ -7,7 +7,6 @@
 #include "command_exit_codes.h"
 #include "mif_pipeline.h"
 #include "mif_storage.h"
-#include "read_mif.h"
 #include "shell.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -28,12 +27,15 @@ int read_mif_template(T& openfpga_context, const Command& cmd,
 
   const std::string& mif_path = cmd_context.option_value(cmd, opt_file);
   const std::string& pb_type = cmd_context.option_value(cmd, opt_pb_type);
-  const int exec_status = read_mif_from_init_hex(
-    mif_path, openfpga_context.mutable_mif_pipeline().mutable_hex(), pb_type);
-  if (CMD_EXEC_SUCCESS != exec_status) {
-    return exec_status;
+  auto& hex_map = openfpga_context.mutable_mif_pipeline().mutable_hex();
+  if (hex_map.find(pb_type) != hex_map.end()) {
+    VTR_LOG_ERROR(
+      "read_mif: pb_type '%s' already has hex file '%s'; refusing '%s'\n",
+      pb_type.c_str(), hex_map[pb_type].c_str(), mif_path.c_str());
+    return CMD_EXEC_FATAL_ERROR;
   }
-  VTR_LOG("read_mif: read '%s' (pb_type='%s')\n", mif_path.c_str(),
+  hex_map[pb_type] = mif_path;
+  VTR_LOG("read_mif: registered '%s' (pb_type='%s')\n", mif_path.c_str(),
           pb_type.c_str());
   return CMD_EXEC_SUCCESS;
 }

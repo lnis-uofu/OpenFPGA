@@ -17,11 +17,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-/* Decode atom INIT into logical_mifs_, aggregate per placed physical
- * primitive into physical_mifs_. Must run after repack.
- *
- * Raw INIT stays in the atom netlist; PhysicalPb only stores AtomBlockId
- * and the parameter selector. */
+/* Register hex files (read_mif) and eblif atom->pb_type pairs, then
+ * decode INIT / hex and aggregate into placed physical primitives.
+ * Must run after repack. */
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
                        MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
                        const VprClusteringAnnotation& clustering_annotation,

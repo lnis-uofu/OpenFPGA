@@ -101,23 +101,21 @@ static std::string strip_mif_line_comment(const std::string& raw_line) {
  * Returns false on syntax error.
  * When has_data is false, only next_addr was updated (@addr with no data word),
  * matching Verilog $readmemh address-only directives. */
-static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
-                                uint64_t& addr, std::string& data_hex,
-                                bool& has_data) {
-  has_data = false;
-  data_hex.clear();
-  if (line.empty()) {
+static bool parse_init_hex_line(const std::string& raw_line,
+                                uint64_t& next_addr, uint64_t& addr,
+                                std::string& data_hex, bool& has_data) {
+  if (raw_line.empty()) {
     return false;
   }
 
-  std::string work = line;
-  const bool has_at_jump = (!work.empty() && work.front() == '@');
+  std::string line = raw_line;
+  const bool has_at_jump = (!line.empty() && line.front() == '@');
   if (has_at_jump) {
-    work.erase(work.begin());
-    trim_mif_line_inplace(work);
+    line.erase(line.begin());
+    trim_mif_line_inplace(line);
   }
 
-  std::istringstream iss(work);
+  std::istringstream iss(line);
   std::string first;
   std::string second;
   if (!(iss >> first)) {
@@ -157,7 +155,7 @@ static bool parse_init_hex_line(const std::string& line, uint64_t& next_addr,
 
 /********************************************************************
  * Read a Verilog-style init.hex into one logical segment.
- * Used by shell command: read_mif --file <hex> --pb_type <pb>
+ * Used by build_physical_mif after read_mif registered pb_type -> path.
  *
  * Stores only address/data words and the caller-provided pb_type.
  * Address/data ranges come later from bitstream setting in MifPipeline.
