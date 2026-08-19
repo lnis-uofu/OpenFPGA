@@ -14,6 +14,8 @@ int yosys_script_mode_wrapper(const std::string& script_path) {
     try {
         // 1. Initialize global Yosys state and log systems
         Yosys::yosys_setup();
+        Yosys::log_errfile = stderr;
+        Yosys::log_streams.push_back(&std::cout);
 
         // 2. Instantiate a persistent design container
         // This holds the AST, Netlist, and Design modules in memory
