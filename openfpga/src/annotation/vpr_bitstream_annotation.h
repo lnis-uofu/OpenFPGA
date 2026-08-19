@@ -9,10 +9,16 @@
 
 /* Header from vpr library */
 #include "clock_network.h"
+#include "openfpga_port.h"
 #include "vpr_context.h"
+#include "vtr_strong_id.h"
+#include "vtr_vector.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
+
+struct mif_source_annotation_id_tag;
+typedef vtr::StrongId<mif_source_annotation_id_tag> MifSourceAnnotationId;
 
 /********************************************************************
  * This is the critical data structure to link the pb_type in VPR
@@ -68,6 +74,14 @@ class VprBitstreamAnnotation {
     t_pb_type* pb_type) const;
   size_t interconnect_default_path_id(t_interconnect* interconnect) const;
   ClockTreePinId clock_tap_routing_pin(const ClockTreeId& tree_id) const;
+  MifSourceAnnotationId find_mif_source_by_pb_type(
+    const std::string& pb_type) const;
+  std::string mif_source_source(const MifSourceAnnotationId& source_id) const;
+  std::string mif_source_content(const MifSourceAnnotationId& source_id) const;
+  BasicPort mif_source_address_range(
+    const MifSourceAnnotationId& source_id) const;
+  BasicPort mif_source_data_range(
+    const MifSourceAnnotationId& source_id) const;
 
  public: /* Public mutators */
   bool add_pb_type_bitstream_source(t_pb_type* pb_type,
@@ -82,6 +96,12 @@ class VprBitstreamAnnotation {
                                         const size_t& default_path_id);
   void set_clock_tap_routing_pin(const ClockTreeId& tree_id,
                                  const ClockTreePinId& tree_pin_id);
+  MifSourceAnnotationId add_mif_source(const std::string& pb_type,
+                                       const std::string& source,
+                                       const std::string& content,
+                                       const BasicPort& address_range,
+                                       const BasicPort& data_range);
+  void clear_mif_sources();
   std::map<t_pb_type*, BasicPort> pb_type_pcf_pins() const;
   void add_pcf_coord_pb_type(const std::array<size_t, 3>& coord,
                              t_pb_type* pb_type);
@@ -109,6 +129,12 @@ class VprBitstreamAnnotation {
    * be routed through Note that for each clock tree, only one pin is allowed
    */
   std::map<ClockTreeId, ClockTreePinId> clock_tap_routing_pins_;
+
+  vtr::vector<MifSourceAnnotationId, std::string> mif_source_pb_types_;
+  vtr::vector<MifSourceAnnotationId, std::string> mif_source_sources_;
+  vtr::vector<MifSourceAnnotationId, std::string> mif_source_contents_;
+  vtr::vector<MifSourceAnnotationId, BasicPort> mif_source_address_ranges_;
+  vtr::vector<MifSourceAnnotationId, BasicPort> mif_source_data_ranges_;
 
   std::map<t_pb_type*, std::vector<std::vector<char>>> pb_type_pcf_mode_bits_;
   std::map<t_pb_type*, BasicPort> pb_type_pcf_pins_;

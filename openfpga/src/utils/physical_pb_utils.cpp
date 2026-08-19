@@ -376,8 +376,7 @@ void rec_update_physical_pb_from_operating_pb(
   PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
   const t_pb* op_pb, const t_pb_routes& pb_route, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation,
-  const BitstreamSetting& bitstream_setting, const bool& verbose) {
+  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
   t_pb_type* pb_type = pb_graph_node->pb_type;
 
@@ -406,19 +405,19 @@ void rec_update_physical_pb_from_operating_pb(
              atom_ctx.netlist().block_name(atom_blk).c_str());
 
     const std::string operating_pb_path = generate_mif_pb_path(op_pb);
-    const MifSourceSettingId mif_source_id =
-      bitstream_setting.find_mif_source_by_pb_type(operating_pb_path);
+    const MifSourceAnnotationId mif_source_id =
+      bitstream_annotation.find_mif_source_by_pb_type(operating_pb_path);
     if (mif_source_id.is_valid()) {
       const std::string source =
-        bitstream_setting.mif_source_source(mif_source_id);
-      const std::string selector =
-        bitstream_setting.mif_source_content(mif_source_id);
+        bitstream_annotation.mif_source_source(mif_source_id);
+      const std::string content =
+        bitstream_annotation.mif_source_content(mif_source_id);
       std::string value;
       if (source == XML_MIF_SOURCE_SOURCE_EBLIF) {
-        if (!read_atom_block_field(atom_ctx, atom_blk, selector, value)) {
+        if (!read_atom_block_field(atom_ctx, atom_blk, content, value)) {
           VTR_LOG_ERROR(
             "MIF field '%s' was not found on AtomBlock '%s' for pb '%s'\n",
-            selector.c_str(), atom_ctx.netlist().block_name(atom_blk).c_str(),
+            content.c_str(), atom_ctx.netlist().block_name(atom_blk).c_str(),
             operating_pb_path.c_str());
           exit(openfpga::CMD_EXEC_FATAL_ERROR);
         }
@@ -426,7 +425,7 @@ void rec_update_physical_pb_from_operating_pb(
           value = value.substr(1, value.size() - 2);
         }
       }
-      phy_pb.add_mif_data(physical_pb, operating_pb_path, source, selector,
+      phy_pb.add_mif_data(physical_pb, operating_pb_path, source, content,
                           value);
     }
 
@@ -537,8 +536,7 @@ void rec_update_physical_pb_from_operating_pb(
           (nullptr != op_pb->child_pbs[ipb][jpb].name)) {
         rec_update_physical_pb_from_operating_pb(
           phy_pb, lgk2phy_pb_map, &(op_pb->child_pbs[ipb][jpb]), pb_route,
-          atom_ctx, device_annotation, bitstream_annotation, bitstream_setting,
-          verbose);
+          atom_ctx, device_annotation, bitstream_annotation, verbose);
       } else {
         /* Some pb may be used just in routing purpose, find out the output nets
          */

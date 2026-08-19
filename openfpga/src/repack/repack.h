@@ -3,7 +3,6 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "bitstream_setting.h"
 #include "circuit_library.h"
 #include "repack_option.h"
 #include "vpr_bitstream_annotation.h"
@@ -25,7 +24,6 @@ int pack_physical_pbs(const DeviceContext& device_ctx,
                       VprDeviceAnnotation& device_annotation,
                       VprClusteringAnnotation& clustering_annotation,
                       const VprBitstreamAnnotation& bitstream_annotation,
-                      const BitstreamSetting& bitstream_setting,
                       const CircuitLibrary& circuit_lib,
                       const RepackOption& options);
 

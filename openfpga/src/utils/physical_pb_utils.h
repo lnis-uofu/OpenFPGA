@@ -5,7 +5,6 @@
  *******************************************************************/
 #include <vector>
 
-#include "bitstream_setting.h"
 #include "circuit_library.h"
 #include "logical2physical_pb_map.h"
 #include "physical_pb.h"
@@ -30,8 +29,7 @@ void rec_update_physical_pb_from_operating_pb(
   PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
   const t_pb* op_pb, const t_pb_routes& pb_route, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation,
-  const BitstreamSetting& bitstream_setting, const bool& verbose);
+  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose);
 
 int identify_one_physical_pb_wire_lut_created_by_repack(
   PhysicalPb& physical_pb, const PhysicalPbId& lut_pb_id,

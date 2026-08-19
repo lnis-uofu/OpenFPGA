@@ -20,6 +20,22 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+static int annotate_mif_source_setting(
+  const BitstreamSetting& bitstream_setting,
+  VprBitstreamAnnotation& vpr_bitstream_annotation) {
+  vpr_bitstream_annotation.clear_mif_sources();
+  for (const MifSourceSettingId& source_id :
+       bitstream_setting.mif_source_settings()) {
+    vpr_bitstream_annotation.add_mif_source(
+      bitstream_setting.mif_source_pb_type(source_id),
+      bitstream_setting.mif_source_source(source_id),
+      bitstream_setting.mif_source_content(source_id),
+      bitstream_setting.mif_source_address_range(source_id),
+      bitstream_setting.mif_source_data_range(source_id));
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
 /********************************************************************
  * Annotate bitstream setting based on VPR device information
  *  - Find the pb_type and link to the bitstream source
@@ -507,6 +523,12 @@ int annotate_bitstream_setting(
   VprDeviceAnnotation& vpr_device_annotation,
   VprBitstreamAnnotation& vpr_bitstream_annotation) {
   int status = CMD_EXEC_SUCCESS;
+
+  status =
+    annotate_mif_source_setting(bitstream_setting, vpr_bitstream_annotation);
+  if (status == CMD_EXEC_FATAL_ERROR) {
+    return status;
+  }
 
   status = annotate_bitstream_pb_type_setting(bitstream_setting, vpr_device_ctx,
                                               vpr_bitstream_annotation);
