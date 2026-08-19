@@ -1132,10 +1132,10 @@ int pack_physical_pbs(const DeviceContext& device_ctx,
 
   /* Call the LbRouter to re-pack each clustered block to physical
    * implementation */
-  int status = repack_clusters(
-    atom_ctx, clustering_ctx,
-    const_cast<const VprDeviceAnnotation&>(device_annotation),
-    clustering_annotation, bitstream_annotation, options);
+  int status =
+    repack_clusters(atom_ctx, clustering_ctx,
+                    const_cast<const VprDeviceAnnotation&>(device_annotation),
+                    clustering_annotation, bitstream_annotation, options);
 
   /* Annnotate wire LUTs that are ONLY created by repacker!!!
    * This is a MUST RUN!

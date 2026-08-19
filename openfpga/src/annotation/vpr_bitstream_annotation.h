@@ -80,8 +80,7 @@ class VprBitstreamAnnotation {
   std::string mif_source_content(const MifSourceAnnotationId& source_id) const;
   BasicPort mif_source_address_range(
     const MifSourceAnnotationId& source_id) const;
-  BasicPort mif_source_data_range(
-    const MifSourceAnnotationId& source_id) const;
+  BasicPort mif_source_data_range(const MifSourceAnnotationId& source_id) const;
 
  public: /* Public mutators */
   bool add_pb_type_bitstream_source(t_pb_type* pb_type,
