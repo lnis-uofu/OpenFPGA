@@ -28,6 +28,15 @@ add_library(libopenfpga STATIC
             ${LIB_SOURCES})
 target_include_directories(libopenfpga PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
+# For yosys header files
+target_include_directories(libopenfpga PRIVATE 
+    ${YOSYS_CMAKE_SOURCE_DIR}
+    ${YOSYS_CMAKE_BINARY_DIR}
+)
+# 2. Bind the macros directly to that exact target name:
+target_compile_definitions(libopenfpga PRIVATE 
+    _YOSYS_
+)
 
 #Specify link-time dependancies
 target_link_libraries(libopenfpga

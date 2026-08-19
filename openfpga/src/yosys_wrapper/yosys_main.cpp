@@ -1,4 +1,4 @@
-#include "yosys.h"
+#include "kernel/yosys.h"
 #include "yosys_main.h"
 #include "vtr_log.h"
 #include "command_exit_codes.h"
@@ -14,7 +14,6 @@ int yosys_script_mode_wrapper(const std::string& script_path) {
     try {
         // 1. Initialize global Yosys state and log systems
         Yosys::yosys_setup();
-        Yosys::log_to_stdout(); // Direct logs to standard output
 
         // 2. Instantiate a persistent design container
         // This holds the AST, Netlist, and Design modules in memory
