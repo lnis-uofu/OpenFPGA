@@ -14,7 +14,7 @@ namespace openfpga {
 template <class T>
 int yosys_synth_template(T& openfpga_ctx, const Command& cmd,
                          const CommandContext& cmd_context) {
-  CommandOptionId opt_script_file = cmd.option("file");
+  CommandOptionId opt_file = cmd.option("file");
 
   return yosys_script_mode_wrapper(
       cmd_context.option_value(cmd, opt_file));

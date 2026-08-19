@@ -62,5 +62,3 @@ void add_yosys_command_templates(openfpga::Shell<T>& shell,
 }
 
 } /* end namespace openfpga */
-
-#endif

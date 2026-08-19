@@ -1,4 +1,4 @@
-#include "kernel/yosys.h"
+#include "yosys.h"
 #include "yosys_main.h"
 #include "vtr_log.h"
 #include "command_exit_codes.h"
