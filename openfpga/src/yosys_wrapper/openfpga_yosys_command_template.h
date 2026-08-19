@@ -25,10 +25,9 @@ ShellCommandId add_yosys_synth_command_template(
   Command shell_cmd("yosys");
 
   /* Add an option '--design_constraints' */
-  CommandOptionId opt_file = shell_cmd.add_option(
-    "file", true, "file path to the yosys script to run");
-  shell_cmd.set_option_require_value(opt_file,
-                                     openfpga::OPT_STRING);
+  CommandOptionId opt_file =
+    shell_cmd.add_option("file", true, "file path to the yosys script to run");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
   /* Add command 'repack' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
@@ -49,16 +48,15 @@ template <class T>
 void add_yosys_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
   /* Add a new class of commands */
-  ShellCommandClassId openfpga_ys_cmd_class =
-    shell.add_command_class("Yosys");
+  ShellCommandClassId openfpga_ys_cmd_class = shell.add_command_class("Yosys");
 
   /********************************
    * Command 'repack'
    */
   /* The 'repack' command should NOT be executed before 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency_ys_synth;
-  add_yosys_synth_command_template(
-    shell, openfpga_ys_cmd_class, cmd_dependency_ys_synth, hidden);
+  add_yosys_synth_command_template(shell, openfpga_ys_cmd_class,
+                                   cmd_dependency_ys_synth, hidden);
 }
 
 } /* end namespace openfpga */
