@@ -18,96 +18,46 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-size_t MifLocationMap::find_mif_location_index(
-  const size_t& x, const size_t& y, const size_t& z,
-  const std::string& pb_type_path) const {
-  std::array<size_t, 3> coord = {x, y, z};
-  auto result = mif_coord_lookup_.find(coord);
-  if (result == mif_coord_lookup_.end()) {
-    return size_t(-1);
+namespace {
+
+const std::map<t_pl_loc, MifPortSlice> k_empty_phy_locs;
+
+} /* namespace */
+
+const std::map<t_pl_loc, MifPortSlice>& MifLocationMap::phy_locs(
+  const std::string& port_name) const {
+  auto result = data_port2phy_loc_map_.find(port_name);
+  if (result == data_port2phy_loc_map_.end()) {
+    return k_empty_phy_locs;
   }
-  for (const size_t& loc_id : result->second) {
-    VTR_ASSERT(loc_id < mif_locations_.size());
-    if (mif_locations_[loc_id].pb_type_path == pb_type_path) {
-      return loc_id;
-    }
+  return result->second;
+}
+
+const std::map<std::string, std::map<t_pl_loc, MifPortSlice>>&
+MifLocationMap::data_port2phy_loc_map() const {
+  return data_port2phy_loc_map_;
+}
+
+size_t MifLocationMap::size() const {
+  size_t num_locs = 0;
+  for (const auto& port_entry : data_port2phy_loc_map_) {
+    num_locs += port_entry.second.size();
   }
-  return size_t(-1);
+  return num_locs;
 }
 
-bool MifLocationMap::has_mif_location(const size_t& x, const size_t& y,
-                                      const size_t& z,
-                                      const std::string& pb_type_path) const {
-  return size_t(-1) != find_mif_location_index(x, y, z, pb_type_path);
-}
+bool MifLocationMap::empty() const { return data_port2phy_loc_map_.empty(); }
 
-const MifLocation& MifLocationMap::mif_location(
-  const size_t& x, const size_t& y, const size_t& z,
-  const std::string& pb_type_path) const {
-  const size_t loc_id = find_mif_location_index(x, y, z, pb_type_path);
-  VTR_ASSERT(size_t(-1) != loc_id);
-  return mif_locations_[loc_id];
-}
-
-size_t MifLocationMap::data_offset(const size_t& x, const size_t& y,
-                                   const size_t& z,
-                                   const std::string& pb_type_path) const {
-  if (false == has_mif_location(x, y, z, pb_type_path)) {
-    return size_t(-1);
-  }
-  return mif_location(x, y, z, pb_type_path).data_offset;
-}
-
-size_t MifLocationMap::data_width(const size_t& x, const size_t& y,
-                                  const size_t& z,
-                                  const std::string& pb_type_path) const {
-  if (false == has_mif_location(x, y, z, pb_type_path)) {
-    return size_t(-1);
-  }
-  return mif_location(x, y, z, pb_type_path).data_width;
-}
-
-std::string MifLocationMap::port_name(const size_t& x, const size_t& y,
-                                      const size_t& z,
-                                      const std::string& pb_type_path) const {
-  if (false == has_mif_location(x, y, z, pb_type_path)) {
-    return std::string();
-  }
-  return mif_location(x, y, z, pb_type_path).port_name;
-}
-
-const std::vector<MifLocation>& MifLocationMap::mif_locations() const {
-  return mif_locations_;
-}
-
-bool MifLocationMap::empty() const { return mif_locations_.empty(); }
-
-void MifLocationMap::set_mif_location(const size_t& x, const size_t& y,
-                                      const size_t& z,
-                                      const std::string& pb_type_path,
-                                      const std::string& port_name,
-                                      const size_t& data_offset,
-                                      const size_t& data_width) {
-  if (true == has_mif_location(x, y, z, pb_type_path)) {
-    VTR_LOG_WARN(
-      "Attempt to add duplicated MIF location for pb_type '%s' at "
-      "(%lu, %lu, %lu)! Skip to save memory\n",
-      pb_type_path.c_str(), x, y, z);
-    return;
-  }
-
-  MifLocation loc;
-  loc.x = x;
-  loc.y = y;
-  loc.z = z;
-  loc.pb_type_path = pb_type_path;
-  loc.port_name = port_name;
-  loc.data_offset = data_offset;
-  loc.data_width = data_width;
-
-  const size_t loc_id = mif_locations_.size();
-  mif_locations_.push_back(loc);
-  mif_coord_lookup_[{x, y, z}].push_back(loc_id);
+void MifLocationMap::add(const std::string& port_name, const t_pl_loc& phy_loc,
+                         t_pb_graph_node* pb_graph_node,
+                         const size_t& data_offset,
+                         const size_t& data_width) {
+  VTR_ASSERT(nullptr != pb_graph_node);
+  MifPortSlice slice;
+  slice.pb_graph_node = pb_graph_node;
+  slice.data_offset = data_offset;
+  slice.data_width = data_width;
+  data_port2phy_loc_map_[port_name][phy_loc] = slice;
 }
 
 int MifLocationMap::write_to_xml_file(const std::string& fname,
@@ -137,23 +87,35 @@ int MifLocationMap::write_to_xml_file(const std::string& fname,
 
   pugi::xml_node root_node =
     out_xml.append_child(XML_MIF_COORDINATES_ROOT_NAME);
-  for (const MifLocation& loc : mif_locations_) {
-    pugi::xml_node mif_node =
-      root_node.append_child(XML_MIF_LOCATION_NODE_NAME);
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_PB_TYPE) =
-      loc.pb_type_path.c_str();
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_PORT) =
-      loc.port_name.c_str();
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_DATA_OFFSET) =
-      std::to_string(loc.data_offset).c_str();
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_DATA_WIDTH) =
-      std::to_string(loc.data_width).c_str();
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_X) =
-      std::to_string(loc.x).c_str();
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_Y) =
-      std::to_string(loc.y).c_str();
-    mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_Z) =
-      std::to_string(loc.z).c_str();
+  for (const auto& port_entry : data_port2phy_loc_map_) {
+    for (const auto& loc_entry : port_entry.second) {
+      const t_pl_loc& phy_loc = loc_entry.first;
+      const MifPortSlice& slice = loc_entry.second;
+      VTR_ASSERT(nullptr != slice.pb_graph_node &&
+                 nullptr != slice.pb_graph_node->pb_type);
+
+      const std::string pb_type_name =
+        slice.pb_graph_node->hierarchical_type_name();
+      const std::string x_str = std::to_string(phy_loc.x);
+      const std::string y_str = std::to_string(phy_loc.y);
+      const std::string z_str = std::to_string(phy_loc.sub_tile);
+      const std::string offset_str = std::to_string(slice.data_offset);
+      const std::string width_str = std::to_string(slice.data_width);
+
+      pugi::xml_node mif_node =
+        root_node.append_child(XML_MIF_LOCATION_NODE_NAME);
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_PORT) =
+        port_entry.first.c_str();
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_PB_TYPE) =
+        pb_type_name.c_str();
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_DATA_OFFSET) =
+        offset_str.c_str();
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_DATA_WIDTH) =
+        width_str.c_str();
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_X) = x_str.c_str();
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_Y) = y_str.c_str();
+      mif_node.append_attribute(XML_MIF_LOCATION_ATTRIBUTE_Z) = z_str.c_str();
+    }
   }
 
   if (!out_xml.save_file(fname.c_str())) {
@@ -161,8 +123,8 @@ int MifLocationMap::write_to_xml_file(const std::string& fname,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  VTR_LOGV(verbose, "Outputted %lu MIF locations to XML file: %s\n",
-           mif_locations_.size(), fname.c_str());
+  VTR_LOGV(verbose, "Outputted %lu MIF locations to XML file: %s\n", size(),
+           fname.c_str());
   return CMD_EXEC_SUCCESS;
 }
 

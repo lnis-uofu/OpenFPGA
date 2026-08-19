@@ -76,8 +76,12 @@ class VprBitstreamAnnotation {
   ClockTreePinId clock_tap_routing_pin(const ClockTreeId& tree_id) const;
   MifSourceAnnotationId find_mif_source_by_pb_type(
     const std::string& pb_type) const;
+  size_t num_mif_sources() const;
+  std::string mif_source_pb_type(const MifSourceAnnotationId& source_id) const;
   std::string mif_source_source(const MifSourceAnnotationId& source_id) const;
   std::string mif_source_content(const MifSourceAnnotationId& source_id) const;
+  t_pb_graph_node* mif_source_pb_graph_node(
+    const MifSourceAnnotationId& source_id) const;
   BasicPort mif_source_address_range(
     const MifSourceAnnotationId& source_id) const;
   BasicPort mif_source_data_range(const MifSourceAnnotationId& source_id) const;
@@ -98,6 +102,7 @@ class VprBitstreamAnnotation {
   MifSourceAnnotationId add_mif_source(const std::string& pb_type,
                                        const std::string& source,
                                        const std::string& content,
+                                       t_pb_graph_node* pb_graph_node,
                                        const BasicPort& address_range,
                                        const BasicPort& data_range);
   void clear_mif_sources();
@@ -132,6 +137,8 @@ class VprBitstreamAnnotation {
   vtr::vector<MifSourceAnnotationId, std::string> mif_source_pb_types_;
   vtr::vector<MifSourceAnnotationId, std::string> mif_source_sources_;
   vtr::vector<MifSourceAnnotationId, std::string> mif_source_contents_;
+  vtr::vector<MifSourceAnnotationId, t_pb_graph_node*>
+    mif_source_pb_graph_nodes_;
   vtr::vector<MifSourceAnnotationId, BasicPort> mif_source_address_ranges_;
   vtr::vector<MifSourceAnnotationId, BasicPort> mif_source_data_ranges_;
 

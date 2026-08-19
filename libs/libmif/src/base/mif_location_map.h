@@ -1,21 +1,24 @@
 #pragma once
 
 /********************************************************************
- * MIF location map bridges VPR grid coordinates and the bit offset of
- * each physical MIF instance on a fabric-top MIF data bus (GPIN).
+ * MIF location map: for any bit of a top-level MIF data port, find
+ * the physical MIF instance and its slice on that bus.
  *
- * Each entry records:
- *   (x, y, z), pb_type_path, global port name, data_offset, data_width
+ * Outer key: string form of the top-level BasicPort.
+ * Inner key: physical location of the instance on that port.
+ * Inner value: pb_graph_node plus data_offset/data_width on the bus.
  *
- * Offsets are assigned in the same order that GPIN buses are
- * concatenated in the module graph (see build_fabric_mif_location_map).
+ * Offsets are assigned in GPIN concatenation order (io_children).
+ * Pair (t_pl_loc, t_pb_graph_node*) recovers MIF content from
+ * openfpga_context; offset/width place that content on the top bus.
  *******************************************************************/
 
-#include <array>
 #include <cstddef>
 #include <map>
 #include <string>
-#include <vector>
+
+#include "physical_types.h"
+#include "vpr_types.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -31,55 +34,35 @@ constexpr const char* XML_MIF_LOCATION_ATTRIBUTE_X = "x";
 constexpr const char* XML_MIF_LOCATION_ATTRIBUTE_Y = "y";
 constexpr const char* XML_MIF_LOCATION_ATTRIBUTE_Z = "z";
 
-struct MifLocation {
-  size_t x = 0;
-  size_t y = 0;
-  size_t z = 0;
-  std::string pb_type_path;
-  /* Top-level MIF data bus associated with this physical memory instance. */
-  std::string port_name;
-  /* Bit offset within port_name; each top-level bus has independent offsets. */
+struct MifPortSlice {
+  t_pb_graph_node* pb_graph_node = nullptr;
   size_t data_offset = 0;
   size_t data_width = 0;
 };
 
 class MifLocationMap {
- public: /* Public aggregators */
-  bool has_mif_location(const size_t& x, const size_t& y, const size_t& z,
-                        const std::string& pb_type_path) const;
-  const MifLocation& mif_location(const size_t& x, const size_t& y,
-                                  const size_t& z,
-                                  const std::string& pb_type_path) const;
-  size_t data_offset(const size_t& x, const size_t& y, const size_t& z,
-                     const std::string& pb_type_path) const;
-  size_t data_width(const size_t& x, const size_t& y, const size_t& z,
-                    const std::string& pb_type_path) const;
-  std::string port_name(const size_t& x, const size_t& y, const size_t& z,
-                        const std::string& pb_type_path) const;
-  const std::vector<MifLocation>& mif_locations() const;
+ public: /* Public accessors */
+  const std::map<t_pl_loc, MifPortSlice>& phy_locs(
+    const std::string& port_name) const;
+  const std::map<std::string, std::map<t_pl_loc, MifPortSlice>>&
+  data_port2phy_loc_map() const;
+  size_t size() const;
   bool empty() const;
 
  public: /* Public mutators */
-  void set_mif_location(const size_t& x, const size_t& y, const size_t& z,
-                        const std::string& pb_type_path,
-                        const std::string& port_name, const size_t& data_offset,
-                        const size_t& data_width);
+  void add(const std::string& port_name, const t_pl_loc& phy_loc,
+           t_pb_graph_node* pb_graph_node, const size_t& data_offset,
+           const size_t& data_width);
 
  public: /* Public writer */
   int write_to_xml_file(const std::string& fname,
                         const bool& include_time_stamp,
                         const bool& verbose) const;
 
- private: /* Internal helpers */
-  /* Returns index into mif_locations_, or size_t(-1) if missing. */
-  size_t find_mif_location_index(const size_t& x, const size_t& y,
-                                 const size_t& z,
-                                 const std::string& pb_type_path) const;
-
  private: /* Internal Data */
-  std::vector<MifLocation> mif_locations_;
-  /* Fast lookup by [x][y][z] into indices of mif_locations_. */
-  std::map<std::array<size_t, 3>, std::vector<size_t>> mif_coord_lookup_;
+  /* Outer key is the string version of the BasicPort for a top-level port. */
+  std::map<std::string, std::map<t_pl_loc, MifPortSlice>>
+    data_port2phy_loc_map_;
 };
 
 } /* End namespace openfpga */

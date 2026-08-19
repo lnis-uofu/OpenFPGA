@@ -95,6 +95,17 @@ MifSourceAnnotationId VprBitstreamAnnotation::find_mif_source_by_pb_type(
   return MifSourceAnnotationId::INVALID();
 }
 
+size_t VprBitstreamAnnotation::num_mif_sources() const {
+  return mif_source_pb_types_.size();
+}
+
+std::string VprBitstreamAnnotation::mif_source_pb_type(
+  const MifSourceAnnotationId& source_id) const {
+  VTR_ASSERT(source_id.is_valid() &&
+             size_t(source_id) < mif_source_pb_types_.size());
+  return mif_source_pb_types_[source_id];
+}
+
 std::string VprBitstreamAnnotation::mif_source_source(
   const MifSourceAnnotationId& source_id) const {
   VTR_ASSERT(source_id.is_valid() &&
@@ -107,6 +118,13 @@ std::string VprBitstreamAnnotation::mif_source_content(
   VTR_ASSERT(source_id.is_valid() &&
              size_t(source_id) < mif_source_contents_.size());
   return mif_source_contents_[source_id];
+}
+
+t_pb_graph_node* VprBitstreamAnnotation::mif_source_pb_graph_node(
+  const MifSourceAnnotationId& source_id) const {
+  VTR_ASSERT(source_id.is_valid() &&
+             size_t(source_id) < mif_source_pb_graph_nodes_.size());
+  return mif_source_pb_graph_nodes_[source_id];
 }
 
 BasicPort VprBitstreamAnnotation::mif_source_address_range(
@@ -182,12 +200,13 @@ void VprBitstreamAnnotation::set_clock_tap_routing_pin(
 
 MifSourceAnnotationId VprBitstreamAnnotation::add_mif_source(
   const std::string& pb_type, const std::string& source,
-  const std::string& content, const BasicPort& address_range,
-  const BasicPort& data_range) {
+  const std::string& content, t_pb_graph_node* pb_graph_node,
+  const BasicPort& address_range, const BasicPort& data_range) {
   const MifSourceAnnotationId source_id(mif_source_pb_types_.size());
   mif_source_pb_types_.push_back(pb_type);
   mif_source_sources_.push_back(source);
   mif_source_contents_.push_back(content);
+  mif_source_pb_graph_nodes_.push_back(pb_graph_node);
   mif_source_address_ranges_.push_back(address_range);
   mif_source_data_ranges_.push_back(data_range);
   return source_id;
@@ -197,6 +216,7 @@ void VprBitstreamAnnotation::clear_mif_sources() {
   mif_source_pb_types_.clear();
   mif_source_sources_.clear();
   mif_source_contents_.clear();
+  mif_source_pb_graph_nodes_.clear();
   mif_source_address_ranges_.clear();
   mif_source_data_ranges_.clear();
 }

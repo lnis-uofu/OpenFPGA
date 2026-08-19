@@ -228,10 +228,11 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.module_graph(), g_vpr_ctx.device().grid,
     cmd_context.option_enable(cmd, opt_group_tile));
 
-  /* Build MIF location map (fabric coord + data-bus offset; not MifPipeline) */
+  /* Build MIF location map from bitstream/device annotations */
   openfpga_ctx.mutable_mif_location_map() = build_fabric_mif_location_map(
     openfpga_ctx.module_graph(), g_vpr_ctx.device().grid,
-    openfpga_ctx.arch().circuit_lib, openfpga_ctx.bitstream_setting(),
+    openfpga_ctx.arch().circuit_lib, openfpga_ctx.vpr_bitstream_annotation(),
+    openfpga_ctx.vpr_device_annotation(),
     cmd_context.option_enable(cmd, opt_group_tile));
 
   /* update vpr bitstream annotation with io location map */

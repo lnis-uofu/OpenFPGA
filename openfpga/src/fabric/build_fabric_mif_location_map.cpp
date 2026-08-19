@@ -1,18 +1,21 @@
 /********************************************************************
- * Build MIF location map: (x, y, z, pb) -> (port, data_offset, width).
+ * Build MIF location map: top-level port -> (t_pl_loc, MifPortSlice).
  *
- * Walks top-module io_children in the same order GPIN buses are
- * concatenated, and assigns a bit offset for each is_mif_data_bus port.
+ * Walks top-module io_children in GPIN concatenation order and assigns
+ * data_offset/data_width along that same order. The physical primitive
+ * for each instance is taken from bitstream annotation and remapped by
+ * device annotation (operating pb -> physical pb).
  *******************************************************************/
 #include "build_fabric_mif_location_map.h"
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
 #include "arch_util.h"
+#include "circuit_library_utils.h"
 #include "openfpga_naming.h"
-#include "openfpga_pb_parser.h"
 #include "openfpga_reserved_words.h"
 #include "vpr_utils.h"
 #include "vtr_assert.h"
@@ -22,118 +25,123 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-static bool tile_matches_mif_pb(t_physical_tile_type_ptr phy_tile_type,
-                                const std::string& pb_type_path) {
-  const PbParser parser(strip_numeric_pb_index(pb_type_path));
-  const std::string top_name =
-    parser.parents().empty() ? parser.leaf() : parser.parents().front();
-  if (top_name.empty()) {
-    return false;
-  }
-  if (phy_tile_type->name == top_name) {
-    return true;
-  }
-  for (t_logical_block_type_ptr site :
-       get_equivalent_sites_set(phy_tile_type)) {
-    if (site != nullptr && site->name == top_name) {
-      return true;
+static std::vector<t_pb_graph_node*> collect_physical_mif_nodes(
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const VprDeviceAnnotation& device_annotation) {
+  std::vector<t_pb_graph_node*> physical_nodes;
+  std::set<t_pb_graph_node*> seen;
+  for (size_t i = 0; i < bitstream_annotation.num_mif_sources(); ++i) {
+    t_pb_graph_node* node =
+      bitstream_annotation.mif_source_pb_graph_node(MifSourceAnnotationId(i));
+    if (nullptr == node) {
+      continue;
     }
+    t_pb_graph_node* physical_node =
+      device_annotation.physical_pb_graph_node(node);
+    if (nullptr == physical_node) {
+      physical_node = node;
+    }
+    if (false == seen.insert(physical_node).second) {
+      continue;
+    }
+    physical_nodes.push_back(physical_node);
   }
-  return false;
+  return physical_nodes;
 }
 
-static std::vector<std::string> matching_mif_pb_paths(
+static t_pb_graph_node* matching_physical_mif_node(
   t_physical_tile_type_ptr phy_tile_type,
-  const std::vector<std::string>& mif_pb_paths) {
-  std::vector<std::string> matched;
-  for (const std::string& pb_type_path : mif_pb_paths) {
-    if (tile_matches_mif_pb(phy_tile_type, pb_type_path)) {
-      matched.push_back(pb_type_path);
+  const std::vector<t_pb_graph_node*>& physical_nodes) {
+  for (t_pb_graph_node* node : physical_nodes) {
+    t_pb_graph_node* root = node;
+    while (nullptr != root && false == root->is_root()) {
+      root = root->parent_pb_graph_node;
+    }
+    if (nullptr == root || nullptr == root->pb_type) {
+      continue;
+    }
+    const std::string top_name = root->pb_type->name;
+    if (phy_tile_type->name == top_name) {
+      return node;
+    }
+    for (t_logical_block_type_ptr site :
+         get_equivalent_sites_set(phy_tile_type)) {
+      if (site != nullptr && site->name == top_name) {
+        return node;
+      }
     }
   }
-  return matched;
-}
-
-static bool skip_non_root_grid_cell(const DeviceGrid& grids, const int& x,
-                                    const int& y, const size_t& layer) {
-  const t_physical_tile_loc phy_tile_loc(x, y, layer);
-  if (!grids.is_valid_tile_loc(phy_tile_loc)) {
-    return true;
-  }
-  t_physical_tile_type_ptr phy_tile_type =
-    grids.get_physical_type(phy_tile_loc);
-  if (true == is_empty_type(phy_tile_type)) {
-    return true;
-  }
-  /* Skip non-root cells of multi-width/height tiles. */
-  return !grids.is_root_location(phy_tile_loc);
+  return nullptr;
 }
 
 static std::map<std::string, size_t> collect_mif_data_bus_ports(
-  const CircuitLibrary& circuit_lib) {
+  const CircuitLibrary& circuit_lib,
+  const VprDeviceAnnotation& device_annotation,
+  const std::vector<t_pb_graph_node*>& physical_nodes) {
   std::map<std::string, size_t> mif_data_ports;
-  for (const CircuitPortId& port : circuit_lib.ports()) {
-    if (false == circuit_lib.port_is_mif_data_bus(port)) {
+  std::set<CircuitModelId> models;
+  for (t_pb_graph_node* node : physical_nodes) {
+    if (nullptr == node || nullptr == node->pb_type) {
       continue;
+    }
+    t_pb_type* physical_pb_type =
+      device_annotation.physical_pb_type(node->pb_type);
+    if (nullptr == physical_pb_type) {
+      physical_pb_type = node->pb_type;
+    }
+    const CircuitModelId model =
+      device_annotation.pb_type_circuit_model(physical_pb_type);
+    if (true == circuit_lib.valid_model_id(model)) {
+      models.insert(model);
+    }
+  }
+
+  auto add_mif_port = [&](const CircuitPortId& port) {
+    if (false == circuit_lib.port_is_mif_data_bus(port)) {
+      return;
     }
     const CircuitModelId parent_model = circuit_lib.port_parent_model(port);
     const std::string port_name = generate_fpga_global_io_port_name(
       std::string(GIO_INOUT_PREFIX), circuit_lib, parent_model, port);
     mif_data_ports[port_name] = circuit_lib.port_size(port);
+  };
+
+  if (false == models.empty()) {
+    for (const CircuitModelId& model : models) {
+      for (const CircuitPortId& port : circuit_lib.model_ports(model)) {
+        add_mif_port(port);
+      }
+    }
+  } else {
+    for (const CircuitPortId& port :
+         find_circuit_library_global_ports(circuit_lib)) {
+      add_mif_port(port);
+    }
   }
   return mif_data_ports;
 }
 
-static void register_subchild_mif_locations(
-  MifLocationMap& mif_location_map, const ModuleManager& module_manager,
-  const ModuleId& subchild, const int& x, const int& y, const int& z,
-  const std::vector<std::string>& pb_paths,
-  const std::map<std::string, size_t>& mif_data_ports,
-  std::map<std::string, size_t>& offset_counter) {
-  for (const ModulePortId& gpin_port_id :
-       module_manager.module_port_ids_by_type(
-         subchild, ModuleManager::MODULE_GPIN_PORT)) {
-    const BasicPort& gpin_port =
-      module_manager.module_port(subchild, gpin_port_id);
-    auto port_info = mif_data_ports.find(gpin_port.get_name());
-    if (port_info == mif_data_ports.end()) {
-      continue;
-    }
-
-    const std::string& port_name = port_info->first;
-    const size_t width = gpin_port.get_width();
-    VTR_ASSERT(width == port_info->second);
-
-    size_t& offset = offset_counter[port_name];
-
-    /* One physical instance on the bus; associate all matching pb paths. */
-    for (const std::string& pb_path : pb_paths) {
-      mif_location_map.set_mif_location(
-        static_cast<size_t>(x), static_cast<size_t>(y), static_cast<size_t>(z),
-        pb_path, port_name, offset, width);
-    }
-    offset += width;
-  }
-}
-
-/* Shared by fine-grained and tiled builders: register MIF offsets for one
- * grid-level module and its capacity (z) io_children. */
 static void register_grid_module_mif_locations(
   MifLocationMap& mif_location_map, const ModuleManager& module_manager,
   const DeviceGrid& grids, const size_t& layer, const ModuleId& grid_module,
-  const int& x, const int& y, const std::vector<std::string>& mif_pb_paths,
+  const int& x, const int& y,
+  const std::vector<t_pb_graph_node*>& physical_nodes,
   const std::map<std::string, size_t>& mif_data_ports,
   std::map<std::string, size_t>& offset_counter) {
-  if (true == skip_non_root_grid_cell(grids, x, y, layer)) {
+  const t_physical_tile_loc phy_tile_loc(x, y, layer);
+  if (!grids.is_valid_tile_loc(phy_tile_loc) ||
+      !grids.is_root_location(phy_tile_loc)) {
+    return;
+  }
+  t_physical_tile_type_ptr phy_tile_type =
+    grids.get_physical_type(phy_tile_loc);
+  if (true == is_empty_type(phy_tile_type)) {
     return;
   }
 
-  t_physical_tile_loc phy_tile_loc(x, y, layer);
-  t_physical_tile_type_ptr phy_tile_type =
-    grids.get_physical_type(phy_tile_loc);
-  const std::vector<std::string> pb_paths =
-    matching_mif_pb_paths(phy_tile_type, mif_pb_paths);
-  if (pb_paths.empty()) {
+  t_pb_graph_node* pb_graph_node =
+    matching_physical_mif_node(phy_tile_type, physical_nodes);
+  if (nullptr == pb_graph_node) {
     return;
   }
 
@@ -151,8 +159,6 @@ static void register_grid_module_mif_locations(
       module_manager.io_children(grid_module)[isubchild];
     const vtr::Point<int>& subchild_coord =
       module_manager.io_child_coordinates(grid_module)[isubchild];
-    /* subchild_coord.x() is tile capacity index (VPR subblk); default (-1,-1)
-     * when unset — fall back to io_children order index. */
     int z = subchild_coord.x();
     if (0 > z) {
       z = static_cast<int>(isubchild);
@@ -160,34 +166,47 @@ static void register_grid_module_mif_locations(
     if (z < 0 || size_t(z) >= size_t(phy_tile_type->capacity)) {
       continue;
     }
-    register_subchild_mif_locations(mif_location_map, module_manager, subchild,
-                                    x, y, z, pb_paths, mif_data_ports,
-                                    offset_counter);
+
+    const t_pl_loc phy_loc(x, y, z, static_cast<int>(layer));
+    for (const ModulePortId& gpin_port_id :
+         module_manager.module_port_ids_by_type(
+           subchild, ModuleManager::MODULE_GPIN_PORT)) {
+      const BasicPort& gpin_port =
+        module_manager.module_port(subchild, gpin_port_id);
+      auto port_info = mif_data_ports.find(gpin_port.get_name());
+      if (port_info == mif_data_ports.end()) {
+        continue;
+      }
+      VTR_ASSERT(gpin_port.get_width() == port_info->second);
+      size_t& offset = offset_counter[port_info->first];
+      mif_location_map.add(port_info->first, phy_loc, pb_graph_node, offset,
+                           gpin_port.get_width());
+      offset += gpin_port.get_width();
+    }
   }
 }
 
 MifLocationMap build_fabric_mif_location_map(
   const ModuleManager& module_manager, const DeviceGrid& grids,
-  const CircuitLibrary& circuit_lib, const BitstreamSetting& bitstream_setting,
-  const bool& tiled_fabric) {
+  const CircuitLibrary& circuit_lib,
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const VprDeviceAnnotation& device_annotation, const bool& tiled_fabric) {
   vtr::ScopedStartFinishTimer timer(
     "Create MIF location mapping for fabric grids");
 
-  const std::map<std::string, size_t> mif_data_ports =
-    collect_mif_data_bus_ports(circuit_lib);
-  if (mif_data_ports.empty()) {
+  const std::vector<t_pb_graph_node*> physical_nodes =
+    collect_physical_mif_nodes(bitstream_annotation, device_annotation);
+  if (true == physical_nodes.empty()) {
     return MifLocationMap();
   }
 
-  std::vector<std::string> mif_pb_paths;
-  for (const MifSourceSettingId& id : bitstream_setting.mif_source_settings()) {
-    mif_pb_paths.push_back(bitstream_setting.mif_source_pb_type(id));
-  }
-  if (mif_pb_paths.empty()) {
+  const std::map<std::string, size_t> mif_data_ports = collect_mif_data_bus_ports(
+    circuit_lib, device_annotation, physical_nodes);
+  if (true == mif_data_ports.empty()) {
     VTR_LOG(
-      "Found %zu is_mif_data_bus port(s) but no mif_source settings; skip MIF "
-      "location map\n",
-      mif_data_ports.size());
+      "Found %zu annotated MIF primitive(s) but no is_mif_data_bus port; skip "
+      "MIF location map\n",
+      physical_nodes.size());
     return MifLocationMap();
   }
 
@@ -211,7 +230,7 @@ MifLocationMap build_fabric_mif_location_map(
           module_manager.io_child_coordinates(child_module)[igrid];
         register_grid_module_mif_locations(
           mif_location_map, module_manager, grids, layer, grid_module,
-          grid_coord.x(), grid_coord.y(), mif_pb_paths, mif_data_ports,
+          grid_coord.x(), grid_coord.y(), physical_nodes, mif_data_ports,
           offset_counter);
       }
       continue;
@@ -219,16 +238,16 @@ MifLocationMap build_fabric_mif_location_map(
 
     const vtr::Point<int>& grid_coord =
       module_manager.io_child_coordinates(top_module)[ichild];
-    register_grid_module_mif_locations(mif_location_map, module_manager, grids,
-                                       layer, child_module, grid_coord.x(),
-                                       grid_coord.y(), mif_pb_paths,
-                                       mif_data_ports, offset_counter);
+    register_grid_module_mif_locations(
+      mif_location_map, module_manager, grids, layer, child_module,
+      grid_coord.x(), grid_coord.y(), physical_nodes, mif_data_ports,
+      offset_counter);
   }
 
   VTR_LOG(
     "Built MIF location map: %zu location(s) across %zu mif_data_bus "
     "port(s)\n",
-    mif_location_map.mif_locations().size(), mif_data_ports.size());
+    mif_location_map.size(), mif_data_ports.size());
   return mif_location_map;
 }
 

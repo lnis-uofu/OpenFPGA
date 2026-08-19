@@ -2,28 +2,29 @@
 #define BUILD_FABRIC_MIF_LOCATION_MAP_H
 
 /********************************************************************
- * Build a fabric-side lookup from VPR grid (x, y, z) to each physical
- * MIF instance's bit offset on a top-level MIF data bus.
+ * Build a fabric-side lookup:
+ *   top-level MIF data port -> (physical loc, physical pb_graph_node)
  *
- * Offset order follows module_graph GPIN concatenation (io_children),
- * matching how is_mif_data_bus ports are wired at fabric top.
- *
- * Independent of annotate_mif / MifPipeline data flow.
+ * Physical MIF primitives come from VprBitstreamAnnotation, remapped
+ * through VprDeviceAnnotation. Port names come from the circuit models
+ * bound to those primitives.
  *******************************************************************/
 
-#include "bitstream_setting.h"
 #include "circuit_library.h"
 #include "device_grid.h"
 #include "mif_location_map.h"
 #include "module_manager.h"
+#include "vpr_bitstream_annotation.h"
+#include "vpr_device_annotation.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
 MifLocationMap build_fabric_mif_location_map(
   const ModuleManager& module_manager, const DeviceGrid& grids,
-  const CircuitLibrary& circuit_lib, const BitstreamSetting& bitstream_setting,
-  const bool& tiled_fabric);
+  const CircuitLibrary& circuit_lib,
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const VprDeviceAnnotation& device_annotation, const bool& tiled_fabric);
 
 } /* end namespace openfpga */
 
