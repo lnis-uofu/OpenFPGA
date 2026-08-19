@@ -62,6 +62,11 @@ PhysicalPb VprClusteringAnnotation::physical_pb(
   return physical_pbs_.at(block_id);
 }
 
+const std::map<ClusterBlockId, PhysicalPb>&
+VprClusteringAnnotation::physical_pbs() const {
+  return physical_pbs_;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/

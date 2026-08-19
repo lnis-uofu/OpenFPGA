@@ -3,10 +3,37 @@
 #include "bitstream_setting_xml_constants.h"
 #include "command_exit_codes.h"
 #include "mif_vpr_placement.h"
+#include "physical_pb.h"
 #include "vtr_log.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+static size_t load_repacked_mif_data(
+  MifPipeline& mif_pipeline,
+  const VprClusteringAnnotation& clustering_annotation) {
+  MifStorage& eblif_storage =
+    mif_pipeline.mutable_storage(MifPipeline::Stage::EBLIF);
+  eblif_storage.clear();
+  size_t num_mif_data = 0;
+  for (const auto& cluster_physical_pb : clustering_annotation.physical_pbs()) {
+    const PhysicalPb& physical_pb = cluster_physical_pb.second;
+    for (const PhysicalPbId& physical_pb_id : physical_pb.primitive_pbs()) {
+      for (const PhysicalPb::MifDataInfo& mif_data :
+           physical_pb.mif_data(physical_pb_id)) {
+        if (mif_data.source != XML_MIF_SOURCE_SOURCE_EBLIF) {
+          continue;
+        }
+        const MifSegmentId segment_id = eblif_storage.create_segment();
+        eblif_storage.set_segment_physical_pb(segment_id,
+                                              mif_data.operating_pb_path);
+        eblif_storage.set_segment_raw_data(segment_id, mif_data.value);
+        ++num_mif_data;
+      }
+    }
+  }
+  return num_mif_data;
+}
 
 /********************************************************************
  * Build LOGICAL then PHYSICAL MIF for the given bitstream setting.
@@ -19,16 +46,13 @@ namespace openfpga {
  *                   mif_address_map src_pb_type strings)
  *   PHYSICAL      - aggregated des_pb_type from mif_address_map
  *
- * Why eblif binding does NOT use VprDeviceAnnotation:
- *   VprDeviceAnnotation maps operating t_pb_type* -> physical t_pb_type*.
- *   Eblif load needs packed operating instances from VPR atom/pack
- *   so segments can match XML mif_source and address-map keys. Device
- *   annotation has no atom->pb instance binding.
+ * EBLIF values and operating pb paths were cached in PhysicalPb by repack.
+ * This stage consumes only OpenFPGA clustering and placement annotations.
  *******************************************************************/
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
-                       MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
-                       const PlacementContext& place_ctx,
-                       const VprClusteringAnnotation& clustering_annotation) {
+                       MifPipeline& mif_pipeline,
+                       const VprClusteringAnnotation& clustering_annotation,
+                       const VprPlacementAnnotation& placement_annotation) {
   const bool has_mif_setting =
     !bitstream_setting.mif_source_settings().empty() ||
     !bitstream_setting.mif_address_map_settings().empty();
@@ -46,12 +70,12 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* Operating pb from VPR pack (not VprDeviceAnnotation). */
   if (bitstream_setting.has_eblif_mif_source()) {
-    const int load_status =
-      mif_pipeline.load_eblif(bitstream_setting, atom_ctx);
-    if (CMD_EXEC_SUCCESS != load_status) {
-      return load_status;
+    if (load_repacked_mif_data(mif_pipeline, clustering_annotation) == 0) {
+      VTR_LOG_ERROR(
+        "build_physical_mif: no EBLIF-backed MIF data found in repacked "
+        "PhysicalPb annotations\n");
+      return CMD_EXEC_FATAL_ERROR;
     }
   }
   /* merge mif collected from two sources: read_mif command and eblif source */
@@ -79,8 +103,8 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
 
   /* Annotate placement coords into the same MifPipeline as physical_. */
   status = annotate_physical_mif_grid_coordinates(
-    mif_pipeline, bitstream_setting, atom_ctx, place_ctx,
-    clustering_annotation);
+    mif_pipeline, bitstream_setting, clustering_annotation,
+    placement_annotation);
   return status;
 }
 

@@ -37,6 +37,7 @@ class VprClusteringAnnotation {
   bool is_truth_table_adapted(t_pb* pb) const;
   AtomNetlist::TruthTable truth_table(t_pb* pb) const;
   PhysicalPb physical_pb(const ClusterBlockId& block_id) const;
+  const std::map<ClusterBlockId, PhysicalPb>& physical_pbs() const;
   t_logical_block_type_ptr physical_equivalent_site(
     const ClusterBlockId& block_id) const;
 

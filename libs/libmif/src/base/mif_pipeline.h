@@ -5,7 +5,6 @@
 #include "bitstream_setting.h"
 #include "command_exit_codes.h"
 #include "mif_storage.h"
-#include "read_mif.h"
 
 namespace openfpga {
 
@@ -42,10 +41,6 @@ class MifPipeline {
 
   void clear();
   void clear(Stage stage);
-
-  /* Load VTR-parsed EBLIF parameters into the EBLIF stage. */
-  int load_eblif(const BitstreamSetting& bitstream_setting,
-                 const AtomContext& atom_ctx);
 
   /* Merge HEX/EBLIF into LOGICAL by mif_source: eblif pb_types use EBLIF
    * only; others use HEX only (no concatenation or overwrite). */

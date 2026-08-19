@@ -115,6 +115,12 @@ PhysicalPb::fixed_mode_select_bitstreams(const PhysicalPbId& pb) const {
   return fixed_mode_select_bitstreams_[pb];
 }
 
+std::vector<PhysicalPb::MifDataInfo> PhysicalPb::mif_data(
+  const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return mif_data_[pb];
+}
+
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/
@@ -146,6 +152,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
 
   fixed_bitstreams_.emplace_back();
   fixed_mode_select_bitstreams_.emplace_back();
+  mif_data_.emplace_back();
 
   /* Register in the name2id map */
   type2id_map_[pb_graph_node] = pb;
@@ -262,6 +269,15 @@ void PhysicalPb::add_fixed_mode_select_bitstream(
   VTR_ASSERT(true == valid_pb_id(pb));
   FixedBitstreamInfo fix_bitstrm(fixed_bitstream, offset);
   fixed_mode_select_bitstreams_[pb].push_back(fix_bitstrm);
+}
+
+void PhysicalPb::add_mif_data(const PhysicalPbId& pb,
+                              const std::string& operating_pb_path,
+                              const std::string& source,
+                              const std::string& selector,
+                              const std::string& value) {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  mif_data_[pb].emplace_back(operating_pb_path, source, selector, value);
 }
 
 /******************************************************************************

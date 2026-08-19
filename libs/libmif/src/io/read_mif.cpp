@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "aggregate_mif_util.h"
-#include "atom_netlist.h"
 #include "openfpga_decode.h"
 #include "vtr_log.h"
 
@@ -230,119 +229,6 @@ int read_mif_from_init_hex(const std::string& file_path,
   }
 
   mif_storage.set_segment_physical_pb(segment_id, pb_type);
-  return CMD_EXEC_SUCCESS;
-}
-
-struct MifEblifContentSelector {
-  /* Supported selectors:
-   *   .param <name> - read an AtomBlock parameter
-   *   .attr  <name> - read an AtomBlock attribute
-   * Both tokens come from mif_source content in the bitstream setting. */
-  std::string field_type;
-  std::string field_name;
-};
-
-static bool parse_eblif_content_selector(const std::string& content,
-                                         MifEblifContentSelector& selector) {
-  std::istringstream content_stream(content);
-  std::string extra;
-  if (!(content_stream >> selector.field_type >> selector.field_name) ||
-      (content_stream >> extra)) {
-    return false;
-  }
-  return true;
-}
-
-int read_mif_from_atom_context(MifStorage& mif_storage,
-                               const AtomContext& atom_ctx,
-                               const std::vector<std::string>& eblif_contents) {
-  if (eblif_contents.empty()) {
-    VTR_LOG_ERROR(
-      "read_mif_from_atom_context: no mif_source content selectors were "
-      "provided\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  std::vector<MifEblifContentSelector> selectors;
-  selectors.reserve(eblif_contents.size());
-  for (const std::string& content : eblif_contents) {
-    MifEblifContentSelector selector;
-    if (!parse_eblif_content_selector(content, selector)) {
-      VTR_LOG_ERROR(
-        "read_mif_from_atom_context: invalid mif_source content '%s'; "
-        "expected '<field_type> <field_name>'\n",
-        content.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    if (selector.field_type != ".param" && selector.field_type != ".attr") {
-      VTR_LOG_ERROR(
-        "read_mif_from_atom_context: unsupported EBLIF field type '%s' in "
-        "mif_source content '%s'\n",
-        selector.field_type.c_str(), content.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    selectors.push_back(selector);
-  }
-
-  mif_storage.clear();
-  size_t field_index = 0;
-  for (const AtomBlockId atom_block : atom_ctx.netlist().blocks()) {
-    for (const MifEblifContentSelector& selector : selectors) {
-      std::string value;
-      bool field_found = false;
-      if (selector.field_type == ".param") {
-        for (const auto& parameter :
-             atom_ctx.netlist().block_params(atom_block)) {
-          if (parameter.first == selector.field_name) {
-            value = parameter.second;
-            field_found = true;
-            break;
-          }
-        }
-      } else {
-        for (const auto& attribute :
-             atom_ctx.netlist().block_attrs(atom_block)) {
-          if (attribute.first == selector.field_name) {
-            value = attribute.second;
-            field_found = true;
-            break;
-          }
-        }
-      }
-      if (!field_found) {
-        continue;
-      }
-
-      const t_pb* leaf_pb =
-        atom_ctx.lookup().atom_pb_bimap().atom_pb(atom_block);
-      const std::string pb_type = generate_mif_pb_path(leaf_pb);
-      if (pb_type.empty()) {
-        VTR_LOG_ERROR(
-          "read_mif_from_atom_context: AtomBlock '%s' has no valid packed pb "
-          "path (%s %s #%zu); run this after VPR pack\n",
-          atom_ctx.netlist().block_name(atom_block).c_str(),
-          selector.field_type.c_str(), selector.field_name.c_str(),
-          field_index);
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-        value = value.substr(1, value.size() - 2);
-      }
-      const MifSegmentId segment_id = mif_storage.create_segment();
-      mif_storage.set_segment_physical_pb(segment_id, pb_type);
-      mif_storage.set_segment_raw_data(segment_id, value);
-      VTR_LOG("read_mif: AtomBlock '%s' %s %s -> VPR pb_type '%s'\n",
-              atom_ctx.netlist().block_name(atom_block).c_str(),
-              selector.field_type.c_str(), selector.field_name.c_str(),
-              pb_type.c_str());
-      ++field_index;
-    }
-  }
-
-  if (field_index == 0) {
-    VTR_LOG_ERROR("read_mif: no matching AtomBlock fields found\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
   return CMD_EXEC_SUCCESS;
 }
 

@@ -5,7 +5,7 @@
  *******************************************************************/
 #include "mif_pipeline.h"
 #include "vpr_clustering_annotation.h"
-#include "vpr_context.h"
+#include "vpr_placement_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -23,8 +23,8 @@ namespace openfpga {
  * EBLIF/LOGICAL keep operating pb paths to match bitstream-setting keys;
  * PHYSICAL keeps mif_address_map des_pb_type for location-map binding. */
 int build_physical_mif(const BitstreamSetting& bitstream_setting,
-                       MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
-                       const PlacementContext& place_ctx,
-                       const VprClusteringAnnotation& clustering_annotation);
+                       MifPipeline& mif_pipeline,
+                       const VprClusteringAnnotation& clustering_annotation,
+                       const VprPlacementAnnotation& placement_annotation);
 
 } /* end namespace openfpga */

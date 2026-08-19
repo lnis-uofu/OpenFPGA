@@ -9,6 +9,8 @@
 #include "vtr_log.h"
 
 /* Headers from openfpgautil library */
+#include "aggregate_mif_util.h"
+#include "bitstream_setting_xml_constants.h"
 #include "command_exit_codes.h"
 #include "lut_utils.h"
 #include "openfpga_naming.h"
@@ -335,11 +337,47 @@ static void mark_physical_pb_wired_lut_outputs(
 /************************************************************************
  * Synchronize mapping results from an operating pb to a physical pb
  ***********************************************************************/
+static bool read_atom_block_field(const AtomContext& atom_ctx,
+                                  const AtomBlockId& atom_block,
+                                  const std::string& selector,
+                                  std::string& value) {
+  StringToken tokenizer(selector);
+  const std::vector<std::string> tokens = tokenizer.split(" ");
+  if (tokens.size() != 2) {
+    VTR_LOG_ERROR(
+      "Invalid MIF content selector '%s'. Expect '.param <name>' or "
+      "'.attr <name>'\n",
+      selector.c_str());
+    exit(openfpga::CMD_EXEC_FATAL_ERROR);
+  }
+
+  if (tokens[0] == ".param") {
+    for (const auto& parameter : atom_ctx.netlist().block_params(atom_block)) {
+      if (parameter.first == tokens[1]) {
+        value = parameter.second;
+        return true;
+      }
+    }
+  } else if (tokens[0] == ".attr") {
+    for (const auto& attribute : atom_ctx.netlist().block_attrs(atom_block)) {
+      if (attribute.first == tokens[1]) {
+        value = attribute.second;
+        return true;
+      }
+    }
+  } else {
+    VTR_LOG_ERROR("Unsupported MIF EBLIF field type '%s'\n", tokens[0].c_str());
+    exit(openfpga::CMD_EXEC_FATAL_ERROR);
+  }
+  return false;
+}
+
 void rec_update_physical_pb_from_operating_pb(
   PhysicalPb& phy_pb, const Logical2PhysicalPbMap& lgk2phy_pb_map,
   const t_pb* op_pb, const t_pb_routes& pb_route, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const BitstreamSetting& bitstream_setting, const bool& verbose) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
   t_pb_type* pb_type = pb_graph_node->pb_type;
 
@@ -366,6 +404,31 @@ void rec_update_physical_pb_from_operating_pb(
     VTR_LOGV(verbose, "Update physical pb '%s' using atom block '%s'\n",
              physical_pb_graph_node->hierarchical_type_name().c_str(),
              atom_ctx.netlist().block_name(atom_blk).c_str());
+
+    const std::string operating_pb_path = generate_mif_pb_path(op_pb);
+    const MifSourceSettingId mif_source_id =
+      bitstream_setting.find_mif_source_by_pb_type(operating_pb_path);
+    if (mif_source_id.is_valid()) {
+      const std::string source =
+        bitstream_setting.mif_source_source(mif_source_id);
+      const std::string selector =
+        bitstream_setting.mif_source_content(mif_source_id);
+      std::string value;
+      if (source == XML_MIF_SOURCE_SOURCE_EBLIF) {
+        if (!read_atom_block_field(atom_ctx, atom_blk, selector, value)) {
+          VTR_LOG_ERROR(
+            "MIF field '%s' was not found on AtomBlock '%s' for pb '%s'\n",
+            selector.c_str(), atom_ctx.netlist().block_name(atom_blk).c_str(),
+            operating_pb_path.c_str());
+          exit(openfpga::CMD_EXEC_FATAL_ERROR);
+        }
+        if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+          value = value.substr(1, value.size() - 2);
+        }
+      }
+      phy_pb.add_mif_data(physical_pb, operating_pb_path, source, selector,
+                          value);
+    }
 
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
@@ -474,7 +537,8 @@ void rec_update_physical_pb_from_operating_pb(
           (nullptr != op_pb->child_pbs[ipb][jpb].name)) {
         rec_update_physical_pb_from_operating_pb(
           phy_pb, lgk2phy_pb_map, &(op_pb->child_pbs[ipb][jpb]), pb_route,
-          atom_ctx, device_annotation, bitstream_annotation, verbose);
+          atom_ctx, device_annotation, bitstream_annotation, bitstream_setting,
+          verbose);
       } else {
         /* Some pb may be used just in routing purpose, find out the output nets
          */

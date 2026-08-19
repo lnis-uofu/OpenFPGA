@@ -42,13 +42,12 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
 
-  /* Repack has created PhysicalPb before this command. Build the MIF here so
-   * EBLIF values still come from AtomContext while physical instances can be
-   * checked against the repacked clustering annotation. */
+  /* Repack has cached MIF data in PhysicalPb before this command. Build the
+   * MIF exclusively from clustering and placement annotations. */
   const int mif_status = build_physical_mif(
     openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
-    g_vpr_ctx.atom(), g_vpr_ctx.placement(),
-    openfpga_ctx.vpr_clustering_annotation());
+    openfpga_ctx.vpr_clustering_annotation(),
+    openfpga_ctx.vpr_placement_annotation());
   if (CMD_EXEC_SUCCESS != mif_status) {
     return mif_status;
   }

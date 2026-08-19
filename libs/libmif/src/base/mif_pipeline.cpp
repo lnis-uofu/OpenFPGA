@@ -1,6 +1,5 @@
 #include "mif_pipeline.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -68,27 +67,6 @@ void MifPipeline::clear(Stage stage) {
   if (Stage::PHYSICAL == stage) {
     physical_segment_grid_coords_.clear();
   }
-}
-
-int MifPipeline::load_eblif(const BitstreamSetting& bitstream_setting,
-                            const AtomContext& atom_ctx) {
-  eblif_.clear();
-
-  /* Collect unique content selectors used by EBLIF-backed MIF sources. */
-  std::vector<std::string> eblif_contents;
-  for (const MifSourceSettingId& source_id :
-       bitstream_setting.mif_source_settings()) {
-    if (bitstream_setting.mif_source_source(source_id) !=
-        XML_MIF_SOURCE_SOURCE_EBLIF) {
-      continue;
-    }
-    const std::string content = bitstream_setting.mif_source_content(source_id);
-    if (std::find(eblif_contents.begin(), eblif_contents.end(), content) ==
-        eblif_contents.end()) {
-      eblif_contents.push_back(content);
-    }
-  }
-  return read_mif_from_atom_context(eblif_, atom_ctx, eblif_contents);
 }
 
 int MifPipeline::merge_to_logical(const BitstreamSetting& bitstream_setting) {
