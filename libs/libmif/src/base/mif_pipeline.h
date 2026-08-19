@@ -15,8 +15,8 @@ namespace openfpga {
 /********************************************************************
  * MIF pipeline. hex_ / eblif_ are metadata maps only.
  *
- *   hex_           pb_type -> path of the .hex file (from read_mif)
- *   eblif_         AtomBlockId -> operating pb_type (from repack)
+ *   hex_           pb_type -> .hex file path (from read_mif --pb_type)
+ *   eblif_         AtomBlockId -> operating pb_type (same string as hex_/XML)
  *   physical_mifs_ (t_pl_loc, t_pb_graph_node*) -> aggregated dest
  *   top_mif_       one FPGA-top MIF
  ********************************************************************/

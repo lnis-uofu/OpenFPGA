@@ -111,7 +111,7 @@ int decode_mif_instance(MifPipeline& mif_pipeline, const AtomContext& atom_ctx,
 
   if (mif_data.source == XML_MIF_SOURCE_SOURCE_EBLIF) {
     mif_pipeline.mutable_eblif()[mif_data.atom_block] =
-      mif_data.operating_pb_path;
+      strip_numeric_pb_index(mif_data.operating_pb_path);
     std::string value;
     if (!read_atom_block_field(atom_ctx, mif_data.atom_block, mif_data.selector,
                                value)) {
