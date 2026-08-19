@@ -2,8 +2,6 @@
  * This file includes functions that are used to annotate pb_type
  * from VPR to OpenFPGA
  *******************************************************************/
-#include <cmath>
-#include <iterator>
 #include <string>
 
 /* Headers from openfpgashell library */
@@ -22,73 +20,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-static t_pb_graph_node* find_mif_pb_graph_node(
-  const DeviceContext& vpr_device_ctx, const std::string& pb_path) {
-  const std::string type_path = strip_numeric_pb_index(pb_path);
-  int leaf_index = 0;
-  if (type_path != pb_path && pb_path.back() == ']') {
-    const size_t bracket_pos = pb_path.rfind('[');
-    leaf_index = std::stoi(
-      pb_path.substr(bracket_pos + 1, pb_path.size() - bracket_pos - 2));
-  }
-
-  const PbParser parser(type_path);
-  std::vector<std::string> type_names = parser.parents();
-  type_names.push_back(parser.leaf());
-  const std::vector<std::string> mode_names = parser.modes();
-  if (type_names.empty()) {
-    return nullptr;
-  }
-
-  for (const t_logical_block_type& lb_type :
-       vpr_device_ctx.logical_block_types) {
-    if (nullptr == lb_type.pb_type || nullptr == lb_type.pb_graph_head) {
-      continue;
-    }
-    if (type_names[0] != std::string(lb_type.pb_type->name) ||
-        mode_names.size() + 1 != type_names.size()) {
-      continue;
-    }
-
-    t_pb_graph_node* node = lb_type.pb_graph_head;
-    if (mode_names.empty()) {
-      return node;
-    }
-
-    bool matched = true;
-    for (size_t i = 0; i < mode_names.size(); ++i) {
-      t_mode* mode = find_pb_type_mode(node->pb_type, mode_names[i].c_str());
-      if (nullptr == mode) {
-        matched = false;
-        break;
-      }
-      int child_idx = -1;
-      for (int ichild = 0; ichild < mode->num_pb_type_children; ++ichild) {
-        if (type_names[i + 1] ==
-            std::string(mode->pb_type_children[ichild].name)) {
-          child_idx = ichild;
-          break;
-        }
-      }
-      if (child_idx < 0) {
-        matched = false;
-        break;
-      }
-      const int inst = (i + 1 == type_names.size() - 1) ? leaf_index : 0;
-      t_pb_type* child_type = &(mode->pb_type_children[child_idx]);
-      if (inst < 0 || inst >= child_type->num_pb) {
-        matched = false;
-        break;
-      }
-      node = &(node->child_pb_graph_nodes[mode->index][child_idx][inst]);
-    }
-    if (matched) {
-      return node;
-    }
-  }
-  return nullptr;
-}
-
+/********************************************************************
+ * Annotate mif_source setting based on VPR device information
+ *  - Find the pb_type with the same path walker as other bitstream settings
+ *  - Bind the matching pb_graph_node instance (optional trailing [N])
+ *******************************************************************/
 static int annotate_mif_source_setting(
   const BitstreamSetting& bitstream_setting,
   const DeviceContext& vpr_device_ctx,
@@ -96,22 +32,77 @@ static int annotate_mif_source_setting(
   vpr_bitstream_annotation.clear_mif_sources();
   for (const MifSourceSettingId& source_id :
        bitstream_setting.mif_source_settings()) {
-    const std::string pb_type =
-      bitstream_setting.mif_source_pb_type(source_id);
-    t_pb_graph_node* pb_graph_node =
-      find_mif_pb_graph_node(vpr_device_ctx, pb_type);
-    if (nullptr == pb_graph_node) {
+    const std::string pb_type = bitstream_setting.mif_source_pb_type(source_id);
+    const std::string type_path = strip_numeric_pb_index(pb_type);
+    int leaf_index = 0;
+    if (type_path != pb_type && pb_type.back() == ']') {
+      const size_t bracket_pos = pb_type.rfind('[');
+      leaf_index = std::stoi(
+        pb_type.substr(bracket_pos + 1, pb_type.size() - bracket_pos - 2));
+    }
+
+    const PbParser parser(type_path);
+    std::vector<std::string> target_pb_type_names = parser.parents();
+    target_pb_type_names.push_back(parser.leaf());
+    const std::vector<std::string> target_pb_mode_names = parser.modes();
+
+    bool link_success = false;
+    for (const t_logical_block_type& lb_type :
+         vpr_device_ctx.logical_block_types) {
+      if (nullptr == lb_type.pb_type || nullptr == lb_type.pb_graph_head) {
+        continue;
+      }
+      if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
+        continue;
+      }
+      t_pb_type* target_pb_type = try_find_pb_type_with_given_path(
+        lb_type.pb_type, target_pb_type_names, target_pb_mode_names);
+      if (nullptr == target_pb_type) {
+        continue;
+      }
+
+      /* try_find_* returns the type; descend the graph for instance [N]. */
+      t_pb_graph_node* pb_graph_node = lb_type.pb_graph_head;
+      bool walk_ok = true;
+      for (size_t i = 0; i < target_pb_mode_names.size(); ++i) {
+        t_mode* mode = find_pb_type_mode(pb_graph_node->pb_type,
+                                         target_pb_mode_names[i].c_str());
+        t_pb_type* child_type =
+          (nullptr == mode) ? nullptr
+                            : find_mode_child_pb_type(
+                                mode, target_pb_type_names[i + 1].c_str());
+        const int inst =
+          (i + 1 == target_pb_mode_names.size()) ? leaf_index : 0;
+        if (nullptr == mode || nullptr == child_type || inst < 0 ||
+            inst >= child_type->num_pb) {
+          walk_ok = false;
+          break;
+        }
+        const int child_idx =
+          static_cast<int>(child_type - mode->pb_type_children);
+        pb_graph_node =
+          &(pb_graph_node->child_pb_graph_nodes[mode->index][child_idx][inst]);
+      }
+      if (false == walk_ok || pb_graph_node->pb_type != target_pb_type) {
+        continue;
+      }
+
+      vpr_bitstream_annotation.add_mif_source(
+        pb_type, bitstream_setting.mif_source_source(source_id),
+        bitstream_setting.mif_source_content(source_id), pb_graph_node,
+        bitstream_setting.mif_source_address_range(source_id),
+        bitstream_setting.mif_source_data_range(source_id));
+      link_success = true;
+      break;
+    }
+
+    if (false == link_success) {
       VTR_LOG_ERROR(
         "Fail to find a pb_graph_node for mif_source pb_type '%s' from VPR "
         "architecture description\n",
         pb_type.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    vpr_bitstream_annotation.add_mif_source(
-      pb_type, bitstream_setting.mif_source_source(source_id),
-      bitstream_setting.mif_source_content(source_id), pb_graph_node,
-      bitstream_setting.mif_source_address_range(source_id),
-      bitstream_setting.mif_source_data_range(source_id));
   }
   return CMD_EXEC_SUCCESS;
 }

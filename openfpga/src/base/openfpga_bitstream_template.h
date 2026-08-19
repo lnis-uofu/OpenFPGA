@@ -51,6 +51,12 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   if (CMD_EXEC_SUCCESS != mif_status) {
     return mif_status;
   }
+  const int unified_status = aggregate_unified_mif(
+    openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
+    openfpga_ctx.mif_location_map());
+  if (CMD_EXEC_SUCCESS != unified_status) {
+    return unified_status;
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     int status = read_xml_architecture_bitstream(

@@ -25,6 +25,8 @@ struct MifGridCoord {
  *   EBLIF     - raw .param INIT from Yosys eblif
  *   LOGICAL   - merged + decoded logical words per mif_source
  *   PHYSICAL  - remapped aggregated preload per destination pb_type
+ *   UNIFIED   - FPGA-top concatenation of all destination PBs on each
+ *               MIF data port (location-map order; missing PBs are 0)
  *
  * Aggregated physical MIF is stored as physical_. Its corresponding
  * placement coordinates (x, y, sub_tile) are also stored in this
@@ -33,7 +35,7 @@ struct MifGridCoord {
  ********************************************************************/
 class MifPipeline {
  public:
-  enum class Stage { HEX, EBLIF, LOGICAL, PHYSICAL };
+  enum class Stage { HEX, EBLIF, LOGICAL, PHYSICAL, UNIFIED };
 
  public:
   const MifStorage& storage(Stage stage) const;
@@ -67,6 +69,7 @@ class MifPipeline {
   MifStorage eblif_;
   MifStorage logical_;
   MifStorage physical_; /* Aggregated physical MIF */
+  MifStorage unified_;  /* FPGA-top MIF, one segment per data port */
   /* Parallel to physical_ only; indexed by physical_ segment id.
    * Do not index with HEX/EBLIF/LOGICAL segment ids (same StrongId type,
    * but each stage has its own id space). */

@@ -48,10 +48,15 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
-  /* Aggregated preload result from build_architecture_bitstream / aggregate. */
-  const MifStorage& aggregated_mif_storage =
+  /* FPGA-top unified MIF when location-map aggregation ran; else per-PB
+   * PHYSICAL result from build_architecture_bitstream. */
+  const openfpga::MifStorage& unified_mif_storage =
     openfpga_context.mif_pipeline().storage(
-      openfpga::MifPipeline::Stage::PHYSICAL);
+      openfpga::MifPipeline::Stage::UNIFIED);
+  const openfpga::MifStorage& aggregated_mif_storage =
+    unified_mif_storage.empty() ? openfpga_context.mif_pipeline().storage(
+                                    openfpga::MifPipeline::Stage::PHYSICAL)
+                                : unified_mif_storage;
   if (aggregated_mif_storage.empty()) {
     VTR_LOG_ERROR(
       "write_mif: no aggregated MIF data; run build_architecture_bitstream "

@@ -50,8 +50,7 @@ bool MifLocationMap::empty() const { return data_port2phy_loc_map_.empty(); }
 
 void MifLocationMap::add(const std::string& port_name, const t_pl_loc& phy_loc,
                          t_pb_graph_node* pb_graph_node,
-                         const size_t& data_offset,
-                         const size_t& data_width) {
+                         const size_t& data_offset, const size_t& data_width) {
   VTR_ASSERT(nullptr != pb_graph_node);
   MifPortSlice slice;
   slice.pb_graph_node = pb_graph_node;

@@ -200,8 +200,8 @@ MifLocationMap build_fabric_mif_location_map(
     return MifLocationMap();
   }
 
-  const std::map<std::string, size_t> mif_data_ports = collect_mif_data_bus_ports(
-    circuit_lib, device_annotation, physical_nodes);
+  const std::map<std::string, size_t> mif_data_ports =
+    collect_mif_data_bus_ports(circuit_lib, device_annotation, physical_nodes);
   if (true == mif_data_ports.empty()) {
     VTR_LOG(
       "Found %zu annotated MIF primitive(s) but no is_mif_data_bus port; skip "
@@ -238,10 +238,10 @@ MifLocationMap build_fabric_mif_location_map(
 
     const vtr::Point<int>& grid_coord =
       module_manager.io_child_coordinates(top_module)[ichild];
-    register_grid_module_mif_locations(
-      mif_location_map, module_manager, grids, layer, child_module,
-      grid_coord.x(), grid_coord.y(), physical_nodes, mif_data_ports,
-      offset_counter);
+    register_grid_module_mif_locations(mif_location_map, module_manager, grids,
+                                       layer, child_module, grid_coord.x(),
+                                       grid_coord.y(), physical_nodes,
+                                       mif_data_ports, offset_counter);
   }
 
   VTR_LOG(

@@ -44,6 +44,8 @@ const MifStorage& MifPipeline::storage(Stage stage) const {
       return logical_;
     case Stage::PHYSICAL:
       return physical_;
+    case Stage::UNIFIED:
+      return unified_;
     default:
       return logical_;
   }
@@ -59,6 +61,7 @@ void MifPipeline::clear() {
   eblif_.clear();
   logical_.clear();
   physical_.clear();
+  unified_.clear();
   physical_segment_grid_coords_.clear();
 }
 
