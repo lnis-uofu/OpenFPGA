@@ -14,7 +14,7 @@ namespace openfpga {
  * A wrapper function to call the build_device_bitstream() in FPGA bitstream
  *******************************************************************/
 template <class T>
-int yosys_synth_template(T& openfpga_ctx, const Command& cmd,
+int yosys_synth_template(const Command& cmd,
                          const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("file");
 
