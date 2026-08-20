@@ -47,7 +47,6 @@ target_link_libraries(libopenfpga
                       libpugixml
                       libvpr
                       libopenfpgacapnproto
-                      libyosys
                       )
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   # For yosys header files
@@ -71,6 +70,10 @@ add_executable(openfpga ${EXEC_SOURCE})
 target_link_libraries(openfpga libopenfpga)
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   add_dependencies(openfpga yosys)
+  target_include_directories(openfpga PRIVATE 
+      ${YOSYS_CMAKE_SOURCE_DIR}
+      ${YOSYS_CMAKE_BINARY_DIR}
+  )
   # Define required directory and executable for yosys
   set(YOSYS_BUILD_SHARE_DIR    "${YOSYS_CMAKE_BINARY_DIR}/share")
   set(OPENFPGA_BUILD_SHARE_DIR "${CMAKE_CURRENT_BINARY_DIR}/share")

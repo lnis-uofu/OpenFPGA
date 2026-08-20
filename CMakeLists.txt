@@ -328,12 +328,6 @@ if (OPENFPGA_WITH_TEST)
     enable_testing()
 endif()
 
-# 
-# Sub-projects to apply current complier settings
-#
-add_subdirectory(libs)
-add_subdirectory(openfpga)
-
 # yosys compilation starts
 
 # Compilation options for yosys
@@ -403,6 +397,14 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(slang_slang PRIVATE "-w")
   endif()
 endif()
+
+# 
+# Sub-projects to apply current complier settings
+#
+add_subdirectory(libs)
+# The openfpga has to be included after yosys subdirectory. It requires some variables in Yosys cmake scripts
+add_subdirectory(openfpga)
+
 
 # For installer
 if (OPENFPGA_WITH_INSTALLER)
