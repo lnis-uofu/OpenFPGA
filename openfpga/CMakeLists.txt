@@ -88,6 +88,21 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       COMMENT "Post-build: Creating necessary symlinks for Yosys and ABC environment"
       VERBATIM
   )
+  # Special to compress yosys warnings
+  message(STATUS "OpenFPGA: suppress warnings from Yosys codes")
+  set(MY_TARGETS libopenfpga openfpga)
+  foreach(target_name IN LISTS MY_TARGETS)
+      # Get the current flags for the target
+      get_target_property(CURRENT_FLAGS ${target_name} COMPILE_OPTIONS)
+      
+      # Check if the target actually has flags to avoid CMake errors
+      if(CURRENT_FLAGS)
+          # Remove the exact flag (change "-Wshadow" to your flag)
+          list(REMOVE_ITEM CURRENT_FLAGS "-Wshadow" "-Wextra-semi" "-Wswitch-default")
+          # Save the cleaned flags back to the target
+          set_target_properties(${target_name} PROPERTIES COMPILE_OPTIONS "${CURRENT_FLAGS}")
+      endif()
+  endforeach()
 endif()
 
 if (OPENFPGA_ENABLE_STRICT_COMPILE)
