@@ -1060,6 +1060,7 @@ jobs:
           chmod +x build/vtr-verilog-to-routing/ace2/ace
           chmod +x build/vtr-verilog-to-routing/vpr/vpr
           chmod +x build/openfpga/openfpga
+          chmod +x build/openfpga/yosys-abc
           chmod +x build/yosys/yosys
           chmod +x build/yosys/yosys-abc
           chmod +x build/yosys/yosys-config
