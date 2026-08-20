@@ -588,10 +588,13 @@ jobs:
             build/openfpga/libopenfpga.a
             build/openfpga/openfpga_shell.so
             build/openfpga/openfpga
+            build/openfpga/share
+            build/openfpga/yosys-abc
             build/yosys/yosys
             build/yosys/yosys-abc
             build/yosys/yosys-config
             build/yosys/libyosys-abc.a
+            build/yosys/libyosys.so
             build/yosys/share
             build/yosys-smtbmc
             build/yosys-witness
