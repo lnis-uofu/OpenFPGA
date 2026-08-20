@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <string>
+
 /* Begin namespace openfpga */
 namespace openfpga {
 
