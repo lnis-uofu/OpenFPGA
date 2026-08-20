@@ -1072,7 +1072,9 @@ jobs:
           ldd build/yosys/yosys
       - name: ${{matrix.config.name}}_GCC-12_(Ubuntu 22.04)
         shell: bash
-        run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/build/yosys
+          source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         if: ${{ failure() }}
@@ -1121,6 +1123,7 @@ jobs:
           ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
           unset OPENFPGA_PATH
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/build/yosys
           source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
         uses: actions/upload-artifact@v7
