@@ -60,6 +60,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       _YOSYS_
       OPENFPGA_INCLUDE_YOSYS_COMMAND
   )
+  add_dependencies(libopenfpga yosys)
   target_link_libraries(libopenfpga
                         libyosys
                         )
