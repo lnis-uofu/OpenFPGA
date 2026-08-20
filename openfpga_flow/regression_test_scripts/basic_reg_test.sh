@@ -14,6 +14,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo -e "Test built-in yosys command"
+run-task basic_tests/yosys_in_shell $@
+
 echo -e "Test multiple runs of vpr"
 run-task basic_tests/vpr_standalone $@
 
