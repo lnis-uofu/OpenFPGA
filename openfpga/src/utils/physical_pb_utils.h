@@ -3,6 +3,7 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
+#include <string>
 #include <vector>
 
 #include "circuit_library.h"
@@ -30,6 +31,12 @@ void rec_update_physical_pb_from_operating_pb(
   const t_pb* op_pb, const t_pb_routes& pb_route, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose);
+
+/* Read an eblif .param / .attr from an atom. Returns false if the named
+ * field is missing. Invalid selector syntax is a fatal error. */
+bool read_atom_block_field(const AtomContext& atom_ctx,
+                           const AtomBlockId& atom_block,
+                           const std::string& selector, std::string& value);
 
 int identify_one_physical_pb_wire_lut_created_by_repack(
   PhysicalPb& physical_pb, const PhysicalPbId& lut_pb_id,

@@ -8,6 +8,7 @@
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
 #include "build_io_mapping_info.h"
+#include "build_mif.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
@@ -40,6 +41,22 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
   CommandOptionId opt_unused_mux_config = cmd.option("unused_mux_config");
+
+  /* Repack recorded AtomBlockId + param name on PhysicalPb. Read INIT from
+   * the atom netlist and aggregate per placed physical primitive. */
+  const int mif_status = build_physical_mif(
+    openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
+    g_vpr_ctx.atom(), openfpga_ctx.vpr_clustering_annotation(),
+    openfpga_ctx.vpr_placement_annotation());
+  if (CMD_EXEC_SUCCESS != mif_status) {
+    return mif_status;
+  }
+  const int unified_status = aggregate_unified_mif(
+    openfpga_ctx.bitstream_setting(), openfpga_ctx.mutable_mif_pipeline(),
+    openfpga_ctx.mif_location_map());
+  if (CMD_EXEC_SUCCESS != unified_status) {
+    return unified_status;
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
     int status = read_xml_architecture_bitstream(

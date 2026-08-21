@@ -494,6 +494,12 @@ static void read_xml_circuit_port(pugi::xml_node& xml_port,
               .as_bool(false));
   }
 
+  /* Identify if the port is a MIF preload data bus (global sliced bus). */
+  circuit_lib.set_port_is_mif_data_bus(
+    port, get_attribute(xml_port, "is_mif_data_bus", loc_data,
+                        pugiutil::ReqOpt::OPTIONAL)
+            .as_bool(false));
+
   /* Identify if the port is for mode selection, this is only applicable to SRAM
    * ports. By default, it will NOT be a mode selection port
    */

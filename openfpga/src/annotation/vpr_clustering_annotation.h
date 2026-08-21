@@ -4,6 +4,7 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <map>
+#include <vector>
 
 /* Header from vpr library */
 #include "clustered_netlist.h"
@@ -37,6 +38,8 @@ class VprClusteringAnnotation {
   bool is_truth_table_adapted(t_pb* pb) const;
   AtomNetlist::TruthTable truth_table(t_pb* pb) const;
   PhysicalPb physical_pb(const ClusterBlockId& block_id) const;
+  /* ClusterBlockIds that have a physical pb from repack. */
+  std::vector<ClusterBlockId> physical_pb_blocks() const;
   t_logical_block_type_ptr physical_equivalent_site(
     const ClusterBlockId& block_id) const;
 

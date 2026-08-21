@@ -19,6 +19,9 @@ struct bitstream_pcf_mode_setting_id_tag;
 struct bitstream_clock_routing_setting_id_tag;
 struct bitstream_interconnect_setting_id_tag;
 struct overwrite_bitstream_id_tag;
+struct mif_source_setting_id_tag;
+struct mif_address_map_setting_id_tag;
+struct mif_address_map_rule_id_tag;
 
 typedef vtr::StrongId<bitstream_pb_type_setting_id_tag>
   BitstreamPbTypeSettingId;
@@ -31,6 +34,9 @@ typedef vtr::StrongId<bitstream_clock_routing_setting_id_tag>
 typedef vtr::StrongId<bitstream_interconnect_setting_id_tag>
   BitstreamInterconnectSettingId;
 typedef vtr::StrongId<overwrite_bitstream_id_tag> OverwriteBitstreamId;
+typedef vtr::StrongId<mif_source_setting_id_tag> MifSourceSettingId;
+typedef vtr::StrongId<mif_address_map_setting_id_tag> MifAddressMapSettingId;
+typedef vtr::StrongId<mif_address_map_rule_id_tag> MifAddressMapRuleId;
 
 /* Short declaration of class */
 class BitstreamSetting;

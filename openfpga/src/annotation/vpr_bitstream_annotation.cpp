@@ -4,6 +4,7 @@
 #include "vpr_bitstream_annotation.h"
 
 #include "mux_bitstream_constants.h"
+#include "pb_type_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -74,6 +75,46 @@ ClockTreePinId VprBitstreamAnnotation::clock_tap_routing_pin(
   return ClockTreePinId::INVALID();
 }
 
+MifSourceAnnotationId VprBitstreamAnnotation::find_mif_source_by_pb_type(
+  const std::string& pb_type) const {
+  for (size_t id = 0; id < mif_source_pb_graph_nodes_.size(); ++id) {
+    const MifSourceAnnotationId source_id(id);
+    t_pb_graph_node* node = mif_source_pb_graph_nodes_[source_id];
+    if (nullptr == node || nullptr == node->pb_type) {
+      continue;
+    }
+    if (generate_pb_type_hierarchy_path(node->pb_type) == pb_type) {
+      return source_id;
+    }
+  }
+  return MifSourceAnnotationId::INVALID();
+}
+
+size_t VprBitstreamAnnotation::num_mif_sources() const {
+  return mif_source_pb_graph_nodes_.size();
+}
+
+std::string VprBitstreamAnnotation::mif_source_source(
+  const MifSourceAnnotationId& source_id) const {
+  VTR_ASSERT(source_id.is_valid() &&
+             size_t(source_id) < mif_source_sources_.size());
+  return mif_source_sources_[source_id];
+}
+
+std::string VprBitstreamAnnotation::mif_source_content(
+  const MifSourceAnnotationId& source_id) const {
+  VTR_ASSERT(source_id.is_valid() &&
+             size_t(source_id) < mif_source_contents_.size());
+  return mif_source_contents_[source_id];
+}
+
+t_pb_graph_node* VprBitstreamAnnotation::mif_source_pb_graph_node(
+  const MifSourceAnnotationId& source_id) const {
+  VTR_ASSERT(source_id.is_valid() &&
+             size_t(source_id) < mif_source_pb_graph_nodes_.size());
+  return mif_source_pb_graph_nodes_[source_id];
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -129,6 +170,23 @@ void VprBitstreamAnnotation::set_clock_tap_routing_pin(
       size_t(tree_pin_id), size_t(tree_id), size_t(result->second));
   }
   clock_tap_routing_pins_[tree_id] = tree_pin_id;
+}
+
+MifSourceAnnotationId VprBitstreamAnnotation::add_mif_source(
+  t_pb_graph_node* pb_graph_node, const std::string& source,
+  const std::string& content) {
+  VTR_ASSERT(nullptr != pb_graph_node);
+  const MifSourceAnnotationId source_id(mif_source_pb_graph_nodes_.size());
+  mif_source_pb_graph_nodes_.push_back(pb_graph_node);
+  mif_source_sources_.push_back(source);
+  mif_source_contents_.push_back(content);
+  return source_id;
+}
+
+void VprBitstreamAnnotation::clear_mif_sources() {
+  mif_source_pb_graph_nodes_.clear();
+  mif_source_sources_.clear();
+  mif_source_contents_.clear();
 }
 
 std::vector<std::string>

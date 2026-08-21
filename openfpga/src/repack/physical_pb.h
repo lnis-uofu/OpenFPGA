@@ -43,6 +43,21 @@ class PhysicalPb {
     FixedBitstreamInfo(const std::string& cont, const size_t& ofs)
       : content(cont), offset(ofs) {}
   };
+  /* Mapped AtomBlock used as eblif_ key.
+   * selector is the eblif field (e.g. ".param INIT") when source="eblif". */
+  struct MifDataInfo {
+    AtomBlockId atom_block = AtomBlockId::INVALID();
+    std::string operating_pb_path;
+    std::string source;
+    std::string selector;
+    MifDataInfo(const AtomBlockId& atom, const std::string& pb_path,
+                const std::string& source_type,
+                const std::string& field_selector)
+      : atom_block(atom),
+        operating_pb_path(pb_path),
+        source(source_type),
+        selector(field_selector) {}
+  };
 
  public: /* Public aggregators */
   physical_pb_range pbs() const;
@@ -65,6 +80,7 @@ class PhysicalPb {
     const PhysicalPbId& pb) const;
   std::vector<FixedBitstreamInfo> fixed_mode_select_bitstreams(
     const PhysicalPbId& pb) const;
+  std::vector<MifDataInfo> mif_data(const PhysicalPbId& pb) const;
 
  public: /* Public mutators */
   PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
@@ -88,6 +104,9 @@ class PhysicalPb {
   void add_fixed_mode_select_bitstream(const PhysicalPbId& pb,
                                        const std::string& fixed_bitstream,
                                        const size_t& offset);
+  void add_mif_data(const PhysicalPbId& pb, const AtomBlockId& atom_block,
+                    const std::string& operating_pb_path,
+                    const std::string& source, const std::string& selector);
 
  public: /* Public validators/invalidators */
   bool valid_pb_id(const PhysicalPbId& pb_id) const;
@@ -123,6 +142,7 @@ class PhysicalPb {
 
   vtr::vector<PhysicalPbId, std::vector<FixedBitstreamInfo>>
     fixed_mode_select_bitstreams_;
+  vtr::vector<PhysicalPbId, std::vector<MifDataInfo>> mif_data_;
 
   /* Fast lookup */
   std::map<const t_pb_graph_node*, PhysicalPbId> type2id_map_;

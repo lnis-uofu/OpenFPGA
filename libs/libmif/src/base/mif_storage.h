@@ -1,13 +1,41 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "mif_storage_fwd.h"
+#include "openfpga_port.h"
 #include "vtr_vector.h"
 
 /********************************************************************
- * In-memory MIF data aggregated from one or more read_mif calls.
+ * In-memory MIF payload used by MifPipeline:
+ *   - decoded logical MIF (temporary during aggregation)
+ *   - physical MIF per (t_pl_loc, t_pb_graph_node*)
+ *   - the FPGA-top unified MIF
+ *
+ * Decode binds each segment to its mif_source, stores data_width /
+ * addr_range, unpacks raw INIT into memory lines, and clears raw data.
+ *
+ * Each aggregated destination segment has:
+ *   - memory lines
+ *   - physical_pb, data_width, addr_range (for .mem header)
+ * Placement is the map key on MifPipeline, not a field here.
+ *
+ * Data members (indexed by MifSegmentId unless noted):
+ *   segment_ids_             - Valid segment id list (StrongId table)
+ *   segment_data_width_      - Data width in bits (-1 if unset)
+ *   segment_addr_range_      - Address range as BasicPort [lsb:msb];
+ *                              invalid BasicPort if unset
+ *   segment_physical_pb_     - Bound pb_type path (logical or physical)
+ *   segment_raw_data_        - Undecoded eblif .param INIT bit-string;
+ *                              cleared after decode in MifPipeline
+ *   segment_memory_line_ids_ - Per-segment list of memory-line ids
+ *
+ * Data members (indexed by MifMemoryLineId):
+ *   memory_line_ids_         - Valid memory-line id list (StrongId table)
+ *   memory_line_addresses_   - Word address of each memory line
+ *   memory_line_data_        - Word data as bit string, LSB at index 0
  *******************************************************************/
 namespace openfpga {
 
@@ -26,54 +54,58 @@ class MifStorage {
  public: /* Accessors: aggregates */
   segment_range segments() const;
   memory_line_range segment_memory_lines(const MifSegmentId& segment_id) const;
+  size_t num_segments() const;
 
  public: /* Accessors */
-  bool has_xy(const MifSegmentId& segment_id) const;
-  int coord_x(const MifSegmentId& segment_id) const;
-  int coord_y(const MifSegmentId& segment_id) const;
-  int addr_width(const MifSegmentId& segment_id) const;
   int data_width(const MifSegmentId& segment_id) const;
-  bool has_ram_id(const MifSegmentId& segment_id) const;
-  int ram_id(const MifSegmentId& segment_id) const;
-  int id_width(const MifSegmentId& segment_id) const;
+  /* Invalid BasicPort when no address range was set. */
+  const BasicPort& addr_range(const MifSegmentId& segment_id) const;
+  const std::string& physical_pb(const MifSegmentId& segment_id) const;
+  const std::string& raw_data(const MifSegmentId& segment_id) const;
+  bool has_physical_pb(const MifSegmentId& segment_id) const;
   uint64_t memory_line_address(const MifMemoryLineId& memory_line_id) const;
-  uint64_t memory_line_data(const MifMemoryLineId& memory_line_id) const;
+  /* Bit string with LSB at index 0 ('0'/'1'). */
+  const std::string& memory_line_data(
+    const MifMemoryLineId& memory_line_id) const;
   bool empty() const;
 
  public: /* Mutators */
   void clear();
   void remove_last_segment_if_empty();
   MifSegmentId create_segment();
-  void set_segment_coord_x(const MifSegmentId& segment_id, int x);
-  void set_segment_coord_y(const MifSegmentId& segment_id, int y);
-  void set_segment_addr_width(const MifSegmentId& segment_id, int width);
   void set_segment_data_width(const MifSegmentId& segment_id, int width);
-  void set_segment_ram_id(const MifSegmentId& segment_id, int ram_id);
-  void set_segment_id_width(const MifSegmentId& segment_id, int width);
-  void reset_segment(const MifSegmentId& segment_id);
+  void set_segment_addr_range(const MifSegmentId& segment_id,
+                              const BasicPort& addr_range);
+  void set_segment_physical_pb(const MifSegmentId& segment_id,
+                               const std::string& physical_pb);
+  void set_segment_raw_data(const MifSegmentId& segment_id,
+                            const std::string& raw_data);
+  /* Drop decoded memory lines for a segment (e.g. before eblif overwrite). */
+  void clear_segment_memory_lines(const MifSegmentId& segment_id);
   MifMemoryLineId create_memory_line(const MifSegmentId& segment_id,
-                                     uint64_t address, uint64_t data);
+                                     uint64_t address,
+                                     const std::string& data_bits);
+  void set_memory_line_data(const MifMemoryLineId& memory_line_id,
+                            const std::string& data_bits);
 
  public: /* Validators */
   bool valid_segment_id(const MifSegmentId& segment_id) const;
   bool valid_memory_line_id(const MifMemoryLineId& memory_line_id) const;
 
  private: /* Internal data */
+  /* Per-segment tables (indexed by MifSegmentId) */
   vtr::vector<MifSegmentId, MifSegmentId> segment_ids_;
-  vtr::vector<MifSegmentId, bool> segment_has_xy_;
-  vtr::vector<MifSegmentId, int> segment_coord_x_;
-  vtr::vector<MifSegmentId, int> segment_coord_y_;
-  vtr::vector<MifSegmentId, int> segment_addr_width_;
   vtr::vector<MifSegmentId, int> segment_data_width_;
-  vtr::vector<MifSegmentId, bool> segment_has_ram_id_;
-  vtr::vector<MifSegmentId, int> segment_ram_id_;
-  vtr::vector<MifSegmentId, int> segment_id_width_;
+  vtr::vector<MifSegmentId, BasicPort> segment_addr_range_;
+  vtr::vector<MifSegmentId, std::string> segment_physical_pb_;
+  vtr::vector<MifSegmentId, std::string> segment_raw_data_;
   vtr::vector<MifSegmentId, std::vector<MifMemoryLineId>>
     segment_memory_line_ids_;
 
+  /* Per-memory-line tables (indexed by MifMemoryLineId) */
   vtr::vector<MifMemoryLineId, MifMemoryLineId> memory_line_ids_;
   vtr::vector<MifMemoryLineId, uint64_t> memory_line_addresses_;
-  vtr::vector<MifMemoryLineId, uint64_t> memory_line_data_;
+  vtr::vector<MifMemoryLineId, std::string> memory_line_data_;
 };
 
 } /* namespace openfpga */

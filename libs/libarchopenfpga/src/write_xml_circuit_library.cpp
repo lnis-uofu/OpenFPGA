@@ -245,6 +245,10 @@ static void write_xml_circuit_port(std::fstream& fp, const char* fname,
     write_xml_attribute(fp, "is_data_io", "true");
   }
 
+  if (true == circuit_lib.port_is_mif_data_bus(port)) {
+    write_xml_attribute(fp, "is_mif_data_bus", "true");
+  }
+
   /* Global, reset, set port attributes */
   if (true == circuit_lib.port_is_global(port)) {
     write_xml_attribute(fp, "is_global", "true");

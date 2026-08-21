@@ -208,8 +208,10 @@ static void print_analysis_sdc_disable_global_ports(
       continue;
     }
 
-    /* Skip any gpio port here! */
-    if (true == fabric_global_port_info.global_port_is_io(global_port)) {
+    /* Skip any gpio / MIF data-bus pad here! */
+    if ((true == fabric_global_port_info.global_port_is_io(global_port)) ||
+        (true ==
+         fabric_global_port_info.global_port_is_mif_data(global_port))) {
       continue;
     }
 

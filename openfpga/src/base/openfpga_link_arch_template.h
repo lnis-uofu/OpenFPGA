@@ -208,7 +208,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 }
 
