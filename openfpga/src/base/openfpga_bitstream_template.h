@@ -4,11 +4,11 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
-#include "build_mif.h"
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
 #include "build_io_mapping_info.h"
+#include "build_mif.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
