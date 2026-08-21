@@ -9,7 +9,6 @@
 #include "vtr_log.h"
 
 /* Headers from openfpgautil library */
-#include "aggregate_mif_util.h"
 #include "bitstream_setting_xml_constants.h"
 #include "command_exit_codes.h"
 #include "lut_utils.h"
@@ -403,7 +402,8 @@ void rec_update_physical_pb_from_operating_pb(
              physical_pb_graph_node->hierarchical_type_name().c_str(),
              atom_ctx.netlist().block_name(atom_blk).c_str());
 
-    const std::string operating_pb_path = generate_mif_pb_path(op_pb);
+    const std::string operating_pb_path =
+      generate_pb_type_hierarchy_path(pb_type);
     const MifSourceAnnotationId mif_source_id =
       bitstream_annotation.find_mif_source_by_pb_type(operating_pb_path);
     if (mif_source_id.is_valid()) {

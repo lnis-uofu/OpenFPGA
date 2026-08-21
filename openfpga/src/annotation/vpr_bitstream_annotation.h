@@ -77,14 +77,10 @@ class VprBitstreamAnnotation {
   MifSourceAnnotationId find_mif_source_by_pb_type(
     const std::string& pb_type) const;
   size_t num_mif_sources() const;
-  std::string mif_source_pb_type(const MifSourceAnnotationId& source_id) const;
   std::string mif_source_source(const MifSourceAnnotationId& source_id) const;
   std::string mif_source_content(const MifSourceAnnotationId& source_id) const;
   t_pb_graph_node* mif_source_pb_graph_node(
     const MifSourceAnnotationId& source_id) const;
-  BasicPort mif_source_address_range(
-    const MifSourceAnnotationId& source_id) const;
-  BasicPort mif_source_data_range(const MifSourceAnnotationId& source_id) const;
 
  public: /* Public mutators */
   bool add_pb_type_bitstream_source(t_pb_type* pb_type,
@@ -99,12 +95,9 @@ class VprBitstreamAnnotation {
                                         const size_t& default_path_id);
   void set_clock_tap_routing_pin(const ClockTreeId& tree_id,
                                  const ClockTreePinId& tree_pin_id);
-  MifSourceAnnotationId add_mif_source(const std::string& pb_type,
+  MifSourceAnnotationId add_mif_source(t_pb_graph_node* pb_graph_node,
                                        const std::string& source,
-                                       const std::string& content,
-                                       t_pb_graph_node* pb_graph_node,
-                                       const BasicPort& address_range,
-                                       const BasicPort& data_range);
+                                       const std::string& content);
   void clear_mif_sources();
   std::map<t_pb_type*, BasicPort> pb_type_pcf_pins() const;
   void add_pcf_coord_pb_type(const std::array<size_t, 3>& coord,
@@ -134,13 +127,10 @@ class VprBitstreamAnnotation {
    */
   std::map<ClockTreeId, ClockTreePinId> clock_tap_routing_pins_;
 
-  vtr::vector<MifSourceAnnotationId, std::string> mif_source_pb_types_;
-  vtr::vector<MifSourceAnnotationId, std::string> mif_source_sources_;
-  vtr::vector<MifSourceAnnotationId, std::string> mif_source_contents_;
   vtr::vector<MifSourceAnnotationId, t_pb_graph_node*>
     mif_source_pb_graph_nodes_;
-  vtr::vector<MifSourceAnnotationId, BasicPort> mif_source_address_ranges_;
-  vtr::vector<MifSourceAnnotationId, BasicPort> mif_source_data_ranges_;
+  vtr::vector<MifSourceAnnotationId, std::string> mif_source_sources_;
+  vtr::vector<MifSourceAnnotationId, std::string> mif_source_contents_;
 
   std::map<t_pb_type*, std::vector<std::vector<char>>> pb_type_pcf_mode_bits_;
   std::map<t_pb_type*, BasicPort> pb_type_pcf_pins_;

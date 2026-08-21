@@ -23,7 +23,7 @@ namespace openfpga {
 /********************************************************************
  * Annotate mif_source setting based on VPR device information
  *  - Find the pb_type with the same path walker as other bitstream settings
- *  - Bind the matching pb_graph_node instance (optional trailing [N])
+ *  - Bind a pb_graph_node of that type (instance 0; instances are placement)
  *******************************************************************/
 static int annotate_mif_source_setting(
   const BitstreamSetting& bitstream_setting,
@@ -33,15 +33,7 @@ static int annotate_mif_source_setting(
   for (const MifSourceSettingId& source_id :
        bitstream_setting.mif_source_settings()) {
     const std::string pb_type = bitstream_setting.mif_source_pb_type(source_id);
-    const std::string type_path = strip_numeric_pb_index(pb_type);
-    int leaf_index = 0;
-    if (type_path != pb_type && pb_type.back() == ']') {
-      const size_t bracket_pos = pb_type.rfind('[');
-      leaf_index = std::stoi(
-        pb_type.substr(bracket_pos + 1, pb_type.size() - bracket_pos - 2));
-    }
-
-    const PbParser parser(type_path);
+    const PbParser parser(pb_type);
     std::vector<std::string> target_pb_type_names = parser.parents();
     target_pb_type_names.push_back(parser.leaf());
     const std::vector<std::string> target_pb_mode_names = parser.modes();
@@ -61,7 +53,7 @@ static int annotate_mif_source_setting(
         continue;
       }
 
-      /* try_find_* returns the type; descend the graph for instance [N]. */
+      /* try_find_* returns the type; descend the graph at instance 0. */
       t_pb_graph_node* pb_graph_node = lb_type.pb_graph_head;
       bool walk_ok = true;
       for (size_t i = 0; i < target_pb_mode_names.size(); ++i) {
@@ -71,27 +63,23 @@ static int annotate_mif_source_setting(
           (nullptr == mode) ? nullptr
                             : find_mode_child_pb_type(
                                 mode, target_pb_type_names[i + 1].c_str());
-        const int inst =
-          (i + 1 == target_pb_mode_names.size()) ? leaf_index : 0;
-        if (nullptr == mode || nullptr == child_type || inst < 0 ||
-            inst >= child_type->num_pb) {
+        if (nullptr == mode || nullptr == child_type ||
+            child_type->num_pb < 1) {
           walk_ok = false;
           break;
         }
         const int child_idx =
           static_cast<int>(child_type - mode->pb_type_children);
         pb_graph_node =
-          &(pb_graph_node->child_pb_graph_nodes[mode->index][child_idx][inst]);
+          &(pb_graph_node->child_pb_graph_nodes[mode->index][child_idx][0]);
       }
       if (false == walk_ok || pb_graph_node->pb_type != target_pb_type) {
         continue;
       }
 
       vpr_bitstream_annotation.add_mif_source(
-        pb_type, bitstream_setting.mif_source_source(source_id),
-        bitstream_setting.mif_source_content(source_id), pb_graph_node,
-        bitstream_setting.mif_source_address_range(source_id),
-        bitstream_setting.mif_source_data_range(source_id));
+        pb_graph_node, bitstream_setting.mif_source_source(source_id),
+        bitstream_setting.mif_source_content(source_id));
       link_success = true;
       break;
     }
