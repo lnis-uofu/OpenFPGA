@@ -186,9 +186,10 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
   std::map<std::string, MifStorage> decoded_hex;
   size_t num_eblif = 0;
   size_t num_others = 0;
-  for (const auto& cluster_physical_pb : clustering_annotation.physical_pbs()) {
-    const ClusterBlockId& cluster_block = cluster_physical_pb.first;
-    const PhysicalPb& physical_pb = cluster_physical_pb.second;
+  for (const ClusterBlockId& cluster_block :
+       clustering_annotation.physical_pb_blocks()) {
+    const PhysicalPb& physical_pb =
+      clustering_annotation.physical_pb(cluster_block);
     bool loc_ready = false;
     t_pl_loc loc;
 
