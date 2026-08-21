@@ -343,7 +343,7 @@ set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
 set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
 set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
 set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
-set(YOSYS_BUILD_WITH_TEST OFF CACHE BOOL "Disable unit tests in compiled yosys")
+set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
 
 #
 ## Search and link dependent packages
