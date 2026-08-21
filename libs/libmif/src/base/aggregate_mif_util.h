@@ -9,12 +9,10 @@
 #include "mif_storage.h"
 #include "openfpga_port.h"
 
-class t_pb;
-
 namespace openfpga {
 
-/* Convert a packed leaf pb into the hierarchy format used by mif_source. */
-std::string generate_mif_pb_path(const t_pb* leaf_pb);
+/* Copy bits [lsb:msb] from a logical MIF word (LSB at index 0). */
+std::string extract_mif_bits(const std::string& data, const BasicPort& bits);
 
 /* Copy one segment (metadata + memory lines) from src into dest. */
 void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,

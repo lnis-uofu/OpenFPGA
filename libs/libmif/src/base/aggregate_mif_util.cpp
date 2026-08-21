@@ -1,14 +1,11 @@
 #include "aggregate_mif_util.h"
 
-#include <algorithm>
-
-#include "vpr_types.h"
 #include "vtr_log.h"
 
 namespace openfpga {
 
-namespace {
-
+/* Slice logical-word bits selected by XML src_mif_bits.
+ * data is LSB-at-index-0; missing high bits are padded with '0'. */
 std::string extract_mif_bits(const std::string& data, const BasicPort& bits) {
   std::string out(bits.get_width(), '0');
   for (size_t i = 0; i < bits.get_width(); ++i) {
@@ -18,37 +15,6 @@ std::string extract_mif_bits(const std::string& data, const BasicPort& bits) {
     }
   }
   return out;
-}
-
-} /* namespace */
-
-std::string generate_mif_pb_path(const t_pb* leaf_pb) {
-  std::vector<std::string> path;
-  for (const t_pb* pb = leaf_pb; pb != nullptr; pb = pb->parent_pb) {
-    if (pb->pb_graph_node == nullptr) {
-      return std::string();
-    }
-
-    const t_pb_type* pb_type = pb->pb_graph_node->pb_type;
-    std::string component(pb_type->name);
-    if (pb->is_primitive()) {
-      component +=
-        "[" + std::to_string(pb->pb_graph_node->placement_index) + "]";
-    } else {
-      component += "[" + std::string(pb_type->modes[pb->mode].name) + "]";
-    }
-    path.push_back(component);
-  }
-
-  std::reverse(path.begin(), path.end());
-  std::string result;
-  for (const std::string& component : path) {
-    if (!result.empty()) {
-      result += ".";
-    }
-    result += component;
-  }
-  return result;
 }
 
 void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
