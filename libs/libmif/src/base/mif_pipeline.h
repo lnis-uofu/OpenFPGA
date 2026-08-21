@@ -42,10 +42,6 @@ class MifPipeline {
   const MifStorage& physical_mif(const t_pl_loc& phy_loc,
                                  t_pb_graph_node* pb_graph_node) const;
 
-  /* Flatten every placed physical MIF into one storage (write_mif
-   * fallback when top_mif_ was not built). */
-  MifStorage copy_all_physical_mifs() const;
-
   /* Bind mif_source metadata and decode raw INIT / hex words in place. */
   int decode_storage(MifStorage& storage,
                      const BitstreamSetting& bitstream_setting) const;

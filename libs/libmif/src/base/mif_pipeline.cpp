@@ -66,19 +66,6 @@ void MifPipeline::clear() {
   top_mif_.clear();
 }
 
-MifStorage MifPipeline::copy_all_physical_mifs() const {
-  MifStorage combined;
-  for (const auto& loc_entry : physical_mifs_) {
-    for (const auto& node_entry : loc_entry.second) {
-      const MifStorage& storage = node_entry.second;
-      for (const MifSegmentId& segment_id : storage.segments()) {
-        copy_mif_segment(storage, segment_id, combined);
-      }
-    }
-  }
-  return combined;
-}
-
 int MifPipeline::decode_storage(
   MifStorage& storage, const BitstreamSetting& bitstream_setting) const {
   for (const MifSegmentId& segment_id : storage.segments()) {

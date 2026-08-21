@@ -47,28 +47,17 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
-  /* FPGA-top unified MIF when location-map aggregation ran; else flatten
-   * every placed physical MIF from build_architecture_bitstream. */
+  /* FPGA-top unified MIF from location-map aggregation. */
   const openfpga::MifPipeline& mif_pipeline = openfpga_context.mif_pipeline();
-  const openfpga::MifStorage* aggregated_mif_storage = nullptr;
-  openfpga::MifStorage physical_fallback;
-  if (!mif_pipeline.top_mif().empty()) {
-    aggregated_mif_storage = &mif_pipeline.top_mif();
-  } else {
-    physical_fallback = mif_pipeline.copy_all_physical_mifs();
-    if (!physical_fallback.empty()) {
-      aggregated_mif_storage = &physical_fallback;
-    }
-  }
-  if (nullptr == aggregated_mif_storage) {
+  if (mif_pipeline.top_mif().empty()) {
     VTR_LOG_ERROR(
-      "write_mif: no aggregated MIF data; run build_architecture_bitstream "
-      "first (with mif_source / logical MIF)\n");
+      "write_mif: no FPGA-top MIF; run build_architecture_bitstream "
+      "first (with mif_source / mif location map)\n");
     return CMD_EXEC_FATAL_ERROR;
   }
 
   const int exec_status =
-    write_mif(cmd_context.option_value(cmd, opt_file), *aggregated_mif_storage);
+    write_mif(cmd_context.option_value(cmd, opt_file), mif_pipeline.top_mif());
   if (CMD_EXEC_SUCCESS == exec_status) {
     VTR_LOG("write_mif: wrote '%s'\n",
             cmd_context.option_value(cmd, opt_file).c_str());

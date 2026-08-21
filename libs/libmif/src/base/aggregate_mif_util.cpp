@@ -17,23 +17,6 @@ std::string extract_mif_bits(const std::string& data, const BasicPort& bits) {
   return out;
 }
 
-void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
-                      MifStorage& dest) {
-  const MifSegmentId new_seg = dest.create_segment();
-  dest.set_segment_physical_pb(new_seg, src.physical_pb(seg));
-  dest.set_segment_raw_data(new_seg, src.raw_data(seg));
-  if (src.addr_range(seg).is_valid()) {
-    dest.set_segment_addr_range(new_seg, src.addr_range(seg));
-  }
-  if (src.data_width(seg) >= 0) {
-    dest.set_segment_data_width(new_seg, src.data_width(seg));
-  }
-  for (const MifMemoryLineId& line_id : src.segment_memory_lines(seg)) {
-    dest.create_memory_line(new_seg, src.memory_line_address(line_id),
-                            src.memory_line_data(line_id));
-  }
-}
-
 bool unpack_yosys_init_param(
   const std::string& bits, size_t data_width, size_t depth,
   std::vector<std::pair<uint64_t, std::string>>& words) {

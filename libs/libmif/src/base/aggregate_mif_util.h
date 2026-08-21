@@ -14,10 +14,6 @@ namespace openfpga {
 /* Copy bits [lsb:msb] from a logical MIF word (LSB at index 0). */
 std::string extract_mif_bits(const std::string& data, const BasicPort& bits);
 
-/* Copy one segment (metadata + memory lines) from src into dest. */
-void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
-                      MifStorage& dest);
-
 bool unpack_yosys_init_param(
   const std::string& bits, size_t data_width, size_t depth,
   std::vector<std::pair<uint64_t, std::string>>& words);
