@@ -16,7 +16,9 @@
 #include "arch_util.h"
 #include "circuit_library_utils.h"
 #include "openfpga_naming.h"
+#include "openfpga_pb_parser.h"
 #include "openfpga_reserved_words.h"
+#include "pb_type_utils.h"
 #include "vpr_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -49,18 +51,26 @@ static std::vector<t_pb_graph_node*> collect_physical_mif_nodes(
   return physical_nodes;
 }
 
+/* Decide whether this fabric tile hosts a MIF primitive.
+ *
+ * MIF sources are named as a hierarchy, e.g.
+ *   memory[mem_8x16_dp].mem_8x16_dp
+ * Only the leading block name is compared with the tile:
+ *   "memory" <-> tile "memory"  ->  yes, this tile has that MIF
+ */
 static t_pb_graph_node* matching_physical_mif_node(
   t_physical_tile_type_ptr phy_tile_type,
   const std::vector<t_pb_graph_node*>& physical_nodes) {
   for (t_pb_graph_node* node : physical_nodes) {
-    t_pb_graph_node* root = node;
-    while (nullptr != root && false == root->is_root()) {
-      root = root->parent_pb_graph_node;
-    }
-    if (nullptr == root || nullptr == root->pb_type) {
+    if (nullptr == node || nullptr == node->pb_type) {
       continue;
     }
-    const std::string top_name = root->pb_type->name;
+    const PbParser parser(generate_pb_type_hierarchy_path(node->pb_type));
+    const std::string top_name =
+      parser.parents().empty() ? parser.leaf() : parser.parents().front();
+    if (true == top_name.empty()) {
+      continue;
+    }
     if (phy_tile_type->name == top_name) {
       return node;
     }
