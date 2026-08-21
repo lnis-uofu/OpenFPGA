@@ -7,7 +7,9 @@
 
 namespace openfpga {
 
-/* Read a MIF file and append parsed segments to storage. */
-int read_mif(const std::string& file_path, MifStorage& mif_storage);
+/* Parse a Verilog-style init.hex into one logical segment.
+ * Called from build_physical_mif after read_mif registered the path. */
+int read_mif_from_init_hex(const std::string& file_path,
+                           MifStorage& mif_storage, const std::string& pb_type);
 
 } /* namespace openfpga */

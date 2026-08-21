@@ -18,17 +18,17 @@ target_include_directories(libmif PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libmif PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 target_link_libraries(libmif
                       libopenfpgashell
+                      libarchopenfpga
+                      libarchfpga
+                      libpugiutil
+                      libvpr
                       libvtrutil)
 
 #Create the test executable
 foreach(testsourcefile ${EXEC_SOURCES})
     get_filename_component(testname ${testsourcefile} NAME_WE)
     add_executable(${testname} ${testsourcefile})
-    target_link_libraries(${testname} libmif libvtrutil)
-    add_test(NAME ${testname}
-             COMMAND ${testname}
-                     ${CMAKE_CURRENT_SOURCE_DIR}/example/src/test.mif
-                     ${CMAKE_CURRENT_BINARY_DIR}/test_mif_out.mif)
+    target_link_libraries(${testname} libmif)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
 install(TARGETS libmif

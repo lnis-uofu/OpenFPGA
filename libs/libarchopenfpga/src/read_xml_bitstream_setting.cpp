@@ -207,6 +207,241 @@ static void read_xml_overwrite_bitstream_setting(
 }
 
 /********************************************************************
+ * Parse a bare range string such as "[0:15]" into a BasicPort.
+ *******************************************************************/
+static openfpga::BasicPort parse_mif_range_attribute(
+  const std::string& range_attr, const pugi::xml_node& xml_node,
+  const pugiutil::loc_data& loc_data, const char* attr_name) {
+  openfpga::PortParser port_parser(range_attr,
+                                   openfpga::PORT_PARSER_SUPPORT_ALL_FORMAT,
+                                   true /* only_range */);
+  openfpga::BasicPort range_port = port_parser.port();
+  if (!port_parser.valid() || !range_port.is_valid()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_node),
+                   "Invalid %s='%s'. Expect a decimal range like [0:15]\n",
+                   attr_name, range_attr.c_str());
+  }
+  return range_port;
+}
+
+/********************************************************************
+ * Parse XML description for a <mif_source> XML node
+ *******************************************************************/
+static void read_xml_mif_source_setting(
+  pugi::xml_node& xml_mif_source, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& pb_type_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_PB_TYPE, loc_data)
+      .as_string();
+  const std::string& source_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_SOURCE, loc_data)
+      .as_string();
+  const std::string& content_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_CONTENT, loc_data)
+      .as_string();
+  const std::string& address_range_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE,
+                  loc_data)
+      .as_string();
+  const std::string& data_range_attr =
+    get_attribute(xml_mif_source, XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE, loc_data)
+      .as_string();
+
+  if (source_attr != XML_MIF_SOURCE_SOURCE_EBLIF &&
+      source_attr != XML_MIF_SOURCE_SOURCE_OTHERS &&
+      source_attr != XML_MIF_SOURCE_SOURCE_NONE) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+      "Invalid mif_source source='%s'. Expect '%s', '%s' or '%s'\n",
+      source_attr.c_str(), XML_MIF_SOURCE_SOURCE_EBLIF,
+      XML_MIF_SOURCE_SOURCE_OTHERS, XML_MIF_SOURCE_SOURCE_NONE);
+  }
+  /* content is a free-form eblif field selector (e.g. ".param INIT",
+   * ".param INIT_i"); exact name depends on the synth frontend. */
+  if (content_attr.empty()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+                   "mif_source content must not be empty\n");
+  }
+
+  const openfpga::BasicPort address_range =
+    parse_mif_range_attribute(address_range_attr, xml_mif_source, loc_data,
+                              XML_MIF_SOURCE_ATTRIBUTE_ADDRESS_RANGE);
+  const openfpga::BasicPort data_range =
+    parse_mif_range_attribute(data_range_attr, xml_mif_source, loc_data,
+                              XML_MIF_SOURCE_ATTRIBUTE_DATA_RANGE);
+  if (data_range.get_lsb() != 0) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mif_source),
+                   "mif_source data_range='%s' must start at 0\n",
+                   data_range_attr.c_str());
+  }
+
+  bitstream_setting.add_mif_source_setting(
+    pb_type_attr, source_attr, content_attr, address_range, data_range);
+}
+
+/********************************************************************
+ * Parse XML description for a <map> child under <mif_address_map>
+ *******************************************************************/
+static void read_xml_mif_address_map_rule(
+  pugi::xml_node& xml_map_rule, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting,
+  const MifAddressMapSettingId& map_id,
+  const openfpga::BasicPort& src_address_range,
+  const openfpga::BasicPort& src_data_range,
+  const openfpga::BasicPort& des_address_range,
+  const openfpga::BasicPort& des_data_range) {
+  const std::string& src_addr_range_attr =
+    get_attribute(xml_map_rule,
+                  XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE, loc_data)
+      .as_string();
+  const int des_addr_offset =
+    get_attribute(xml_map_rule,
+                  XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_ADDR_OFFSET, loc_data)
+      .as_int();
+  const std::string& src_mif_bits_attr =
+    get_attribute(xml_map_rule, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_MIF_BITS,
+                  loc_data)
+      .as_string();
+  const std::string& des_mif_bits_attr =
+    get_attribute(xml_map_rule, XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_MIF_BITS,
+                  loc_data)
+      .as_string();
+
+  const openfpga::BasicPort src_addr_range = parse_mif_range_attribute(
+    src_addr_range_attr, xml_map_rule, loc_data,
+    XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_ADDR_RANGE);
+  const openfpga::BasicPort src_mif_bits =
+    parse_mif_range_attribute(src_mif_bits_attr, xml_map_rule, loc_data,
+                              XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_SRC_MIF_BITS);
+  const openfpga::BasicPort des_mif_bits =
+    parse_mif_range_attribute(des_mif_bits_attr, xml_map_rule, loc_data,
+                              XML_MIF_ADDRESS_MAP_RULE_ATTRIBUTE_DES_MIF_BITS);
+
+  if (!src_address_range.contained(src_addr_range)) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_map_rule),
+      "src_addr_range='%s' is outside the address_range '[%zu:%zu]' defined "
+      "by mif_source for the same src_pb_type\n",
+      src_addr_range_attr.c_str(), src_address_range.get_lsb(),
+      src_address_range.get_msb());
+  }
+  if (!src_data_range.contained(src_mif_bits) ||
+      !des_data_range.contained(des_mif_bits) ||
+      src_mif_bits.get_width() != des_mif_bits.get_width()) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_map_rule),
+      "src_mif_bits='%s' and des_mif_bits='%s' must have equal widths and "
+      "fit their mif_source data ranges\n",
+      src_mif_bits_attr.c_str(), des_mif_bits_attr.c_str());
+  }
+
+  /* Apply des_addr_offset via BasicPort rotate APIs; dummy name for empty
+   * ranges. */
+  openfpga::BasicPort mapped_addr_range(
+    "tmp_des_addr", src_addr_range.get_lsb(), src_addr_range.get_msb());
+  bool rotate_success = true;
+  if (des_addr_offset >= 0) {
+    rotate_success =
+      mapped_addr_range.rotate(static_cast<size_t>(des_addr_offset));
+  } else {
+    rotate_success =
+      mapped_addr_range.counter_rotate(static_cast<size_t>(-des_addr_offset));
+  }
+  if (!rotate_success || !des_address_range.contained(mapped_addr_range)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_map_rule),
+                   "src_addr_range='%s' with des_addr_offset='%d' maps outside "
+                   "destination address_range='[%zu:%zu]'\n",
+                   src_addr_range_attr.c_str(), des_addr_offset,
+                   des_address_range.get_lsb(), des_address_range.get_msb());
+  }
+
+  bitstream_setting.add_mif_address_map_rule(
+    map_id, src_addr_range, des_addr_offset, src_mif_bits, des_mif_bits);
+}
+
+/********************************************************************
+ * Parse XML description for a <mif_address_map> XML node
+ *******************************************************************/
+static void read_xml_mif_address_map_setting(
+  pugi::xml_node& xml_mif_address_map, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& src_pb_type_attr =
+    get_attribute(xml_mif_address_map,
+                  XML_MIF_ADDRESS_MAP_ATTRIBUTE_SRC_PB_TYPE, loc_data)
+      .as_string();
+  const std::string& des_pb_type_attr =
+    get_attribute(xml_mif_address_map,
+                  XML_MIF_ADDRESS_MAP_ATTRIBUTE_DES_PB_TYPE, loc_data)
+      .as_string();
+
+  const MifSourceSettingId src_source_id =
+    bitstream_setting.find_mif_source_by_pb_type(src_pb_type_attr);
+  if (!bitstream_setting.valid_mif_source_setting_id(src_source_id)) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "mif_address_map src_pb_type='%s' has no matching "
+                   "mif_source definition\n",
+                   src_pb_type_attr.c_str());
+  }
+  if (bitstream_setting.mif_source_source(src_source_id) ==
+      XML_MIF_SOURCE_SOURCE_NONE) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "mif_address_map src_pb_type='%s' cannot use mif_source "
+                   "source='%s' (reserved for des_pb_type range metadata)\n",
+                   src_pb_type_attr.c_str(), XML_MIF_SOURCE_SOURCE_NONE);
+  }
+
+  const MifSourceSettingId des_source_id =
+    bitstream_setting.find_mif_source_by_pb_type(des_pb_type_attr);
+  if (!bitstream_setting.valid_mif_source_setting_id(des_source_id)) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "mif_address_map des_pb_type='%s' has no matching "
+                   "mif_source definition\n",
+                   des_pb_type_attr.c_str());
+  }
+  if (bitstream_setting.valid_mif_address_map_setting_id(
+        bitstream_setting.find_mif_address_map_by_src_pb_type(
+          src_pb_type_attr))) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "multiple mif_address_map entries use src_pb_type='%s'\n",
+                   src_pb_type_attr.c_str());
+  }
+
+  const MifAddressMapSettingId map_id =
+    bitstream_setting.add_mif_address_map_setting(src_pb_type_attr,
+                                                  des_pb_type_attr);
+  const openfpga::BasicPort src_address_range =
+    bitstream_setting.mif_source_address_range(src_source_id);
+  const openfpga::BasicPort src_data_range =
+    bitstream_setting.mif_source_data_range(src_source_id);
+  const openfpga::BasicPort des_address_range =
+    bitstream_setting.mif_source_address_range(des_source_id);
+  const openfpga::BasicPort des_data_range =
+    bitstream_setting.mif_source_data_range(des_source_id);
+
+  bool has_map_rule = false;
+  for (pugi::xml_node xml_child : xml_mif_address_map.children()) {
+    if (xml_child.name() != std::string(XML_MIF_ADDRESS_MAP_RULE_NODE_NAME)) {
+      bad_tag(xml_child, loc_data, xml_mif_address_map,
+              {XML_MIF_ADDRESS_MAP_RULE_NODE_NAME});
+    }
+    read_xml_mif_address_map_rule(xml_child, loc_data, bitstream_setting,
+                                  map_id, src_address_range, src_data_range,
+                                  des_address_range, des_data_range);
+    has_map_rule = true;
+  }
+
+  if (!has_map_rule) {
+    archfpga_throw(loc_data.filename_c_str(),
+                   loc_data.line(xml_mif_address_map),
+                   "mif_address_map requires at least one <map> child\n");
+  }
+}
+
+/********************************************************************
  * Parse XML codes about <openfpga_bitstream_setting> to an object
  *******************************************************************/
 int read_xml_bitstream_setting(pugi::xml_node& Node,
@@ -248,11 +483,16 @@ int read_xml_bitstream_setting(pugi::xml_node& Node,
     } else if (xml_child.name() == std::string(XML_NON_FABRIC_NODE_NAME)) {
       read_xml_non_fabric_bitstream_setting(xml_child, loc_data,
                                             bitstream_setting);
-    } else {
-      VTR_ASSERT_SAFE(xml_child.name() ==
-                      std::string(XML_OVERWRITE_BITSTREAM_NODE_NAME));
+    } else if (xml_child.name() ==
+               std::string(XML_OVERWRITE_BITSTREAM_NODE_NAME)) {
       read_xml_overwrite_bitstream_setting(xml_child, loc_data,
                                            bitstream_setting);
+    } else if (xml_child.name() == std::string(XML_MIF_SOURCE_NODE_NAME)) {
+      read_xml_mif_source_setting(xml_child, loc_data, bitstream_setting);
+    } else {
+      VTR_ASSERT_SAFE(xml_child.name() ==
+                      std::string(XML_MIF_ADDRESS_MAP_NODE_NAME));
+      read_xml_mif_address_map_setting(xml_child, loc_data, bitstream_setting);
     }
   }
 

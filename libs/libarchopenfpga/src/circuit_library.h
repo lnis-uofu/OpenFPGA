@@ -105,6 +105,8 @@
  * - port_is_io: specify if this port is an io port
  * - port_is_data_io: specify if this port is an io port that can be mapped to a
  *signal from netlist
+ * - port_is_mif_data_bus: specify if this global port is a MIF preload data bus
+ *whose bits are sliced per memory instance on the fabric top module
  * - port_is_global: specify if this port is a global signal shared by other
  *circuit model
  * - port_is_reset: specify if this port is a reset signal which needs special
@@ -364,6 +366,7 @@ class CircuitLibrary {
   size_t port_default_value(const CircuitPortId& circuit_port_id) const;
   bool port_is_io(const CircuitPortId& circuit_port_id) const;
   bool port_is_data_io(const CircuitPortId& circuit_port_id) const;
+  bool port_is_mif_data_bus(const CircuitPortId& circuit_port_id) const;
   bool port_is_mode_select(const CircuitPortId& circuit_port_id) const;
   bool port_is_global(const CircuitPortId& circuit_port_id) const;
   bool port_is_reset(const CircuitPortId& circuit_port_id) const;
@@ -470,6 +473,8 @@ class CircuitLibrary {
   void set_port_is_io(const CircuitPortId& circuit_port_id, const bool& is_io);
   void set_port_is_data_io(const CircuitPortId& circuit_port_id,
                            const bool& is_data_io);
+  void set_port_is_mif_data_bus(const CircuitPortId& circuit_port_id,
+                                const bool& is_mif_data_bus);
   void set_port_is_mode_select(const CircuitPortId& circuit_port_id,
                                const bool& is_mode_select);
   void set_port_is_global(const CircuitPortId& circuit_port_id,
@@ -686,6 +691,7 @@ class CircuitLibrary {
   vtr::vector<CircuitPortId, size_t> port_default_values_;
   vtr::vector<CircuitPortId, bool> port_is_io_;
   vtr::vector<CircuitPortId, bool> port_is_data_io_;
+  vtr::vector<CircuitPortId, bool> port_is_mif_data_bus_;
   vtr::vector<CircuitPortId, bool> port_is_mode_select_;
   vtr::vector<CircuitPortId, bool> port_is_global_;
   vtr::vector<CircuitPortId, bool> port_is_reset_;

@@ -21,10 +21,22 @@ std::vector<ClusterBlockId> VprPlacementAnnotation::grid_blocks(
   return blocks_[grid_coord.x()][grid_coord.y()];
 }
 
+bool VprPlacementAnnotation::has_block_location(
+  const ClusterBlockId& block_id) const {
+  return block_locations_.find(block_id) != block_locations_.end();
+}
+
+const std::array<size_t, 3>& VprPlacementAnnotation::block_location(
+  const ClusterBlockId& block_id) const {
+  VTR_ASSERT(has_block_location(block_id));
+  return block_locations_.at(block_id);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
 void VprPlacementAnnotation::init_mapped_blocks(const DeviceGrid& grids) {
+  block_locations_.clear();
   /* Size the block array with grid sizes */
   blocks_.resize({grids.width(), grids.height()});
 
@@ -48,6 +60,7 @@ void VprPlacementAnnotation::add_mapped_block(
             grid_coord.y(), z);
   }
   blocks_[grid_coord.x()][grid_coord.y()][z] = mapped_block;
+  block_locations_[mapped_block] = {grid_coord.x(), grid_coord.y(), z};
 }
 
 } /* End namespace openfpga*/

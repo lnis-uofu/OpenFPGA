@@ -1,6 +1,8 @@
 #ifndef VPR_PLACEMENT_ANNOTATION_H
 #define VPR_PLACEMENT_ANNOTATION_H
 
+#include <array>
+
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
@@ -24,6 +26,9 @@ class VprPlacementAnnotation {
  public: /* Public accessors */
   std::vector<ClusterBlockId> grid_blocks(
     const vtr::Point<size_t>& grid_coord) const;
+  bool has_block_location(const ClusterBlockId& block_id) const;
+  const std::array<size_t, 3>& block_location(
+    const ClusterBlockId& block_id) const;
 
  public: /* Public mutators */
   void init_mapped_blocks(const DeviceGrid& grids);
@@ -44,6 +49,8 @@ class VprPlacementAnnotation {
    * Unmapped blocks will be labelled as an invalid id in the vector
    */
   vtr::Matrix<std::vector<ClusterBlockId>> blocks_;
+  /* Reverse lookup: ClusterBlockId -> (x, y, z/subtile). */
+  std::map<ClusterBlockId, std::array<size_t, 3>> block_locations_;
 };
 
 } /* End namespace openfpga*/

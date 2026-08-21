@@ -84,6 +84,12 @@ bool FabricGlobalPortInfo::global_port_is_io(
   return global_port_is_io_[global_port_id];
 }
 
+bool FabricGlobalPortInfo::global_port_is_mif_data(
+  const FabricGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  return global_port_is_mif_data_[global_port_id];
+}
+
 size_t FabricGlobalPortInfo::global_port_default_value(
   const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
@@ -107,6 +113,7 @@ FabricGlobalPortId FabricGlobalPortInfo::create_global_port(
   global_port_is_bl_.push_back(false);
   global_port_is_wl_.push_back(false);
   global_port_is_io_.push_back(false);
+  global_port_is_mif_data_.push_back(false);
   global_port_is_config_enable_.push_back(false);
   global_port_default_values_.push_back(0);
 
@@ -165,6 +172,12 @@ void FabricGlobalPortInfo::set_global_port_is_io(
   const FabricGlobalPortId& global_port_id, const bool& is_io) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_io_[global_port_id] = is_io;
+}
+
+void FabricGlobalPortInfo::set_global_port_is_mif_data(
+  const FabricGlobalPortId& global_port_id, const bool& is_mif_data) {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  global_port_is_mif_data_[global_port_id] = is_mif_data;
 }
 
 void FabricGlobalPortInfo::set_global_port_default_value(

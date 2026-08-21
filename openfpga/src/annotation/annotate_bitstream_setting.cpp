@@ -2,8 +2,7 @@
  * This file includes functions that are used to annotate pb_type
  * from VPR to OpenFPGA
  *******************************************************************/
-#include <cmath>
-#include <iterator>
+#include <string>
 
 /* Headers from openfpgashell library */
 #include "command_exit_codes.h"
@@ -14,11 +13,87 @@
 
 /* Headers from openfpgautil library */
 #include "annotate_bitstream_setting.h"
+#include "openfpga_pb_parser.h"
 #include "openfpga_tokenizer.h"
 #include "pb_type_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/********************************************************************
+ * Annotate mif_source setting based on VPR device information
+ *  - Find the pb_type with the same path walker as other bitstream settings
+ *  - Bind a pb_graph_node of that type (instance 0; instances are placement)
+ *******************************************************************/
+static int annotate_mif_source_setting(
+  const BitstreamSetting& bitstream_setting,
+  const DeviceContext& vpr_device_ctx,
+  VprBitstreamAnnotation& vpr_bitstream_annotation) {
+  vpr_bitstream_annotation.clear_mif_sources();
+  for (const MifSourceSettingId& source_id :
+       bitstream_setting.mif_source_settings()) {
+    const std::string pb_type = bitstream_setting.mif_source_pb_type(source_id);
+    const PbParser parser(pb_type);
+    std::vector<std::string> target_pb_type_names = parser.parents();
+    target_pb_type_names.push_back(parser.leaf());
+    const std::vector<std::string> target_pb_mode_names = parser.modes();
+
+    bool link_success = false;
+    for (const t_logical_block_type& lb_type :
+         vpr_device_ctx.logical_block_types) {
+      if (nullptr == lb_type.pb_type || nullptr == lb_type.pb_graph_head) {
+        continue;
+      }
+      if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
+        continue;
+      }
+      t_pb_type* target_pb_type = try_find_pb_type_with_given_path(
+        lb_type.pb_type, target_pb_type_names, target_pb_mode_names);
+      if (nullptr == target_pb_type) {
+        continue;
+      }
+
+      /* try_find_* returns the type; descend the graph at instance 0. */
+      t_pb_graph_node* pb_graph_node = lb_type.pb_graph_head;
+      bool walk_ok = true;
+      for (size_t i = 0; i < target_pb_mode_names.size(); ++i) {
+        t_mode* mode = find_pb_type_mode(pb_graph_node->pb_type,
+                                         target_pb_mode_names[i].c_str());
+        t_pb_type* child_type =
+          (nullptr == mode) ? nullptr
+                            : find_mode_child_pb_type(
+                                mode, target_pb_type_names[i + 1].c_str());
+        if (nullptr == mode || nullptr == child_type ||
+            child_type->num_pb < 1) {
+          walk_ok = false;
+          break;
+        }
+        const int child_idx =
+          static_cast<int>(child_type - mode->pb_type_children);
+        pb_graph_node =
+          &(pb_graph_node->child_pb_graph_nodes[mode->index][child_idx][0]);
+      }
+      if (false == walk_ok || pb_graph_node->pb_type != target_pb_type) {
+        continue;
+      }
+
+      vpr_bitstream_annotation.add_mif_source(
+        pb_graph_node, bitstream_setting.mif_source_source(source_id),
+        bitstream_setting.mif_source_content(source_id));
+      link_success = true;
+      break;
+    }
+
+    if (false == link_success) {
+      VTR_LOG_ERROR(
+        "Fail to find a pb_graph_node for mif_source pb_type '%s' from VPR "
+        "architecture description\n",
+        pb_type.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  return CMD_EXEC_SUCCESS;
+}
 
 /********************************************************************
  * Annotate bitstream setting based on VPR device information
@@ -507,6 +582,12 @@ int annotate_bitstream_setting(
   VprDeviceAnnotation& vpr_device_annotation,
   VprBitstreamAnnotation& vpr_bitstream_annotation) {
   int status = CMD_EXEC_SUCCESS;
+
+  status = annotate_mif_source_setting(bitstream_setting, vpr_device_ctx,
+                                       vpr_bitstream_annotation);
+  if (status == CMD_EXEC_FATAL_ERROR) {
+    return status;
+  }
 
   status = annotate_bitstream_pb_type_setting(bitstream_setting, vpr_device_ctx,
                                               vpr_bitstream_annotation);

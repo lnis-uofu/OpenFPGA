@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <stddef.h>
+#include <stdint.h>
 
 #include <string>
 #include <vector>
@@ -54,6 +55,32 @@ std::vector<char> itobin_charvec(const size_t& in_int, const size_t& bin_len);
 size_t bintoi_charvec(const std::vector<char>& bin);
 
 std::vector<std::string> expand_dont_care_bin_str(const std::string& input_str);
+
+/* Number of hex digits needed to cover width_bits (ceil(width/4)). */
+int hex_digits_for_width(const int& width_bits);
+
+/********************************************************************
+ * Convert a hex digit string (optional 0x prefix) into a bit string with
+ * LSB at index 0. width_bits selects how many bits to produce (zero-extend
+ * or truncate high bits that must be 0 when truncating).
+ * Returns empty string on invalid input.
+ ********************************************************************/
+std::string hex_to_bit_string(const std::string& hex_digits,
+                              const size_t& width_bits);
+
+/********************************************************************
+ * Format a bit string (LSB at index 0) as zero-padded uppercase hex
+ * (Verilog $readmemh style, no 0x prefix). width_bits selects digit count;
+ * if <= 0, bits.size() is used.
+ ********************************************************************/
+std::string format_hex_word(const std::string& bits_lsb0,
+                            const int& width_bits);
+
+/********************************************************************
+ * Resize an LSB-at-index-0 bit string to target_width (zero-extend, or
+ * truncate high bits that must be 0). Requires only '0'/'1'.
+ ********************************************************************/
+bool normalize_bit_string_width(std::string& bits, size_t target_width);
 
 }  // namespace openfpga
 

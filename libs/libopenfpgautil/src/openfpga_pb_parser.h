@@ -18,6 +18,13 @@
 /* namespace openfpga begins */
 namespace openfpga {
 
+/********************************************************************
+ * Strip a trailing numeric leaf index used by instance paths:
+ *   foo.bar[3] -> foo.bar
+ * Non-numeric brackets (e.g. mode names) are left unchanged.
+ *******************************************************************/
+std::string strip_numeric_pb_index(const std::string& pb_type);
+
 /************************************************************************
  * Class PbParser: pb_type name with full hierarchy parser
  * Supported pb_type definition:
