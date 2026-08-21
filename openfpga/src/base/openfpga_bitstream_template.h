@@ -4,7 +4,7 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
-#include "annotate_mif.h"
+#include "build_mif.h"
 #include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
