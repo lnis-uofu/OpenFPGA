@@ -10,6 +10,8 @@ As OpenFPGA integrates various tools, the commands are categorized into differen
 
    basic_commands
 
+   yosys_commands
+
    vpr_commands
 
    setup_commands
