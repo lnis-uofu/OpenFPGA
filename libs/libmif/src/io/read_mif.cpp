@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "aggregate_mif_util.h"
 #include "openfpga_decode.h"
 #include "vtr_log.h"
 

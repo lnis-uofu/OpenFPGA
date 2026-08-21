@@ -354,4 +354,29 @@ std::string format_hex_word(const std::string& bits_lsb0,
   return hex;
 }
 
+/********************************************************************
+ * Resize an LSB-at-index-0 bit string to target_width.
+ ********************************************************************/
+bool normalize_bit_string_width(std::string& bits, const size_t target_width) {
+  for (const char bit : bits) {
+    if (bit != '0' && bit != '1') {
+      return false;
+    }
+  }
+  if (bits.size() == target_width) {
+    return true;
+  }
+  if (bits.size() < target_width) {
+    bits.append(target_width - bits.size(), '0');
+    return true;
+  }
+  for (size_t i = target_width; i < bits.size(); ++i) {
+    if (bits[i] == '1') {
+      return false;
+    }
+  }
+  bits.resize(target_width);
+  return true;
+}
+
 } /* end namespace openfpga */

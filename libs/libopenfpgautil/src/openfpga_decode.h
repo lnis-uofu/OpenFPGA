@@ -76,6 +76,12 @@ std::string hex_to_bit_string(const std::string& hex_digits,
 std::string format_hex_word(const std::string& bits_lsb0,
                             const int& width_bits);
 
+/********************************************************************
+ * Resize an LSB-at-index-0 bit string to target_width (zero-extend, or
+ * truncate high bits that must be 0). Requires only '0'/'1'.
+ ********************************************************************/
+bool normalize_bit_string_width(std::string& bits, size_t target_width);
+
 }  // namespace openfpga
 
 #endif

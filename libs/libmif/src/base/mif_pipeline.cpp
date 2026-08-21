@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "aggregate_mif_util.h"
+#include "openfpga_decode.h"
 #include "vtr_log.h"
 
 namespace openfpga {
@@ -103,8 +104,7 @@ int MifPipeline::decode_storage(
       for (const MifMemoryLineId& line_id :
            storage.segment_memory_lines(segment_id)) {
         std::string data_bits = storage.memory_line_data(line_id);
-        if (!is_valid_bit_string(data_bits) ||
-            !normalize_bit_string_width(data_bits, data_range.get_width())) {
+        if (!normalize_bit_string_width(data_bits, data_range.get_width())) {
           VTR_LOG_ERROR(
             "mif_pipeline: cannot fit hex word at addr %lu into data_range "
             "width %zu for pb_type '%s'\n",
@@ -204,8 +204,7 @@ int MifPipeline::aggregate_logical_into_physical(
       if (!src_addr_range.is_valid() ||
           logical_addr < src_addr_range.get_lsb() ||
           logical_addr > src_addr_range.get_msb() ||
-          logical_data.size() != src_word_width ||
-          !is_valid_bit_string(logical_data)) {
+          logical_data.size() != src_word_width) {
         VTR_LOG_ERROR(
           "mif_pipeline: invalid address/data in segment %zu for "
           "mif_source pb_type '%s'\n",

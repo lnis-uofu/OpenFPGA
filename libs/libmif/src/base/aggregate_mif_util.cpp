@@ -34,32 +34,6 @@ void copy_mif_segment(const MifStorage& src, const MifSegmentId& seg,
   }
 }
 
-bool is_valid_bit_string(const std::string& bits) {
-  for (const char bit : bits) {
-    if (bit != '0' && bit != '1') {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool normalize_bit_string_width(std::string& bits, const size_t target_width) {
-  if (bits.size() == target_width) {
-    return true;
-  }
-  if (bits.size() < target_width) {
-    bits.append(target_width - bits.size(), '0');
-    return true;
-  }
-  for (size_t i = target_width; i < bits.size(); ++i) {
-    if (bits[i] == '1') {
-      return false;
-    }
-  }
-  bits.resize(target_width);
-  return true;
-}
-
 bool unpack_yosys_init_param(
   const std::string& bits, size_t data_width, size_t depth,
   std::vector<std::pair<uint64_t, std::string>>& words) {
