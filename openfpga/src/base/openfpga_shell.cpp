@@ -10,6 +10,9 @@
 #include "openfpga_spice_command.h"
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
+#ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
+#include "openfpga_yosys_command.h"
+#endif
 #include "vpr_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
@@ -18,6 +21,11 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add vpr commands */
   openfpga::add_vpr_commands(shell_);
+
+#ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
+  /* Add yosys commands */
+  openfpga::add_openfpga_yosys_commands(shell_);
+#endif
 
   /* Add openfpga setup commands */
   openfpga::add_openfpga_setup_commands(shell_);

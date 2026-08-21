@@ -328,12 +328,6 @@ if (OPENFPGA_WITH_TEST)
     enable_testing()
 endif()
 
-# 
-# Sub-projects to apply current complier settings
-#
-add_subdirectory(libs)
-add_subdirectory(openfpga)
-
 # yosys compilation starts
 
 # Compilation options for yosys
@@ -349,7 +343,7 @@ set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
 set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
 set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
 set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
-set(YOSYS_BUILD_WITH_TEST OFF CACHE BOOL "Disable unit tests in compiled yosys")
+set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
 
 #
 ## Search and link dependent packages
@@ -403,6 +397,14 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(slang_slang PRIVATE "-w")
   endif()
 endif()
+
+# 
+# Sub-projects to apply current complier settings
+#
+add_subdirectory(libs)
+# The openfpga has to be included after yosys subdirectory. It requires some variables in Yosys cmake scripts
+add_subdirectory(openfpga)
+
 
 # For installer
 if (OPENFPGA_WITH_INSTALLER)

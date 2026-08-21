@@ -4,6 +4,7 @@ WORKDIR /opt/openfpga
 COPY . /opt/openfpga
 RUN chmod +x build/vtr-verilog-to-routing/abc/abc build/vtr-verilog-to-routing/ace2/ace build/openfpga/openfpga build/vtr-verilog-to-routing/vpr/vpr
 RUN chmod +x build/yosys/yosys build/yosys/yosys-abc build/yosys/yosys-config
+RUN chmod +x build/openfpga/yosys-abc
 ENV PATH="/opt/openfpga/build/openfpga:/opt/openfpga/build/yosys:${PATH}"
 ENV PATH="/opt/openfpga/build/vtr-verilog-to-routing/ace2:/opt/openfpga/build/vtr-verilog-to-routing/abc:/opt/openfpga/build/vtr-verilog-to-routing/vpr:${PATH}"
 ENV OPENFPGA_PATH="/opt/openfpga"
