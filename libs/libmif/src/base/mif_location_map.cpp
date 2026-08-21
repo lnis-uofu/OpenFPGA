@@ -18,21 +18,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-namespace {
-
-const std::map<t_pl_loc, MifPortSlice> k_empty_phy_locs;
-
-} /* namespace */
-
-const std::map<t_pl_loc, MifPortSlice>& MifLocationMap::phy_locs(
-  const std::string& port_name) const {
-  auto result = data_port2phy_loc_map_.find(port_name);
-  if (result == data_port2phy_loc_map_.end()) {
-    return k_empty_phy_locs;
-  }
-  return result->second;
-}
-
 const std::map<std::string, std::map<t_pl_loc, MifPortSlice>>&
 MifLocationMap::data_port2phy_loc_map() const {
   return data_port2phy_loc_map_;
