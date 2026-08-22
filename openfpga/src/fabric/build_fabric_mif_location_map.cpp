@@ -230,8 +230,8 @@ MifLocationMap build_fabric_mif_location_map(
           module_manager.io_child_coordinates(child_module)[igrid];
         register_grid_module_mif_locations(
           mif_location_map, module_manager, grids, layer, grid_module,
-          curr_grid_coord.x(), curr_grid_coord.y(), physical_nodes, mif_data_ports,
-          offset_counter);
+          curr_grid_coord.x(), curr_grid_coord.y(), physical_nodes,
+          mif_data_ports, offset_counter);
       }
       continue;
     }
