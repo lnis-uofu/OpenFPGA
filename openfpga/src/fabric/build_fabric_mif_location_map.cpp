@@ -226,17 +226,17 @@ MifLocationMap build_fabric_mif_location_map(
            igrid < module_manager.io_children(child_module).size(); ++igrid) {
         const ModuleId grid_module =
           module_manager.io_children(child_module)[igrid];
-        const vtr::Point<int>& grid_coord =
+        vtr::Point<int> curr_grid_coord =
           module_manager.io_child_coordinates(child_module)[igrid];
         register_grid_module_mif_locations(
           mif_location_map, module_manager, grids, layer, grid_module,
-          grid_coord.x(), grid_coord.y(), physical_nodes, mif_data_ports,
+          curr_grid_coord.x(), curr_grid_coord.y(), physical_nodes, mif_data_ports,
           offset_counter);
       }
       continue;
     }
 
-    const vtr::Point<int>& grid_coord =
+    vtr::Point<int> grid_coord =
       module_manager.io_child_coordinates(top_module)[ichild];
     register_grid_module_mif_locations(mif_location_map, module_manager, grids,
                                        layer, child_module, grid_coord.x(),
