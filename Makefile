@@ -31,26 +31,64 @@ INSTALL_DOC ?= ON
 #INSTALL_DOC := $(shell echo ${INSTALL_DOC} | tr '[:upper:]' '[lower]')
 INTERNAL_CMAKE_FLAGS += -DOPENFPGA_INSTALL_DOC=${INSTALL_DOC}
 
+#Detect the operating system
+UNAME_S := $(shell uname -s)
+# Cmake generator has to be Ninja on MSVC
+CMAKE_GEN = Unix Makefiles
+ifeq ($(OS),Windows_NT)
+CMAKE_GEN = Ninja
+# Msys2 can still use Linux gcc
+ifeq ($(MSYSTEM),MINGW64)
+CMAKE_GEN = Unix Makefiles
+endif
+endif
+ifeq ($(UNAME_S),Darwin)
+CMAKE_GEN = Ninja
+endif
+
 # Allow users to pass parameters to cmake, without defining build types
 # e.g. make CMAKE_FLAGS="-DCMAKE_CXX_COMPILER=g++-9'
-override CMAKE_FLAGS := -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${INTERNAL_CMAKE_FLAGS} ${CMAKE_FLAGS}
+override CMAKE_FLAGS := -G '${CMAKE_GEN}' -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${INTERNAL_CMAKE_FLAGS} ${CMAKE_FLAGS}
+
+ifeq ($(OS),Windows_NT)
+# The curl path should be defined by user. Try to get one from system
+CURL_PATH:=$(shell where curl.exe 2>nul | head -n 1)
+# VCPKG root is a system variable env:VCPKG in power shell. User can override by using VCPKG_PATH when calling the makefile
+VCPKG_CMAKE_PATH:=$(subst \,/,$(VCPKG_PATH))
+override CMAKE_FLAGS := ${CMAKE_PARAMS} -DVTR_IPO_BUILD=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_SWIG=OFF -DOPENFPGA_WITH_YOSYS=OFF
+# Msys2 can still use Linux gcc
+ifneq ($(MSYSTEM),MINGW64)
+override CMAKE_FLAGS := ${CMAKE_PARAMS} -DWGET="${CURL_PATH}" -DCMAKE_TOOLCHAIN_FILE="${VCPKG_CMAKE_PATH}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_MANIFEST_MODE=OFF
+endif
+endif
 
 # -s : Suppress makefile output (e.g. entering/leaving directories)
 # --output-sync target : For parallel compilation ensure output for each target is synchronized (make version >= 4.0)
 MAKEFLAGS := -s
 
 # Directory to build the codes
-SOURCE_DIR :=${PWD}
-BUILD_DIR ?= build
 CMAKE_GOALS = all
 INSTALLER_TYPE=STGZ
+# Branch on OS
+ifeq ($(OS),Windows_NT)
+ifeq ($(MSYSTEM),MINGW64)
+SOURCE_DIR := $(PWD)
+else
+SOURCE_DIR := $(shell powershell -NoProfile -Command "(Get-Location).Path")
+SOURCE_DIR := $(subst \,/,$(SOURCE_DIR))
+endif
+else
+SOURCE_DIR := $(PWD)
+endif
+BUILD_DIR ?= build
 
 # Find CMake command from system variable, otherwise use a default one
-ifeq ($(origin CMAKE_COMMAND),undefined)
 #Check for the cmake executable
 CMAKE_COMMAND := $(shell command -v cmake 2> /dev/null)
-else
-CMAKE_COMMAND := ${CMAKE_COMMAND}
+ifeq ($(OS),Windows_NT)
+ifneq ($(MSYSTEM),MINGW64)
+CMAKE_COMMAND := cmake.exe
+endif
 endif
 
 # Define executables
