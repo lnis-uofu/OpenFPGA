@@ -2300,6 +2300,34 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
                                          ModuleManager::MODULE_GPOUT_PORT);
 }
 
+bool module_contains_mif_data_bus(const ModuleManager& module_manager,
+                                  const CircuitLibrary& circuit_lib,
+                                  const ModuleId& module) {
+  if (false == module_manager.mif_children(module).empty()) {
+    return true;
+  }
+
+  /* Walk every is_mif_data_bus port. Do not use
+   * find_circuit_library_global_ports: that list is unique-by-prefix, so a
+   * non-MIF global port with the same prefix can hide the MIF bus from name
+   * matching.
+   */
+  for (const CircuitPortId& port : circuit_lib.ports()) {
+    if (false == circuit_lib.port_is_mif_data_bus(port)) {
+      continue;
+    }
+    const std::string port_name = generate_fpga_global_io_port_name(
+      std::string(GIO_INOUT_PREFIX), circuit_lib,
+      circuit_lib.port_parent_model(port), port);
+    const ModulePortId module_port =
+      module_manager.find_module_port(module, port_name);
+    if (true == module_manager.valid_module_port_id(module, module_port)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /********************************************************************
  * Add global input ports to the module:
  * In this function, the following tasks are done:

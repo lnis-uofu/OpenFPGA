@@ -4,7 +4,7 @@
  * MIF location map
  *
  * Maps each FPGA-top MIF data bus to the physical memory instances that
- * occupy slices of that bus. Built by walking top-module io_children in
+ * occupy slices of that bus. Built by walking top-module mif_children in
  * GPIN concatenation order (same order as Verilog pin packing).
  *
  * Nested map:

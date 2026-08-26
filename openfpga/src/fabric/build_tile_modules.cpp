@@ -1820,6 +1820,12 @@ static int build_tile_module(
       module_manager.add_io_child(
         tile_module, pb_module, pb_instance,
         vtr::Point<int>(grid_coord.x(), grid_coord.y()));
+      if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
+                                               pb_module)) {
+        module_manager.add_mif_child(
+          tile_module, pb_module,
+          vtr::Point<int>(grid_coord.x(), grid_coord.y()));
+      }
     }
   }
 
