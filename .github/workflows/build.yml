@@ -411,6 +411,7 @@ jobs:
       matrix:
         config:
           - name: "Installer w/o doc (MsBuild Windows-latest)"
+            cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.12.1
@@ -499,11 +500,9 @@ jobs:
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
-          mkdir build
-          cd build
-          cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -DCMAKE_INSTALL_RPATH="${{ github.workspace }}/vcpkg" -S .. -B . -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          cmake --build . --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
-          cpack --config CPackConfig.cmake -G IFW -DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DWGET="${{ env.CURL_PATH }}" -DOPENFPGA_INSTALL_DOC=OFF -C Release -DOPENFPGA_WITH_YOSYS=OFF
+          make checkout
+          make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+          make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Create Python virtual environment
         shell: powershell
