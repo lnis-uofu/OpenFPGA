@@ -165,8 +165,8 @@ static int add_top_module_tile_instances(ModuleManager& module_manager,
  *******************************************************************/
 static void add_top_module_tile_io_children(
   ModuleManager& module_manager, const ModuleId& top_module,
-  const DeviceGrid& grids, const FabricTile& fabric_tile,
-  const vtr::Matrix<size_t>& tile_instance_ids) {
+  const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
+  const FabricTile& fabric_tile, const vtr::Matrix<size_t>& tile_instance_ids) {
   /* Create the coordinate range for the perimeter I/Os of FPGA fabric */
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
     generate_perimeter_tile_coordinates(grids);
@@ -188,6 +188,11 @@ static void add_top_module_tile_io_children(
       module_manager.add_io_child(top_module, tile_module,
                                   tile_instance_ids[io_coord.x()][io_coord.y()],
                                   vtr::Point<int>(io_coord.x(), io_coord.y()));
+      if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
+                                               tile_module)) {
+        module_manager.add_mif_child(
+          top_module, tile_module, vtr::Point<int>(io_coord.x(), io_coord.y()));
+      }
     }
   }
 
@@ -249,6 +254,11 @@ static void add_top_module_tile_io_children(
     module_manager.add_io_child(top_module, tile_module,
                                 tile_instance_ids[coord.x()][coord.y()],
                                 vtr::Point<int>(coord.x(), coord.y()));
+    if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
+                                             tile_module)) {
+      module_manager.add_mif_child(top_module, tile_module,
+                                   vtr::Point<int>(coord.x(), coord.y()));
+    }
   }
 }
 
@@ -1956,8 +1966,8 @@ int build_top_module_tile_child_instances(
   }
 
   /* Update the I/O children list */
-  add_top_module_tile_io_children(module_manager, top_module, grids,
-                                  fabric_tile, tile_instance_ids);
+  add_top_module_tile_io_children(module_manager, top_module, circuit_lib,
+                                  grids, fabric_tile, tile_instance_ids);
 
   /* Build the nets between tiles */
   if (false == frame_view) {

@@ -224,6 +224,14 @@ class ModuleManager {
   std::vector<vtr::Point<int>> io_child_coordinates(
     const ModuleId& parent_module) const;
 
+  /* Find all the MIF child modules under a parent module. These are children
+   * that contain mif_data_bus ports, kept separate from regular I/O children.
+   */
+  std::vector<ModuleId> mif_children(const ModuleId& parent_module) const;
+  /* Find the coordinate of a MIF child module under a parent module */
+  std::vector<vtr::Point<int>> mif_child_coordinates(
+    const ModuleId& parent_module) const;
+
   /* Find the source ids of modules */
   module_net_src_range module_net_sources(const ModuleId& module,
                                           const ModuleNetId& net) const;
@@ -464,6 +472,15 @@ class ModuleManager {
   /** @brief Reserved a number of I/O children for memory efficiency */
   void reserve_io_child(const ModuleId& module, const size_t& num_children);
 
+  /** @brief Add a MIF child to module
+   * Child modules that contain mif_data_bus ports are tracked separately from
+   * regular I/O children so that MIF GPIN indexing is not mixed with GPIO
+   * indexing. The coordinate is used to build the MIF location map and should
+   * be consistent with the VPR coordinate system.
+   */
+  void add_mif_child(const ModuleId& module, const ModuleId& child_module,
+                     const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
+
   /* Reserved a number of module nets for a given module for memory efficiency
    */
   void reserve_module_nets(const ModuleId& module, const size_t& num_nets);
@@ -647,6 +664,13 @@ class ModuleManager {
   vtr::vector<ModuleId, std::vector<ModuleId>> io_children_;
   vtr::vector<ModuleId, std::vector<size_t>> io_child_instances_;
   vtr::vector<ModuleId, std::vector<vtr::Point<int>>> io_child_coordinates_;
+
+  /* MIF child modules record fabric instances that expose mif_data_bus GPIN
+   * ports. Sequence denotes MIF data-bus concatenation order, independent of
+   * io_children_ GPIO indexing.
+   */
+  vtr::vector<ModuleId, std::vector<ModuleId>> mif_children_;
+  vtr::vector<ModuleId, std::vector<vtr::Point<int>>> mif_child_coordinates_;
 
   /* Port-level data */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>>

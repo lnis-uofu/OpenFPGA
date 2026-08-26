@@ -206,7 +206,6 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
     return CMD_EXEC_FATAL_ERROR;
   }
   if (mif_pipeline.physical_mifs().empty()) {
-    VTR_LOG("build_physical_mif: no MIF data to aggregate\n");
     return CMD_EXEC_SUCCESS;
   }
   return CMD_EXEC_SUCCESS;
@@ -218,14 +217,8 @@ int aggregate_unified_mif(const BitstreamSetting& bitstream_setting,
   MifStorage& top_mif = mif_pipeline.mutable_top_mif();
   top_mif.clear();
   if (mif_location_map.empty()) {
-    VTR_LOG(
-      "aggregate_unified_mif: empty MIF location map; skip FPGA-top "
-      "aggregation\n");
     return CMD_EXEC_SUCCESS;
   }
-
-  size_t num_used_slices = 0;
-  size_t num_zero_slices = 0;
 
   for (const auto& port_entry : mif_location_map.data_port2phy_loc_map()) {
     const std::string& port_name = port_entry.first;
@@ -259,9 +252,6 @@ int aggregate_unified_mif(const BitstreamSetting& bitstream_setting,
         mif_pipeline.physical_mif(phy_loc, slice.pb_graph_node);
       if (!physical.empty()) {
         loc_to_storage[phy_loc] = &physical;
-        ++num_used_slices;
-      } else {
-        ++num_zero_slices;
       }
     }
     if (0 == total_width) {
@@ -333,10 +323,6 @@ int aggregate_unified_mif(const BitstreamSetting& bitstream_setting,
     }
   }
 
-  VTR_LOG(
-    "aggregate_unified_mif: %zu FPGA-top port(s), %zu placed slice(s), "
-    "%zu zero-filled slice(s)\n",
-    top_mif.num_segments(), num_used_slices, num_zero_slices);
   return CMD_EXEC_SUCCESS;
 }
 

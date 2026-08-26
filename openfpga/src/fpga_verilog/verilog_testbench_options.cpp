@@ -19,6 +19,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   dut_module_ = "fpga_top";
   fabric_netlist_file_path_.clear();
   reference_benchmark_file_path_.clear();
+  mif_file_path_.clear();
   print_preconfig_top_testbench_ = false;
   print_formal_verification_top_netlist_ = false;
   print_top_testbench_ = false;
@@ -56,6 +57,10 @@ std::string VerilogTestbenchOption::fabric_netlist_file_path() const {
 
 std::string VerilogTestbenchOption::reference_benchmark_file_path() const {
   return reference_benchmark_file_path_;
+}
+
+std::string VerilogTestbenchOption::mif_file_path() const {
+  return mif_file_path_;
 }
 
 bool VerilogTestbenchOption::print_formal_verification_top_netlist() const {
@@ -172,6 +177,11 @@ void VerilogTestbenchOption::set_reference_benchmark_file_path(
    */
   set_print_preconfig_top_testbench(print_preconfig_top_testbench_);
   set_print_top_testbench(print_top_testbench_);
+}
+
+void VerilogTestbenchOption::set_mif_file_path(
+  const std::string& mif_file_path) {
+  mif_file_path_ = mif_file_path;
 }
 
 void VerilogTestbenchOption::set_print_formal_verification_top_netlist(

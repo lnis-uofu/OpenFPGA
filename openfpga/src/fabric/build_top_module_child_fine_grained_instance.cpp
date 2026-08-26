@@ -332,8 +332,8 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
  *******************************************************************/
 static void add_top_module_io_children(
   ModuleManager& module_manager, const ModuleId& top_module,
-  const DeviceGrid& grids, const size_t& layer,
-  const vtr::Matrix<size_t>& grid_instance_ids) {
+  const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids) {
   /* Create the coordinate range for the perimeter I/Os of FPGA fabric */
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
     generate_perimeter_grid_coordinates(grids);
@@ -363,6 +363,11 @@ static void add_top_module_io_children(
       module_manager.add_io_child(top_module, grid_module,
                                   grid_instance_ids[io_coord.x()][io_coord.y()],
                                   vtr::Point<int>(io_coord.x(), io_coord.y()));
+      if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
+                                               grid_module)) {
+        module_manager.add_mif_child(
+          top_module, grid_module, vtr::Point<int>(io_coord.x(), io_coord.y()));
+      }
     }
   }
 
@@ -435,6 +440,11 @@ static void add_top_module_io_children(
     module_manager.add_io_child(top_module, grid_module,
                                 grid_instance_ids[coord.x()][coord.y()],
                                 vtr::Point<int>(coord.x(), coord.y()));
+    if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
+                                             grid_module)) {
+      module_manager.add_mif_child(top_module, grid_module,
+                                   vtr::Point<int>(coord.x(), coord.y()));
+    }
   }
 }
 
@@ -481,8 +491,8 @@ int build_top_module_fine_grained_child_instances(
   }
 
   /* Update I/O children list */
-  add_top_module_io_children(module_manager, top_module, grids, layer,
-                             grid_instance_ids);
+  add_top_module_io_children(module_manager, top_module, circuit_lib, grids,
+                             layer, grid_instance_ids);
 
   /* Add nets when we need a complete fabric modeling,
    * which is required by downstream functions

@@ -102,6 +102,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
                                   const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_bitstream = cmd.option("bitstream");
+  CommandOptionId opt_mif = cmd.option("mif");
   CommandOptionId opt_sim = cmd.option("simulator");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
@@ -138,6 +139,9 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   options.set_use_relative_path(
     cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_print_top_testbench(true);
+  if (true == cmd_context.option_enable(cmd, opt_mif)) {
+    options.set_mif_file_path(cmd_context.option_value(cmd, opt_mif));
+  }
   options.set_include_signal_init(
     cmd_context.option_enable(cmd, opt_include_signal_init));
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
