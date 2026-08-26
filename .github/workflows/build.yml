@@ -77,7 +77,7 @@ jobs:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: windows-latest
+    runs-on: ${{ matrix.config.os }}
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
     # Comment the line out when base image is built again
     #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
