@@ -51,6 +51,7 @@ class VerilogTestbenchOption {
   std::string dut_module() const;
   std::string fabric_netlist_file_path() const;
   std::string reference_benchmark_file_path() const;
+  std::string mif_file_path() const;
   bool fast_configuration() const;
   bool print_formal_verification_top_netlist() const;
   bool print_preconfig_top_testbench() const;
@@ -92,6 +93,8 @@ class VerilogTestbenchOption {
    */
   void set_fabric_netlist_file_path(
     const std::string& fabric_netlist_file_path);
+  /* Aggregated MIF file (write_mif format) loaded by the full testbench */
+  void set_mif_file_path(const std::string& mif_file_path);
   void set_print_formal_verification_top_netlist(const bool& enabled);
   /* The preconfig top testbench generation can be enabled only when formal
    * verification top netlist is enabled */
@@ -130,6 +133,7 @@ class VerilogTestbenchOption {
   std::string dut_module_;
   std::string fabric_netlist_file_path_;
   std::string reference_benchmark_file_path_;
+  std::string mif_file_path_;
   bool fast_configuration_;
   bool print_formal_verification_top_netlist_;
   bool print_preconfig_top_testbench_;

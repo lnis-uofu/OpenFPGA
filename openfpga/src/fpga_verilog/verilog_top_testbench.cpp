@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <set>
+#include <string>
+#include <vector>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -57,6 +60,123 @@ static size_t find_config_protocol_num_prog_clocks(
     num_config_done_signals = config_protocol.num_prog_clocks();
   }
   return num_config_done_signals;
+}
+
+/********************************************************************
+ * Collect FPGA-top ports used to preload memories from an aggregated MIF.
+ * Data / done pads use gfpga_pad_<model>_<prefix>; clk / reset / start / addr
+ * stay as circuit port prefixes (shared globals).
+ *******************************************************************/
+struct MifTestbenchPorts {
+  std::vector<BasicPort> data_ports;
+  std::vector<BasicPort> done_ports;
+  BasicPort clk_port;
+  BasicPort reset_port;
+  BasicPort start_port;
+  BasicPort addr_port;
+
+  bool valid() const {
+    return (false == data_ports.empty()) && (0 < addr_port.get_width()) &&
+           (0 < clk_port.get_width()) && (0 < start_port.get_width());
+  }
+
+  std::set<std::string> skip_port_names() const {
+    std::set<std::string> names;
+    if (0 < clk_port.get_width()) {
+      names.insert(clk_port.get_name());
+    }
+    if (0 < reset_port.get_width()) {
+      names.insert(reset_port.get_name());
+    }
+    if (0 < start_port.get_width()) {
+      names.insert(start_port.get_name());
+    }
+    if (0 < addr_port.get_width()) {
+      names.insert(addr_port.get_name());
+    }
+    return names;
+  }
+};
+
+static BasicPort find_module_basic_port(const ModuleManager& module_manager,
+                                        const ModuleId& module,
+                                        const std::string& port_name) {
+  const ModulePortId port_id =
+    module_manager.find_module_port(module, port_name);
+  if (false == module_manager.valid_module_port_id(module, port_id)) {
+    return BasicPort();
+  }
+  return module_manager.module_port(module, port_id);
+}
+
+static void add_unique_basic_port(std::vector<BasicPort>& ports,
+                                  const BasicPort& port) {
+  if (0 == port.get_width()) {
+    return;
+  }
+  for (const BasicPort& existing : ports) {
+    if (existing.get_name() == port.get_name()) {
+      return;
+    }
+  }
+  ports.push_back(port);
+}
+
+static MifTestbenchPorts collect_mif_testbench_ports(
+  const ModuleManager& module_manager, const ModuleId& top_module,
+  const CircuitLibrary& circuit_lib) {
+  MifTestbenchPorts mif_ports;
+  std::set<CircuitModelId> mif_models;
+  for (const CircuitPortId& port : circuit_lib.ports()) {
+    if (true == circuit_lib.port_is_mif_data_bus(port)) {
+      mif_models.insert(circuit_lib.port_parent_model(port));
+    }
+  }
+
+  for (const CircuitModelId& model : mif_models) {
+    for (const CircuitPortId& port : circuit_lib.model_ports(model)) {
+      if (false == circuit_lib.port_is_global(port)) {
+        continue;
+      }
+      if (true == circuit_lib.port_is_mif_data_bus(port)) {
+        add_unique_basic_port(
+          mif_ports.data_ports,
+          find_module_basic_port(
+            module_manager, top_module,
+            generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX),
+                                              circuit_lib, model, port)));
+        continue;
+      }
+      if ((CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) &&
+          (true == circuit_lib.port_is_io(port))) {
+        add_unique_basic_port(
+          mif_ports.done_ports,
+          find_module_basic_port(
+            module_manager, top_module,
+            generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX),
+                                              circuit_lib, model, port)));
+        continue;
+      }
+
+      const BasicPort fabric_port = find_module_basic_port(
+        module_manager, top_module, circuit_lib.port_prefix(port));
+      if (0 == fabric_port.get_width()) {
+        continue;
+      }
+      if (true == circuit_lib.port_is_reset(port)) {
+        mif_ports.reset_port = fabric_port;
+      } else if ((CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(port)) ||
+                 (std::string::npos !=
+                  circuit_lib.port_prefix(port).find("clk"))) {
+        mif_ports.clk_port = fabric_port;
+      } else if (1 < circuit_lib.port_size(port)) {
+        mif_ports.addr_port = fabric_port;
+      } else {
+        mif_ports.start_port = fabric_port;
+      }
+    }
+  }
+  return mif_ports;
 }
 
 /********************************************************************
@@ -445,7 +565,8 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
   mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& fabric_global_port_info,
-  const bool& active_global_prog_reset, const bool& little_endian) {
+  const bool& active_global_prog_reset, const bool& little_endian,
+  const std::set<std::string>& mif_skip_ports) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
 
@@ -473,6 +594,12 @@ static void print_verilog_top_testbench_global_reset_ports_stimuli(
       fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module,
                                                            module_global_port));
+    if (mif_skip_ports.end() !=
+        mif_skip_ports.find(
+          module_manager.module_port(top_module, module_global_port)
+            .get_name())) {
+      continue;
+    }
 
     /* For global programming reset port, we will active only when specified */
     BasicPort stimuli_reset_port;
@@ -639,7 +766,7 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
   mmostream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
   const FabricGlobalPortInfo& fabric_global_port_info,
-  const bool& little_endian) {
+  const bool& little_endian, const std::set<std::string>& mif_skip_ports) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
 
@@ -693,6 +820,9 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
 
     BasicPort module_port =
       module_manager.module_port(top_module, module_global_port);
+    if (mif_skip_ports.end() != mif_skip_ports.find(module_port.get_name())) {
+      continue;
+    }
     std::vector<size_t> default_values(
       module_port.get_width(),
       fabric_global_port_info.global_port_default_value(fabric_global_port));
@@ -711,7 +841,7 @@ static void print_verilog_top_testbench_global_ports_stimuli(
   const FabricGlobalPortInfo& fabric_global_port_info,
   const SimulationSetting& simulation_parameters,
   const bool& active_global_prog_reset, const bool& active_global_prog_set,
-  const bool& little_endian) {
+  const bool& little_endian, const std::set<std::string>& mif_skip_ports) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
 
@@ -732,14 +862,15 @@ static void print_verilog_top_testbench_global_ports_stimuli(
 
   print_verilog_top_testbench_global_reset_ports_stimuli(
     fp, module_manager, top_module, pin_constraints, fabric_global_port_info,
-    active_global_prog_reset, little_endian);
+    active_global_prog_reset, little_endian, mif_skip_ports);
 
   print_verilog_top_testbench_global_set_ports_stimuli(
     fp, module_manager, top_module, fabric_global_port_info,
     active_global_prog_set, little_endian);
 
   print_verilog_top_testbench_regular_global_ports_stimuli(
-    fp, module_manager, top_module, fabric_global_port_info, little_endian);
+    fp, module_manager, top_module, fabric_global_port_info, little_endian,
+    mif_skip_ports);
 
   print_verilog_comment(
     fp, std::string(
@@ -1242,7 +1373,7 @@ static void print_verilog_top_testbench_generic_stimulus(
   const SimulationSetting& simulation_parameters,
   const size_t& num_config_clock_cycles, const float& prog_clock_period,
   const float& op_clock_period, const float& timescale,
-  const bool& little_endian) {
+  const bool& little_endian, const bool& defer_config_all_done) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
 
@@ -1341,22 +1472,24 @@ static void print_verilog_top_testbench_generic_stimulus(
   fp << std::endl;
 
   /* Config all done signal is triggered when all the config done signals are
-   * pulled up */
-  fp << "\tassign "
-     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port, true,
-                              little_endian)
-     << " = ";
-  for (size_t pin : config_done_port.pins()) {
-    BasicPort curr_cfg_pin(config_done_port.get_name(),
-                           config_done_port.pins()[pin],
-                           config_done_port.pins()[pin]);
-    if (pin > 0) {
-      fp << " & ";
+   * pulled up. When --mif is enabled, AND with mem_init_all_done later. */
+  if (false == defer_config_all_done) {
+    fp << "\tassign "
+       << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port, true,
+                                little_endian)
+       << " = ";
+    for (size_t pin : config_done_port.pins()) {
+      BasicPort curr_cfg_pin(config_done_port.get_name(),
+                             config_done_port.pins()[pin],
+                             config_done_port.pins()[pin]);
+      if (pin > 0) {
+        fp << " & ";
+      }
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin, true,
+                                  little_endian);
     }
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin, true,
-                                little_endian);
+    fp << ";" << std::endl;
   }
-  fp << ";" << std::endl;
 
   /* Generate stimuli waveform for multiple user-defined operating clock signals
    */
@@ -2576,6 +2709,262 @@ static void print_verilog_top_testbench_check(
 }
 
 /********************************************************************
+ * Drive memory-preload ports from an aggregated MIF (write_mif format):
+ *   $readmemh the file, sweep mem_init_addr, pulse mem_init_start,
+ *   and hold __config_all_done__ until every mem_init_done bit is sticky-high.
+ *******************************************************************/
+static int print_verilog_full_testbench_mif_preload(
+  mmostream& fp, const MifTestbenchPorts& mif_ports,
+  const std::string& mif_file, const bool& little_endian) {
+  valid_file_mmostream(fp);
+  if (false == mif_ports.valid()) {
+    VTR_LOG_ERROR(
+      "write_full_testbench --mif: fabric has no complete MIF preload "
+      "ports (need data bus, address, clock and start)\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  print_verilog_comment(
+    fp, std::string("----- Begin aggregated MIF preload from '" + mif_file +
+                    "' -----"));
+
+  BasicPort prog_clock_register_port(
+    std::string(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) +
+                std::string(TOP_TB_CLOCK_REG_POSTFIX)),
+    1);
+  BasicPort prog_reset_port(std::string(TOP_TB_PROG_RESET_PORT_NAME), 1);
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+  BasicPort config_all_done_port(std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
+                                 1);
+  BasicPort start_reg_port(std::string(TOP_TB_MIF_START_REG_NAME), 1);
+  BasicPort addr_reg_port(std::string(TOP_TB_MIF_ADDR_REG_NAME),
+                          mif_ports.addr_port.get_width());
+  BasicPort all_done_port(std::string(TOP_TB_MIF_ALL_DONE_PORT_NAME), 1);
+
+  size_t rom_width = 0;
+  for (const BasicPort& data_port : mif_ports.data_ports) {
+    rom_width += data_port.get_width();
+  }
+  const size_t rom_depth = size_t(1) << mif_ports.addr_port.get_width();
+  BasicPort rom_word_port(std::string(TOP_TB_MIF_ROM_REG_NAME), rom_width);
+
+  if (0 < mif_ports.clk_port.get_width()) {
+    print_verilog_comment(
+      fp, std::string("----- mem_init_clk follows the raw programming clock "
+                      "so preload can run with bitstream loading -----"));
+    print_verilog_wire_connection(
+      fp, mif_ports.clk_port, prog_clock_register_port, false, little_endian);
+  }
+  if (0 < mif_ports.reset_port.get_width()) {
+    print_verilog_comment(
+      fp, std::string("----- mem_init reset is released when programming "
+                      "reset drops (active-low) -----"));
+    print_verilog_wire_connection(fp, mif_ports.reset_port, prog_reset_port,
+                                  true, little_endian);
+  }
+
+  fp << generate_verilog_port(VERILOG_PORT_REG, start_reg_port, true,
+                              little_endian)
+     << ";" << std::endl;
+  print_verilog_wire_connection(fp, mif_ports.start_port, start_reg_port, false,
+                                little_endian);
+
+  fp << generate_verilog_port(VERILOG_PORT_REG, addr_reg_port, true,
+                              little_endian)
+     << ";" << std::endl;
+  print_verilog_wire_connection(fp, mif_ports.addr_port, addr_reg_port, false,
+                                little_endian);
+
+  fp << generate_verilog_port(VERILOG_PORT_REG, rom_word_port, true,
+                              little_endian)
+     << " [0:" << rom_depth - 1 << "];" << std::endl;
+  fp << "initial begin" << std::endl;
+  fp << "\t$readmemh(\"" << mif_file << "\", " << TOP_TB_MIF_ROM_REG_NAME
+     << ");" << std::endl;
+  fp << "end" << std::endl;
+
+  size_t data_offset = 0;
+  const std::string addr_str = generate_verilog_port(
+    VERILOG_PORT_CONKT, mif_ports.addr_port, true, little_endian);
+  for (const BasicPort& data_port : mif_ports.data_ports) {
+    fp << "\tassign "
+       << generate_verilog_port(VERILOG_PORT_CONKT, data_port, true,
+                                little_endian)
+       << " = " << TOP_TB_MIF_ROM_REG_NAME << "[" << addr_str << "]";
+    if (1 < mif_ports.data_ports.size()) {
+      if (true == little_endian) {
+        fp << "[" << data_offset + data_port.get_width() - 1 << ":"
+           << data_offset << "]";
+      } else {
+        fp << "[" << data_offset << ":"
+           << data_offset + data_port.get_width() - 1 << "]";
+      }
+    }
+    fp << ";" << std::endl;
+    data_offset += data_port.get_width();
+  }
+
+  const std::string clk_str = generate_verilog_port(
+    VERILOG_PORT_CONKT, mif_ports.clk_port, true, little_endian);
+  const std::string rst_str =
+    (0 < mif_ports.reset_port.get_width())
+      ? generate_verilog_port(VERILOG_PORT_CONKT, mif_ports.reset_port, true,
+                              little_endian)
+      : std::string();
+  const std::string start_str = generate_verilog_port(
+    VERILOG_PORT_CONKT, mif_ports.start_port, true, little_endian);
+  const std::string addr_reg_str = generate_verilog_port(
+    VERILOG_PORT_CONKT, addr_reg_port, true, little_endian);
+
+  print_verilog_comment(
+    fp,
+    std::string("----- Sweep MIF address while mem_init_start is held -----"));
+  fp << "always @(posedge " << clk_str;
+  if (false == rst_str.empty()) {
+    fp << " or negedge " << rst_str;
+  }
+  fp << ") begin" << std::endl;
+  if (false == rst_str.empty()) {
+    fp << "\tif (1'b0 == " << rst_str << ") begin" << std::endl;
+    fp << "\t\t" << addr_reg_str << " <= " << addr_reg_port.get_width()
+       << "'b0;" << std::endl;
+    fp << "\tend else if ((1'b1 == " << start_str << ") && (" << addr_reg_str
+       << " != {" << addr_reg_port.get_width() << "{1'b1}})) begin"
+       << std::endl;
+    fp << "\t\t" << addr_reg_str << " <= " << addr_reg_str << " + 1'b1;"
+       << std::endl;
+    fp << "\tend" << std::endl;
+  } else {
+    fp << "\tif ((1'b1 == " << start_str << ") && (" << addr_reg_str << " != {"
+       << addr_reg_port.get_width() << "{1'b1}})) begin" << std::endl;
+    fp << "\t\t" << addr_reg_str << " <= " << addr_reg_str << " + 1'b1;"
+       << std::endl;
+    fp << "\tend" << std::endl;
+  }
+  fp << "end" << std::endl;
+
+  size_t done_width = 0;
+  for (const BasicPort& done_port : mif_ports.done_ports) {
+    done_width += done_port.get_width();
+  }
+  if (0 == done_width) {
+    done_width = 1;
+  }
+  BasicPort done_sticky_port(std::string(TOP_TB_MIF_DONE_STICKY_REG_NAME),
+                             done_width);
+  fp << generate_verilog_port(VERILOG_PORT_REG, done_sticky_port, true,
+                              little_endian)
+     << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, all_done_port, true,
+                              little_endian)
+     << ";" << std::endl;
+
+  if (false == mif_ports.done_ports.empty()) {
+    fp << "always @(posedge " << clk_str;
+    if (false == rst_str.empty()) {
+      fp << " or negedge " << rst_str;
+    }
+    fp << ") begin" << std::endl;
+    if (false == rst_str.empty()) {
+      fp << "\tif (1'b0 == " << rst_str << ") begin" << std::endl;
+      fp << "\t\t"
+         << generate_verilog_port(VERILOG_PORT_CONKT, done_sticky_port, true,
+                                  little_endian)
+         << " <= " << done_width << "'b0;" << std::endl;
+      fp << "\tend else begin" << std::endl;
+    } else {
+      fp << "\tbegin" << std::endl;
+    }
+    size_t sticky_bit = 0;
+    for (const BasicPort& done_port : mif_ports.done_ports) {
+      for (size_t pin : done_port.pins()) {
+        BasicPort done_pin(done_port.get_name(), pin, pin);
+        BasicPort sticky_pin(done_sticky_port.get_name(), sticky_bit,
+                             sticky_bit);
+        fp << "\t\tif ("
+           << generate_verilog_port(VERILOG_PORT_CONKT, done_pin, true,
+                                    little_endian)
+           << ") "
+           << generate_verilog_port(VERILOG_PORT_CONKT, sticky_pin, true,
+                                    little_endian)
+           << " <= 1'b1;" << std::endl;
+        ++sticky_bit;
+      }
+    }
+    fp << "\tend" << std::endl;
+    fp << "end" << std::endl;
+    fp << "\tassign "
+       << generate_verilog_port(VERILOG_PORT_CONKT, all_done_port, true,
+                                little_endian)
+       << " = &"
+       << generate_verilog_port(VERILOG_PORT_CONKT, done_sticky_port, true,
+                                little_endian)
+       << ";" << std::endl;
+  } else {
+    fp << "\tassign "
+       << generate_verilog_port(VERILOG_PORT_CONKT, all_done_port, true,
+                                little_endian)
+       << " = 1'b1;" << std::endl;
+  }
+
+  fp << "\tassign "
+     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port, true,
+                              little_endian)
+     << " = "
+     << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port, true,
+                              little_endian)
+     << " & "
+     << generate_verilog_port(VERILOG_PORT_CONKT, all_done_port, true,
+                              little_endian)
+     << ";" << std::endl;
+
+  print_verilog_comment(
+    fp, std::string("----- Pulse mem_init_start until every instance reports "
+                    "mem_init_done -----"));
+  fp << "initial begin" << std::endl;
+  fp << "\t"
+     << generate_verilog_port(VERILOG_PORT_CONKT, start_reg_port, true,
+                              little_endian)
+     << " = 1'b0;" << std::endl;
+  fp << "\twait ("
+     << generate_verilog_port(VERILOG_PORT_CONKT, prog_reset_port, true,
+                              little_endian)
+     << " === 1'b0);" << std::endl;
+  fp << "\t"
+     << generate_verilog_port(VERILOG_PORT_CONKT, start_reg_port, true,
+                              little_endian)
+     << " = 1'b1;" << std::endl;
+  if (false == mif_ports.done_ports.empty()) {
+    fp << "\twait (";
+    bool first_done = true;
+    for (const BasicPort& done_port : mif_ports.done_ports) {
+      for (size_t pin : done_port.pins()) {
+        BasicPort done_pin(done_port.get_name(), pin, pin);
+        if (false == first_done) {
+          fp << " && ";
+        }
+        first_done = false;
+        fp << generate_verilog_port(VERILOG_PORT_CONKT, done_pin, true,
+                                    little_endian)
+           << " === 1'b1";
+      }
+    }
+    fp << ");" << std::endl;
+  }
+  fp << "\t@(posedge " << clk_str << "); #1;" << std::endl;
+  fp << "\t"
+     << generate_verilog_port(VERILOG_PORT_CONKT, start_reg_port, true,
+                              little_endian)
+     << " = 1'b0;" << std::endl;
+  fp << "end" << std::endl;
+
+  print_verilog_comment(fp,
+                        std::string("----- End aggregated MIF preload -----"));
+  fp << std::endl;
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * The top-level function to generate a full testbench, in order to verify:
  * 1. Configuration phase of the FPGA fabric, where the bitstream is
  *    loaded to the configuration protocol of the FPGA fabric
@@ -2656,6 +3045,15 @@ int print_verilog_full_testbench(
     core_module = top_module;
   }
 
+  const bool enable_mif_preload = (false == options.mif_file_path().empty());
+  MifTestbenchPorts mif_ports;
+  std::set<std::string> mif_skip_ports;
+  if (true == enable_mif_preload) {
+    mif_ports =
+      collect_mif_testbench_ports(module_manager, core_module, circuit_lib);
+    mif_skip_ports = mif_ports.skip_port_names();
+  }
+
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names =
     find_atom_netlist_clock_port_names(atom_ctx.netlist(), netlist_annotation);
@@ -2704,7 +3102,7 @@ int print_verilog_full_testbench(
   print_verilog_top_testbench_generic_stimulus(
     fp, config_protocol, simulation_parameters, num_config_clock_cycles,
     prog_clock_period, default_op_clock_period, VERILOG_SIM_TIMESCALE,
-    little_endian);
+    little_endian, enable_mif_preload);
 
   /* Generate stimuli for programming interface */
   int status = CMD_EXEC_SUCCESS;
@@ -2747,7 +3145,15 @@ int print_verilog_full_testbench(
   print_verilog_top_testbench_global_ports_stimuli(
     fp, module_manager, core_module, pin_constraints, config_protocol,
     global_ports, simulation_parameters, active_global_prog_reset,
-    active_global_prog_set, little_endian);
+    active_global_prog_set, little_endian, mif_skip_ports);
+
+  if (true == enable_mif_preload) {
+    status = print_verilog_full_testbench_mif_preload(
+      fp, mif_ports, options.mif_file_path(), little_endian);
+    if (status == CMD_EXEC_FATAL_ERROR) {
+      return status;
+    }
+  }
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(

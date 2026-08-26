@@ -1,10 +1,11 @@
 /********************************************************************
  * Build MIF location map: top-level port -> (t_pl_loc, MifPortSlice).
  *
- * Walks top-module io_children in GPIN concatenation order and assigns
- * data_offset/data_width along that same order. The physical primitive
- * for each instance is taken from bitstream annotation and remapped by
- * device annotation (operating pb -> physical pb).
+ * Walks top-module mif_children (modules that contain mif_data_bus) in
+ * GPIN concatenation order and assigns data_offset/data_width along that
+ * same order. The physical primitive for each instance is taken from
+ * bitstream annotation and remapped by device annotation (operating pb ->
+ * physical pb).
  *******************************************************************/
 #include "build_fabric_mif_location_map.h"
 
@@ -19,7 +20,6 @@
 #include "openfpga_reserved_words.h"
 #include "vpr_utils.h"
 #include "vtr_assert.h"
-#include "vtr_log.h"
 #include "vtr_time.h"
 
 /* begin namespace openfpga */
@@ -145,20 +145,13 @@ static void register_grid_module_mif_locations(
     return;
   }
 
-  if (size_t(phy_tile_type->capacity) !=
-      module_manager.io_children(grid_module).size()) {
-    VTR_LOG("%s[%d][%d] capacity: %d while io_child number is %zu\n",
-            phy_tile_type->name.c_str(), x, y, phy_tile_type->capacity,
-            module_manager.io_children(grid_module).size());
-  }
-
   for (size_t isubchild = 0;
-       isubchild < module_manager.io_children(grid_module).size();
+       isubchild < module_manager.mif_children(grid_module).size();
        ++isubchild) {
     const ModuleId subchild =
-      module_manager.io_children(grid_module)[isubchild];
+      module_manager.mif_children(grid_module)[isubchild];
     const vtr::Point<int>& subchild_coord =
-      module_manager.io_child_coordinates(grid_module)[isubchild];
+      module_manager.mif_child_coordinates(grid_module)[isubchild];
     int z = subchild_coord.x();
     if (0 > z) {
       z = static_cast<int>(isubchild);
@@ -203,10 +196,6 @@ MifLocationMap build_fabric_mif_location_map(
   const std::map<std::string, size_t> mif_data_ports =
     collect_mif_data_bus_ports(circuit_lib, device_annotation, physical_nodes);
   if (true == mif_data_ports.empty()) {
-    VTR_LOG(
-      "Found %zu annotated MIF primitive(s) but no is_mif_data_bus port; skip "
-      "MIF location map\n",
-      physical_nodes.size());
     return MifLocationMap();
   }
 
@@ -218,16 +207,16 @@ MifLocationMap build_fabric_mif_location_map(
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   for (size_t ichild = 0;
-       ichild < module_manager.io_children(top_module).size(); ++ichild) {
+       ichild < module_manager.mif_children(top_module).size(); ++ichild) {
     const ModuleId child_module =
-      module_manager.io_children(top_module)[ichild];
+      module_manager.mif_children(top_module)[ichild];
     if (tiled_fabric) {
       for (size_t igrid = 0;
-           igrid < module_manager.io_children(child_module).size(); ++igrid) {
+           igrid < module_manager.mif_children(child_module).size(); ++igrid) {
         const ModuleId grid_module =
-          module_manager.io_children(child_module)[igrid];
+          module_manager.mif_children(child_module)[igrid];
         vtr::Point<int> curr_grid_coord =
-          module_manager.io_child_coordinates(child_module)[igrid];
+          module_manager.mif_child_coordinates(child_module)[igrid];
         register_grid_module_mif_locations(
           mif_location_map, module_manager, grids, layer, grid_module,
           curr_grid_coord.x(), curr_grid_coord.y(), physical_nodes,
@@ -237,17 +226,13 @@ MifLocationMap build_fabric_mif_location_map(
     }
 
     vtr::Point<int> grid_coord =
-      module_manager.io_child_coordinates(top_module)[ichild];
+      module_manager.mif_child_coordinates(top_module)[ichild];
     register_grid_module_mif_locations(mif_location_map, module_manager, grids,
                                        layer, child_module, grid_coord.x(),
                                        grid_coord.y(), physical_nodes,
                                        mif_data_ports, offset_counter);
   }
 
-  VTR_LOG(
-    "Built MIF location map: %zu location(s) across %zu mif_data_bus "
-    "port(s)\n",
-    mif_location_map.size(), mif_data_ports.size());
   return mif_location_map;
 }
 

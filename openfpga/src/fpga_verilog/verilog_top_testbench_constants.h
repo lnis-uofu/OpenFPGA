@@ -36,6 +36,12 @@ constexpr const char* TOP_TB_BITSTREAM_INDEX_REG_NAME = "bit_index";
 constexpr const char* TOP_TB_BITSTREAM_ITERATOR_REG_NAME = "ibit";
 constexpr const char* TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME = "skip_bits";
 
+constexpr const char* TOP_TB_MIF_ROM_REG_NAME = "mem_init_rom";
+constexpr const char* TOP_TB_MIF_START_REG_NAME = "mem_init_start_reg";
+constexpr const char* TOP_TB_MIF_ADDR_REG_NAME = "mem_init_addr_reg";
+constexpr const char* TOP_TB_MIF_DONE_STICKY_REG_NAME = "mem_init_done_sticky";
+constexpr const char* TOP_TB_MIF_ALL_DONE_PORT_NAME = "mem_init_all_done";
+
 constexpr const char* AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX =
   "_autocheck_top_tb";
 

@@ -127,6 +127,13 @@ ShellCommandId add_write_full_testbench_command_template(
     "bitstream", true, "specify the bitstream to be loaded in the testbench");
   shell_cmd.set_option_require_value(bitstream_opt, openfpga::OPT_STRING);
 
+  /* add an option '--mif' */
+  CommandOptionId mif_opt = shell_cmd.add_option(
+    "mif", false,
+    "specify the aggregated MIF file to be loaded into the full testbench. "
+    "The file should use the same format as write_mif output");
+  shell_cmd.set_option_require_value(mif_opt, openfpga::OPT_STRING);
+
   /* add an option '--simulator'*/
   CommandOptionId sim_opt = shell_cmd.add_option(
     "simulator", false, "specify the simulator to be used for the testbench");

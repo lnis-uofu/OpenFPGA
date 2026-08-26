@@ -167,6 +167,18 @@ std::vector<vtr::Point<int>> ModuleManager::io_child_coordinates(
   return io_child_coordinates_[parent_module];
 }
 
+std::vector<ModuleId> ModuleManager::mif_children(
+  const ModuleId& parent_module) const {
+  VTR_ASSERT(valid_module_id(parent_module));
+  return mif_children_[parent_module];
+}
+
+std::vector<vtr::Point<int>> ModuleManager::mif_child_coordinates(
+  const ModuleId& parent_module) const {
+  VTR_ASSERT(valid_module_id(parent_module));
+  return mif_child_coordinates_[parent_module];
+}
+
 /* Find the source ids of modules */
 ModuleManager::module_net_src_range ModuleManager::module_net_sources(
   const ModuleId& module, const ModuleNetId& net) const {
@@ -754,6 +766,9 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   io_child_instances_.emplace_back();
   io_child_coordinates_.emplace_back();
 
+  mif_children_.emplace_back();
+  mif_child_coordinates_.emplace_back();
+
   port_ids_.emplace_back();
   ports_.emplace_back();
   port_types_.emplace_back();
@@ -1211,6 +1226,16 @@ void ModuleManager::reserve_io_child(const ModuleId& parent_module,
   if (num_children > io_child_coordinates_[parent_module].size()) {
     io_child_coordinates_[parent_module].reserve(num_children);
   }
+}
+
+void ModuleManager::add_mif_child(const ModuleId& parent_module,
+                                  const ModuleId& child_module,
+                                  const vtr::Point<int> coord) {
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(valid_module_id(child_module));
+
+  mif_children_[parent_module].push_back(child_module);
+  mif_child_coordinates_[parent_module].push_back(coord);
 }
 
 void ModuleManager::reserve_module_nets(const ModuleId& module,
