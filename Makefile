@@ -55,10 +55,10 @@ ifeq ($(OS),Windows_NT)
 CURL_PATH:=$(shell where curl.exe 2>nul | head -n 1)
 # VCPKG root is a system variable env:VCPKG in power shell. User can override by using VCPKG_PATH when calling the makefile
 VCPKG_CMAKE_PATH:=$(subst \,/,$(VCPKG_PATH))
-override CMAKE_FLAGS := ${CMAKE_PARAMS} -DVTR_IPO_BUILD=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_SWIG=OFF -DOPENFPGA_WITH_YOSYS=OFF
+override CMAKE_FLAGS := ${CMAKE_FLAGS} -DVTR_IPO_BUILD=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_SWIG=OFF -DOPENFPGA_WITH_YOSYS=OFF
 # Msys2 can still use Linux gcc
 ifneq ($(MSYSTEM),MINGW64)
-override CMAKE_FLAGS := ${CMAKE_PARAMS} -DWGET="${CURL_PATH}" -DCMAKE_TOOLCHAIN_FILE="${VCPKG_CMAKE_PATH}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_MANIFEST_MODE=OFF
+override CMAKE_FLAGS := ${CMAKE_FLAGS} -DWGET="${CURL_PATH}" -DCMAKE_TOOLCHAIN_FILE="${VCPKG_CMAKE_PATH}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_MANIFEST_MODE=OFF
 endif
 endif
 
