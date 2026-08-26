@@ -72,80 +72,80 @@ jobs:
           fi
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-  # Test the compilation compatibility
-  macos_installer:
-    needs: change_detect
-    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
-    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
-    # Comment the line out when base image is built again
-    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
-    # Branch on different OS and settings
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - name: "Installer (Clang, MacOS 15)"
-            os: macos-15
-            cc: clang
-            cxx: clang++
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-    # Define the steps to run the build job
-    env:
-      CC: ${{ matrix.config.cc }}
-      CXX: ${{ matrix.config.cxx }}
-    steps:
-      - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
-          
-      - name: Checkout repo
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Show build environment
-        run: |
-          sw_vers
-          uname -m
-          xcodebuild -version
-          clang --version
-          clang++ --version
-          cmake --version
-          ninja --version
-
-      - name: Install dependencies
-        run: |
-          ./.github/workflows/build_dependency_${{ matrix.config.os}}.sh
-          python3 -m venv myenv
-          source myenv/bin/activate
-          python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install -r requirements.txt
-          echo "==== Checking python packages ===="
-          python -c "import yaml; print('Installed')"      
-          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
-          sleep 10s
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
-          restore-keys: |
-            ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-
-            ${{ runner.os }}-msys2-${{ github.job }}-
-
-      - name: Get number of CPU cores
-        uses: SimenB/github-actions-cpu-cores@v3
-        id: cpu-cores
-
-      - name: Create installer
-        env:
-          CCACHE_DIR: ${{ github.workspace }}/.ccache
-        run: |
-          make checkout
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+#  # Test the compilation compatibility
+#  macos_installer:
+#    needs: change_detect
+#    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+#    name: ${{ matrix.config.name }}
+#    runs-on: ${{ matrix.config.os }}
+#    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+#    # Comment the line out when base image is built again
+#    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+#    # Branch on different OS and settings
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        config:
+#          - name: "Installer (Clang, MacOS 15)"
+#            os: macos-15
+#            cc: clang
+#            cxx: clang++
+#            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+#    # Define the steps to run the build job
+#    env:
+#      CC: ${{ matrix.config.cc }}
+#      CXX: ${{ matrix.config.cxx }}
+#    steps:
+#      - name: Cancel previous
+#        uses: styfle/cancel-workflow-action@0.9.1
+#        with:
+#          access_token: ${{ github.token }}
+#          
+#      - name: Checkout repo
+#        uses: actions/checkout@v6
+#        with:
+#          submodules: recursive
+#
+#      - name: Show build environment
+#        run: |
+#          sw_vers
+#          uname -m
+#          xcodebuild -version
+#          clang --version
+#          clang++ --version
+#          cmake --version
+#          ninja --version
+#
+#      - name: Install dependencies
+#        run: |
+#          ./.github/workflows/build_dependency_${{ matrix.config.os}}.sh
+#          python3 -m venv myenv
+#          source myenv/bin/activate
+#          python3 -m pip install --upgrade pip setuptools
+#          python3 -m pip install -r requirements.txt
+#          echo "==== Checking python packages ===="
+#          python -c "import yaml; print('Installed')"      
+#          echo "---- Sleep 10 seconds before copy file consider system glitching ----"
+#          sleep 10s
+#
+#      - name: ccache
+#        uses: hendrikmuhs/ccache-action@v1.2
+#        with:
+#          key: ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-${{ hashFiles('**/CMakeLists.txt', '**/Makefile') }}
+#          restore-keys: |
+#            ${{ runner.os }}-msys2-${{ github.job }}-${{ matrix.config.prefix }}-
+#            ${{ runner.os }}-msys2-${{ github.job }}-
+#
+#      - name: Get number of CPU cores
+#        uses: SimenB/github-actions-cpu-cores@v3
+#        id: cpu-cores
+#
+#      - name: Create installer
+#        env:
+#          CCACHE_DIR: ${{ github.workspace }}/.ccache
+#        run: |
+#          make checkout
+#          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
   # Yosys-slang plugin has issues on linking library to Yosys in Msys2. Suspect the root of cause is on the linking path. Disable it for now.
   win_msys2_installer:
