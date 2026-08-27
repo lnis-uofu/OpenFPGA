@@ -136,8 +136,8 @@ compile: | prebuild
 #
 #   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled 
 	echo "Building target(s): ${CMAKE_GOALS}" && \
-	echo "${CMAKE_COMMAND} --config ${CMAKE_BUILD_CONFIG} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
-	${CMAKE_COMMAND} --config ${CMAKE_BUILD_CONFIG} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}
+	echo "${CMAKE_COMMAND} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
+	${CMAKE_COMMAND} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}
 
 list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
