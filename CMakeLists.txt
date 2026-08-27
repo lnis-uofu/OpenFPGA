@@ -129,6 +129,12 @@ set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
 set(VPR_USE_SERVER OFF CACHE BOOL "Specify whether vpr enables the server mode")
 # TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
 #set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
+#if (WIN32)
+#  if (MSVC)
+#    set(VPR_IPO_BUILD OFF CACHE BOOL "Specify build in IPO optimization")
+#  endif()
+#  set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+#endif()
 
 # Override WGET Options
 if (WIN32)
@@ -344,7 +350,10 @@ set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
 set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
 set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
 set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
-
+# Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
+if (APPLE)
+set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
+endif()
 #
 ## Search and link dependent packages
 ## We need readline to compile 
