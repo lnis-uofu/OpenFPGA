@@ -143,8 +143,8 @@ compile: | prebuild
 #
 #   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled 
 	echo "Building target(s): ${CMAKE_GOALS}" && \
-	echo "${CMAKE_COMMAND} ${CMAKE_BUILD_CONFIG} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
-	${CMAKE_COMMAND} ${CMAKE_BUILD_CONFIG} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}
+	echo "${CMAKE_COMMAND} --build ${BUILD_DIR} ${CMAKE_BUILD_CONFIG} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
+	${CMAKE_COMMAND} --build ${BUILD_DIR} ${CMAKE_BUILD_CONFIG} --target ${CMAKE_GOALS} ${JOB_FLAGS}
 
 list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
@@ -161,7 +161,7 @@ installer:
 # .. option:: INSTALLER_TYPE
 #
 #   Define the type of installer, can be [STGZ|DEB|IFW] (default: STGZ). for example, ``INSTALLER_TYPE=DEB`` indicates to create a DEB package
-	cpack ${CPACK_BUILD_CONFIG} --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE}
+	cpack --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE} ${CPACK_BUILD_CONFIG}
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules
