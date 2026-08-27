@@ -501,8 +501,7 @@ jobs:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
 
         run: |
-          make checkout
-          make prebuild VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+          make all VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
           make installer VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Create Python virtual environment
