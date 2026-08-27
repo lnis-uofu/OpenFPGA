@@ -19,11 +19,11 @@ BUILD_TYPE ?= release
 BUILD_TYPE := $(shell echo ${BUILD_TYPE} | tr '[:upper:]' '[lower]')
 # Trim any _pgo or _strict in the build type name (since it would not match any of CMake's standard build types
 CMAKE_BUILD_TYPE := $(shell echo ${BUILD_TYPE} | sed 's/_\?pgo//' | sed 's/_\?strict//')
-CMAKE_BUILD_CONFIG = Release
-ifeq ($(BUILD_TYPE), release)
-CMAKE_BUILD_CONFIG = Release
-else ifeq ($(BUILD_TYPE), debug)
-CMAKE_BUILD_CONFIG = Debug
+CMAKE_BUILD_CONFIG_VAL = Release
+ifeq ($(CMAKE_BUILD_TYPE), release)
+CMAKE_BUILD_CONFIG_VAL = Release
+else ifeq ($(CMAKE_BUILD_TYPE), debug)
+CMAKE_BUILD_CONFIG_VAL = Debug
 else
 $(error Invalid BUILD type '$(BUILD_TYPE)'. Allowed values are 'release' or 'debug')
 endif
@@ -52,6 +52,12 @@ endif
 endif
 ifeq ($(UNAME_S),Darwin)
 CMAKE_GEN = Ninja
+endif
+
+CPACK_CONFIG_TYPE=
+ifeq ($(CMAKE_GEN),Ninja)
+CPACK_CONFIG_TYPE=-C ${CMAKE_BUILD_CONFIG_VAL}
+CMAKE_BUILD_CONFIG=--config ${CMAKE_BUILD_CONFIG_VAL}
 endif
 
 # Allow users to pass parameters to cmake, without defining build types
@@ -136,8 +142,8 @@ compile: | prebuild
 #
 #   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled 
 	echo "Building target(s): ${CMAKE_GOALS}" && \
-	echo "${CMAKE_COMMAND} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
-	${CMAKE_COMMAND} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}
+	echo "${CMAKE_COMMAND} ${CMAKE_BUILD_CONFIG} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
+	${CMAKE_COMMAND} ${CMAKE_BUILD_CONFIG} --build ${BUILD_DIR} --target ${CMAKE_GOALS} ${JOB_FLAGS}
 
 list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
@@ -154,7 +160,7 @@ installer:
 # .. option:: INSTALLER_TYPE
 #
 #   Define the type of installer, can be [STGZ|DEB|IFW] (default: STGZ). for example, ``INSTALLER_TYPE=DEB`` indicates to create a DEB package
-	cpack -C ${CMAKE_BUILD_CONFIG} --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE}
+	cpack ${CPACK_BUILD_CONFIG} --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE}
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules
