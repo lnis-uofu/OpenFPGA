@@ -27,6 +27,8 @@ pacman -S --noconfirm --needed \
     gdb \
     git \
     gperf \
+    gawk \
+    mingw-w64-x86_64-git \
     mingw-w64-x86_64-iverilog \
     mingw-w64-x86_64-cairo \
     mingw-w64-x86_64-libevent \
