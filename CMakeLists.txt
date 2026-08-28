@@ -361,9 +361,7 @@ set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
 set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
 set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
 # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
-if (APPLE OR MSVC)
 set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
-endif()
 #
 ## Search and link dependent packages
 ## We need readline to compile 
@@ -420,16 +418,6 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(libyosys PRIVATE "-w")
       target_compile_options(libyosys-abc PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
-      if (MSVC)
-        target_include_directories(yosys_fst PRIVATE ${ZLIB_INCLUDE_DIRS})
-        target_link_libraries(yosys_fst PRIVATE ${ZLIB_LIBRARIES})
-      endif()
-      if(MINGW OR MSYS)
-          # MinGW/MSYS2 doesn't provide scandir/alphasort
-          target_compile_definitions(libyosys-abc PRIVATE "HAVE_SCANDIR=0")
-      elseif(UNIX)
-          target_compile_definitions(libyosys-abc PRIVATE "HAVE_SCANDIR=1")
-      endif()
   endif()
 endif()
 
