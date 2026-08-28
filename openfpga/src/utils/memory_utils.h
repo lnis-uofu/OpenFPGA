@@ -65,7 +65,7 @@ int rec_find_physical_memory_children(
   const ModuleManager& module_manager, const ModuleId& curr_module,
   std::vector<ModuleId>& physical_memory_children,
   std::vector<std::string>& physical_memory_instance_names,
-  const bool& verbose);
+  const bool& verbose, std::string parent_name = "");
 
 } /* end namespace openfpga */
 
