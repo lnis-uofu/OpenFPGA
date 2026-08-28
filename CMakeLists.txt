@@ -191,7 +191,10 @@ if (OPENFPGA_IPO_BUILD STREQUAL "on")
         message(ERROR "Building with IPO unsupported with this compiler!")
     endif()
 elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
-    if (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
+    # Yosys does not support IPO on Mingw gcc tool chain
+    if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(STATUS "Building with IPO: off (auto) due to Msys2 gcc toolchain limitations")
+    elseif (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
         message(STATUS "Building with IPO: on (auto)")
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
     else()
@@ -372,6 +375,12 @@ endif()
 
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  # Yosys inherit ccache setting from parent project
+  if(CMAKE_CXX_COMPILER_LAUNCHER)
+    set(YOSYS_COMPILER_LAUNCHER ${CMAKE_CXX_COMPILER_LAUNCHER} CACHE STRING "Compiler launcher being consistent with parent project")
+  else()
+    set(YOSYS_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "Compiler launcher being consistent with parent project")
+  endif()
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
   add_subdirectory(yosys)
   #Since Yosys is an externally developed tool, we suppress all compiler warnings
