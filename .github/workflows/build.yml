@@ -171,7 +171,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -297,7 +297,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -411,7 +411,7 @@ jobs:
       matrix:
         config:
           - name: "Installer w/o doc (MsBuild Windows-latest)"
-            cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DOPENFPGA_WITH_YOSYS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF -DWITH_ABC=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.12.1
@@ -483,17 +483,6 @@ jobs:
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
         id: cpu-cores
-
-# Adapt from https://github.com/tangxifan/yosys/blob/41a4b5a039d1f6e04d9c577d3f186ba85f6f1f01/.github/workflows/extra-builds.yml#L60-L80
-      - name: Build yosys
-        shell: powershell
-        env:
-          CCACHE_DIR: ${{ github.workspace }}/.ccache
-        run: |
-          cd yosys
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSYS_COMPILER_LAUNCHER=ccache
-          cmake --build build --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
-          cmake --install build --prefix ${{ github.workspace }}/yosys_installed
 
       - name: Create installer
         shell: powershell
