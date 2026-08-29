@@ -360,6 +360,11 @@ set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
 set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
 set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
 set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
+# A hotfix on the following error. Could be a zlib problem on vcpkg
+# yosys\libs\fst\fstapi.h(39): fatal error C1083: Cannot open include file: 'libs/zlib/zlib.h': No such file or directory
+if (MSVC)
+set(YOSYS_ENABLE_ZLIB OFF CACHE BOOL "Transparent Gzip decompression and FST file format support")
+endif()
 # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
 set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
 #
