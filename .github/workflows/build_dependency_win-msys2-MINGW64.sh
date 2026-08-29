@@ -55,7 +55,6 @@ pacman -S --noconfirm --needed \
     expect \
     mingw-w64-x86_64-lld \
     mingw-w64-x86_64-clang \
-    mingw-w64-x86_64-yosys \
     mingw-w64-x86_64-boost-libs \
     libreadline-devel \
     zlib-devel \
