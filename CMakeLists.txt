@@ -362,6 +362,10 @@ set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
 set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
 # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
 set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
+# Based on Yosys CI using MSVC build. Zlib is disabled
+if (MSVC)
+  set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
+endif()
 #
 ## Search and link dependent packages
 ## We need readline to compile 
@@ -418,10 +422,6 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(libyosys PRIVATE "-w")
       target_compile_options(libyosys-abc PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
-      # Fixed the bug zlib include path only for msvc
-      if (MSVC)
-        target_include_directories(yosys_fst PRIVATE ${YOSYS_CMAKE_SOURCE_DIR})
-      endif()
   endif()
 endif()
 
