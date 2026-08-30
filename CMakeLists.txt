@@ -427,11 +427,11 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       # Enable POSIX functions for MinGW/MSYS2 environments
       if(DEFINED ENV{MSYSTEM})
           message(STATUS "Enabling POSIX C functions for MSYS2 yosys-abc")
-          target_compile_definitions(yosys-abc
+          target_compile_definitions(yosys-abc PRIVATE
               _GNU_SOURCE
               _POSIX_C_SOURCE=200809L
           )
-          target_compile_definitions(libyosys-abc
+          target_compile_definitions(libyosys-abc PRIVATE
               _GNU_SOURCE
               _POSIX_C_SOURCE=200809L
           )
