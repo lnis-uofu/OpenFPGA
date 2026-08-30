@@ -66,14 +66,6 @@ if (MSVC)
     )
 else()
     add_compile_definitions(NOMINMAX)
-    # Enable POSIX functions for MinGW/MSYS2 environments
-    if(DEFINED ENV{MSYSTEM})
-        message(STATUS "Enabling POSIX C functions for MSYS2")
-        add_compile_definitions(
-            _GNU_SOURCE
-            _POSIX_C_SOURCE=200809L
-        )
-    endif()
 endif()
 
 
@@ -430,7 +422,21 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       endforeach()
       target_compile_options(libyosys PRIVATE "-w")
       target_compile_options(libyosys-abc PRIVATE "-w")
+      target_compile_options(yosys-abc PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
+      # Enable POSIX functions for MinGW/MSYS2 environments
+      if(DEFINED ENV{MSYSTEM})
+          message(STATUS "Enabling POSIX C functions for MSYS2 yosys-abc")
+          target_compile_definitions(yosys-abc
+              _GNU_SOURCE
+              _POSIX_C_SOURCE=200809L
+          )
+          target_compile_definitions(libyosys-abc
+              _GNU_SOURCE
+              _POSIX_C_SOURCE=200809L
+          )
+      endif()
+
   endif()
 endif()
 
