@@ -391,6 +391,15 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   else()
     set(YOSYS_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "Compiler launcher being consistent with parent project")
   endif()
+  # Enable POSIX functions for MinGW/MSYS2 environments
+  if(DEFINED ENV{MSYSTEM})
+    message(STATUS "Enabling POSIX C functions for MSYS2")
+    add_compile_definitions(
+      _GNU_SOURCE
+      _POSIX_C_SOURCE=200809L
+    )
+  endif()
+
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
   add_subdirectory(yosys)
   #Since Yosys is an externally developed tool, we suppress all compiler warnings
@@ -424,19 +433,6 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(libyosys-abc PRIVATE "-w")
       target_compile_options(yosys-abc PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
-      # Enable POSIX functions for MinGW/MSYS2 environments
-      if(DEFINED ENV{MSYSTEM})
-          message(STATUS "Enabling POSIX C functions for MSYS2 yosys-abc")
-          target_compile_definitions(yosys-abc PRIVATE
-              _GNU_SOURCE
-              _POSIX_C_SOURCE=200809L
-          )
-          target_compile_definitions(libyosys-abc PRIVATE
-              _GNU_SOURCE
-              _POSIX_C_SOURCE=200809L
-          )
-      endif()
-
   endif()
 endif()
 
