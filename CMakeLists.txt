@@ -119,6 +119,9 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   if (MSVC)
     set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
   endif()
+  if (WIN32)
+    set(BUILD_SHARED_LIBS ON)
+  endif()
   #
   ## Search and link dependent packages
   ## We need readline to compile 
