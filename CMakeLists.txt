@@ -266,7 +266,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   set(MATCHING_TARGETS ${ALL_TARGETS})
   list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
   # Output result
-  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
+#  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
 #  if(CXX_COMPILER_SUPPORTS_-w)
 #      foreach (target_name IN LISTS MATCHING_TARGETS)
 #        # 1. Fetch the exact target type
