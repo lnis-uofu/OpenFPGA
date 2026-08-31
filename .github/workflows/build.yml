@@ -481,13 +481,18 @@ jobs:
         uses: SimenB/github-actions-cpu-cores@v3
         id: cpu-cores
 
+      - name: Build
+        shell: powershell
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: |
+          make all VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+
       - name: Create installer
         shell: powershell
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
-
         run: |
-          make all VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
           make installer VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Create Python virtual environment
