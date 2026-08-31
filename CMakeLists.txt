@@ -210,6 +210,86 @@ if(NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
 endif()
 
+# yosys compilation starts
+# Compilation options for yosys
+include(CMakeParseArguments)
+
+# Yosys goes first as it requires special CMake settings which should be overwritten by other projects
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  # Options to enable/disable dependencies for yosys
+  set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
+  set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
+  set(YOSYS_SKIP_ABC_SUBMODULE_CHECK OFF CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
+  # Based on Yosys CI using MSVC build. Readline is disabled
+  if (MSVC)
+    set(YOSYS_WITHOUT_READLINE ON CACHE BOOL "Disable readline library in yosys")
+  else()
+    set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
+  endif()
+  #if (MSVC)
+  #  set(YOSYS_WITHOUT_EDITLINE ON CACHE BOOL "Disable editline library in yosys")
+  #else()
+    set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
+  #endif()
+  set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
+  set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
+  set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
+  set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
+  # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
+  set(YOSYS_USE_BUNDLED_LIBS OFF CACHE BOOL "Use bundled third-party libraries")
+  # Based on Yosys CI using MSVC build. Zlib is disabled
+  if (MSVC)
+    set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
+  endif()
+  #
+  ## Search and link dependent packages
+  ## We need readline to compile 
+  if (YOSYS_WITHOUT_READLINE)
+    find_package(Readline REQUIRED)
+  endif()
+
+  # Yosys inherit ccache setting from parent project
+  if(CMAKE_CXX_COMPILER_LAUNCHER)
+    set(YOSYS_COMPILER_LAUNCHER ${CMAKE_CXX_COMPILER_LAUNCHER} CACHE STRING "Compiler launcher being consistent with parent project")
+  else()
+    set(YOSYS_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "Compiler launcher being consistent with parent project")
+  endif()
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
+  add_subdirectory(yosys)
+  #Since Yosys is an externally developed tool, we suppress all compiler warnings
+  CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
+  # Collect all targets starting from the root source directory
+  set(ALL_TARGETS "")
+  get_all_project_targets(ALL_TARGETS "${CMAKE_SOURCE_DIR}")
+  # Filter targets that start with your prefix (e.g., "my_prefix_")
+  set(PREFIX_PATTERN "^yosys_")
+  set(MATCHING_TARGETS ${ALL_TARGETS})
+  list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
+  # Output result
+  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
+#  if(CXX_COMPILER_SUPPORTS_-w)
+#      foreach (target_name IN LISTS MATCHING_TARGETS)
+#        # 1. Fetch the exact target type
+#        get_target_property(target_type ${target_name} TYPE)
+#        # Skip completely non-compilable utility and alias metadata
+#        if(target_type STREQUAL "UTILITY" OR target_type MATCHES "ALIAS")
+#          message(STATUS "Skipping non-compilable target: ${target_name} [${target_type}]")
+#          continue()
+#        endif()
+#        if(target_type STREQUAL "INTERFACE_LIBRARY")
+#           # Interface targets only accept INTERFACE flags
+#           target_compile_options(${target_name} INTERFACE "-w")
+#        else()
+#           target_compile_options(${target_name} PRIVATE "-w")
+#        endif()
+#      endforeach()
+#      target_compile_options(libyosys PRIVATE "-w")
+#      target_compile_options(libyosys-abc PRIVATE "-w")
+#      target_compile_options(yosys-abc PRIVATE "-w")
+#      target_compile_options(slang_slang PRIVATE "-w")
+#  endif()
+endif()
+
 # Set WARN FLAGS
 set(WARN_FLAGS "")
 
@@ -322,85 +402,6 @@ separate_arguments(
     WARN_FLAGS UNIX_COMMAND "${WARN_FLAGS}"
     )
 
-# yosys compilation starts
-# Compilation options for yosys
-include(CMakeParseArguments)
-
-# Yosys goes first as it requires special CMake settings which should be overwritten by other projects
-if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
-  # Options to enable/disable dependencies for yosys
-  set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
-  set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
-  set(YOSYS_SKIP_ABC_SUBMODULE_CHECK OFF CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
-  # Based on Yosys CI using MSVC build. Readline is disabled
-  if (MSVC)
-    set(YOSYS_WITHOUT_READLINE ON CACHE BOOL "Disable readline library in yosys")
-  else()
-    set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
-  endif()
-  #if (MSVC)
-  #  set(YOSYS_WITHOUT_EDITLINE ON CACHE BOOL "Disable editline library in yosys")
-  #else()
-    set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
-  #endif()
-  set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
-  set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
-  set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
-  set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
-  # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
-  set(YOSYS_USE_BUNDLED_LIBS OFF CACHE BOOL "Use bundled third-party libraries")
-  # Based on Yosys CI using MSVC build. Zlib is disabled
-  if (MSVC)
-    set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
-  endif()
-  #
-  ## Search and link dependent packages
-  ## We need readline to compile 
-  if (YOSYS_WITHOUT_READLINE)
-    find_package(Readline REQUIRED)
-  endif()
-
-  # Yosys inherit ccache setting from parent project
-  if(CMAKE_CXX_COMPILER_LAUNCHER)
-    set(YOSYS_COMPILER_LAUNCHER ${CMAKE_CXX_COMPILER_LAUNCHER} CACHE STRING "Compiler launcher being consistent with parent project")
-  else()
-    set(YOSYS_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "Compiler launcher being consistent with parent project")
-  endif()
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
-  add_subdirectory(yosys)
-  #Since Yosys is an externally developed tool, we suppress all compiler warnings
-  CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
-  # Collect all targets starting from the root source directory
-  set(ALL_TARGETS "")
-  get_all_project_targets(ALL_TARGETS "${CMAKE_SOURCE_DIR}")
-  # Filter targets that start with your prefix (e.g., "my_prefix_")
-  set(PREFIX_PATTERN "^yosys_")
-  set(MATCHING_TARGETS ${ALL_TARGETS})
-  list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
-  # Output result
-  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
-  if(CXX_COMPILER_SUPPORTS_-w)
-      foreach (target_name IN LISTS MATCHING_TARGETS)
-        # 1. Fetch the exact target type
-        get_target_property(target_type ${target_name} TYPE)
-        # Skip completely non-compilable utility and alias metadata
-        if(target_type STREQUAL "UTILITY" OR target_type MATCHES "ALIAS")
-          message(STATUS "Skipping non-compilable target: ${target_name} [${target_type}]")
-          continue()
-        endif()
-        if(target_type STREQUAL "INTERFACE_LIBRARY")
-           # Interface targets only accept INTERFACE flags
-           target_compile_options(${target_name} INTERFACE "-w")
-        else()
-           target_compile_options(${target_name} PRIVATE "-w")
-        endif()
-      endforeach()
-      target_compile_options(libyosys PRIVATE "-w")
-      target_compile_options(libyosys-abc PRIVATE "-w")
-      target_compile_options(yosys-abc PRIVATE "-w")
-      target_compile_options(slang_slang PRIVATE "-w")
-  endif()
-endif()
 # 
 # Sub-projects with their own compiler settings
 #
