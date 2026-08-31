@@ -401,8 +401,8 @@ separate_arguments(
 # 
 # Sub-projects with their own compiler settings
 # In MSVC and MSYS2, Yosys will not build shared lib and set the option globally
-# Here to recover it as the capnproto require it to be on always
-set(BUILD_SHARED_LIBS ON)
+# Here to recover it as the capnproto require it to be off always
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(vtr-verilog-to-routing)
 
 add_compile_options(${WARN_FLAGS}) #Add warn flags for VTR tools
