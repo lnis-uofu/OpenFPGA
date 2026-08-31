@@ -369,6 +369,12 @@ jobs:
         run: |
           make all BUILD_TYPE=debug CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
+      - name: Check DLL linkg
+        shell: msys2 {0}
+        run: |
+          # This will print exactly which DLL file is missing/unresolved
+          ldd ./build/openfpga/openfga
+
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
 #   D:/a/OpenFPGA/OpenFPGA/openfpga_flow/tasks/compilation_verification/run001/aOpenFPGAOpenFPGA/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
