@@ -321,59 +321,6 @@ separate_arguments(
 separate_arguments(
     WARN_FLAGS UNIX_COMMAND "${WARN_FLAGS}"
     )
-
-# 
-# Sub-projects with their own compiler settings
-#
-add_subdirectory(vtr-verilog-to-routing)
-
-add_compile_options(${WARN_FLAGS}) #Add warn flags for VTR tools
-add_compile_options(${ADDITIONAL_FLAGS})
-link_libraries(${ADDITIONAL_FLAGS})
-
-# Unit Testing
-#
-if (OPENFPGA_WITH_TEST)
-    enable_testing()
-endif()
-
-# yosys compilation starts
-
-# Compilation options for yosys
-include(CMakeParseArguments)
-
-# Options to enable/disable dependencies for yosys
-set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
-set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
-set(YOSYS_SKIP_ABC_SUBMODULE_CHECK ON CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
-# Based on Yosys CI using MSVC build. Readline is disabled
-if (MSVC)
-  set(YOSYS_WITHOUT_READLINE ON CACHE BOOL "Disable readline library in yosys")
-else()
-  set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
-endif()
-#if (MSVC)
-#  set(YOSYS_WITHOUT_EDITLINE ON CACHE BOOL "Disable editline library in yosys")
-#else()
-  set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
-#endif()
-set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
-set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
-set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
-set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
-# Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
-set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
-# Based on Yosys CI using MSVC build. Zlib is disabled
-if (MSVC)
-  set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
-endif()
-#
-## Search and link dependent packages
-## We need readline to compile 
-if (YOSYS_WITHOUT_READLINE)
-  find_package(Readline REQUIRED)
-endif()
-
 #PugiXml has some deliberate switch fallthrough cases (as indicated by comments), but they
 #are tagged as warnings with g++-7 (the comments don't match g++-7's suppression regexes).
 #Since we don't want to change PugiXml (it is developed externally), we relax the warning
@@ -383,22 +330,50 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
     target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
 endif()
 
-# we will check if yosys already exist. if not then build it
+# yosys compilation starts
+# Compilation options for yosys
+include(CMakeParseArguments)
+
+# Yosys goes first as it requires special CMake settings which should be overwritten by other projects
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  # Options to enable/disable dependencies for yosys
+  set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
+  set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
+  set(YOSYS_SKIP_ABC_SUBMODULE_CHECK ON CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
+  # Based on Yosys CI using MSVC build. Readline is disabled
+  if (MSVC)
+    set(YOSYS_WITHOUT_READLINE ON CACHE BOOL "Disable readline library in yosys")
+  else()
+    set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
+  endif()
+  #if (MSVC)
+  #  set(YOSYS_WITHOUT_EDITLINE ON CACHE BOOL "Disable editline library in yosys")
+  #else()
+    set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
+  #endif()
+  set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
+  set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
+  set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
+  set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
+  # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
+  set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
+  # Based on Yosys CI using MSVC build. Zlib is disabled
+  if (MSVC)
+    set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
+  endif()
+  #
+  ## Search and link dependent packages
+  ## We need readline to compile 
+  if (YOSYS_WITHOUT_READLINE)
+    find_package(Readline REQUIRED)
+  endif()
+
   # Yosys inherit ccache setting from parent project
   if(CMAKE_CXX_COMPILER_LAUNCHER)
     set(YOSYS_COMPILER_LAUNCHER ${CMAKE_CXX_COMPILER_LAUNCHER} CACHE STRING "Compiler launcher being consistent with parent project")
   else()
     set(YOSYS_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "Compiler launcher being consistent with parent project")
   endif()
-  # Enable POSIX functions for MinGW/MSYS2 environments
-  if(DEFINED ENV{MSYSTEM})
-    message(STATUS "Enabling POSIX C functions for MSYS2")
-    add_compile_options(-D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L)
-    # Force inclusion of dirent.h for C++ compiled C files
-    add_compile_options(-D__USE_MINGW_ANSI_STDIO=1)
-  endif()
-
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
   add_subdirectory(yosys)
   #Since Yosys is an externally developed tool, we suppress all compiler warnings
@@ -433,6 +408,20 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
       target_compile_options(yosys-abc PRIVATE "-w")
       target_compile_options(slang_slang PRIVATE "-w")
   endif()
+endif()
+# 
+# Sub-projects with their own compiler settings
+#
+add_subdirectory(vtr-verilog-to-routing)
+
+add_compile_options(${WARN_FLAGS}) #Add warn flags for VTR tools
+add_compile_options(${ADDITIONAL_FLAGS})
+link_libraries(${ADDITIONAL_FLAGS})
+
+# Unit Testing
+#
+if (OPENFPGA_WITH_TEST)
+    enable_testing()
 endif()
 
 # 
