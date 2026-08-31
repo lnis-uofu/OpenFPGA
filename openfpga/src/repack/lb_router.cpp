@@ -92,6 +92,7 @@ bool LbRouter::is_route_success(const LbRRGraph& lb_rr_graph) const {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
 
+  bool success = true;
   for (const LbRRNodeId& inode : lb_rr_graph.nodes()) {
     if (routing_status_[inode].occ > lb_rr_graph.node_capacity(inode)) {
       VTR_LOGV(lb_rr_graph.node_pb_graph_pin(inode),
@@ -99,11 +100,11 @@ bool LbRouter::is_route_success(const LbRRGraph& lb_rr_graph) const {
                "capacity '%ld'!\n",
                lb_rr_graph.node_pb_graph_pin(inode)->to_string().c_str(),
                routing_status_[inode].occ, lb_rr_graph.node_capacity(inode));
-      return false;
+      success = false;
     }
   }
 
-  return true;
+  return success;
 }
 
 LbRouter::t_trace* LbRouter::find_node_in_rt(t_trace* rt,
