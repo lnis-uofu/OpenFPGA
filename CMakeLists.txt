@@ -331,7 +331,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   # Options to enable/disable dependencies for yosys
   set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
   set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
-  set(YOSYS_SKIP_ABC_SUBMODULE_CHECK ON CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
+  set(YOSYS_SKIP_ABC_SUBMODULE_CHECK OFF CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
   # Based on Yosys CI using MSVC build. Readline is disabled
   if (MSVC)
     set(YOSYS_WITHOUT_READLINE ON CACHE BOOL "Disable readline library in yosys")
@@ -348,7 +348,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
   set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
   # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
-  set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
+  set(YOSYS_USE_BUNDLED_LIBS OFF CACHE BOOL "Use bundled third-party libraries")
   # Based on Yosys CI using MSVC build. Zlib is disabled
   if (MSVC)
     set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
