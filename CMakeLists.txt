@@ -58,17 +58,6 @@ set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 #Create the project 
 project("OpenFPGA-tool-suites" C CXX)
 
-# Windows fixes
-if (MSVC)
-    add_compile_definitions(
-        NOMINMAX
-        _CRT_SECURE_NO_WARNINGS
-    )
-else()
-    add_compile_definitions(NOMINMAX)
-endif()
-
-
 # Version number
 file (STRINGS "VERSION.md" VERSION_NUMBER)
 string (REPLACE "." ";" VERSION_LIST ${VERSION_NUMBER})
@@ -76,13 +65,6 @@ list(GET VERSION_LIST 0 OPENFPGA_VERSION_MAJOR)
 list(GET VERSION_LIST 1 OPENFPGA_VERSION_MINOR)
 list(GET VERSION_LIST 2 OPENFPGA_VERSION_PATCH)
 set(OPENFPGA_VERSION_PRERELEASE "dev")
-
-
-# Set the assertion level
-add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
-
-# compiler flag configuration checks
-include(CheckCXXCompilerFlag)
 
 # Options
 ## General options
@@ -108,111 +90,6 @@ if (NOT OPENFPGA_READLINE_MODE IN_LIST OPENFPGA_READLINE_MODES)
     message(FATAL_ERROR "Invalid value for OPENFPGA_READLINE_MODE. Allowed values are: ${OPENFPGA_READLINE_MODES}")
 endif()
 message(STATUS "Readline feature mode: ${OPENFPGA_READLINE_MODE}")
-
-# Options pass on to VTR
-
-set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
-set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
-set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
-set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in Verilog-to-Routing")
-set(ODIN_COVERAGE OFF CACHE BOOL "Enable building odin with coverage flags in Verilog-to-Routing")
-set(ODIN_TIDY OFF CACHE BOOL "Enable building odin with clang tidy in Verilog-to-Routing")
-set(ODIN_SANITIZE OFF CACHE BOOL "Enable building odin with sanitize flags in Verilog-to-Routing")
-set(WITH_YOSYS OFF CACHE BOOL "Enable building Yosys in Verilog-to-Routing")
-set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
-set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Routing")
-set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
-set(YOSYS_F4PGA_PLUGINS OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins")
-set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
-set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
-set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
-set(VPR_USE_SERVER OFF CACHE BOOL "Specify whether vpr enables the server mode")
-# TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
-#set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
-#if (WIN32)
-#  if (MSVC)
-#    set(VPR_IPO_BUILD OFF CACHE BOOL "Specify build in IPO optimization")
-#  endif()
-#  set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
-#endif()
-
-# Override WGET Options
-if (WIN32)
-  if(MSVC)
-    set(WGET_OUTPUT_OPTION "-o" CACHE STRING "Wget output option" FORCE)
-  elseif(DEFINED ENV{MSYSTEM})
-    message(STATUS "Wget specifically using the Msys2 toolchain")
-    set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
-  endif()
-elseif(UNIX AND NOT APPLE)
-  set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
-endif()
-
-# TCL file/lib required to link with SWIG generated wrapper
-if (OPENFPGA_WITH_SWIG)
-#Find Tcl
-  find_package(TCL REQUIRED)
-  if(NOT TCL_FOUND)
-    message(FATAL_ERROR "TCL not found. Please install TCL development headers (e.g. tcl8.6-dev).")
-  endif()
-  message(STATUS "TCL_INCLUDE_PATH: ${TCL_INCLUDE_PATH}")
-  message(STATUS "TCL_LIBRARY: ${TCL_LIBRARY}")
-
-#Find SWIG
-  find_package(SWIG 3.0 REQUIRED)
-  if (SWIG_VERSION VERSION_GREATER_EQUAL "4.1.0")
-    message(WARNING "Using SWIG >= ${SWIG_VERSION} -flatstaticmethod flag for python")
-  endif()
-  include(UseSWIG)
-endif()
-
-#Compiler flag configuration checks
-include(CheckCXXCompilerFlag)
-
-#
-# We require c++20 support
-#
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
-
-#
-# Interprocedural optimization
-#
-#   Note that we manually clear the INTERPROCEDURAL_OPTIMIZATION flag on ABC later
-#   to avoid cmake warnings
-include(CheckIPOSupported)
-check_ipo_supported(RESULT IPO_SUPPORTED)
-if (OPENFPGA_IPO_BUILD STREQUAL "on")
-    if (IPO_SUPPORTED)
-        message(STATUS "Building with IPO: on")
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-    else()
-        message(ERROR "Building with IPO unsupported with this compiler!")
-    endif()
-elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
-    # Yosys does not support IPO on Mingw gcc tool chain
-    if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        message(STATUS "Building with IPO: off (auto) due to Msys2 gcc toolchain limitations")
-    elseif (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
-        message(STATUS "Building with IPO: on (auto)")
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-    else()
-        message(STATUS "Building with IPO: off (auto)")
-    endif()
-else()
-    message(STATUS "Building with IPO: off")
-endif()
-
-if(NOT MSVC)
-    # for GCC and Clang
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
-endif()
-
-# yosys compilation starts
-# Compilation options for yosys
-include(CMakeParseArguments)
 
 # Yosys goes first as it requires special CMake settings which should be overwritten by other projects
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
@@ -289,6 +166,125 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
 #      target_compile_options(slang_slang PRIVATE "-w")
 #  endif()
 endif()
+
+
+# Options pass on to VTR
+
+set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
+set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
+set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in Verilog-to-Routing")
+set(ODIN_COVERAGE OFF CACHE BOOL "Enable building odin with coverage flags in Verilog-to-Routing")
+set(ODIN_TIDY OFF CACHE BOOL "Enable building odin with clang tidy in Verilog-to-Routing")
+set(ODIN_SANITIZE OFF CACHE BOOL "Enable building odin with sanitize flags in Verilog-to-Routing")
+set(WITH_YOSYS OFF CACHE BOOL "Enable building Yosys in Verilog-to-Routing")
+set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
+set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Routing")
+set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
+set(YOSYS_F4PGA_PLUGINS OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins")
+set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
+set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
+set(VPR_ENABLE_INTERCHANGE ON CACHE BOOL "Enable FPGA interchange")
+set(VPR_USE_SERVER OFF CACHE BOOL "Specify whether vpr enables the server mode")
+# TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
+#set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
+#if (WIN32)
+#  if (MSVC)
+#    set(VPR_IPO_BUILD OFF CACHE BOOL "Specify build in IPO optimization")
+#  endif()
+#  set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+#endif()
+# Windows fixes
+if (MSVC)
+    add_compile_definitions(
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+    )
+else()
+    add_compile_definitions(NOMINMAX)
+endif()
+# Set the assertion level
+add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
+
+# compiler flag configuration checks
+include(CheckCXXCompilerFlag)
+
+
+# Override WGET Options
+if (WIN32)
+  if(MSVC)
+    set(WGET_OUTPUT_OPTION "-o" CACHE STRING "Wget output option" FORCE)
+  elseif(DEFINED ENV{MSYSTEM})
+    message(STATUS "Wget specifically using the Msys2 toolchain")
+    set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
+  endif()
+elseif(UNIX AND NOT APPLE)
+  set(WGET_OUTPUT_OPTION "-O" CACHE STRING "Wget output option" FORCE)
+endif()
+
+# TCL file/lib required to link with SWIG generated wrapper
+if (OPENFPGA_WITH_SWIG)
+#Find Tcl
+  find_package(TCL REQUIRED)
+  if(NOT TCL_FOUND)
+    message(FATAL_ERROR "TCL not found. Please install TCL development headers (e.g. tcl8.6-dev).")
+  endif()
+  message(STATUS "TCL_INCLUDE_PATH: ${TCL_INCLUDE_PATH}")
+  message(STATUS "TCL_LIBRARY: ${TCL_LIBRARY}")
+
+#Find SWIG
+  find_package(SWIG 3.0 REQUIRED)
+  if (SWIG_VERSION VERSION_GREATER_EQUAL "4.1.0")
+    message(WARNING "Using SWIG >= ${SWIG_VERSION} -flatstaticmethod flag for python")
+  endif()
+  include(UseSWIG)
+endif()
+
+#Compiler flag configuration checks
+include(CheckCXXCompilerFlag)
+
+#
+# We require c++20 support
+#
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
+
+#
+# Interprocedural optimization
+#
+#   Note that we manually clear the INTERPROCEDURAL_OPTIMIZATION flag on ABC later
+#   to avoid cmake warnings
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED)
+if (OPENFPGA_IPO_BUILD STREQUAL "on")
+    if (IPO_SUPPORTED)
+        message(STATUS "Building with IPO: on")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(ERROR "Building with IPO unsupported with this compiler!")
+    endif()
+elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
+    # Yosys does not support IPO on Mingw gcc tool chain
+    if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(STATUS "Building with IPO: off (auto) due to Msys2 gcc toolchain limitations")
+    elseif (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
+        message(STATUS "Building with IPO: on (auto)")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(STATUS "Building with IPO: off (auto)")
+    endif()
+else()
+    message(STATUS "Building with IPO: off")
+endif()
+
+if(NOT MSVC)
+    # for GCC and Clang
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+endif()
+
+include(CMakeParseArguments)
 
 # Set WARN FLAGS
 set(WARN_FLAGS "")
