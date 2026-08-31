@@ -321,14 +321,6 @@ separate_arguments(
 separate_arguments(
     WARN_FLAGS UNIX_COMMAND "${WARN_FLAGS}"
     )
-#PugiXml has some deliberate switch fallthrough cases (as indicated by comments), but they
-#are tagged as warnings with g++-7 (the comments don't match g++-7's suppression regexes).
-#Since we don't want to change PugiXml (it is developed externally), we relax the warning
-#level so no fallthrough warnings are generated
-CHECK_CXX_COMPILER_FLAG("-Wimplicit-fallthrough=0" CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
-if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
-    target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
-endif()
 
 # yosys compilation starts
 # Compilation options for yosys
@@ -417,6 +409,14 @@ add_subdirectory(vtr-verilog-to-routing)
 add_compile_options(${WARN_FLAGS}) #Add warn flags for VTR tools
 add_compile_options(${ADDITIONAL_FLAGS})
 link_libraries(${ADDITIONAL_FLAGS})
+#PugiXml has some deliberate switch fallthrough cases (as indicated by comments), but they
+#are tagged as warnings with g++-7 (the comments don't match g++-7's suppression regexes).
+#Since we don't want to change PugiXml (it is developed externally), we relax the warning
+#level so no fallthrough warnings are generated
+CHECK_CXX_COMPILER_FLAG("-Wimplicit-fallthrough=0" CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
+if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
+    target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
+endif()
 
 # Unit Testing
 #
