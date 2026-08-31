@@ -389,6 +389,14 @@ jobs:
           echo "==== Run a quick test ===="
           python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path "${DEFAULT_TOOL_PATH}"
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.name}}_regression_log
+          retention-days: 1
+          path: openfpga_flow/**/*.log
+
   # Add an installer creation for MSVC build
   win_msvc_installer:
     needs: change_detect
@@ -518,7 +526,7 @@ jobs:
 
           echo "==== Add DLL directories to PATH ===="
           $dllPaths = @(
-            "${{ github.workspace }}\yosys_installed",
+            "${{ github.workspace }}\build\yosys\Release",
             "${{ github.workspace }}\build\openfpga\Release",
             "${{ github.workspace }}\build\libs\libopenfpgashell\Release",
             "${{ github.workspace }}\build\libs\libpcf\Release",
