@@ -394,10 +394,9 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   # Enable POSIX functions for MinGW/MSYS2 environments
   if(DEFINED ENV{MSYSTEM})
     message(STATUS "Enabling POSIX C functions for MSYS2")
-    add_compile_definitions(
-      _GNU_SOURCE
-      _POSIX_C_SOURCE=200809L
-    )
+    add_compile_options(-D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L)
+    # Force inclusion of dirent.h for C++ compiled C files
+    add_compile_options(-D__USE_MINGW_ANSI_STDIO=1)
   endif()
 
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
