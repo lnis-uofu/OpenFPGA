@@ -445,6 +445,9 @@ if(MSVC)
   # Replace /MT with /MD for all targets
   string(REPLACE "/MT" "/MD" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
   string(REPLACE "/MT" "/MD" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+  
+  # Add linker flag to ignore LIBCMT conflicts
+  add_link_options(/NODEFAULTLIB:LIBCMT)
 endif()
 # The openfpga has to be included after yosys subdirectory. It requires some variables in Yosys cmake scripts
 add_subdirectory(openfpga)
