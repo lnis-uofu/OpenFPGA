@@ -120,7 +120,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
     set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
   endif()
   if (WIN32)
-    set(BUILD_SHARED_LIBS ON)
+    set(BUILD_SHARED_LIBS OFF)
   endif()
   #
   ## Search and link dependent packages
