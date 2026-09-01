@@ -63,6 +63,11 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   target_link_libraries(libopenfpga
                         libyosys
                         )
+  # FIX: Handle MSVC runtime library mismatch
+  if (MSVC)
+    # Suppress the LIBCMT conflict warning and prefer MSVCRT
+    target_link_options(libopenfpga PRIVATE /NODEFAULTLIB:LIBCMT)
+  endif()
 endif()
 
 #Create the test executable
