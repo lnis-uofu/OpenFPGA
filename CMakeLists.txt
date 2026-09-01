@@ -256,6 +256,10 @@ set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
 # Yosys requires C++ and a patch when linking its static lib to OpenFPGA shell
 if (MSVC)
   add_compile_options(/Zc:__cplusplus)
+  add_compile_definitions(
+    _CRT_NONSTDC_NO_DEPRECATE
+    _CRT_SECURE_NO_WARNINGS
+  )
 endif()
 #
 # Interprocedural optimization
