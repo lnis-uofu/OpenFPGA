@@ -119,7 +119,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   if (MSVC)
     set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
   endif()
-  if (WIN32)
+  if(DEFINED ENV{MSYSTEM})
     set(BUILD_SHARED_LIBS OFF)
   endif()
   #
