@@ -58,17 +58,6 @@ set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 #Create the project 
 project("OpenFPGA-tool-suites" C CXX)
 
-# Windows fixes
-if (MSVC)
-    add_compile_definitions(
-        NOMINMAX
-        _CRT_SECURE_NO_WARNINGS
-    )
-else()
-    add_compile_definitions(NOMINMAX)
-endif()
-
-
 # Version number
 file (STRINGS "VERSION.md" VERSION_NUMBER)
 string (REPLACE "." ";" VERSION_LIST ${VERSION_NUMBER})
@@ -76,13 +65,6 @@ list(GET VERSION_LIST 0 OPENFPGA_VERSION_MAJOR)
 list(GET VERSION_LIST 1 OPENFPGA_VERSION_MINOR)
 list(GET VERSION_LIST 2 OPENFPGA_VERSION_PATCH)
 set(OPENFPGA_VERSION_PRERELEASE "dev")
-
-
-# Set the assertion level
-add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
-
-# compiler flag configuration checks
-include(CheckCXXCompilerFlag)
 
 # Options
 ## General options
@@ -108,6 +90,87 @@ if (NOT OPENFPGA_READLINE_MODE IN_LIST OPENFPGA_READLINE_MODES)
     message(FATAL_ERROR "Invalid value for OPENFPGA_READLINE_MODE. Allowed values are: ${OPENFPGA_READLINE_MODES}")
 endif()
 message(STATUS "Readline feature mode: ${OPENFPGA_READLINE_MODE}")
+
+# Yosys goes first as it requires special CMake settings which should be overwritten by other projects
+if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
+  # Options to enable/disable dependencies for yosys
+  set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
+  set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
+  set(YOSYS_SKIP_ABC_SUBMODULE_CHECK OFF CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
+  # Based on Yosys CI using MSVC build. Readline is disabled
+  if (MSVC)
+    set(YOSYS_WITHOUT_READLINE ON CACHE BOOL "Disable readline library in yosys")
+  else()
+    set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
+  endif()
+  #if (MSVC)
+  #  set(YOSYS_WITHOUT_EDITLINE ON CACHE BOOL "Disable editline library in yosys")
+  #else()
+    set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
+  #endif()
+  set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
+  set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
+  set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
+  set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
+  set(YOSYS_ENABLE_FUNCTIONAL_TESTS OFF CACHE BOOL "Disable functional tests in compiled yosys")
+  # Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
+  set(YOSYS_USE_BUNDLED_LIBS OFF CACHE BOOL "Use bundled third-party libraries")
+  # Based on Yosys CI using MSVC build. Zlib is disabled
+  if (MSVC)
+    set(YOSYS_WITHOUT_ZLIB ON CACHE BOOL "Disable zlib integration")
+  endif()
+  if(DEFINED ENV{MSYSTEM})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+  #
+  ## Search and link dependent packages
+  ## We need readline to compile 
+  if (YOSYS_WITHOUT_READLINE)
+    find_package(Readline REQUIRED)
+  endif()
+
+  # Yosys inherit ccache setting from parent project
+  if(CMAKE_CXX_COMPILER_LAUNCHER)
+    set(YOSYS_COMPILER_LAUNCHER ${CMAKE_CXX_COMPILER_LAUNCHER} CACHE STRING "Compiler launcher being consistent with parent project")
+  else()
+    set(YOSYS_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "Compiler launcher being consistent with parent project")
+  endif()
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
+  add_subdirectory(yosys)
+  #Since Yosys is an externally developed tool, we suppress all compiler warnings
+  CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
+  # Collect all targets starting from the root source directory
+  set(ALL_TARGETS "")
+  get_all_project_targets(ALL_TARGETS "${CMAKE_SOURCE_DIR}")
+  # Filter targets that start with your prefix (e.g., "my_prefix_")
+  set(PREFIX_PATTERN "^yosys_")
+  set(MATCHING_TARGETS ${ALL_TARGETS})
+  list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
+  # Output result
+#  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
+#  if(CXX_COMPILER_SUPPORTS_-w)
+#      foreach (target_name IN LISTS MATCHING_TARGETS)
+#        # 1. Fetch the exact target type
+#        get_target_property(target_type ${target_name} TYPE)
+#        # Skip completely non-compilable utility and alias metadata
+#        if(target_type STREQUAL "UTILITY" OR target_type MATCHES "ALIAS")
+#          message(STATUS "Skipping non-compilable target: ${target_name} [${target_type}]")
+#          continue()
+#        endif()
+#        if(target_type STREQUAL "INTERFACE_LIBRARY")
+#           # Interface targets only accept INTERFACE flags
+#           target_compile_options(${target_name} INTERFACE "-w")
+#        else()
+#           target_compile_options(${target_name} PRIVATE "-w")
+#        endif()
+#      endforeach()
+#      target_compile_options(libyosys PRIVATE "-w")
+#      target_compile_options(libyosys-abc PRIVATE "-w")
+#      target_compile_options(yosys-abc PRIVATE "-w")
+#      target_compile_options(slang_slang PRIVATE "-w")
+#  endif()
+endif()
+
 
 # Options pass on to VTR
 
@@ -135,6 +198,21 @@ set(VPR_USE_SERVER OFF CACHE BOOL "Specify whether vpr enables the server mode")
 #  endif()
 #  set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
 #endif()
+# Windows fixes
+if (MSVC)
+    add_compile_definitions(
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+    )
+else()
+    add_compile_definitions(NOMINMAX)
+endif()
+# Set the assertion level
+add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
+
+# compiler flag configuration checks
+include(CheckCXXCompilerFlag)
+
 
 # Override WGET Options
 if (WIN32)
@@ -175,7 +253,14 @@ include(CheckCXXCompilerFlag)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
-
+# Yosys requires C++ and a patch when linking its static lib to OpenFPGA shell
+if (MSVC)
+  add_compile_options(/Zc:__cplusplus)
+  add_compile_definitions(
+    _CRT_NONSTDC_NO_DEPRECATE
+    _CRT_SECURE_NO_WARNINGS
+  )
+endif()
 #
 # Interprocedural optimization
 #
@@ -191,7 +276,10 @@ if (OPENFPGA_IPO_BUILD STREQUAL "on")
         message(ERROR "Building with IPO unsupported with this compiler!")
     endif()
 elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
-    if (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
+    # Yosys does not support IPO on Mingw gcc tool chain
+    if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(STATUS "Building with IPO: off (auto) due to Msys2 gcc toolchain limitations")
+    elseif (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
         message(STATUS "Building with IPO: on (auto)")
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
     else()
@@ -206,6 +294,8 @@ if(NOT MSVC)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
 endif()
+
+include(CMakeParseArguments)
 
 # Set WARN FLAGS
 set(WARN_FLAGS "")
@@ -321,46 +411,14 @@ separate_arguments(
 
 # 
 # Sub-projects with their own compiler settings
-#
+# In MSVC and MSYS2, Yosys will not build shared lib and set the option globally
+# Here to recover it as the capnproto require it to be off always
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(vtr-verilog-to-routing)
 
 add_compile_options(${WARN_FLAGS}) #Add warn flags for VTR tools
 add_compile_options(${ADDITIONAL_FLAGS})
 link_libraries(${ADDITIONAL_FLAGS})
-
-# Unit Testing
-#
-if (OPENFPGA_WITH_TEST)
-    enable_testing()
-endif()
-
-# yosys compilation starts
-
-# Compilation options for yosys
-include(CMakeParseArguments)
-
-# Options to enable/disable dependencies for yosys
-set(YOSYS_CONFIG_OPTION "config-gcc" CACHE STRING "Yosys configuration on environment") 
-set(YOSYS_WITHOUT_TCL OFF CACHE BOOL "Disable TCL parser integrated in yosys")
-set(YOSYS_WITHOUT_ABC OFF CACHE BOOL "Disable ABC support in yosys")
-set(YOSYS_SKIP_ABC_SUBMODULE_CHECK ON CACHE BOOL "Do not allow yosys to checkout submodule during build. It is handled by OpenFPGA")
-set(YOSYS_WITHOUT_READLINE OFF CACHE BOOL "Disable readline library in yosys")
-set(YOSYS_WITHOUT_EDITLINE OFF CACHE BOOL "Disable editline library in yosys")
-set(YOSYS_ENABLE_VERIFIC OFF CACHE BOOL "Enable verific library in yosys")
-set(YOSYS_ENABLE_COVERAGE OFF CACHE BOOL "Enable coverage test in yosys")
-set(YOSYS_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in compiled yosys")
-set(YOSYS_ENABLE_UNIT_TESTS OFF CACHE BOOL "Disable unit tests in compiled yosys")
-# Refer to https://github.com/YosysHQ/yosys/blob/dd83bbad28b61f244e1ae00639d85a07c2a5c95f/.github/workflows/test-build.yml#L96
-if (APPLE)
-set(YOSYS_USE_BUNDLED_LIBS ON CACHE BOOL "Use bundled third-party libraries")
-endif()
-#
-## Search and link dependent packages
-## We need readline to compile 
-if (YOSYS_WITHOUT_READLINE)
-  find_package(Readline REQUIRED)
-endif()
-
 #PugiXml has some deliberate switch fallthrough cases (as indicated by comments), but they
 #are tagged as warnings with g++-7 (the comments don't match g++-7's suppression regexes).
 #Since we don't want to change PugiXml (it is developed externally), we relax the warning
@@ -370,47 +428,27 @@ if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
     target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
 endif()
 
-# we will check if yosys already exist. if not then build it
-if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/yosys/cmake)
-  add_subdirectory(yosys)
-  #Since Yosys is an externally developed tool, we suppress all compiler warnings
-  CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
-  # Collect all targets starting from the root source directory
-  set(ALL_TARGETS "")
-  get_all_project_targets(ALL_TARGETS "${CMAKE_SOURCE_DIR}")
-  # Filter targets that start with your prefix (e.g., "my_prefix_")
-  set(PREFIX_PATTERN "^yosys_")
-  set(MATCHING_TARGETS ${ALL_TARGETS})
-  list(FILTER MATCHING_TARGETS INCLUDE REGEX "${PREFIX_PATTERN}")
-  # Output result
-  message(STATUS "Found targets with prefix: ${MATCHING_TARGETS}")
-  if(CXX_COMPILER_SUPPORTS_-w)
-      foreach (target_name IN LISTS MATCHING_TARGETS)
-        # 1. Fetch the exact target type
-        get_target_property(target_type ${target_name} TYPE)
-        # Skip completely non-compilable utility and alias metadata
-        if(target_type STREQUAL "UTILITY" OR target_type MATCHES "ALIAS")
-          message(STATUS "Skipping non-compilable target: ${target_name} [${target_type}]")
-          continue()
-        endif()
-        if(target_type STREQUAL "INTERFACE_LIBRARY")
-           # Interface targets only accept INTERFACE flags
-           target_compile_options(${target_name} INTERFACE "-w")
-        else()
-           target_compile_options(${target_name} PRIVATE "-w")
-        endif()
-      endforeach()
-      target_compile_options(libyosys PRIVATE "-w")
-      target_compile_options(libyosys-abc PRIVATE "-w")
-      target_compile_options(slang_slang PRIVATE "-w")
-  endif()
+# Unit Testing
+#
+if (OPENFPGA_WITH_TEST)
+    enable_testing()
 endif()
 
 # 
 # Sub-projects to apply current complier settings
 #
 add_subdirectory(libs)
+# Set runtime library to dynamic (/MD)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+# Or for all targets, you can add:
+if(MSVC)
+  # Replace /MT with /MD for all targets
+  string(REPLACE "/MT" "/MD" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+  string(REPLACE "/MT" "/MD" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+  
+  # Add linker flag to ignore LIBCMT conflicts
+  add_link_options(/NODEFAULTLIB:LIBCMT)
+endif()
 # The openfpga has to be included after yosys subdirectory. It requires some variables in Yosys cmake scripts
 add_subdirectory(openfpga)
 
