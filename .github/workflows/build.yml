@@ -171,7 +171,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -200,6 +200,7 @@ jobs:
           install: >-
             wget
             git
+            tree
 
       #In MSYS2, the flex package is an MSYS-native tool, meaning it installs its headers to /usr/include/FlexLexer.h. However, if you are using a MinGW-w64 environment (e.g., UCRT64, MINGW64), the compiler only looks for headers in /mingw64/include or similar toolchain-specific paths. The most common workaround is to copy or link the header from the MSYS directory to your active MinGW-w64 include directory. 
       # For python build from sources
@@ -228,10 +229,6 @@ jobs:
           ld --version
           which python3
           python3 --version
-          echo "==== Checking yosys packages ===="
-          which yosys.exe
-          echo "==== Checking libgnat.a ===="
-          ls /${{ matrix.config.prefix }}/lib/gcc/x86_64-w64-mingw32/*/adalib/libgnat.a
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -297,7 +294,7 @@ jobs:
             cxx: g++
             os: MINGW64
             prefix: mingw64
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+            cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
         # This ensures all 'run' steps use the MSYS2 bash shell by default
@@ -324,6 +321,7 @@ jobs:
           install: >-
             wget
             git
+            tree
 
       #In MSYS2, the flex package is an MSYS-native tool, meaning it installs its headers to /usr/include/FlexLexer.h. However, if you are using a MinGW-w64 environment (e.g., UCRT64, MINGW64), the compiler only looks for headers in /mingw64/include or similar toolchain-specific paths. The most common workaround is to copy or link the header from the MSYS directory to your active MinGW-w64 include directory. 
       # For python build from sources
@@ -353,10 +351,6 @@ jobs:
           echo "PYTHON_EXEC=$(which python3)" >> $GITHUB_ENV
           echo "OPENFPGA_PATH=$(pwd)" >> $GITHUB_ENV
           python3 --version
-          echo "==== Checking yosys packages ===="
-          which yosys.exe
-          echo "==== Checking libgnat.a ===="
-          ls /${{ matrix.config.prefix }}/lib/gcc/x86_64-w64-mingw32/*/adalib/libgnat.a
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -377,6 +371,17 @@ jobs:
         run: |
           make all BUILD_TYPE=debug CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
+      - name: Build file tree
+        shell: msys2 {0}
+        run: |
+          tree build
+
+      - name: Check DLL linkg
+        shell: msys2 {0}
+        run: |
+          # This will print exactly which DLL file is missing/unresolved
+          ldd ./build/openfpga/openfpga.exe
+
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
 #   D:/a/OpenFPGA/OpenFPGA/openfpga_flow/tasks/compilation_verification/run001/aOpenFPGAOpenFPGA/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
@@ -396,6 +401,14 @@ jobs:
 
           echo "==== Run a quick test ===="
           python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs --default_tool_path "${DEFAULT_TOOL_PATH}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.name}}_regression_log
+          retention-days: 1
+          path: openfpga_flow/**/*.log
 
   # Add an installer creation for MSVC build
   win_msvc_installer:
@@ -435,6 +448,9 @@ jobs:
         run: |
           choco install winflexbison3 wget eigen
           choco install magicsplat-tcl-tk --version=1.16.0
+          # Make tools visible to CMake
+          echo "C:\Program Files (x86)\GnuWin32\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
+          echo "C:\ProgramData\chocolatey\lib\winflexbison3\tools" | Out-File -Append -FilePath $env:GITHUB_PATH
 
       - name: Dump tool versions
         shell: powershell
@@ -468,8 +484,10 @@ jobs:
           }
           echo "CURL_PATH=$curlPath" >> $env:GITHUB_ENV
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Setup MSVC
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
       
       - name: Check MSVC Version
         run: cl
@@ -484,7 +502,7 @@ jobs:
         uses: SimenB/github-actions-cpu-cores@v3
         id: cpu-cores
 
-# Adapt from https://github.com/tangxifan/yosys/blob/41a4b5a039d1f6e04d9c577d3f186ba85f6f1f01/.github/workflows/extra-builds.yml#L60-L80
+      # Adapt from https://github.com/tangxifan/yosys/blob/41a4b5a039d1f6e04d9c577d3f186ba85f6f1f01/.github/workflows/extra-builds.yml#L60-L80
       - name: Build yosys
         shell: powershell
         env:
@@ -495,13 +513,18 @@ jobs:
           cmake --build build --config Release --parallel ${{ steps.cpu-cores.outputs.count }}
           cmake --install build --prefix ${{ github.workspace }}/yosys_installed
 
+      - name: Build
+        shell: powershell
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: |
+          make all VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
+
       - name: Create installer
         shell: powershell
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
-
         run: |
-          make all VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
           make installer VCPKG_PATH="${{ github.workspace }}/vcpkg" INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Create Python virtual environment
