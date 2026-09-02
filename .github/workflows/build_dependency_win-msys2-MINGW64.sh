@@ -27,6 +27,8 @@ pacman -S --noconfirm --needed \
     gdb \
     git \
     gperf \
+    gawk \
+    mingw-w64-x86_64-git \
     mingw-w64-x86_64-iverilog \
     mingw-w64-x86_64-cairo \
     mingw-w64-x86_64-libevent \
@@ -53,7 +55,6 @@ pacman -S --noconfirm --needed \
     expect \
     mingw-w64-x86_64-lld \
     mingw-w64-x86_64-clang \
-    mingw-w64-x86_64-yosys \
     mingw-w64-x86_64-boost-libs \
     libreadline-devel \
     zlib-devel \
