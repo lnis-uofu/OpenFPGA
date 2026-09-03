@@ -1062,6 +1062,10 @@ ShellCommandId add_write_mif_loc_map_command_template(
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false,
+                       "Do not print time stamp in output files");
+
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
   /* Add command to the Shell */
