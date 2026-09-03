@@ -296,7 +296,7 @@ int write_mif_location_map_template(const T& openfpga_ctx, const Command& cmd,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
-  std::string fpath = cmd_context.option_value(cmd, opt_file).empty();
+  std::string fpath = cmd_context.option_value(cmd, opt_file);
 
   /* Write fabric key to a file */
   const MifLocationMap& mif_loc_map = openfpga_ctx.mif_location_map();
