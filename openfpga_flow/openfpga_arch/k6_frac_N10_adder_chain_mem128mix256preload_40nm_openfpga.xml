@@ -208,6 +208,7 @@
       <port type="input" prefix="ren" size="1"/>
       <port type="output" prefix="data_out" lib_name="d_out" size="32"/>
       <port type="clock" prefix="clk" size="1"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
       <!-- Global ports for preload -->
       <port type="input" prefix="mem_init_rst_n" lib_name="rst_n" size="1" is_global="true" default_val="1" is_reset="true"/>
       <port type="input" prefix="mem_init_clk" lib_name="preload_clk" size="1" is_global="true" default_val="0"/>
