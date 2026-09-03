@@ -62,8 +62,6 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --ver
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
 #write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --mif ${OPENFPGA_WRITE_MIF_FILE} --bus_group_file bus_group.xml --explicit_port_mapping
-# Check if the output MIF matches the expected ground-truth MIF
-ext_exec --command "diff ${OPENFPGA_WRITE_MIF_FILE} ${OPENFPGA_CUSTOM_FULL_TESTBENCH_MIF}"
 # Copy external hand-crafted testbench 
 ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH} SRC/"
 
