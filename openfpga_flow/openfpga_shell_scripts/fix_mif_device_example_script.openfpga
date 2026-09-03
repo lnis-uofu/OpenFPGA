@@ -54,13 +54,18 @@ write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 #  - Enable the use of explicit port mapping in Verilog netlist
 write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --verbose
 
+# TODO: Think how to accept custom testing vectors in full testbench generation
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
 #  - Must specify the reference benchmark file if you want to output any testbenches
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --mif ${OPENFPGA_WRITE_MIF_FILE} --bus_group_file bus_group.xml --explicit_port_mapping
+#write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --mif ${OPENFPGA_WRITE_MIF_FILE} --bus_group_file bus_group.xml --explicit_port_mapping
+# Check if the output MIF matches the expected ground-truth MIF
+ext_exec --command "diff ${OPENFPGA_WRITE_MIF_FILE} ${OPENFPGA_CUSTOM_FULL_TESTBENCH_MIF}"
+# Copy external hand-crafted testbench 
+ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH} SRC/"
 
 # Finish and exit OpenFPGA
 exit
