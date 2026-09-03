@@ -148,9 +148,9 @@ static void register_grid_module_mif_locations(
   for (size_t isubchild = 0;
        isubchild < module_manager.mif_children(grid_module).size();
        ++isubchild) {
-    const ModuleId subchild =
+    ModuleId subchild =
       module_manager.mif_children(grid_module)[isubchild];
-    const vtr::Point<int>& subchild_coord =
+    vtr::Point<int> subchild_coord =
       module_manager.mif_child_coordinates(grid_module)[isubchild];
     int z = subchild_coord.x();
     if (0 > z) {
@@ -171,7 +171,7 @@ static void register_grid_module_mif_locations(
         continue;
       }
       VTR_ASSERT(gpin_port.get_width() == port_info->second);
-      size_t& offset = offset_counter[port_info->first];
+      size_t offset = offset_counter[port_info->first];
       mif_location_map.add(port_info->first, phy_loc, pb_graph_node, offset,
                            gpin_port.get_width());
       offset += gpin_port.get_width();
