@@ -179,7 +179,7 @@ static void register_grid_module_mif_locations(
       size_t offset = offset_counter[port_info->first];
       mif_location_map.add(port_info->first, phy_loc, pb_graph_node, offset,
                            gpin_port.get_width());
-      offset += gpin_port.get_width();
+      offset_counter[port_info->first] += gpin_port.get_width();
     }
   }
 }
