@@ -25,6 +25,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/** @brief Get a list of unique pb_graph nodes which are
+ * - primitive nodes
+ * - require memory initialization file (MIF) defined through bitstream annotation
+ * TODO: This should be a method of the bitstream annotation
+ */ 
 static std::vector<t_pb_graph_node*> collect_physical_mif_nodes(
   const VprBitstreamAnnotation& bitstream_annotation,
   const VprDeviceAnnotation& device_annotation) {
@@ -186,19 +191,21 @@ MifLocationMap build_fabric_mif_location_map(
   const VprDeviceAnnotation& device_annotation, const bool& tiled_fabric) {
   vtr::ScopedStartFinishTimer timer(
     "Create MIF location mapping for fabric grids");
-
+  /* Collect unique pb_graph nodes that require MIF file */
   const std::vector<t_pb_graph_node*> physical_nodes =
     collect_physical_mif_nodes(bitstream_annotation, device_annotation);
   if (true == physical_nodes.empty()) {
     return MifLocationMap();
   }
-
+  /* Collect all the data ports (name + port width) of each circuit lib used in the architecture (valid one in the unique pb_graph node list) */
   const std::map<std::string, size_t> mif_data_ports =
     collect_mif_data_bus_ports(circuit_lib, device_annotation, physical_nodes);
   if (true == mif_data_ports.empty()) {
     return MifLocationMap();
   }
-
+  /* Now walk through all the MIF children under the top-level module
+   * For each MIF child, record its offset in the mif data bus at top-level module
+   */
   MifLocationMap mif_location_map;
   std::map<std::string, size_t> offset_counter;
   const size_t layer = 0;
