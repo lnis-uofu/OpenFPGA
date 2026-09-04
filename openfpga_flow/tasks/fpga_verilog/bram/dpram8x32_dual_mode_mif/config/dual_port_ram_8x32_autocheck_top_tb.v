@@ -307,7 +307,7 @@ end
 // ----- Begin MIF ROM: loaded from external file, indexed by mem_init_addr -----
 // ----- File format: "@ADDR DATA" (standard $readmemh sparse-address syntax) -----
 // ----- NOTE: update the filename below to match your actual generated MIF file -----
-`define MEM_INIT_MIF "frac_mem_256_mem_init.mif"
+`define MEM_INIT_MIF "ram_mif.mem"
 	reg [0:31] mem_init_rom [0:15];
 initial begin
 	$readmemh(`MEM_INIT_MIF, mem_init_rom);

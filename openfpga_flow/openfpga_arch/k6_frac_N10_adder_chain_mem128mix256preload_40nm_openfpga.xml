@@ -208,6 +208,7 @@
       <port type="input" prefix="ren" size="1"/>
       <port type="output" prefix="data_out" lib_name="d_out" size="32"/>
       <port type="clock" prefix="clk" size="1"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
       <!-- Global ports for preload -->
       <port type="input" prefix="mem_init_rst_n" lib_name="rst_n" size="1" is_global="true" default_val="1" is_reset="true"/>
       <port type="input" prefix="mem_init_clk" lib_name="preload_clk" size="1" is_global="true" default_val="0"/>
@@ -300,7 +301,8 @@
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
     <!-- End physical pb_type binding in complex block clb -->
     <!-- physical pb_type binding in complex block memory -->
-    <pb_type name="memory256[mem_16x16_phy].mem_16x16_phy" circuit_model_name="frac_mem_256_preload"/>
+    <pb_type name="memory256" physical_mode_name="mem_16x16_phy"/>
+    <pb_type name="memory256[mem_16x16_phy].mem_16x16_phy" circuit_model_name="frac_mem_256_preload" mode_bits="00"/>
     <pb_type name="memory256[mem_16x16_dp].mem_16x16_dp" physical_pb_type_name="memory256[mem_16x16_phy].mem_16x16_phy" mode_bits="00">
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="waddr" physical_mode_port="waddr[0:3]"/>

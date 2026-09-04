@@ -337,7 +337,7 @@ end
 // ----- fpga_top embeds TWO physical dpram_8x16_preload memories that share ONE 32-bit init data bus, looked up by the TB-driven 3-bit mem_init_addr counter above -----
 // ----- File format is standard $readmemh sparse-address syntax: "@ADDR" on its own token followed by a hex DATA word, e.g. "@0 FFFFFFFF" -- matching dual_port_ram_128_mem_init.mif -----
 // ----- NOTE: update the file name/path below if your generated MIF file is named/located differently. -----
-`define MEM_INIT_MIF "dual_port_ram_8x32_mem_init.mif"
+`define MEM_INIT_MIF "ram_mif.mem"
 	reg [0:31] mem_init_rom [0:15];
 initial begin
 	$readmemh(`MEM_INIT_MIF, mem_init_rom);
