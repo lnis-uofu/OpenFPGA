@@ -284,7 +284,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
  *******************************************************************/
 template <class T>
 int write_mif_location_map_template(const T& openfpga_ctx, const Command& cmd,
-                              const CommandContext& cmd_context) {
+                                    const CommandContext& cmd_context) {
   CommandOptionId opt_no_ts = cmd.option("no_time_stamp");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -300,13 +300,11 @@ int write_mif_location_map_template(const T& openfpga_ctx, const Command& cmd,
 
   /* Write fabric key to a file */
   const MifLocationMap& mif_loc_map = openfpga_ctx.mif_location_map();
- 
+
   return mif_loc_map.write_to_xml_file(
-    fpath,
-    !cmd_context.option_enable(cmd, opt_no_ts),
+    fpath, !cmd_context.option_enable(cmd, opt_no_ts),
     cmd_context.option_enable(cmd, opt_verbose));
 }
-
 
 /********************************************************************
  * Write fabric key of the module graph for FPGA device to a file
