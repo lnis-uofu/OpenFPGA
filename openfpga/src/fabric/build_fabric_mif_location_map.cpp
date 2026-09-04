@@ -25,6 +25,12 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/** @brief Get a list of unique pb_graph nodes which are
+ * - primitive nodes
+ * - require memory initialization file (MIF) defined through bitstream
+ * annotation
+ * TODO: This should be a method of the bitstream annotation
+ */
 static std::vector<t_pb_graph_node*> collect_physical_mif_nodes(
   const VprBitstreamAnnotation& bitstream_annotation,
   const VprDeviceAnnotation& device_annotation) {
@@ -148,9 +154,8 @@ static void register_grid_module_mif_locations(
   for (size_t isubchild = 0;
        isubchild < module_manager.mif_children(grid_module).size();
        ++isubchild) {
-    const ModuleId subchild =
-      module_manager.mif_children(grid_module)[isubchild];
-    const vtr::Point<int>& subchild_coord =
+    ModuleId subchild = module_manager.mif_children(grid_module)[isubchild];
+    vtr::Point<int> subchild_coord =
       module_manager.mif_child_coordinates(grid_module)[isubchild];
     int z = subchild_coord.x();
     if (0 > z) {
@@ -171,10 +176,10 @@ static void register_grid_module_mif_locations(
         continue;
       }
       VTR_ASSERT(gpin_port.get_width() == port_info->second);
-      size_t& offset = offset_counter[port_info->first];
+      size_t offset = offset_counter[port_info->first];
       mif_location_map.add(port_info->first, phy_loc, pb_graph_node, offset,
                            gpin_port.get_width());
-      offset += gpin_port.get_width();
+      offset_counter[port_info->first] += gpin_port.get_width();
     }
   }
 }
@@ -186,19 +191,23 @@ MifLocationMap build_fabric_mif_location_map(
   const VprDeviceAnnotation& device_annotation, const bool& tiled_fabric) {
   vtr::ScopedStartFinishTimer timer(
     "Create MIF location mapping for fabric grids");
-
+  /* Collect unique pb_graph nodes that require MIF file */
   const std::vector<t_pb_graph_node*> physical_nodes =
     collect_physical_mif_nodes(bitstream_annotation, device_annotation);
   if (true == physical_nodes.empty()) {
     return MifLocationMap();
   }
-
+  /* Collect all the data ports (name + port width) of each circuit lib used in
+   * the architecture (valid one in the unique pb_graph node list) */
   const std::map<std::string, size_t> mif_data_ports =
     collect_mif_data_bus_ports(circuit_lib, device_annotation, physical_nodes);
   if (true == mif_data_ports.empty()) {
     return MifLocationMap();
   }
-
+  /* Now walk through all the MIF children under the top-level module
+   * For each MIF child, record its offset in the mif data bus at top-level
+   * module
+   */
   MifLocationMap mif_location_map;
   std::map<std::string, size_t> offset_counter;
   const size_t layer = 0;

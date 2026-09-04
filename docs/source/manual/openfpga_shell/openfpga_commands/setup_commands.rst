@@ -479,6 +479,26 @@ write_fabric_hierarchy
 
   .. note:: This file is designed for hierarchical PnR flow, which requires the tree of Multiple-Instanced-Blocks (MIBs).
 
+
+.. _openfpga_setup_commands_write_mif_location_map:
+
+write_mif_location_map
+~~~~~~~~~~~~~~~~~~~~
+
+  Write the memory initialization file (MIF) location information of FPGA fabric to an XML file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name to write the MIF location information
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose log
+
 .. _openfpga_setup_commands_write_fabric_io_info:
 
 write_fabric_io_info

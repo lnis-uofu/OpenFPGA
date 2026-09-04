@@ -400,7 +400,7 @@ end
 // ----- Each 32-bit word: bits [0:15] -> dpram_8x16_preload, bits [16:31] -> frac_mem_256_preload -----
 // ----- mem128 uses rows 0-7 (3-bit addr); mem256 uses all 16 rows (4-bit addr) -----
 // ----- NOTE: update filename below if your MIF is named differently -----
-`define MEM_INIT_MIF "dual_port_ram_128_mem_init.mif"
+`define MEM_INIT_MIF "ram_mif.mem"
 	reg [0:31] mem_init_rom [0:15];
 initial begin
 	$readmemh(`MEM_INIT_MIF, mem_init_rom);

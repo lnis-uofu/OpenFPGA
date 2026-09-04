@@ -869,16 +869,11 @@ static void add_lb_router_nets(
         (AtomNetId::INVALID() == pb->pb_route[pin].atom_net_id)) {
       continue;
     }
-    /* Get the driver pb pin id, it must be valid */
-    int source_pb_pin_id = pb->pb_route[pin].driver_pb_pin_id;
-    if (UNDEFINED == source_pb_pin_id) {
-      continue;
-    }
-    VTR_ASSERT(UNDEFINED != source_pb_pin_id &&
-               source_pb_pin_id < pb->pb_graph_node->total_pb_pins);
-    /* Find the corresponding pb_graph_pin and its physical pb_graph_pin */
-    t_pb_graph_pin* source_pb_pin =
-      pb_graph_pin_lookup_from_index[source_pb_pin_id];
+
+    /* Consider this pin as the potential source pin of a net */
+    t_pb_graph_pin* source_pb_pin = pb_graph_pin_lookup_from_index[pin];
+    VTR_ASSERT(nullptr != source_pb_pin);
+
     /* Skip the pin from top-level pb_graph_node, they have been handled already
      */
     if (source_pb_pin->parent_node == pb->pb_graph_node) {
@@ -890,6 +885,20 @@ static void add_lb_router_nets(
       continue;
     }
     if (true != is_primitive_pb_type(source_pb_pin->parent_node->pb_type)) {
+      continue;
+    }
+
+    /* Skip dangling outputs: there is no terminal to route to.
+     * Warn unconditionally: a driven net always reaches at least one terminal,
+     * so an empty sink list points at an inconsistent pb_route rather than at a
+     * legitimately unused output.
+     */
+    if (pb->pb_route[pin].sink_pb_pin_ids.empty()) {
+      VTR_LOG_WARN(
+        "Primitive output pin '%s' carries net '%s' but drives nothing inside "
+        "the cluster. Skip routing it.\n",
+        source_pb_pin->to_string().c_str(),
+        atom_ctx.netlist().net_name(pb->pb_route[pin].atom_net_id).c_str());
       continue;
     }
 
