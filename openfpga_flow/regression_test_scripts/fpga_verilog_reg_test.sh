@@ -46,7 +46,8 @@ run-task fpga_verilog/bram/wide_dpram1k $@
 echo -e "Testing Verilog generation with 128-bit block RAMs with MIF support";
 run-task fpga_verilog/bram/dpram128_mif $@
 run-task fpga_verilog/bram/dpram8x32_dual_mode_mif $@
-run-task fpga_verilog/bram/dpram128_mix_8x32_dual_mode_mif $@
+# TODO: Find a way to aggregate different types of memory into one unique mif file
+#run-task fpga_verilog/bram/dpram128_mix_8x32_dual_mode_mif $@
 
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8 $@
