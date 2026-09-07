@@ -976,7 +976,7 @@ static void print_verilog_top_testbench_ports(
   mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map, const ModuleId& top_module,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
-  const std::vector<std::string>& clock_port_names,
+  const BusGroup& bus_group, const std::vector<std::string>& clock_port_names,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
   const SimulationSetting& simulation_parameters,
@@ -1141,7 +1141,7 @@ static void print_verilog_top_testbench_ports(
   std::vector<std::string> global_port_names;
   print_verilog_testbench_shared_ports(
     fp, module_manager, module_name_map, global_ports, pin_constraints,
-    atom_ctx, netlist_annotation, clock_port_names,
+    atom_ctx, netlist_annotation, bus_group, clock_port_names,
     std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
     std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
@@ -3075,10 +3075,11 @@ int print_verilog_full_testbench(
   }
 
   /* Start of testbench */
-  print_verilog_top_testbench_ports(
-    fp, module_manager, module_name_map, core_module, atom_ctx,
-    netlist_annotation, clock_port_names, global_ports, pin_constraints,
-    simulation_parameters, config_protocol, circuit_name, options);
+  print_verilog_top_testbench_ports(fp, module_manager, module_name_map,
+                                    core_module, atom_ctx, netlist_annotation,
+                                    bus_group, clock_port_names, global_ports,
+                                    pin_constraints, simulation_parameters,
+                                    config_protocol, circuit_name, options);
 
   /* Find the clock period */
   float prog_clock_period =
@@ -3200,7 +3201,7 @@ int print_verilog_full_testbench(
     little_endian);
   print_verilog_testbench_random_stimuli(
     fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
-    global_ports, pin_constraints, clock_port_names,
+    global_ports, pin_constraints, bus_group, clock_port_names,
     std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
     std::vector<BasicPort>(

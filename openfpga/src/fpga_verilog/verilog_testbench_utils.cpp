@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <map>
+#include <set>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -26,6 +27,57 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+static std::string atom_block_verilog_name(
+  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
+  const AtomBlockId& atom_blk) {
+  std::string block_name = atom_ctx.netlist().block_name(atom_blk);
+  if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+    block_name = netlist_annotation.block_name(atom_blk);
+  }
+  return block_name;
+}
+
+static std::set<std::string> collect_atom_inpad_names(
+  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation) {
+  std::set<std::string> names;
+  for (const AtomBlockId& atom_blk : atom_ctx.netlist().blocks()) {
+    if (AtomBlockType::INPAD != atom_ctx.netlist().block_type(atom_blk)) {
+      continue;
+    }
+    names.insert(
+      atom_block_verilog_name(atom_ctx, netlist_annotation, atom_blk));
+  }
+  return names;
+}
+
+/* Pins that still appear in bus_group (original HDL) but were swept from the
+ * atom netlist. REF_DUT instantiation walks the full bus, so these bits must
+ * still exist as shared inputs. */
+static std::vector<std::string> collect_unmapped_input_bus_pins(
+  const BusGroup& bus_group, const std::set<std::string>& atom_inpad_names) {
+  std::vector<std::string> missing;
+  for (const BusGroupId& bus_id : bus_group.buses()) {
+    bool is_input_bus = false;
+    for (const BusPinId& pin : bus_group.bus_pins(bus_id)) {
+      if (atom_inpad_names.end() !=
+          atom_inpad_names.find(bus_group.pin_name(pin))) {
+        is_input_bus = true;
+        break;
+      }
+    }
+    if (false == is_input_bus) {
+      continue;
+    }
+    for (const BusPinId& pin : bus_group.bus_pins(bus_id)) {
+      const std::string& pin_name = bus_group.pin_name(pin);
+      if (atom_inpad_names.end() == atom_inpad_names.find(pin_name)) {
+        missing.push_back(pin_name);
+      }
+    }
+  }
+  return missing;
+}
 
 /********************************************************************
  * Print an instance of the FPGA top-level module
@@ -857,7 +909,7 @@ void print_verilog_testbench_random_stimuli(
   const VprNetlistAnnotation& netlist_annotation,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
-  const PinConstraints& pin_constraints,
+  const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const std::vector<std::string>& clock_port_names,
   const std::string& input_port_postfix,
   const std::string& check_flag_port_postfix,
@@ -908,6 +960,12 @@ void print_verilog_testbench_random_stimuli(
       fp << "\t\t" << block_name + input_port_postfix << " <= 1'b0;"
          << std::endl;
     }
+  }
+
+  /* Keep unused HDL bus bits at 0; they are not FPGA I/Os so do not $random */
+  for (const std::string& pin_name : collect_unmapped_input_bus_pins(
+         bus_group, collect_atom_inpad_names(atom_ctx, netlist_annotation))) {
+    fp << "\t\t" << pin_name + input_port_postfix << " <= 1'b0;" << std::endl;
   }
 
   /* Set 0 to registers for checking flags */
@@ -1015,7 +1073,7 @@ void print_verilog_testbench_shared_input_ports(
   const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
-  const VprNetlistAnnotation& netlist_annotation,
+  const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
   const std::vector<std::string>& clock_port_names,
   const bool& include_clock_ports, const std::string& shared_input_port_postfix,
   const bool& use_reg_port, const bool& little_endian) {
@@ -1066,6 +1124,23 @@ void print_verilog_testbench_shared_input_ports(
     } else {
       fp << "\t"
          << generate_verilog_port(VERILOG_PORT_WIRE, input_port, true,
+                                  little_endian)
+         << ";" << std::endl;
+    }
+  }
+
+  /* Declare unused HDL bus bits so REF_DUT concatenation still binds */
+  for (const std::string& pin_name : collect_unmapped_input_bus_pins(
+         bus_group, collect_atom_inpad_names(atom_ctx, netlist_annotation))) {
+    BasicPort extra_port(pin_name + shared_input_port_postfix, 1);
+    if (use_reg_port) {
+      fp << "\t"
+         << generate_verilog_port(VERILOG_PORT_REG, extra_port, true,
+                                  little_endian)
+         << ";" << std::endl;
+    } else {
+      fp << "\t"
+         << generate_verilog_port(VERILOG_PORT_WIRE, extra_port, true,
                                   little_endian)
          << ";" << std::endl;
     }
@@ -1217,7 +1292,7 @@ void print_verilog_testbench_shared_ports(
   const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
-  const VprNetlistAnnotation& netlist_annotation,
+  const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
   const std::vector<std::string>& clock_port_names,
   const std::string& shared_input_port_postfix,
   const std::string& benchmark_output_port_postfix,
@@ -1226,7 +1301,7 @@ void print_verilog_testbench_shared_ports(
   const bool& little_endian) {
   print_verilog_testbench_shared_input_ports(
     fp, module_manager, module_name_map, global_ports, pin_constraints,
-    atom_ctx, netlist_annotation, clock_port_names, false,
+    atom_ctx, netlist_annotation, bus_group, clock_port_names, false,
     shared_input_port_postfix, true, little_endian);
 
   print_verilog_testbench_shared_fpga_output_ports(
