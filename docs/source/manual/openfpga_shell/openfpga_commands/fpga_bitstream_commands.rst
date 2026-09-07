@@ -68,6 +68,36 @@ build_architecture_bitstream
 
     Show verbose log
 
+.. _openfpga_bitstream_commands_write_mif:
+
+write_mif
+~~~~~~~~~
+
+  Write the unified FPGA-top Memory Initialization File (MIF) produced by ``build_architecture_bitstream``.
+  All MIF inputs (``read_mif`` hex files and/or eblif ``INIT``) are aggregated first; this command writes that result.
+
+  A unified MIF is generated for each unique circuit model in the OpenFPGA architecture that exposes an ``is_mif_data_bus`` port.
+  This command must be called after ``build_architecture_bitstream``.
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the output MIF file. If there are multiple MIF files as inputs, all their content is aggregated and then outputted to this file.
+
+  .. option:: --circuit_model <string>
+
+    Specify the name of the circuit model in the OpenFPGA architecture to which the MIF should be associated.
+    A unified MIF is generated for each unique circuit model used in the FPGA architecture.
+    If there is only one such circuit model, this option can be ignored.
+    When more than one MIF circuit model exists, this option is required.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose log
+
 build_fabric_bitstream
 ~~~~~~~~~~~~~~~~~~~~~~
 

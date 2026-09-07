@@ -326,4 +326,32 @@ int aggregate_unified_mif(const BitstreamSetting& bitstream_setting,
   return CMD_EXEC_SUCCESS;
 }
 
+std::map<std::string, std::string> collect_mif_data_port_circuit_models(
+  const MifLocationMap& mif_location_map,
+  const VprDeviceAnnotation& device_annotation,
+  const CircuitLibrary& circuit_lib) {
+  std::map<std::string, std::string> port_to_model;
+  for (const auto& port_entry : mif_location_map.data_port2phy_loc_map()) {
+    for (const auto& loc_entry : port_entry.second) {
+      t_pb_graph_node* node = loc_entry.second.pb_graph_node;
+      if ((nullptr == node) || (nullptr == node->pb_type)) {
+        continue;
+      }
+      t_pb_type* physical_pb_type =
+        device_annotation.physical_pb_type(node->pb_type);
+      if (nullptr == physical_pb_type) {
+        physical_pb_type = node->pb_type;
+      }
+      const CircuitModelId model =
+        device_annotation.pb_type_circuit_model(physical_pb_type);
+      if (false == circuit_lib.valid_model_id(model)) {
+        continue;
+      }
+      port_to_model[port_entry.first] = circuit_lib.model_name(model);
+      break;
+    }
+  }
+  return port_to_model;
+}
+
 } /* end namespace openfpga */
