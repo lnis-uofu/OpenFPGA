@@ -485,7 +485,7 @@ write_fabric_hierarchy
 write_mif_location_map
 ~~~~~~~~~~~~~~~~~~~~
 
-  Write the memory initialization file (MIF) location information of FPGA fabric to an XML file
+  Write the memory initialization file (MIF) location information of FPGA fabric to an XML file (see details in :ref:`file_format_mif_location_map_file`)
 
   .. option:: --file <string> or -f <string>
 
