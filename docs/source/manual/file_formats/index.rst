@@ -26,6 +26,8 @@ OpenFPGA widely uses XML format for interchangeable files
 
    io_info_file
 
+   mif_location_map_file
+
    bitstream_distribution_file
 
    boundary_timing_template_file
