@@ -88,8 +88,9 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
     }
     if (unique_models.end() == unique_models.find(model_name)) {
       VTR_LOG_ERROR(
-        "write_mif: circuit model '%s' has no unified MIF on this FPGA. Here "
-        "is a list of valid circuit models with MIF data bus: '%s'\n",
+        "The circuit model '%s' does not have a valid MIF data bus and cannot "
+        "be accept to MIF writer. Here is a list of valid circuit models with "
+        "MIF data bus: '%s'\n",
         model_name.c_str(), vtr::join(unique_models, ", ").c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
