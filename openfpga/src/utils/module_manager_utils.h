@@ -179,13 +179,13 @@ void add_module_global_ports_from_child_modules(
 void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
                                               const ModuleId& module_id);
 
-/* True when the module exposes mif_data_bus GPIN ports, or already has MIF
- * children. Matches ports by generated GPIN name against every
- * is_mif_data_bus circuit port (not the unique-by-prefix global port list).
+/* Unique MIF data buses on this module: union of buses cached on existing
+ * mif_children, plus is_mif_data_bus GPIN ports on the module itself.
+ * Returns ids scoped to this module. Empty when the module has no MIF data bus.
  */
-bool module_contains_mif_data_bus(const ModuleManager& module_manager,
-                                  const CircuitLibrary& circuit_lib,
-                                  const ModuleId& module);
+std::vector<MifDataBusId> collect_module_mif_data_buses(
+  ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
+  const ModuleId& module);
 
 size_t find_module_num_shared_config_bits_from_child_modules(
   ModuleManager& module_manager, const ModuleId& module_id);

@@ -363,10 +363,12 @@ static void add_top_module_io_children(
       module_manager.add_io_child(top_module, grid_module,
                                   grid_instance_ids[io_coord.x()][io_coord.y()],
                                   vtr::Point<int>(io_coord.x(), io_coord.y()));
-      if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
-                                               grid_module)) {
+      const std::vector<MifDataBusId> mif_buses =
+        collect_module_mif_data_buses(module_manager, circuit_lib, grid_module);
+      if (false == mif_buses.empty()) {
         module_manager.add_mif_child(
-          top_module, grid_module, vtr::Point<int>(io_coord.x(), io_coord.y()));
+          top_module, grid_module, vtr::Point<int>(io_coord.x(), io_coord.y()),
+          mif_buses);
       }
     }
   }
@@ -440,10 +442,12 @@ static void add_top_module_io_children(
     module_manager.add_io_child(top_module, grid_module,
                                 grid_instance_ids[coord.x()][coord.y()],
                                 vtr::Point<int>(coord.x(), coord.y()));
-    if (true == module_contains_mif_data_bus(module_manager, circuit_lib,
-                                             grid_module)) {
+    const std::vector<MifDataBusId> mif_buses =
+      collect_module_mif_data_buses(module_manager, circuit_lib, grid_module);
+    if (false == mif_buses.empty()) {
       module_manager.add_mif_child(top_module, grid_module,
-                                   vtr::Point<int>(coord.x(), coord.y()));
+                                   vtr::Point<int>(coord.x(), coord.y()),
+                                   mif_buses);
     }
   }
 }

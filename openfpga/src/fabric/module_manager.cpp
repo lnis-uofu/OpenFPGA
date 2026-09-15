@@ -179,6 +179,30 @@ std::vector<vtr::Point<int>> ModuleManager::mif_child_coordinates(
   return mif_child_coordinates_[parent_module];
 }
 
+const std::vector<std::vector<MifDataBusId>>&
+ModuleManager::mif_child_data_buses(const ModuleId& parent_module) const {
+  VTR_ASSERT(valid_module_id(parent_module));
+  return mif_child_data_buses_[parent_module];
+}
+
+std::string ModuleManager::mif_data_bus_port_name(
+  const ModuleId& module, const MifDataBusId& bus) const {
+  VTR_ASSERT(valid_mif_data_bus_id(module, bus));
+  return mif_data_bus_port_names_[module][bus];
+}
+
+std::string ModuleManager::mif_data_bus_parent_module_name(
+  const ModuleId& module, const MifDataBusId& bus) const {
+  VTR_ASSERT(valid_mif_data_bus_id(module, bus));
+  return mif_data_bus_parent_module_names_[module][bus];
+}
+
+size_t ModuleManager::mif_data_bus_width(const ModuleId& module,
+                                         const MifDataBusId& bus) const {
+  VTR_ASSERT(valid_mif_data_bus_id(module, bus));
+  return mif_data_bus_widths_[module][bus];
+}
+
 /* Find the source ids of modules */
 ModuleManager::module_net_src_range ModuleManager::module_net_sources(
   const ModuleId& module, const ModuleNetId& net) const {
@@ -766,8 +790,13 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   io_child_instances_.emplace_back();
   io_child_coordinates_.emplace_back();
 
+  mif_data_bus_ids_.emplace_back();
+  mif_data_bus_port_names_.emplace_back();
+  mif_data_bus_parent_module_names_.emplace_back();
+  mif_data_bus_widths_.emplace_back();
   mif_children_.emplace_back();
   mif_child_coordinates_.emplace_back();
+  mif_child_data_buses_.emplace_back();
 
   port_ids_.emplace_back();
   ports_.emplace_back();
@@ -1228,14 +1257,49 @@ void ModuleManager::reserve_io_child(const ModuleId& parent_module,
   }
 }
 
-void ModuleManager::add_mif_child(const ModuleId& parent_module,
-                                  const ModuleId& child_module,
-                                  const vtr::Point<int> coord) {
+MifDataBusId ModuleManager::add_mif_data_bus(
+  const ModuleId& module, const std::string& port_name,
+  const std::string& parent_module_name, const size_t& data_width) {
+  VTR_ASSERT(valid_module_id(module));
+
+  for (const MifDataBusId& existing : mif_data_bus_ids_[module]) {
+    if (mif_data_bus_port_names_[module][existing] != port_name) {
+      continue;
+    }
+    VTR_ASSERT(mif_data_bus_parent_module_names_[module][existing] ==
+               parent_module_name);
+    VTR_ASSERT(mif_data_bus_widths_[module][existing] == data_width);
+    return existing;
+  }
+
+  MifDataBusId bus = MifDataBusId(mif_data_bus_ids_[module].size());
+  mif_data_bus_ids_[module].push_back(bus);
+  mif_data_bus_port_names_[module].push_back(port_name);
+  mif_data_bus_parent_module_names_[module].push_back(parent_module_name);
+  mif_data_bus_widths_[module].push_back(data_width);
+  return bus;
+}
+
+void ModuleManager::add_mif_child(
+  const ModuleId& parent_module, const ModuleId& child_module,
+  const vtr::Point<int> coord,
+  const std::vector<MifDataBusId>& child_data_buses) {
   VTR_ASSERT(valid_module_id(parent_module));
   VTR_ASSERT(valid_module_id(child_module));
 
+  std::vector<MifDataBusId> parent_data_buses;
+  parent_data_buses.reserve(child_data_buses.size());
+  for (const MifDataBusId& child_bus : child_data_buses) {
+    VTR_ASSERT(valid_mif_data_bus_id(child_module, child_bus));
+    parent_data_buses.push_back(add_mif_data_bus(
+      parent_module, mif_data_bus_port_name(child_module, child_bus),
+      mif_data_bus_parent_module_name(child_module, child_bus),
+      mif_data_bus_width(child_module, child_bus)));
+  }
+
   mif_children_[parent_module].push_back(child_module);
   mif_child_coordinates_[parent_module].push_back(coord);
+  mif_child_data_buses_[parent_module].push_back(parent_data_buses);
 }
 
 void ModuleManager::reserve_module_nets(const ModuleId& module,
@@ -1571,6 +1635,15 @@ bool ModuleManager::valid_module_port_id(const ModuleId& module,
   }
   return (size_t(port) < port_ids_[module].size()) &&
          (port == port_ids_[module][port]);
+}
+
+bool ModuleManager::valid_mif_data_bus_id(const ModuleId& module,
+                                          const MifDataBusId& bus) const {
+  if (false == valid_module_id(module)) {
+    return false;
+  }
+  return (size_t(bus) < mif_data_bus_ids_[module].size()) &&
+         (bus == mif_data_bus_ids_[module][bus]);
 }
 
 bool ModuleManager::valid_module_net_id(const ModuleId& module,

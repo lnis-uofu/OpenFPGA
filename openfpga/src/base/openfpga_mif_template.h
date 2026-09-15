@@ -2,6 +2,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include "build_mif.h"
 #include "command.h"
@@ -71,6 +72,9 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   for (const auto& port_model : port_to_model) {
     unique_models.insert(port_model.second);
   }
+  /* vtr::join() requires random-access iterators; std::set is bidirectional. */
+  const std::vector<std::string> unique_model_list(unique_models.begin(),
+                                                   unique_models.end());
 
   std::set<std::string> allowed_ports;
   if (true == cmd_context.option_enable(cmd, opt_circuit_model)) {
@@ -83,7 +87,7 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
         "Invalid circuit model '%s' which is not defined in the OpenFPGA "
         "architecture. Here is a list of valid circuit models with MIF data "
         "bus: '%s'\n",
-        model_name.c_str(), vtr::join(unique_models, ", ").c_str());
+        model_name.c_str(), vtr::join(unique_model_list, ", ").c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     if (unique_models.end() == unique_models.find(model_name)) {
@@ -91,7 +95,7 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
         "The circuit model '%s' does not have a valid MIF data bus and cannot "
         "be accept to MIF writer. Here is a list of valid circuit models with "
         "MIF data bus: '%s'\n",
-        model_name.c_str(), vtr::join(unique_models, ", ").c_str());
+        model_name.c_str(), vtr::join(unique_model_list, ", ").c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     for (const auto& port_model : port_to_model) {
@@ -104,7 +108,7 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
       "write_mif: %zu unique circuit models have MIF data; specify "
       "--circuit_model <name>. Here is a list of valid circuit models with "
       "MIF data bus: '%s'\n",
-      unique_models.size(), vtr::join(unique_models, ", ").c_str());
+      unique_models.size(), vtr::join(unique_model_list, ", ").c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 

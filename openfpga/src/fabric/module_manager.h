@@ -6,6 +6,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "module_manager_fwd.h"
 #include "openfpga_port.h"
@@ -231,6 +232,20 @@ class ModuleManager {
   /* Find the coordinate of a MIF child module under a parent module */
   std::vector<vtr::Point<int>> mif_child_coordinates(
     const ModuleId& parent_module) const;
+  /* MIF data bus ids of each MIF child (parallel to mif_children).
+   * Ids are scoped to the parent module.
+   */
+  const std::vector<std::vector<MifDataBusId>>& mif_child_data_buses(
+    const ModuleId& parent_module) const;
+  /* Attributes of a MIF data bus. Names are gfpga_pad_<parent_module>_<prefix>
+   * so different parent circuit models stay on different buses.
+   */
+  std::string mif_data_bus_port_name(const ModuleId& module,
+                                     const MifDataBusId& bus) const;
+  std::string mif_data_bus_parent_module_name(const ModuleId& module,
+                                              const MifDataBusId& bus) const;
+  size_t mif_data_bus_width(const ModuleId& module,
+                            const MifDataBusId& bus) const;
 
   /* Find the source ids of modules */
   module_net_src_range module_net_sources(const ModuleId& module,
@@ -472,14 +487,26 @@ class ModuleManager {
   /** @brief Reserved a number of I/O children for memory efficiency */
   void reserve_io_child(const ModuleId& module, const size_t& num_children);
 
+  /** @brief Add a named MIF data bus to a module.
+   * Unique by port_name. Different parent circuit models become different
+   * top ports (gfpga_pad_<parent_module>_<prefix>).
+   */
+  MifDataBusId add_mif_data_bus(const ModuleId& module,
+                                const std::string& port_name,
+                                const std::string& parent_module_name,
+                                const size_t& data_width);
+
   /** @brief Add a MIF child to module
    * Child modules that contain mif_data_bus ports are tracked separately from
    * regular I/O children so that MIF GPIN indexing is not mixed with GPIO
    * indexing. The coordinate is used to build the MIF location map and should
    * be consistent with the VPR coordinate system.
+   * child_data_buses are ids scoped to child_module; they are remapped to this
+   * module so the location map can look up port name / parent / width by id.
    */
   void add_mif_child(const ModuleId& module, const ModuleId& child_module,
-                     const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
+                     const vtr::Point<int> coord,
+                     const std::vector<MifDataBusId>& child_data_buses);
 
   /* Reserved a number of module nets for a given module for memory efficiency
    */
@@ -571,6 +598,8 @@ class ModuleManager {
   bool valid_module_id(const ModuleId& module) const;
   bool valid_module_port_id(const ModuleId& module,
                             const ModulePortId& port) const;
+  bool valid_mif_data_bus_id(const ModuleId& module,
+                             const MifDataBusId& bus) const;
   bool valid_module_net_id(const ModuleId& module,
                            const ModuleNetId& net) const;
   bool valid_module_instance_id(const ModuleId& parent_module,
@@ -665,12 +694,27 @@ class ModuleManager {
   vtr::vector<ModuleId, std::vector<size_t>> io_child_instances_;
   vtr::vector<ModuleId, std::vector<vtr::Point<int>>> io_child_coordinates_;
 
+  /* MIF data buses are unique-by-port-name under each module, indexed by
+   * MifDataBusId (same style as ModulePortId). Children then store ids rather
+   * than a packed struct.
+   */
+  vtr::vector<ModuleId, vtr::vector<MifDataBusId, MifDataBusId>>
+    mif_data_bus_ids_;
+  vtr::vector<ModuleId, vtr::vector<MifDataBusId, std::string>>
+    mif_data_bus_port_names_;
+  vtr::vector<ModuleId, vtr::vector<MifDataBusId, std::string>>
+    mif_data_bus_parent_module_names_;
+  vtr::vector<ModuleId, vtr::vector<MifDataBusId, size_t>> mif_data_bus_widths_;
+
   /* MIF child modules record fabric instances that expose mif_data_bus GPIN
    * ports. Sequence denotes MIF data-bus concatenation order, independent of
-   * io_children_ GPIO indexing.
+   * io_children_ GPIO indexing. mif_child_data_buses_ is parallel and stores
+   * parent-scoped MifDataBusId lists.
    */
   vtr::vector<ModuleId, std::vector<ModuleId>> mif_children_;
   vtr::vector<ModuleId, std::vector<vtr::Point<int>>> mif_child_coordinates_;
+  vtr::vector<ModuleId, std::vector<std::vector<MifDataBusId>>>
+    mif_child_data_buses_;
 
   /* Port-level data */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>>
