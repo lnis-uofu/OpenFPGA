@@ -12,6 +12,7 @@
 #include "shell.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_util.h"
 #include "write_mif.h"
 
 /* begin namespace openfpga */
@@ -79,15 +80,17 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
       openfpga_context.arch().circuit_lib.model(model_name);
     if (false == openfpga_context.arch().circuit_lib.valid_model_id(model)) {
       VTR_LOG_ERROR(
-        "write_mif: unknown circuit model '%s' in the OpenFPGA "
-        "architecture\n",
-        model_name.c_str());
+        "Invalid circuit model '%s' which is not defined in the OpenFPGA "
+        "architecture. Here is a list of valid circuit models with MIF data "
+        "bus: '%s'\n",
+        model_name.c_str(), vtr::join(unique_models, ", ").c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     if (unique_models.end() == unique_models.find(model_name)) {
       VTR_LOG_ERROR(
-        "write_mif: circuit model '%s' has no unified MIF on this FPGA\n",
-        model_name.c_str());
+        "write_mif: circuit model '%s' has no unified MIF on this FPGA. Here "
+        "is a list of valid circuit models with MIF data bus: '%s'\n",
+        model_name.c_str(), vtr::join(unique_models, ", ").c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     for (const auto& port_model : port_to_model) {
@@ -98,8 +101,9 @@ int write_mif_template(T& openfpga_context, const Command& cmd,
   } else if (1 < unique_models.size()) {
     VTR_LOG_ERROR(
       "write_mif: %zu unique circuit models have MIF data; specify "
-      "--circuit_model <name>\n",
-      unique_models.size());
+      "--circuit_model <name>. Here is a list of valid circuit models with "
+      "MIF data bus: '%s'\n",
+      unique_models.size(), vtr::join(unique_models, ", ").c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 

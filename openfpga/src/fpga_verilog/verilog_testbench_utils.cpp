@@ -903,6 +903,10 @@ void print_verilog_testbench_clock_stimuli(
 /********************************************************************
  * Generate random stimulus for the input ports (non-clock signals)
  * For clock signals, please use print_verilog_testbench_clock_stimuli
+ *
+ * bus_group is needed to initialize unused HDL bus bits that REF_DUT
+ * still concatenates. Those bits are tied to 0 only; they are not
+ * $random'd, because there is no corresponding FPGA I/O.
  *******************************************************************/
 void print_verilog_testbench_random_stimuli(
   mmostream& fp, const AtomContext& atom_ctx,
@@ -1067,6 +1071,16 @@ void print_verilog_testbench_random_stimuli(
  * 1. the shared input ports (registers) to drive both
  *    FPGA fabric and benchmark instance
  *    same input vectors
+ *
+ * bus_group is needed to align REF_DUT's original HDL bus width with the
+ * INPADs that still remain in the atom netlist.
+ * Shared-input declarations originally walked atom INPADs only. Yosys/VPR
+ * may sweep unused bus bits (e.g. waddr[2]), while bus_group.xml still
+ * connects the full source bus [2:0] to REF_DUT. Without bus_group, the
+ * testbench will not declare the missing shared_input nets (e.g.
+ * waddr_2__shared_input) and elaboration fails.
+ * These extra bits are only declared and tied to 0; they are not $random'd,
+ * because there is no corresponding FPGA I/O.
  *******************************************************************/
 void print_verilog_testbench_shared_input_ports(
   mmostream& fp, const ModuleManager& module_manager,
