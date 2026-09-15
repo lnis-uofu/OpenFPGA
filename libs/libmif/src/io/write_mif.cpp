@@ -79,11 +79,6 @@ int write_mif(const std::string& file_path,
       ++num_written;
     }
   }
-  if (0 == num_written) {
-    VTR_LOG_ERROR(
-      "write_mif: no MIF segment matches the selected circuit model\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
 
   /* mmostream can emit gzip when the path ends with .gz (enabled later). */
   mmostream os(file_path, file_require_gz(file_path));
