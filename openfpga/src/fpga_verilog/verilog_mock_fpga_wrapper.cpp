@@ -526,7 +526,7 @@ int print_verilog_mock_fpga_wrapper(
   /* Print local wires */
   print_verilog_testbench_shared_input_ports(
     fp, module_manager, module_name_map, global_ports, pin_constraints,
-    atom_ctx, netlist_annotation, benchmark_clock_port_names, true,
+    atom_ctx, netlist_annotation, bus_group, benchmark_clock_port_names, true,
     std::string(APPINST_PORT_POSTFIX), false, little_endian);
 
   print_verilog_testbench_shared_benchmark_output_ports(

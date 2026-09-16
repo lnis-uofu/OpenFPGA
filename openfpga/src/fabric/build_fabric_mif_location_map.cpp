@@ -3,9 +3,9 @@
  *
  * Walks top-module mif_children (modules that contain mif_data_bus) in
  * GPIN concatenation order and assigns data_offset/data_width along that
- * same order. The physical primitive for each instance is taken from
- * bitstream annotation and remapped by device annotation (operating pb ->
- * physical pb).
+ * same order, using the named buses cached at add_mif_child. The physical
+ * primitive for each instance is taken from bitstream annotation and remapped
+ * by device annotation (operating pb -> physical pb).
  *******************************************************************/
 #include "build_fabric_mif_location_map.h"
 
@@ -154,7 +154,6 @@ static void register_grid_module_mif_locations(
   for (size_t isubchild = 0;
        isubchild < module_manager.mif_children(grid_module).size();
        ++isubchild) {
-    ModuleId subchild = module_manager.mif_children(grid_module)[isubchild];
     vtr::Point<int> subchild_coord =
       module_manager.mif_child_coordinates(grid_module)[isubchild];
     int z = subchild_coord.x();
@@ -166,20 +165,23 @@ static void register_grid_module_mif_locations(
     }
 
     const t_pl_loc phy_loc(x, y, z, static_cast<int>(layer));
-    for (const ModulePortId& gpin_port_id :
-         module_manager.module_port_ids_by_type(
-           subchild, ModuleManager::MODULE_GPIN_PORT)) {
-      const BasicPort& gpin_port =
-        module_manager.module_port(subchild, gpin_port_id);
-      auto port_info = mif_data_ports.find(gpin_port.get_name());
+    VTR_ASSERT(isubchild <
+               module_manager.mif_child_data_buses(grid_module).size());
+    for (const MifDataBusId& bus :
+         module_manager.mif_child_data_buses(grid_module)[isubchild]) {
+      const std::string port_name =
+        module_manager.mif_data_bus_port_name(grid_module, bus);
+      const size_t data_width =
+        module_manager.mif_data_bus_width(grid_module, bus);
+      auto port_info = mif_data_ports.find(port_name);
       if (port_info == mif_data_ports.end()) {
         continue;
       }
-      VTR_ASSERT(gpin_port.get_width() == port_info->second);
-      size_t offset = offset_counter[port_info->first];
-      mif_location_map.add(port_info->first, phy_loc, pb_graph_node, offset,
-                           gpin_port.get_width());
-      offset_counter[port_info->first] += gpin_port.get_width();
+      VTR_ASSERT(data_width == port_info->second);
+      size_t offset = offset_counter[port_name];
+      mif_location_map.add(port_name, phy_loc, pb_graph_node, offset,
+                           data_width);
+      offset_counter[port_name] += data_width;
     }
   }
 }
@@ -204,9 +206,8 @@ MifLocationMap build_fabric_mif_location_map(
   if (true == mif_data_ports.empty()) {
     return MifLocationMap();
   }
-  /* Now walk through all the MIF children under the top-level module
-   * For each MIF child, record its offset in the mif data bus at top-level
-   * module
+  /* Walk top-module mif_children. Per-instance named buses come from the
+   * cache filled at add_mif_child; each unique port_name has its own offset.
    */
   MifLocationMap mif_location_map;
   std::map<std::string, size_t> offset_counter;

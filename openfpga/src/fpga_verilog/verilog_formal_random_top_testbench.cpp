@@ -55,7 +55,7 @@ static void print_verilog_top_random_testbench_ports(
   mmostream& fp, const ModuleManager& module_manager,
   const ModuleNameMap& module_name_map, const std::string& circuit_name,
   const std::vector<std::string>& clock_port_names, const AtomContext& atom_ctx,
-  const VprNetlistAnnotation& netlist_annotation,
+  const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
   const VerilogTestbenchOption& options) {
   /* Validate the file stream */
   valid_file_mmostream(fp);
@@ -88,7 +88,7 @@ static void print_verilog_top_random_testbench_ports(
 
   print_verilog_testbench_shared_ports(
     fp, module_manager, module_name_map, FabricGlobalPortInfo(),
-    PinConstraints(), atom_ctx, netlist_annotation, clock_port_names,
+    PinConstraints(), atom_ctx, netlist_annotation, bus_group, clock_port_names,
     std::string(), std::string(BENCHMARK_PORT_POSTFIX),
     std::string(FPGA_PORT_POSTFIX), std::string(CHECKFLAG_PORT_POSTFIX),
     options.no_self_checking(), little_endian);
@@ -311,7 +311,7 @@ void print_verilog_random_top_testbench(
   /* Start of testbench */
   print_verilog_top_random_testbench_ports(
     fp, module_manager, module_name_map, circuit_name, clock_port_names,
-    atom_ctx, netlist_annotation, options);
+    atom_ctx, netlist_annotation, bus_group, options);
 
   /* Call defined top-level module */
   print_verilog_random_testbench_fpga_instance(
@@ -344,7 +344,7 @@ void print_verilog_random_top_testbench(
 
   print_verilog_testbench_random_stimuli(
     fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
-    global_ports, pin_constraints, clock_port_names, std::string(),
+    global_ports, pin_constraints, bus_group, clock_port_names, std::string(),
     std::string(CHECKFLAG_PORT_POSTFIX), clock_ports,
     options.no_self_checking(), little_endian);
 

@@ -104,14 +104,44 @@ read_mif
 
     Path to the MIF file to read.
 
+  .. option:: --pb_type <string>
+
+    VPR ``pb_type`` path for this MIF segment. Must match ``mif_address_map``
+    ``src_pb_type`` in the bitstream setting when ``source="others"``.
+    For example, ``memory[mem_8x16_dp].mem_8x16_dp``.
+
 write_mif
 ~~~~~~~~~
 
-  Write the processed in-memory MIF data to one file in the OpenFPGA MIF format. Requires that ``read_mif`` has completed successfully at least once before this command (shell dependency).
+  Write the FPGA-top unified Memory Initialization File (MIF) produced by
+  ``build_architecture_bitstream``.
+  All MIF inputs (``read_mif`` hex files and/or eblif ``INIT``) are aggregated
+  during ``build_architecture_bitstream``; this command writes that result.
+
+  When more than one circuit model in the OpenFPGA architecture exposes an
+  ``is_mif_data_bus`` port, ``--circuit_model`` is required and this command
+  should be called once per model (each call writes one file).
+  If there is only one such circuit model, ``--circuit_model`` may be omitted.
+
+  This command must be called after ``build_architecture_bitstream``.
 
   .. option:: --file <string> or -f <string>
 
-    Path to the output file (overwrite).
+    Specify the output MIF file.
+
+  .. option:: --circuit_model <string>
+
+    Name of the circuit model in the OpenFPGA architecture whose unified MIF
+    should be written. Required when more than one MIF circuit model exists;
+    may be omitted when only one is available.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose log
 
 .. _openfpga_setup_command_read_openfpga_clock_arch:
 

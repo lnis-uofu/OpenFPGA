@@ -121,6 +121,19 @@ ShellCommandId add_write_mif_command_template(
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  CommandOptionId opt_circuit_model = shell_cmd.add_option(
+    "circuit_model", false,
+    "circuit model name in the OpenFPGA architecture that this MIF is "
+    "associated with. A unified MIF is generated per unique circuit model. "
+    "Required when more than one MIF circuit model exists; may be omitted "
+    "when only one is available");
+  shell_cmd.set_option_require_value(opt_circuit_model, openfpga::OPT_STRING);
+
+  shell_cmd.add_option("no_time_stamp", false,
+                       "Do not print time stamp in the output file");
+
+  shell_cmd.add_option("verbose", false, "Show verbose log");
+
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Write aggregated MIF storage to a preload .mem file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);

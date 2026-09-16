@@ -3,11 +3,17 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
+#include <map>
+#include <set>
+#include <string>
+
 #include "bitstream_setting.h"
+#include "circuit_library.h"
 #include "mif_location_map.h"
 #include "mif_pipeline.h"
 #include "vpr_clustering_annotation.h"
 #include "vpr_context.h"
+#include "vpr_device_annotation.h"
 #include "vpr_placement_annotation.h"
 
 /********************************************************************
@@ -42,5 +48,12 @@ int build_physical_mif(const BitstreamSetting& bitstream_setting,
 int aggregate_unified_mif(const BitstreamSetting& bitstream_setting,
                           MifPipeline& mif_pipeline,
                           const MifLocationMap& mif_location_map);
+
+/* Top-level MIF data-bus port name -> circuit model name (from the physical
+ * pb bound on each location-map slice). */
+std::map<std::string, std::string> collect_mif_data_port_circuit_models(
+  const MifLocationMap& mif_location_map,
+  const VprDeviceAnnotation& device_annotation,
+  const CircuitLibrary& circuit_lib);
 
 } /* end namespace openfpga */

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <set>
 
 /* Headers from vtrutil library */
 #include "command_exit_codes.h"
@@ -2300,14 +2301,30 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
                                          ModuleManager::MODULE_GPOUT_PORT);
 }
 
-bool module_contains_mif_data_bus(const ModuleManager& module_manager,
-                                  const CircuitLibrary& circuit_lib,
-                                  const ModuleId& module) {
-  if (false == module_manager.mif_children(module).empty()) {
-    return true;
+std::vector<MifDataBusId> collect_module_mif_data_buses(
+  ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
+  const ModuleId& module) {
+  std::vector<MifDataBusId> buses;
+  std::set<std::string> seen;
+
+  /* Prefer buses already cached on mif_children (wrappers such as grid/tile
+   * may not have promoted GPIN ports yet, but children already recorded the
+   * named buses and parent circuit models).
+   */
+  const std::vector<std::vector<MifDataBusId>>& child_buses =
+    module_manager.mif_child_data_buses(module);
+  VTR_ASSERT(child_buses.size() == module_manager.mif_children(module).size());
+  for (const std::vector<MifDataBusId>& cached : child_buses) {
+    for (const MifDataBusId& bus : cached) {
+      const std::string port_name =
+        module_manager.mif_data_bus_port_name(module, bus);
+      if (true == seen.insert(port_name).second) {
+        buses.push_back(bus);
+      }
+    }
   }
 
-  /* Walk every is_mif_data_bus port. Do not use
+  /* Walk every is_mif_data_bus port on this module. Do not use
    * find_circuit_library_global_ports: that list is unique-by-prefix, so a
    * non-MIF global port with the same prefix can hide the MIF bus from name
    * matching.
@@ -2316,16 +2333,22 @@ bool module_contains_mif_data_bus(const ModuleManager& module_manager,
     if (false == circuit_lib.port_is_mif_data_bus(port)) {
       continue;
     }
+    const CircuitModelId parent_model = circuit_lib.port_parent_model(port);
     const std::string port_name = generate_fpga_global_io_port_name(
-      std::string(GIO_INOUT_PREFIX), circuit_lib,
-      circuit_lib.port_parent_model(port), port);
+      std::string(GIO_INOUT_PREFIX), circuit_lib, parent_model, port);
     const ModulePortId module_port =
       module_manager.find_module_port(module, port_name);
-    if (true == module_manager.valid_module_port_id(module, module_port)) {
-      return true;
+    if (false == module_manager.valid_module_port_id(module, module_port)) {
+      continue;
     }
+    if (false == seen.insert(port_name).second) {
+      continue;
+    }
+    buses.push_back(module_manager.add_mif_data_bus(
+      module, port_name, circuit_lib.model_name(parent_model),
+      module_manager.module_port(module, module_port).get_width()));
   }
-  return false;
+  return buses;
 }
 
 /********************************************************************
