@@ -6,10 +6,11 @@
 /* Headers from vtrutil library */
 #include "openfpga_decode.h"
 
-#include "vtr_assert.h"
 #include <cstdint>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
+
+#include "vtr_assert.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -382,19 +383,20 @@ bool normalize_bit_string_width(std::string& bits, const size_t target_width) {
   return true;
 }
 
-std::string int_to_hex_string(const uint64_t& num_int, const bool& lowercase, const bool& add_prefix) {
+std::string int_to_hex_string(const uint64_t& num_int, const bool& lowercase,
+                              const bool& add_prefix) {
   std::stringstream ss;
 
   // Add prefix if requested
   if (add_prefix) {
-      ss << "0x";
+    ss << "0x";
   }
 
   // Set casing based on the lowercase flag
   if (lowercase) {
-      ss << std::nouppercase;
+    ss << std::nouppercase;
   } else {
-      ss << std::uppercase;
+    ss << std::uppercase;
   }
 
   // Output the number in hexadecimal format

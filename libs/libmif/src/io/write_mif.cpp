@@ -38,8 +38,7 @@ static void write_mif_segment(const MifStorage& storage,
   /* $readmemh @addr allows sparse / out-of-order writes; no sort needed. */
   for (const MifMemoryLineId& memory_line_id :
        storage.segment_memory_lines(segment_id)) {
-    os << "@" 
-       << int_to_hex_string(storage.memory_line_address(memory_line_id)) 
+    os << "@" << int_to_hex_string(storage.memory_line_address(memory_line_id))
        << " "
        << format_hex_word(storage.memory_line_data(memory_line_id),
                           storage.data_width(segment_id))
