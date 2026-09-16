@@ -8,7 +8,8 @@
 
 #include "vtr_assert.h"
 #include <cstdint>
-#include <format>
+#include <sstream>
+#include <iomanip>
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -382,19 +383,24 @@ bool normalize_bit_string_width(std::string& bits, const size_t target_width) {
 }
 
 std::string int_to_hex_string(const uint64_t& num_int, const bool& lowercase, const bool& add_prefix) {
-  std::string fmt_style("{:");
+  std::stringstream ss;
+
+  // Add prefix if requested
   if (add_prefix) {
-    fmt_style += "#";
+      ss << "0x";
   }
+
+  // Set casing based on the lowercase flag
   if (lowercase) {
-    fmt_style += "x";
+      ss << std::nouppercase;
   } else {
-    fmt_style += "X";
+      ss << std::uppercase;
   }
-  fmt_style += "}";
-  // "{:x}" for lowercase, "{:X}" for uppercase. 
-  // Add '#' (e.g., "{:#X}") if you want the "0x" prefix automatically.
-  return std::format(fmt_style, num_int);
+
+  // Output the number in hexadecimal format
+  ss << std::hex << num_int;
+
+  return ss.str();
 }
 
 } /* end namespace openfpga */

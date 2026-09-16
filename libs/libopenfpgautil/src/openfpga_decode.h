@@ -85,7 +85,7 @@ bool normalize_bit_string_width(std::string& bits, size_t target_width);
 /********************************************************************
  * Convert an integer to a hex in string
  ********************************************************************/
-std::string int_to_hex_string(const uint64_t& num_int, const bool& lowercase = false, const bool& add_prefix = false) {
+std::string int_to_hex_string(const uint64_t& num_int, const bool& lowercase = false, const bool& add_prefix = false);
 
 }  // namespace openfpga
 
