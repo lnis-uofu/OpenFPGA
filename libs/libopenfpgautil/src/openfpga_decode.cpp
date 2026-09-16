@@ -7,6 +7,8 @@
 #include "openfpga_decode.h"
 
 #include "vtr_assert.h"
+#include <cstdint>
+#include <format>
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -377,6 +379,22 @@ bool normalize_bit_string_width(std::string& bits, const size_t target_width) {
   }
   bits.resize(target_width);
   return true;
+}
+
+std::string int_to_hex_string(const uint64_t& num_int, const bool& lowercase, const bool& add_prefix) {
+  std::string fmt_style("{:");
+  if (add_prefix) {
+    fmt_style += "#";
+  }
+  if (lowercase) {
+    fmt_style += "x";
+  } else {
+    fmt_style += "X";
+  }
+  fmt_style += "}";
+  // "{:x}" for lowercase, "{:X}" for uppercase. 
+  // Add '#' (e.g., "{:#X}") if you want the "0x" prefix automatically.
+  return std::format(fmt_style, num_int);
 }
 
 } /* end namespace openfpga */
