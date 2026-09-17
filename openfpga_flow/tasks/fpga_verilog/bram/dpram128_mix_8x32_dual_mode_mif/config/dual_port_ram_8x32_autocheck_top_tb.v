@@ -337,13 +337,16 @@ end
 // ----- fpga_top embeds TWO physical dpram_8x16_preload memories that share ONE 32-bit init data bus, looked up by the TB-driven 3-bit mem_init_addr counter above -----
 // ----- File format is standard $readmemh sparse-address syntax: "@ADDR" on its own token followed by a hex DATA word, e.g. "@0 FFFFFFFF" -- matching dual_port_ram_128_mem_init.mif -----
 // ----- NOTE: update the file name/path below if your generated MIF file is named/located differently. -----
-`define MEM_INIT_MIF "ram_mif.mem"
-	reg [0:31] mem_init_rom [0:15];
+`define MEM_128_INIT_MIF "ram_mif_8x16.mem"
+`define MEM_256_INIT_MIF "ram_mif_256.mem"
+	reg [0:15] mem_128_init_rom [0:7];
+	reg [0:15] mem_256_init_rom [0:15];
 initial begin
-	$readmemh(`MEM_INIT_MIF, mem_init_rom);
+	$readmemh(`MEM_128_INIT_MIF, mem_128_init_rom);
+	$readmemh(`MEM_256_INIT_MIF, mem_256_init_rom);
 end
-	assign gfpga_pad_dpram_8x16_preload_mem_init_data[0:15] = mem_init_rom[mem128_init_addr[0:2]][0:15];
-	assign gfpga_pad_frac_mem_256_preload_mem_init_data[0:15] = mem_init_rom[mem256_init_addr[0:3]][16:31];
+	assign gfpga_pad_dpram_8x16_preload_mem_init_data[0:15] = mem_128_init_rom[mem128_init_addr[0:2]][0:15];
+	assign gfpga_pad_frac_mem_256_preload_mem_init_data[0:15] = mem_256_init_rom[mem256_init_addr[0:3]][0:15];
 
 // ----- Link BLIF Benchmark I/Os to FPGA I/Os -----
 // ----- Blif Benchmark input clk is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD[142] -----

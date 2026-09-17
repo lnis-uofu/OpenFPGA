@@ -71,8 +71,10 @@ wire [0:15] ccff_tail;
 	reg [0:0] din8x16_15__shared_input;
 	reg [0:0] waddr8x32_0__shared_input;
 	reg [0:0] waddr8x32_1__shared_input;
+	reg [0:0] waddr8x32_2__shared_input;
 	reg [0:0] raddr8x32_0__shared_input;
 	reg [0:0] raddr8x32_1__shared_input;
+	reg [0:0] raddr8x32_2__shared_input;
 	reg [0:0] din8x32_0__shared_input;
 	reg [0:0] din8x32_1__shared_input;
 	reg [0:0] din8x32_2__shared_input;
@@ -400,13 +402,16 @@ end
 // ----- Each 32-bit word: bits [0:15] -> dpram_8x16_preload, bits [16:31] -> frac_mem_256_preload -----
 // ----- mem128 uses rows 0-7 (3-bit addr); mem256 uses all 16 rows (4-bit addr) -----
 // ----- NOTE: update filename below if your MIF is named differently -----
-`define MEM_INIT_MIF "ram_mif.mem"
-	reg [0:31] mem_init_rom [0:15];
+`define MEM_128_INIT_MIF "ram_mif_8x16.mem"
+`define MEM_256_INIT_MIF "ram_mif_256.mem"
+	reg [0:15] mem_128_init_rom [0:7];
+	reg [0:15] mem_256_init_rom [0:15];
 initial begin
-	$readmemh(`MEM_INIT_MIF, mem_init_rom);
+	$readmemh(`MEM_128_INIT_MIF, mem_128_init_rom);
+	$readmemh(`MEM_256_INIT_MIF, mem_256_init_rom);
 end
-	assign gfpga_pad_dpram_8x16_preload_mem_init_data[0:15]   = mem_init_rom[mem128_init_addr[0:2]][0:15];
-	assign gfpga_pad_frac_mem_256_preload_mem_init_data[0:15] = mem_init_rom[mem256_init_addr[0:3]][16:31];
+	assign gfpga_pad_dpram_8x16_preload_mem_init_data[0:15] = mem_128_init_rom[mem128_init_addr[0:2]][0:15];
+	assign gfpga_pad_frac_mem_256_preload_mem_init_data[0:15] = mem_256_init_rom[mem256_init_addr[0:3]][0:15];
 // ----- End MIF ROM -----
 
 // ----- Begin mem_init_start trigger sequence -----
@@ -833,8 +838,8 @@ end
 		.waddr8x16({waddr8x16_2__shared_input, waddr8x16_1__shared_input, waddr8x16_0__shared_input}),
 		.raddr8x16({raddr8x16_2__shared_input, raddr8x16_1__shared_input, raddr8x16_0__shared_input}),
 		.din8x16({din8x16_15__shared_input, din8x16_14__shared_input, din8x16_13__shared_input, din8x16_12__shared_input, din8x16_11__shared_input, din8x16_10__shared_input, din8x16_9__shared_input, din8x16_8__shared_input, din8x16_7__shared_input, din8x16_6__shared_input, din8x16_5__shared_input, din8x16_4__shared_input, din8x16_3__shared_input, din8x16_2__shared_input, din8x16_1__shared_input, din8x16_0__shared_input}),
-		.waddr8x32({waddr8x32_1__shared_input, waddr8x32_0__shared_input}),
-		.raddr8x32({raddr8x32_1__shared_input, raddr8x32_0__shared_input}),
+		.waddr8x32({waddr8x32_2__shared_input, waddr8x32_1__shared_input, waddr8x32_0__shared_input}),
+		.raddr8x32({raddr8x32_2__shared_input, raddr8x32_1__shared_input, raddr8x32_0__shared_input}),
 		.din8x32({din8x32_31__shared_input, din8x32_30__shared_input, din8x32_29__shared_input, din8x32_28__shared_input, din8x32_27__shared_input, din8x32_26__shared_input, din8x32_25__shared_input, din8x32_24__shared_input, din8x32_23__shared_input, din8x32_22__shared_input, din8x32_21__shared_input, din8x32_20__shared_input, din8x32_19__shared_input, din8x32_18__shared_input, din8x32_17__shared_input, din8x32_16__shared_input, din8x32_15__shared_input, din8x32_14__shared_input, din8x32_13__shared_input, din8x32_12__shared_input, din8x32_11__shared_input, din8x32_10__shared_input, din8x32_9__shared_input, din8x32_8__shared_input, din8x32_7__shared_input, din8x32_6__shared_input, din8x32_5__shared_input, din8x32_4__shared_input, din8x32_3__shared_input, din8x32_2__shared_input, din8x32_1__shared_input, din8x32_0__shared_input}),
 		.dout8x16({dout8x16_15__benchmark, dout8x16_14__benchmark, dout8x16_13__benchmark, dout8x16_12__benchmark, dout8x16_11__benchmark, dout8x16_10__benchmark, dout8x16_9__benchmark, dout8x16_8__benchmark, dout8x16_7__benchmark, dout8x16_6__benchmark, dout8x16_5__benchmark, dout8x16_4__benchmark, dout8x16_3__benchmark, dout8x16_2__benchmark, dout8x16_1__benchmark, dout8x16_0__benchmark}),
 		.dout8x32({dout8x32_31__benchmark, dout8x32_30__benchmark, dout8x32_29__benchmark, dout8x32_28__benchmark, dout8x32_27__benchmark, dout8x32_26__benchmark, dout8x32_25__benchmark, dout8x32_24__benchmark, dout8x32_23__benchmark, dout8x32_22__benchmark, dout8x32_21__benchmark, dout8x32_20__benchmark, dout8x32_19__benchmark, dout8x32_18__benchmark, dout8x32_17__benchmark, dout8x32_16__benchmark, dout8x32_15__benchmark, dout8x32_14__benchmark, dout8x32_13__benchmark, dout8x32_12__benchmark, dout8x32_11__benchmark, dout8x32_10__benchmark, dout8x32_9__benchmark, dout8x32_8__benchmark, dout8x32_7__benchmark, dout8x32_6__benchmark, dout8x32_5__benchmark, dout8x32_4__benchmark, dout8x32_3__benchmark, dout8x32_2__benchmark, dout8x32_1__benchmark, dout8x32_0__benchmark})
@@ -842,7 +847,7 @@ end
 // ----- End reference Benchmark Instanication -------
 
 // ----- Begin bitstream loading during configuration phase -----
-`define BITSTREAM_LENGTH 7948
+`define BITSTREAM_LENGTH 7950
 `define BITSTREAM_WIDTH 16
 // ----- Virtual memory to store the bitstream from external file -----
 reg [0:`BITSTREAM_WIDTH - 1] bit_mem[0:`BITSTREAM_LENGTH - 1];
@@ -906,8 +911,10 @@ end
 		din8x16_15__shared_input <= 1'b0;
 		waddr8x32_0__shared_input <= 1'b0;
 		waddr8x32_1__shared_input <= 1'b0;
+		waddr8x32_2__shared_input <= 1'b0;
 		raddr8x32_0__shared_input <= 1'b0;
 		raddr8x32_1__shared_input <= 1'b0;
+		raddr8x32_2__shared_input <= 1'b0;
 		din8x32_0__shared_input <= 1'b0;
 		din8x32_1__shared_input <= 1'b0;
 		din8x32_2__shared_input <= 1'b0;
@@ -1081,7 +1088,7 @@ initial begin
 	// ---- Step 4: Runtime write then readback for 8x32 ----
 	$display("[TB] Testing runtime write/read for 8x32...");
 	wen_shared_input = 1'b1;
-	{waddr8x32_1__shared_input, waddr8x32_0__shared_input} = 2'b10;
+	{waddr8x32_2__shared_input, waddr8x32_1__shared_input, waddr8x32_0__shared_input} = 3'b010;
 	{din8x32_31__shared_input, din8x32_30__shared_input, din8x32_29__shared_input, din8x32_28__shared_input,
 	 din8x32_27__shared_input, din8x32_26__shared_input, din8x32_25__shared_input, din8x32_24__shared_input,
 	 din8x32_23__shared_input, din8x32_22__shared_input, din8x32_21__shared_input, din8x32_20__shared_input,
@@ -1093,7 +1100,7 @@ initial begin
 	@(negedge clk[0]);
 	wen_shared_input = 1'b0;
 	ren_shared_input = 1'b1;
-	{raddr8x32_1__shared_input, raddr8x32_0__shared_input} = 2'b10;
+	{raddr8x32_2__shared_input, raddr8x32_1__shared_input, raddr8x32_0__shared_input} = 3'b010;
 	@(negedge clk[0]);
 	$display("8x32 Addr 2 (post-write) | Expected: DEADBEEF | Got: %h", dout8x32_fpga_bus);
 	ren_shared_input = 1'b0;

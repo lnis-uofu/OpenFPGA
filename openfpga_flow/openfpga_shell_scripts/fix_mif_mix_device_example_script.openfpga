@@ -59,6 +59,8 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --ver
 
 # Auto full testbench (no custom TB overwrite)
 write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --mif ${OPENFPGA_WRITE_MIF_FILE} --bus_group_file bus_group.xml --explicit_port_mapping
+# Copy external hand-crafted testbench 
+ext_exec --command "cp ${OPENFPGA_CUSTOM_FULL_TESTBENCH} SRC/"
 
 # Finish and exit OpenFPGA
 exit
