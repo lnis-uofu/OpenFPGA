@@ -9,6 +9,7 @@
 #pacman -Syu --noconfirm
 #    mingw-w64-x86_64-toolchain \
 
+pacman -Syu
 # This is for code compilation
 pacman -S --noconfirm --needed \
     autoconf \
@@ -70,5 +71,5 @@ pacman -S --noconfirm --needed \
 
 # This is for openfpga regression tests
 pacman -S --noconfirm --needed \
-    mingw-w64-gtkwave \
-    mingw-w64-iverilog
+    mingw-w64-x86_64-gtkwave \
+    mingw-w64-x86_64-iverilog
