@@ -277,7 +277,7 @@ if (OPENFPGA_IPO_BUILD STREQUAL "on")
     endif()
 elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
     # Yosys does not support IPO on Mingw gcc tool chain
-    if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (DEFINED ENV{MSYSTEM} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         message(STATUS "Building with IPO: off (auto) due to Msys2 gcc toolchain limitations")
     elseif (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
         message(STATUS "Building with IPO: on (auto)")
