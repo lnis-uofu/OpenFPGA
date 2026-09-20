@@ -279,16 +279,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-#          - name: "Build (GCC, Windows Msys2-UCRT64)"
-#            cc: gcc
-#            cxx: g++
-#            os: UCRT64
-#            prefix: ucrt64
-          - name: "Build (GCC, Windows Msys2-MINGW64, debug)"
+          - name: "Build (GCC, Windows Msys2-UCRT64)"
             cc: gcc
             cxx: g++
-            os: MINGW64
-            prefix: mingw64
+            os: UCRT64
+            prefix: ucrt64
             cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     defaults:
       run:
