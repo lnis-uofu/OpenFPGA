@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<block name="and2.net.post_routing" instance="FPGA_packed_netlist[0]" architecture_id="SHA256:a989f5a219eb0cb80922d9257abeaeba9c899ce13dedeac41aaf786b1ed24679" atom_netlist_id="SHA256:2e9b9fe963ef6fc23a8f4ba4a40f1b273b533ef6a062cd9c2ea9cd7e80da4b04">
+	<inputs>a b</inputs>
+	<outputs>out:c</outputs>
+	<clocks></clocks>
+	<block name="c" instance="clb[0]" mode="default">
+		<inputs>
+			<port name="I">open open b open open open open open open open a open</port>
+		</inputs>
+		<outputs>
+			<port name="O">open open open open open open open fle[3].out[1]-&gt;clbouts2</port>
+		</outputs>
+		<clocks>
+			<port name="clk">open</port>
+		</clocks>
+		<block name="open" instance="fle[0]" />
+		<block name="open" instance="fle[1]" />
+		<block name="open" instance="fle[2]" />
+		<block name="c" instance="fle[3]" mode="n2_lut3">
+			<inputs>
+				<port name="in">open clb.I[2]-&gt;crossbar clb.I[10]-&gt;crossbar open</port>
+			</inputs>
+			<outputs>
+				<port name="out">open lut3inter[0].out[1]-&gt;direct2</port>
+			</outputs>
+			<clocks>
+				<port name="clk">open</port>
+			</clocks>
+			<block name="c" instance="lut3inter[0]" mode="default">
+				<inputs>
+					<port name="in">open fle.in[1]-&gt;direct1 fle.in[2]-&gt;direct1</port>
+				</inputs>
+				<outputs>
+					<port name="out">open ble3[1].out[0]-&gt;direct3</port>
+				</outputs>
+				<clocks>
+					<port name="clk">open</port>
+				</clocks>
+				<block name="open" instance="ble3[0]" />
+				<block name="c" instance="ble3[1]" mode="default">
+					<inputs>
+						<port name="in">open lut3inter.in[1]-&gt;direct2 lut3inter.in[2]-&gt;direct2</port>
+					</inputs>
+					<outputs>
+						<port name="out">lut3[0].out[0]-&gt;mux1</port>
+					</outputs>
+					<clocks>
+						<port name="clk">open</port>
+					</clocks>
+					<block name="c" instance="lut3[0]" mode="lut3">
+						<inputs>
+							<port name="in">open ble3.in[1]-&gt;direct1 ble3.in[2]-&gt;direct1</port>
+						</inputs>
+						<outputs>
+							<port name="out">lut[0].out[0]-&gt;direct:lut3</port>
+						</outputs>
+						<clocks />
+						<block name="c" instance="lut[0]">
+							<attributes />
+							<parameters />
+							<inputs>
+								<port name="in">open lut3.in[1]-&gt;direct:lut3 lut3.in[2]-&gt;direct:lut3</port>
+								<port_rotation_map name="in">open 1 0</port_rotation_map>
+							</inputs>
+							<outputs>
+								<port name="out">c</port>
+							</outputs>
+							<clocks />
+						</block>
+					</block>
+					<block name="open" instance="ff[0]" />
+				</block>
+			</block>
+		</block>
+	</block>
+	<block name="out:c" instance="io[1]" mode="outpad">
+		<inputs>
+			<port name="outpad">c</port>
+		</inputs>
+		<outputs>
+			<port name="inpad">open</port>
+		</outputs>
+		<clocks />
+		<block name="out:c" instance="outpad[0]">
+			<attributes />
+			<parameters />
+			<inputs>
+				<port name="outpad">io.outpad[0]-&gt;outpad</port>
+			</inputs>
+			<outputs />
+			<clocks />
+		</block>
+	</block>
+	<block name="a" instance="io[2]" mode="inpad">
+		<inputs>
+			<port name="outpad">open</port>
+		</inputs>
+		<outputs>
+			<port name="inpad">inpad[0].inpad[0]-&gt;inpad</port>
+		</outputs>
+		<clocks />
+		<block name="a" instance="inpad[0]">
+			<attributes />
+			<parameters />
+			<inputs />
+			<outputs>
+				<port name="inpad">a</port>
+			</outputs>
+			<clocks />
+		</block>
+	</block>
+	<block name="b" instance="io[3]" mode="inpad">
+		<inputs>
+			<port name="outpad">open</port>
+		</inputs>
+		<outputs>
+			<port name="inpad">inpad[0].inpad[0]-&gt;inpad</port>
+		</outputs>
+		<clocks />
+		<block name="b" instance="inpad[0]">
+			<attributes />
+			<parameters />
+			<inputs />
+			<outputs>
+				<port name="inpad">b</port>
+			</outputs>
+			<clocks />
+		</block>
+	</block>
+</block>
