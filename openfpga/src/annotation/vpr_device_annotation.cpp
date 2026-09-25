@@ -562,7 +562,7 @@ void VprDeviceAnnotation::add_interconnect_physical_type(
     interconnect_physical_types_.find(pb_interconnect);
   if (it != interconnect_physical_types_.end()) {
     VTR_LOG_WARN("Override the physical interconnect for interconnect '%s'!\n",
-                 pb_interconnect->name);
+                 pb_interconnect->name.c_str());
   }
 
   interconnect_physical_types_[pb_interconnect] = physical_type;
