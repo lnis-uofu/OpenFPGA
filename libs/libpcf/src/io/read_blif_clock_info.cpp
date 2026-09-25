@@ -66,7 +66,7 @@ std::vector<std::string> read_blif_clock_info(const char* arch_fname,
       VPR_FATAL_ERROR(VPR_ERROR_ATOM_NETLIST,
                       "Unable to identify circuit file format for '%s'. "
                       "Expect [blif|eblif|fpga-interchange]!\n",
-                      blif_fname.c_str());
+                      blif_fname);
       break;
   }
 
