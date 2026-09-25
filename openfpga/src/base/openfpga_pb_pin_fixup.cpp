@@ -331,7 +331,7 @@ static int update_cluster_pin_with_post_routing_results(
              "Fixed up net '%s' mapping mismatch at clustered block '%s' pin "
              "'grid[%ld][%ld].%s' (was net '%s')\n",
              routing_net_name.c_str(),
-             clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
+             clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(), grid_coord.x(),
              grid_coord.y(),
              get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                ->to_string()
