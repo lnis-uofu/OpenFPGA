@@ -98,7 +98,7 @@ void VprClusteringAnnotation::adapt_truth_table(
     VTR_LOG_WARN(
       "Override the truth table for pb '%s' in clustering context "
       "annotation!\n",
-      pb->name);
+      pb->name.c_str());
   }
 
   block_truth_tables_[pb] = tt;
