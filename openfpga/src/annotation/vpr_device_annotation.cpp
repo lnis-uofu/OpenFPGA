@@ -549,7 +549,7 @@ void VprDeviceAnnotation::add_interconnect_circuit_model(
     interconnect_circuit_models_.find(pb_interconnect);
   if (it != interconnect_circuit_models_.end()) {
     VTR_LOG_WARN("Override the circuit model for interconnect '%s'!\n",
-                 pb_interconnect->name);
+                 pb_interconnect->name.c_str());
   }
 
   interconnect_circuit_models_[pb_interconnect] = circuit_model;
