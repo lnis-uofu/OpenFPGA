@@ -56,7 +56,8 @@ std::vector<std::string> read_blif_clock_info(const char* arch_fname,
   switch (circuit_format) {
     case e_circuit_format::BLIF:
     case e_circuit_format::EBLIF:
-      atom_ntlist = read_blif(circuit_format, blif_fname, logical_models, verbose ? 1 : 0);
+      atom_ntlist =
+        read_blif(circuit_format, blif_fname, logical_models, verbose ? 1 : 0);
       break;
     case e_circuit_format::FPGA_INTERCHANGE:
       atom_ntlist = read_interchange_netlist(blif_fname, arch, verbose ? 1 : 0);
