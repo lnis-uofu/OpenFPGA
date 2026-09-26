@@ -568,6 +568,9 @@ void shuffle_top_module_configurable_children(
 #ifdef _WIN32
   static std::mt19937 rng(std::random_device{}());
   std::shuffle(shuffled_keys.begin(), shuffled_keys.end(), rng);
+#elif defined(__APPLE__) 
+  static std::mt19937 rng(std::random_device{}());
+  std::shuffle(shuffled_keys.begin(), shuffled_keys.end(), rng);
 #else
   std::random_shuffle(shuffled_keys.begin(), shuffled_keys.end());
 #endif
