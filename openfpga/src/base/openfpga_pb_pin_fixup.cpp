@@ -280,8 +280,7 @@ static int update_cluster_pin_with_post_routing_results(
                "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
                "it is not routed\n",
                clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
-               grid_coord.x(),
-               grid_coord.y(),
+               grid_coord.x(), grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                  ->to_string()
                  .c_str());
@@ -295,8 +294,7 @@ static int update_cluster_pin_with_post_routing_results(
                "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
                "it is a local net inside the cluster\n",
                clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
-               grid_coord.x(),
-               grid_coord.y(),
+               grid_coord.x(), grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                  ->to_string()
                  .c_str());
@@ -309,8 +307,7 @@ static int update_cluster_pin_with_post_routing_results(
                "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
                "it matches cluster routing\n",
                clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
-               grid_coord.x(),
-               grid_coord.y(),
+               grid_coord.x(), grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                  ->to_string()
                  .c_str());
@@ -334,8 +331,8 @@ static int update_cluster_pin_with_post_routing_results(
              "Fixed up net '%s' mapping mismatch at clustered block '%s' pin "
              "'grid[%ld][%ld].%s' (was net '%s')\n",
              routing_net_name.c_str(),
-             clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(), grid_coord.x(),
-             grid_coord.y(),
+             clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
+             grid_coord.x(), grid_coord.y(),
              get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                ->to_string()
                .c_str(),
