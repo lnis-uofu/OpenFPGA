@@ -181,7 +181,7 @@ set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in V
 set(ODIN_COVERAGE OFF CACHE BOOL "Enable building odin with coverage flags in Verilog-to-Routing")
 set(ODIN_TIDY OFF CACHE BOOL "Enable building odin with clang tidy in Verilog-to-Routing")
 set(ODIN_SANITIZE OFF CACHE BOOL "Enable building odin with sanitize flags in Verilog-to-Routing")
-set(WITH_YOSYS OFF CACHE BOOL "Enable building Yosys in Verilog-to-Routing")
+set(WITH_MOSAIC OFF CACHE BOOL "Enable building mosaic Yosys plugin in Verilog-to-Routing")
 set(WITH_PARMYS OFF CACHE BOOL "Enable Yosys as elaborator and parmys-plugin as partial mapper")
 set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Routing")
 set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
