@@ -113,7 +113,7 @@ static int update_cluster_pin_global_net_with_post_routing_results(
       VTR_LOG_ERROR(
         "Failed to find any unused pin in the same port to remap clustered "
         "block '%s' global net '%s' (was mapped to pin '%s').\n",
-        clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+        clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
         clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
         pb_graph_pin->to_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
