@@ -73,7 +73,7 @@ jobs:
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
   # Test the compilation compatibility
-  macos_installer:
+  macos_build:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
@@ -86,7 +86,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Installer (Clang, MacOS 15)"
+          - name: "Build (Clang, MacOS 15)"
             os: macos-15
             cc: clang
             cxx: clang++
@@ -140,7 +140,7 @@ jobs:
         uses: SimenB/github-actions-cpu-cores@v3
         id: cpu-cores
 
-      - name: Create installer
+      - name: Build
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
@@ -161,7 +161,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build (GCC, Windows Msys2-UCRT64)"
+          - name: "Installer (GCC, Windows Msys2-UCRT64)"
             cc: gcc
             cxx: g++
             os: UCRT64
