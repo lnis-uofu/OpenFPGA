@@ -91,6 +91,11 @@ jobs:
             cc: clang
             cxx: clang++
             cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+          - name: "Build (Clang, MacOS 26)"
+            os: macos-26
+            cc: clang
+            cxx: clang++
+            cmake_flags: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
