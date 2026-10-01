@@ -102,7 +102,7 @@ static int update_cluster_pin_global_net_with_post_routing_results(
       clustering_annotation.rename_net(blk_id, cand_pin, global_net_id);
       VTR_LOGV(verbose,
                "Remap clustered block '%s' global net '%s' to pin '%s'\n",
-               clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
                clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
                cand_pb_graph_pin->to_string().c_str());
       found_cand = true;
@@ -113,7 +113,7 @@ static int update_cluster_pin_global_net_with_post_routing_results(
       VTR_LOG_ERROR(
         "Failed to find any unused pin in the same port to remap clustered "
         "block '%s' global net '%s' (was mapped to pin '%s').\n",
-        clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+        clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
         clustering_ctx.clb_nlist.net_name(global_net_id).c_str(),
         pb_graph_pin->to_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
@@ -279,8 +279,8 @@ static int update_cluster_pin_with_post_routing_results(
       VTR_LOGV(verbose,
                "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
                "it is not routed\n",
-               clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-               grid_coord.y(),
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
+               grid_coord.x(), grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                  ->to_string()
                  .c_str());
@@ -293,8 +293,8 @@ static int update_cluster_pin_with_post_routing_results(
       VTR_LOGV(verbose,
                "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
                "it is a local net inside the cluster\n",
-               clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-               grid_coord.y(),
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
+               grid_coord.x(), grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                  ->to_string()
                  .c_str());
@@ -306,8 +306,8 @@ static int update_cluster_pin_with_post_routing_results(
       VTR_LOGV(verbose,
                "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s' as "
                "it matches cluster routing\n",
-               clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-               grid_coord.y(),
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
+               grid_coord.x(), grid_coord.y(),
                get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                  ->to_string()
                  .c_str());
@@ -331,8 +331,8 @@ static int update_cluster_pin_with_post_routing_results(
              "Fixed up net '%s' mapping mismatch at clustered block '%s' pin "
              "'grid[%ld][%ld].%s' (was net '%s')\n",
              routing_net_name.c_str(),
-             clustering_ctx.clb_nlist.block_pb(blk_id)->name, grid_coord.x(),
-             grid_coord.y(),
+             clustering_ctx.clb_nlist.block_pb(blk_id)->name.c_str(),
+             grid_coord.x(), grid_coord.y(),
              get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)
                ->to_string()
                .c_str(),

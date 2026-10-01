@@ -161,7 +161,7 @@ static void rec_adapt_lut_pb_tt(
     for (int jpb = 0; jpb < mapped_mode->pb_type_children[ipb].num_pb; ++jpb) {
       /* See if we still have any pb children to walk through */
       if ((pb->child_pbs[ipb] != nullptr) &&
-          (pb->child_pbs[ipb][jpb].name != nullptr)) {
+          (!pb->child_pbs[ipb][jpb].name.empty())) {
         rec_adapt_lut_pb_tt(atom_ctx, &(pb->child_pbs[ipb][jpb]), pb_route,
                             vpr_clustering_annotation, verbose);
       }

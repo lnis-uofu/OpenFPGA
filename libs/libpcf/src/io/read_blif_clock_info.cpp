@@ -49,17 +49,18 @@ std::vector<std::string> read_blif_clock_info(const char* arch_fname,
     VPR_FATAL_ERROR(VPR_ERROR_ATOM_NETLIST,
                     "Unknown circuit format '%s' specified by users. Expected "
                     "[ auto | blif | eblif ]\n",
-                    blif_ffmt);
+                    blif_ffmt.c_str());
   }
 
   AtomNetlist atom_ntlist;
   switch (circuit_format) {
     case e_circuit_format::BLIF:
     case e_circuit_format::EBLIF:
-      atom_ntlist = read_blif(circuit_format, blif_fname, logical_models);
+      atom_ntlist =
+        read_blif(circuit_format, blif_fname, logical_models, verbose ? 1 : 0);
       break;
     case e_circuit_format::FPGA_INTERCHANGE:
-      atom_ntlist = read_interchange_netlist(blif_fname, arch);
+      atom_ntlist = read_interchange_netlist(blif_fname, arch, verbose ? 1 : 0);
       break;
     default:
       VPR_FATAL_ERROR(VPR_ERROR_ATOM_NETLIST,

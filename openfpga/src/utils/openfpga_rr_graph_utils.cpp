@@ -4,7 +4,6 @@
 
 #include "rr_graph_in_edges.h"
 #include "rr_graph_view.h"
-#include "tileable_rr_graph_types.h"
 #include "tileable_rr_graph_utils.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"

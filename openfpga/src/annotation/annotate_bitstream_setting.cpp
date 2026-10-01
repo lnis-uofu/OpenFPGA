@@ -547,7 +547,7 @@ static int annotate_bitstream_interconnect_setting(
           "Invalid default path '%s' for interconnect '%s' which inputs are "
           "'%s'\n",
           expected_input_path.c_str(), interconnect_name.c_str(),
-          pb_interc->input_string);
+          pb_interc->input_string.c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
 
