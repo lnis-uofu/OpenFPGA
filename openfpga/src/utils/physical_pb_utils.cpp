@@ -529,7 +529,7 @@ void rec_update_physical_pb_from_operating_pb(
     /* Each child may exist multiple times in the hierarchy*/
     for (int jpb = 0; jpb < mapped_mode->pb_type_children[ipb].num_pb; ++jpb) {
       if ((nullptr != op_pb->child_pbs[ipb]) &&
-          (nullptr != op_pb->child_pbs[ipb][jpb].name)) {
+          (!op_pb->child_pbs[ipb][jpb].name.empty())) {
         rec_update_physical_pb_from_operating_pb(
           phy_pb, lgk2phy_pb_map, &(op_pb->child_pbs[ipb][jpb]), pb_route,
           atom_ctx, device_annotation, bitstream_annotation, verbose);

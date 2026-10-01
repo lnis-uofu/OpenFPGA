@@ -72,7 +72,7 @@ static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
            jpb < mapped_mode->pb_type_children[ipb].num_pb && !found_pb;
            ++jpb) {
         if ((nullptr != op_pb->child_pbs[ipb]) &&
-            (nullptr != op_pb->child_pbs[ipb][jpb].name)) {
+            (!op_pb->child_pbs[ipb][jpb].name.empty())) {
           found_pb =
             extract_pb_data(fp, atom_ctx, &(op_pb->child_pbs[ipb][jpb]),
                             target_pb_type, setting);

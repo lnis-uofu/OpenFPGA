@@ -717,7 +717,7 @@ static void add_module_pb_bus_mux_interc(
   VTR_LOGV(verbose,
            "Built bus-based mux '%s' with %lu shared bit-muxes driven by a "
            "single selector\n",
-           cur_interc->name, mux_instances.size());
+           cur_interc->name.c_str(), mux_instances.size());
 
   /* Wire the shared memory output to the SRAM ports of every mux instance */
   ModuleId mux_module = module_manager.find_module(generate_mux_subckt_name(

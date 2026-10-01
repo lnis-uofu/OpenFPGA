@@ -382,7 +382,7 @@ static void build_physical_block_pin_interc_bitstream(
               "output bus to be routed from the same input port. Bit '%s' "
               "selects input %d while another bit of the same bus selects "
               "input %d. Check the packing/routing results.\n",
-              cur_interc->name, cur_interc->line_num,
+              cur_interc->name.c_str(), cur_interc->line_num,
               bus_pin->to_string().c_str(), pin_path_id, bus_path_id);
             exit(CMD_EXEC_FATAL_ERROR);
           }
