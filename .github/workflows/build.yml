@@ -803,7 +803,11 @@ jobs:
           dnf repolist --all | grep -i power
           echo "===== Install Git as the default one is too old ===="
           dnf install -y git
+          echo "===== Git version ====="
           git --version
+          echo "===== Cmake availability ====="
+          dnf module list cmake
+          dnf list --showduplicates cmake
 
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
@@ -815,6 +819,12 @@ jobs:
           # To use gcc-12 in the current step and export paths for subsequent steps:
           echo "CC=/opt/rh/gcc-toolset-12/root/usr/bin/gcc" >> $GITHUB_ENV
           echo "CXX=/opt/rh/gcc-toolset-12/root/usr/bin/g++" >> $GITHUB_ENV
+
+      - name: Install CMake
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade cmake
+          echo "/usr/local/bin" >> "$GITHUB_PATH"
       
       - name: Dump tool versions
         run: |
