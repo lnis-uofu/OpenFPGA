@@ -801,7 +801,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+          sudo bash ./.github/workflows/build_dependency_${{ matrix.config.dependency_version }}.sh
           # To use gcc-12 in the current step and export paths for subsequent steps:
           echo "CC=/opt/rh/gcc-toolset-12/root/usr/bin/gcc" >> $GITHUB_ENV
           echo "CXX=/opt/rh/gcc-toolset-12/root/usr/bin/g++" >> $GITHUB_ENV
