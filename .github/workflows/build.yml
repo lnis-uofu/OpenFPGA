@@ -801,12 +801,12 @@ jobs:
           dnf repolist --all
           echo "===== PowerTools ====="
           dnf repolist --all | grep -i power
+          echo "===== Install Git as the default one is too old ===="
+          dnf install -y git
+          git --version
 
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: recursive
 
       - name: Install dependencies
         run: |
