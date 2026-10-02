@@ -1,5 +1,9 @@
 # Disable GPG checks for repositories (if needed)
 sed -i 's/gpgcheck=1/gpgcheck=0/g' /etc/yum.repos.d/*.repo
+# AlmaLinux 8 uses PowerTools
+dnf install -y dnf-plugins-core
+dnf config-manager --set-enabled powertools
+dnf makecache
 
 # Install essential packages
 dnf install -y \
@@ -44,6 +48,9 @@ dnf install -y \
     eigen3-devel \
     libopm-devel \
     && dnf clean all
+
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 #yum install -y https://dl.fedoraproject.org/pub/epel/8/Modular/x86_64/Packages/s/swig-4.0.2-9.module_el8+12710+6335019d.x86_64.rpm
 localedef -i en_US -f UTF-8 en_US.UTF-8

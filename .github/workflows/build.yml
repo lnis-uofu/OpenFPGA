@@ -795,7 +795,13 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Check OS version
-        run: cat /etc/redhat-release
+        run: |
+          cat /etc/os-release
+          echo "===== Repositories ====="
+          dnf repolist --all
+          echo "===== PowerTools ====="
+          dnf repolist --all | grep -i power
+
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
 
