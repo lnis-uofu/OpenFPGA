@@ -18,6 +18,8 @@ OpenFPGA is continously tested on
 - Ubuntu 22.04
 - Ubuntu 24.04
 - CentOS 9
+- MacOS 15
+- MacOS 26
 
 It might work with earlier versions and other distributions.
 
@@ -169,25 +171,28 @@ If your OS is CentOS 9, we offer the script to install all the dependencies.
 .. include:: centos9_dependencies.sh
   :code: shell
 
+MacOS
+^^^^^
+
+If your OS is mac OS 15, we offer the script to install all the dependencies.
+
+.. include:: macos15_dependencies.sh
+  :code: shell
+
+If your OS is mac OS 26, we offer the script to install all the dependencies.
+
+.. include:: macos26_dependencies.sh
+  :code: shell
+
 Windows (Mingw64)
 ^^^^^^^^^^^^^^^^^
 
 If your OS is Msys2 in Windows, we offer the script to install all the dependencies
 
-.. note:: We support only MINGW64 on Msys2. 
+.. note:: We support only UCRT64 on Msys2. 
 
-.. include:: win_msys2_mingw64.sh
+.. include:: win_msys2.sh
   :code: shell
-
-Yosys Slang build is not supported yet on Msys2. Please disable it during the build by adding to cmake flags (See details in :ref:`tutorial_compile_build_options`)
-
-.. code-block::
-
-  make all CMAKE_FLAGS="-DOPENFPGA_WITH_SLANG=OFF"
-
-Instead, please use the prebuilt version of Yosys at 
-`mingw-w64-x86_64-yosys <https://packages.msys2.org/packages/mingw-w64-x86_64-yosys>`_.
-
 
 Windows (MSVC)
 ^^^^^^^^^^^^^^
