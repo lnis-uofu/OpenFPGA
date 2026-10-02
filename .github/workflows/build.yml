@@ -804,6 +804,9 @@ jobs:
 
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Install dependencies
         run: |
@@ -839,7 +842,10 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           echo "PWD: $PWD"
           echo "WORKSPACE: $GITHUB_WORKSPACE"
+          # Check if the workspace has a git control
+          ls -la .git
           git config --global --add safe.directory '*'
+          git status
           make all BUILD_TYPE=$BUILD_TYPE  -j${{ steps.cpu-cores.outputs.count}}
 
   centos_support:
