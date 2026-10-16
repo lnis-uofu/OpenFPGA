@@ -20,6 +20,7 @@ OpenFPGA is continously tested on
 - CentOS 9
 - MacOS 15
 - MacOS 26
+- Alma 8
 
 It might work with earlier versions and other distributions.
 
@@ -169,6 +170,14 @@ If your OS is CentOS 7.9, we offer the script to install all the dependencies.
 If your OS is CentOS 9, we offer the script to install all the dependencies.
 
 .. include:: centos9_dependencies.sh
+  :code: shell
+
+Alma
+^^^^
+
+If your OS is Alma 8, we offer the script to install all the dependencies.
+
+.. include:: alma8_dependencies.sh
   :code: shell
 
 MacOS
