@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 
 import argparse
@@ -18,16 +17,11 @@ def load_replacements(yaml_file: Path) -> dict[str, str]:
 
     for key, value in replacements.items():
         if not isinstance(key, str) or not isinstance(value, str):
-            raise ValueError(
-                f"Replacement keys and values must be strings: "
-                f"{key!r}: {value!r}"
-            )
+            raise ValueError(f"Replacement keys and values must be strings: " f"{key!r}: {value!r}")
 
     # Replace longer strings first to avoid shorter keys interfering
     # with longer keys.
-    return dict(
-        sorted(replacements.items(), key=lambda item: len(item[0]), reverse=True)
-    )
+    return dict(sorted(replacements.items(), key=lambda item: len(item[0]), reverse=True))
 
 
 def process_file(
@@ -99,10 +93,7 @@ def main():
                 print(f"[ERROR] {file_path}: {exc}", file=sys.stderr)
 
         action = "would be updated" if args.dry_run else "updated"
-        print(
-            f"\nFound {len(files)} task.conf files; "
-            f"{changed_count} {action}."
-        )
+        print(f"\nFound {len(files)} task.conf files; " f"{changed_count} {action}.")
 
     except (OSError, yaml.YAMLError, ValueError) as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
@@ -111,4 +102,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
