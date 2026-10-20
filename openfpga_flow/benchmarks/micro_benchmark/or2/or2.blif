@@ -1,8 +1,0 @@
-.model or2
-.inputs a b
-.outputs c
-
-.names a b c
-00 0
-
-.end

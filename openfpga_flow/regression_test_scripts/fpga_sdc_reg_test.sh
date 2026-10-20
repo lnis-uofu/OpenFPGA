@@ -16,4 +16,4 @@ run-task fpga_sdc/sdc_time_unit/sdc_time_unit_us $@
 run-task fpga_sdc/sdc_time_unit/sdc_time_unit_ms $@
 run-task fpga_sdc/sdc_time_unit/sdc_time_unit_default $@
 run-task fpga_sdc/sdc_time_unit/sdc_time_unit_ks $@
-run-task fpga_sdc/sdc_time_unit/sdc_time_unit_Ms $@
+run-task fpga_sdc/sdc_time_unit/sdc_time_unit_megas $@
