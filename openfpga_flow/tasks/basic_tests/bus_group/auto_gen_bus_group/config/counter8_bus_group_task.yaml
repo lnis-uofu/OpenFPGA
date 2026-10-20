@@ -1,5 +1,5 @@
-counter8_async_reset:
+counter8_async_resetb:
   source:
-    - name: counter8_async_reset_output_verilog.v
-  top_module: counter8_async_reset
+    - name: counter8_async_resetb_output_verilog.v
+  top_module: counter8_async_resetb
   bus_group_file: bus_group.xml
