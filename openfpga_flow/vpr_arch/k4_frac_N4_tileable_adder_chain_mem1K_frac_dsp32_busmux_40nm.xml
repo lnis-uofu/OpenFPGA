@@ -783,8 +783,8 @@
                 <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.b" out_port="mult_8x8.out"/>
               </pb_type>
               <interconnect>
-                <direct name="a2a" input="mult_8x8_slice.A_cfg" output="mult_8x8.a">
-                </direct>
+                <mux name="a2a" input="mult_8x8_slice.A_cfg mult_8x8_slice.B_cfg" output="mult_8x8.a" bus="true">
+                </mux>
                 <direct name="b2b" input="mult_8x8_slice.B_cfg" output="mult_8x8.b">
                 </direct>
                 <direct name="out2out" input="mult_8x8.out" output="mult_8x8_slice.OUT_cfg">
@@ -818,8 +818,8 @@
                 <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_16x16.b" out_port="mult_16x16.out"/>
               </pb_type>
               <interconnect>
-                <direct name="a2a" input="mult_16x16_slice.A_cfg" output="mult_16x16.a">
-                </direct>
+                <mux name="a2a" input="mult_16x16_slice.A_cfg mult_16x16_slice.B_cfg" output="mult_16x16.a" bus="true">
+                </mux>
                 <direct name="b2b" input="mult_16x16_slice.B_cfg" output="mult_16x16.b">
                 </direct>
                 <direct name="out2out" input="mult_16x16.out" output="mult_16x16_slice.OUT_cfg">
