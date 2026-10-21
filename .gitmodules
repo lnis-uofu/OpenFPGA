@@ -4,3 +4,6 @@
 [submodule "vtr-verilog-to-routing"]
 	path = vtr-verilog-to-routing
 	url = https://github.com/verilog-to-routing/vtr-verilog-to-routing.git
+[submodule "openfpga_flow/benchmarks/ubm"]
+	path = openfpga_flow/benchmarks/ubm
+	url = https://github.com/tangxifan/ubm

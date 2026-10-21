@@ -2,22 +2,22 @@
 
 .model mult_8_pipelined
 .inputs clk a[7] a[6] a[5] a[4] a[3] a[2] a[1] a[0] b[7] b[6] b[5] b[4] b[3] b[2] b[1] b[0]
-.outputs out[15] out[14] out[13] out[12] out[11] out[10] out[9] out[8] out[7] out[6] out[5] out[4] out[3] out[2] out[1] out[0]
+.outputs p[15] p[14] p[13] p[12] p[11] p[10] p[9] p[8] p[7] p[6] p[5] p[4] p[3] p[2] p[1] p[0]
 .names $false
 .names $true
 1
 .names $undef
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[5] out[10] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[6] out[9] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[7] out[8] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[8] out[7] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[9] out[6] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[10] out[5] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[11] out[4] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[12] out[3] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[13] out[2] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[14] out[1] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[15] out[0] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[5] p[10] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[6] p[9] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[7] p[8] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[8] p[7] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[9] p[6] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[10] p[5] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[11] p[4] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[12] p[3] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[13] p[2] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[14] p[1] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[15] p[0] re clk 2
 .latch a[7] a_reg[7] re clk 2
 .latch a[6] a_reg[6] re clk 2
 .latch a[5] a_reg[5] re clk 2
@@ -34,10 +34,10 @@
 .latch b[2] b_reg[2] re clk 2
 .latch b[1] b_reg[1] re clk 2
 .latch b[0] b_reg[0] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[0] out[15] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[1] out[14] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[2] out[13] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[3] out[12] re clk 2
-.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[4] out[11] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[0] p[15] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[1] p[14] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[2] p[13] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[3] p[12] re clk 2
+.latch $techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[4] p[11] re clk 2
 .subckt mult_8 A[7]=a_reg[7] A[6]=a_reg[6] A[5]=a_reg[5] A[4]=a_reg[4] A[3]=a_reg[3] A[2]=a_reg[2] A[1]=a_reg[1] A[0]=a_reg[0] B[7]=b_reg[7] B[6]=b_reg[6] B[5]=b_reg[5] B[4]=b_reg[4] B[3]=b_reg[3] B[2]=b_reg[2] B[1]=b_reg[1] B[0]=b_reg[0] Y[15]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[0] Y[14]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[1] Y[13]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[2] Y[12]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[3] Y[11]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[4] Y[10]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[5] Y[9]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[6] Y[8]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[7] Y[7]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[8] Y[6]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[9] Y[5]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[10] Y[4]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[11] Y[3]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[12] Y[2]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[13] Y[1]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[14] Y[0]=$techmap6$mul$./benchmark/mult_8_pipelined.v:19$2.Y[15]
 .end
