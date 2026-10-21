@@ -950,6 +950,52 @@ static void add_lb_router_nets(
 }
 
 /***************************************************************************************
+ * Find the input set VPR used on each bus-based mux of a clustered block, by
+ * mux name. The driver of each pin in pb_route tells which edge VPR used.
+ * The physical mode has the same bus-based muxes, with the same names and
+ * input sets, as the mode VPR packed. Several muxes of the packed mode may
+ * share a name, and so the one physical select: if VPR used different input
+ * sets on them, the mux gets no input set and cannot be used.
+ ***************************************************************************************/
+static std::map<std::string, int> find_vpr_bus_mux_selections(
+  const t_pb* pb, const bool& verbose) {
+  std::map<std::string, int> selections;
+  for (const auto& route_entry : pb->pb_route) {
+    const t_pb_route& pb_route = route_entry.second;
+    if ((UNDEFINED == pb_route.driver_pb_pin_id) ||
+        (AtomNetId::INVALID() == pb_route.atom_net_id)) {
+      continue;
+    }
+    const t_pb_graph_pin* pin = pb_route.pb_graph_pin;
+    for (int iedge = 0; iedge < pin->num_input_edges; ++iedge) {
+      const t_pb_graph_edge* edge = pin->input_edges[iedge];
+      if ((pb_route.driver_pb_pin_id ==
+           edge->input_pins[0]->pin_count_in_cluster) &&
+          (edge->is_bus_mux())) {
+        auto result =
+          selections.insert({edge->interconnect->name, edge->driver_set});
+        if (result.first->second != edge->driver_set) {
+          result.first->second = -1;
+        }
+        break;
+      }
+    }
+  }
+  for (const auto& selection : selections) {
+    if (0 > selection.second) {
+      VTR_LOG_WARN(
+        "VPR used different input sets on the bus-based muxes named '%s', "
+        "which share one select in the physical mode. The mux is not used.\n",
+        selection.first.c_str());
+      continue;
+    }
+    VTR_LOGV(verbose, "Bus-based mux '%s' uses input set %d\n",
+             selection.first.c_str(), selection.second);
+  }
+  return selections;
+}
+
+/***************************************************************************************
  * Repack a clustered block in the physical mode
  * This function will do
  * - Find the lb_rr_graph that is affiliated to the clustered block
@@ -998,6 +1044,10 @@ static int repack_cluster(const AtomContext& atom_ctx,
    * purpose of repacking!!!
    */
   lb_router.set_physical_pb_modes(lb_rr_graph, device_annotation);
+
+  /* Use only the bus-based mux input sets VPR used */
+  lb_router.set_bus_mux_selections(find_vpr_bus_mux_selections(
+    clustering_ctx.clb_nlist.block_pb(block_id), verbose));
 
   /* Run the router */
   bool route_success =
