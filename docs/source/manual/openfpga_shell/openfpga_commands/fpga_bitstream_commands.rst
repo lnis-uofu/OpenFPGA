@@ -12,6 +12,8 @@ Repack's functionality are in the following aspects:
 
 - It annotates the net mapping results from operating modes (considered by VPR) to the physical modes (considered by OpenFPGA)
 
+- On a bus-based multiplexer (``<mux bus="true"/>`` in VPR architecture, whose bits share a single select), it only uses the input set that VPR used, and it does not use a bus-based multiplexer that VPR did not use. The multiplexers are matched by name, so the physical mode must have the same bus-based multiplexers, with the same names and input-set order, as the operating mode VPR packed, and a name must denote a single bus-based multiplexer of the physical mode of a block. Bus-based multiplexers of the operating mode that share a name share the physical select: if VPR used different input sets on them, the multiplexer is not used and the routing fails. Route with ``--flat_routing on`` so that VPR uses one input set for all the bits of a bus-based multiplexer.
+
 - It re-routes all the nets by considering the programmable interconnects in physical modes **only**.
 
   .. note:: This must be done before bitstream generator and testbench generation. Strongly recommend it is done after all the fix-up have been applied
