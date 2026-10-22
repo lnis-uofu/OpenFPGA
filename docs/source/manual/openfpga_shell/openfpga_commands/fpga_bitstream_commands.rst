@@ -12,7 +12,26 @@ Repack's functionality are in the following aspects:
 
 - It annotates the net mapping results from operating modes (considered by VPR) to the physical modes (considered by OpenFPGA)
 
-- On a bus-based multiplexer (``<mux bus="true"/>`` in VPR architecture, whose bits share a single select), it only uses the input set that VPR used, and it does not use a bus-based multiplexer that VPR did not use. The multiplexers are matched by name, so the physical mode must have the same bus-based multiplexers, with the same names and input-set order, as the operating mode VPR packed, and a name must denote a single bus-based multiplexer of the physical mode of a block. Bus-based multiplexers of the operating mode that share a name share the physical select: if VPR used different input sets on them, the multiplexer is not used and the routing fails. Route with ``--flat_routing on`` so that VPR uses one input set for all the bits of a bus-based multiplexer.
+- On a bus-based multiplexer (``<mux bus="true"/>`` in VPR architecture), all the bits share one select. Repack uses only the input set that VPR used on it, and does not use a bus-based multiplexer that VPR did not use. Repack finds the input set VPR used by the name of the multiplexer, so:
+
+  - The physical mode must have the same bus-based multiplexers as the operating modes, with the same names and the same order of input sets. An operating mode cannot simplify a bus-based multiplexer of the physical mode, *e.g.*, into a ``<direct>``: repack would never use the physical multiplexer, and fail to route.
+  - A name must denote a single bus-based multiplexer in the physical modes of a block. For instance, a bus-based multiplexer cannot be defined under a ``pb_type`` whose ``num_pb`` is larger than 1 in the physical mode.
+  - Bus-based multiplexers of the operating modes that share a name are one multiplexer in the physical mode. VPR must use the same input set on all of them.
+
+  For example, the physical mode ``mult_32x32`` and the operating mode ``mult_16x16`` of a fracturable multiplier define the same bus-based multiplexer ``a2a``:
+
+  .. code-block:: xml
+
+    <!-- Physical mode -->
+    <mux name="a2a" input="mult_32x32_slice.A_cfg mult_32x32_slice.B_cfg" output="mult_32x32.a" bus="true"/>
+
+    <!-- Operating mode: same name, same order of input sets -->
+    <mux name="a2a" input="mult_16x16_slice.A_cfg mult_16x16_slice.B_cfg" output="mult_16x16.a" bus="true"/>
+
+    <!-- Not allowed in the operating mode: repack would never use the physical a2a -->
+    <direct name="a2a" input="mult_16x16_slice.A_cfg" output="mult_16x16.a"/>
+
+  .. note:: Run VPR with ``--flat_routing on``. Otherwise, VPR may drive the bits of a bus-based multiplexer from different input sets. Repack checks the input sets VPR used before rerouting any block, and errors out if the physical modes cannot follow them, rather than programming an input set VPR did not use.
 
 - It re-routes all the nets by considering the programmable interconnects in physical modes **only**.
 
