@@ -1072,7 +1072,7 @@ void LbRouter::build_bus_mux_lookup(const LbRRGraph& lb_rr_graph) {
 
   std::map<std::string, int> mux_indices;
   /* Bus-based muxes are identified by name, so a name must denote a single
-   * mux of the logical block */
+   * mux of the logical block. Repack checks this before routing. */
   std::vector<const t_pb_graph_node*> mux_owners;
   for (const LbRREdgeId& edge : lb_rr_graph.edges()) {
     const t_pb_graph_pin* src_pin =
