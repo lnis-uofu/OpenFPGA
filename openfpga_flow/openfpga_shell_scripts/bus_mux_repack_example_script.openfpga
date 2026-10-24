@@ -1,0 +1,38 @@
+# Run VPR with the task's flat-routing setting. Flat routing rebuilds pb_route
+# from routed nets and keeps bus mux bits on one input set. Cluster routing
+# may split the bits across sets, which repack cannot follow.
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --flat_routing ${OPENFPGA_VPR_FLAT_ROUTING}
+
+# Read OpenFPGA architecture definition
+read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
+
+# Read OpenFPGA simulation settings
+read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+
+# Link the OpenFPGA architecture to VPR; use --verbose for details
+link_openfpga_arch --sort_gsb_chan_node_in_edges
+
+# Check and correct any naming conflicts in the BLIF netlist
+check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
+
+# Apply fix-up to Look-Up Table truth tables based on packing results
+lut_truth_table_fixup
+
+# Build the module graph with routing module compression
+build_fabric --compress_routing #--verbose
+
+# Repack to physical pbs, using only the bus mux input sets VPR used.
+# Use --verbose to log the retained selections.
+repack #--verbose
+
+# Build the fabric-independent bitstream
+build_architecture_bitstream --write_file fabric_independent_bitstream.xml
+
+# Build fabric-dependent bitstream
+build_fabric_bitstream
+
+# Write fabric-dependent bitstream
+write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
+
+# Finish and exit OpenFPGA
+exit
