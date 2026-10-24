@@ -376,6 +376,10 @@ jobs:
           # This will print exactly which DLL file is missing/unresolved
           ldd ./build/openfpga/openfpga.exe
 
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
+
 # Reg test script has issues on handling windows paths. For example, 
 # Not able to locate default file CAD TOOL PATH under 
 #   D:/a/OpenFPGA/OpenFPGA/openfpga_flow/tasks/compilation_verification/run001/aOpenFPGAOpenFPGA/openfpga_flow/misc/fpgaflow_default_tool_path_msys2_mingw64.conf
@@ -661,6 +665,10 @@ jobs:
         shell: bash
         run: |
           make all BUILD_TYPE=$BUILD_TYPE -j1
+
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
@@ -968,6 +976,10 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           make all BUILD_TYPE=$BUILD_TYPE -j${{ steps.cpu-cores.outputs.count}} 
 
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
+
       - name: Quick Test
         shell: bash
         run: |
@@ -1032,6 +1044,10 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}}
 
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
+
       - name: Quick Test
         shell: bash
         run: |
@@ -1092,6 +1108,10 @@ jobs:
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           make all BUILD_TYPE=${{ matrix.config.build_type }} -j${{ steps.cpu-cores.outputs.count}} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON -DOPENFPGA_WITH_YOSYS=OFF"
+
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
 
       - name: Quick Test
         shell: bash
@@ -1292,10 +1312,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
-
-      - name: checkout reg test submodules
-        run: |
-          make checkout_regtest
 
       - name: ${{matrix.config.name}}_GCC-12_(Ubuntu 22.04)
         shell: bash
