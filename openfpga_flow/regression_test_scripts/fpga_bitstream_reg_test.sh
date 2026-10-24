@@ -40,6 +40,9 @@ run-task fpga_bitstream/repack_wire_lut $@
 run-task fpga_bitstream/repack_wire_lut_strong $@
 run-task fpga_bitstream/repack_ignore_nets $@
 
+echo -e "Testing repacker capability in following VPR's input set on bus-based muxes";
+run-task fpga_bitstream/repack_bus_mux $@
+
 echo -e "Testing overloading parameters from eblif";
 run-task fpga_bitstream/overload_eblif_param $@
 echo -e "Testing overloading default paths for programmable interconnect when generating bitstream";

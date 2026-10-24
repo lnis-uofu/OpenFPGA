@@ -1,6 +1,9 @@
 /***************************************************************************************
  * This file includes functions that are used to redo packing for physical pbs
  ***************************************************************************************/
+#include <map>
+#include <set>
+#include <string>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -950,6 +953,194 @@ static void add_lb_router_nets(
 }
 
 /***************************************************************************************
+ * Name a pb_graph_node by the instances from the top, e.g., clb[0]/fle[1]
+ ***************************************************************************************/
+static std::string pb_graph_node_instance_name(
+  const t_pb_graph_node* pb_graph_node) {
+  std::string name;
+  for (const t_pb_graph_node* node = pb_graph_node; nullptr != node;
+       node = node->parent_pb_graph_node) {
+    std::string instance = std::string(node->pb_type->name) + "[" +
+                           std::to_string(node->placement_index) + "]";
+    name = name.empty() ? instance : instance + "/" + name;
+  }
+  return name;
+}
+
+/***************************************************************************************
+ * Repack matches bus-based muxes by name, so a name must denote a single
+ * bus-based mux of the physical modes of a logical block. Record the
+ * pb_graph_node that owns each name, and return false if a name is owned by
+ * more than one.
+ ***************************************************************************************/
+static bool rec_check_physical_bus_mux_names(
+  const t_pb_graph_node* pb_graph_node,
+  const VprDeviceAnnotation& device_annotation,
+  std::map<std::string, const t_pb_graph_node*>& owners) {
+  if (is_primitive_pb_type(pb_graph_node->pb_type)) {
+    return true;
+  }
+  const t_mode* physical_mode =
+    device_annotation.physical_mode(pb_graph_node->pb_type);
+  VTR_ASSERT(nullptr != physical_mode);
+
+  for (int iinterc = 0; iinterc < physical_mode->num_interconnect; ++iinterc) {
+    const t_interconnect& interc = physical_mode->interconnect[iinterc];
+    if ((MUX_INTERC != interc.type) || (!interc.bus)) {
+      continue;
+    }
+    auto result = owners.insert({interc.name, pb_graph_node});
+    if (result.first->second != pb_graph_node) {
+      VTR_LOG_ERROR(
+        "Bus-based muxes named '%s' are defined in both '%s' and '%s' in the "
+        "physical modes. Repack matches bus-based muxes by name, so a name "
+        "must denote a single bus-based mux of a logical block.\n",
+        interc.name.c_str(),
+        pb_graph_node_instance_name(result.first->second).c_str(),
+        pb_graph_node_instance_name(pb_graph_node).c_str());
+      return false;
+    }
+  }
+
+  for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
+    for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb;
+         ++jpb) {
+      if (!rec_check_physical_bus_mux_names(
+            &(pb_graph_node
+                ->child_pb_graph_nodes[physical_mode->index][ipb][jpb]),
+            device_annotation, owners)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/***************************************************************************************
+ * Find the input set VPR used on each bus-based mux of a clustered block, by
+ * mux name. The driver of each pin in pb_route tells which edge VPR used.
+ * The physical mode has the same bus-based muxes, with the same names and
+ * input sets, as the mode VPR packed. Several muxes of the packed mode may
+ * share a name, and so the one physical select. Return false if VPR used
+ * different input sets on a name, which the physical mode cannot follow.
+ ***************************************************************************************/
+static bool find_vpr_bus_mux_selections(const AtomContext& atom_ctx,
+                                        const ClusteringContext& clustering_ctx,
+                                        const ClusterBlockId& block_id,
+                                        std::map<std::string, int>& selections,
+                                        const bool& verbose) {
+  const t_pb* pb = clustering_ctx.clb_nlist.block_pb(block_id);
+  const std::string& block_name = clustering_ctx.clb_nlist.block_name(block_id);
+
+  /* The first edge and net VPR used on each name, to report a conflict */
+  struct t_bus_mux_use {
+    const t_pb_graph_edge* edge;
+    AtomNetId net;
+  };
+  std::map<std::string, t_bus_mux_use> uses;
+  std::set<std::string> conflicts;
+
+  for (const auto& route_entry : pb->pb_route) {
+    const t_pb_route& pb_route = route_entry.second;
+    if ((UNDEFINED == pb_route.driver_pb_pin_id) ||
+        (AtomNetId::INVALID() == pb_route.atom_net_id)) {
+      continue;
+    }
+    const t_pb_graph_pin* pin = pb_route.pb_graph_pin;
+    for (int iedge = 0; iedge < pin->num_input_edges; ++iedge) {
+      const t_pb_graph_edge* edge = pin->input_edges[iedge];
+      if ((pb_route.driver_pb_pin_id !=
+           edge->input_pins[0]->pin_count_in_cluster) ||
+          (!edge->is_bus_mux())) {
+        continue;
+      }
+      const std::string& name = edge->interconnect->name;
+      auto result = uses.insert({name, {edge, pb_route.atom_net_id}});
+      const t_bus_mux_use& first = result.first->second;
+      /* Report a single conflict per name */
+      if ((first.edge->driver_set == edge->driver_set) ||
+          (0 < conflicts.count(name))) {
+        break;
+      }
+      conflicts.insert(name);
+      std::string first_pin = first.edge->output_pins[0]->to_string();
+      std::string first_net = atom_ctx.netlist().net_name(first.net);
+      std::string pin_name = pin->to_string();
+      std::string net_name = atom_ctx.netlist().net_name(pb_route.atom_net_id);
+      if ((first.edge->interconnect == edge->interconnect) &&
+          (first.edge->bus_mux_owner() == edge->bus_mux_owner())) {
+        VTR_LOG_ERROR(
+          "Clustered block '%s': VPR drove the bits of bus-based mux '%s' "
+          "from different input sets: '%s' (net '%s') from set %d, and '%s' "
+          "(net '%s') from set %d. Run VPR with '--flat_routing on', which "
+          "keeps all the bits of a bus-based mux on one input set.\n",
+          block_name.c_str(), name.c_str(), first_pin.c_str(),
+          first_net.c_str(), first.edge->driver_set, pin_name.c_str(),
+          net_name.c_str(), edge->driver_set);
+      } else {
+        VTR_LOG_ERROR(
+          "Clustered block '%s': VPR drove the bus-based muxes named '%s', "
+          "which share one select in the physical mode, from different input "
+          "sets: '%s' (net '%s') from set %d, and '%s' (net '%s') from set "
+          "%d.\n",
+          block_name.c_str(), name.c_str(), first_pin.c_str(),
+          first_net.c_str(), first.edge->driver_set, pin_name.c_str(),
+          net_name.c_str(), edge->driver_set);
+      }
+      break;
+    }
+  }
+
+  if (!conflicts.empty()) {
+    return false;
+  }
+  for (const auto& use : uses) {
+    selections[use.first] = use.second.edge->driver_set;
+    VTR_LOGV(
+      verbose, "Clustered block '%s': bus-based mux '%s' uses input set %d\n",
+      block_name.c_str(), use.first.c_str(), use.second.edge->driver_set);
+  }
+  return true;
+}
+
+/***************************************************************************************
+ * Before repacking, check that the physical modes can follow the input set
+ * VPR used on each bus-based mux of each clustered block, and find these
+ * input sets. Report every block that cannot be followed.
+ ***************************************************************************************/
+static int find_clusters_bus_mux_selections(
+  const AtomContext& atom_ctx, const ClusteringContext& clustering_ctx,
+  const VprDeviceAnnotation& device_annotation,
+  std::map<ClusterBlockId, std::map<std::string, int>>& selections,
+  const bool& verbose) {
+  bool valid = true;
+
+  /* Check the physical modes of each logical block type in use once */
+  std::set<const t_pb_graph_node*> checked_pb_graph_heads;
+  for (const ClusterBlockId& block_id : clustering_ctx.clb_nlist.blocks()) {
+    const t_pb_graph_node* pb_graph_head =
+      clustering_ctx.clb_nlist.block_type(block_id)->pb_graph_head;
+    if (!checked_pb_graph_heads.insert(pb_graph_head).second) {
+      continue;
+    }
+    std::map<std::string, const t_pb_graph_node*> owners;
+    if (!rec_check_physical_bus_mux_names(pb_graph_head, device_annotation,
+                                          owners)) {
+      valid = false;
+    }
+  }
+
+  for (const ClusterBlockId& block_id : clustering_ctx.clb_nlist.blocks()) {
+    if (!find_vpr_bus_mux_selections(atom_ctx, clustering_ctx, block_id,
+                                     selections[block_id], verbose)) {
+      valid = false;
+    }
+  }
+
+  return valid ? CMD_EXEC_SUCCESS : CMD_EXEC_FATAL_ERROR;
+}
+
+/***************************************************************************************
  * Repack a clustered block in the physical mode
  * This function will do
  * - Find the lb_rr_graph that is affiliated to the clustered block
@@ -966,6 +1157,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
                           VprClusteringAnnotation& clustering_annotation,
                           const VprBitstreamAnnotation& bitstream_annotation,
                           const ClusterBlockId& block_id,
+                          const std::map<std::string, int>& bus_mux_selections,
                           const RepackOption& options) {
   /* Get the pb graph that current clustered block is mapped to */
   t_logical_block_type_ptr lgk_lb_type =
@@ -998,6 +1190,9 @@ static int repack_cluster(const AtomContext& atom_ctx,
    * purpose of repacking!!!
    */
   lb_router.set_physical_pb_modes(lb_rr_graph, device_annotation);
+
+  /* Use only the bus-based mux input sets VPR used */
+  lb_router.set_bus_mux_selections(bus_mux_selections);
 
   /* Run the router */
   bool route_success =
@@ -1060,19 +1255,21 @@ static int repack_cluster(const AtomContext& atom_ctx,
 /***************************************************************************************
  * Repack each clustered blocks in the clustering context
  ***************************************************************************************/
-static int repack_clusters(const AtomContext& atom_ctx,
-                           const ClusteringContext& clustering_ctx,
-                           const VprDeviceAnnotation& device_annotation,
-                           VprClusteringAnnotation& clustering_annotation,
-                           const VprBitstreamAnnotation& bitstream_annotation,
-                           const RepackOption& options) {
+static int repack_clusters(
+  const AtomContext& atom_ctx, const ClusteringContext& clustering_ctx,
+  const VprDeviceAnnotation& device_annotation,
+  VprClusteringAnnotation& clustering_annotation,
+  const VprBitstreamAnnotation& bitstream_annotation,
+  const std::map<ClusterBlockId, std::map<std::string, int>>&
+    bus_mux_selections,
+  const RepackOption& options) {
   vtr::ScopedStartFinishTimer timer(
     "Repack clustered blocks to physical implementation of logical tile");
 
   for (auto blk_id : clustering_ctx.clb_nlist.blocks()) {
     int status = repack_cluster(atom_ctx, clustering_ctx, device_annotation,
                                 clustering_annotation, bitstream_annotation,
-                                blk_id, options);
+                                blk_id, bus_mux_selections.at(blk_id), options);
     if (status != CMD_EXEC_SUCCESS) {
       return status;
     }
@@ -1135,16 +1332,26 @@ int pack_physical_pbs(const DeviceContext& device_ctx,
                       const VprBitstreamAnnotation& bitstream_annotation,
                       const CircuitLibrary& circuit_lib,
                       const RepackOption& options) {
+  /* Check that repack can follow the bus-based mux input sets VPR used, before
+   * repacking any block */
+  std::map<ClusterBlockId, std::map<std::string, int>> bus_mux_selections;
+  int status = find_clusters_bus_mux_selections(
+    atom_ctx, clustering_ctx, device_annotation, bus_mux_selections,
+    options.verbose_output());
+  if (CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
+
   /* build the routing resource graph for each logical tile */
   build_physical_lb_rr_graphs(device_ctx, device_annotation,
                               options.verbose_output());
 
   /* Call the LbRouter to re-pack each clustered block to physical
    * implementation */
-  int status =
-    repack_clusters(atom_ctx, clustering_ctx,
-                    const_cast<const VprDeviceAnnotation&>(device_annotation),
-                    clustering_annotation, bitstream_annotation, options);
+  status = repack_clusters(
+    atom_ctx, clustering_ctx,
+    const_cast<const VprDeviceAnnotation&>(device_annotation),
+    clustering_annotation, bitstream_annotation, bus_mux_selections, options);
 
   /* Annnotate wire LUTs that are ONLY created by repacker!!!
    * This is a MUST RUN!

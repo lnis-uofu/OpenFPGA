@@ -112,6 +112,13 @@ CLANG_FORMAT_EXEC ?= clang-format-14
 XML_FORMAT_EXEC ?= xmllint
 PYTHON_FORMAT_EXEC ?= black
 
+# Version update settings
+VERSION_FILE = VERSION.md
+TAGGED_COMMIT_FILE = .TAGGED_COMMIT
+VERSION_BUMP_TYPE = minor
+FORCE_COMMIT_VERSION_UPDATE = off
+INFRA_ROOT = ${PWD}/utils/refact_infra/
+
 # Extract the -j value from MAKEFLAGS if present, otherwise default to empty (CMake will auto-detect)
 # This handles formats like '-j 4' or '-j4'
 JOBS_FLAGS := $(shell echo "$(MAKEFLAGS)" | grep -oE '\-j[0-9]*' | sed 's/\-j/--parallel /')
@@ -143,8 +150,8 @@ compile: | prebuild
 #
 #   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled 
 	echo "Building target(s): ${CMAKE_GOALS}" && \
-	echo "${CMAKE_COMMAND} --build ${BUILD_DIR} ${CMAKE_BUILD_CONFIG} --target ${CMAKE_GOALS} ${JOB_FLAGS}" && \
-	${CMAKE_COMMAND} --build ${BUILD_DIR} ${CMAKE_BUILD_CONFIG} --target ${CMAKE_GOALS} ${JOB_FLAGS}
+	echo "${CMAKE_COMMAND} --build ${BUILD_DIR} ${CMAKE_BUILD_CONFIG} --target ${CMAKE_GOALS} ${JOB_FLAGS}"
+	+${CMAKE_COMMAND} --build ${BUILD_DIR} ${CMAKE_BUILD_CONFIG} --target ${CMAKE_GOALS} ${JOB_FLAGS}
 
 list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
@@ -190,6 +197,20 @@ format-all: format-cpp format-xml format-py
 clean:
 # Remove current build results
 	rm -rf ${BUILD_DIR} yosys/install
+
+update_version:
+# Update the patch count in the version number
+	echo "======== Bump up patch count in the version number ========"; \
+	${PYTHON_EXEC} ${INFRA_ROOT}/scripts/version_updater.py --version_file ${VERSION_FILE} --tagged_commit ${TAGGED_COMMIT_FILE} --force_commit ${FORCE_COMMIT_VERSION_UPDATE}	
+
+release_version:
+# Update the patch count in the version number
+	echo "======== Bump up release in the version number ========"; \
+	${PYTHON_EXEC} ${INFRA_ROOT}/scripts/version_updater.py --version_file ${VERSION_FILE} --tagged_commit ${TAGGED_COMMIT_FILE} --release --bump_type ${VERSION_BUMP_TYPE}	
+
+generate_initial_tagged_commit:
+# Create the first version of tagged commit file, used for version update
+	git rev-list --max-parents=0 --abbrev-commit HEAD > ${TAGGED_COMMIT_FILE}
 
 # Functions to extract comments from Makefiles
 define COMMENT_EXTRACT

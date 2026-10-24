@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!-- Bus-based mux architecture:
+       - Perimeter pins give the multi-height memory/DSP tiles routing access.
+       - a2a_swap feeds either operand to A_cfg. a2a favors A_cfg (10 ps) over
+         B_cfg (1 ns), so the repacker must keep VPR's timing-driven choice. -->
 <!-- 
   Flagship Heterogeneous Architecture (No Carry Chains) for VTR 7.0.
 
@@ -147,7 +151,8 @@
         <output name="d_out" num_pins="8"/>
         <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-        <pinlocations pattern="spread"/>
+        <!-- Only the outer sides of a multi-height tile have routing channels -->
+        <pinlocations pattern="perimeter"/>
       </sub_tile>
     </tile>
     <tile name="mult_32" height="4" area="396000">
@@ -160,7 +165,8 @@
         <output name="out" num_pins="64"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <!--  Highly recommand to customize pin location when direct connection is used!!! -->
-        <pinlocations pattern="spread"/>
+        <!-- Only the outer sides of a multi-height tile have routing channels -->
+        <pinlocations pattern="perimeter"/>
         <!--pinlocations pattern="custom">
         <loc side="left"></loc>
         <loc side="top"></loc>
@@ -783,8 +789,10 @@
                 <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.b" out_port="mult_8x8.out"/>
               </pb_type>
               <interconnect>
-                <direct name="a2a" input="mult_8x8_slice.A_cfg" output="mult_8x8.a">
-                </direct>
+                <mux name="a2a" input="mult_8x8_slice.A_cfg mult_8x8_slice.B_cfg" output="mult_8x8.a" bus="true">
+                  <delay_constant max="10e-12" min="10e-12" in_port="mult_8x8_slice.A_cfg" out_port="mult_8x8.a"/>
+                  <delay_constant max="1e-9" min="1e-9" in_port="mult_8x8_slice.B_cfg" out_port="mult_8x8.a"/>
+                </mux>
                 <direct name="b2b" input="mult_8x8_slice.B_cfg" output="mult_8x8.b">
                 </direct>
                 <direct name="out2out" input="mult_8x8.out" output="mult_8x8_slice.OUT_cfg">
@@ -818,8 +826,10 @@
                 <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_16x16.b" out_port="mult_16x16.out"/>
               </pb_type>
               <interconnect>
-                <direct name="a2a" input="mult_16x16_slice.A_cfg" output="mult_16x16.a">
-                </direct>
+                <mux name="a2a" input="mult_16x16_slice.A_cfg mult_16x16_slice.B_cfg" output="mult_16x16.a" bus="true">
+                  <delay_constant max="10e-12" min="10e-12" in_port="mult_16x16_slice.A_cfg" out_port="mult_16x16.a"/>
+                  <delay_constant max="1e-9" min="1e-9" in_port="mult_16x16_slice.B_cfg" out_port="mult_16x16.a"/>
+                </mux>
                 <direct name="b2b" input="mult_16x16_slice.B_cfg" output="mult_16x16.b">
                 </direct>
                 <direct name="out2out" input="mult_16x16.out" output="mult_16x16_slice.OUT_cfg">
@@ -847,9 +857,10 @@
 		   Subtract 72.5 ps delay, which is already in the connection block input mux, leading 134 ps
 				The interconnect difference for DSP blocks is 0.5523, which leads to a minimum delay of 74 ps
               -->
-          <direct name="a2a" input="mult_32.a" output="divisible_mult_16x16[1:0].a">
-            <delay_constant max="134e-12" min="74e-12" in_port="mult_32.a" out_port="divisible_mult_16x16[1:0].a"/>
-          </direct>
+          <mux name="a2a_swap" input="mult_32.a mult_32.b" output="divisible_mult_16x16[1:0].a" bus="true">
+            <delay_constant max="10e-12" min="10e-12" in_port="mult_32.a" out_port="divisible_mult_16x16[1:0].a"/>
+            <delay_constant max="10e-12" min="10e-12" in_port="mult_32.b" out_port="divisible_mult_16x16[1:0].a"/>
+          </mux>
           <direct name="b2b" input="mult_32.b" output="divisible_mult_16x16[1:0].b">
             <delay_constant max="134e-12" min="74e-12" in_port="mult_32.b" out_port="divisible_mult_16x16[1:0].b"/>
           </direct>
@@ -874,8 +885,12 @@
             <!-- Bus-based mux: a 32-bit-wide 2:1 mux driving mult_32x32.a.
                  bus="true" expands to 32 single-bit muxes that share one
                  selector (one config bit) in OpenFPGA. Used to test bus-based
-                 mux support. -->
+                 mux support. The input from B_cfg is made slow so that VPR's
+                 timing-driven router prefers the A_cfg input, which it can
+                 reach from either operand pins through 'a2a_swap'. -->
             <mux name="a2a" input="mult_32x32_slice.A_cfg mult_32x32_slice.B_cfg" output="mult_32x32.a" bus="true">
+              <delay_constant max="10e-12" min="10e-12" in_port="mult_32x32_slice.A_cfg" out_port="mult_32x32.a"/>
+              <delay_constant max="1e-9" min="1e-9" in_port="mult_32x32_slice.B_cfg" out_port="mult_32x32.a"/>
             </mux>
             <direct name="b2b" input="mult_32x32_slice.B_cfg" output="mult_32x32.b">
             </direct>
@@ -894,9 +909,13 @@
 		   to a 134 ps delay.
 				The interconnect difference for DSP blocks is 0.5523, which leads to a minimum delay of 74 ps
               -->
-          <direct name="a2a" input="mult_32.a" output="mult_32x32_slice.A_cfg">
-            <delay_constant max="134e-12" min="74e-12" in_port="mult_32.a" out_port="mult_32x32_slice.A_cfg"/>
-          </direct>
+          <!-- Operand swap lets A_cfg take either operand. From 'b' pins, VPR
+               prefers fast a2a_swap+a2a (two muxes) over slow b2b+a2a (one).
+               Repacking must preserve that choice. -->
+          <mux name="a2a_swap" input="mult_32.a mult_32.b" output="mult_32x32_slice.A_cfg" bus="true">
+            <delay_constant max="10e-12" min="10e-12" in_port="mult_32.a" out_port="mult_32x32_slice.A_cfg"/>
+            <delay_constant max="10e-12" min="10e-12" in_port="mult_32.b" out_port="mult_32x32_slice.A_cfg"/>
+          </mux>
           <direct name="b2b" input="mult_32.b" output="mult_32x32_slice.B_cfg">
             <delay_constant max="134e-12" min="74e-12" in_port="mult_32.b" out_port="mult_32x32_slice.B_cfg"/>
           </direct>

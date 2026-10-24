@@ -35,6 +35,8 @@ LbRouter::LbRouter(const LbRRGraph& lb_rr_graph,
   is_routed_ = false;
 
   pres_con_fac_ = 1;
+
+  build_bus_mux_lookup(lb_rr_graph);
 }
 
 /**************************************************
@@ -218,6 +220,15 @@ void LbRouter::set_physical_pb_modes(
         }
       }
     }
+  }
+}
+
+void LbRouter::set_bus_mux_selections(
+  const std::map<std::string, int>& selections) {
+  for (size_t imux = 0; imux < bus_mux_names_.size(); ++imux) {
+    auto result = selections.find(bus_mux_names_[imux]);
+    bus_mux_selected_sets_[imux] =
+      (result == selections.end()) ? -1 : result->second;
   }
 }
 
@@ -764,6 +775,13 @@ void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph, t_mode* mode,
   float incr_cost;
 
   for (const LbRREdgeId& iedge : lb_rr_graph.node_out_edges(cur_inode, mode)) {
+    /* A bus-based mux is only used through the input set VPR used */
+    int imux = edge_bus_muxes_[iedge];
+    if ((0 <= imux) &&
+        (edge_bus_mux_sets_[iedge] != bus_mux_selected_sets_[imux])) {
+      continue;
+    }
+
     /* Init new expansion node */
     enode.prev_index = cur_inode;
     enode.node_index = lb_rr_graph.edge_sink_node(iedge);
@@ -1048,6 +1066,45 @@ bool LbRouter::check_net(const LbRRGraph& lb_rr_graph,
 /**************************************************
  * Private Initializer and cleaner
  *************************************************/
+void LbRouter::build_bus_mux_lookup(const LbRRGraph& lb_rr_graph) {
+  edge_bus_muxes_.resize(lb_rr_graph.edges().size(), -1);
+  edge_bus_mux_sets_.resize(lb_rr_graph.edges().size(), -1);
+
+  std::map<std::string, int> mux_indices;
+  /* Bus-based muxes are identified by name, so a name must denote a single
+   * mux of the logical block. Repack checks this before routing. */
+  std::vector<const t_pb_graph_node*> mux_owners;
+  for (const LbRREdgeId& edge : lb_rr_graph.edges()) {
+    const t_pb_graph_pin* src_pin =
+      lb_rr_graph.node_pb_graph_pin(lb_rr_graph.edge_src_node(edge));
+    const t_pb_graph_pin* sink_pin =
+      lb_rr_graph.node_pb_graph_pin(lb_rr_graph.edge_sink_node(edge));
+    if ((nullptr == src_pin) || (nullptr == sink_pin)) {
+      continue;
+    }
+    /* Find the pb_graph edge of the physical mode that the edge represents */
+    for (int iedge = 0; iedge < src_pin->num_output_edges; ++iedge) {
+      const t_pb_graph_edge* pb_edge = src_pin->output_edges[iedge];
+      if ((sink_pin != pb_edge->output_pins[0]) ||
+          (lb_rr_graph.edge_mode(edge) != pb_edge->interconnect->parent_mode) ||
+          (!pb_edge->is_bus_mux())) {
+        continue;
+      }
+      auto result = mux_indices.insert(
+        {pb_edge->interconnect->name, (int)bus_mux_names_.size()});
+      if (result.second) {
+        bus_mux_names_.push_back(pb_edge->interconnect->name);
+        bus_mux_selected_sets_.push_back(-1);
+        mux_owners.push_back(pb_edge->bus_mux_owner());
+      }
+      VTR_ASSERT(mux_owners[result.first->second] == pb_edge->bus_mux_owner());
+      edge_bus_muxes_[edge] = result.first->second;
+      edge_bus_mux_sets_[edge] = pb_edge->driver_set;
+      break;
+    }
+  }
+}
+
 void LbRouter::reset_explored_node_tb() {
   for (t_explored_node_stats& explored_node : explored_node_tb_) {
     explored_node.prev_index = LbRRNodeId::INVALID();
