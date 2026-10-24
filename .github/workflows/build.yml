@@ -1242,10 +1242,6 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
 
-      - name: checkout reg test submodules
-        run: |
-          make checkout_regtest
-
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
