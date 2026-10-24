@@ -149,7 +149,6 @@ jobs:
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
-          make checkout
           make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
   # Yosys-slang plugin has issues on linking library to Yosys in Msys2. Suspect the root of cause is on the linking path. Disable it for now.
@@ -247,7 +246,7 @@ jobs:
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
-          make checkout
+          make checkout_build
           make prebuild BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
           make installer BUILD_TYPE=$BUILD_TYPE INSTALLER_TYPE=IFW INSTALL_DOC=OFF CMAKE_FLAGS="${{ matrix.config.cmake_flags }}" -j${{ steps.cpu-cores.outputs.count}}
 
@@ -467,7 +466,7 @@ jobs:
       - name: Checkout all the submodules
         shell: powershell
         run: |
-          make checkout
+          make checkout_submodule
 
       - name: Ensure curl is available
         shell: powershell
@@ -1153,7 +1152,7 @@ jobs:
         shell: bash
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          make checkout
+          make checkout_build
           make prebuild BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF -j${{ steps.cpu-cores.outputs.count}}
           make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF -j${{ steps.cpu-cores.outputs.count}}
 
@@ -1222,6 +1221,11 @@ jobs:
     
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
+
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
+
       - name: Download a built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1288,6 +1292,10 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v6
+
+      - name: checkout reg test submodules
+        run: |
+          make checkout_regtest
 
       - name: ${{matrix.config.name}}_GCC-12_(Ubuntu 22.04)
         shell: bash
