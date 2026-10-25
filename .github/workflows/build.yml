@@ -991,6 +991,8 @@ jobs:
       - name: Quick Test
         shell: bash
         run: |
+          echo "==== Activate python3 virtual environment ===="
+          source myenv/bin/activate
           source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
 
   debug_build:
