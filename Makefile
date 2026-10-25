@@ -123,6 +123,9 @@ INFRA_ROOT = ${PWD}/utils/refact_infra/
 # This handles formats like '-j 4' or '-j4'
 JOBS_FLAGS := $(shell echo "$(MAKEFLAGS)" | grep -oE '\-j[0-9]*' | sed 's/\-j/--parallel /')
 
+# By default checkout all submodules 
+SUBMODULE=
+
 # Put it first so that "make" without argument is like "make help".
 export COMMENT_EXTRACT
 
@@ -132,10 +135,19 @@ help:
 
 .PHONY: help
 
-checkout: 
-# Update all the submodules
-	git submodule init
-	git submodule update --init --recursive
+checkout_submodule: 
+# Checkout the submodule. Use SUBMODULE=<STRING> to select one. If not specified, checkout all the submodules. This could be overkill when only code build is needed
+	git submodule init ${SUBMODULE}
+	git submodule update --init --recursive ${SUBMODULE}
+
+checkout_build:
+# Checkout submodules required by code build only
+	make checkout_submodule SUBMODULE=yosys
+	make checkout_submodule SUBMODULE=vtr-verilog-to-routing
+
+checkout_regtest:
+# Checkout submodules required by regression test only
+	make checkout_submodule SUBMODULE=openfpga_flow/benchmarks/ubm
 
 prebuild:
 # Run cmake to generate Makefile under the build directory, before compilation
@@ -157,7 +169,7 @@ list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
 	cd ${BUILD_DIR} && make help && cd -
 
-all: checkout
+all: checkout_build
 # A shortcut command to run checkout and compile in serial
 	@+${MAKE} compile
 
