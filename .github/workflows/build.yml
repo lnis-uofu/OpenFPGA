@@ -992,7 +992,7 @@ jobs:
         run: |
           echo "==== Activate python3 virtual environment ===="
           . .venv/bin/activate
-          source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
+          python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs
 
   debug_build:
     needs: change_detect
