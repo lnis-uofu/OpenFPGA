@@ -973,7 +973,6 @@ jobs:
           restore-keys: |
             ${{ github.job }}-${{ runner.os }}-
 
-
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
         id: cpu-cores
@@ -992,7 +991,7 @@ jobs:
         shell: bash
         run: |
           echo "==== Activate python3 virtual environment ===="
-          source myenv/bin/activate
+          . .venv/bin/activate
           source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
 
   debug_build:
