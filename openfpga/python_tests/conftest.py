@@ -51,6 +51,23 @@ def and2_files(flow_dir):
         "vpr_arch": flow_dir / "vpr_arch" / "k6_frac_N10_tileable_40nm.xml",
         "openfpga_arch": flow_dir / "openfpga_arch" / "k6_frac_N10_40nm_openfpga.xml",
         "blif": flow_dir / "benchmarks" / "ubm" / "simple_gates" / "and2" / "and2.blif",
+        # Needs a model that the architecture does not have: VPR fails right
+        # after loading the architecture
+        "unsupported_blif": flow_dir
+        / "benchmarks"
+        / "ubm"
+        / "ram"
+        / "pipelined_8bit_adder"
+        / "pipelined_8bit_adder.blif",
+        "activity": flow_dir
+        / "benchmarks"
+        / "ubm"
+        / "simple_gates"
+        / "and2"
+        / "and2.act",
+        "sim_setting": flow_dir
+        / "openfpga_simulation_settings"
+        / "auto_sim_openfpga.xml",
     }
     missing = [str(p) for p in files.values() if not p.exists()]
     if missing:
