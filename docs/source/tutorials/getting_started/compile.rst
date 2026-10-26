@@ -17,6 +17,7 @@ OpenFPGA is continously tested on
 - Windows 2025 server (compatible to Windows 10 and Windows 11)
 - Ubuntu 22.04
 - Ubuntu 24.04
+- Ubuntu 26.04
 - CentOS 9
 - MacOS 15
 - MacOS 26
@@ -136,7 +137,7 @@ In general, OpenFPGA requires specific versions for the following dependencies:
 Ubuntu
 ^^^^^^
 
-If your OS is Ubuntu 20.04, 22.04 and 24.04, we offer unified scripts to install all the dependencies.
+If your OS is Ubuntu 20.04, 22.04, 24.04 and 26.04, we offer unified scripts to install all the dependencies.
 
 - Dependencies required to build the code base
 

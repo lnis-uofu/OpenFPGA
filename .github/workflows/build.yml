@@ -923,14 +923,19 @@ jobs:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: "Build (GCC-13 on Ubuntu 24.04)"
+          - name: "Build (GCC on Ubuntu 24.04)"
             cc: gcc-13
             cxx: g++-13
+            os: ubuntu-24.04
+          - name: "Build (GCC on Ubuntu 26.04)"
+            cc: gcc-15
+            cxx: g++-15
+            os: ubuntu-26.04
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -948,7 +953,6 @@ jobs:
         run: |
           sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
           sudo bash ./.github/workflows/install_dependencies_run_ubuntu.sh
-          sudo python3 -m pip install -r requirements.txt
       
       - name: Dump tool versions
         run: |
@@ -964,7 +968,6 @@ jobs:
           # Defines the fallback prefix if an exact match is missing
           restore-keys: |
             ${{ github.job }}-${{ runner.os }}-
-
 
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v3
@@ -983,7 +986,12 @@ jobs:
       - name: Quick Test
         shell: bash
         run: |
-          source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
+          echo "==== Activate python3 virtual environment ===="
+          python3 -m venv venv
+          source venv/bin/activate
+          ./venv/bin/python3 -m pip install --upgrade pip setuptools wheel
+          ./venv/bin/python3 -m pip install -r requirements.txt
+          ./venv/bin/python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/compilation_verification --debug --show_thread_logs
 
   debug_build:
     needs: change_detect

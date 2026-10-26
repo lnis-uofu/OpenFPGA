@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# The package list is designed for Ubuntu 20.04 LTS
+# The package list is designed for Ubuntu LTS versions
 add-apt-repository -y ppa:ubuntu-toolchain-r/test
 apt-get update
 apt-get install -y \
@@ -93,6 +93,15 @@ elif [ "$(lsb_release -rs)" = "24.04" ]; then
         qtbase5-dev \
         g++-13 \
         gcc-13 \
+        clang-18 \
+        clang-format-18
+# Install Ubuntu 26.04 packages
+elif [ "$(lsb_release -rs)" = "26.04" ]; then
+    apt-get install -y \
+        exuberant-ctags \
+        qtbase5-dev \
+        g++-15 \
+        gcc-15 \
         clang-18 \
         clang-format-18
 fi
