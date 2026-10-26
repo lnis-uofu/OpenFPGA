@@ -6,6 +6,9 @@
 #   NAME <library>: the generated library name
 #   I_FILE <file>: the .i file input to swig
 #   NAMESPACE <name>: the namespace prefix in TCL
+#   MODULE_NAME <name>: optional SWIG module (and output library) name, when it
+#                       differs from the CMake target NAME
+#   LANGUAGE <tcl|python>: target language, default tcl
 #   SWIG_INCLUDES <dir>* : optional list of include dirs for swig
 #   SCRIPTS <file>* : tcl files to encode
 #
@@ -17,7 +20,7 @@ function(SwigLib)
 
   # Parse args
   set(options "")
-  set(oneValueArgs I_FILE NAME NAMESPACE LANGUAGE RUNTIME_HEADER)
+  set(oneValueArgs I_FILE NAME NAMESPACE MODULE_NAME LANGUAGE RUNTIME_HEADER)
   set(multiValueArgs SWIG_INCLUDES SCRIPTS)
   
   cmake_parse_arguments(
@@ -37,15 +40,24 @@ function(SwigLib)
      message(FATAL_ERROR "Missing value for argument(s) to SwigLib: ${ARG_KEYWORDS_MISSING_VALUES}")
   endif()
 
-  foreach(arg I_FILE NAME NAMESPACE)
+  # Default to tcl if unspecified
+  if (NOT DEFINED ARG_LANGUAGE)
+    set(ARG_LANGUAGE tcl)
+  endif()
+
+  foreach(arg I_FILE NAME)
     if (NOT DEFINED ARG_${arg})
        message(FATAL_ERROR "${arg} argument must be provided to SwigLib")
     endif()
   endforeach()
 
-  # Default to tcl if unspecified
-  if (NOT DEFINED ARG_LANGUAGE)
-    set(ARG_LANGUAGE tcl)
+  # The namespace prefix is only meaningful for tcl
+  if (NOT DEFINED ARG_NAMESPACE AND "${ARG_LANGUAGE}" STREQUAL "tcl")
+    message(FATAL_ERROR "NAMESPACE argument must be provided to SwigLib for tcl")
+  endif()
+
+  if (NOT DEFINED ARG_MODULE_NAME)
+    set(ARG_MODULE_NAME ${ARG_NAME})
   endif()
 
   set_source_files_properties(${ARG_I_FILE} PROPERTIES CPLUSPLUS ON)
@@ -66,7 +78,7 @@ function(SwigLib)
                                         -w317,325,378,401,402,467,472,503,509)
 
   set_property(SOURCE ${ARG_I_FILE}
-               PROPERTY SWIG_MODULE_NAME ${ARG_NAME})
+               PROPERTY SWIG_MODULE_NAME ${ARG_MODULE_NAME})
   set_property(SOURCE ${ARG_I_FILE}
                PROPERTY USE_SWIG_DEPENDENCIES TRUE)
   set_property(SOURCE ${ARG_I_FILE}
@@ -78,6 +90,9 @@ function(SwigLib)
     TYPE     SHARED
     SOURCES  ${ARG_I_FILE}
   )
+
+  # Shared library file name follows the module name (_<module>.so for python)
+  set_target_properties(${ARG_NAME} PROPERTIES OUTPUT_NAME ${ARG_MODULE_NAME})
 
   # Disable problematic compiler warnings on generated files.
   # At this point only the swig generated sources are present.
@@ -121,7 +136,7 @@ function(SwigLib)
 
     swig_link_libraries(${ARG_NAME}
       PUBLIC
-        Python3::Python
+        Python3::Module
     )
   endif()
   

@@ -19,6 +19,18 @@ if (OPENFPGA_WITH_SWIG)
   target_include_directories(openfpga_shell PUBLIC ${LIB_INCLUDE_DIRS})
   target_link_libraries(openfpga_shell
                         libopenfpga)
+
+  if (OPENFPGA_SWIG_PYTHON)
+    # Python module: import openfpga (built as _openfpga.so + openfpga.py)
+    # The target cannot be called 'openfpga', which is the executable
+    SwigLib(NAME        openfpga_python
+            MODULE_NAME openfpga
+            LANGUAGE    python
+            I_FILE      src/openfpga_python.i)
+    target_include_directories(openfpga_python PUBLIC ${LIB_INCLUDE_DIRS})
+    target_link_libraries(openfpga_python
+                          PUBLIC libopenfpga)
+  endif()
 endif()
 
 #Create the library

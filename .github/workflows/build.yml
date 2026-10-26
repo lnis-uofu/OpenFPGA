@@ -658,13 +658,13 @@ jobs:
         shell: bash
         run: |
            export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-           make all BUILD_TYPE=$BUILD_TYPE -j${{ steps.cpu-cores.outputs.count}}
+           make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="-DOPENFPGA_SWIG_PYTHON=ON -DPython3_EXECUTABLE=/usr/bin/python3" -j${{ steps.cpu-cores.outputs.count}}
 
       - name: Clear error log
         if: ${{ failure() }}
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE -j1
+          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="-DOPENFPGA_SWIG_PYTHON=ON -DPython3_EXECUTABLE=/usr/bin/python3" -j1
 
       - name: checkout reg test submodules
         run: |
@@ -686,6 +686,8 @@ jobs:
             build/vtr-verilog-to-routing/vpr/vpr
             build/openfpga/libopenfpga.a
             build/openfpga/openfpga_shell.so
+            build/openfpga/_openfpga.so
+            build/openfpga/openfpga.py
             build/openfpga/openfpga
             build/openfpga/share
             build/openfpga/yosys-abc
@@ -1233,6 +1235,7 @@ jobs:
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
           - name: tcl_reg_test
+          - name: python_binding_test
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.12.1

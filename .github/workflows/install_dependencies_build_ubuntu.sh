@@ -38,6 +38,7 @@ apt-get install -y \
     python3-setuptools \
     python3-lxml \
     python3-pip \
+    python3-dev \
     tcl8.6-dev \
     tk8.6-dev \
     texinfo \
