@@ -287,8 +287,7 @@ static void test_copies_are_independent() {
 static void test_session_owns_options() {
   OpenfpgaContext context;
   std::string error;
-  CHECK(context.mutable_session().mutable_app_options().set("place.seed", "3",
-                                                            error));
+  CHECK(context.mutable_session().set_app_option("place.seed", "3", error));
   const OpenfpgaContext& const_context = context;
   CHECK(const_context.session().app_options().find("place.seed")->int_value ==
         3);
