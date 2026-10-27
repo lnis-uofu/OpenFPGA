@@ -29,8 +29,7 @@ int set_app_option_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
   const std::string value = cmd_context.option_value(cmd, cmd.option("value"));
 
   std::string error;
-  if (!openfpga_ctx.mutable_session().mutable_app_options().set(name, value,
-                                                                error)) {
+  if (!openfpga_ctx.mutable_session().set_app_option(name, value, error)) {
     VTR_LOG_ERROR("%s\n", error.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
