@@ -49,6 +49,8 @@ ext_exec
 
     ext_exec --command "ls -all"
 
+.. _set_app_option:
+
 set_app_option
 ~~~~~~~~~~~~~~
 
@@ -56,7 +58,7 @@ set_app_option
 
   The options are the ones of VPR, with the same defaults, plus a few of OpenFPGA. The groups are ``filename`` (files and the architecture and circuit to read), ``general``, ``atom`` (atom netlist), ``cluster`` (packing), ``aplace`` (analytical placement), ``place`` and ``tplace`` (placement and timing-driven placement), ``router`` and ``trouter`` (routing and timing-driven routing), ``analysis``, ``power``, ``crr`` and ``build_fabric`` (OpenFPGA only). Options that only make sense on the command line of VPR, e.g., stage switches, graphics and verbosity, are not available. Use :ref:`report_app_option <report_app_option>` to list the options, their values and the values a selection accepts.
 
-  Every option tunes one stage of the flow: ``filename``, ``general`` and ``atom`` the device, ``cluster`` packing, ``aplace``, ``place`` and ``tplace`` placement, ``crr``, ``router`` and ``trouter`` routing, ``analysis`` and ``power`` the analysis, and ``build_fabric`` the repacking. A few ``filename`` options belong to the stage of the file they name, e.g., ``filename.place_file`` to placement. Changing the value of an option makes the results of its stage, and of the stages after it, out of date, so that the next run of these stages uses the new value. The earlier stages are kept. Setting the value an option already has changes nothing.
+  Every option tunes one stage of the flow: ``filename``, ``general``, ``atom`` and ``crr`` the device, ``cluster`` packing, ``aplace``, ``place`` and ``tplace`` placement, ``router`` and ``trouter`` routing, ``analysis`` and ``power`` the analysis, and ``build_fabric`` the repacking. A few options belong to another stage than their group: the ``filename`` options belong to the stage of the file they name, e.g., ``filename.place_file`` to placement, and the channel width (``router.route_chan_width``, ``place.place_chan_width``) to the device, which includes the routing resource graph. Changing the value of an option makes the results of its stage, and of the stages after it, out of date, so that the next run of these stages uses the new value. The earlier stages are kept. Setting the value an option already has changes nothing.
 
   .. option:: --name <string>
 

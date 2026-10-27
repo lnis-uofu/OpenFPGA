@@ -82,6 +82,7 @@ static void test_stages_of_groups() {
   CHECK(stage_of("tplace.timing_tradeoff") == OpenFpgaStage::PLACED);
   CHECK(stage_of("aplace.ap_analytical_solver") == OpenFpgaStage::PLACED);
   CHECK(stage_of("router.max_router_iterations") == OpenFpgaStage::ROUTED);
+  CHECK(stage_of("crr.sb_maps") == OpenFpgaStage::DEVICE);
   CHECK(stage_of("trouter.astar_fac") == OpenFpgaStage::ROUTED);
   CHECK(stage_of("analysis.generate_post_synthesis_netlist") ==
         OpenFpgaStage::ANALYZED);
@@ -94,7 +95,9 @@ static void test_stages_of_exceptions() {
   CHECK(stage_of("filename.net_file") == OpenFpgaStage::PACKED);
   CHECK(stage_of("filename.place_file") == OpenFpgaStage::PLACED);
   CHECK(stage_of("filename.route_file") == OpenFpgaStage::ROUTED);
-  CHECK(stage_of("filename.read_rr_graph_file") == OpenFpgaStage::ROUTED);
+  CHECK(stage_of("filename.read_rr_graph_file") == OpenFpgaStage::DEVICE);
+  CHECK(stage_of("router.route_chan_width") == OpenFpgaStage::DEVICE);
+  CHECK(stage_of("place.place_chan_width") == OpenFpgaStage::DEVICE);
   CHECK(stage_of("aplace.appack_max_dist_th") == OpenFpgaStage::PACKED);
 }
 
