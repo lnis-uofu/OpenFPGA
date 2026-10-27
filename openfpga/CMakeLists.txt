@@ -150,3 +150,14 @@ deploy_runtime_dependencies(
     COMPONENT openfpga_package
     RUNTIME_SET_NAME openfpga_shared_deps
 )
+
+# Unit tests, run by ctest
+if (OPENFPGA_WITH_TEST)
+  file(GLOB TEST_SOURCES test/*.cpp)
+  foreach(testsourcefile ${TEST_SOURCES})
+    get_filename_component(testname ${testsourcefile} NAME_WE)
+    add_executable(${testname} ${testsourcefile})
+    target_link_libraries(${testname} libopenfpga)
+    add_test(NAME ${testname} COMMAND ${testname})
+  endforeach()
+endif()
