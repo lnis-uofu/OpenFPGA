@@ -28,6 +28,9 @@
  * - Running a stage again, or after an application option changed, runs the
  *   stages before it again on fresh VPR data, as VPR cannot run a stage twice
  *   on the same data. The results are the same, since VPR is deterministic
+ * - Analysis changes the data of VPR, as it synchronizes the packing with the
+ *   routing. Running it again, or routing again, starts from fresh data. It
+ *   leaves the stages on the other branches of the tree alone
  * - Another command that replaces the VPR data, e.g., 'vpr', makes the session
  *   forget everything it knows
  *
@@ -50,7 +53,7 @@ bool read_circuit_input(OpenFpgaSession& session, const std::string& file);
 bool openfpga_arch_input_read(OpenFpgaSession& session);
 void fail_openfpga_arch_input(OpenFpgaSession& session);
 
-/* Run a stage of the main path: PACKED, PLACED or ROUTED. The device is
+/* Run a stage: PACKED, PLACED, ROUTED or ANALYZED. The device is
  * created first if it is not there yet */
 bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage);
 
