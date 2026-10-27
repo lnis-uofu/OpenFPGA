@@ -8,7 +8,6 @@
 #include <cstring>
 #include <ctime>
 #include <exception>
-#include <memory>
 
 #include "command_exit_codes.h"
 #include "globals.h"
@@ -16,6 +15,7 @@
 #include "vpr_api.h"
 #include "vpr_error.h"
 #include "vpr_exit_codes.h"
+#include "vpr_run.h"
 #include "vpr_signal_handler.h"
 #include "vpr_tatum_error.h"
 #include "vtr_error.h"
@@ -24,49 +24,6 @@
 #include "vtr_time.h"
 
 namespace vpr {
-
-namespace {
-
-/* Data of a VPR run, which has to outlive the function that ran VPR:
- * later OpenFPGA commands read it through the global VPR contexts (g_vpr_ctx),
- * which point to the architecture. */
-struct VprRun {
-  t_options options = t_options();
-  t_arch arch = t_arch();
-  t_vpr_setup setup = t_vpr_setup();
-};
-
-/* The last successful run of command 'vpr'. Like g_vpr_ctx, it is global to
- * the process */
-std::unique_ptr<VprRun> last_vpr_run;
-
-/* Free the data of a run, from the global VPR contexts as well */
-void free_vpr_run(VprRun& run) {
-  try {
-    vpr_free_all(run.arch, run.setup);
-    /* vpr_free_all() leaves the packing of the circuit in the clustering
-     * context: the next circuit would be checked against it */
-    ClusteringContext& cluster_ctx = g_vpr_ctx.mutable_clustering();
-    cluster_ctx.atoms_lookup.clear();
-    cluster_ctx.post_routing_clb_pin_nets.clear();
-    cluster_ctx.pre_routing_net_pin_mapping.clear();
-  } catch (const std::exception& exc) {
-    VTR_LOG_ERROR("Fail to free VPR data: %s\n", exc.what());
-  }
-}
-
-/* VPR keeps its data in global contexts, and loading a new design on top of
- * the data of a previous run crashes. Therefore, release the last run before
- * starting a new one */
-void release_last_vpr_run() {
-  if (last_vpr_run) {
-    VTR_LOG("Free the data of the previous VPR run\n");
-    free_vpr_run(*last_vpr_run);
-    last_vpr_run.reset();
-  }
-}
-
-} /* End anonymous namespace */
 
 /**
  * VPR program without clean up
@@ -85,26 +42,24 @@ void release_last_vpr_run() {
 static int vpr(int argc, char** argv) {
   vtr::ScopedFinishTimer t("The entire flow of VPR");
 
-  release_last_vpr_run();
-
-  /* The run is kept (see last_vpr_run) only when VPR succeeds. When it fails,
+  /* The run is kept (see vpr_run.h) only when VPR succeeds. When it fails,
    * its data is freed, so that the next run starts from a clean state */
-  std::unique_ptr<VprRun> run = std::make_unique<VprRun>();
+  VprRun& run = begin_vpr_run();
   int exit_code = SUCCESS_EXIT_CODE;
 
   try {
     vpr_install_signal_handler();
 
     /* Read options, architecture, and circuit netlist */
-    vpr_init(argc, const_cast<const char**>(argv), &run->options, &run->setup,
-             &run->arch);
+    vpr_init(argc, const_cast<const char**>(argv), &run.options, &run.setup,
+             &run.arch);
 
-    if (run->options.show_version) {
-      free_vpr_run(*run);
+    if (run.options.show_version) {
+      release_vpr_run();
       return SUCCESS_EXIT_CODE;
     }
 
-    bool flow_succeeded = vpr_flow(run->setup, run->arch);
+    bool flow_succeeded = vpr_flow(run.setup, run.arch);
     if (!flow_succeeded) {
       VTR_LOG("VPR failed to implement circuit\n");
       exit_code = UNIMPLEMENTABLE_EXIT_CODE;
@@ -134,10 +89,8 @@ static int vpr(int argc, char** argv) {
     exit_code = ERROR_EXIT_CODE;
   }
 
-  if (SUCCESS_EXIT_CODE == exit_code) {
-    last_vpr_run = std::move(run);
-  } else {
-    free_vpr_run(*run);
+  if (SUCCESS_EXIT_CODE != exit_code) {
+    release_vpr_run();
   }
 
   return exit_code;
@@ -157,7 +110,7 @@ int vpr_wrapper(int argc, char** argv) {
 static int vpr_standalone(int argc, char** argv) {
   vtr::ScopedFinishTimer t("The entire flow of VPR");
 
-  release_last_vpr_run();
+  release_vpr_run(true);
 
   t_options Options = t_options();
   t_arch Arch = t_arch();
