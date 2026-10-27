@@ -158,6 +158,17 @@ if (OPENFPGA_WITH_TEST)
     get_filename_component(testname ${testsourcefile} NAME_WE)
     add_executable(${testname} ${testsourcefile})
     target_link_libraries(${testname} libopenfpga)
+    # The tests read files of the repository, e.g., the sources of VPR
+    target_compile_definitions(${testname} PRIVATE OPENFPGA_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     add_test(NAME ${testname} COMMAND ${testname})
   endforeach()
+
+  # The table of the options of VPR is generated from its sources: it must be
+  # up to date
+  find_package(Python3 QUIET COMPONENTS Interpreter)
+  if (Python3_Interpreter_FOUND)
+    add_test(NAME vpr_option_table_up_to_date
+             COMMAND ${Python3_EXECUTABLE}
+                     ${CMAKE_SOURCE_DIR}/openfpga_flow/scripts/generate_vpr_option_mapping.py --check)
+  endif()
 endif()
