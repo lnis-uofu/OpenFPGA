@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "app_options.h"
 #include "read_options.h"
 #include "vpr_api.h"
 #include "vpr_types.h"
@@ -66,6 +67,7 @@ std::string to_string(const OpenFpgaStage& stage);
  * Notes:
  * - This class only tracks what has been done. It does not run VPR nor
  *   release the VPR data, e.g., with vpr_free_all()
+ * - The application options are kept when the session is reset
  * - Commands such as link_openfpga_arch and build_fabric are prerequisites
  *   of REPACKED, but they are not stages. They are checked by the shell
  *   command dependencies
@@ -88,6 +90,7 @@ class OpenFpgaSession {
   bool can_run(const OpenFpgaStage& stage) const;
   /* All the stages that are valid, in the order of the enum, UNINIT excluded */
   std::vector<OpenFpgaStage> reached_stages() const;
+  const AppOptions& app_options() const { return app_options_; }
   const t_options& options() const { return options_; }
   const t_arch& arch() const { return arch_; }
   const t_vpr_setup& setup() const { return setup_; }
@@ -106,6 +109,7 @@ class OpenFpgaSession {
   void fail(const OpenFpgaStage& stage);
   /* Forget the inputs and the stages. The VPR data is not released */
   void reset();
+  AppOptions& mutable_app_options() { return app_options_; }
   t_options& mutable_options() { return options_; }
   t_arch& mutable_arch() { return arch_; }
   t_vpr_setup& mutable_setup() { return setup_; }
@@ -118,6 +122,7 @@ class OpenFpgaSession {
   /* One bit per input and per stage, from the value of their enum */
   unsigned inputs_ = 0;
   unsigned stages_ = 0;
+  AppOptions app_options_;
   t_options options_ = t_options();
   t_arch arch_ = t_arch();
   t_vpr_setup setup_ = t_vpr_setup();
