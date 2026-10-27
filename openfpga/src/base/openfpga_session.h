@@ -67,7 +67,8 @@ std::string to_string(const OpenFpgaStage& stage);
  * Notes:
  * - This class only tracks what has been done. It does not run VPR nor
  *   release the VPR data, e.g., with vpr_free_all()
- * - The application options are kept when the session is reset
+ * - The application options are kept when the session is reset. Changing one
+ *   drops the stage it tunes, and the ones that depend on it
  * - Commands such as link_openfpga_arch and build_fabric are prerequisites
  *   of REPACKED, but they are not stages. They are checked by the shell
  *   command dependencies
@@ -109,7 +110,18 @@ class OpenFpgaSession {
   void fail(const OpenFpgaStage& stage);
   /* Forget the inputs and the stages. The VPR data is not released */
   void reset();
-  AppOptions& mutable_app_options() { return app_options_; }
+  /* Set an application option from text, see AppOptions::set(). If the value
+   * changes, the stage that the option tunes and the ones that depend on it
+   * are dropped, see app_option_stage(). Setting the value it already has
+   * keeps the stages. Return false, and leave everything untouched, if the
+   * option cannot be set */
+  bool set_app_option(const std::string& name, const std::string& text,
+                      std::string& error);
+  /* Give an option its default value back, with the same effect on the
+   * stages. Return false if it does not exist */
+  bool reset_app_option(const std::string& name);
+  /* Give all the options their default value back */
+  void reset_app_options();
   t_options& mutable_options() { return options_; }
   t_arch& mutable_arch() { return arch_; }
   t_vpr_setup& mutable_setup() { return setup_; }
@@ -117,6 +129,7 @@ class OpenFpgaSession {
  private: /* Internal functions */
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
   void invalidate_all_stages();
+  void invalidate_for_option(const std::string& name);
 
  private: /* Internal data */
   /* One bit per input and per stage, from the value of their enum */
