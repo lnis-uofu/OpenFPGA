@@ -42,7 +42,9 @@ Stage-by-stage flow
   - ``read_vpr_arch --file <string> --layout <string>`` reads and checks the VPR architecture file, with the name of the fixed layout of the device (for example ``2x2``). It starts the flow over: the results of the stages and the circuit are dropped.
   - ``read_openfpga_arch --file <string>`` reads the OpenFPGA architecture. It needs the VPR architecture to have been read.
   - ``read_circuit --file <string>`` reads the circuit netlist against the VPR architecture. VPR sets itself up from the architecture and the circuit together, so the architecture is read again.
-  - ``pack``, ``place`` and ``route`` run the stages. A stage needs the one before it: ``pack`` the device, ``place`` the packing, ``route`` the placement.
+  - ``pack``, ``place``, ``route`` and ``analysis`` run the stages. A stage needs the one before it: ``pack`` the device, ``place`` the packing, ``route`` the placement, ``analysis`` the routing.
+
+  ``analysis`` reports the timing and the power, and synchronizes the packing with the routing results, which writes the ``.net.post_routing`` file. It changes the data of VPR, so running it again, or routing again, starts from fresh data. Repacking does not wait for it.
 
   The device (the grid and, if the channel width is fixed with ``router.route_chan_width``, the routing resource graph) is created once the three inputs have been read. A layout that is not fixed (``auto``) is refused, since it is sized from the result of packing.
 

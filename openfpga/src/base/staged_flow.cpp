@@ -49,6 +49,8 @@ const char* stage_command(const OpenFpgaStage& stage) {
       return "place";
     case OpenFpgaStage::ROUTED:
       return "route";
+    case OpenFpgaStage::ANALYZED:
+      return "analysis";
     default:
       break;
   }
@@ -113,6 +115,7 @@ bool flow_args(const AppOptions& options, const bool with_circuit,
   args.push_back("--pack");
   args.push_back("--place");
   args.push_back("--route");
+  args.push_back("--analysis");
   return true;
 }
 
@@ -235,6 +238,26 @@ bool do_route(OpenFpgaSession& session, VprRun& run) {
   return true;
 }
 
+/* Analysis changes the data of VPR: it synchronizes the packing with the
+ * routing results. It is run on the data of the routing, as VPR cannot run it
+ * twice on the same data */
+bool do_analysis(OpenFpgaSession& session, VprRun& run) {
+  bool analyzed = false;
+  const bool ok = guarded([&run, &analyzed]() {
+    const Netlist<>& net_list =
+      (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+    analyzed = vpr_analysis_flow(net_list, run.setup, run.arch,
+                                 run.route_status, false);
+  });
+  if (!ok || !analyzed) {
+    VTR_LOG_ERROR("Analysis failed\n");
+    drop_run(session);
+    return false;
+  }
+  run.last_stage = OpenFpgaStage::ANALYZED;
+  return true;
+}
+
 /* Tell which inputs are missing, and how to read them */
 void report_missing_inputs(const OpenFpgaSession& session) {
   for (const OpenFpgaInput& input :
@@ -306,7 +329,13 @@ bool prepare_vpr(OpenFpgaSession& session, const OpenFpgaStage& target) {
   if (OpenFpgaStage::PACKED == target) {
     return true;
   }
-  return do_place(session, *run);
+  if (!do_place(session, *run)) {
+    return false;
+  }
+  if (OpenFpgaStage::PLACED == target) {
+    return true;
+  }
+  return do_route(session, *run);
 }
 
 }  // End anonymous namespace
@@ -421,6 +450,9 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
       break;
     case OpenFpgaStage::ROUTED:
       ok = do_route(session, run);
+      break;
+    case OpenFpgaStage::ANALYZED:
+      ok = do_analysis(session, run);
       break;
     default:
       VTR_LOG_ERROR("The stage %s cannot be run by a command yet\n",
