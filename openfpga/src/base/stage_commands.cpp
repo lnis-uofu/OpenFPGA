@@ -51,6 +51,11 @@ int route_command(OpenfpgaContext& openfpga_ctx, const Command&,
   return run_stage_command(openfpga_ctx, OpenFpgaStage::ROUTED);
 }
 
+int analysis_command(OpenfpgaContext& openfpga_ctx, const Command&,
+                     const CommandContext&) {
+  return run_stage_command(openfpga_ctx, OpenFpgaStage::ANALYZED);
+}
+
 /* A command of a stage, which has no option: the settings are the
  * application options */
 void add_stage_command(openfpga::Shell<OpenfpgaContext>& shell,
@@ -107,6 +112,10 @@ void add_stage_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                     "Place the packed circuit on the device", place_command);
   add_stage_command(shell, cmd_class, "route",
                     "Route the placed circuit on the device", route_command);
+  add_stage_command(shell, cmd_class, "analysis",
+                    "Analyze the routed circuit: timing, power and the "
+                    "synchronization of the packing with the routing",
+                    analysis_command);
 }
 
 } /* End namespace openfpga */
