@@ -1,13 +1,11 @@
 #ifndef OPENFPGA_SESSION_H
 #define OPENFPGA_SESSION_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include "app_options.h"
-#include "read_options.h"
-#include "vpr_api.h"
-#include "vpr_types.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -42,6 +40,10 @@ enum class OpenFpgaStage : int {
   BITSTREAM
 };
 
+/* The stage that a stage requires: its parent in the tree of stages. UNINIT
+ * for UNINIT and DEVICE */
+OpenFpgaStage required_stage(const OpenFpgaStage& stage);
+
 /* Name of an input or a stage, to be used in messages */
 std::string to_string(const OpenFpgaInput& input);
 std::string to_string(const OpenFpgaStage& stage);
@@ -66,7 +68,8 @@ std::string to_string(const OpenFpgaStage& stage);
  *
  * Notes:
  * - This class only tracks what has been done. It does not run VPR nor
- *   release the VPR data, e.g., with vpr_free_all()
+ *   release the VPR data, e.g., with vpr_free_all(): the data is in the live
+ *   run of VPR (see vpr_run.h)
  * - The application options are kept when the session is reset. Changing one
  *   drops the stage it tunes, and the ones that depend on it
  * - Commands such as link_openfpga_arch and build_fabric are prerequisites
@@ -74,6 +77,9 @@ std::string to_string(const OpenFpgaStage& stage);
  *   command dependencies
  * - VPR keeps most of its data in global contexts (g_vpr_ctx), which are
  *   shared by the whole process. Only one session can be live in a process
+ * - The generation of the VPR run that the session has been working with
+ *   is recorded, so that the session can tell that another command, e.g.,
+ *   'vpr', has replaced the VPR data
  *******************************************************************/
 class OpenFpgaSession {
  public: /* Public accessors */
@@ -92,9 +98,7 @@ class OpenFpgaSession {
   /* All the stages that are valid, in the order of the enum, UNINIT excluded */
   std::vector<OpenFpgaStage> reached_stages() const;
   const AppOptions& app_options() const { return app_options_; }
-  const t_options& options() const { return options_; }
-  const t_arch& arch() const { return arch_; }
-  const t_vpr_setup& setup() const { return setup_; }
+  uint64_t vpr_generation() const { return vpr_generation_; }
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
@@ -122,9 +126,7 @@ class OpenFpgaSession {
   bool reset_app_option(const std::string& name);
   /* Give all the options their default value back */
   void reset_app_options();
-  t_options& mutable_options() { return options_; }
-  t_arch& mutable_arch() { return arch_; }
-  t_vpr_setup& mutable_setup() { return setup_; }
+  void set_vpr_generation(uint64_t generation) { vpr_generation_ = generation; }
 
  private: /* Internal functions */
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
@@ -136,9 +138,7 @@ class OpenFpgaSession {
   unsigned inputs_ = 0;
   unsigned stages_ = 0;
   AppOptions app_options_;
-  t_options options_ = t_options();
-  t_arch arch_ = t_arch();
-  t_vpr_setup setup_ = t_vpr_setup();
+  uint64_t vpr_generation_ = 0;
 };
 
 } /* End namespace openfpga */
