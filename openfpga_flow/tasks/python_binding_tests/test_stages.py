@@ -1,5 +1,5 @@
 """The flow that is run stage by stage: read_vpr_arch, read_circuit,
-read_openfpga_arch, pack, place and route."""
+read_openfpga_arch, pack, place, route and analysis."""
 
 import os
 from pathlib import Path
@@ -12,6 +12,7 @@ DESIGNS = {
     "routing_test": "interface/routing_test/routing_test.blif",
 }
 RESULTS = ["{}.net", "{}.place", "{}.route"]
+ANALYSIS_RESULTS = RESULTS + ["{}.net.post_routing"]
 
 
 @pytest.fixture
@@ -64,10 +65,10 @@ def refused(result, text):
     assert text in result.log
 
 
-def results_of(directory, name):
+def results_of(directory, name, patterns=RESULTS):
     return {
         pattern.format(name): (Path(directory) / pattern.format(name)).read_bytes()
-        for pattern in RESULTS
+        for pattern in patterns
     }
 
 
@@ -92,6 +93,30 @@ def test_results_equal_the_monolithic_flow(
     finally:
         os.chdir(cwd)
     assert results_of(monolithic, name) == staged_results
+
+
+@pytest.mark.parametrize("name", sorted(DESIGNS))
+def test_analysis_equals_the_monolithic_flow(
+    staged, shell, tmp_path, and2_files, design, name
+):
+    staged.read_all(name)
+    for command in ("pack", "place", "route", "analysis"):
+        shell.run(command)
+    staged_results = results_of(Path.cwd(), name, ANALYSIS_RESULTS)
+
+    monolithic = tmp_path / "monolithic"
+    monolithic.mkdir()
+    cwd = Path.cwd()
+    os.chdir(monolithic)
+    try:
+        result = shell.run(
+            f"vpr {and2_files['vpr_arch']} {design(name)} --clock_modeling route "
+            "--device 2x2 --route_chan_width 20 --pack --place --route --analysis"
+        )
+    finally:
+        os.chdir(cwd)
+    assert results_of(monolithic, name, ANALYSIS_RESULTS) == staged_results
+    assert "Timing analysis" in result.log or "critical path" in result.log
 
 
 def test_the_three_inputs_make_the_device(staged):
@@ -329,3 +354,32 @@ def test_channel_width_option_changes_the_device(staged, shell):
     shell.run("place")
     log = shell.run("route").log
     assert "channel width factor of 30" in log
+
+
+def test_analysis_needs_the_route(staged, shell):
+    staged.read_all()
+    shell.run("pack")
+    shell.run("place")
+    refused(
+        shell.run("analysis", check=False),
+        "the stage ROUTED has not been reached, use the command 'route'",
+    )
+
+
+def test_analysis_can_be_repeated(staged, shell):
+    staged.read_all()
+    for command in ("pack", "place", "route", "analysis"):
+        shell.run(command)
+    first = results_of(Path.cwd(), "and2", ANALYSIS_RESULTS)
+    again = shell.run("analysis").log
+    assert "Run the stages up to ROUTED again" in again
+    assert results_of(Path.cwd(), "and2", ANALYSIS_RESULTS) == first
+
+
+def test_route_again_after_analysis(staged, shell):
+    staged.read_all()
+    for command in ("pack", "place", "route", "analysis"):
+        shell.run(command)
+    assert "Run the stages up to PLACED again" in shell.run("route").log
+    shell.run("analysis")
+
