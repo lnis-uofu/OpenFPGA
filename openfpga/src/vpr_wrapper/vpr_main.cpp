@@ -44,6 +44,12 @@ std::unique_ptr<VprRun> last_vpr_run;
 void free_vpr_run(VprRun& run) {
   try {
     vpr_free_all(run.arch, run.setup);
+    /* vpr_free_all() leaves the packing of the circuit in the clustering
+     * context: the next circuit would be checked against it */
+    ClusteringContext& cluster_ctx = g_vpr_ctx.mutable_clustering();
+    cluster_ctx.atoms_lookup.clear();
+    cluster_ctx.post_routing_clb_pin_nets.clear();
+    cluster_ctx.pre_routing_net_pin_mapping.clear();
   } catch (const std::exception& exc) {
     VTR_LOG_ERROR("Fail to free VPR data: %s\n", exc.what());
   }

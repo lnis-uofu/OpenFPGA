@@ -83,3 +83,18 @@ def test_commands_after_rerun(shell, vpr_cmd, and2_files):
         "--sort_gsb_chan_node_in_edges"
     )
     shell.run("build_fabric --compress_routing")
+
+
+def test_vpr_with_another_circuit(shell, and2_files, flow_dir):
+    # The packing of the first circuit must not be checked against the second
+    other = (
+        flow_dir / "benchmarks" / "ubm" / "simple_gates" / "and2_or2" / "and2_or2.blif"
+    )
+    if not other.exists():
+        pytest.skip(f"missing {other}")
+    for blif in (and2_files["blif"], other, and2_files["blif"]):
+        command = (
+            f"vpr {and2_files['vpr_arch']} {blif} --clock_modeling route "
+            "--device 2x2 --route_chan_width 20 --pack --place --route"
+        )
+        assert "VPR succeeded" in shell.run(command).log
