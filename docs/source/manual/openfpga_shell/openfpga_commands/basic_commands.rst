@@ -54,7 +54,7 @@ set_app_option
 
   Set an application option. Application options tune the engines of the flow, e.g., the seed of the placer. Every option has a name made of a group and an option, e.g., ``place.seed``, a type and a default value. The value is checked against the type: an invalid value is an error, and the option keeps its value.
 
-  The groups are ``filename``, ``general``, ``atom`` (atom netlist), ``aplace`` (analytical placement), ``cluster`` (packing), ``place`` and ``tplace`` (placement), ``router`` and ``trouter`` (routing), ``analysis`` and ``build_fabric``. Use :ref:`report_app_option <report_app_option>` to list the options, their values and the values a selection accepts.
+  The options are the ones of VPR, with the same defaults, plus a few of OpenFPGA. The groups are ``filename`` (files and the architecture and circuit to read), ``general``, ``atom`` (atom netlist), ``cluster`` (packing), ``aplace`` (analytical placement), ``place`` and ``tplace`` (placement and timing-driven placement), ``router`` and ``trouter`` (routing and timing-driven routing), ``analysis``, ``power``, ``crr`` and ``build_fabric`` (OpenFPGA only). Options that only make sense on the command line of VPR, e.g., stage switches, graphics and verbosity, are not available. Use :ref:`report_app_option <report_app_option>` to list the options, their values and the values a selection accepts.
 
   .. option:: --name <string>
 
