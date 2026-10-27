@@ -34,8 +34,9 @@ static void test_table() {
   CHECK(defaults.size() > 200);
 
   const std::set<std::string> groups = {
-    "filename", "general", "atom",    "aplace",   "cluster",     "place",
-    "tplace",   "router",  "trouter", "analysis", "build_fabric"};
+    "filename", "general", "atom",        "aplace",  "cluster",
+    "place",    "tplace",  "router",      "trouter", "analysis",
+    "power",    "crr",     "build_fabric"};
   std::set<std::string> seen_groups;
   for (const auto& option : defaults) {
     /* Names are group.option, with a group that exists */
