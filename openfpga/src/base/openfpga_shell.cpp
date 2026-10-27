@@ -3,6 +3,7 @@
 #include <cctype>
 #include <exception>
 
+#include "app_options_commands.h"
 #include "basic_command.h"
 #include "command_echo.h"
 #include "command_exit_codes.h"
@@ -47,6 +48,9 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell_);
+
+  /* Add commands to set and report the application options */
+  openfpga::add_app_options_commands(shell_);
 
   /* Add basic commands: exit, help, etc.
    * Note:
