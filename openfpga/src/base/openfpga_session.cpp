@@ -39,6 +39,8 @@ OpenFpgaStage required_stage(const OpenFpgaStage& stage) {
       return OpenFpgaStage::ROUTED;
     case OpenFpgaStage::BITSTREAM:
       return OpenFpgaStage::REPACKED;
+    default:
+      break;
   }
   return OpenFpgaStage::UNINIT;
 }
@@ -65,6 +67,8 @@ std::string to_string(const OpenFpgaInput& input) {
       return "OPENFPGA_ARCH";
     case OpenFpgaInput::CIRCUIT:
       return "CIRCUIT";
+    default:
+      break;
   }
   return "UNKNOWN";
 }
@@ -87,6 +91,8 @@ std::string to_string(const OpenFpgaStage& stage) {
       return "REPACKED";
     case OpenFpgaStage::BITSTREAM:
       return "BITSTREAM";
+    default:
+      break;
   }
   return "UNKNOWN";
 }
