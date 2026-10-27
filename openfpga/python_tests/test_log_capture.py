@@ -35,8 +35,7 @@ def test_failed_command_log_has_stderr(shell):
 
 
 def test_vpr_flow_log(shell, and2_files):
-    # vpr_standalone, as a second call of 'vpr' in one process crashes (it keeps
-    # its context alive for the commands that follow). test_smoke.py covers 'vpr'
+    # vpr_standalone frees its data at the end. test_smoke.py covers 'vpr'
     result = shell.run(
         f"vpr_standalone {and2_files['vpr_arch']} {and2_files['blif']} "
         "--clock_modeling route --device 2x2 --route_chan_width 20"
