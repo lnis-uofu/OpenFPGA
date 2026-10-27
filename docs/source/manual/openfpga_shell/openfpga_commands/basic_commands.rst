@@ -49,6 +49,48 @@ ext_exec
 
     ext_exec --command "ls -all"
 
+set_app_option
+~~~~~~~~~~~~~~
+
+  Set an application option. Application options tune the engines of the flow, e.g., the seed of the placer. Every option has a name made of a group and an option, e.g., ``place.seed``, a type and a default value. The value is checked against the type: an invalid value is an error, and the option keeps its value.
+
+  The groups are ``filename``, ``general``, ``atom`` (atom netlist), ``aplace`` (analytical placement), ``cluster`` (packing), ``place`` and ``tplace`` (placement), ``router`` and ``trouter`` (routing), ``analysis`` and ``build_fabric``. Use :ref:`report_app_option <report_app_option>` to list the options, their values and the values a selection accepts.
+
+  .. option:: --name <string>
+
+    Name of the option, e.g., ``place.seed``
+
+  .. option:: --value <string>
+
+    Value of the option. It is read according to the type of the option:
+
+    - string: any text. Use quotes (``"``) if it has spaces
+    - int: a whole number, e.g., ``10`` or ``-2``
+    - float: a number, e.g., ``0.5`` or ``1e-3``
+    - bool: ``true``, ``false``, ``on``, ``off``, ``yes``, ``no``, ``1`` or ``0``
+    - selection: one of the values the option accepts. They are case sensitive
+
+  .. code-block::
+
+    set_app_option --name place.seed --value 5
+    set_app_option --name router.flat_routing --value true
+    set_app_option --name place.place_algorithm --value bounding_box
+
+.. _report_app_option:
+
+report_app_option
+~~~~~~~~~~~~~~~~~
+
+  Report the value of one application option, or of all of them. Each option is shown as ``name = value``. A selection also shows the values it accepts, in brackets.
+
+  .. option:: --name <string>
+
+    Name of the option to report. All the options are reported when it is not set
+
+  .. code-block::
+
+    report_app_option --name place.seed
+
 exit
 ~~~~
 
