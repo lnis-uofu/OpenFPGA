@@ -1,7 +1,11 @@
 #include "openfpga_shell.h"
 
+#include <cctype>
+#include <exception>
+
 #include "basic_command.h"
 #include "command_echo.h"
+#include "command_exit_codes.h"
 #include "command_parser.h"
 #include "openfpga_bitstream_command.h"
 #include "openfpga_context.h"
@@ -10,10 +14,12 @@
 #include "openfpga_spice_command.h"
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
+#include "output_capture.h"
 #ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
 #include "openfpga_yosys_command.h"
 #endif
 #include "vpr_command.h"
+#include "vtr_log.h"
 
 OpenfpgaShell::OpenfpgaShell() {
   shell_.set_name("OpenFPGA");
@@ -49,8 +55,58 @@ OpenfpgaShell::OpenfpgaShell() {
   openfpga::add_basic_commands(shell_);
 }
 
+/* Return true if the command line calls the built-in command 'exit' */
+static bool is_exit_command(const char* cmd_line) {
+  const char* cur = cmd_line;
+  while (*cur != '\0' && std::isspace(static_cast<unsigned char>(*cur))) {
+    ++cur;
+  }
+  std::string name;
+  while (*cur != '\0' && !std::isspace(static_cast<unsigned char>(*cur))) {
+    name.push_back(*cur);
+    ++cur;
+  }
+  return name == "exit";
+}
+
+int OpenfpgaShell::execute_guarded(const char* cmd_line, std::string& error) {
+  if (nullptr == cmd_line) {
+    error = "Empty command line";
+    VTR_LOG_ERROR("%s\n", error.c_str());
+    return openfpga::CMD_EXEC_FATAL_ERROR;
+  }
+
+  try {
+    return shell_.execute_command(cmd_line, openfpga_ctx_);
+  } catch (const std::exception& exc) {
+    error = exc.what();
+  } catch (...) {
+    error = "Unknown exception";
+  }
+  VTR_LOG_ERROR("%s\n", error.c_str());
+  return openfpga::CMD_EXEC_FATAL_ERROR;
+}
+
 int OpenfpgaShell::run_command(const char* cmd_line) {
-  return shell_.execute_command(cmd_line, openfpga_ctx_);
+  std::string error;
+  return execute_guarded(cmd_line, error);
+}
+
+CommandResult OpenfpgaShell::execute(const char* cmd_line) {
+  CommandResult result;
+
+  if (nullptr != cmd_line && is_exit_command(cmd_line)) {
+    result.status = openfpga::CMD_EXEC_FATAL_ERROR;
+    result.error =
+      "The command 'exit' is not available here: it would terminate the host "
+      "process";
+    return result;
+  }
+
+  openfpga::OutputCapture capture;
+  result.status = execute_guarded(cmd_line, result.error);
+  result.log = capture.stop();
+  return result;
 }
 
 void OpenfpgaShell::reset() {
