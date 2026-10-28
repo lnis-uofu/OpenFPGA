@@ -203,9 +203,9 @@ def read_declarations(text):
                 "parser": parser,
                 "store_true": "Action::STORE_TRUE" in statement,
                 "multi_value": bool(re.search(r"\.nargs\('\+'\)", statement)),
-                "help": help_text.strip()
-                if help_text and only_string_literals(help_text)
-                else '""',
+                "help": (
+                    help_text.strip() if help_text and only_string_literals(help_text) else '""'
+                ),
             }
         )
     return declarations
