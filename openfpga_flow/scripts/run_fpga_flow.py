@@ -700,7 +700,7 @@ def prepare_run_directory(run_dir):
                 + f" {args.openfpga_shell_template} file not found"
             )
         else:
-            shutil.copy(args.openfpga_shell_template, args.top_module + "_template.openfpga")
+            shutil.copy(args.openfpga_shell_template, args.top_module + shell_template_suffix())
 
     # Create benchmark dir in run_dir and copy flattern architecture file
     os.mkdir("benchmark")
@@ -1030,11 +1030,41 @@ def collect_files_for_vpr():
     shutil.copy(args.base_verilog, args.top_module + "_output_verilog.v")
 
 
+def is_python_shell_template():
+    """The template of the shell is a Python script, run with the Python module of OpenFPGA
+    instead of the shell binary"""
+    return (args.openfpga_shell_template or "").endswith(".py")
+
+
+def shell_template_suffix():
+    return "_template.py" if is_python_shell_template() else "_template.openfpga"
+
+
+def python_shell_command(path_variables):
+    """Return the command that runs a Python script as the shell, and its environment.
+    The variables that a template of the shell gets by substitution are given as environment
+    variables, so that the script is plain Python: it can be run by hand as well"""
+    openfpga_path = path_variables.get("OPENFPGA_PATH", os.environ.get("OPENFPGA_PATH", ""))
+    module_dir = os.environ.get(
+        "OPENFPGA_PYTHON_PATH", os.path.join(openfpga_path, "build", "openfpga")
+    )
+    if not os.path.isfile(os.path.join(module_dir, "openfpga.py")):
+        clean_up_and_exit(
+            f"The Python module of OpenFPGA is not in {module_dir}: build with "
+            "-DOPENFPGA_SWIG_PYTHON=ON, or set OPENFPGA_PYTHON_PATH"
+        )
+    env = dict(os.environ)
+    env.update({key: str(value) for key, value in path_variables.items()})
+    env["OPENFPGA_PYTHON_PATH"] = module_dir
+    env["PYTHONPATH"] = os.pathsep.join(
+        [module_dir] + ([os.environ["PYTHONPATH"]] if os.environ.get("PYTHONPATH") else [])
+    )
+    return [sys.executable, args.top_module + shell_template_suffix()], env
+
+
 def run_openfpga_shell():
     ExecTime["VPRStart"] = time.time()
     # bench_blif, fixed_chan_width, logfile, route_only=False
-    tmpl = Template(open(args.top_module + "_template.openfpga", encoding="utf-8").read())
-
     path_variables = script_env_vars["PATH"]
     path_variables["TOP_MODULE"] = args.top_module
     path_variables["VPR_ARCH_FILE"] = normalize_template_path_for_windows(args.arch_file)
@@ -1077,10 +1107,20 @@ def run_openfpga_shell():
             path_variables["OPENFPGA_VERILOG_OUTPUT_DIR"]
         )
 
-    with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
-        archfile.write(tmpl.safe_substitute(path_variables))
-    command = [cad_tools["openfpga_shell_path"], "-batch", "-f", args.top_module + "_run.openfpga"]
-    run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
+    if is_python_shell_template():
+        command, env = python_shell_command(path_variables)
+    else:
+        tmpl = Template(open(args.top_module + "_template.openfpga", encoding="utf-8").read())
+        with open(args.top_module + "_run.openfpga", "w", encoding="utf-8") as archfile:
+            archfile.write(tmpl.safe_substitute(path_variables))
+        command = [
+            cad_tools["openfpga_shell_path"],
+            "-batch",
+            "-f",
+            args.top_module + "_run.openfpga",
+        ]
+        env = None
+    run_command("OpenFPGA Shell Run", "openfpgashell.log", command, env=env)
     ExecTime["VPREnd"] = time.time()
     extract_vpr_stats("openfpgashell.log")
 
@@ -1211,13 +1251,17 @@ def run_netlists_verification(exit_if_fail=True):
     ExecTime["VerificationEnd"] = time.time()
 
 
-def run_command(taskname, logfile, command, exit_if_fail=True):
+def run_command(taskname, logfile, command, exit_if_fail=True, env=None):
     logger.info("Launching %s " % taskname)
     with open(logfile, "w") as output:
         try:
             output.write(" ".join(command) + "\n")
             process = subprocess.run(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=False
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=False,
+                env=env,
             )
             output.write(process.stdout.decode("cp1252"))
             output.write(process.stderr.decode("cp1252"))
