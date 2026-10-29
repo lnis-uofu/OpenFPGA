@@ -99,6 +99,9 @@ class OpenFpgaSession {
   std::vector<OpenFpgaStage> reached_stages() const;
   const AppOptions& app_options() const { return app_options_; }
   uint64_t vpr_generation() const { return vpr_generation_; }
+  /* The generation of the VPR run that the architecture was linked to, see
+   * set_linked_generation(). 0 if it has not been linked */
+  uint64_t linked_generation() const { return linked_generation_; }
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
@@ -127,6 +130,12 @@ class OpenFpgaSession {
   /* Give all the options their default value back */
   void reset_app_options();
   void set_vpr_generation(uint64_t generation) { vpr_generation_ = generation; }
+  /* Record the generation of the VPR run that the OpenFPGA architecture was
+   * linked to, by link_openfpga_arch. What the link makes refers to the data
+   * of that run, and it is not valid for another one */
+  void set_linked_generation(uint64_t generation) {
+    linked_generation_ = generation;
+  }
 
  private: /* Internal functions */
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
@@ -139,6 +148,7 @@ class OpenFpgaSession {
   unsigned stages_ = 0;
   AppOptions app_options_;
   uint64_t vpr_generation_ = 0;
+  uint64_t linked_generation_ = 0;
 };
 
 } /* End namespace openfpga */
