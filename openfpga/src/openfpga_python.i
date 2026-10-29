@@ -73,4 +73,82 @@ def _run(self, command, check=True):
 
 
 OpenfpgaShell.run = _run
+
+
+import os as _os
+import re as _re
+
+_WHITESPACE = _re.compile(r"\s")
+
+
+def _command_value(label, value):
+    """Return a value as it is written on a command line.
+
+    The shell splits the line at spaces, except inside a pair of double
+    quotes, and has no escape for a double quote: a value with a space is
+    quoted, and a value that cannot be written is refused.
+    """
+    if isinstance(value, (bool, list, tuple, set, dict)):
+        raise TypeError(
+            "'%s' takes a string, a number or a path, not %s"
+            % (label, type(value).__name__)
+        )
+    text = _os.fspath(value) if isinstance(value, _os.PathLike) else str(value)
+    if not text:
+        raise ValueError("'%s' has an empty value" % label)
+    if '"' in text or "\n" in text or "\r" in text:
+        raise ValueError(
+            "'%s' has a value that cannot be written on a command line: %r"
+            % (label, text)
+        )
+    if _WHITESPACE.search(text):
+        text = '"%s"' % text
+    return text
+
+
+def _command_line(name, args, options):
+    """Return the command line of the command 'name'.
+
+    The positional arguments come first, then every option as '--key value'.
+    An option set to True is a switch, and one set to False or None is left
+    out.
+    """
+    words = [name]
+    for arg in args:
+        words.append(_command_value(name, arg))
+    for key, value in options.items():
+        if value is None or value is False:
+            continue
+        words.append("--" + key)
+        if value is not True:
+            words.append(_command_value(key, value))
+    return " ".join(words)
+
+
+def _shell_getattr(self, name):
+    """Run a command of the shell as a method.
+
+    shell.read_circuit(file="a.blif") runs 'read_circuit --file a.blif'. The
+    positional arguments are written first, as in shell.vpr(arch, blif,
+    pack=True), and the options follow: key=value is '--key value', key=True
+    is the switch '--key', and key=False or key=None is left out. The check
+    argument is the one of run(): the call raises OpenfpgaError when the
+    command fails, unless check is False. It returns the CommandResult.
+
+    Any name is taken for a command, and the shell reports one that does not
+    exist when the method is called. Names that start with an underscore are
+    not commands.
+    """
+    if name.startswith("_") or name in ("this", "thisown"):
+        raise AttributeError(name)
+
+    def command(*args, check=True, **options):
+        return self.run(_command_line(name, args, options), check=check)
+
+    command.__name__ = name
+    command.__doc__ = "Run the command '%s' of the shell, see run()" % name
+    return command
+
+
+OpenfpgaShell.__getattr__ = _shell_getattr
 %}
