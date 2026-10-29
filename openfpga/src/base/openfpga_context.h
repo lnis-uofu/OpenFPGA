@@ -197,6 +197,38 @@ class OpenfpgaContext : public Context {
   }
   openfpga::NetlistManager& mutable_spice_netlists() { return spice_netlists_; }
 
+ public: /* Public mutators: start again */
+  /* Drop what build_fabric made: the fabric, its bitstream and its netlists
+   * are made again from the linked architecture */
+  void reset_fabric() {
+    decoder_lib_ = openfpga::DecoderLibrary();
+    blwl_sr_banks_ = openfpga::MemoryBankShiftRegisterBanks();
+    module_graph_ = openfpga::ModuleManager();
+    io_location_map_ = openfpga::IoLocationMap();
+    mif_location_map_ = openfpga::MifLocationMap();
+    io_name_map_ = openfpga::IoNameMap();
+    module_name_map_ = openfpga::ModuleNameMap();
+    fabric_tile_ = openfpga::FabricTile();
+    fabric_global_port_info_ = openfpga::FabricGlobalPortInfo();
+    bitstream_manager_ = openfpga::BitstreamManager();
+    fabric_bitstream_ = openfpga::FabricBitstream();
+    flow_manager_ = openfpga::FlowManager();
+  }
+  /* Drop what link_openfpga_arch made, and the fabric which is made from it.
+   * It refers to the data of VPR, and is not valid for another run of it. What
+   * read_openfpga_arch and the commands that read settings made is kept */
+  void reset_linked_data() {
+    reset_fabric();
+    vpr_device_annotation_ = openfpga::VprDeviceAnnotation();
+    vpr_clustering_annotation_ = openfpga::VprClusteringAnnotation();
+    vpr_placement_annotation_ = openfpga::VprPlacementAnnotation();
+    vpr_routing_annotation_ = openfpga::VprRoutingAnnotation();
+    vpr_bitstream_annotation_ = openfpga::VprBitstreamAnnotation();
+    device_rr_gsb_.clear();
+    mux_lib_ = openfpga::MuxLibrary();
+    tile_direct_ = openfpga::TileDirect();
+  }
+
  private: /* Internal data */
   /* Data structure to store information from read_openfpga_arch library */
   openfpga::Arch arch_;
