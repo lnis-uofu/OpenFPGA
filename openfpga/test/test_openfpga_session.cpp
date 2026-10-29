@@ -384,6 +384,41 @@ static void test_linked_generation() {
   CHECK(0 == session.linked_generation());
 }
 
+static void test_imported_file() {
+  OpenFpgaSession session;
+  /* Only a valid stage has a file */
+  session.set_imported(OpenFpgaStage::PACKED, "a.net");
+  CHECK(session.imported_file(OpenFpgaStage::PACKED).empty());
+
+  session.read_input(OpenFpgaInput::VPR_ARCH);
+  session.read_input(OpenFpgaInput::OPENFPGA_ARCH);
+  session.read_input(OpenFpgaInput::CIRCUIT);
+  session.complete(OpenFpgaStage::DEVICE);
+  session.complete(OpenFpgaStage::PACKED);
+  session.set_imported(OpenFpgaStage::PACKED, "a.net");
+  CHECK("a.net" == session.imported_file(OpenFpgaStage::PACKED));
+  session.complete(OpenFpgaStage::PLACED);
+  session.set_imported(OpenFpgaStage::PLACED, "a.place");
+
+  /* Running a stage forgets its file and the ones after it, not before */
+  session.complete(OpenFpgaStage::PLACED);
+  CHECK("a.net" == session.imported_file(OpenFpgaStage::PACKED));
+  CHECK(session.imported_file(OpenFpgaStage::PLACED).empty());
+
+  session.set_imported(OpenFpgaStage::PLACED, "a.place");
+  /* An option of the packing drops the packing and what follows */
+  std::string error;
+  CHECK(session.set_app_option("cluster.timing_gain_weight", "0.5", error));
+  CHECK(session.imported_file(OpenFpgaStage::PACKED).empty());
+  CHECK(session.imported_file(OpenFpgaStage::PLACED).empty());
+
+  session.complete(OpenFpgaStage::DEVICE);
+  session.complete(OpenFpgaStage::PACKED);
+  session.set_imported(OpenFpgaStage::PACKED, "a.net");
+  session.reset();
+  CHECK(session.imported_file(OpenFpgaStage::PACKED).empty());
+}
+
 static void test_required_stage() {
   CHECK(openfpga::required_stage(OpenFpgaStage::UNINIT) ==
         OpenFpgaStage::UNINIT);
@@ -427,6 +462,7 @@ int main() {
   test_names();
   test_vpr_generation();
   test_linked_generation();
+  test_imported_file();
   test_required_stage();
   test_context_has_session();
 
