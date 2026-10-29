@@ -51,6 +51,10 @@ const char* stage_command(const OpenFpgaStage& stage) {
       return "route";
     case OpenFpgaStage::ANALYZED:
       return "analysis";
+    case OpenFpgaStage::REPACKED:
+      return "repack";
+    case OpenFpgaStage::BITSTREAM:
+      return "build_architecture_bitstream";
     default:
       break;
   }
@@ -83,6 +87,13 @@ void sync_with_vpr(OpenFpgaSession& session) {
     session.reset();
     session.set_vpr_generation(vpr::vpr_run_generation());
   }
+}
+
+/* Return true if the flow is run stage by stage, with the data of VPR that the
+ * session works with */
+bool in_staged_flow(const OpenFpgaSession& session) {
+  return session.has_input(OpenFpgaInput::VPR_ARCH) &&
+         session.vpr_generation() == vpr::vpr_run_generation();
 }
 
 /* Start a new run of VPR, which is the one the session works with */
@@ -465,6 +476,51 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
   }
   session.complete(stage);
   return true;
+}
+
+bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
+                 const char* command) {
+  if (!in_staged_flow(session) || session.reached(stage)) {
+    return true;
+  }
+  VTR_LOG_ERROR(
+    "Cannot run '%s': the stage %s has not been reached, or it was dropped "
+    "because an earlier stage or an option changed. Use the command '%s' "
+    "first\n",
+    command, to_string(stage).c_str(), stage_command(stage));
+  return false;
+}
+
+void stage_linked(OpenFpgaSession& session) {
+  if (in_staged_flow(session)) {
+    session.set_linked_generation(session.vpr_generation());
+  }
+}
+
+bool linked_ready(const OpenFpgaSession& session, const char* command) {
+  if (!in_staged_flow(session) ||
+      session.linked_generation() == session.vpr_generation()) {
+    return true;
+  }
+  VTR_LOG_ERROR(
+    "Cannot run '%s': the architecture was linked to the data of an earlier "
+    "run of VPR, which a stage that ran again has replaced. The OpenFPGA "
+    "architecture cannot be linked again in the same shell yet: start the "
+    "flow again in a new shell\n",
+    command);
+  return false;
+}
+
+void stage_done(OpenFpgaSession& session, const OpenFpgaStage& stage) {
+  if (in_staged_flow(session)) {
+    session.complete(stage);
+  }
+}
+
+void stage_failed(OpenFpgaSession& session, const OpenFpgaStage& stage) {
+  if (in_staged_flow(session)) {
+    session.fail(stage);
+  }
 }
 
 } /* End namespace openfpga */
