@@ -2,6 +2,7 @@
 #define OPENFPGA_SESSION_H
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -99,6 +100,12 @@ class OpenFpgaSession {
   std::vector<OpenFpgaStage> reached_stages() const;
   const AppOptions& app_options() const { return app_options_; }
   uint64_t vpr_generation() const { return vpr_generation_; }
+  /* The generation of the VPR run that the architecture was linked to, see
+   * set_linked_generation(). 0 if it has not been linked */
+  uint64_t linked_generation() const { return linked_generation_; }
+  /* The file that the results of a stage were read from, see
+   * set_imported(). Empty if the stage was run, or is not valid */
+  std::string imported_file(const OpenFpgaStage& stage) const;
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
@@ -126,7 +133,17 @@ class OpenFpgaSession {
   bool reset_app_option(const std::string& name);
   /* Give all the options their default value back */
   void reset_app_options();
+  /* Record that the results of a valid stage were read from a file. They are
+   * read again when the stages before another stage are run again. Running
+   * the stage, or dropping it, forgets the file */
+  void set_imported(const OpenFpgaStage& stage, const std::string& file);
   void set_vpr_generation(uint64_t generation) { vpr_generation_ = generation; }
+  /* Record the generation of the VPR run that the OpenFPGA architecture was
+   * linked to, by link_openfpga_arch. What the link makes refers to the data
+   * of that run, and it is not valid for another one */
+  void set_linked_generation(uint64_t generation) {
+    linked_generation_ = generation;
+  }
 
  private: /* Internal functions */
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
@@ -139,6 +156,8 @@ class OpenFpgaSession {
   unsigned stages_ = 0;
   AppOptions app_options_;
   uint64_t vpr_generation_ = 0;
+  uint64_t linked_generation_ = 0;
+  std::map<OpenFpgaStage, std::string> imported_;
 };
 
 } /* End namespace openfpga */

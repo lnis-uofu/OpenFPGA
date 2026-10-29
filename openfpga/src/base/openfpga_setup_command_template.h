@@ -18,6 +18,7 @@
 #include "openfpga_read_arch_template.h"
 #include "openfpga_write_gsb_template.h"
 #include "shell.h"
+#include "stage_guard.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -230,7 +231,8 @@ ShellCommandId add_link_arch_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd, "Bind OpenFPGA architecture to VPR", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, link_arch_template<T>);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     record_link<T>(link_arch_template<T>));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -468,7 +470,9 @@ ShellCommandId add_build_fabric_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Build the FPGA fabric in a graph of modules", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, build_fabric_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id,
+    require_link<T>("build_fabric", build_fabric_template<T>));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);

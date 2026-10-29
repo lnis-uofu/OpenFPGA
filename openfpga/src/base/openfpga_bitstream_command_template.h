@@ -13,6 +13,7 @@
 #include "openfpga_mif_template.h"
 #include "openfpga_repack_template.h"
 #include "shell.h"
+#include "stage_guard.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -49,7 +50,10 @@ ShellCommandId add_repack_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Pack physical programmable logic blocks", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, repack_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id,
+    guard_stage<T>("repack", OpenFpgaStage::ROUTED, OpenFpgaStage::REPACKED,
+                   require_link<T>("repack", repack_template<T>)));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -99,7 +103,11 @@ ShellCommandId add_build_arch_bitstream_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Build fabric-independent bitstream database", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, fpga_bitstream_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id, guard_stage<T>("build_architecture_bitstream",
+                                 OpenFpgaStage::REPACKED,
+                                 OpenFpgaStage::BITSTREAM,
+                                 fpga_bitstream_template<T>));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -179,8 +187,10 @@ ShellCommandId add_report_bitstream_distribution_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd, "Report bitstream distribution", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                     report_bitstream_distribution_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id,
+    guard_stage<T>("report_bitstream_distribution", OpenFpgaStage::BITSTREAM,
+                   OpenFpgaStage::UNINIT, report_bitstream_distribution_template<T>));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -209,8 +219,10 @@ ShellCommandId add_build_fabric_bitstream_command_template(
                       "FPGA fabric created by FPGA-Verilog",
                       hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                     build_fabric_bitstream_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id,
+    guard_stage<T>("build_fabric_bitstream", OpenFpgaStage::BITSTREAM,
+                   OpenFpgaStage::UNINIT, build_fabric_bitstream_template<T>));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -290,8 +302,10 @@ ShellCommandId add_write_fabric_bitstream_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Write the fabric-dependent bitstream to a file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                     write_fabric_bitstream_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id,
+    guard_stage<T>("write_fabric_bitstream", OpenFpgaStage::BITSTREAM,
+                   OpenFpgaStage::UNINIT, write_fabric_bitstream_template<T>));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
