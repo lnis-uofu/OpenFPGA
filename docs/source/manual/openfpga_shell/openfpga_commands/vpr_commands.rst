@@ -44,6 +44,8 @@ Stage-by-stage flow
   - ``read_circuit --file <string>`` reads the circuit netlist against the VPR architecture. VPR sets itself up from the architecture and the circuit together, so the architecture is read again.
   - ``pack``, ``place``, ``route`` and ``analysis`` run the stages. A stage needs the one before it: ``pack`` the device, ``place`` the packing, ``route`` the placement, ``analysis`` the routing.
 
+  ``read_packing``, ``read_placement`` and ``read_routing`` (``--file``) read the results of a stage made elsewhere, e.g., by ``vpr``, instead of running it. They need the stage before the one they read, and the routing needs a fixed channel width (``router.fixed_channel_width``). The stages after them run on the results read. When the stages before a stage run again, e.g., after an option changed, the files are read again. Running the stage, or changing an option that tunes it, forgets the file.
+
   ``analysis`` reports the timing and the power, and synchronizes the packing with the routing results, which writes the ``.net.post_routing`` file. It changes the data of VPR, so running it again, or routing again, starts from fresh data. Repacking does not wait for it.
 
   The device (the grid and, if the channel width is fixed with ``router.route_chan_width``, the routing resource graph) is created once the three inputs have been read. A layout that is not fixed (``auto``) is refused, since it is sized from the result of packing.

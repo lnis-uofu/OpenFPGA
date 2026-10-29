@@ -57,6 +57,14 @@ void fail_openfpga_arch_input(OpenFpgaSession& session);
  * created first if it is not there yet */
 bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage);
 
+/* Read the results of a stage, PACKED, PLACED or ROUTED, from the files that
+ * a run of VPR made, instead of running it. The stage before it must have been
+ * reached, and, for the routing, the channel width must be fixed. The files
+ * are read again when the stages before another stage are run again, until the
+ * stage is run, or dropped */
+bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
+                       const std::string& file);
+
 /* The commands that follow the stages, e.g., 'repack', are checked against the
  * session when the flow is run stage by stage, i.e., when the VPR architecture
  * has been read, and the data of VPR has not been replaced by 'vpr' since.
