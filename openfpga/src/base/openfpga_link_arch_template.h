@@ -60,6 +60,10 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
    * VPR options and this command */
   e_gsb_version gsb_version = g_vpr_ctx.device().gsb_version;
 
+  /* Start from nothing: what a previous link made refers to a previous run of
+   * VPR */
+  openfpga_ctx.reset_linked_data();
+
   /* Build fast look-up between physical tile pin index and port information */
   build_physical_tile_pin2port_info(
     g_vpr_ctx.device(), openfpga_ctx.mutable_vpr_device_annotation());
