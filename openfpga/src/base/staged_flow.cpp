@@ -504,9 +504,8 @@ bool linked_ready(const OpenFpgaSession& session, const char* command) {
   }
   VTR_LOG_ERROR(
     "Cannot run '%s': the architecture was linked to the data of an earlier "
-    "run of VPR, which a stage that ran again has replaced. The OpenFPGA "
-    "architecture cannot be linked again in the same shell yet: start the "
-    "flow again in a new shell\n",
+    "run of VPR, which a stage that ran again has replaced. Use the commands "
+    "'link_openfpga_arch' and 'build_fabric' again first\n",
     command);
   return false;
 }

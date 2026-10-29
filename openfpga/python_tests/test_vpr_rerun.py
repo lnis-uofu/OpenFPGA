@@ -98,3 +98,18 @@ def test_vpr_with_another_circuit(shell, and2_files, flow_dir):
             "--device 2x2 --route_chan_width 20 --pack --place --route"
         )
         assert "VPR succeeded" in shell.run(command).log
+
+
+def test_flow_after_flow(shell, vpr_cmd, and2_files):
+    """The data made from the first run is made again from the second run"""
+    for _ in range(2):
+        shell.run(f"read_openfpga_arch -f {and2_files['openfpga_arch']}")
+        shell.run(vpr_cmd())
+        shell.run(f"read_openfpga_simulation_setting -f {and2_files['sim_setting']}")
+        shell.run(
+            f"link_openfpga_arch --activity_file {and2_files['activity']} "
+            "--sort_gsb_chan_node_in_edges"
+        )
+        shell.run("build_fabric --compress_routing")
+        shell.run("repack")
+        shell.run("build_architecture_bitstream")

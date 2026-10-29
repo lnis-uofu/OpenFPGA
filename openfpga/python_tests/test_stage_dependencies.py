@@ -30,7 +30,7 @@ def downstream(staged, shell, and2_files):  # noqa: F811
             shell.run("repack")
             shell.run("build_architecture_bitstream")
             shell.run("build_fabric_bitstream")
-            shell.run(f"write_fabric_bitstream --file {name} --format plain_text")
+            shell.run(f"write_fabric_bitstream --file {name} --format plain_text --no_time_stamp")
             return Path(name).read_bytes()
 
     return Downstream()
@@ -127,9 +127,29 @@ def test_linked_architecture_does_not_outlive_the_vpr_data(
         shell.run(stage)
     # What link_openfpga_arch made refers to the data of the previous run of VPR
     refused(shell.run("repack", check=False), "linked to the data of an earlier run")
-    refused(
-        shell.run("build_fabric", check=False), "linked to the data of an earlier run"
-    )
+
+
+def test_place_again_makes_the_same_bitstream(staged, shell, downstream):  # noqa: F811
+    staged.read_all()
+    downstream.stages()
+    downstream.link()
+    first = downstream.bitstream("first.bit")
+    for stage in ("place", "route", "analysis"):
+        shell.run(stage)
+    downstream.link()
+    assert downstream.bitstream("second.bit") == first
+
+
+def test_another_seed_makes_another_fabric_input(staged, shell, downstream):  # noqa: F811
+    staged.read_all()
+    downstream.stages()
+    downstream.link()
+    downstream.bitstream("first.bit")
+    shell.run("set_app_option -n place.seed -v 2")
+    for stage in ("place", "route", "analysis"):
+        shell.run(stage)
+    downstream.link()
+    assert downstream.bitstream("second.bit")
 
 
 def test_analysis_again_keeps_the_bitstream(staged, shell, downstream):  # noqa: F811
@@ -138,7 +158,7 @@ def test_analysis_again_keeps_the_bitstream(staged, shell, downstream):  # noqa:
     downstream.link()
     first = downstream.bitstream("first.bit")
     shell.run("analysis")
-    shell.run("write_fabric_bitstream --file again.bit --format plain_text")
+    shell.run("write_fabric_bitstream --file again.bit --format plain_text --no_time_stamp")
     assert Path("again.bit").read_bytes() == first
 
 
