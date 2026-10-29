@@ -24,7 +24,20 @@ unsigned bit(const OpenFpgaStage& stage) {
   return 1u << static_cast<int>(stage);
 }
 
-/* The stage that a stage requires: its parent in the tree of stages */
+/* Return true if a stage is the other one, or comes after it in the tree */
+bool is_or_depends_on(const OpenFpgaStage& stage, const OpenFpgaStage& other) {
+  OpenFpgaStage cur = stage;
+  while (OpenFpgaStage::UNINIT != cur) {
+    if (cur == other) {
+      return true;
+    }
+    cur = required_stage(cur);
+  }
+  return false;
+}
+
+}  // End anonymous namespace
+
 OpenFpgaStage required_stage(const OpenFpgaStage& stage) {
   switch (stage) {
     case OpenFpgaStage::UNINIT:
@@ -46,20 +59,6 @@ OpenFpgaStage required_stage(const OpenFpgaStage& stage) {
   }
   return OpenFpgaStage::UNINIT;
 }
-
-/* Return true if a stage is the other one, or comes after it in the tree */
-bool is_or_depends_on(const OpenFpgaStage& stage, const OpenFpgaStage& other) {
-  OpenFpgaStage cur = stage;
-  while (OpenFpgaStage::UNINIT != cur) {
-    if (cur == other) {
-      return true;
-    }
-    cur = required_stage(cur);
-  }
-  return false;
-}
-
-}  // End anonymous namespace
 
 std::string to_string(const OpenFpgaInput& input) {
   switch (input) {

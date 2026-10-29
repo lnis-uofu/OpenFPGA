@@ -17,7 +17,7 @@ const std::map<std::string, OpenFpgaStage>& group_stages() {
     {"aplace", OpenFpgaStage::PLACED},
     {"place", OpenFpgaStage::PLACED},
     {"tplace", OpenFpgaStage::PLACED},
-    {"crr", OpenFpgaStage::ROUTED},
+    {"crr", OpenFpgaStage::DEVICE},
     {"router", OpenFpgaStage::ROUTED},
     {"trouter", OpenFpgaStage::ROUTED},
     {"analysis", OpenFpgaStage::ANALYZED},
@@ -47,11 +47,15 @@ const std::map<std::string, OpenFpgaStage>& option_stages() {
     {"filename.write_post_gp_flat_place_file", OpenFpgaStage::PLACED},
     {"filename.read_placement_delay_lookup", OpenFpgaStage::PLACED},
     {"filename.write_placement_delay_lookup", OpenFpgaStage::PLACED},
+    /* The routing resource graph, which is made with the device when the
+     * channel width is fixed */
+    {"place.place_chan_width", OpenFpgaStage::DEVICE},
+    {"router.route_chan_width", OpenFpgaStage::DEVICE},
+    {"filename.read_rr_graph_file", OpenFpgaStage::DEVICE},
+    {"filename.read_rr_edge_override_file", OpenFpgaStage::DEVICE},
+    {"filename.write_rr_graph_file", OpenFpgaStage::DEVICE},
     /* Routing */
     {"filename.route_file", OpenFpgaStage::ROUTED},
-    {"filename.read_rr_graph_file", OpenFpgaStage::ROUTED},
-    {"filename.read_rr_edge_override_file", OpenFpgaStage::ROUTED},
-    {"filename.write_rr_graph_file", OpenFpgaStage::ROUTED},
     {"filename.read_router_lookahead", OpenFpgaStage::ROUTED},
     {"filename.read_intra_cluster_router_lookahead", OpenFpgaStage::ROUTED},
     {"filename.write_router_lookahead", OpenFpgaStage::ROUTED},
