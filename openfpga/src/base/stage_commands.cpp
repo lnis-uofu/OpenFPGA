@@ -56,6 +56,50 @@ int analysis_command(OpenfpgaContext& openfpga_ctx, const Command&,
   return run_stage_command(openfpga_ctx, OpenFpgaStage::ANALYZED);
 }
 
+int read_stage_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                       const CommandContext& cmd_context,
+                       const OpenFpgaStage& stage) {
+  const std::string file = cmd_context.option_value(cmd, cmd.option("file"));
+  if (!import_flow_stage(openfpga_ctx.mutable_session(), stage, file)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+int read_packing_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                         const CommandContext& cmd_context) {
+  return read_stage_command(openfpga_ctx, cmd, cmd_context,
+                            OpenFpgaStage::PACKED);
+}
+
+int read_placement_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                           const CommandContext& cmd_context) {
+  return read_stage_command(openfpga_ctx, cmd, cmd_context,
+                            OpenFpgaStage::PLACED);
+}
+
+int read_routing_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                         const CommandContext& cmd_context) {
+  return read_stage_command(openfpga_ctx, cmd, cmd_context,
+                            OpenFpgaStage::ROUTED);
+}
+
+/* A command that reads the results of a stage from a file */
+void add_read_stage_command(openfpga::Shell<OpenfpgaContext>& shell,
+                            const ShellCommandClassId& cmd_class,
+                            const char* name, const char* file_help,
+                            const char* description,
+                            int (*exec)(OpenfpgaContext&, const Command&,
+                                        const CommandContext&)) {
+  Command shell_cmd(name);
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, file_help);
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, description);
+  shell.set_command_class(shell_cmd_id, cmd_class);
+  shell.set_command_execute_function(shell_cmd_id, exec);
+}
+
 /* A command of a stage, which has no option: the settings are the
  * application options */
 ShellCommandId add_stage_command(openfpga::Shell<OpenfpgaContext>& shell,
@@ -113,6 +157,19 @@ void add_stage_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                     "Place the packed circuit on the device", place_command);
   add_stage_command(shell, cmd_class, "route",
                     "Route the placed circuit on the device", route_command);
+  add_read_stage_command(
+    shell, cmd_class, "read_packing", "Path to the packing file (.net)",
+    "Read the packing made elsewhere, instead of running 'pack'",
+    read_packing_command);
+  add_read_stage_command(
+    shell, cmd_class, "read_placement", "Path to the placement file (.place)",
+    "Read the placement made elsewhere, instead of running 'place'",
+    read_placement_command);
+  add_read_stage_command(
+    shell, cmd_class, "read_routing", "Path to the routing file (.route)",
+    "Read the routing made elsewhere, instead of running 'route'. The channel "
+    "width must be fixed",
+    read_routing_command);
   ShellCommandId analysis_cmd_id = add_stage_command(
     shell, cmd_class, "analysis",
     "Analyze the routed circuit: timing, power and the synchronization of the "

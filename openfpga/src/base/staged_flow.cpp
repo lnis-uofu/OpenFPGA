@@ -1,6 +1,7 @@
 #include "staged_flow.h"
 
 #include <exception>
+#include <fstream>
 #include <functional>
 #include <vector>
 
@@ -16,6 +17,7 @@
 #include "vpr_tatum_error.h"
 #include "vtr_error.h"
 #include "vtr_log.h"
+#include "vtr_util.h"
 #include "vtr_time.h"
 
 /* Begin namespace openfpga */
@@ -55,6 +57,21 @@ const char* stage_command(const OpenFpgaStage& stage) {
       return "repack";
     case OpenFpgaStage::BITSTREAM:
       return "build_architecture_bitstream";
+    default:
+      break;
+  }
+  return "";
+}
+
+/* The name of the command that reads the results of a stage from a file */
+const char* import_command(const OpenFpgaStage& stage) {
+  switch (stage) {
+    case OpenFpgaStage::PACKED:
+      return "read_packing";
+    case OpenFpgaStage::PLACED:
+      return "read_placement";
+    case OpenFpgaStage::ROUTED:
+      return "read_routing";
     default:
       break;
   }
@@ -194,8 +211,15 @@ bool create_device(OpenFpgaSession& session, VprRun& run) {
   return true;
 }
 
-bool do_pack(OpenFpgaSession& session, VprRun& run) {
+/* The stages are run, or, if a file is given, their results are read from it,
+ * as VPR does for the stages before the last one it is asked for */
+bool do_pack(OpenFpgaSession& session, VprRun& run,
+             const std::string& file = std::string()) {
   bool packed = false;
+  if (!file.empty()) {
+    run.setup.FileNameOpts.NetFile = file;
+    run.setup.PackerOpts.doPacking = e_stage_action::LOAD;
+  }
   const bool ok = guarded([&run, &packed]() {
     packed = vpr_pack_flow(run.setup, run.arch);
     if (packed) {
@@ -203,6 +227,7 @@ bool do_pack(OpenFpgaSession& session, VprRun& run) {
       print_device_utilization(run.setup.PackerOpts.target_device_utilization);
     }
   });
+  run.setup.PackerOpts.doPacking = e_stage_action::DO;
   if (!ok || !packed) {
     VTR_LOG_ERROR("Packing failed\n");
     drop_run(session);
@@ -212,13 +237,19 @@ bool do_pack(OpenFpgaSession& session, VprRun& run) {
   return true;
 }
 
-bool do_place(OpenFpgaSession& session, VprRun& run) {
+bool do_place(OpenFpgaSession& session, VprRun& run,
+              const std::string& file = std::string()) {
   bool placed = false;
+  if (!file.empty()) {
+    run.setup.FileNameOpts.PlaceFile = file;
+    run.setup.PlacerOpts.do_placement = e_stage_action::LOAD;
+  }
   const bool ok = guarded([&run, &placed]() {
     const Netlist<>& net_list =
       (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
     placed = vpr_place_flow(net_list, run.setup, run.arch);
   });
+  run.setup.PlacerOpts.do_placement = e_stage_action::DO;
   if (!ok || !placed) {
     VTR_LOG_ERROR("Placement failed\n");
     drop_run(session);
@@ -228,18 +259,31 @@ bool do_place(OpenFpgaSession& session, VprRun& run) {
   return true;
 }
 
-bool do_route(OpenFpgaSession& session, VprRun& run) {
+bool do_route(OpenFpgaSession& session, VprRun& run,
+              const std::string& file = std::string()) {
   if (run.setup.RouterOpts.flat_routing) {
     VTR_LOG_ERROR(
       "Flat routing is not supported by the stage-by-stage flow yet\n");
     drop_run(session);
     return false;
   }
+  if (!file.empty()) {
+    if (NO_FIXED_CHANNEL_WIDTH == run.setup.RouterOpts.fixed_channel_width) {
+      VTR_LOG_ERROR(
+        "The routing is read against a channel width, which is not fixed: "
+        "set the option router.fixed_channel_width\n");
+      drop_run(session);
+      return false;
+    }
+    run.setup.FileNameOpts.RouteFile = file;
+    run.setup.RouterOpts.doRouting = e_stage_action::LOAD;
+  }
   const bool ok = guarded([&run]() {
     const Netlist<>& net_list =
       (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
     run.route_status = vpr_route_flow(net_list, run.setup, run.arch, false);
   });
+  run.setup.RouterOpts.doRouting = e_stage_action::DO;
   if (!ok || !run.route_status.success()) {
     VTR_LOG_ERROR("Routing failed\n");
     drop_run(session);
@@ -334,19 +378,20 @@ bool prepare_vpr(OpenFpgaSession& session, const OpenFpgaStage& target) {
   if (OpenFpgaStage::DEVICE == target) {
     return true;
   }
-  if (!do_pack(session, *run)) {
+  if (!do_pack(session, *run, session.imported_file(OpenFpgaStage::PACKED))) {
     return false;
   }
   if (OpenFpgaStage::PACKED == target) {
     return true;
   }
-  if (!do_place(session, *run)) {
+  if (!do_place(session, *run,
+               session.imported_file(OpenFpgaStage::PLACED))) {
     return false;
   }
   if (OpenFpgaStage::PLACED == target) {
     return true;
   }
-  return do_route(session, *run);
+  return do_route(session, *run, session.imported_file(OpenFpgaStage::ROUTED));
 }
 
 }  // End anonymous namespace
@@ -475,6 +520,65 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
     return false;
   }
   session.complete(stage);
+  return true;
+}
+
+bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
+                       const std::string& file) {
+  sync_with_vpr(session);
+  const OpenFpgaStage required = required_stage(stage);
+  const char* command = import_command(stage);
+  if (OpenFpgaStage::PACKED != stage &&
+      OpenFpgaStage::PLACED != stage && OpenFpgaStage::ROUTED != stage) {
+    VTR_LOG_ERROR("The results of the stage %s cannot be read from a file\n",
+                  to_string(stage).c_str());
+    return false;
+  }
+  if (!session.reached(required) && OpenFpgaStage::DEVICE == required) {
+    if (!ensure_device(session)) {
+      return false;
+    }
+  }
+  if (!session.reached(required)) {
+    VTR_LOG_ERROR(
+      "Cannot read the results of the stage %s with '%s': the stage %s has "
+      "not been reached, use the command '%s' first\n",
+      to_string(stage).c_str(), command, to_string(required).c_str(),
+      stage_command(required));
+    return false;
+  }
+  if (!std::ifstream(file).good()) {
+    VTR_LOG_ERROR("Cannot read the results of the stage %s: the file '%s' "
+                  "does not exist\n",
+                  to_string(stage).c_str(), file.c_str());
+    return false;
+  }
+
+  vtr::ScopedStartFinishTimer timer(std::string("Read stage ") +
+                                    to_string(stage));
+  if (!prepare_vpr(session, required)) {
+    session.fail(required);
+    return false;
+  }
+  VprRun& run = *vpr::current_vpr_run();
+  bool ok = false;
+  switch (stage) {
+    case OpenFpgaStage::PACKED:
+      ok = do_pack(session, run, file);
+      break;
+    case OpenFpgaStage::PLACED:
+      ok = do_place(session, run, file);
+      break;
+    default:
+      ok = do_route(session, run, file);
+      break;
+  }
+  if (!ok) {
+    session.fail(stage);
+    return false;
+  }
+  session.complete(stage);
+  session.set_imported(stage, file);
   return true;
 }
 
