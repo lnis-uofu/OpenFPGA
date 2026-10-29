@@ -374,6 +374,16 @@ static void test_vpr_generation() {
   CHECK(7 == session.vpr_generation());
 }
 
+static void test_linked_generation() {
+  OpenFpgaSession session;
+  CHECK(0 == session.linked_generation());
+  session.set_linked_generation(3);
+  CHECK(3 == session.linked_generation());
+  /* What was linked is forgotten with the flow */
+  session.reset();
+  CHECK(0 == session.linked_generation());
+}
+
 static void test_required_stage() {
   CHECK(openfpga::required_stage(OpenFpgaStage::UNINIT) ==
         OpenFpgaStage::UNINIT);
@@ -416,6 +426,7 @@ int main() {
   test_reset();
   test_names();
   test_vpr_generation();
+  test_linked_generation();
   test_required_stage();
   test_context_has_session();
 

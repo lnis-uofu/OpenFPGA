@@ -50,6 +50,15 @@ Stage-by-stage flow
 
   A stage that is run again, or run after an option changed, runs the stages before it again on fresh data, since VPR cannot run a stage twice on the same data. The results are those of ``vpr``: the same packing, placement and routing for the same options. The command ``vpr`` replaces the data of this flow, which has to be read again.
 
+  The commands that follow the stages are checked against them when the flow is run stage by stage:
+
+  - ``link_openfpga_arch`` and the commands after ``vpr`` accept ``analysis`` in place of ``vpr``.
+  - ``repack`` needs the stage ``route``, and ``build_architecture_bitstream`` needs ``repack``. ``build_fabric_bitstream``, ``write_fabric_bitstream`` and ``report_bitstream_distribution`` need ``build_architecture_bitstream``.
+  - Running a stage again, or changing an option that tunes it, drops these results as well: ``place`` drops the repacking and the bitstream. ``analysis`` does not: it is on another branch of the stages than ``repack``. The commands are refused with the name of the command to run first.
+  - ``link_openfpga_arch`` and ``build_fabric`` refer to the data of VPR that they were run on. A stage that runs again replaces that data, and ``repack`` and ``build_fabric`` are then refused. The OpenFPGA architecture cannot be linked again in the same shell yet: start the flow again in a new shell.
+
+  The flow of ``vpr`` is not checked against the stages.
+
   .. code-block:: shell
 
     set_app_option --name router.route_chan_width --value 20
