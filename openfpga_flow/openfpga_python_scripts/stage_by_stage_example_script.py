@@ -4,7 +4,8 @@ the stages.
 The task runner runs this script when it is the 'openfpga_shell_template' of a task. It is plain
 Python: the variables that the scripts of the shell get by substitution, e.g., ${VPR_ARCH_FILE},
 are environment variables here. The script can be run by hand, from the directory of the run, with
-the same variables set.
+the same variables set. Every command of the shell is a method of the shell:
+shell.read_circuit(file="a.blif") runs 'read_circuit --file a.blif'.
 
 The inputs are read first, then 'pack', 'place', 'route' and 'analysis' run one at a time, with the
 application options as their settings. The results of the stages are written to 'stage_qor.json',
@@ -32,15 +33,17 @@ RESULTS = {
 }
 
 
-def run(shell, command):
-    """Run a command, print what it printed, and stop the flow if it failed"""
-    try:
-        result = shell.run(command)
-    except openfpga.OpenfpgaError as err:
-        sys.stdout.write(err.log)
-        raise
-    sys.stdout.write(result.log)
-    return result
+class EchoShell(openfpga.OpenfpgaShell):
+    """A shell that prints what each command printed, and stops the flow if one fails"""
+
+    def run(self, command, check=True):
+        try:
+            result = super().run(command, check)
+        except openfpga.OpenfpgaError as err:
+            sys.stdout.write(err.log)
+            raise
+        sys.stdout.write(result.log)
+        return result
 
 
 def read_results(stage, log):
@@ -55,48 +58,44 @@ def read_results(stage, log):
 
 def main():
     env = os.environ
-    shell = openfpga.OpenfpgaShell()
+    shell = EchoShell()
 
     # The settings of the stages are application options
-    run(shell, "set_app_option -n general.clock_modeling -v route")
-    run(
-        shell,
-        f"set_app_option -n router.route_chan_width -v {env['OPENFPGA_VPR_ROUTE_CHAN_WIDTH']}",
-    )
+    shell.set_app_option(name="general.clock_modeling", value="route")
+    shell.set_app_option(name="router.route_chan_width", value=env["OPENFPGA_VPR_ROUTE_CHAN_WIDTH"])
 
     # The inputs: the device is made once the three of them are read
-    run(shell, f"read_vpr_arch -f {env['VPR_ARCH_FILE']} -l {env['OPENFPGA_VPR_DEVICE_LAYOUT']}")
-    run(shell, f"read_openfpga_arch -f {env['OPENFPGA_ARCH_FILE']}")
-    run(shell, f"read_circuit -f {env['VPR_TESTBENCH_BLIF']}")
+    shell.read_vpr_arch(file=env["VPR_ARCH_FILE"], layout=env["OPENFPGA_VPR_DEVICE_LAYOUT"])
+    shell.read_openfpga_arch(file=env["OPENFPGA_ARCH_FILE"])
+    shell.read_circuit(file=env["VPR_TESTBENCH_BLIF"])
 
     # The stages, one at a time. The results of each one can be read before the next runs
     qor = {}
     for stage in ("pack", "place", "route", "analysis"):
-        qor[stage] = read_results(stage, run(shell, stage).log)
+        qor[stage] = read_results(stage, getattr(shell, stage)().log)
     with open("stage_qor.json", "w", encoding="utf-8") as report:
         json.dump(qor, report, indent=2)
         report.write("\n")
 
     # Link the OpenFPGA architecture to the routed design, and build the fabric
-    run(shell, f"read_openfpga_simulation_setting -f {env['OPENFPGA_SIM_SETTING_FILE']}")
-    run(
-        shell,
-        f"link_openfpga_arch --activity_file {env['ACTIVITY_FILE']} --sort_gsb_chan_node_in_edges",
-    )
-    run(shell, "check_netlist_naming_conflict --fix --report ./netlist_renaming.xml")
-    run(shell, "build_fabric --compress_routing")
+    shell.read_openfpga_simulation_setting(file=env["OPENFPGA_SIM_SETTING_FILE"])
+    shell.link_openfpga_arch(activity_file=env["ACTIVITY_FILE"], sort_gsb_chan_node_in_edges=True)
+    shell.check_netlist_naming_conflict(fix=True, report="./netlist_renaming.xml")
+    shell.build_fabric(compress_routing=True)
 
     # The bitstream follows the routing: repack, then the bitstream of the architecture and the fabric
-    run(shell, "repack")
-    run(shell, "build_architecture_bitstream --write_file fabric_independent_bitstream.xml")
-    run(shell, "build_fabric_bitstream")
-    run(shell, "write_fabric_bitstream --file fabric_bitstream.bit --format plain_text")
+    shell.repack()
+    shell.build_architecture_bitstream(write_file="fabric_independent_bitstream.xml")
+    shell.build_fabric_bitstream()
+    shell.write_fabric_bitstream(file="fabric_bitstream.bit", format="plain_text")
 
     # Write the netlists of the fabric
-    run(
-        shell,
-        f"write_fabric_verilog --file {env['OPENFPGA_VERILOG_OUTPUT_DIR']}/SRC "
-        "--explicit_port_mapping --include_timing --print_user_defined_template --verbose",
+    shell.write_fabric_verilog(
+        file=f"{env['OPENFPGA_VERILOG_OUTPUT_DIR']}/SRC",
+        explicit_port_mapping=True,
+        include_timing=True,
+        print_user_defined_template=True,
+        verbose=True,
     )
 
 
