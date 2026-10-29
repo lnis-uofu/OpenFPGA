@@ -301,8 +301,8 @@ bool do_analysis(OpenFpgaSession& session, VprRun& run) {
   const bool ok = guarded([&run, &analyzed]() {
     const Netlist<>& net_list =
       (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
-    analyzed = vpr_analysis_flow(net_list, run.setup, run.arch,
-                                 run.route_status, false);
+    analyzed =
+      vpr_analysis_flow(net_list, run.setup, run.arch, run.route_status, false);
   });
   if (!ok || !analyzed) {
     VTR_LOG_ERROR("Analysis failed\n");
