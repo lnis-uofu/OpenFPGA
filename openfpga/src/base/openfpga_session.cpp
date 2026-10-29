@@ -223,6 +223,7 @@ void OpenFpgaSession::reset_app_options() {
 void OpenFpgaSession::reset() {
   inputs_ = 0;
   stages_ = 0;
+  linked_generation_ = 0;
 }
 
 void OpenFpgaSession::invalidate_stage_and_dependents(

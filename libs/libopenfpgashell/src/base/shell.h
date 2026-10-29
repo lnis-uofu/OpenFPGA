@@ -182,6 +182,13 @@ class Shell {
   void set_command_dependency(
     const ShellCommandId& cmd_id,
     const std::vector<ShellCommandId>& cmd_dependency);
+  /* Declare that a command can stand for another one when it is required by
+   * the dependencies of the commands: executing the alternative has the same
+   * effect as executing the command. This is for commands that make the same
+   * data in another way, e.g., stages that replace a command running them all
+   */
+  void add_command_alternative(const ShellCommandId& cmd_id,
+                               const ShellCommandId& alternative_cmd_id);
   ShellCommandClassId add_command_class(const char* name);
 
  public: /* Public validators */
@@ -290,6 +297,10 @@ class Shell {
    */
   vtr::vector<ShellCommandId, std::vector<ShellCommandId>>
     command_dependencies_;
+
+  /* Commands that can stand for a command in the dependencies */
+  vtr::vector<ShellCommandId, std::vector<ShellCommandId>>
+    command_alternatives_;
 
   /* Fast name look-up */
   std::map<std::string, ShellCommandId> command_name2ids_;
