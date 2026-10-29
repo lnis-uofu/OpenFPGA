@@ -55,7 +55,7 @@ Stage-by-stage flow
   - ``link_openfpga_arch`` and the commands after ``vpr`` accept ``analysis`` in place of ``vpr``.
   - ``repack`` needs the stage ``route``, and ``build_architecture_bitstream`` needs ``repack``. ``build_fabric_bitstream``, ``write_fabric_bitstream`` and ``report_bitstream_distribution`` need ``build_architecture_bitstream``.
   - Running a stage again, or changing an option that tunes it, drops these results as well: ``place`` drops the repacking and the bitstream. ``analysis`` does not: it is on another branch of the stages than ``repack``. The commands are refused with the name of the command to run first.
-  - ``link_openfpga_arch`` and ``build_fabric`` refer to the data of VPR that they were run on. A stage that runs again replaces that data, and ``repack`` and ``build_fabric`` are then refused. The OpenFPGA architecture cannot be linked again in the same shell yet: start the flow again in a new shell.
+  - ``link_openfpga_arch`` and ``build_fabric`` refer to the data of VPR that they were run on. A stage that runs again replaces that data, and ``repack`` and ``build_fabric`` are then refused until ``link_openfpga_arch`` and ``build_fabric`` are run again. They start from nothing each time: what they made before is dropped.
 
   The flow of ``vpr`` is not checked against the stages.
 
