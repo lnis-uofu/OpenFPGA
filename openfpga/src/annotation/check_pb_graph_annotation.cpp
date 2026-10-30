@@ -81,7 +81,7 @@ static void rec_check_vpr_physical_pb_graph_node_annotation(
     for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport];
          ++ipin) {
       if (false == check_physical_pb_graph_pin(
-                     &(physical_pb_graph_node->input_pins[iport][ipin]),
+                     &(physical_pb_graph_node->pins_by_input_port[iport][ipin]),
                      vpr_device_annotation)) {
         num_err++;
       }
@@ -92,9 +92,10 @@ static void rec_check_vpr_physical_pb_graph_node_annotation(
        ++iport) {
     for (int ipin = 0; ipin < physical_pb_graph_node->num_output_pins[iport];
          ++ipin) {
-      if (false == check_physical_pb_graph_pin(
-                     &(physical_pb_graph_node->output_pins[iport][ipin]),
-                     vpr_device_annotation)) {
+      if (false ==
+          check_physical_pb_graph_pin(
+            &(physical_pb_graph_node->pins_by_output_port[iport][ipin]),
+            vpr_device_annotation)) {
         num_err++;
       }
     }
@@ -105,7 +106,7 @@ static void rec_check_vpr_physical_pb_graph_node_annotation(
     for (int ipin = 0; ipin < physical_pb_graph_node->num_clock_pins[iport];
          ++ipin) {
       if (false == check_physical_pb_graph_pin(
-                     &(physical_pb_graph_node->clock_pins[iport][ipin]),
+                     &(physical_pb_graph_node->pins_by_clock_port[iport][ipin]),
                      vpr_device_annotation)) {
         num_err++;
       }

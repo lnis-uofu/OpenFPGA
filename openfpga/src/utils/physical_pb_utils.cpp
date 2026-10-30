@@ -189,17 +189,18 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
-      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
-               pb_graph_node->input_pins[iport][ipin].to_string().c_str());
+      VTR_LOGV(
+        verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+        pb_graph_node->pins_by_input_port[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
-        pb_graph_node->input_pins[iport][ipin].port->model_port;
+        pb_graph_node->pins_by_input_port[iport][ipin].port->model_port;
       /* Special for LUTs, the model port is hidden under 1 level
        * Do NOT do this. Net mapping on LUT inputs may be swapped during
        * rerouting
        * if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
        *   VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
        *   model_port = pb_graph_node->child_pb_graph_nodes[1][0][0]
-       *                  .input_pins[iport][ipin]
+       *                  .pins_by_input_port[iport][ipin]
        *                  .port->model_port;
        * }
        */
@@ -221,8 +222,8 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, lgk2phy_pb_map, primitive_pb,
-        &(pb_graph_node->input_pins[iport][ipin]), pb_route, device_annotation,
-        atom_ctx.netlist(), verbose);
+        &(pb_graph_node->pins_by_input_port[iport][ipin]), pb_route,
+        device_annotation, atom_ctx.netlist(), verbose);
     }
   }
 
@@ -230,17 +231,18 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
-      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
-               pb_graph_node->output_pins[iport][ipin].to_string().c_str());
+      VTR_LOGV(
+        verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+        pb_graph_node->pins_by_output_port[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
-        pb_graph_node->output_pins[iport][ipin].port->model_port;
+        pb_graph_node->pins_by_output_port[iport][ipin].port->model_port;
       /* Special for LUTs, the model port is hidden under 1 level
        * Do NOT do this. Net mapping on LUT inputs may be swapped during
        * rerouting
        * if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
        *  VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
        *  model_port = pb_graph_node->child_pb_graph_nodes[1][0][0]
-       *                 .output_pins[iport][ipin]
+       *                 .pins_by_output_port[iport][ipin]
        *                 .port->model_port;
        * }
        */
@@ -261,8 +263,8 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, lgk2phy_pb_map, primitive_pb,
-        &(pb_graph_node->output_pins[iport][ipin]), pb_route, device_annotation,
-        atom_ctx.netlist(), verbose);
+        &(pb_graph_node->pins_by_output_port[iport][ipin]), pb_route,
+        device_annotation, atom_ctx.netlist(), verbose);
     }
   }
 
@@ -270,10 +272,11 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
-      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
-               pb_graph_node->clock_pins[iport][ipin].to_string().c_str());
+      VTR_LOGV(
+        verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+        pb_graph_node->pins_by_clock_port[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
-        pb_graph_node->clock_pins[iport][ipin].port->model_port;
+        pb_graph_node->pins_by_clock_port[iport][ipin].port->model_port;
       if (nullptr == model_port) {
         VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
@@ -291,8 +294,8 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, lgk2phy_pb_map, primitive_pb,
-        &(pb_graph_node->clock_pins[iport][ipin]), pb_route, device_annotation,
-        atom_ctx.netlist(), verbose);
+        &(pb_graph_node->pins_by_clock_port[iport][ipin]), pb_route,
+        device_annotation, atom_ctx.netlist(), verbose);
     }
   }
 }
@@ -315,7 +318,8 @@ static void mark_physical_pb_wired_lut_outputs(
   const VprDeviceAnnotation& device_annotation, const bool& verbose) {
   for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
-      t_pb_graph_pin* pb_graph_pin = &(pb_graph_node->output_pins[iport][ipin]);
+      t_pb_graph_pin* pb_graph_pin =
+        &(pb_graph_node->pins_by_output_port[iport][ipin]);
 
       /* Find the physical pb_graph_pin */
       t_pb_graph_pin* physical_pb_graph_pin =
@@ -552,8 +556,9 @@ void rec_update_physical_pb_from_operating_pb(
         for (int k = 0; k < child_pb_type->num_ports && !is_used; k++) {
           if (OUT_PORT == child_pb_type->ports[k].type) {
             for (int m = 0; m < child_pb_type->ports[k].num_pins; m++) {
-              int node_index = child_pb_graph_node->output_pins[port_index][m]
-                                 .pin_count_in_cluster;
+              int node_index =
+                child_pb_graph_node->pins_by_output_port[port_index][m]
+                  .pin_count_in_cluster;
               if (pb_route.count(node_index) &&
                   pb_route[node_index].atom_net_id) {
                 is_used = true;
@@ -660,12 +665,12 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
       /* Skip the input pin that do not drive by LUT MUXes */
       CircuitPortId circuit_port = device_annotation.pb_circuit_port(
-        pb_graph_node->input_pins[iport][ipin].port);
+        pb_graph_node->pins_by_input_port[iport][ipin].port);
       if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
         continue;
       }
       input_nets.push_back(physical_pb.pb_graph_pin_atom_net(
-        lut_pb_id, &(pb_graph_node->input_pins[iport][ipin])));
+        lut_pb_id, &(pb_graph_node->pins_by_input_port[iport][ipin])));
     }
   }
 
@@ -673,7 +678,7 @@ int identify_one_physical_pb_wire_lut_created_by_repack(
   for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       const t_pb_graph_pin* output_pin =
-        &(pb_graph_node->output_pins[iport][ipin]);
+        &(pb_graph_node->pins_by_output_port[iport][ipin]);
       /* Skip the output ports that are not driven by LUT MUXes */
       CircuitPortId circuit_port =
         device_annotation.pb_circuit_port(output_pin->port);

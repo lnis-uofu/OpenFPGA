@@ -77,10 +77,9 @@ static bool rec_direct_search_sink_pb_graph_pins(
         source_pb_pin->output_edges[iedge]->interconnect->type) {
       return false;
     }
-    for (int ipin = 0;
-         ipin < source_pb_pin->output_edges[iedge]->num_output_pins; ++ipin) {
+    {
       t_pb_graph_pin* cand_sink_pb_pin =
-        source_pb_pin->output_edges[iedge]->output_pins[ipin];
+        source_pb_pin->output_edges[iedge]->output_pin();
       if ((true ==
            is_primitive_pb_type(cand_sink_pb_pin->parent_node->pb_type)) &&
           (IN_PORT == cand_sink_pb_pin->port->type)) {
@@ -184,11 +183,9 @@ static void rec_find_routed_sink_pb_graph_pins(
                 sink_pb_pin->parent_node->pb_type)) {
             continue;
           }
-          for (int ipin = 0;
-               ipin < source_pb_pin->output_edges[iedge]->num_output_pins;
-               ++ipin) {
+          {
             const t_pb_graph_pin* cand_sink_pb_pin =
-              source_pb_pin->output_edges[iedge]->output_pins[ipin];
+              source_pb_pin->output_edges[iedge]->output_pin();
             auto cand_remapped_result =
               pb_pin_mapped_nets.find(cand_sink_pb_pin);
             AtomNetId cand_sink_pb_pin_net = AtomNetId::INVALID();
@@ -1050,7 +1047,7 @@ static bool find_vpr_bus_mux_selections(const AtomContext& atom_ctx,
     for (int iedge = 0; iedge < pin->num_input_edges; ++iedge) {
       const t_pb_graph_edge* edge = pin->input_edges[iedge];
       if ((pb_route.driver_pb_pin_id !=
-           edge->input_pins[0]->pin_count_in_cluster) ||
+           edge->input_pin()->pin_count_in_cluster) ||
           (!edge->is_bus_mux())) {
         continue;
       }
@@ -1063,7 +1060,7 @@ static bool find_vpr_bus_mux_selections(const AtomContext& atom_ctx,
         break;
       }
       conflicts.insert(name);
-      std::string first_pin = first.edge->output_pins[0]->to_string();
+      std::string first_pin = first.edge->output_pin()->to_string();
       std::string first_net = atom_ctx.netlist().net_name(first.net);
       std::string pin_name = pin->to_string();
       std::string net_name = atom_ctx.netlist().net_name(pb_route.atom_net_id);

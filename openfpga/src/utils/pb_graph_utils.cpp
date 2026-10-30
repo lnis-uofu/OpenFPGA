@@ -27,17 +27,13 @@ std::vector<t_pb_graph_pin*> pb_graph_pin_inputs(
         pb_graph_pin->input_edges[iedge]->interconnect) {
       continue;
     }
-    for (int ipin = 0; ipin < pb_graph_pin->input_edges[iedge]->num_input_pins;
-         ++ipin) {
-      /* Ensure that the pin is unique in the list */
-      if (inputs.end() !=
-          std::find(inputs.begin(), inputs.end(),
-                    pb_graph_pin->input_edges[iedge]->input_pins[ipin])) {
-        continue;
-      }
-      /* Unique pin, push to the vector */
-      inputs.push_back(pb_graph_pin->input_edges[iedge]->input_pins[ipin]);
+    /* Ensure that the pin is unique in the list */
+    t_pb_graph_pin* input_pin = pb_graph_pin->input_edges[iedge]->input_pin();
+    if (inputs.end() != std::find(inputs.begin(), inputs.end(), input_pin)) {
+      continue;
     }
+    /* Unique pin, push to the vector */
+    inputs.push_back(input_pin);
   }
 
   return inputs;
@@ -107,11 +103,11 @@ std::vector<t_pb_graph_pin*> pb_graph_interc_sink_pins(
    * to that port instead of scanning every port of the node. */
   t_pb_graph_pin* port_pins = nullptr;
   if (OUT_PORT == des_port->type) {
-    port_pins = node->output_pins[des_port->port_index_by_type];
+    port_pins = node->pins_by_output_port[des_port->port_index_by_type].data();
   } else if (des_port->is_clock) {
-    port_pins = node->clock_pins[des_port->port_index_by_type];
+    port_pins = node->pins_by_clock_port[des_port->port_index_by_type].data();
   } else {
-    port_pins = node->input_pins[des_port->port_index_by_type];
+    port_pins = node->pins_by_input_port[des_port->port_index_by_type].data();
   }
 
   /* Keep only the pins of this port that are driven by the selected

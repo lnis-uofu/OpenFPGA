@@ -71,7 +71,7 @@ static void print_pnr_sdc_constrain_pb_pin_interc_timing(
 
     /* Source pin, node, pb_type*/
     t_pb_graph_pin* src_pb_graph_pin =
-      des_pb_graph_pin->input_edges[iedge]->input_pins[0];
+      des_pb_graph_pin->input_edges[iedge]->input_pin();
     t_pb_graph_node* src_pb_graph_node = src_pb_graph_pin->parent_node;
     /* Des pin, node, pb_type */
     t_pb_graph_node* des_pb_graph_node = des_pb_graph_pin->parent_node;
@@ -207,7 +207,8 @@ static void print_pnr_sdc_constrain_pb_interc_timing(
           /* Get the selected edge of current pin*/
           print_pnr_sdc_constrain_pb_pin_interc_timing(
             fp, time_unit, hierarchical, module_path, module_manager,
-            parent_module, &(des_pb_graph_node->input_pins[iport][ipin]),
+            parent_module,
+            &(des_pb_graph_node->pins_by_input_port[iport][ipin]),
             physical_mode, constrain_zero_delay_paths);
         }
       }
@@ -220,7 +221,8 @@ static void print_pnr_sdc_constrain_pb_interc_timing(
              ++ipin) {
           print_pnr_sdc_constrain_pb_pin_interc_timing(
             fp, time_unit, hierarchical, module_path, module_manager,
-            parent_module, &(des_pb_graph_node->output_pins[iport][ipin]),
+            parent_module,
+            &(des_pb_graph_node->pins_by_output_port[iport][ipin]),
             physical_mode, constrain_zero_delay_paths);
         }
       }
@@ -415,7 +417,7 @@ static void print_pnr_sdc_constrain_primitive_pb_graph_node(
          ipin < logical_primitive_pb_graph_node->num_input_pins[iport];
          ++ipin) {
       t_pb_graph_pin* src_pin =
-        &(logical_primitive_pb_graph_node->input_pins[iport][ipin]);
+        &(logical_primitive_pb_graph_node->pins_by_input_port[iport][ipin]);
 
       /* Port must exist in the module graph */
       ModulePortId src_module_port_id = module_manager.find_module_port(

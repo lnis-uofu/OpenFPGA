@@ -1085,7 +1085,7 @@ void LbRouter::build_bus_mux_lookup(const LbRRGraph& lb_rr_graph) {
     /* Find the pb_graph edge of the physical mode that the edge represents */
     for (int iedge = 0; iedge < src_pin->num_output_edges; ++iedge) {
       const t_pb_graph_edge* pb_edge = src_pin->output_edges[iedge];
-      if ((sink_pin != pb_edge->output_pins[0]) ||
+      if ((sink_pin != pb_edge->output_pin()) ||
           (lb_rr_graph.edge_mode(edge) != pb_edge->interconnect->parent_mode) ||
           (!pb_edge->is_bus_mux())) {
         continue;

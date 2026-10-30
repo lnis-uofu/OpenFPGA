@@ -42,7 +42,7 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
   for (int iport = 0; iport < pb_graph_node->num_input_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ipin++) {
       /* load intermediate indices */
-      t_pb_graph_pin* pb_pin = &pb_graph_node->input_pins[iport][ipin];
+      t_pb_graph_pin* pb_pin = &pb_graph_node->pins_by_input_port[iport][ipin];
 
       /* alloc and load rr node info */
       LbRRNodeId node = lb_rr_graph.create_node(e_lb_rr_type::INTERMEDIATE);
@@ -58,7 +58,7 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
   for (int iport = 0; iport < pb_graph_node->num_clock_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ipin++) {
       /* load intermediate indices */
-      t_pb_graph_pin* pb_pin = &pb_graph_node->clock_pins[iport][ipin];
+      t_pb_graph_pin* pb_pin = &pb_graph_node->pins_by_clock_port[iport][ipin];
 
       /* alloc and load rr node info */
       LbRRNodeId node = lb_rr_graph.create_node(e_lb_rr_type::INTERMEDIATE);
@@ -74,7 +74,7 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
   for (int iport = 0; iport < pb_graph_node->num_output_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ipin++) {
       /* load intermediate indices */
-      t_pb_graph_pin* pb_pin = &pb_graph_node->output_pins[iport][ipin];
+      t_pb_graph_pin* pb_pin = &pb_graph_node->pins_by_output_port[iport][ipin];
 
       /* alloc and load rr node info */
       LbRRNodeId node = lb_rr_graph.create_node(output_pin_rr_type);
@@ -156,14 +156,13 @@ static void build_lb_rr_edge_pb_graph_pin(LbRRGraph& lb_rr_graph,
 
   /* Load edges only for physical mode! */
   for (int iedge = 0; iedge < pb_pin->num_output_edges; iedge++) {
-    VTR_ASSERT(1 == pb_pin->output_edges[iedge]->num_output_pins);
     if (physical_mode !=
         pb_pin->output_edges[iedge]->interconnect->parent_mode) {
       continue;
     }
     /* Find the node that we have already created */
     LbRRNodeId to_node = lb_rr_graph.find_node(
-      e_lb_rr_type::INTERMEDIATE, pb_pin->output_edges[iedge]->output_pins[0]);
+      e_lb_rr_type::INTERMEDIATE, pb_pin->output_edges[iedge]->output_pin());
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
     LbRREdgeId edge =
       lb_rr_graph.create_edge(from_node, to_node, physical_mode);
@@ -217,7 +216,7 @@ static void rec_build_physical_lb_rr_edge_for_pb_graph_node(
     LbRRNodeId sink_node = LbRRNodeId::INVALID();
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ipin++) {
       /* load intermediate indices */
-      t_pb_graph_pin* pb_pin = &pb_graph_node->input_pins[iport][ipin];
+      t_pb_graph_pin* pb_pin = &pb_graph_node->pins_by_input_port[iport][ipin];
       t_mode* physical_mode = device_annotation.physical_mode(pb_type);
 
       if (true == is_primitive_pb_type(pb_type)) {
@@ -235,7 +234,7 @@ static void rec_build_physical_lb_rr_edge_for_pb_graph_node(
     LbRRNodeId sink_node = LbRRNodeId::INVALID();
     for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ipin++) {
       /* load intermediate indices */
-      t_pb_graph_pin* pb_pin = &pb_graph_node->clock_pins[iport][ipin];
+      t_pb_graph_pin* pb_pin = &pb_graph_node->pins_by_clock_port[iport][ipin];
       t_mode* physical_mode = device_annotation.physical_mode(pb_type);
 
       if (true == is_primitive_pb_type(pb_type)) {
@@ -258,7 +257,7 @@ static void rec_build_physical_lb_rr_edge_for_pb_graph_node(
   for (int iport = 0; iport < pb_graph_node->num_output_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ipin++) {
       /* load intermediate indices */
-      t_pb_graph_pin* pb_pin = &pb_graph_node->output_pins[iport][ipin];
+      t_pb_graph_pin* pb_pin = &pb_graph_node->pins_by_output_port[iport][ipin];
 
       if (true == pb_graph_node->is_root()) {
         build_lb_rr_edge_root_pb_graph_pin(lb_rr_graph, pb_pin,
@@ -333,7 +332,8 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_input_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_input_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->input_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE,
+        &(pb_graph_head->pins_by_input_port[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge =
         lb_rr_graph.create_edge(ext_source_index, to_node, nullptr);
@@ -344,7 +344,8 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_clock_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_clock_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->clock_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE,
+        &(pb_graph_head->pins_by_clock_port[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge =
         lb_rr_graph.create_edge(ext_source_index, to_node, nullptr);
@@ -379,7 +380,8 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_input_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_input_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->input_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE,
+        &(pb_graph_head->pins_by_input_port[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge = lb_rr_graph.create_edge(ext_rr_index, to_node, nullptr);
       /* set cost high to avoid using external interconnect unless necessary */
@@ -389,7 +391,8 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_clock_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_clock_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->clock_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE,
+        &(pb_graph_head->pins_by_clock_port[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge = lb_rr_graph.create_edge(ext_rr_index, to_node, nullptr);
       /* set cost high to avoid using external interconnect unless necessary */

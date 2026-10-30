@@ -79,21 +79,23 @@ bool Logical2PhysicalPbMap::build_pb_graph_input_pin_map(
     }
     for (int ipin = 0; ipin < lgk_pb_graph_node->num_input_pins[iport];
          ++ipin) {
-      if (std::string(lgk_pb_graph_node->input_pins[iport][ipin].port->name) !=
-          std::string(phy_pb_graph_node->input_pins[iport][ipin].port->name)) {
+      if (std::string(
+            lgk_pb_graph_node->pins_by_input_port[iport][ipin].port->name) !=
+          std::string(
+            phy_pb_graph_node->pins_by_input_port[iport][ipin].port->name)) {
         VTR_LOG_ERROR(
           "Logical pb_graph_node '%s' has a input port which has a different "
           "name '%s' than physical pb_graph_node '%s' whose port name is '%s'. "
           "The two cannot be considered as equivalent sites for repacking\n",
           lgk_pb_graph_node->hierarchical_type_name().c_str(),
-          lgk_pb_graph_node->input_pins[iport][ipin].port->name,
+          lgk_pb_graph_node->pins_by_input_port[iport][ipin].port->name,
           phy_pb_graph_node->hierarchical_type_name().c_str(),
-          phy_pb_graph_node->input_pins[iport][ipin].port->name);
+          phy_pb_graph_node->pins_by_input_port[iport][ipin].port->name);
         return false;
       }
       /* Build the map, sanity checks passed */
-      pb_graph_pin_map_[&lgk_pb_graph_node->input_pins[iport][ipin]] =
-        &phy_pb_graph_node->input_pins[iport][ipin];
+      pb_graph_pin_map_[&lgk_pb_graph_node->pins_by_input_port[iport][ipin]] =
+        &phy_pb_graph_node->pins_by_input_port[iport][ipin];
     }
   }
   VTR_LOGV(verbose,
@@ -135,21 +137,23 @@ bool Logical2PhysicalPbMap::build_pb_graph_output_pin_map(
     }
     for (int ipin = 0; ipin < lgk_pb_graph_node->num_output_pins[iport];
          ++ipin) {
-      if (std::string(lgk_pb_graph_node->output_pins[iport][ipin].port->name) !=
-          std::string(phy_pb_graph_node->output_pins[iport][ipin].port->name)) {
+      if (std::string(
+            lgk_pb_graph_node->pins_by_output_port[iport][ipin].port->name) !=
+          std::string(
+            phy_pb_graph_node->pins_by_output_port[iport][ipin].port->name)) {
         VTR_LOG_ERROR(
           "Logical pb_graph_node '%s' has a output port which has a different "
           "name '%s' than physical pb_graph_node '%s' whose port name is '%s'. "
           "The two cannot be considered as equivalent sites for repacking\n",
           lgk_pb_graph_node->hierarchical_type_name().c_str(),
-          lgk_pb_graph_node->output_pins[iport][ipin].port->name,
+          lgk_pb_graph_node->pins_by_output_port[iport][ipin].port->name,
           phy_pb_graph_node->hierarchical_type_name().c_str(),
-          phy_pb_graph_node->output_pins[iport][ipin].port->name);
+          phy_pb_graph_node->pins_by_output_port[iport][ipin].port->name);
         return false;
       }
       /* Build the map, sanity checks passed */
-      pb_graph_pin_map_[&lgk_pb_graph_node->output_pins[iport][ipin]] =
-        &phy_pb_graph_node->output_pins[iport][ipin];
+      pb_graph_pin_map_[&lgk_pb_graph_node->pins_by_output_port[iport][ipin]] =
+        &phy_pb_graph_node->pins_by_output_port[iport][ipin];
     }
   }
   VTR_LOGV(verbose,
@@ -191,21 +195,23 @@ bool Logical2PhysicalPbMap::build_pb_graph_clock_pin_map(
     }
     for (int ipin = 0; ipin < lgk_pb_graph_node->num_clock_pins[iport];
          ++ipin) {
-      if (std::string(lgk_pb_graph_node->clock_pins[iport][ipin].port->name) !=
-          std::string(phy_pb_graph_node->clock_pins[iport][ipin].port->name)) {
+      if (std::string(
+            lgk_pb_graph_node->pins_by_clock_port[iport][ipin].port->name) !=
+          std::string(
+            phy_pb_graph_node->pins_by_clock_port[iport][ipin].port->name)) {
         VTR_LOG_ERROR(
           "Logical pb_graph_node '%s' has a clock port which has a different "
           "name '%s' than physical pb_graph_node '%s' whose port name is '%s'. "
           "The two cannot be considered as equivalent sites for repacking\n",
           lgk_pb_graph_node->hierarchical_type_name().c_str(),
-          lgk_pb_graph_node->clock_pins[iport][ipin].port->name,
+          lgk_pb_graph_node->pins_by_clock_port[iport][ipin].port->name,
           phy_pb_graph_node->hierarchical_type_name().c_str(),
-          phy_pb_graph_node->clock_pins[iport][ipin].port->name);
+          phy_pb_graph_node->pins_by_clock_port[iport][ipin].port->name);
         return false;
       }
       /* Build the map, sanity checks passed */
-      pb_graph_pin_map_[&lgk_pb_graph_node->clock_pins[iport][ipin]] =
-        &phy_pb_graph_node->clock_pins[iport][ipin];
+      pb_graph_pin_map_[&lgk_pb_graph_node->pins_by_clock_port[iport][ipin]] =
+        &phy_pb_graph_node->pins_by_clock_port[iport][ipin];
     }
   }
   VTR_LOGV(verbose,

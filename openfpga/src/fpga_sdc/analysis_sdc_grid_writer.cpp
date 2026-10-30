@@ -159,7 +159,8 @@ static void disable_pb_graph_node_unused_pins(
          ++ipin) {
       disable_pb_graph_node_unused_pin(
         fp, module_manager, parent_module, hierarchy_name,
-        &(physical_pb_graph_node->input_pins[iport][ipin]), physical_pb, pb_id);
+        &(physical_pb_graph_node->pins_by_input_port[iport][ipin]), physical_pb,
+        pb_id);
     }
   }
 
@@ -170,8 +171,8 @@ static void disable_pb_graph_node_unused_pins(
          ++ipin) {
       disable_pb_graph_node_unused_pin(
         fp, module_manager, parent_module, hierarchy_name,
-        &(physical_pb_graph_node->output_pins[iport][ipin]), physical_pb,
-        pb_id);
+        &(physical_pb_graph_node->pins_by_output_port[iport][ipin]),
+        physical_pb, pb_id);
     }
   }
 
@@ -182,7 +183,8 @@ static void disable_pb_graph_node_unused_pins(
          ++ipin) {
       disable_pb_graph_node_unused_pin(
         fp, module_manager, parent_module, hierarchy_name,
-        &(physical_pb_graph_node->clock_pins[iport][ipin]), physical_pb, pb_id);
+        &(physical_pb_graph_node->pins_by_clock_port[iport][ipin]), physical_pb,
+        pb_id);
     }
   }
 }
@@ -227,11 +229,12 @@ static void disable_pb_graph_node_unused_mux_inputs(
           /* Generate the mux name */
           std::string mux_instance_name = generate_pb_mux_instance_name(
             GRID_MUX_INSTANCE_PREFIX,
-            &(child_pb_graph_node->input_pins[iport][ipin]), std::string(""));
+            &(child_pb_graph_node->pins_by_input_port[iport][ipin]),
+            std::string(""));
           /* Cache the net */
           mux_instance_to_net_map[mux_instance_name] =
             physical_pb.pb_graph_pin_atom_net(
-              pb_id, &(child_pb_graph_node->input_pins[iport][ipin]));
+              pb_id, &(child_pb_graph_node->pins_by_input_port[iport][ipin]));
         }
       }
 
@@ -244,11 +247,12 @@ static void disable_pb_graph_node_unused_mux_inputs(
           /* Generate the mux name */
           std::string mux_instance_name = generate_pb_mux_instance_name(
             GRID_MUX_INSTANCE_PREFIX,
-            &(child_pb_graph_node->clock_pins[iport][ipin]), std::string(""));
+            &(child_pb_graph_node->pins_by_clock_port[iport][ipin]),
+            std::string(""));
           /* Cache the net */
           mux_instance_to_net_map[mux_instance_name] =
             physical_pb.pb_graph_pin_atom_net(
-              pb_id, &(child_pb_graph_node->clock_pins[iport][ipin]));
+              pb_id, &(child_pb_graph_node->pins_by_clock_port[iport][ipin]));
         }
       }
     }
@@ -263,11 +267,12 @@ static void disable_pb_graph_node_unused_mux_inputs(
       /* Generate the mux name */
       std::string mux_instance_name = generate_pb_mux_instance_name(
         GRID_MUX_INSTANCE_PREFIX,
-        &(physical_pb_graph_node->output_pins[iport][ipin]), std::string(""));
+        &(physical_pb_graph_node->pins_by_output_port[iport][ipin]),
+        std::string(""));
       /* Cache the net */
       mux_instance_to_net_map[mux_instance_name] =
         physical_pb.pb_graph_pin_atom_net(
-          pb_id, &(physical_pb_graph_node->output_pins[iport][ipin]));
+          pb_id, &(physical_pb_graph_node->pins_by_output_port[iport][ipin]));
     }
   }
 
@@ -279,7 +284,7 @@ static void disable_pb_graph_node_unused_mux_inputs(
          ++ipin) {
       /* Find the module port by name */
       std::string module_port_name = generate_pb_type_port_name(
-        physical_pb_graph_node->input_pins[iport][ipin].port);
+        physical_pb_graph_node->pins_by_input_port[iport][ipin].port);
       ModulePortId module_port =
         module_manager.find_module_port(parent_module, module_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(parent_module,
@@ -287,11 +292,11 @@ static void disable_pb_graph_node_unused_mux_inputs(
 
       const PhysicalPbId& pb_id = physical_pb.find_pb(physical_pb_graph_node);
       const AtomNetId& mapped_net = physical_pb.pb_graph_pin_atom_net(
-        pb_id, &(physical_pb_graph_node->input_pins[iport][ipin]));
+        pb_id, &(physical_pb_graph_node->pins_by_input_port[iport][ipin]));
 
       /* If the pin has not fan-out, we do not need to disable anything  */
-      if (0 ==
-          physical_pb_graph_node->input_pins[iport][ipin].num_output_edges) {
+      if (0 == physical_pb_graph_node->pins_by_input_port[iport][ipin]
+                 .num_output_edges) {
         /* Make sure that we do not have any module net associated to this pin
          */
         ModuleNetId module_net = module_manager.module_instance_port_net(
@@ -313,7 +318,7 @@ static void disable_pb_graph_node_unused_mux_inputs(
          ++ipin) {
       /* Find the module port by name */
       std::string module_port_name = generate_pb_type_port_name(
-        physical_pb_graph_node->clock_pins[iport][ipin].port);
+        physical_pb_graph_node->pins_by_clock_port[iport][ipin].port);
       ModulePortId module_port =
         module_manager.find_module_port(parent_module, module_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(parent_module,
@@ -321,11 +326,11 @@ static void disable_pb_graph_node_unused_mux_inputs(
 
       const PhysicalPbId& pb_id = physical_pb.find_pb(physical_pb_graph_node);
       const AtomNetId& mapped_net = physical_pb.pb_graph_pin_atom_net(
-        pb_id, &(physical_pb_graph_node->clock_pins[iport][ipin]));
+        pb_id, &(physical_pb_graph_node->pins_by_clock_port[iport][ipin]));
 
       /* If the pin has not fan-out, we do not need to disable anything  */
-      if (0 ==
-          physical_pb_graph_node->clock_pins[iport][ipin].num_output_edges) {
+      if (0 == physical_pb_graph_node->pins_by_clock_port[iport][ipin]
+                 .num_output_edges) {
         /* Make sure that we do not have any module net associated to this pin
          */
         ModuleNetId module_net = module_manager.module_instance_port_net(
@@ -363,7 +368,7 @@ static void disable_pb_graph_node_unused_mux_inputs(
              ++ipin) {
           /* Find the module port by name */
           std::string module_port_name = generate_pb_type_port_name(
-            child_pb_graph_node->output_pins[iport][ipin].port);
+            child_pb_graph_node->pins_by_output_port[iport][ipin].port);
           ModulePortId module_port =
             module_manager.find_module_port(child_module, module_port_name);
           VTR_ASSERT(true == module_manager.valid_module_port_id(child_module,
@@ -371,12 +376,12 @@ static void disable_pb_graph_node_unused_mux_inputs(
 
           const PhysicalPbId& pb_id = physical_pb.find_pb(child_pb_graph_node);
           const AtomNetId& mapped_net = physical_pb.pb_graph_pin_atom_net(
-            pb_id, &(child_pb_graph_node->output_pins[iport][ipin]));
+            pb_id, &(child_pb_graph_node->pins_by_output_port[iport][ipin]));
 
           /* Corner case: if the pb_graph_pin has no fan-out we will skip this
            * pin */
-          if (0 ==
-              child_pb_graph_node->output_pins[iport][ipin].num_output_edges) {
+          if (0 == child_pb_graph_node->pins_by_output_port[iport][ipin]
+                     .num_output_edges) {
             continue;
           }
 

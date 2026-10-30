@@ -147,7 +147,7 @@ static void rec_build_vpr_physical_pb_graph_node_mux_library(
   for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
       build_pb_graph_pin_interconnect_mux_library(
-        &(pb_graph_node->input_pins[iport][ipin]), parent_physical_mode,
+        &(pb_graph_node->pins_by_input_port[iport][ipin]), parent_physical_mode,
         circuit_lib, vpr_device_annotation, mux_lib);
     }
   }
@@ -155,7 +155,7 @@ static void rec_build_vpr_physical_pb_graph_node_mux_library(
   for (int iport = 0; iport < pb_graph_node->num_clock_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
       build_pb_graph_pin_interconnect_mux_library(
-        &(pb_graph_node->clock_pins[iport][ipin]), parent_physical_mode,
+        &(pb_graph_node->pins_by_clock_port[iport][ipin]), parent_physical_mode,
         circuit_lib, vpr_device_annotation, mux_lib);
     }
   }
@@ -175,8 +175,8 @@ static void rec_build_vpr_physical_pb_graph_node_mux_library(
   for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       build_pb_graph_pin_interconnect_mux_library(
-        &(pb_graph_node->output_pins[iport][ipin]), physical_mode, circuit_lib,
-        vpr_device_annotation, mux_lib);
+        &(pb_graph_node->pins_by_output_port[iport][ipin]), physical_mode,
+        circuit_lib, vpr_device_annotation, mux_lib);
     }
   }
 

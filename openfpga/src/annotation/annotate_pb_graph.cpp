@@ -54,11 +54,13 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
     for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
       for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
         for (int iedge = 0;
-             iedge < pb_graph_node->input_pins[iport][ipin].num_input_edges;
+             iedge <
+             pb_graph_node->pins_by_input_port[iport][ipin].num_input_edges;
              ++iedge) {
-          t_interconnect* interc = pb_graph_node->input_pins[iport][ipin]
-                                     .input_edges[iedge]
-                                     ->interconnect;
+          t_interconnect* interc =
+            pb_graph_node->pins_by_input_port[iport][ipin]
+              .input_edges[iedge]
+              ->interconnect;
           /* Ensure that the interconnect is unique in the list */
           if (0 < interc_num_inputs.count(interc)) {
             continue;
@@ -72,11 +74,13 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
     for (int iport = 0; iport < pb_graph_node->num_clock_ports; ++iport) {
       for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
         for (int iedge = 0;
-             iedge < pb_graph_node->clock_pins[iport][ipin].num_input_edges;
+             iedge <
+             pb_graph_node->pins_by_clock_port[iport][ipin].num_input_edges;
              ++iedge) {
-          t_interconnect* interc = pb_graph_node->clock_pins[iport][ipin]
-                                     .input_edges[iedge]
-                                     ->interconnect;
+          t_interconnect* interc =
+            pb_graph_node->pins_by_clock_port[iport][ipin]
+              .input_edges[iedge]
+              ->interconnect;
           /* Ensure that the interconnect is unique in the list */
           if (0 < interc_num_inputs.count(interc)) {
             continue;
@@ -99,8 +103,8 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
         /* For each interconnect, we count the total number of inputs */
         for (const auto& pair : interc_num_inputs) {
           interc_num_inputs[pair.first] +=
-            pb_graph_pin_inputs(&(pb_graph_node->input_pins[iport][ipin]),
-                                pair.first)
+            pb_graph_pin_inputs(
+              &(pb_graph_node->pins_by_input_port[iport][ipin]), pair.first)
               .size();
         }
       }
@@ -111,8 +115,8 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
         /* For each interconnect, we count the total number of inputs */
         for (const auto& pair : interc_num_inputs) {
           interc_num_inputs[pair.first] +=
-            pb_graph_pin_inputs(&(pb_graph_node->clock_pins[iport][ipin]),
-                                pair.first)
+            pb_graph_pin_inputs(
+              &(pb_graph_node->pins_by_clock_port[iport][ipin]), pair.first)
               .size();
         }
       }
@@ -176,11 +180,13 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
     for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
       for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
         for (int iedge = 0;
-             iedge < pb_graph_node->output_pins[iport][ipin].num_input_edges;
+             iedge <
+             pb_graph_node->pins_by_output_port[iport][ipin].num_input_edges;
              ++iedge) {
-          t_interconnect* interc = pb_graph_node->output_pins[iport][ipin]
-                                     .input_edges[iedge]
-                                     ->interconnect;
+          t_interconnect* interc =
+            pb_graph_node->pins_by_output_port[iport][ipin]
+              .input_edges[iedge]
+              ->interconnect;
           /* Ensure that the interconnect is unique in the list */
           if (0 < interc_num_inputs.count(interc)) {
             continue;
@@ -203,8 +209,8 @@ static void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(
         /* For each interconnect, we count the total number of inputs */
         for (const auto& pair : interc_num_inputs) {
           interc_num_inputs[pair.first] +=
-            pb_graph_pin_inputs(&(pb_graph_node->output_pins[iport][ipin]),
-                                pair.first)
+            pb_graph_pin_inputs(
+              &(pb_graph_node->pins_by_output_port[iport][ipin]), pair.first)
               .size();
         }
       }
@@ -431,7 +437,7 @@ static void annotate_physical_pb_graph_pin(
          ++ipin) {
       if (false == try_match_pb_graph_pin(
                      operating_pb_graph_pin,
-                     &(physical_pb_graph_node->input_pins[iport][ipin]),
+                     &(physical_pb_graph_node->pins_by_input_port[iport][ipin]),
                      vpr_device_annotation)) {
         continue;
       }
@@ -440,7 +446,7 @@ static void annotate_physical_pb_graph_pin(
        */
       vpr_device_annotation.add_physical_pb_graph_pin(
         operating_pb_graph_pin,
-        &(physical_pb_graph_node->input_pins[iport][ipin]));
+        &(physical_pb_graph_node->pins_by_input_port[iport][ipin]));
       if (true == verbose_output) {
         print_success_bind_pb_graph_pin(
           operating_pb_graph_pin,
@@ -454,10 +460,11 @@ static void annotate_physical_pb_graph_pin(
        ++iport) {
     for (int ipin = 0; ipin < physical_pb_graph_node->num_output_pins[iport];
          ++ipin) {
-      if (false == try_match_pb_graph_pin(
-                     operating_pb_graph_pin,
-                     &(physical_pb_graph_node->output_pins[iport][ipin]),
-                     vpr_device_annotation)) {
+      if (false ==
+          try_match_pb_graph_pin(
+            operating_pb_graph_pin,
+            &(physical_pb_graph_node->pins_by_output_port[iport][ipin]),
+            vpr_device_annotation)) {
         continue;
       }
       /* Reach here, it means the pins are matched by the annotation
@@ -465,7 +472,7 @@ static void annotate_physical_pb_graph_pin(
        */
       vpr_device_annotation.add_physical_pb_graph_pin(
         operating_pb_graph_pin,
-        &(physical_pb_graph_node->output_pins[iport][ipin]));
+        &(physical_pb_graph_node->pins_by_output_port[iport][ipin]));
       if (true == verbose_output) {
         print_success_bind_pb_graph_pin(
           operating_pb_graph_pin,
@@ -481,7 +488,7 @@ static void annotate_physical_pb_graph_pin(
          ++ipin) {
       if (false == try_match_pb_graph_pin(
                      operating_pb_graph_pin,
-                     &(physical_pb_graph_node->clock_pins[iport][ipin]),
+                     &(physical_pb_graph_node->pins_by_clock_port[iport][ipin]),
                      vpr_device_annotation)) {
         continue;
       }
@@ -490,7 +497,7 @@ static void annotate_physical_pb_graph_pin(
        */
       vpr_device_annotation.add_physical_pb_graph_pin(
         operating_pb_graph_pin,
-        &(physical_pb_graph_node->clock_pins[iport][ipin]));
+        &(physical_pb_graph_node->pins_by_clock_port[iport][ipin]));
       if (true == verbose_output) {
         print_success_bind_pb_graph_pin(
           operating_pb_graph_pin,
@@ -525,7 +532,7 @@ static void annotate_physical_pb_graph_node_pins(
     for (int ipin = 0; ipin < operating_pb_graph_node->num_input_pins[iport];
          ++ipin) {
       annotate_physical_pb_graph_pin(
-        &(operating_pb_graph_node->input_pins[iport][ipin]),
+        &(operating_pb_graph_node->pins_by_input_port[iport][ipin]),
         physical_pb_graph_node, vpr_device_annotation, verbose_output);
     }
     /* Finish a port, accumulate the port-level offset affiliated to the port */
@@ -533,7 +540,7 @@ static void annotate_physical_pb_graph_node_pins(
       continue;
     }
     t_pb_graph_pin* operating_pb_graph_pin =
-      &(operating_pb_graph_node->input_pins[iport][0]);
+      &(operating_pb_graph_node->pins_by_input_port[iport][0]);
     for (t_port* candidate_port :
          vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
       vpr_device_annotation.accumulate_physical_pb_port_rotate_offset(
@@ -546,7 +553,7 @@ static void annotate_physical_pb_graph_node_pins(
     for (int ipin = 0; ipin < operating_pb_graph_node->num_output_pins[iport];
          ++ipin) {
       annotate_physical_pb_graph_pin(
-        &(operating_pb_graph_node->output_pins[iport][ipin]),
+        &(operating_pb_graph_node->pins_by_output_port[iport][ipin]),
         physical_pb_graph_node, vpr_device_annotation, verbose_output);
     }
     /* Finish a port, accumulate the port-level offset affiliated to the port */
@@ -554,7 +561,7 @@ static void annotate_physical_pb_graph_node_pins(
       continue;
     }
     t_pb_graph_pin* operating_pb_graph_pin =
-      &(operating_pb_graph_node->output_pins[iport][0]);
+      &(operating_pb_graph_node->pins_by_output_port[iport][0]);
     for (t_port* candidate_port :
          vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
       vpr_device_annotation.accumulate_physical_pb_port_rotate_offset(
@@ -567,7 +574,7 @@ static void annotate_physical_pb_graph_node_pins(
     for (int ipin = 0; ipin < operating_pb_graph_node->num_clock_pins[iport];
          ++ipin) {
       annotate_physical_pb_graph_pin(
-        &(operating_pb_graph_node->clock_pins[iport][ipin]),
+        &(operating_pb_graph_node->pins_by_clock_port[iport][ipin]),
         physical_pb_graph_node, vpr_device_annotation, verbose_output);
     }
     /* Finish a port, accumulate the port-level offset affiliated to the port */
@@ -575,7 +582,7 @@ static void annotate_physical_pb_graph_node_pins(
       continue;
     }
     t_pb_graph_pin* operating_pb_graph_pin =
-      &(operating_pb_graph_node->clock_pins[iport][0]);
+      &(operating_pb_graph_node->pins_by_clock_port[iport][0]);
     for (t_port* candidate_port :
          vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
       vpr_device_annotation.accumulate_physical_pb_port_rotate_offset(
