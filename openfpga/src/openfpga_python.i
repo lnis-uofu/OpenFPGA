@@ -22,6 +22,10 @@
   }
 }
 
+/* The answer of a query is JSON text in C++. Python gets it as raw_data, and
+ * as data, which is the text parsed, see below */
+%rename(raw_data) CommandResult::data;
+
 /* start() takes a C-style argv, which is not usable from Python */
 %ignore OpenfpgaShell::start;
 
@@ -96,8 +100,19 @@ def _run(self, command, check=True):
 OpenfpgaShell.run = _run
 
 
+import json as _json
 import os as _os
 import re as _re
+
+
+def _result_data(self):
+    """The answer of a query: the JSON of raw_data, parsed, or None if the
+    command gave none. See the envelope in json_response.h: schema_version,
+    kind, stage and data."""
+    return _json.loads(self.raw_data) if self.raw_data else None
+
+
+CommandResult.data = property(_result_data)
 
 _WHITESPACE = _re.compile(r"\s")
 
