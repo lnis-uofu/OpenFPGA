@@ -526,7 +526,7 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
 
         // Remap this terminal to an explicit pin instead of the common sink
         LbRRNodeId pin_index =
-          lb_rr_graph.find_node(LB_INTERMEDIATE, pb_graph_pin);
+          lb_rr_graph.find_node(e_lb_rr_type::INTERMEDIATE, pb_graph_pin);
         VTR_ASSERT(true == lb_rr_graph.valid_node_id(pin_index));
 
         VTR_LOG_WARN(
@@ -545,7 +545,7 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
         LbRRNodeId sink_index =
           lb_rr_graph.edge_sink_node(lb_rr_graph.node_out_edges(
             pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0]))[0]);
-        VTR_ASSERT(LB_SINK == lb_rr_graph.node_type(sink_index));
+        VTR_ASSERT(e_lb_rr_type::SINK == lb_rr_graph.node_type(sink_index));
         VTR_ASSERT_MSG(sink_index == lb_net_sinks_[ilb_net][iterm],
                        "Remapped pin must be connected to original sink");
 

@@ -33,9 +33,9 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
    * the output pins of primitive node will be SINK node
    * Otherwise it is always INTERMEDIATE node
    */
-  e_lb_rr_type output_pin_rr_type = LB_INTERMEDIATE;
+  e_lb_rr_type output_pin_rr_type = e_lb_rr_type::INTERMEDIATE;
   if (true == is_primitive_pb_type(pb_type)) {
-    output_pin_rr_type = LB_SOURCE;
+    output_pin_rr_type = e_lb_rr_type::SOURCE;
   }
 
   /* alloc and load input pins that connect to sinks */
@@ -45,7 +45,7 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
       t_pb_graph_pin* pb_pin = &pb_graph_node->input_pins[iport][ipin];
 
       /* alloc and load rr node info */
-      LbRRNodeId node = lb_rr_graph.create_node(LB_INTERMEDIATE);
+      LbRRNodeId node = lb_rr_graph.create_node(e_lb_rr_type::INTERMEDIATE);
       lb_rr_graph.set_node_capacity(node, 1);
       lb_rr_graph.set_node_pb_graph_pin(node, pb_pin);
 
@@ -61,7 +61,7 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
       t_pb_graph_pin* pb_pin = &pb_graph_node->clock_pins[iport][ipin];
 
       /* alloc and load rr node info */
-      LbRRNodeId node = lb_rr_graph.create_node(LB_INTERMEDIATE);
+      LbRRNodeId node = lb_rr_graph.create_node(e_lb_rr_type::INTERMEDIATE);
       lb_rr_graph.set_node_capacity(node, 1);
       lb_rr_graph.set_node_pb_graph_pin(node, pb_pin);
 
@@ -114,7 +114,7 @@ static void rec_build_physical_lb_rr_node_for_pb_graph_node(
 static void build_lb_rr_edge_primitive_pb_graph_input_pin(
   LbRRGraph& lb_rr_graph, t_pb_graph_pin* pb_pin, LbRRNodeId& sink_node) {
   /* Find the node that we have already created */
-  LbRRNodeId node = lb_rr_graph.find_node(LB_INTERMEDIATE, pb_pin);
+  LbRRNodeId node = lb_rr_graph.find_node(e_lb_rr_type::INTERMEDIATE, pb_pin);
   VTR_ASSERT(true == lb_rr_graph.valid_node_id(node));
 
   PortEquivalence port_equivalent = pb_pin->port->equivalent;
@@ -122,7 +122,7 @@ static void build_lb_rr_edge_primitive_pb_graph_input_pin(
   if (port_equivalent == PortEquivalence::NONE ||
       sink_node == LbRRNodeId::INVALID()) {
     /* Create new sink for input to primitive */
-    LbRRNodeId new_sink = lb_rr_graph.create_node(LB_SINK);
+    LbRRNodeId new_sink = lb_rr_graph.create_node(e_lb_rr_type::SINK);
     if (port_equivalent != PortEquivalence::NONE) {
       lb_rr_graph.set_node_capacity(new_sink, pb_pin->port->num_pins);
     } else {
@@ -163,7 +163,7 @@ static void build_lb_rr_edge_pb_graph_pin(LbRRGraph& lb_rr_graph,
     }
     /* Find the node that we have already created */
     LbRRNodeId to_node = lb_rr_graph.find_node(
-      LB_INTERMEDIATE, pb_pin->output_edges[iedge]->output_pins[0]);
+      e_lb_rr_type::INTERMEDIATE, pb_pin->output_edges[iedge]->output_pins[0]);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
     LbRREdgeId edge =
       lb_rr_graph.create_edge(from_node, to_node, physical_mode);
@@ -225,8 +225,8 @@ static void rec_build_physical_lb_rr_edge_for_pb_graph_node(
                                                       sink_node);
       } else {
         VTR_ASSERT(false == is_primitive_pb_type(pb_type));
-        build_lb_rr_edge_pb_graph_pin(lb_rr_graph, pb_pin, LB_INTERMEDIATE,
-                                      physical_mode);
+        build_lb_rr_edge_pb_graph_pin(
+          lb_rr_graph, pb_pin, e_lb_rr_type::INTERMEDIATE, physical_mode);
       }
     }
   }
@@ -243,15 +243,15 @@ static void rec_build_physical_lb_rr_edge_for_pb_graph_node(
                                                       sink_node);
       } else {
         VTR_ASSERT(false == is_primitive_pb_type(pb_type));
-        build_lb_rr_edge_pb_graph_pin(lb_rr_graph, pb_pin, LB_INTERMEDIATE,
-                                      physical_mode);
+        build_lb_rr_edge_pb_graph_pin(
+          lb_rr_graph, pb_pin, e_lb_rr_type::INTERMEDIATE, physical_mode);
       }
     }
   }
 
-  e_lb_rr_type output_pin_rr_type = LB_INTERMEDIATE;
+  e_lb_rr_type output_pin_rr_type = e_lb_rr_type::INTERMEDIATE;
   if (true == is_primitive_pb_type(pb_type)) {
-    output_pin_rr_type = LB_SOURCE;
+    output_pin_rr_type = e_lb_rr_type::SOURCE;
   }
 
   /* The output pins should connect to its fan-outs */
@@ -308,9 +308,9 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
 
   /* Define the external source, sink, and external interconnect for the routing
    * resource graph of the logic block type */
-  LbRRNodeId ext_source_index = lb_rr_graph.create_node(LB_SOURCE);
-  LbRRNodeId ext_sink_index = lb_rr_graph.create_node(LB_SINK);
-  LbRRNodeId ext_rr_index = lb_rr_graph.create_node(LB_INTERMEDIATE);
+  LbRRNodeId ext_source_index = lb_rr_graph.create_node(e_lb_rr_type::SOURCE);
+  LbRRNodeId ext_sink_index = lb_rr_graph.create_node(e_lb_rr_type::SINK);
+  LbRRNodeId ext_rr_index = lb_rr_graph.create_node(e_lb_rr_type::INTERMEDIATE);
 
   /* Build the main body of lb rr_graph by walking through the pb_graph
    * recursively */
@@ -333,7 +333,7 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_input_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_input_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        LB_INTERMEDIATE, &(pb_graph_head->input_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->input_pins[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge =
         lb_rr_graph.create_edge(ext_source_index, to_node, nullptr);
@@ -344,7 +344,7 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_clock_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_clock_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        LB_INTERMEDIATE, &(pb_graph_head->clock_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->clock_pins[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge =
         lb_rr_graph.create_edge(ext_source_index, to_node, nullptr);
@@ -379,7 +379,7 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_input_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_input_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        LB_INTERMEDIATE, &(pb_graph_head->input_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->input_pins[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge = lb_rr_graph.create_edge(ext_rr_index, to_node, nullptr);
       /* set cost high to avoid using external interconnect unless necessary */
@@ -389,7 +389,7 @@ static LbRRGraph build_lb_type_physical_lb_rr_graph(
   for (int iport = 0; iport < pb_graph_head->num_clock_ports; iport++) {
     for (int ipin = 0; ipin < pb_graph_head->num_clock_pins[iport]; ipin++) {
       LbRRNodeId to_node = lb_rr_graph.find_node(
-        LB_INTERMEDIATE, &(pb_graph_head->clock_pins[iport][ipin]));
+        e_lb_rr_type::INTERMEDIATE, &(pb_graph_head->clock_pins[iport][ipin]));
       VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
       LbRREdgeId edge = lb_rr_graph.create_edge(ext_rr_index, to_node, nullptr);
       /* set cost high to avoid using external interconnect unless necessary */

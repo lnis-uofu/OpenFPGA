@@ -495,7 +495,7 @@ static std::vector<LbRRNodeId> find_lb_net_physical_sink_lb_rr_nodes(
     }
 
     LbRRNodeId sink_lb_rr_node =
-      lb_rr_graph.find_node(LB_INTERMEDIATE, physical_sink_pin);
+      lb_rr_graph.find_node(e_lb_rr_type::INTERMEDIATE, physical_sink_pin);
     if (true != lb_rr_graph.valid_node_id(sink_lb_rr_node)) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
                      "Fail to find the lb_rr_node for pb_graph_pin '%s'\n",
@@ -765,7 +765,7 @@ static void add_lb_router_nets(
      * graph, they are all connected to a common source node
      */
     LbRRNodeId source_lb_rr_node =
-      lb_rr_graph.find_node(LB_INTERMEDIATE, source_pb_pin);
+      lb_rr_graph.find_node(e_lb_rr_type::INTERMEDIATE, source_pb_pin);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(source_lb_rr_node));
 
     /* Output verbose messages for debugging only */
@@ -910,7 +910,7 @@ static void add_lb_router_nets(
     t_pb_graph_pin* physical_source_pb_pin =
       device_annotation.physical_pb_graph_pin(source_pb_pin);
     LbRRNodeId source_lb_rr_node =
-      lb_rr_graph.find_node(LB_SOURCE, physical_source_pb_pin);
+      lb_rr_graph.find_node(e_lb_rr_type::SOURCE, physical_source_pb_pin);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(source_lb_rr_node));
 
     AtomNetId atom_net_id = pb->pb_route[pin].atom_net_id;

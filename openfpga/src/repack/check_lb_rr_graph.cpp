@@ -108,8 +108,8 @@ static bool check_lb_rr_graph_source_nodes(const LbRRGraph& lb_rr_graph) {
    * If so, this is a dangling nodes and report
    */
   for (auto node : lb_rr_graph.nodes()) {
-    /* Pass nodes whose types are not LB_SOURCE */
-    if (LB_SOURCE != lb_rr_graph.node_type(node)) {
+    /* Pass nodes whose types are not SOURCE */
+    if (e_lb_rr_type::SOURCE != lb_rr_graph.node_type(node)) {
       continue;
     }
     /* Bypass 0-capacity node; They can be dangling */
@@ -143,8 +143,8 @@ static bool check_lb_rr_graph_sink_nodes(const LbRRGraph& lb_rr_graph) {
    * If so, this is a dangling nodes and report
    */
   for (auto node : lb_rr_graph.nodes()) {
-    /* Pass nodes whose types are not LB_SINK */
-    if (LB_SINK != lb_rr_graph.node_type(node)) {
+    /* Pass nodes whose types are not SINK */
+    if (e_lb_rr_type::SINK != lb_rr_graph.node_type(node)) {
       continue;
     }
     /* Bypass 0-capacity node; They can be dangling */

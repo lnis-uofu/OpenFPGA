@@ -25,14 +25,14 @@ std::string describe_lb_rr_node(const LbRRGraph& lb_rr_graph,
   if (pb_graph_pin) {
     description += "'" + pb_graph_pin->to_string(false) + "'";
   } else if (inode == lb_rr_graph.ext_source_node()) {
-    VTR_ASSERT(LB_SOURCE == lb_rr_graph.node_type(inode));
-    description = "cluster-external source (LB_SOURCE)";
+    VTR_ASSERT(e_lb_rr_type::SOURCE == lb_rr_graph.node_type(inode));
+    description = "cluster-external source (SOURCE)";
   } else if (inode == lb_rr_graph.ext_sink_node()) {
-    VTR_ASSERT(LB_SINK == lb_rr_graph.node_type(inode));
-    description = "cluster-external sink (LB_SINK)";
-  } else if (LB_SINK == lb_rr_graph.node_type(inode)) {
+    VTR_ASSERT(e_lb_rr_type::SINK == lb_rr_graph.node_type(inode));
+    description = "cluster-external sink (SINK)";
+  } else if (e_lb_rr_type::SINK == lb_rr_graph.node_type(inode)) {
     description =
-      "cluster-internal sink (LB_SINK accessible via architecture pins: ";
+      "cluster-internal sink (SINK accessible via architecture pins: ";
 
     // To account for equivalent pins multiple pins may route to a single sink.
     // As a result we need to fin all the nodes which connect to this sink in
@@ -48,9 +48,9 @@ std::string describe_lb_rr_node(const LbRRGraph& lb_rr_graph,
     description += vtr::join(pin_descriptions, ", ");
     description += ")";
 
-  } else if (LB_SOURCE == lb_rr_graph.node_type(inode)) {
-    description = "cluster-internal source (LB_SOURCE)";
-  } else if (LB_INTERMEDIATE == lb_rr_graph.node_type(inode)) {
+  } else if (e_lb_rr_type::SOURCE == lb_rr_graph.node_type(inode)) {
+    description = "cluster-internal source (SOURCE)";
+  } else if (e_lb_rr_type::INTERMEDIATE == lb_rr_graph.node_type(inode)) {
     description = "cluster-internal intermediate?";
   } else {
     description = "<unknown lb_type_rr_node>";
@@ -62,7 +62,8 @@ std::string describe_lb_rr_node(const LbRRGraph& lb_rr_graph,
 /* This function aims to print basic information about a node */
 void print_lb_rr_node(const LbRRGraph& lb_rr_graph, const LbRRNodeId& node) {
   VTR_LOG("Node id: %d\n", size_t(node));
-  VTR_LOG("Node type: %s\n", lb_rr_type_str[lb_rr_graph.node_type(node)]);
+  VTR_LOG("Node type: %s\n",
+          lb_rr_type_str[size_t(lb_rr_graph.node_type(node))]);
   VTR_LOG("Node capacity: %d\n", lb_rr_graph.node_capacity(node));
   /* Some node, e.g., SOURCE, SINK  may not have pb_graph_pin, skip outputing in
    * this case */

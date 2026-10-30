@@ -210,19 +210,20 @@ void LbRRGraph::set_node_pb_graph_pin(const LbRRNodeId& node,
   VTR_ASSERT(true == valid_node_id(node));
   node_pb_graph_pins_[node] = pb_graph_pin;
 
-  /* Register in fast node look-up */
-  if (node_type(node) >= node_lookup_.size()) {
-    node_lookup_.resize(node_type(node) + 1);
+  /* Register in fast node look-up, which is indexed by the node type */
+  const size_t type_index = size_t(node_type(node));
+  if (type_index >= node_lookup_.size()) {
+    node_lookup_.resize(type_index + 1);
   }
 
-  if (0 < node_lookup_[node_type(node)].count(pb_graph_pin)) {
+  if (0 < node_lookup_[type_index].count(pb_graph_pin)) {
     VTR_LOG_WARN(
       "Detect pb_graph_pin '%s[%lu]' is mapped to LbRRGraph nodes (exist: %lu) "
       "and (to be mapped: %lu). Overwrite is done\n",
       pb_graph_pin->port->name, pb_graph_pin->pin_number,
-      size_t(node_lookup_[node_type(node)].at(pb_graph_pin)), size_t(node));
+      size_t(node_lookup_[type_index].at(pb_graph_pin)), size_t(node));
   }
-  node_lookup_[node_type(node)][pb_graph_pin] = node;
+  node_lookup_[type_index][pb_graph_pin] = node;
 }
 
 void LbRRGraph::set_node_intrinsic_cost(const LbRRNodeId& node,
