@@ -214,13 +214,15 @@ int annotate_simulation_setting(
     const Netlist<>& net_list = is_flat
                                   ? (const Netlist<>&)atom_ctx.netlist()
                                   : (const Netlist<>&)cluster_ctx.clb_nlist;
-    NetPinsMatrix<float> net_delay = make_net_pins_matrix<float>(net_list);
-    /* Load the net delays */
-    load_net_delay_from_routing(net_list, net_delay);
+    NetPinsMatrix<float> net_delay_min = make_net_pins_matrix<float>(net_list);
+    NetPinsMatrix<float> net_delay_max = make_net_pins_matrix<float>(net_list);
+    /* Load the min and max net delays */
+    load_net_delay_from_routing(net_list, net_delay_min, net_delay_max);
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(
-      atom_ctx.netlist(), atom_ctx.lookup(), net_delay, is_flat);
+      atom_ctx.netlist(), atom_ctx.lookup(), net_delay_min, net_delay_max,
+      is_flat);
     auto timing_info = make_setup_hold_timing_info(analysis_delay_calc,
                                                    e_timing_update_type::FULL);
     timing_info->update();
