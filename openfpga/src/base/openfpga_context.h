@@ -1,6 +1,7 @@
 #ifndef OPENFPGA_CONTEXT_H
 #define OPENFPGA_CONTEXT_H
 
+#include <string>
 #include <vector>
 
 #include "bitstream_manager.h"
@@ -104,6 +105,8 @@ class OpenfpgaContext : public Context {
   const openfpga::ModuleManager& module_graph() const { return module_graph_; }
   const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
   const openfpga::OpenFpgaSession& session() const { return session_; }
+  /* The answer of the last query, as JSON text: see set_query_result() */
+  const std::string& query_result() const { return query_result_; }
   const openfpga::BitstreamManager& bitstream_manager() const {
     return bitstream_manager_;
   }
@@ -172,6 +175,12 @@ class OpenfpgaContext : public Context {
   openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
   openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
   openfpga::OpenFpgaSession& mutable_session() { return session_; }
+  /* A command that answers a query gives its answer here, as JSON text, for
+   * the caller that ran the command (see OpenfpgaShell::execute()). It is a
+   * channel for the output of a command, not data of the flow, so a command
+   * that does not change the data can set it: the function is const */
+  void set_query_result(const std::string& json) const { query_result_ = json; }
+  void clear_query_result() const { query_result_.clear(); }
   openfpga::BitstreamManager& mutable_bitstream_manager() {
     return bitstream_manager_;
   }
@@ -297,6 +306,7 @@ class OpenfpgaContext : public Context {
 
   /* Flow run stage by stage, and the stage it has reached */
   openfpga::OpenFpgaSession session_;
+  mutable std::string query_result_;
 };
 
 #endif
