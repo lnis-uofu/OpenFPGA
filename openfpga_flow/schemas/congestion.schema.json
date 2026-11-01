@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "congestion",
+  "description": "The use of the routing channels, aggregated in regions, answer of 'congestion'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "congestion"
+    },
+    "stage": {
+      "const": "ROUTED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "grid",
+        "channel_width",
+        "region_size",
+        "summary",
+        "regions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "grid": {
+          "type": "object",
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "channel_width": {
+          "type": "object",
+          "required": [
+            "x",
+            "y"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "region_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "summary": {
+          "type": "object",
+          "required": [
+            "chanx",
+            "chany",
+            "overused_nodes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "chanx": {
+              "$ref": "#/$defs/usage"
+            },
+            "chany": {
+              "$ref": "#/$defs/usage"
+            },
+            "overused_nodes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "x_low",
+              "y_low",
+              "x_high",
+              "y_high",
+              "chanx",
+              "chany"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "x_low": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y_low": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "x_high": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y_high": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "chanx": {
+                "$ref": "#/$defs/usage"
+              },
+              "chany": {
+                "$ref": "#/$defs/usage"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "usage": {
+      "type": "object",
+      "required": [
+        "used",
+        "capacity",
+        "occupancy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "occupancy": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

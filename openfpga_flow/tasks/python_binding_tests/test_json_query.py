@@ -206,3 +206,36 @@ def test_the_schema_rejects_what_is_not_an_answer(validate):
     bad(lambda d: d["data"]["options"][0].update(stage="NOWHERE"))
     bad(lambda d: d["data"]["options"][0].pop("help"))
     bad(lambda d: d["data"]["options"][0].update(type="selection"))  # needs choices
+
+
+def test_only_the_changed_options(shell, validate):
+    # Nothing is changed in a new shell
+    none = shell.report_app_option(changed=True, json=True)
+    validate(none.data, "app_options")
+    assert none.data["data"]["options"] == []
+
+    shell.set_app_option(name="place.seed", value=9)
+    shell.set_app_option(name="router.max_router_iterations", value=30)
+    answer = shell.report_app_option(changed=True, json=True)
+    validate(answer.data, "app_options")
+    options = options_of(answer)
+    assert set(options) == {"place.seed", "router.max_router_iterations"}
+    assert all(not option["is_default"] for option in options.values())
+
+    # The text report lists the same ones
+    text = shell.report_app_option(changed=True).log
+    assert "place.seed = 9" in text and "router.max_router_iterations = 30" in text
+    assert "place.place_algorithm" not in text
+
+    # With a name, an option that has its default value is not reported
+    assert options_of(shell.report_app_option(name="place.seed", changed=True, json=True))
+    unchanged = shell.report_app_option(name="place.inner_num_nothing_here", check=False)
+    assert unchanged.status != 0
+    none = shell.report_app_option(name="place.place_checkpointing", changed=True, json=True)
+    assert none.data["data"]["options"] == []
+
+    # Setting an option back to its default takes it out
+    shell.set_app_option(name="place.seed", value=1)
+    assert set(options_of(shell.report_app_option(changed=True, json=True))) == {
+        "router.max_router_iterations"
+    }
