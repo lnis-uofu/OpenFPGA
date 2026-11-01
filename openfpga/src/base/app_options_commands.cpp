@@ -56,6 +56,17 @@ int report_app_option_command(const OpenfpgaContext& openfpga_ctx,
     names = options.names();
   }
 
+  /* Only the options that are not at their default value */
+  if (cmd_context.option_enable(cmd, cmd.option("changed"))) {
+    std::vector<std::string> changed;
+    for (const std::string& name : names) {
+      if (!options.is_default(name)) {
+        changed.push_back(name);
+      }
+    }
+    names = changed;
+  }
+
   /* As a query answer: the JSON is printed, and given to the caller */
   if (cmd_context.option_enable(cmd, cmd.option("json"))) {
     const std::string json = app_options_json(options, names);
@@ -98,6 +109,9 @@ void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell_cmd_report.set_option_short_name(report_opt_name, "n");
   shell_cmd_report.set_option_require_value(report_opt_name,
                                             openfpga::OPT_STRING);
+  shell_cmd_report.add_option(
+    "changed", false,
+    "Report only the options that do not have their default value");
   CommandOptionId report_opt_json = shell_cmd_report.add_option(
     "json", false,
     "Report as a JSON answer of the kind app_options, which is given to the "
