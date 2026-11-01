@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "critical_paths",
+  "description": "The worst setup paths of the routed design, answer of 'critical_paths'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "critical_paths"
+    },
+    "stage": {
+      "const": "ROUTED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "requested",
+        "returned",
+        "paths"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requested": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "paths": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "launch_clock",
+              "capture_clock",
+              "startpoint",
+              "endpoint",
+              "slack_ns",
+              "points",
+              "data_arrival_ns",
+              "data_required_ns"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "launch_clock": {
+                "type": "string"
+              },
+              "capture_clock": {
+                "type": "string"
+              },
+              "startpoint": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "slack_ns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "points": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "pin",
+                    "type",
+                    "block",
+                    "net",
+                    "arrival_ns",
+                    "delay_ns"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "pin": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "block": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "net": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "arrival_ns": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "delay_ns": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              },
+              "data_arrival_ns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "data_required_ns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

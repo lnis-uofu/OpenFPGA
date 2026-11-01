@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "timing_summary",
+  "description": "The timing of the routed design, answer of 'timing_summary'. Times are in ns, frequencies in MHz. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "timing_summary"
+    },
+    "stage": {
+      "const": "ROUTED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "setup",
+        "hold",
+        "clock_domains"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "setup": {
+          "type": "object",
+          "required": [
+            "worst_negative_slack_ns",
+            "total_negative_slack_ns",
+            "critical_path_delay_ns",
+            "fmax_mhz",
+            "critical_path"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "worst_negative_slack_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_negative_slack_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "critical_path_delay_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "fmax_mhz": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "critical_path": {
+              "type": "object",
+              "required": [
+                "launch_clock",
+                "capture_clock"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "launch_clock": {
+                  "type": "string"
+                },
+                "capture_clock": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "hold": {
+          "type": "object",
+          "required": [
+            "worst_negative_slack_ns",
+            "total_negative_slack_ns"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "worst_negative_slack_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_negative_slack_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "clock_domains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "launch_clock",
+              "capture_clock",
+              "intra_domain",
+              "critical_path_delay_ns",
+              "worst_slack_ns",
+              "fmax_mhz"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "launch_clock": {
+                "type": "string"
+              },
+              "capture_clock": {
+                "type": "string"
+              },
+              "intra_domain": {
+                "type": "boolean"
+              },
+              "critical_path_delay_ns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "worst_slack_ns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "fmax_mhz": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
