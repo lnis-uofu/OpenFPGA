@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "net_route",
+  "description": "The routing tree of a net as nodes of the routing resource graph, in depth-first order, answer of 'net_route'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "net_route"
+    },
+    "stage": {
+      "const": "ROUTED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "net",
+        "num_sinks",
+        "nodes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "net": {
+          "type": "string"
+        },
+        "num_sinks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "parent",
+              "rr_node",
+              "type",
+              "xlow",
+              "ylow",
+              "xhigh",
+              "yhigh",
+              "ptc",
+              "layer",
+              "sink_pin"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "parent": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "rr_node": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "type": {
+                "enum": [
+                  "SOURCE",
+                  "SINK",
+                  "IPIN",
+                  "OPIN",
+                  "CHANX",
+                  "CHANY",
+                  "MUX",
+                  "NUM_RR_TYPES"
+                ]
+              },
+              "xlow": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "ylow": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "xhigh": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "yhigh": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "ptc": {
+                "type": "integer"
+              },
+              "layer": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sink_pin": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
