@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "utilization",
+  "description": "The use of the blocks of the device by the packed design, answer of 'utilization'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "utilization"
+    },
+    "stage": {
+      "const": "PACKED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "device_utilization",
+        "grid",
+        "block_types",
+        "limiting_resources"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "device_utilization": {
+          "type": "number",
+          "minimum": 0
+        },
+        "grid": {
+          "type": "object",
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "block_types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "is_io",
+              "used",
+              "available",
+              "utilization"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "is_io": {
+                "type": "boolean"
+              },
+              "used": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "available": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "utilization": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "limiting_resources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
