@@ -91,6 +91,10 @@ report_app_option
 
     Name of the option to report. All the options are reported when it is not set
 
+  .. option:: --changed
+
+    Report only the options that do not have their default value. With ``--name``, nothing is reported if that option has its default value
+
   .. option:: --json
 
     Report as a JSON answer instead of lines of text, see :ref:`query_answers`. The answer is of the kind ``app_options``, and its data is ``{"options": [...]}``, with one entry per option: ``name``, ``type`` (``string``, ``int``, ``float``, ``bool`` or ``selection``), ``value`` and ``default`` (typed after the type), ``is_default``, ``help``, ``choices`` (empty unless the option is a selection) and ``stage`` (the stage that the option tunes). Its schema is ``openfpga_flow/schemas/app_options.schema.json``.
@@ -98,6 +102,7 @@ report_app_option
   .. code-block::
 
     report_app_option --name place.seed
+    report_app_option --changed
     report_app_option --json
 
 .. _query_answers:
