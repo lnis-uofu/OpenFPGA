@@ -51,12 +51,33 @@ class OpenfpgaError(RuntimeError):
             lines = [line for line in self.log.splitlines() if line.strip()]
             # Error messages are not always at the end of the log, as stderr
             # is not ordered against stdout. Quote them first when present
-            errors = [line for line in lines if line.startswith("Error ")]
+            errors = self._error_lines(lines)
             detail = "\n".join(errors or lines[-self.LOG_TAIL_LINES:])
         message = "Command '%s' failed with status %d" % (command, self.status)
         if detail:
             message += ":\n" + detail
         super().__init__(message)
+
+    # Lines of a VPR error after "Error <n>:" (Type, File, Line, Message)
+    VPR_ERROR_LINES = 4
+
+    @classmethod
+    def _error_lines(cls, lines):
+        """The lines that start with "Error ". VPR writes its errors over
+        several lines, with "Error <n>:" alone and the text on a "Message:"
+        line after it: that text is added to the error line."""
+        errors = []
+        for index, line in enumerate(lines):
+            if not line.startswith("Error "):
+                continue
+            if line.rstrip().endswith(":"):
+                following = lines[index + 1:index + 1 + cls.VPR_ERROR_LINES]
+                for next_line in following:
+                    if next_line.startswith("Message:"):
+                        line = line.rstrip() + " " + next_line[len("Message:"):].strip()
+                        break
+            errors.append(line)
+        return errors
 
 
 def _run(self, command, check=True):
