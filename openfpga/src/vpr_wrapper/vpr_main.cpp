@@ -15,6 +15,7 @@
 #include "vpr_api.h"
 #include "vpr_error.h"
 #include "vpr_exit_codes.h"
+#include "vpr_read_options.h"
 #include "vpr_run.h"
 #include "vpr_signal_handler.h"
 #include "vpr_tatum_error.h"
@@ -51,10 +52,9 @@ static int vpr(int argc, char** argv) {
     vpr_install_signal_handler();
 
     /* Read options, architecture, and circuit netlist */
-    vpr_init(argc, const_cast<const char**>(argv), &run.options, &run.setup,
-             &run.arch);
-
-    if (run.options.show_version) {
+    if (!vpr_init_no_exit(argc, const_cast<const char**>(argv), &run.options,
+                          &run.setup, &run.arch)) {
+      /* --help or --version: printed, nothing to run */
       release_vpr_run();
       return SUCCESS_EXIT_CODE;
     }
@@ -120,9 +120,9 @@ static int vpr_standalone(int argc, char** argv) {
     vpr_install_signal_handler();
 
     /* Read options, architecture, and circuit netlist */
-    vpr_init(argc, const_cast<const char**>(argv), &Options, &vpr_setup, &Arch);
-    if (Options.show_version) {
-      vpr_free_all(Arch, vpr_setup);
+    if (!vpr_init_no_exit(argc, const_cast<const char**>(argv), &Options,
+                          &vpr_setup, &Arch)) {
+      /* --help or --version: printed, nothing was read */
       return SUCCESS_EXIT_CODE;
     }
 
