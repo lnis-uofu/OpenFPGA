@@ -27,3 +27,4 @@ ${PYTHON_EXEC} -m pytest ${OPENFPGA_PATH}/openfpga/python_tests -v
 echo -e "Regression tests for the tasks that run the flow with Python scripts";
 run-task basic_tests/python_shell/monolithic $@
 run-task basic_tests/python_shell/stage_by_stage $@
+run-task basic_tests/python_shell/seed_sweep $@
