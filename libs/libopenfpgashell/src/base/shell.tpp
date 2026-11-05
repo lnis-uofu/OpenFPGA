@@ -616,7 +616,17 @@ int Shell<T>::execute_command(const char* cmd_line,
       strcpy(argv[itok], tokens[itok].c_str());
     }
     /* Execute the marco function and record the execution status */
-    command_status_[cmd_id] = command_macro_execute_functions_[cmd_id](tokens.size(), argv);
+    try {
+      command_status_[cmd_id] = command_macro_execute_functions_[cmd_id](tokens.size(), argv);
+    } catch (...) {
+      /* A command that throws has failed (see the switch below) */
+      command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
+      for (size_t itok = 0; itok < tokens.size(); ++itok) {
+        free(argv[itok]);
+      }
+      free(argv);
+      throw;
+    }
     /* Free the argv */
     for (size_t itok = 0; itok < tokens.size(); ++itok) {
       free(argv[itok]);
@@ -641,7 +651,12 @@ int Shell<T>::execute_command(const char* cmd_line,
   /* Parse succeed. Let user to confirm selected options */ 
   print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
 
-  /* Execute the command depending on the type of function ! */ 
+  /* Execute the command depending on the type of function !
+   * A command that throws has failed: its status is set before the exception
+   * goes on to the caller, so that the commands that depend on it are not
+   * run on what it left. Otherwise the status of its previous run would stay
+   */
+  try {
   switch (command_execute_function_types_[cmd_id]) {
   case PLUGIN:
     command_status_[cmd_id] = command_plugin_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
@@ -673,6 +688,10 @@ int Shell<T>::execute_command(const char* cmd_line,
                   commands_[cmd_id].name().c_str());
     /* Exit the shell using the exit() function inside this class! */
     return CMD_EXEC_FATAL_ERROR;
+  }
+  } catch (...) {
+    command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
+    throw;
   }
 
   /* Forbid users to return the status CMD_EXEC_NONE */
