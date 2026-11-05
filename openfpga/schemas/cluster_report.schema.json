@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cluster_report",
+  "description": "The clusters of the packed design, answer of 'report_cluster'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "cluster_report"
+    },
+    "stage": {
+      "const": "PACKED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "query",
+        "total",
+        "matched",
+        "returned",
+        "truncated",
+        "clusters"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "matched": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "type",
+              "input_pin_utils",
+              "output_pin_utils"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "input_pin_utils": {
+                "type": "number",
+                "minimum": 0
+              },
+              "output_pin_utils": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "stats": {
+          "type": "object",
+          "required": [
+            "num_clusters",
+            "by_type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "num_clusters": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "by_type": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "count",
+                  "average_input_pin_utils",
+                  "average_output_pin_utils"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "average_input_pin_utils": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "average_output_pin_utils": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

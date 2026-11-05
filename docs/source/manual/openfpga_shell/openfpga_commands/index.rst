@@ -14,6 +14,8 @@ As OpenFPGA integrates various tools, the commands are categorized into differen
 
    vpr_commands
 
+   query_commands
+
    setup_commands
 
    fpga_bitstream_commands
