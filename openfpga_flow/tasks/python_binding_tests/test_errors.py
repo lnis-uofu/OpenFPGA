@@ -82,3 +82,28 @@ def test_shell_usable_after_error(shell, openfpga_module, and2_files):
         shell.run("read_openfpga_arch -f /nonexistent/arch.xml")
     result = shell.run(f"read_openfpga_arch -f {and2_files['openfpga_arch']}")
     assert result.status == 0
+
+
+def test_command_that_throws_is_marked_failed(shell, openfpga_module, and2_files, tmp_path):
+    # The commands after it check its status: a command that throws must not
+    # keep the status of its previous, successful run
+    shell.run(f"read_openfpga_arch -f {and2_files['openfpga_arch']}")
+    shell.run(f"write_openfpga_arch -f {tmp_path / 'first.xml'}")
+    failed = shell.run("read_openfpga_arch -f /nonexistent/arch.xml", check=False)
+    assert failed.status != 0
+    assert failed.error  # it threw
+
+    with pytest.raises(
+        openfpga_module.OpenfpgaError,
+        match="Command 'read_openfpga_arch' is required to be executed before",
+    ):
+        shell.run(f"write_openfpga_arch -f {tmp_path / 'second.xml'}")
+
+
+def test_vpr_error_message_is_quoted(shell, openfpga_module, and2_files):
+    # VPR writes "Error 1:" alone, and the text on a "Message:" line after it
+    with pytest.raises(
+        openfpga_module.OpenfpgaError,
+        match=r"Error \d+: --route_chan_width option must be specified",
+    ):
+        shell.run(f"vpr {and2_files['vpr_arch']} {and2_files['blif']} --read_rr_graph rr.xml")
