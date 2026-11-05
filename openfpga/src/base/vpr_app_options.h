@@ -17,10 +17,11 @@
  * typed by a user. Only the options whose value is not the default are
  * given, so that VPR infers what it would infer for them.
  *
- * Note that read_options() exits the program when it is given an option it
- * rejects. The application options are checked against their type first,
- * but a text that is valid for the type may still be rejected by VPR, e.g.,
- * a block type that does not exist in a list of pin utilizations
+ * The application options are checked against their type first, but a text
+ * that is valid for the type may still be rejected by VPR, e.g., a block
+ * type that does not exist in a list of pin utilizations. Such a command
+ * line raises a VprError (see vpr_read_options.h): VPR's own read_options()
+ * would exit the program
  *******************************************************************/
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -35,8 +36,8 @@ bool vpr_args_from_app_options(const AppOptions& options,
                                std::string& error);
 
 /* Read the options of VPR from a command line, as made by
- * vpr_args_from_app_options(). VPR exits the program on an invalid command
- * line */
+ * vpr_args_from_app_options(). Throw a VprError on a command line that VPR
+ * rejects */
 t_options read_vpr_options(const std::vector<std::string>& args);
 
 } /* End namespace openfpga */
