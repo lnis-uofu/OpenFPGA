@@ -15,6 +15,7 @@
 #include "globals.h"
 #include "read_xml_clock_network.h"
 #include "read_xml_openfpga_arch.h"
+#include "staged_flow.h"
 #include "vtr_log.h"
 #include "write_xml_clock_network.h"
 #include "write_xml_openfpga_arch.h"
@@ -52,18 +53,19 @@ int read_openfpga_arch_template(T& openfpga_context, const Command& cmd,
    * 3. Technology library (TODO)
    * 4. Simulation settings (TODO)
    */
-  if (false == check_circuit_library(openfpga_context.arch().circuit_lib)) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  if (false == check_config_protocol(openfpga_context.arch().config_protocol,
-                                     openfpga_context.arch().circuit_lib)) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  if (false == check_tile_annotation(openfpga_context.arch().tile_annotations,
+  if (false == check_circuit_library(openfpga_context.arch().circuit_lib) ||
+      false == check_config_protocol(openfpga_context.arch().config_protocol,
+                                     openfpga_context.arch().circuit_lib) ||
+      false == check_tile_annotation(openfpga_context.arch().tile_annotations,
                                      openfpga_context.arch().circuit_lib,
                                      g_vpr_ctx.device().physical_tile_types)) {
+    fail_openfpga_arch_input(openfpga_context.mutable_session());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* The flow that is run stage by stage creates its device when it has all
+   * its inputs */
+  if (false == openfpga_arch_input_read(openfpga_context.mutable_session())) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
