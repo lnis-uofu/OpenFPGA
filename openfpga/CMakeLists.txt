@@ -28,7 +28,8 @@ if (OPENFPGA_WITH_SWIG)
             LANGUAGE    python
             I_FILE      src/openfpga_python.i
             SWIG_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/src
-            SWIG_DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/openfpga_python_session.py)
+            SWIG_DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/openfpga_python_session.py
+                          ${CMAKE_CURRENT_SOURCE_DIR}/src/openfpga_python_worker.py)
     target_include_directories(openfpga_python PUBLIC ${LIB_INCLUDE_DIRS})
     target_link_libraries(openfpga_python
                           PUBLIC libopenfpga)

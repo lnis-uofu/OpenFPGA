@@ -64,6 +64,39 @@ An answer of another kind, or of a version of its schema that the module does no
 
 A query raises ``OpenfpgaError`` when the stage it reads is not valid, e.g., after an option that was set since, and names the command to run first.
 
+Worker processes
+~~~~~~~~~~~~~~~~
+
+VPR keeps its data in global variables, stops the process when an assertion fails, and exits on some bad options. A ``Session`` therefore shares its fate with the interpreter that runs it, and two sessions of a process share the data of VPR. ``RemoteSession`` runs a ``Session`` in a process of its own, a *worker*: whatever happens to the worker, the interpreter of the caller goes on, and workers share nothing, so flows can run at the same time.
+
+.. code-block:: python
+
+  with openfpga.RemoteSession(cwd="run1", checkpoint_dir="run1.ckpt") as session:
+      session.options["router.route_chan_width"] = 100
+      session.read_vpr_arch("arch.xml", layout="2x2")
+      session.read_openfpga_arch("openfpga_arch.xml")
+      session.read_circuit("design.blif")
+      session.pack()
+      session.place()
+      try:
+          session.route(timeout_s=600)
+      except openfpga.WorkerError:
+          session.restart()      # the worker is restored at the end of place
+          session.route()
+
+It has the methods of ``Session`` (``pack()``, ``timing_summary()``, ``options``, ``checkpoint()``, ...), which run in the worker and give back the same results. The failure of a command is the same ``OpenfpgaError``, and the worker goes on. ``shell`` is not available: the commands of the shell that have no method are run with ``command(name, **options)``. ``cwd`` is the directory of the worker, where VPR writes its files. ``RemoteSession.restore(directory)`` starts a worker that is restored from a checkpoint.
+
+The failures of the worker itself are ``WorkerError``:
+
+- ``WorkerCrashed``: the process ended during a call, e.g., an abort of VPR or a kill by the system. It has the ``exitcode``, the ``signal_name`` (e.g., ``SIGABRT``) and the last lines the worker wrote outside of its commands (``log_tail``)
+- ``WorkerTimeout``: the call took longer than its ``timeout_s`` (an argument of the call, or an attribute of the object), and the worker was killed
+- ``WorkerCancelled``: ``cancel()`` was called, from another thread, while the call was running, and the worker was killed. A command cannot be interrupted any other way
+- ``WorkerNotRunning``: a call after one of them, or after ``close()``
+
+``restart()`` starts another worker. With a ``checkpoint_dir`` the worker makes a checkpoint after each stage, and the new worker is restored from the last one, so that the flow loses the stage that was running and nothing else; without one it starts from nothing. It returns the state of the new session. A worker ends when its caller ends, even in the middle of a command (Linux), and ``close()``, or the end of a ``with`` block, ends it.
+
+The calls are made one at a time, and a call is not a way to share data: results are copied from the worker. The output of the commands is in their results, and a worker's own output outside of them goes to a log that is not kept.
+
 Threads
 ~~~~~~~
 
