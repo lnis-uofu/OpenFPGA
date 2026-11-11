@@ -26,6 +26,14 @@
  * as data, which is the text parsed, see below */
 %rename(raw_data) CommandResult::data;
 
+/* A command can run for minutes: let the other threads of the interpreter run
+ * meanwhile. The shell runs one command at a time in the process, so the calls
+ * of the threads wait for each other, and none of them uses the interpreter
+ * while the lock is released */
+%nothread;
+%thread OpenfpgaShell::run_command;
+%thread OpenfpgaShell::execute;
+
 /* start() takes a C-style argv, which is not usable from Python */
 %ignore OpenfpgaShell::start;
 
