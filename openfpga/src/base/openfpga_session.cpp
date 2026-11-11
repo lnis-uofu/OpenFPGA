@@ -164,7 +164,13 @@ void OpenFpgaSession::set_imported(const OpenFpgaStage& stage,
   }
 }
 
-bool OpenFpgaSession::read_input(const OpenFpgaInput& input) {
+std::string OpenFpgaSession::input_file(const OpenFpgaInput& input) const {
+  const auto it = input_files_.find(input);
+  return input_files_.end() == it ? std::string() : it->second;
+}
+
+bool OpenFpgaSession::read_input(const OpenFpgaInput& input,
+                                 const std::string& file) {
   if (!can_read(input)) {
     return false;
   }
@@ -172,16 +178,20 @@ bool OpenFpgaSession::read_input(const OpenFpgaInput& input) {
    * one cannot be kept */
   if (OpenFpgaInput::VPR_ARCH == input) {
     inputs_ &= ~bit(OpenFpgaInput::CIRCUIT);
+    input_files_.erase(OpenFpgaInput::CIRCUIT);
   }
   inputs_ |= bit(input);
+  input_files_[input] = file;
   invalidate_all_stages();
   return true;
 }
 
 void OpenFpgaSession::fail_input(const OpenFpgaInput& input) {
   inputs_ &= ~bit(input);
+  input_files_.erase(input);
   if (OpenFpgaInput::VPR_ARCH == input) {
     inputs_ &= ~bit(OpenFpgaInput::CIRCUIT);
+    input_files_.erase(OpenFpgaInput::CIRCUIT);
   }
   invalidate_all_stages();
 }
@@ -234,6 +244,7 @@ void OpenFpgaSession::reset_app_options() {
 
 void OpenFpgaSession::reset() {
   inputs_ = 0;
+  input_files_.clear();
   stages_ = 0;
   linked_generation_ = 0;
   imported_.clear();
