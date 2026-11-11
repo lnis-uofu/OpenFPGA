@@ -46,7 +46,9 @@ class OpenfpgaShell {
   /* Same as run_command(), but returns the output of the command together
    * with its status, instead of printing it. Intended for embedding, where
    * the caller needs the output of each command separately.
-   * Note that capturing is process-wide, see OutputCapture.
+   * Note that capturing is process-wide, see OutputCapture, and so is the
+   * data of VPR: one command runs at a time in the process, and a call from
+   * another thread waits until it is done.
    * The command 'exit' is refused, as it would terminate the host process.
    * Exceptions raised by a command never leave this function: they are
    * reported in the error field, with a fatal status. */

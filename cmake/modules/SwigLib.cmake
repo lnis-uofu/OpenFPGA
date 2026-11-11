@@ -130,9 +130,13 @@ function(SwigLib)
       PRIVATE
         ${Python3_INCLUDE_DIRS}
     )
+    # Let the interface release the GIL (-threads only makes it possible: the
+    # functions that do it are named in the .i file)
+    set(PYTHON_SWIG_OPTIONS -threads)
     if (SWIG_VERSION VERSION_GREATER_EQUAL "4.1.0")
-      set_property(TARGET ${ARG_NAME} PROPERTY SWIG_COMPILE_OPTIONS -flatstaticmethod)
+      list(APPEND PYTHON_SWIG_OPTIONS -flatstaticmethod)
     endif()
+    set_property(TARGET ${ARG_NAME} PROPERTY SWIG_COMPILE_OPTIONS ${PYTHON_SWIG_OPTIONS})
 
     swig_link_libraries(${ARG_NAME}
       PUBLIC

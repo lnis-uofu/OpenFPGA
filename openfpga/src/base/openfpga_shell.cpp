@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <exception>
+#include <mutex>
 
 #include "app_options_commands.h"
 #include "basic_command.h"
@@ -65,6 +66,15 @@ OpenfpgaShell::OpenfpgaShell() {
   openfpga::add_basic_commands(shell_);
 }
 
+/* One command runs at a time in the process, whichever shell it is sent to:
+ * VPR keeps its data in globals and the capture of the output is process-wide.
+ * A caller from another thread waits for its turn. The mutex is recursive so
+ * that a command may run another one */
+static std::recursive_mutex& command_mutex() {
+  static std::recursive_mutex mutex;
+  return mutex;
+}
+
 /* Return true if the command line calls the built-in command 'exit' */
 static bool is_exit_command(const char* cmd_line) {
   const char* cur = cmd_line;
@@ -98,6 +108,7 @@ int OpenfpgaShell::execute_guarded(const char* cmd_line, std::string& error) {
 }
 
 int OpenfpgaShell::run_command(const char* cmd_line) {
+  std::lock_guard<std::recursive_mutex> lock(command_mutex());
   std::string error;
   openfpga_ctx_.clear_query_result();
   return execute_guarded(cmd_line, error);
@@ -114,6 +125,7 @@ CommandResult OpenfpgaShell::execute(const char* cmd_line) {
     return result;
   }
 
+  std::lock_guard<std::recursive_mutex> lock(command_mutex());
   openfpga::OutputCapture capture;
   /* An answer is the one of this command only */
   openfpga_ctx_.clear_query_result();
