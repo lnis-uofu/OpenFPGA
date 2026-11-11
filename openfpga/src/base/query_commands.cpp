@@ -6,6 +6,7 @@
 #include "command_exit_codes.h"
 #include "query_design.h"
 #include "query_timing.h"
+#include "session_json.h"
 #include "staged_flow.h"
 #include "vpr_run.h"
 #include "vtr_log.h"
@@ -85,6 +86,15 @@ std::string string_option(const Command& cmd, const CommandContext& cmd_context,
   return cmd_context.option_enable(cmd, option)
            ? cmd_context.option_value(cmd, option)
            : std::string();
+}
+
+int report_session_command(const OpenfpgaContext& openfpga_ctx, const Command&,
+                           const CommandContext&) {
+  const std::string json =
+    session_json(openfpga_ctx.session(), vpr::current_vpr_run());
+  openfpga_ctx.set_query_result(json);
+  VTR_LOG("%s\n", json.c_str());
+  return CMD_EXEC_SUCCESS;
 }
 
 int timing_summary_command(const OpenfpgaContext& openfpga_ctx, const Command&,
@@ -194,6 +204,12 @@ void add_query_command(openfpga::Shell<OpenfpgaContext>& shell,
 
 void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandClassId cmd_class = shell.add_command_class("Queries");
+
+  add_query_command(
+    shell, cmd_class, Command("report_session"),
+    "Answer with the stages that are reached, the files the inputs were read "
+    "from and the files of the results of the stages",
+    report_session_command);
 
   add_query_command(
     shell, cmd_class, Command("timing_summary"),

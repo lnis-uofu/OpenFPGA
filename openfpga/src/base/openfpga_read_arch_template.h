@@ -65,7 +65,8 @@ int read_openfpga_arch_template(T& openfpga_context, const Command& cmd,
 
   /* The flow that is run stage by stage creates its device when it has all
    * its inputs */
-  if (false == openfpga_arch_input_read(openfpga_context.mutable_session())) {
+  if (false == openfpga_arch_input_read(openfpga_context.mutable_session(),
+                                        arch_file_name)) {
     return CMD_EXEC_FATAL_ERROR;
   }
 

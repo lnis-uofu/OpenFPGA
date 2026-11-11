@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "session",
+  "description": "What the session of the flow knows: the stages that are reached, the files of the inputs and of the results, answer of 'report_session'. Version 1.",
+  "type": "object",
+  "required": ["schema_version", "kind", "stage", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "session"},
+    "stage": {"type": "null"},
+    "data": {
+      "type": "object",
+      "required": ["reached", "inputs", "results"],
+      "additionalProperties": false,
+      "properties": {
+        "reached": {
+          "type": "array",
+          "items": {"enum": ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "REPACKED", "BITSTREAM"]},
+          "uniqueItems": true
+        },
+        "inputs": {
+          "type": "object",
+          "required": ["vpr_arch", "openfpga_arch", "circuit"],
+          "additionalProperties": false,
+          "properties": {
+            "vpr_arch": {
+              "oneOf": [
+                {"type": "null"},
+                {
+                  "type": "object",
+                  "required": ["file", "layout"],
+                  "additionalProperties": false,
+                  "properties": {"file": {"type": "string"}, "layout": {"type": "string"}}
+                }
+              ]
+            },
+            "openfpga_arch": {"$ref": "#/$defs/input"},
+            "circuit": {"$ref": "#/$defs/input"}
+          }
+        },
+        "results": {
+          "type": "object",
+          "required": ["packing", "placement", "routing"],
+          "additionalProperties": false,
+          "properties": {
+            "packing": {"type": ["string", "null"]},
+            "placement": {"type": ["string", "null"]},
+            "routing": {"type": ["string", "null"]}
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "input": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["file"],
+          "additionalProperties": false,
+          "properties": {"file": {"type": "string"}}
+        }
+      ]
+    }
+  }
+}
