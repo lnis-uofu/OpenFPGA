@@ -1243,6 +1243,8 @@ static int repack_cluster(const AtomContext& atom_ctx,
   save_lb_router_results_to_physical_pb(phy_pb, lgk2phy_pb_map, lb_router,
                                         lb_rr_graph, atom_ctx.netlist(),
                                         verbose);
+  /* Save the bus-based mux input sets that the routing results follow */
+  phy_pb.set_bus_mux_selections(bus_mux_selections);
   VTR_LOGV(verbose, "Saved results in physical pb\n");
 
   /* Add the pb to clustering context */

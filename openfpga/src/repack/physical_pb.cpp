@@ -121,6 +121,15 @@ std::vector<PhysicalPb::MifDataInfo> PhysicalPb::mif_data(
   return mif_data_[pb];
 }
 
+int PhysicalPb::bus_mux_selection(const std::string& mux_name) const {
+  auto result = bus_mux_selections_.find(mux_name);
+  if (result == bus_mux_selections_.end()) {
+    /* Not found, the mux is not used */
+    return -1;
+  }
+  return result->second;
+}
+
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/
@@ -278,6 +287,11 @@ void PhysicalPb::add_mif_data(const PhysicalPbId& pb,
                               const std::string& selector) {
   VTR_ASSERT(true == valid_pb_id(pb));
   mif_data_[pb].emplace_back(atom_block, operating_pb_path, source, selector);
+}
+
+void PhysicalPb::set_bus_mux_selections(
+  const std::map<std::string, int>& selections) {
+  bus_mux_selections_ = selections;
 }
 
 /******************************************************************************
