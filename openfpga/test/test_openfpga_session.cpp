@@ -384,6 +384,41 @@ static void test_linked_generation() {
   CHECK(0 == session.linked_generation());
 }
 
+static void test_input_file() {
+  OpenFpgaSession session;
+  /* An input that is not read has no file, and one read without a file too */
+  CHECK(session.input_file(OpenFpgaInput::VPR_ARCH).empty());
+  session.read_input(OpenFpgaInput::VPR_ARCH, "/a/arch.xml");
+  session.read_input(OpenFpgaInput::OPENFPGA_ARCH, "/a/openfpga.xml");
+  session.read_input(OpenFpgaInput::CIRCUIT, "/a/c.blif");
+  CHECK("/a/arch.xml" == session.input_file(OpenFpgaInput::VPR_ARCH));
+  CHECK("/a/openfpga.xml" == session.input_file(OpenFpgaInput::OPENFPGA_ARCH));
+  CHECK("/a/c.blif" == session.input_file(OpenFpgaInput::CIRCUIT));
+
+  /* Reading an input again replaces its file */
+  session.read_input(OpenFpgaInput::OPENFPGA_ARCH, "/b/openfpga.xml");
+  CHECK("/b/openfpga.xml" == session.input_file(OpenFpgaInput::OPENFPGA_ARCH));
+
+  /* The circuit is dropped with the VPR architecture it was read against */
+  session.read_input(OpenFpgaInput::VPR_ARCH, "/b/arch.xml");
+  CHECK("/b/arch.xml" == session.input_file(OpenFpgaInput::VPR_ARCH));
+  CHECK(session.input_file(OpenFpgaInput::CIRCUIT).empty());
+  CHECK("/b/openfpga.xml" == session.input_file(OpenFpgaInput::OPENFPGA_ARCH));
+
+  /* A failed input is forgotten, and so is the circuit when it is the VPR
+   * architecture */
+  session.read_input(OpenFpgaInput::CIRCUIT, "/b/c.blif");
+  session.fail_input(OpenFpgaInput::CIRCUIT);
+  CHECK(session.input_file(OpenFpgaInput::CIRCUIT).empty());
+  session.read_input(OpenFpgaInput::CIRCUIT, "/b/c.blif");
+  session.fail_input(OpenFpgaInput::VPR_ARCH);
+  CHECK(session.input_file(OpenFpgaInput::VPR_ARCH).empty());
+  CHECK(session.input_file(OpenFpgaInput::CIRCUIT).empty());
+
+  session.reset();
+  CHECK(session.input_file(OpenFpgaInput::OPENFPGA_ARCH).empty());
+}
+
 static void test_imported_file() {
   OpenFpgaSession session;
   /* Only a valid stage has a file */
@@ -462,6 +497,7 @@ int main() {
   test_names();
   test_vpr_generation();
   test_linked_generation();
+  test_input_file();
   test_imported_file();
   test_required_stage();
   test_context_has_session();

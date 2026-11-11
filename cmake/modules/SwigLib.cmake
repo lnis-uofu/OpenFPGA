@@ -10,6 +10,9 @@
 #                       differs from the CMake target NAME
 #   LANGUAGE <tcl|python>: target language, default tcl
 #   SWIG_INCLUDES <dir>* : optional list of include dirs for swig
+#   SWIG_DEPENDS <file>* : optional files that the .i file includes without
+#                          swig reporting them (e.g., %pythoncode "file"): the
+#                          wrapper is generated again when one changes
 #   SCRIPTS <file>* : tcl files to encode
 #
 # The intention is that this will create a library target with the
@@ -21,7 +24,7 @@ function(SwigLib)
   # Parse args
   set(options "")
   set(oneValueArgs I_FILE NAME NAMESPACE MODULE_NAME LANGUAGE RUNTIME_HEADER)
-  set(multiValueArgs SWIG_INCLUDES SCRIPTS)
+  set(multiValueArgs SWIG_INCLUDES SWIG_DEPENDS SCRIPTS)
   
   cmake_parse_arguments(
       ARG  # prefix on the parsed args
@@ -65,6 +68,11 @@ function(SwigLib)
   if (DEFINED ARG_SWIG_INCLUDES)
     set_property(SOURCE ${ARG_I_FILE}
                  PROPERTY INCLUDE_DIRECTORIES ${ARG_SWIG_INCLUDES})
+  endif()
+
+  if (DEFINED ARG_SWIG_DEPENDS)
+    set_property(SOURCE ${ARG_I_FILE}
+                 PROPERTY DEPENDS ${ARG_SWIG_DEPENDS})
   endif()
 
   if (${ARG_LANGUAGE} STREQUAL "tcl")

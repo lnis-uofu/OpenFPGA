@@ -16,6 +16,19 @@ The queries read, and never change, the results of the stage that they need. The
 
 Queries that list items stop at a limit (``--limit``, 1000 by default), and say so with ``truncated``, so that the answer cannot grow without bounds.
 
+report_session
+~~~~~~~~~~~~~~
+
+  Answer with what the flow that is run stage by stage has done: kind ``session``, not read from a stage. It works at any time, and needs no stage.
+
+  - ``reached``: the stages that are valid, in the order of the flow (``DEVICE``, ``PACKED``, ``PLACED``, ``ROUTED``, ``ANALYZED``, ...). A stage that an option or an input made out of date is not in it. The list is empty when the data of VPR that the session worked with was replaced, e.g., by ``vpr`` or by another shell
+  - ``inputs``: ``vpr_arch`` (``file`` and ``layout``), ``openfpga_arch`` and ``circuit`` (``file``): where each was read from, as a whole path. ``null`` for an input that is not read
+  - ``results``: ``packing``, ``placement`` and ``routing``: the file of the results of a stage that is reached, which is the one that VPR wrote, or the one that ``read_packing``, ``read_placement`` or ``read_routing`` read instead of running the stage. ``null`` for the other stages. The path is whole, from the current directory of the process
+
+  .. code-block::
+
+    report_session
+
 timing_summary
 ~~~~~~~~~~~~~~
 

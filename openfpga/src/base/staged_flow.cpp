@@ -1,6 +1,7 @@
 #include "staged_flow.h"
 
 #include <exception>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <vector>
@@ -95,6 +96,14 @@ bool guarded(const std::function<void()>& func) {
     VTR_LOG_ERROR("%s\n", exc.what());
   }
   return false;
+}
+
+/* The path as a whole, from the current directory, so that it still names the
+ * file when the directory changes. A path that cannot be made one is kept */
+std::string whole_path(const std::string& file) {
+  std::error_code error;
+  const std::filesystem::path path = std::filesystem::absolute(file, error);
+  return error ? file : path.lexically_normal().string();
 }
 
 /* The session forgets what it knows if another command replaced the data of
@@ -404,7 +413,7 @@ bool read_vpr_arch_input(OpenFpgaSession& session, const std::string& file,
     VTR_LOG_ERROR("%s\n", error.c_str());
     return false;
   }
-  session.read_input(OpenFpgaInput::VPR_ARCH);
+  session.read_input(OpenFpgaInput::VPR_ARCH, whole_path(file));
 
   VTR_LOG("Reading VPR architecture '%s' with layout '%s'...\n", file.c_str(),
           layout.c_str());
@@ -440,7 +449,7 @@ bool read_circuit_input(OpenFpgaSession& session, const std::string& file) {
     VTR_LOG_ERROR("%s\n", error.c_str());
     return false;
   }
-  session.read_input(OpenFpgaInput::CIRCUIT);
+  session.read_input(OpenFpgaInput::CIRCUIT, whole_path(file));
 
   VTR_LOG("Reading circuit '%s'...\n", file.c_str());
   std::vector<std::string> args;
@@ -456,9 +465,10 @@ bool read_circuit_input(OpenFpgaSession& session, const std::string& file) {
   return true;
 }
 
-bool openfpga_arch_input_read(OpenFpgaSession& session) {
+bool openfpga_arch_input_read(OpenFpgaSession& session,
+                              const std::string& file) {
   sync_with_vpr(session);
-  session.read_input(OpenFpgaInput::OPENFPGA_ARCH);
+  session.read_input(OpenFpgaInput::OPENFPGA_ARCH, whole_path(file));
   if (session.has_all_inputs()) {
     return ensure_device(session);
   }
@@ -580,6 +590,10 @@ bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
   session.complete(stage);
   session.set_imported(stage, file);
   return true;
+}
+
+bool staged_flow_current(const OpenFpgaSession& session) {
+  return in_staged_flow(session);
 }
 
 bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
