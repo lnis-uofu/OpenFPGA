@@ -1,0 +1,21 @@
+.model mult_8_feedback
+.inputs clk b[0] b[1] b[2] b[3] b[4] b[5] b[6] b[7]
+.outputs p[0] p[1] p[2] p[3] p[4] p[5] p[6] p[7] p[8] p[9] p[10] p[11] p[12] p[13] p[14] p[15]
+.latch y[0] p[0] re clk 2
+.latch y[1] p[1] re clk 2
+.latch y[2] p[2] re clk 2
+.latch y[3] p[3] re clk 2
+.latch y[4] p[4] re clk 2
+.latch y[5] p[5] re clk 2
+.latch y[6] p[6] re clk 2
+.latch y[7] p[7] re clk 2
+.latch y[8] p[8] re clk 2
+.latch y[9] p[9] re clk 2
+.latch y[10] p[10] re clk 2
+.latch y[11] p[11] re clk 2
+.latch y[12] p[12] re clk 2
+.latch y[13] p[13] re clk 2
+.latch y[14] p[14] re clk 2
+.latch y[15] p[15] re clk 2
+.subckt mult_8 A[0]=p[1] A[1]=p[2] A[2]=p[3] A[3]=p[4] A[4]=p[5] A[5]=p[6] A[6]=p[7] A[7]=p[7] B[0]=b[0] B[1]=b[1] B[2]=b[2] B[3]=b[3] B[4]=b[4] B[5]=b[5] B[6]=b[6] B[7]=b[7] Y[0]=y[0] Y[1]=y[1] Y[2]=y[2] Y[3]=y[3] Y[4]=y[4] Y[5]=y[5] Y[6]=y[6] Y[7]=y[7] Y[8]=y[8] Y[9]=y[9] Y[10]=y[10] Y[11]=y[11] Y[12]=y[12] Y[13]=y[13] Y[14]=y[14] Y[15]=y[15]
+.end
