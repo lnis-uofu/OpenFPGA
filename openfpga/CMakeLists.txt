@@ -33,6 +33,16 @@ if (OPENFPGA_WITH_SWIG)
     target_include_directories(openfpga_python PUBLIC ${LIB_INCLUDE_DIRS})
     target_link_libraries(openfpga_python
                           PUBLIC libopenfpga)
+    # Built by pip (scikit-build-core): the module goes to the root of the
+    # wheel, which is where the interpreter looks for 'import openfpga'
+    if (SKBUILD)
+      install(TARGETS openfpga_python
+              LIBRARY DESTINATION .
+              COMPONENT python)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/openfpga.py
+              DESTINATION .
+              COMPONENT python)
+    endif()
   endif()
 endif()
 

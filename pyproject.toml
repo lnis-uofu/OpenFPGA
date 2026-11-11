@@ -1,0 +1,46 @@
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "openfpga"
+dynamic = ["version"]
+description = "The OpenFPGA shell as a Python module: run the flow stage by stage, query the results"
+readme = "openfpga/python/README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+
+[project.urls]
+Homepage = "https://github.com/lnis-uofu/OpenFPGA"
+Documentation = "https://openfpga.readthedocs.io"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+# Only the Python module: neither the openfpga executable nor VPR's tools
+build.targets = ["openfpga_python"]
+install.components = ["python"]
+cmake.build-type = "Release"
+# Kept between builds, so that a second `pip install .` does not build everything again
+build-dir = "build/python"
+wheel.packages = []
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "VERSION.md"
+regex = '(?P<value>\d+\.\d+\.\d+)'
+
+[tool.scikit-build.cmake.define]
+OPENFPGA_SWIG_PYTHON = "ON"
+OPENFPGA_WITH_YOSYS = "OFF"
+OPENFPGA_WITH_TEST = "OFF"
+OPENFPGA_WITH_INSTALLER = "OFF"
+OPENFPGA_WITH_VERSION = "OFF"
+# The interactive mode of the shell is not used from Python, and this does not
+# depend on readline or libedit
+OPENFPGA_READLINE_MODE = "standard"
