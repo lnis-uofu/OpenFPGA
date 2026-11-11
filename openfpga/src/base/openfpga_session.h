@@ -106,11 +106,14 @@ class OpenFpgaSession {
   /* The file that the results of a stage were read from, see
    * set_imported(). Empty if the stage was run, or is not valid */
   std::string imported_file(const OpenFpgaStage& stage) const;
+  /* The file that an input was read from, as it was given to read_input().
+   * Empty if it is not known, or the input is not read */
+  std::string input_file(const OpenFpgaInput& input) const;
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
    * the input cannot be read now */
-  bool read_input(const OpenFpgaInput& input);
+  bool read_input(const OpenFpgaInput& input, const std::string& file = "");
   /* Mark an input as failed to read: it is dropped, with the inputs that
    * depend on it, and so are the results of all the stages */
   void fail_input(const OpenFpgaInput& input);
@@ -158,6 +161,7 @@ class OpenFpgaSession {
   uint64_t vpr_generation_ = 0;
   uint64_t linked_generation_ = 0;
   std::map<OpenFpgaStage, std::string> imported_;
+  std::map<OpenFpgaInput, std::string> input_files_;
 };
 
 } /* End namespace openfpga */

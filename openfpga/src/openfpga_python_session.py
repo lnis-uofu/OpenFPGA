@@ -5,6 +5,10 @@
 # else than the shell: a Session sends the commands of the shell, and reads the
 # answers of the queries (JSON, see openfpga_flow/schemas) into typed objects.
 import dataclasses
+import hashlib
+import json
+import os
+import shutil
 import time
 import typing
 from typing import List, Optional, Union
@@ -267,6 +271,51 @@ class AppOption:
     stage: str
 
 
+@dataclasses.dataclass(frozen=True)
+class InputFile:
+    """Where an input was read from, as a whole path"""
+
+    file: str
+
+
+@dataclasses.dataclass(frozen=True)
+class VprArchInput:
+    file: str
+    layout: str
+
+
+@dataclasses.dataclass(frozen=True)
+class SessionInputs:
+    """The inputs of the flow. None for one that is not read"""
+
+    vpr_arch: Optional[VprArchInput]
+    openfpga_arch: Optional[InputFile]
+    circuit: Optional[InputFile]
+
+
+@dataclasses.dataclass(frozen=True)
+class SessionResults:
+    """The files of the results of the stages: the packing (.net), the placement
+    (.place) and the routing (.route). None for a stage that is not reached. The
+    paths are whole, from the directory of the process when they were asked"""
+
+    packing: Optional[str]
+    placement: Optional[str]
+    routing: Optional[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class SessionState:
+    """Answer of report_session: what the flow has done. reached lists the stages
+    that are valid (DEVICE, PACKED, PLACED, ROUTED, ANALYZED, ...); a stage that
+    an option or an input changed is not in it. It is empty if the data of VPR
+    that the session worked with was replaced"""
+
+    reached: List[str]
+    inputs: SessionInputs
+    results: SessionResults
+
+
 def _convert(hint, value):
     """The JSON value, as an instance of the type hint"""
     if value is None:
@@ -298,6 +347,7 @@ def _build(cls, data):
 
 # The version of the schema that each class reads
 _SCHEMA_VERSIONS = {
+    "session": 1,
     "app_options": 1,
     "timing_summary": 1,
     "critical_paths": 1,
@@ -402,6 +452,21 @@ def _answer_options(result):
     return [_build(AppOption, option) for option in answer["data"]["options"]]
 
 
+def _read_manifest(path, missing_ok=False):
+    try:
+        with open(path) as handle:
+            manifest = json.load(handle)
+    except FileNotFoundError:
+        if missing_ok:
+            return None
+        raise CheckpointError("There is no checkpoint in '%s'" % os.path.dirname(path))
+    except ValueError as error:
+        raise CheckpointError("'%s' is not a checkpoint: %s" % (path, error))
+    if not isinstance(manifest, dict) or manifest.get("format") != _CHECKPOINT_FORMAT:
+        raise CheckpointError("'%s' is not a checkpoint of a format that is read" % path)
+    return manifest
+
+
 # The Session -------------------------------------------------------------------------
 
 
@@ -413,6 +478,34 @@ class StepResult:
     command: str
     log: str
     elapsed_s: float
+
+
+class CheckpointError(RuntimeError):
+    """A checkpoint cannot be written, or cannot be restored from"""
+
+
+_CHECKPOINT_FORMAT = 1
+_CHECKPOINT_MANIFEST = "checkpoint.json"
+# The options that the commands which read the inputs set: restoring reads the inputs
+_INPUT_OPTIONS = ("filename.arch_file", "filename.circuit_file", "general.device_layout")
+# What a checkpoint keeps of the stages: the results as files, and the command that reads them
+_CHECKPOINT_RESULTS = (
+    ("packing", "PACKED", "read_packing"),
+    ("placement", "PLACED", "read_placement"),
+    ("routing", "ROUTED", "read_routing"),
+)
+_CHECKPOINT_STAGES = ("DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED")
+
+
+def _sha256(path):
+    digest = hashlib.sha256()
+    try:
+        with open(path, "rb") as handle:
+            for block in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(block)
+    except OSError as error:
+        raise CheckpointError("Cannot read '%s': %s" % (path, error.strerror or error))
+    return digest.hexdigest()
 
 
 class Session:
@@ -433,15 +526,20 @@ class Session:
             stage()
         print(session.timing_summary().setup.fmax_mhz)
 
+    checkpoint() saves what the flow has done in a directory, and
+    Session.restore() makes a session that is at that point, in this process or
+    another. With checkpoint_dir, a checkpoint is made after each stage.
+
     The files of the flow are written in the current directory of the process.
     The queries read the stage that they need, and fail if it is not valid,
     which is the case after an option or an input that changed it, with the
     command to run first.
     """
 
-    def __init__(self, shell=None):
+    def __init__(self, shell=None, checkpoint_dir=None):
         self.shell = shell if shell is not None else OpenfpgaShell()
         self.options = Options(self.shell)
+        self.checkpoint_dir = checkpoint_dir
 
     # The commands ----------------------------------------------------------------
 
@@ -471,16 +569,22 @@ class Session:
     # The stages ------------------------------------------------------------------
 
     def pack(self):
-        return self.command("pack")
+        return self._stage("pack")
 
     def place(self):
-        return self.command("place")
+        return self._stage("place")
 
     def route(self):
-        return self.command("route")
+        return self._stage("route")
 
     def analysis(self):
-        return self.command("analysis")
+        return self._stage("analysis")
+
+    def _stage(self, name, **options):
+        step = self.command(name, **options)
+        if self.checkpoint_dir is not None:
+            self.checkpoint(self.checkpoint_dir)
+        return step
 
     def run_flow(self):
         """Run pack, place, route and analysis, and return their results"""
@@ -488,15 +592,119 @@ class Session:
 
     def read_packing(self, file):
         """Take the packing (.net) of a file, instead of running pack"""
-        return self.command("read_packing", file=file)
+        return self._stage("read_packing", file=file)
 
     def read_placement(self, file):
         """Take the placement (.place) of a file, instead of running place"""
-        return self.command("read_placement", file=file)
+        return self._stage("read_placement", file=file)
 
     def read_routing(self, file):
         """Take the routing (.route) of a file, instead of running route"""
-        return self.command("read_routing", file=file)
+        return self._stage("read_routing", file=file)
+
+    # The state and the checkpoints -----------------------------------------------
+
+    def state(self):
+        """What the flow has done: the stages that are reached, and the files
+        of the inputs and of the results"""
+        return _answer(self.shell.run("report_session"), "session", SessionState)
+
+    def checkpoint(self, directory):
+        """Save the flow in a directory, and return the directory.
+
+        The directory gets the files of the packing, the placement and the
+        routing of the stages that are reached, and checkpoint.json: the
+        stages, the options that are not the default, and where the inputs
+        come from, with the checksum of every file. The inputs are not copied:
+        restore() needs them where they are. The stages after ANALYZED
+        (repack, bitstream) are not saved. A checkpoint that was in the
+        directory is replaced.
+        """
+        state = self.state()
+        if "DEVICE" not in state.reached:
+            raise CheckpointError("Nothing to save: the flow has not read all its inputs")
+        directory = os.fspath(directory)
+        os.makedirs(directory, exist_ok=True)
+        inputs = {}
+        for key in ("vpr_arch", "openfpga_arch", "circuit"):
+            entry = getattr(state.inputs, key)
+            inputs[key] = dict(dataclasses.asdict(entry), sha256=_sha256(entry.file))
+        results = {}
+        for key, _, _ in _CHECKPOINT_RESULTS:
+            source = getattr(state.results, key)
+            if source is None:
+                continue
+            name = os.path.basename(source)
+            target = os.path.join(directory, name)
+            shutil.copyfile(source, target + ".part")
+            os.replace(target + ".part", target)
+            results[key] = {"file": name, "sha256": _sha256(target)}
+        manifest = {
+            "format": _CHECKPOINT_FORMAT,
+            "stages": [stage for stage in state.reached if stage in _CHECKPOINT_STAGES],
+            "inputs": inputs,
+            "options": [
+                {"name": option.name, "value": option.value}
+                for option in self.options.changed()
+                if option.name not in _INPUT_OPTIONS and option.value is not None
+            ],
+            "results": results,
+        }
+        path = os.path.join(directory, _CHECKPOINT_MANIFEST)
+        previous = _read_manifest(path, missing_ok=True)
+        with open(path + ".part", "w") as handle:
+            json.dump(manifest, handle, indent=2)
+            handle.write("\n")
+        # The manifest is the last to change: a checkpoint that was cut short is the old one
+        os.replace(path + ".part", path)
+        for key, entry in (previous or {}).get("results", {}).items():
+            if key not in results and os.path.basename(entry["file"]) == entry["file"]:
+                try:
+                    os.remove(os.path.join(directory, entry["file"]))
+                except FileNotFoundError:
+                    pass
+        return directory
+
+    @classmethod
+    def restore(cls, directory, shell=None, check_inputs=True):
+        """Make a Session that is at the point of a checkpoint.
+
+        It sets the options, reads the inputs, and reads the results of the
+        stages that were reached instead of running them, so that the flow
+        goes on from there, in this process or in another one, and gives the
+        same results. ANALYZED is run again. A file of the results that does
+        not match its checksum raises CheckpointError, and so does an input
+        that changed, unless check_inputs is False.
+        """
+        directory = os.fspath(directory)
+        manifest = _read_manifest(os.path.join(directory, _CHECKPOINT_MANIFEST))
+        for key, entry in manifest["results"].items():
+            if _sha256(os.path.join(directory, entry["file"])) != entry["sha256"]:
+                raise CheckpointError(
+                    "The file '%s' of the %s is not the one of the checkpoint"
+                    % (entry["file"], key)
+                )
+        if check_inputs:
+            for key, entry in manifest["inputs"].items():
+                if _sha256(entry["file"]) != entry["sha256"]:
+                    raise CheckpointError(
+                        "The input '%s' (%s) is not the one of the checkpoint"
+                        % (key, entry["file"])
+                    )
+        session = cls(shell)
+        for option in manifest["options"]:
+            session.options.set(option["name"], option["value"])
+        inputs = manifest["inputs"]
+        session.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
+        session.read_openfpga_arch(inputs["openfpga_arch"]["file"])
+        session.read_circuit(inputs["circuit"]["file"])
+        for key, _, command in _CHECKPOINT_RESULTS:
+            if key in manifest["results"]:
+                path = os.path.join(directory, manifest["results"][key]["file"])
+                getattr(session, command)(path)
+        if "ANALYZED" in manifest["stages"]:
+            session.analysis()
+        return session
 
     # The queries -----------------------------------------------------------------
 
