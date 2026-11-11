@@ -12,3 +12,5 @@ OpenFPGA Shell
    openfpga_script
   
    openfpga_commands/index
+
+   python_session
