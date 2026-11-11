@@ -19,6 +19,21 @@ The module ``openfpga`` (see the build option ``OPENFPGA_SWIG_PYTHON`` in :ref:`
 
 The files of the flow are written in the current directory of the process.
 
+Installation
+~~~~~~~~~~~~
+
+The module is built from the source of OpenFPGA (a checkout with its submodules) and installed with ``pip``, in a virtual environment for instance:
+
+.. code-block:: shell
+
+  python3 -m venv ~/openfpga-env
+  ~/openfpga-env/bin/pip install .
+  ~/openfpga-env/bin/python3 openfpga_flow/openfpga_python_scripts/session_quickstart.py
+
+The build uses ``scikit-build-core``, which ``pip`` fetches, and builds only the Python module (not the ``openfpga`` executable, Yosys or the tests). It needs a C++17 compiler, CMake, SWIG, the Python development headers and the Tcl development headers (``tcl-dev`` or ``tcl-devel``, which VPR's SDC parser uses). CMake takes the compiler that is first in the ``PATH``: set ``CC`` and ``CXX`` for another one, e.g., ``CC=gcc-12 CXX=g++-12 pip install .``. The result is ``import openfpga``. The build is kept in ``build/python``, so that the next ``pip install .`` only builds what changed.
+
+``session_quickstart.py`` runs a small design through the four stages in a worker process, and prints the stages reached, the time of each, the Fmax, the utilization and the worst path. Its ``--in-process`` option runs a ``Session`` instead, and ``--help`` lists the files that it takes.
+
 Commands
 ~~~~~~~~
 
