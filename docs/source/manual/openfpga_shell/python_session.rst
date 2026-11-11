@@ -39,3 +39,12 @@ Answers
 A command that answers in JSON (see :ref:`query_answers`) gives its answer to the session as an object (an immutable dataclass) instead of JSON. The fields are the ones of the answer, and ``stage`` tells which stage the answer was read from, for the classes that have it. Values that are not finite are ``None``.
 
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped. A command that a plugin adds can answer with a kind of its own: ``openfpga.register_answer_kind(kind, version)`` makes the module read it, and a subclass of ``Session`` reads the answer with ``self._query(command, answer_kind, cls, **options)``.
+
+Threads
+~~~~~~~
+
+A command that runs for long, e.g., ``place`` or ``route``, does not hold the interpreter: the GIL is released while it runs, so that the other threads go on, e.g., to show a progress, to read a queue of requests or to cancel a wait.
+
+The commands run one at a time in the process, whichever session or shell they are sent to, because VPR keeps its data in global variables and the output of a command is captured for the whole process. A command that is sent from another thread waits for its turn. This makes concurrent calls safe, but it does not make them parallel, and two sessions that run a flow in turns still share the data of VPR (the last one to read an input wins). For flows that run at the same time, or that must not affect each other, use one process for each.
+
+The output that another thread prints (``print``, ``sys.stdout``) while a command runs is part of the log of that command, as the capture is at the level of the process.
