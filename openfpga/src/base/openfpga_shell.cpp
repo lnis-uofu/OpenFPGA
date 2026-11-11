@@ -20,6 +20,7 @@
 #ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
 #include "openfpga_yosys_command.h"
 #endif
+#include "session_report_commands.h"
 #include "stage_commands.h"
 #include "vpr_command.h"
 #include "vtr_log.h"
@@ -56,6 +57,7 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
+  openfpga::add_session_report_commands(shell_);
 
   /* Add basic commands: exit, help, etc.
    * Note:
