@@ -1,7 +1,7 @@
 # Run VPR with the task's flat-routing setting. Flat routing rebuilds pb_route
 # from routed nets and keeps bus mux bits on one input set. Cluster routing
 # may split the bits across sets, which repack cannot follow.
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --flat_routing ${OPENFPGA_VPR_FLAT_ROUTING}
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling ${OPENFPGA_VPR_CLOCK_MODELING} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --flat_routing ${OPENFPGA_VPR_FLAT_ROUTING}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
