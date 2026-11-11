@@ -199,3 +199,6 @@ OpenfpgaShell.__getattr__ = _shell_getattr
 
 /* The Session of the flow, in pure Python */
 %pythoncode "openfpga_python_session.py"
+
+/* The Session in a process of its own */
+%pythoncode "openfpga_python_worker.py"
