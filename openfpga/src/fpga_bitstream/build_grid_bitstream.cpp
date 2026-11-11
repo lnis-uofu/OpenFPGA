@@ -285,6 +285,35 @@ static int find_physical_block_pin_mux_path_id(const PhysicalPb& physical_pb,
 }
 
 /********************************************************************
+ * Check if a given input of the mux that drives a destination pin carries the
+ * net of the destination pin, based on the routing results stored in
+ * physical_pb. Returns false when the destination is unmapped or has no net.
+ *******************************************************************/
+static bool is_physical_block_pin_net_on_mux_input(
+  const PhysicalPb& physical_pb, t_pb_graph_pin* des_pb_graph_pin,
+  t_interconnect* cur_interc, const size_t& mux_input_pin_id) {
+  const PhysicalPbId& des_pb_id =
+    physical_pb.find_pb(des_pb_graph_pin->parent_node);
+  if (true != physical_pb.valid_pb_id(des_pb_id)) {
+    return false;
+  }
+  AtomNetId output_net =
+    physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin);
+  if (AtomNetId::INVALID() == output_net) {
+    return false;
+  }
+  std::vector<t_pb_graph_pin*> src_pb_graph_pins =
+    pb_graph_pin_inputs(des_pb_graph_pin, cur_interc);
+  VTR_ASSERT(mux_input_pin_id < src_pb_graph_pins.size());
+  t_pb_graph_pin* src_pb_graph_pin = src_pb_graph_pins[mux_input_pin_id];
+  const PhysicalPbId& src_pb_id =
+    physical_pb.find_pb(src_pb_graph_pin->parent_node);
+  return (true == physical_pb.valid_pb_id(src_pb_id)) &&
+         (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) ==
+          output_net);
+}
+
+/********************************************************************
  * This function generates bitstream for a programmable routing
  * multiplexer which drives an output pin of physical_pb_graph_node and its the
  *input_edges
@@ -362,34 +391,43 @@ static void build_physical_block_pin_interc_bitstream(
         if (des_pb_graph_pin != rep_pb_graph_pin) {
           return;
         }
-        /* All the mapped bits of the bus must select the same input port,
-         * otherwise the bus mux cannot be realized with a single shared
-         * selector. The path id equals the selected input-port index. */
-        int bus_path_id = DEFAULT_PATH_ID;
-        for (t_pb_graph_pin* bus_pin : bus_pins) {
-          int pin_path_id = find_physical_block_pin_mux_path_id(
-            physical_pb, bus_pin, cur_interc, fan_in);
-          if (DEFAULT_PATH_ID == pin_path_id) {
-            continue;
-          }
-          if (DEFAULT_PATH_ID == bus_path_id) {
-            bus_path_id = pin_path_id;
-            net_pb_graph_pin = bus_pin;
-          } else if (bus_path_id != pin_path_id) {
-            VTR_LOGF_ERROR(
-              __FILE__, __LINE__,
-              "Bus-based mux '%s' (Arch[LINE%d]) requires all bits of the "
-              "output bus to be routed from the same input port. Bit '%s' "
-              "selects input %d while another bit of the same bus selects "
-              "input %d. Check the packing/routing results.\n",
-              cur_interc->name.c_str(), cur_interc->line_num,
-              bus_pin->to_string().c_str(), pin_path_id, bus_path_id);
-            exit(CMD_EXEC_FATAL_ERROR);
+        /* All the bits of the bus share a single selector. Repack routes
+         * every bit from one input set and saves that set in the physical pb.
+         * The nets on the pins do not always tell which input a bit is routed
+         * from: the source pin of a net can itself be an input of the mux, and
+         * then it carries the net of a bit that is routed from another input.
+         * The path id equals the selected input-port index. A mux without a
+         * saved input set, or with no bit routed through it, is not used. */
+        int bus_path_id = physical_pb.bus_mux_selection(cur_interc->name);
+        mux_input_pin_id = size_t(DEFAULT_PATH_ID);
+        if (0 <= bus_path_id) {
+          VTR_ASSERT(size_t(bus_path_id) < fan_in);
+          for (t_pb_graph_pin* bus_pin : bus_pins) {
+            int pin_path_id = find_physical_block_pin_mux_path_id(
+              physical_pb, bus_pin, cur_interc, fan_in);
+            if (DEFAULT_PATH_ID == pin_path_id) {
+              continue;
+            }
+            /* A bit that is routed through the mux must find its net on the
+             * selected input */
+            if (false ==
+                is_physical_block_pin_net_on_mux_input(
+                  physical_pb, bus_pin, cur_interc, size_t(bus_path_id))) {
+              VTR_LOGF_ERROR(
+                __FILE__, __LINE__,
+                "Bus-based mux '%s' (Arch[LINE%d]) is routed from input %d, "
+                "but the net of bit '%s' is on input %d and not on input %d. "
+                "Check the packing/routing results.\n",
+                cur_interc->name.c_str(), cur_interc->line_num, bus_path_id,
+                bus_pin->to_string().c_str(), pin_path_id, bus_path_id);
+              exit(CMD_EXEC_FATAL_ERROR);
+            }
+            if (size_t(DEFAULT_PATH_ID) == mux_input_pin_id) {
+              mux_input_pin_id = size_t(bus_path_id);
+              net_pb_graph_pin = bus_pin;
+            }
           }
         }
-        mux_input_pin_id = (DEFAULT_PATH_ID == bus_path_id)
-                             ? size_t(DEFAULT_PATH_ID)
-                             : size_t(bus_path_id);
       } else {
         int pin_path_id = find_physical_block_pin_mux_path_id(
           physical_pb, des_pb_graph_pin, cur_interc, fan_in);
