@@ -108,8 +108,11 @@ The following options are available for a custom build
   - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
   - ``DOPENFPGA_WITH_VERSION=[ON|OFF]``: Enable/Disable the build of version number. When disabled, version number will be displayed as an empty string.
   - ``DOPENFPGA_WITH_SWIG=[ON|OFF]``: Enable/Disable the build of SWIG, which is required for integrating to high-level interface.
+  - ``DOPENFPGA_SWIG_PYTHON=[ON|OFF]``: Enable/Disable the build of the Python module of the OpenFPGA shell (``import openfpga``). By default, it is OFF. It requires ``OPENFPGA_WITH_SWIG=ON``, a Python 3 interpreter and its development headers. The Python to use can be selected by ``-DPython3_EXECUTABLE=<path>``. The module (``openfpga.py`` and ``_openfpga.so``) is generated in ``build/openfpga``
   - ``OPENFPGA_ENABLE_STRICT_COMPILE=[ON|OFF]``: Specifies whether compiler warnings should be treated as errors (e.g. -Werror)
   - ``OPENFPGA_READLINE_MODE=[libreadline|libedit|standard]``: Specifies which library to implement readline() function in the OpenFPGA shell. When the ``libreadline`` and ``libedit`` are used, the interactive mode of shell interface supports auto-completion and history. Standard mode is the minimum one without auto-completion and history. By default, it is ``libreadline``
+
+.. note:: The tests of the Python module are in ``openfpga_flow/tasks/python_binding_tests`` and run with ``python3 -m pytest openfpga_flow/tasks/python_binding_tests`` (``pytest`` is in ``requirements.txt``) or with the regression test ``python_binding_test``. They look for the module in ``build/openfpga``, or in the directory that ``OPENFPGA_PYTHON_PATH`` points to, and are skipped when it is not found.
 
 .. warning:: Use ``libreadline`` may cause your software to follow the GPL3 license if a shared library is included in your distribution.
 
