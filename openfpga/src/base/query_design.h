@@ -69,6 +69,14 @@
  *   of its type, as in the packing pin usage report of VPR: the clock pins are
  *   input pins). With stats: stats {num_clusters, by_type[]: type, count,
  *   average_input_pin_utils, average_output_pin_utils}, over all the clusters
+ *
+ * find (stage PACKED): the blocks and the nets whose name matches a
+ *   shell-style pattern
+ *   pattern, kind (null: both), blocks and nets: null if not looked for, else
+ *   {total, matched, returned, truncated, items[]}. A block item: name, type,
+ *   placed, x, y, sub_tile, layer (null until the design is placed). A net
+ *   item: name, fanout (the number of sinks), ignored (VPR does not route it,
+ *   e.g., a clock)
  *******************************************************************/
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -79,6 +87,7 @@ constexpr int PLACEMENT_SCHEMA_VERSION = 1;
 constexpr int NET_ROUTE_SCHEMA_VERSION = 1;
 constexpr int CONGESTION_SCHEMA_VERSION = 1;
 constexpr int CLUSTER_REPORT_SCHEMA_VERSION = 1;
+constexpr int FIND_SCHEMA_VERSION = 1;
 
 /* The most blocks or clusters a query lists, unless a limit is given */
 constexpr size_t QUERY_LIST_DEFAULT_LIMIT = 1000;
@@ -99,6 +108,10 @@ bool congestion_json(const int region_size, std::string& json);
 
 bool cluster_report_json(const std::string& query, const bool with_stats,
                          const size_t limit, std::string& json);
+
+/* An empty kind looks for blocks and nets, else it is "block" or "net" */
+bool find_json(const std::string& pattern, const std::string& kind,
+               const size_t limit, std::string& json);
 
 } /* End namespace openfpga */
 

@@ -174,6 +174,7 @@ def test_the_answers_are_what_the_shell_says(routed):
         ("placement", routed.placement()),
         ("congestion", routed.congestion()),
         ("report_cluster", routed.cluster_report()),
+        ("find --pattern *", routed.find("*")),
     ]
     for command, answer in queries:
         said = raw(routed, command)
@@ -199,6 +200,11 @@ def test_the_options_of_the_queries(routed):
     assert plain(stats) == raw(routed, "report_cluster --stats")["data"]
 
     assert routed.congestion(region_size=1).region_size == 1
+
+    found = routed.find("out:*", kind="block", limit=1)
+    assert found.kind == "block" and found.nets is None
+    assert found.blocks.returned == 1 and found.blocks.items[0].placed
+    assert plain(found) == raw(routed, "find --kind block", pattern="out:*", limit=1)["data"]
 
 
 def test_a_net_route(routed):

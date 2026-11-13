@@ -330,6 +330,114 @@ bool placement_json(const std::string& type, const std::string& prefix,
   return true;
 }
 
+bool find_json(const std::string& pattern, const std::string& kind,
+               const size_t limit, std::string& json_text) {
+  const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+  const auto& block_locs = g_vpr_ctx.placement().block_locs();
+  if (0 == clb_nlist.blocks().size()) {
+    VTR_LOG_ERROR("The design has no packing: run the stage PACKED first\n");
+    return false;
+  }
+  if (!kind.empty() && kind != "block" && kind != "net") {
+    VTR_LOG_ERROR("The kind must be 'block' or 'net', not '%s'\n",
+                  kind.c_str());
+    return false;
+  }
+  if (pattern.empty()) {
+    VTR_LOG_ERROR("The pattern is empty\n");
+    return false;
+  }
+  if (limit < 1) {
+    VTR_LOG_ERROR("The limit must be at least 1\n");
+    return false;
+  }
+  const bool with_blocks = kind.empty() || kind == "block";
+  const bool with_nets = kind.empty() || kind == "net";
+
+  JsonWriter json;
+  begin_response(json, "find", FIND_SCHEMA_VERSION, "PACKED");
+  json.begin_object();
+  json.key("pattern").value(pattern);
+  json.key("kind");
+  kind.empty() ? json.null() : json.value(kind);
+
+  json.key("blocks");
+  if (with_blocks) {
+    std::vector<ClusterBlockId> matching;
+    for (const ClusterBlockId blk : clb_nlist.blocks()) {
+      if (glob_match(pattern, clb_nlist.block_name(blk))) {
+        matching.push_back(blk);
+      }
+    }
+    const size_t returned = std::min(limit, matching.size());
+    json.begin_object();
+    json.key("total").value(static_cast<int64_t>(clb_nlist.blocks().size()));
+    json.key("matched").value(static_cast<int64_t>(matching.size()));
+    json.key("returned").value(static_cast<int64_t>(returned));
+    json.key("truncated").value(returned < matching.size());
+    json.key("items").begin_array();
+    for (size_t i = 0; i < returned; ++i) {
+      const ClusterBlockId blk = matching[i];
+      json.begin_object();
+      json.key("name").value(clb_nlist.block_name(blk));
+      json.key("type").value(clb_nlist.block_type(blk)->name);
+      /* Where it is, once the design is placed */
+      const bool placed = size_t(blk) < block_locs.size() &&
+                          block_locs[blk].loc.x >= 0 &&
+                          block_locs[blk].loc.y >= 0;
+      json.key("placed").value(placed);
+      const t_pl_loc loc = placed ? block_locs[blk].loc : t_pl_loc();
+      auto write_coordinate = [&](const char* name, const int value) {
+        json.key(name);
+        placed ? json.value(value) : json.null();
+      };
+      write_coordinate("x", loc.x);
+      write_coordinate("y", loc.y);
+      write_coordinate("sub_tile", loc.sub_tile);
+      write_coordinate("layer", loc.layer);
+      json.end_object();
+    }
+    json.end_array();
+    json.end_object();
+  } else {
+    json.null();
+  }
+
+  json.key("nets");
+  if (with_nets) {
+    std::vector<ClusterNetId> matching;
+    for (const ClusterNetId net : clb_nlist.nets()) {
+      if (glob_match(pattern, clb_nlist.net_name(net))) {
+        matching.push_back(net);
+      }
+    }
+    const size_t returned = std::min(limit, matching.size());
+    json.begin_object();
+    json.key("total").value(static_cast<int64_t>(clb_nlist.nets().size()));
+    json.key("matched").value(static_cast<int64_t>(matching.size()));
+    json.key("returned").value(static_cast<int64_t>(returned));
+    json.key("truncated").value(returned < matching.size());
+    json.key("items").begin_array();
+    for (size_t i = 0; i < returned; ++i) {
+      const ClusterNetId net = matching[i];
+      json.begin_object();
+      json.key("name").value(clb_nlist.net_name(net));
+      json.key("fanout").value(
+        static_cast<int64_t>(clb_nlist.net_sinks(net).size()));
+      json.key("ignored").value(clb_nlist.net_is_ignored(net));
+      json.end_object();
+    }
+    json.end_array();
+    json.end_object();
+  } else {
+    json.null();
+  }
+  json.end_object();
+  end_response(json);
+  json_text = json.str();
+  return true;
+}
+
 bool net_route_json(const std::string& net, std::string& json_text) {
   const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
   const auto& route_ctx = g_vpr_ctx.routing();
