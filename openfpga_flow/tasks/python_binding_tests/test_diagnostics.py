@@ -270,6 +270,16 @@ def test_every_failure_has_a_diagnostic(openfpga_module, ready, golden, tmp_path
         session.place()
         session.route()
 
+    def after_a_failed_route():
+        # The fabric is built on a routing that worked, and repack needs the routing
+        session = ready()
+        session.run_flow()
+        golden.link(session.shell)
+        session.options["router.max_router_iterations"] = 2
+        with pytest.raises(openfpga_module.OpenfpgaError):
+            session.route()
+        session.command("repack")
+
     def small_device():
         session = ready(inputs=False)
         session.read_vpr_arch(golden.vpr_arch, layout="1x1")
@@ -281,6 +291,7 @@ def test_every_failure_has_a_diagnostic(openfpga_module, ready, golden, tmp_path
         "xml_syntax": lambda: ready(False).read_vpr_arch("bad.xml", layout="2x2"),
         "input_not_read": lambda: ready(False).pack(),
         "stage_not_reached": lambda: ready().place(),
+        "stage_failed": after_a_failed_route,
         "option_unknown": lambda: ready().options.__setitem__("place.nothing", 1),
         "option_value_invalid": lambda: ready().options.__setitem__("place.seed", "many"),
         "command_unknown": lambda: ready().command("no_such_command"),

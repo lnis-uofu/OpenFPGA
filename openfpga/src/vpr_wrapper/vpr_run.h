@@ -36,6 +36,9 @@ struct VprRun {
    * failed since */
   bool initialized = false;
   openfpga::OpenFpgaStage last_stage = openfpga::OpenFpgaStage::UNINIT;
+  /* A stage that ran on this data failed, and left what it had made: the
+   * data can be read, but no stage can be run on it */
+  bool failed = false;
 };
 
 /* Release the data of the live run, if any, and start a new one */

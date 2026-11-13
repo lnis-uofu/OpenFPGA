@@ -20,6 +20,7 @@ report_session
 
   - ``reached``: the stages that are valid, in the order of the flow (``DEVICE``, ``PACKED``, ``PLACED``, ``ROUTED``, ``ANALYZED``, ...). A stage that an option or an input made out of date is not in it. The list is empty when the data of VPR that the session worked with was replaced, e.g., by ``vpr`` or by another shell
   - ``inputs``: ``vpr_arch`` (``file`` and ``layout``), ``openfpga_arch`` and ``circuit`` (``file``): where each was read from, as a whole path. ``null`` for an input that is not read
+  - ``failed``: ``stage`` and ``message`` of the stage (``PACKED``, ``PLACED`` or ``ROUTED``) that failed last and left what it made, e.g., a route that found no legal routing; ``null`` otherwise, and once the stage runs again or is dropped
   - ``results``: ``packing``, ``placement`` and ``routing``: the file of the results of a stage that is reached, which is the one that VPR wrote, or the one that ``read_packing``, ``read_placement`` or ``read_routing`` read instead of running the stage. ``null`` for the other stages. The path is whole, from the current directory of the process
 
   .. code-block::

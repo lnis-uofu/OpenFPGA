@@ -68,6 +68,15 @@ class SessionResults:
 
 
 @dataclasses.dataclass(frozen=True)
+class StageFailure:
+    """A stage that failed and left what it had made, e.g., a route that found
+    no legal routing: the data of the stages before it is still there"""
+
+    stage: str
+    message: str
+
+
+@dataclasses.dataclass(frozen=True)
 class SessionState:
     """Answer of report_session: what the flow has done. reached lists the stages
     that are valid (DEVICE, PACKED, PLACED, ROUTED, ANALYZED, ...); a stage that
@@ -77,6 +86,7 @@ class SessionState:
     reached: List[str]
     inputs: SessionInputs
     results: SessionResults
+    failed: Optional[StageFailure] = None
 
 
 def _convert(hint, value):
