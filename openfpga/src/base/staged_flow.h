@@ -57,6 +57,35 @@ void fail_openfpga_arch_input(OpenFpgaSession& session);
  * created first if it is not there yet */
 bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage);
 
+/* Read the results of a stage, PACKED, PLACED or ROUTED, from the files that
+ * a run of VPR made, instead of running it. The stage before it must have been
+ * reached, and, for the routing, the channel width must be fixed. The files
+ * are read again when the stages before another stage are run again, until the
+ * stage is run, or dropped */
+bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
+                       const std::string& file);
+
+/* The commands that follow the stages, e.g., 'repack', are checked against the
+ * session when the flow is run stage by stage, i.e., when the VPR architecture
+ * has been read, and the data of VPR has not been replaced by 'vpr' since.
+ * Otherwise, the flow is the one of 'vpr', which the shell dependencies check,
+ * and these functions let everything pass and record nothing.
+ *
+ * - stage_ready() checks that a stage is valid. It logs the reason and returns
+ *   false if not
+ * - stage_done() and stage_failed() record the result of a command that
+ *   reaches a stage */
+bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
+                 const char* command);
+/* link_openfpga_arch records the run of VPR it links to; the commands that use
+ * what it makes check that the run is still the one of the data of VPR. The
+ * stages that run again replace the data of VPR, and what was linked to the
+ * previous data cannot be used */
+void stage_linked(OpenFpgaSession& session);
+bool linked_ready(const OpenFpgaSession& session, const char* command);
+void stage_done(OpenFpgaSession& session, const OpenFpgaStage& stage);
+void stage_failed(OpenFpgaSession& session, const OpenFpgaStage& stage);
+
 } /* End namespace openfpga */
 
 #endif

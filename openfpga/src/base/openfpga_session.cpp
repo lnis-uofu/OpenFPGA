@@ -152,6 +152,18 @@ std::vector<OpenFpgaStage> OpenFpgaSession::reached_stages() const {
   return stages;
 }
 
+std::string OpenFpgaSession::imported_file(const OpenFpgaStage& stage) const {
+  const auto it = imported_.find(stage);
+  return imported_.end() == it ? std::string() : it->second;
+}
+
+void OpenFpgaSession::set_imported(const OpenFpgaStage& stage,
+                                   const std::string& file) {
+  if (reached(stage)) {
+    imported_[stage] = file;
+  }
+}
+
 bool OpenFpgaSession::read_input(const OpenFpgaInput& input) {
   if (!can_read(input)) {
     return false;
@@ -223,6 +235,8 @@ void OpenFpgaSession::reset_app_options() {
 void OpenFpgaSession::reset() {
   inputs_ = 0;
   stages_ = 0;
+  linked_generation_ = 0;
+  imported_.clear();
 }
 
 void OpenFpgaSession::invalidate_stage_and_dependents(
@@ -230,11 +244,15 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
   for (const OpenFpgaStage& other : all_stages) {
     if (is_or_depends_on(other, stage)) {
       stages_ &= ~bit(other);
+      imported_.erase(other);
     }
   }
 }
 
-void OpenFpgaSession::invalidate_all_stages() { stages_ = 0; }
+void OpenFpgaSession::invalidate_all_stages() {
+  stages_ = 0;
+  imported_.clear();
+}
 
 void OpenFpgaSession::invalidate_for_option(const std::string& name) {
   OpenFpgaStage stage = OpenFpgaStage::DEVICE;

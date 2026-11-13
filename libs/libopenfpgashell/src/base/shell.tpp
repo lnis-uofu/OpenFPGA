@@ -142,6 +142,7 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
   command_macro_execute_functions_.emplace_back();
   command_status_.push_back(CMD_EXEC_NONE); /* By default, the command should be marked as fatal error as it has been never executed */
   command_dependencies_.emplace_back();
+  command_alternatives_.emplace_back();
 
   /* Register the name in the name2id map */
   command_name2ids_[cmd.name()] = shell_cmd;
@@ -238,6 +239,14 @@ void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
     VTR_ASSERT(true == valid_command_id(dependent_cmd));
   }
   command_dependencies_[cmd_id] = dependent_cmds;
+}
+
+template<class T>
+void Shell<T>::add_command_alternative(const ShellCommandId& cmd_id,
+                                       const ShellCommandId& alternative_cmd_id) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  VTR_ASSERT(true == valid_command_id(alternative_cmd_id));
+  command_alternatives_[cmd_id].push_back(alternative_cmd_id);
 }
 
 /* Add a command with it description */
@@ -593,8 +602,13 @@ int Shell<T>::execute_command(const char* cmd_line,
 
   /* Check the dependency graph to see if all the prequistics have been met */
   for (const ShellCommandId& dep_cmd : command_dependencies_[cmd_id]) {
-    if ( (CMD_EXEC_NONE == command_status_[dep_cmd])
-      || (CMD_EXEC_FATAL_ERROR == command_status_[dep_cmd]) ) {
+    bool dep_met = (CMD_EXEC_NONE != command_status_[dep_cmd])
+                && (CMD_EXEC_FATAL_ERROR != command_status_[dep_cmd]);
+    for (const ShellCommandId& alt_cmd : command_alternatives_[dep_cmd]) {
+      dep_met = dep_met || ( (CMD_EXEC_NONE != command_status_[alt_cmd])
+                          && (CMD_EXEC_FATAL_ERROR != command_status_[alt_cmd]) );
+    }
+    if (!dep_met) {
       VTR_LOG("Command '%s' is required to be executed before command '%s'!\n",
               commands_[dep_cmd].name().c_str(), commands_[cmd_id].name().c_str());
       /* Echo the command help desk */
