@@ -541,6 +541,18 @@ class StageFailure:
 
 
 @dataclasses.dataclass(frozen=True)
+class Change:
+    """What setting an option did: the name, its value before and after (as the
+    shell reports them), and the stages that were reached and are not any more,
+    in the order of the flow. dropped is empty when the value did not change"""
+
+    option: str
+    before: object
+    after: object
+    dropped: List[str]
+
+
+@dataclasses.dataclass(frozen=True)
 class StageRun:
     """A stage that is reached. seconds is None if it was not run by a command
     of this session (its results were read from a file)"""
@@ -788,7 +800,10 @@ class Options:
 
     def reset(self, name):
         """Give an option its default value"""
-        self.set(name, self.get(name).default)
+        if self._run is not None:
+            self._run("reset_app_option", name=name)
+        else:
+            self._shell.reset_app_option(name=name)
 
     def __getitem__(self, name):
         return self.get(name).value
@@ -920,6 +935,8 @@ class _Journal:
             python = "session.command(%s)\n" % call
             if name == "set_app_option" and not args and set(options) == {"name", "value"}:
                 python = "session.options[%r] = %r\n" % (options["name"], options["value"])
+            if name == "reset_app_option" and not args and set(options) == {"name"}:
+                python = "session.options.reset(%r)\n" % options["name"]
             shell = line + "\n"
         else:
             errors = getattr(error, "errors", None) or []
@@ -1111,6 +1128,67 @@ class Session:
     def read_routing(self, file):
         """Take the routing (.route) of a file, instead of running route"""
         return self._stage("read_routing", file=file)
+
+    # The inputs that change a flow -------------------------------------------------
+
+    def set_option(self, name, value):
+        """Set an application option, as options[name] = value does, and tell
+        what it changed: a Change with the stages that it dropped. The next
+        command of a stage that was dropped runs with the new value"""
+        return self._change(name, lambda: self.options.set(name, value))
+
+    def _change(self, name, action):
+        reached = self.state().reached
+        before = self.options.get(name).value
+        action()
+        after = self.options.get(name).value
+        now = self.state().reached
+        return Change(name, before, after, [stage for stage in reached if stage not in now])
+
+    def _file_option(self, name, file):
+        """Set an option that names a file, as a whole path. A file that does not
+        exist is refused before anything changes; None gives the option its
+        default back, i.e., no file"""
+        if file is None:
+            return self._reset_option(name)
+        path = os.path.abspath(os.fspath(file))
+        if not os.path.isfile(path):
+            raise FileNotFoundError("The file '%s' does not exist" % path)
+        return self.set_option(name, path)
+
+    def _reset_option(self, name):
+        return self._change(name, lambda: self.options.reset(name))
+
+    def read_vpr_constraints(self, file):
+        """Take the floorplan constraints of VPR (XML: the atoms of a partition
+        and the regions where they must be packed and placed) from a file, for
+        the stages that follow. They are read when the device is made, so the
+        whole flow runs again. None takes the constraints away"""
+        return self._file_option("filename.read_vpr_constraints_file", file)
+
+    def read_sdc(self, file):
+        """Take the timing constraints of VPR (SDC: the clocks and their periods,
+        the input and output delays) from a file. They are read when the device
+        is made, so the whole flow runs again. None takes them away"""
+        return self._file_option("filename.sdc_file", file)
+
+    def set_route_chan_width(self, width):
+        """Route with a channel of this many tracks, instead of looking for the
+        smallest. The routing graph is made with it, so the whole flow runs
+        again"""
+        return self.set_option("router.route_chan_width", int(width))
+
+    def clear_constraints(self):
+        """Take away the constraints of VPR and the timing constraints. Returns
+        the Changes, one for each that was set"""
+        return [
+            change
+            for change in (
+                self.read_vpr_constraints(None),
+                self.read_sdc(None),
+            )
+            if change.before != change.after
+        ]
 
     # The journal and the replay --------------------------------------------------
 
