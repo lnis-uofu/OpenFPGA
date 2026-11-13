@@ -130,6 +130,67 @@
               }
             }
           }
+        },
+        "hotspots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "channel",
+              "x",
+              "y",
+              "used",
+              "capacity",
+              "occupancy",
+              "overused_nodes",
+              "num_nets",
+              "nets"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "channel": {
+                "enum": [
+                  "chanx",
+                  "chany"
+                ]
+              },
+              "x": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "used": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "occupancy": {
+                "type": "number",
+                "minimum": 0
+              },
+              "overused_nodes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "num_nets": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50
+              }
+            }
+          }
         }
       }
     }

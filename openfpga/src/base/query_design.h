@@ -60,7 +60,12 @@
  *   grid, channel_width {x, y}, region_size, summary {chanx, chany,
  *   overused_nodes}, regions[]: x_low, y_low, x_high, y_high, chanx, chany.
  *   chanx and chany are {used, capacity, occupancy}, and only the regions
- *   with a wire in use are listed
+ *   with a wire in use are listed. With hotspots: hotspots[], the fullest
+ *   segments of the channels, the fullest first: channel (chanx or chany), x, y
+ *   (the tile it is beside), used (wires that cross it), capacity (wires of the
+ *   channel there), occupancy, overused_nodes (the wires that cross it which
+ *   more than one net uses), num_nets, nets[] (the names of the nets that cross
+ *   it, at most 50)
  *
  * cluster_report (stage PACKED): the clusters of the packing that match a
  *   shell-style pattern of their name
@@ -92,6 +97,9 @@ constexpr int FIND_SCHEMA_VERSION = 1;
 /* The most blocks or clusters a query lists, unless a limit is given */
 constexpr size_t QUERY_LIST_DEFAULT_LIMIT = 1000;
 
+/* The most nets that a hot spot of the congestion lists */
+constexpr size_t HOTSPOT_NETS_MAX = 50;
+
 /* An empty type lists no locations */
 bool device_json(const bool fixed_channel_width, const std::string& type,
                  const size_t limit, std::string& json);
@@ -104,7 +112,9 @@ bool placement_json(const std::string& type, const std::string& prefix,
 
 bool net_route_json(const std::string& net, std::string& json);
 
-bool congestion_json(const int region_size, std::string& json);
+/* No hot spots if hotspots is 0 */
+bool congestion_json(const int region_size, const size_t hotspots,
+                     std::string& json);
 
 bool cluster_report_json(const std::string& query, const bool with_stats,
                          const size_t limit, std::string& json);
