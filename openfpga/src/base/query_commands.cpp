@@ -194,6 +194,21 @@ int report_cluster_command(const OpenfpgaContext& openfpga_ctx,
                 });
 }
 
+int find_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                 const CommandContext& cmd_context) {
+  size_t limit = 0;
+  if (!count_option(cmd, cmd_context, "limit", QUERY_LIST_DEFAULT_LIMIT,
+                    limit)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  const std::string pattern = string_option(cmd, cmd_context, "pattern");
+  const std::string kind = string_option(cmd, cmd_context, "kind");
+  return answer(openfpga_ctx, OpenFpgaStage::PACKED, "find",
+                [&](const vpr::VprRun&, std::string& json) {
+                  return find_json(pattern, kind, limit, json);
+                });
+}
+
 /* An option that takes a value, which is optional unless required is set */
 void add_option(Command& cmd, const char* name, const char* short_name,
                 const bool required, const e_option_value_type type,
@@ -295,6 +310,18 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_query_command(shell, cmd_class, report_cluster,
                     "Answer with the clusters of the packed design",
                     report_cluster_command);
+
+  Command find("find");
+  add_option(find, "pattern", "p", true, OPT_STRING,
+             "Shell-style pattern of the name, e.g., 'n1*'");
+  add_option(find, "kind", "k", false, OPT_STRING,
+             "Look for 'block' or for 'net' only. Default: both");
+  add_option(find, "limit", "l", false, OPT_INT,
+             "Most blocks and most nets to list. Default: 1000");
+  add_query_command(shell, cmd_class, find,
+                    "Answer with the blocks and the nets of the packed design "
+                    "whose name matches a pattern",
+                    find_command);
 }
 
 } /* End namespace openfpga */

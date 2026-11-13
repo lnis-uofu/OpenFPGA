@@ -5,6 +5,7 @@ Each answer is checked against what VPR reports for the same run: its log, repor
 the .place and .route files, the channel occupancy files and packing_pin_util.rpt.
 """
 
+import fnmatch
 import json
 import math
 import re
@@ -25,6 +26,7 @@ KINDS = [
     "net_route",
     "congestion",
     "cluster_report",
+    "find",
 ]
 
 
@@ -168,6 +170,7 @@ def test_every_answer_follows_its_schema(routed, validate):
         shell.congestion(region_size=2),
         shell.report_cluster(),
         shell.report_cluster(stats=True, query="out:*"),
+        shell.find(pattern="*"),
     ]
     seen = set()
     for result in answers:
@@ -379,6 +382,78 @@ def test_a_list_is_cut_at_the_limit(routed):
     assert cut["truncated"] and cut["total"] > 2
     for command in ("report_cluster", "placement"):
         assert getattr(shell, command)(limit=0, check=False).status != 0
+
+
+# Find --------------------------------------------------------------------------------------
+
+
+def test_find_lists_the_blocks_where_the_place_file_has_them(routed):
+    answer = data(routed.shell.find(pattern="*"))
+    assert answer["kind"] is None and answer["pattern"] == "*"
+    blocks = answer["blocks"]
+    assert blocks["total"] == blocks["matched"] == blocks["returned"] == len(blocks["items"])
+    assert not blocks["truncated"]
+    placed = {b["name"]: (b["x"], b["y"], b["sub_tile"], b["layer"]) for b in blocks["items"]}
+    assert placed == parse_place(Path(f"{routed.name}.place"))
+    assert all(b["placed"] for b in blocks["items"])
+    types = {b["name"]: b["type"] for b in data(routed.shell.placement())["blocks"]}
+    assert {b["name"]: b["type"] for b in blocks["items"]} == types
+
+
+def test_find_has_no_location_before_the_placement(flow):
+    flow.run("pack")
+    blocks = data(flow.shell.find(pattern="*", kind="block"))["blocks"]
+    assert blocks["items"]
+    for block in blocks["items"]:
+        assert block["placed"] is False
+        assert (block["x"], block["y"], block["sub_tile"], block["layer"]) == (None,) * 4
+
+
+def test_find_nets_are_the_nets_that_vpr_routes(routed):
+    shell = routed.shell
+    nets = data(shell.find(pattern="*", kind="net"))["nets"]
+    routed_nets = parse_route(Path(f"{routed.name}.route"))
+    # A net that is ignored (a clock) is not routed
+    assert {n["name"] for n in nets["items"] if not n["ignored"]} == set(routed_nets)
+    assert nets["total"] == nets["matched"] == len(nets["items"])
+    for net in nets["items"]:
+        if not net["ignored"]:
+            assert net["fanout"] == data(shell.net_route(net=net["name"]))["num_sinks"]
+        assert net["fanout"] >= 1
+
+
+def test_find_matches_names_like_a_shell_does(routed):
+    shell = routed.shell
+    names = [b["name"] for b in data(shell.find(pattern="*"))["blocks"]["items"]]
+    nets = [n["name"] for n in data(shell.find(pattern="*"))["nets"]["items"]]
+    for pattern in ("out:*", "?*:*", "[io]*", names[0], "no_such_name*"):
+        found = data(shell.find(pattern=pattern))
+        assert [b["name"] for b in found["blocks"]["items"]] == [
+            n for n in names if fnmatch.fnmatchcase(n, pattern)
+        ]
+        assert [n["name"] for n in found["nets"]["items"]] == [
+            n for n in nets if fnmatch.fnmatchcase(n, pattern)
+        ]
+    assert data(shell.find(pattern="out:*"))["blocks"]["matched"] > 0
+
+
+def test_find_looks_for_one_kind_and_stops_at_the_limit(routed):
+    shell = routed.shell
+    blocks = data(shell.find(pattern="*", kind="block"))
+    assert blocks["kind"] == "block" and blocks["nets"] is None
+    nets = data(shell.find(pattern="*", kind="net"))
+    assert nets["kind"] == "net" and nets["blocks"] is None
+    cut = data(shell.find(pattern="*", limit=1))
+    for part in (cut["blocks"], cut["nets"]):
+        assert part["returned"] == len(part["items"]) == 1
+        assert part["truncated"] and part["matched"] > 1
+    for bad in ({"kind": "pin"}, {"limit": 0}):
+        assert shell.find(**{"pattern": "*", **bad}, check=False).status != 0
+    assert shell.run("find", check=False).status != 0
+
+
+def test_find_needs_the_packing(flow):
+    refused(flow.shell.find(pattern="*", check=False), "PACKED", "find")
 
 
 # Placement ---------------------------------------------------------------------------------
