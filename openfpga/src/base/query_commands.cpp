@@ -21,8 +21,9 @@ using Query = std::function<bool(const vpr::VprRun&, std::string&)>;
 /* Make the answer of a query, and give it: print it, and hand it to the
  * caller of the command */
 int answer(const OpenfpgaContext& openfpga_ctx, const OpenFpgaStage& stage,
-           const char* command, const Query& query) {
-  if (!stage_ready(openfpga_ctx.session(), stage, command)) {
+           const char* command, const Query& query,
+           const bool stage_is_needed = true) {
+  if (stage_is_needed && !stage_ready(openfpga_ctx.session(), stage, command)) {
     return CMD_EXEC_FATAL_ERROR;
   }
   const vpr::VprRun* run = vpr::current_vpr_run();
@@ -186,11 +187,20 @@ int congestion_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
       !count_option(cmd, cmd_context, "hotspots", 0, hotspots)) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  return answer(openfpga_ctx, OpenFpgaStage::ROUTED, "congestion",
-                [region_size, hotspots](const vpr::VprRun&, std::string& json) {
-                  return congestion_json(static_cast<int>(region_size),
-                                         hotspots, json);
-                });
+  /* The routing of a route that failed is read, to tell why it failed: the
+   * stage is then not reached, but the session knows that it failed, and that
+   * its data is there */
+  const OpenFpgaSession& session = openfpga_ctx.session();
+  const bool failed = staged_flow_current(session) &&
+                      !session.reached(OpenFpgaStage::ROUTED) &&
+                      nullptr != session.failure(OpenFpgaStage::ROUTED);
+  return answer(
+    openfpga_ctx, OpenFpgaStage::ROUTED, "congestion",
+    [&](const vpr::VprRun&, std::string& json) {
+      return congestion_json(static_cast<int>(region_size), hotspots, !failed,
+                             json);
+    },
+    !failed);
 }
 
 int report_cluster_command(const OpenfpgaContext& openfpga_ctx,

@@ -81,6 +81,26 @@ std::string session_json(const OpenFpgaSession& session,
   write_result(json, current && session.reached(OpenFpgaStage::ROUTED),
                current ? run->setup.FileNameOpts.RouteFile : std::string());
   json.end_object();
+  json.key("failed");
+  bool wrote = false;
+  if (current) {
+    /* The stage that failed last, if its data is still there */
+    for (const OpenFpgaStage& stage :
+         {OpenFpgaStage::ROUTED, OpenFpgaStage::PLACED,
+          OpenFpgaStage::PACKED}) {
+      if (const std::string* failure = session.failure(stage)) {
+        json.begin_object();
+        json.key("stage").value(to_string(stage));
+        json.key("message").value(*failure);
+        json.end_object();
+        wrote = true;
+        break;
+      }
+    }
+  }
+  if (!wrote) {
+    json.null();
+  }
   json.end_object();
   end_response(json);
   return json.str();

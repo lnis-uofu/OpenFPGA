@@ -742,7 +742,7 @@ bool net_route_json(const std::string& net, std::string& json_text) {
 }
 
 bool congestion_json(const int region_size, const size_t hotspots,
-                     std::string& json_text) {
+                     const bool routed, std::string& json_text) {
   const auto& device_ctx = g_vpr_ctx.device();
   const auto& route_ctx = g_vpr_ctx.routing();
   const auto& rr_graph = device_ctx.rr_graph;
@@ -932,6 +932,7 @@ bool congestion_json(const int region_size, const size_t hotspots,
   json.key("x").value(chan_width.x_max);
   json.key("y").value(chan_width.y_max);
   json.end_object();
+  json.key("routed").value(routed);
   json.key("region_size").value(region_size);
   json.key("summary").begin_object();
   write_usage(json, "chanx", total.used_x, total.cap_x);

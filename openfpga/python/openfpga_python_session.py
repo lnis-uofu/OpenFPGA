@@ -328,13 +328,16 @@ class Hotspot:
 
 @dataclasses.dataclass(frozen=True)
 class Congestion:
-    """Answer of congestion: the use of the routing channels, by region.
+    """Answer of congestion: the use of the routing channels, by region. routed is
+    False when it reads the routing that a failed route left: then
+    summary.overused_nodes is how many wires nets share.
     hotspots, the fullest segments of the channels with the nets that cross
     them, is set when they were asked for"""
 
     stage: str
     grid: Grid
     channel_width: ChannelWidth
+    routed: bool
     region_size: int
     summary: CongestionSummary
     regions: List[CongestionRegion]
@@ -578,6 +581,16 @@ class SessionResults:
 
 
 @dataclasses.dataclass(frozen=True)
+class StageFailure:
+    """A stage that failed and left what it had made, e.g., a route that found
+    no legal routing: the queries that read the data of the stages before it
+    still work, and congestion reads the routing that failed"""
+
+    stage: str
+    message: str
+
+
+@dataclasses.dataclass(frozen=True)
 class SessionState:
     """Answer of report_session: what the flow has done. reached lists the stages
     that are valid (DEVICE, PACKED, PLACED, ROUTED, ANALYZED, ...); a stage that
@@ -587,6 +600,7 @@ class SessionState:
     reached: List[str]
     inputs: SessionInputs
     results: SessionResults
+    failed: Optional[StageFailure] = None
 
 
 def _convert(hint, value):

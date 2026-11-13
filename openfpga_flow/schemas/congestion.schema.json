@@ -25,6 +25,7 @@
       "required": [
         "grid",
         "channel_width",
+        "routed",
         "region_size",
         "summary",
         "regions"
@@ -66,6 +67,9 @@
               "minimum": 0
             }
           }
+        },
+        "routed": {
+          "type": "boolean"
         },
         "region_size": {
           "type": "integer",
