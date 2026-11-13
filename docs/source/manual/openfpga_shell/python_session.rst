@@ -49,6 +49,56 @@ Options
 
 ``session.options`` gives the application options (see :ref:`openfpga_basic_commands`). ``options["place.seed"]`` is the value, with the type of the option (``str``, ``int``, ``float`` or ``bool``), and ``options["place.seed"] = 3`` sets it. A ``bool`` is written ``true`` or ``false``, and a path is accepted for a file. ``get(name)`` gives an ``AppOption`` with the ``default``, the ``help``, the ``choices`` of a selection and the ``stage`` that the option changes. ``list()`` and ``changed()`` give all the options, and those that do not have their default value, and ``reset(name)`` gives an option its default. An option that does not exist, or a value that it refuses, raises ``OpenfpgaError``.
 
+What went wrong
+~~~~~~~~~~~~~~~
+
+A failure is text in the log of a command. ``OpenfpgaError.diagnostics`` (and ``errors``, which keeps the errors) reads it into ``Diagnostic`` objects, so that a program does not have to:
+
+.. code-block:: python
+
+  try:
+      session.read_vpr_arch("bad.xml", layout="2x2")
+  except openfpga.OpenfpgaError as error:
+      found = error.errors[0]
+      found.kind      # 'xml_syntax'
+      found.file      # 'bad.xml'
+      found.line      # 1
+      found.hint      # "Fix the XML of 'bad.xml' at the line that the message gives"
+
+A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come first, and at most ten warnings are kept), a ``kind``, the ``message`` as it is in the log, the ``file`` and ``line`` of the user that the message names (``None`` if it names none), the ``source`` (where VPR raised an error, for a report of a bug), a ``hint`` on what to try (``None`` when there is nothing to say), and ``data``, the facts that the message contains. The kinds do not change with the wording of a message:
+
+.. list-table::
+  :header-rows: 1
+
+  * - ``kind``
+    - Meaning, and its ``data``
+  * - ``input_not_read``
+    - An input is missing: ``input``, ``command`` to run
+  * - ``stage_not_reached``
+    - The stage that a command needs is not valid: ``stage``, ``command`` to run
+  * - ``no_vpr_data``
+    - A query was asked before any flow
+  * - ``file_not_found``
+    - A file cannot be opened; ``file`` is set when the log says which
+  * - ``xml_syntax``
+    - An XML file cannot be parsed, with its ``file`` and ``line``
+  * - ``option_unknown``, ``option_value_invalid``
+    - An application option that does not exist, or a value it refuses: ``option``, ``type``, ``reason``
+  * - ``command_unknown``, ``command_option_missing``
+    - A command that does not exist, or an option that it requires: ``command`` or ``option``
+  * - ``layout_not_found``
+    - The device layout is not in the architecture: ``layout``, ``valid_layouts``
+  * - ``route_failed``, ``route_unroutable``
+    - The routing failed; for ``route_unroutable``, ``channel_width`` is the width that did not route
+  * - ``worker_crashed``, ``worker_timeout``, ``worker_cancelled``, ``worker_not_running``
+    - Failures of a ``RemoteSession`` worker (``WorkerError.diagnostics``); ``worker_crashed`` has the ``exitcode`` and the ``signal``, and its diagnostics go on with what the worker wrote before it ended
+  * - ``vpr_<type>``
+    - An error that VPR gave a type, e.g., ``vpr_architecture_file``, that no rule knows
+  * - ``error``, ``warning``
+    - Anything else
+
+A new failure of a known kind needs a rule in ``openfpga_python_diagnostics.py`` and a test with the text that it comes from.
+
 State and checkpoints
 ~~~~~~~~~~~~~~~~~~~~~
 

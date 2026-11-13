@@ -73,6 +73,18 @@ class OpenfpgaError(RuntimeError):
     # Lines of a VPR error after "Error <n>:" (Type, File, Line, Message)
     VPR_ERROR_LINES = 4
 
+    @property
+    def diagnostics(self):
+        """What went wrong, as a list of Diagnostic objects: the kind of each
+        failure, the file and line it names, and a hint on what to try. See
+        parse_diagnostics()."""
+        return parse_diagnostics(self.log, self.error)
+
+    @property
+    def errors(self):
+        """The diagnostics of the severity 'error' only"""
+        return [item for item in self.diagnostics if item.severity == "error"]
+
     @classmethod
     def _error_lines(cls, lines):
         """The lines that start with "Error ". VPR writes its errors over
@@ -196,6 +208,9 @@ def _shell_getattr(self, name):
 
 OpenfpgaShell.__getattr__ = _shell_getattr
 %}
+
+/* What went wrong, as data */
+%pythoncode "openfpga_python_diagnostics.py"
 
 /* The Session of the flow, in pure Python */
 %pythoncode "openfpga_python_session.py"
