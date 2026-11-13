@@ -1,5 +1,6 @@
 #include "staged_flow.h"
 
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -542,6 +543,7 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
     return false;
   }
   VprRun& run = *vpr::current_vpr_run();
+  const auto started = std::chrono::steady_clock::now();
   /* The run may be released by a stage that fails */
   const std::string failed_message = failure_message(stage, run);
   bool ok = false;
@@ -568,6 +570,9 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
     return false;
   }
   session.complete(stage);
+  session.set_stage_seconds(stage, std::chrono::duration<double>(
+                                     std::chrono::steady_clock::now() - started)
+                                     .count());
   return true;
 }
 

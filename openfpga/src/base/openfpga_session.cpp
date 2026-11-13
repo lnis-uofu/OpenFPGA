@@ -214,6 +214,31 @@ void OpenFpgaSession::fail(const OpenFpgaStage& stage,
   }
 }
 
+const std::string* OpenFpgaSession::stage_log(
+  const OpenFpgaStage& stage) const {
+  const auto found = stage_logs_.find(stage);
+  return stage_logs_.end() == found ? nullptr : &found->second;
+}
+
+const double* OpenFpgaSession::stage_seconds(const OpenFpgaStage& stage) const {
+  const auto found = stage_seconds_.find(stage);
+  return stage_seconds_.end() == found ? nullptr : &found->second;
+}
+
+void OpenFpgaSession::set_stage_log(const OpenFpgaStage& stage,
+                                    const std::string& log) {
+  if (reached(stage)) {
+    stage_logs_[stage] = log;
+  }
+}
+
+void OpenFpgaSession::set_stage_seconds(const OpenFpgaStage& stage,
+                                        const double seconds) {
+  if (reached(stage)) {
+    stage_seconds_[stage] = seconds;
+  }
+}
+
 const std::string* OpenFpgaSession::failure(const OpenFpgaStage& stage) const {
   const auto found = failures_.find(stage);
   return failures_.end() == found ? nullptr : &found->second;
@@ -258,6 +283,8 @@ void OpenFpgaSession::reset() {
   linked_generation_ = 0;
   imported_.clear();
   failures_.clear();
+  stage_logs_.clear();
+  stage_seconds_.clear();
 }
 
 void OpenFpgaSession::invalidate_stage_and_dependents(
@@ -267,6 +294,8 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
       stages_ &= ~bit(other);
       imported_.erase(other);
       failures_.erase(other);
+      stage_logs_.erase(other);
+      stage_seconds_.erase(other);
     }
   }
 }
@@ -275,6 +304,8 @@ void OpenFpgaSession::invalidate_all_stages() {
   stages_ = 0;
   imported_.clear();
   failures_.clear();
+  stage_logs_.clear();
+  stage_seconds_.clear();
 }
 
 void OpenFpgaSession::invalidate_for_option(const std::string& name) {

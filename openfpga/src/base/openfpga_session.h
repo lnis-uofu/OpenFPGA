@@ -109,6 +109,11 @@ class OpenFpgaSession {
   /* Why a stage failed, see fail(). Null if it did not, or if the failure was
    * forgotten */
   const std::string* failure(const OpenFpgaStage& stage) const;
+  /* What a stage that was run printed, and the seconds it took. Null if the
+   * stage was not run by a command of this session (e.g., its results were
+   * read from a file), or was dropped, see set_stage_log() */
+  const std::string* stage_log(const OpenFpgaStage& stage) const;
+  const double* stage_seconds(const OpenFpgaStage& stage) const;
   /* The file that an input was read from, as it was given to read_input().
    * Empty if it is not known, or the input is not read */
   std::string input_file(const OpenFpgaInput& input) const;
@@ -146,6 +151,10 @@ class OpenFpgaSession {
    * read again when the stages before another stage are run again. Running
    * the stage, or dropping it, forgets the file */
   void set_imported(const OpenFpgaStage& stage, const std::string& file);
+  /* Record what a stage printed, and the time it took, when the command that
+   * ran it ends. They are forgotten with the stage */
+  void set_stage_log(const OpenFpgaStage& stage, const std::string& log);
+  void set_stage_seconds(const OpenFpgaStage& stage, const double seconds);
   void set_vpr_generation(uint64_t generation) { vpr_generation_ = generation; }
   /* Record the generation of the VPR run that the OpenFPGA architecture was
    * linked to, by link_openfpga_arch. What the link makes refers to the data
@@ -168,6 +177,8 @@ class OpenFpgaSession {
   uint64_t linked_generation_ = 0;
   std::map<OpenFpgaStage, std::string> imported_;
   std::map<OpenFpgaStage, std::string> failures_;
+  std::map<OpenFpgaStage, std::string> stage_logs_;
+  std::map<OpenFpgaStage, double> stage_seconds_;
   std::map<OpenFpgaInput, std::string> input_files_;
 };
 

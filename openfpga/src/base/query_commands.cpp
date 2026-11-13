@@ -5,6 +5,7 @@
 
 #include "command_exit_codes.h"
 #include "query_design.h"
+#include "query_run.h"
 #include "query_timing.h"
 #include "session_json.h"
 #include "staged_flow.h"
@@ -105,6 +106,16 @@ int report_session_command(const OpenfpgaContext& openfpga_ctx, const Command&,
   openfpga_ctx.set_query_result(json);
   VTR_LOG("%s\n", json.c_str());
   return CMD_EXEC_SUCCESS;
+}
+
+int report_run_command(const OpenfpgaContext& openfpga_ctx, const Command&,
+                       const CommandContext&) {
+  const bool in_flow = staged_flow_current(openfpga_ctx.session());
+  return answer(openfpga_ctx, OpenFpgaStage::DEVICE, "report_run",
+                [&](const vpr::VprRun& run, std::string& json) {
+                  return run_report_json(openfpga_ctx.session(), in_flow, run,
+                                         json);
+                });
 }
 
 int timing_summary_command(const OpenfpgaContext& openfpga_ctx, const Command&,
@@ -288,6 +299,12 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
     "Answer with the stages that are reached, the files the inputs were read "
     "from and the files of the results of the stages",
     report_session_command);
+
+  add_query_command(shell, cmd_class, Command("report_run"),
+                    "Answer with what each stage of the flow did: the clusters "
+                    "of the packing, the cost of the placement, the wirelength "
+                    "and iterations of the routing, and the time of each stage",
+                    report_run_command);
 
   add_query_command(
     shell, cmd_class, Command("timing_summary"),
