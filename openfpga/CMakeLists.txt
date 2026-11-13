@@ -26,10 +26,23 @@ if (OPENFPGA_WITH_SWIG)
     SwigLib(NAME        openfpga_python
             MODULE_NAME openfpga
             LANGUAGE    python
-            I_FILE      src/openfpga_python.i)
+            I_FILE      src/openfpga_python.i
+            SWIG_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/src
+            SWIG_DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/openfpga_python_session.py
+                          ${CMAKE_CURRENT_SOURCE_DIR}/src/openfpga_python_worker.py)
     target_include_directories(openfpga_python PUBLIC ${LIB_INCLUDE_DIRS})
     target_link_libraries(openfpga_python
                           PUBLIC libopenfpga)
+    # Built by pip (scikit-build-core): the module goes to the root of the
+    # wheel, which is where the interpreter looks for 'import openfpga'
+    if (SKBUILD)
+      install(TARGETS openfpga_python
+              LIBRARY DESTINATION .
+              COMPONENT python)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/openfpga.py
+              DESTINATION .
+              COMPONENT python)
+    endif()
   endif()
 endif()
 

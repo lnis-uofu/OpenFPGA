@@ -48,9 +48,11 @@ bool read_vpr_arch_input(OpenFpgaSession& session, const std::string& file,
 bool read_circuit_input(OpenFpgaSession& session, const std::string& file);
 
 /* Record that the OpenFPGA architecture has been read, and create the device
- * if all the inputs are there now. Call fail_openfpga_arch_input() instead if
+ * if all the inputs are there now. The file is where it was read from.
+ * Call fail_openfpga_arch_input() instead if
  * the architecture could not be read */
-bool openfpga_arch_input_read(OpenFpgaSession& session);
+bool openfpga_arch_input_read(OpenFpgaSession& session,
+                              const std::string& file);
 void fail_openfpga_arch_input(OpenFpgaSession& session);
 
 /* Run a stage: PACKED, PLACED, ROUTED or ANALYZED. The device is
@@ -75,6 +77,10 @@ bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
  *   false if not
  * - stage_done() and stage_failed() record the result of a command that
  *   reaches a stage */
+/* True if the session works with the data of VPR that is alive, i.e., what it
+ * reports about its stages is true of that data */
+bool staged_flow_current(const OpenFpgaSession& session);
+
 bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
                  const char* command);
 /* link_openfpga_arch records the run of VPR it links to; the commands that use
