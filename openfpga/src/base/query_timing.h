@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 
+#include "clustered_netlist_fwd.h"
 #include "vpr_run.h"
 
 /********************************************************************
@@ -47,6 +48,13 @@ constexpr int CRITICAL_PATHS_SCHEMA_VERSION = 1;
 
 /* The most paths a query returns */
 constexpr size_t CRITICAL_PATHS_MAX = 100;
+
+/* The criticality of the worst connection of a net of the packed design, and
+ * its worst setup slack in ns, from the timing of the routed design. False,
+ * without a message, if there is none: the timing analysis is off, the design
+ * is not routed, or the net is not one of the circuit */
+bool net_timing(const vpr::VprRun& run, const ClusterNetId net,
+                double& criticality, double& slack_ns);
 
 bool timing_summary_json(const vpr::VprRun& run, std::string& json);
 bool critical_paths_json(const vpr::VprRun& run, const size_t count,
