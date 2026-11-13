@@ -360,14 +360,15 @@ static void print_pnr_sdc_constrain_primitive_pb_graph_node(
     primitive_pb_type =
       &(primitive_pb_type->modes[VPR_PB_TYPE_LUT_MODE].pb_type_children[0]);
     logical_primitive_pb_graph_node =
-      primitive_pb_graph_node->child_pb_graph_nodes[VPR_PB_TYPE_LUT_MODE][0];
+      &(primitive_pb_graph_node
+          ->child_pb_graph_nodes[VPR_PB_TYPE_LUT_MODE][0][0]);
     VTR_ASSERT(nullptr != logical_primitive_pb_graph_node);
   } else if (MEMORY_CLASS == primitive_pb_type->class_type) {
     VTR_ASSERT(1 == primitive_pb_type->num_modes);
     VTR_ASSERT(1 == primitive_pb_type->modes[0].num_pb_type_children);
     primitive_pb_type = &(primitive_pb_type->modes[0].pb_type_children[0]);
     logical_primitive_pb_graph_node =
-      primitive_pb_graph_node->child_pb_graph_nodes[0][0];
+      &(primitive_pb_graph_node->child_pb_graph_nodes[0][0][0]);
   }
   VTR_ASSERT(nullptr != primitive_pb_type);
   VTR_ASSERT(nullptr != logical_primitive_pb_graph_node);
