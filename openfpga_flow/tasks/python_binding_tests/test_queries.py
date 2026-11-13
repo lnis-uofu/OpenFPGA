@@ -151,9 +151,16 @@ def parse_timing_report(path, count):
         for line in block[:arrival_at].splitlines():
             match = re.match(r"^(\S+) \((\.\w+)\).*?\s+(-?[\d.]+)\s+(-?[\d.]+)$", line)
             if match:
-                points.append((match.group(1), float(match.group(4))))
+                points.append((match.group(1), float(match.group(4)), float(match.group(3))))
+        # The clock to the block that captures the data comes after the arrival of the data
+        capture = []
+        required = block[arrival_at:]
+        for line in required[: required.index("data required time")].splitlines():
+            match = re.match(r"^(\S+) \((\.\w+)\).*?\s+(-?[\d.]+)\s+(-?[\d.]+)$", line)
+            if match:
+                capture.append((match.group(1), float(match.group(4)), float(match.group(3))))
         slack = float(re.search(r"slack \(\w+\)\s+(-?[\d.]+)", block).group(1))
-        paths.append((start, end, slack, points))
+        paths.append((start, end, slack, points, capture))
     return paths
 
 
@@ -242,7 +249,13 @@ def test_timing_summary_lists_the_clock_domains(routed):
         crit["launch_clock"],
         crit["capture_clock"],
     )
+    # The pairs add up to the sTNS of VPR, and a pair has no more than the worst of its paths
+    log = routed.logs["analysis"]
+    (tns,) = log_numbers(log, r"Final setup Total Negative Slack \(sTNS\): ([-\d.e]+) ns")
+    assert close(sum(d["total_negative_slack_ns"] for d in domains), tns)
     for domain in domains:
+        assert domain["total_negative_slack_ns"] <= 0
+        assert domain["total_negative_slack_ns"] <= min(0, domain["worst_slack_ns"]) + 1e-9
         assert domain["intra_domain"] == (domain["launch_clock"] == domain["capture_clock"])
         assert (domain["fmax_mhz"] is not None) == domain["intra_domain"]
 
@@ -251,16 +264,22 @@ def test_the_worst_paths_are_the_ones_of_the_timing_report(routed):
     paths = data(routed.shell.critical_paths(count=3))["paths"]
     expected = parse_timing_report(Path("report_timing.setup.rpt"), 3)
     assert len(paths) == len(expected) >= 2
-    for path, (start, end, slack, points) in zip(paths, expected):
+    for path, (start, end, slack, points, capture) in zip(paths, expected):
         assert path["startpoint"] == start
         assert path["endpoint"] == end
         assert path["slack_ns"] == pytest.approx(slack, abs=6e-4)
-        # The data path ends the way the report does, point by point
-        listed = [(p["pin"], p["arrival_ns"]) for p in path["points"]]
-        assert [name for name, _ in listed] == [name for name, _ in points[-len(listed) :]]
-        for (_, arrival), (_, reported) in zip(listed, points[-len(listed) :]):
-            assert arrival == pytest.approx(reported, abs=6e-4)
+        # The report lists the clock to the launching block, then the data path: point by point,
+        # with the time since the point before
+        listed = path["clock_launch_path"] + path["points"]
+        assert [p["pin"] for p in listed] == [name for name, _, _ in points]
+        for point, (_, arrival, delay) in zip(listed, points):
+            assert point["arrival_ns"] == pytest.approx(arrival, abs=6e-4)
+            assert point["delay_ns"] == pytest.approx(delay, abs=6e-4)
         assert path["data_arrival_ns"] == pytest.approx(path["points"][-1]["arrival_ns"])
+        assert [p["pin"] for p in path["clock_capture_path"]] == [name for name, _, _ in capture]
+        for point, (_, arrival, delay) in zip(path["clock_capture_path"], capture):
+            assert point["arrival_ns"] == pytest.approx(arrival, abs=6e-4)
+            assert point["delay_ns"] == pytest.approx(delay, abs=6e-4)
 
 
 def test_the_paths_are_worst_first_and_made_of_steps(routed):
@@ -272,14 +291,34 @@ def test_the_paths_are_worst_first_and_made_of_steps(routed):
         points = path["points"]
         assert points[0]["pin"] == path["startpoint"]
         assert points[-1]["pin"] == path["endpoint"]
+        # Each point is the time since the point before it, the clock path included
         before = 0.0
-        for point in points:
+        for point in path["clock_launch_path"] + points:
             assert point["delay_ns"] == pytest.approx(point["arrival_ns"] - before, abs=1e-9)
             before = point["arrival_ns"]
         # The slack of a path is what is required less what arrives
         assert path["slack_ns"] == pytest.approx(
             path["data_required_ns"] - path["data_arrival_ns"], abs=1e-6
         )
+
+
+def test_the_clock_paths_are_there_for_the_flip_flops(routed):
+    paths = data(routed.shell.critical_paths(count=100))["paths"]
+    for path in paths:
+        launch, capture = path["clock_launch_path"], path["clock_capture_path"]
+        # The clock is routed in this flow: it goes from its input to the pin of the flip-flop
+        launched_by_clock = path["startpoint"].endswith(".Q[0]")
+        captured_by_clock = path["endpoint"].endswith(".D[0]")
+        assert bool(launch) == launched_by_clock
+        assert bool(capture) == captured_by_clock
+        if launch:
+            assert launch[-1]["pin"] == path["startpoint"].replace(".Q[0]", ".clk[0]")
+            # The data leaves the flip-flop when the clock is there
+            assert path["points"][0]["arrival_ns"] >= launch[-1]["arrival_ns"]
+            assert path["points"][0]["delay_ns"] >= 0
+        if capture:
+            assert capture[-1]["pin"] == path["endpoint"].replace(".D[0]", ".clk[0]")
+    assert any(p["clock_launch_path"] for p in paths)
 
 
 def test_the_number_of_paths_is_what_is_asked_for(routed):
