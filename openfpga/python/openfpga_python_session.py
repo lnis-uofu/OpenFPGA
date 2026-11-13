@@ -53,6 +53,7 @@ class ClockDomain:
     intra_domain: bool
     critical_path_delay_ns: Optional[float]
     worst_slack_ns: Optional[float]
+    total_negative_slack_ns: Optional[float]
     fmax_mhz: Optional[float]
 
 
@@ -84,7 +85,13 @@ class TimingPath:
     startpoint: str
     endpoint: str
     slack_ns: Optional[float]
+    # The clock to the block that launches the data, the data path (its first
+    # point is the output of that block: its delay is the one of the block, and
+    # its arrival includes the clock launch path), and the clock to the block
+    # that captures it (empty if the clock is ideal)
+    clock_launch_path: List[PathPoint]
     points: List[PathPoint]
+    clock_capture_path: List[PathPoint]
     data_arrival_ns: Optional[float]
     data_required_ns: Optional[float]
 

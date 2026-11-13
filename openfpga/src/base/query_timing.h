@@ -22,16 +22,22 @@
  *   clock_domains[]                one entry per pair of clocks that has a
  *                                  path: launch_clock, capture_clock,
  *                                  intra_domain, critical_path_delay_ns,
- *                                  worst_slack_ns, fmax_mhz (only for a path
- *                                  within one clock, null otherwise)
+ *                                  worst_slack_ns, total_negative_slack_ns (of
+ *                                  the paths of this pair), fmax_mhz (only for
+ *                                  a path within one clock, null otherwise)
  *
  * Kind critical_paths (openfpga_flow/schemas/critical_paths.schema.json), data:
  *   requested, returned    the number of paths asked for, and found
  *   paths[]                the worst setup paths, worst first: index,
  *                          launch_clock, capture_clock, startpoint,
- *                          endpoint, slack_ns, points[] (the data path, in
- *                          path order: pin, type, block, net, arrival_ns, the
- *                          time since the point before, delay_ns),
+ *                          endpoint, slack_ns, clock_launch_path[] (the
+ *                          clock to the block that launches the data),
+ *                          points[] (the data path, in path order: pin, type,
+ *                          block, net, arrival_ns, the time since the point
+ *                          before, delay_ns: for the first point, since the
+ *                          clock got to its block), clock_capture_path[] (the
+ *                          clock to the block that captures it, empty if the
+ *                          clock is ideal),
  *                          data_arrival_ns (the arrival of the last point,
  *                          which includes the delay of the clock to the
  *                          launching block), data_required_ns. As in the

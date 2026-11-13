@@ -123,7 +123,7 @@ A new checkpoint in the same directory replaces the old one, and the manifest is
 Queries
 ~~~~~~~
 
-The queries of :ref:`openfpga_query_commands` are methods that return objects (immutable dataclasses) instead of JSON: ``timing_summary()`` (``TimingSummary``), ``critical_paths(count)`` (``CriticalPaths``), ``utilization()`` (``Utilization``), ``placement(block_type, prefix, limit)`` (``Placement``), ``net_route(net)`` (``NetRoute``), ``congestion(region_size)`` (``Congestion``) and ``cluster_report(query, stats, limit)`` (``ClusterReport``). The fields are the ones of the answers, listed with the commands, and ``stage`` tells which stage the answer was read from. Values that are not finite, e.g., the Fmax of a circuit without path, are ``None``.
+The queries of :ref:`openfpga_query_commands` are methods that return objects (immutable dataclasses) instead of JSON: ``timing_summary()`` (``TimingSummary``), ``critical_paths(count)`` (``CriticalPaths``), ``utilization()`` (``Utilization``), ``placement(block_type, prefix, limit)`` (``Placement``), ``net_route(net)`` (``NetRoute``), ``congestion(region_size, hotspots)`` (``Congestion``), ``cluster_report(query, stats, limit)`` (``ClusterReport``), ``device(tile_type, limit)`` (``Device``), ``find(pattern, kind, limit)`` (``Found``), ``block_info(block)`` (``BlockInfo``) and ``net_info(net)`` (``NetInfo``). The fields are the ones of the answers, listed with the commands, and ``stage`` tells which stage the answer was read from. Values that are not finite, e.g., the Fmax of a circuit without path, are ``None``.
 
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped.
 

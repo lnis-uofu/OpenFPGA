@@ -36,7 +36,7 @@ timing_summary
 
   - ``setup``: ``worst_negative_slack_ns`` and ``total_negative_slack_ns`` (the sWNS and sTNS of VPR), ``critical_path_delay_ns`` (of the path with the least slack), ``fmax_mhz`` (its inverse) and the clocks of that path
   - ``hold``: ``worst_negative_slack_ns`` and ``total_negative_slack_ns``
-  - ``clock_domains``: one entry for each pair of clocks that has a path: ``launch_clock``, ``capture_clock``, ``intra_domain``, ``critical_path_delay_ns``, ``worst_slack_ns`` and ``fmax_mhz`` (only for a path within one clock, ``null`` for others)
+  - ``clock_domains``: one entry for each pair of clocks that has a path: ``launch_clock``, ``capture_clock``, ``intra_domain``, ``critical_path_delay_ns``, ``worst_slack_ns``, ``total_negative_slack_ns`` (the sum of the negative slacks of the paths of this pair: the pairs add up to the sTNS of VPR) and ``fmax_mhz`` (only for a path within one clock, ``null`` for others)
 
   .. code-block::
 
@@ -45,7 +45,13 @@ timing_summary
 critical_paths
 ~~~~~~~~~~~~~~
 
-  Answer with the worst setup paths of the routed design: kind ``critical_paths``, read from the stage ``ROUTED``. The paths come worst first, as in the timing report of VPR. Each one has its ``startpoint``, ``endpoint``, clocks and ``slack_ns``, and the points of its data path in order: the ``pin``, its ``type``, the ``block`` and ``net`` of the netlist, the ``arrival_ns`` and the ``delay_ns`` since the point before. ``data_arrival_ns`` includes the delay of the clock to the block that launches the path, as in the report of VPR, and ``data_required_ns`` is what the capturing clock requires.
+  Answer with the worst setup paths of the routed design: kind ``critical_paths``, read from the stage ``ROUTED``. The paths come worst first, as in the timing report of VPR. Each one has its ``startpoint``, ``endpoint``, clocks and ``slack_ns``, and three lists of points in the order of the timing report of VPR, each point with its ``pin``, its ``type``, the ``block`` and ``net`` of the netlist, the ``arrival_ns`` and the ``delay_ns`` since the point before:
+
+  - ``clock_launch_path``: the clock, from its source to the pin of the block that launches the data. Empty when the data starts at an input of the circuit
+  - ``points``: the data path. The first point is the output of the block that launches the data, so its ``delay_ns`` is the one of that block (the clock-to-output delay), and its ``arrival_ns`` includes the ``clock_launch_path``
+  - ``clock_capture_path``: the clock, from its source to the pin of the block that captures the data. Empty when the data ends at an output of the circuit
+
+  ``data_arrival_ns`` is the arrival of the last data point, and ``data_required_ns`` is what the capturing clock requires (it includes the delay of ``clock_capture_path`` and the setup time of the block).
 
   .. option:: --count <int>
 

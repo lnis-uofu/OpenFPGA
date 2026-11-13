@@ -62,8 +62,61 @@ std::unique_ptr<RoutedTiming> analyze_routed_timing(const vpr::VprRun& run) {
   return timing;
 }
 
+/* The total negative slack of the setup paths that go from one clock to
+ * another: what the sTNS of VPR adds up, for the paths of this pair */
+double domain_pair_tns(const tatum::SetupTimingAnalyzer& setup,
+                       const tatum::DomainId launch,
+                       const tatum::DomainId capture) {
+  double tns = 0.;
+  for (const tatum::NodeId node : g_vpr_ctx.timing().graph->logical_outputs()) {
+    for (const tatum::TimingTag& tag : setup.setup_slacks(node)) {
+      if (tag.launch_clock_domain() == launch &&
+          tag.capture_clock_domain() == capture && tag.time().value() < 0.) {
+        tns += tag.time().value();
+      }
+    }
+  }
+  return tns;
+}
+
 void write_ns(JsonWriter& json, const char* name, const double seconds) {
   json.key(name).value(sec_to_nanosec(seconds));
+}
+
+/* The points of a part of a path, with the time since the point before,
+ * starting from the arrival that is given. Return the last arrival */
+double write_points(JsonWriter& json, const tatum::TimingSubPath& sub_path,
+                    const double start_arrival,
+                    const VprTimingGraphResolver& resolver) {
+  const auto& atom_ctx = g_vpr_ctx.atom();
+  double last_arrival = start_arrival;
+  json.begin_array();
+  for (const tatum::TimingPathElem& elem : sub_path.elements()) {
+    const double arrival = elem.tag().time().value();
+    json.begin_object();
+    json.key("pin").value(resolver.node_name(elem.node()));
+    json.key("type").value(resolver.node_type_name(elem.node()));
+    const AtomPinId pin = atom_ctx.lookup().tnode_atom_pin(elem.node());
+    json.key("block");
+    if (pin.is_valid()) {
+      json.value(
+        atom_ctx.netlist().block_name(atom_ctx.netlist().pin_block(pin)));
+    } else {
+      json.null();
+    }
+    json.key("net");
+    if (pin.is_valid() && atom_ctx.netlist().pin_net(pin).is_valid()) {
+      json.value(atom_ctx.netlist().net_name(atom_ctx.netlist().pin_net(pin)));
+    } else {
+      json.null();
+    }
+    write_ns(json, "arrival_ns", arrival);
+    write_ns(json, "delay_ns", arrival - last_arrival);
+    json.end_object();
+    last_arrival = arrival;
+  }
+  json.end_array();
+  return last_arrival;
 }
 
 }  // End anonymous namespace
@@ -151,6 +204,9 @@ bool timing_summary_json(const vpr::VprRun& run, std::string& json_text) {
     json.key("intra_domain").value(intra);
     write_ns(json, "critical_path_delay_ns", path.delay());
     write_ns(json, "worst_slack_ns", path.slack());
+    write_ns(
+      json, "total_negative_slack_ns",
+      domain_pair_tns(setup, path.launch_domain(), path.capture_domain()));
     json.key("fmax_mhz");
     if (intra) {
       json.value(sec_to_mhz(path.delay()));
@@ -212,35 +268,16 @@ bool critical_paths_json(const vpr::VprRun& run, const size_t count,
     json.key("endpoint").value(resolver.node_name(info.endpoint()));
     write_ns(json, "slack_ns", info.slack());
 
-    double last_arrival = 0.;
-    json.key("points").begin_array();
-    for (const tatum::TimingPathElem& elem :
-         path.data_arrival_path().elements()) {
-      const double arrival = elem.tag().time().value();
-      json.begin_object();
-      json.key("pin").value(resolver.node_name(elem.node()));
-      json.key("type").value(resolver.node_type_name(elem.node()));
-      const AtomPinId pin = atom_ctx.lookup().tnode_atom_pin(elem.node());
-      json.key("block");
-      if (pin.is_valid()) {
-        json.value(
-          atom_ctx.netlist().block_name(atom_ctx.netlist().pin_block(pin)));
-      } else {
-        json.null();
-      }
-      json.key("net");
-      if (pin.is_valid() && atom_ctx.netlist().pin_net(pin).is_valid()) {
-        json.value(
-          atom_ctx.netlist().net_name(atom_ctx.netlist().pin_net(pin)));
-      } else {
-        json.null();
-      }
-      write_ns(json, "arrival_ns", arrival);
-      write_ns(json, "delay_ns", arrival - last_arrival);
-      json.end_object();
-      last_arrival = arrival;
-    }
-    json.end_array();
+    /* The path of the clock to the block that launches the data: the data
+     * leaves that block when the clock gets there */
+    json.key("clock_launch_path");
+    double last_arrival =
+      write_points(json, path.clock_launch_path(), 0., resolver);
+    json.key("points");
+    last_arrival =
+      write_points(json, path.data_arrival_path(), last_arrival, resolver);
+    json.key("clock_capture_path");
+    write_points(json, path.clock_capture_path(), 0., resolver);
     write_ns(json, "data_arrival_ns", last_arrival);
     write_ns(json, "data_required_ns",
              path.data_required_element().tag().time().value());

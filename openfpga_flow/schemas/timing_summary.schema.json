@@ -114,6 +114,7 @@
               "intra_domain",
               "critical_path_delay_ns",
               "worst_slack_ns",
+              "total_negative_slack_ns",
               "fmax_mhz"
             ],
             "additionalProperties": false,
@@ -134,6 +135,12 @@
                 ]
               },
               "worst_slack_ns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "total_negative_slack_ns": {
                 "type": [
                   "number",
                   "null"
