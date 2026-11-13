@@ -1,5 +1,6 @@
 #include "app_options_commands.h"
 
+#include "app_options_json.h"
 #include "command_exit_codes.h"
 #include "vtr_log.h"
 
@@ -41,21 +42,40 @@ int report_app_option_command(const OpenfpgaContext& openfpga_ctx,
                               const CommandContext& cmd_context) {
   const AppOptions& options = openfpga_ctx.session().app_options();
 
-  /* Report one option */
+  /* The options to report: one, or all of them */
+  std::vector<std::string> names;
   const CommandOptionId opt_name = cmd.option("name");
   if (cmd_context.option_enable(cmd, opt_name)) {
     const std::string name = cmd_context.option_value(cmd, opt_name);
-    const AppOptionValue* option = options.find(name);
-    if (nullptr == option) {
+    if (nullptr == options.find(name)) {
       VTR_LOG_ERROR("Application option '%s' does not exist\n", name.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    print_app_option(name, *option);
+    names.push_back(name);
+  } else {
+    names = options.names();
+  }
+
+  /* Only the options that are not at their default value */
+  if (cmd_context.option_enable(cmd, cmd.option("changed"))) {
+    std::vector<std::string> changed;
+    for (const std::string& name : names) {
+      if (!options.is_default(name)) {
+        changed.push_back(name);
+      }
+    }
+    names = changed;
+  }
+
+  /* As a query answer: the JSON is printed, and given to the caller */
+  if (cmd_context.option_enable(cmd, cmd.option("json"))) {
+    const std::string json = app_options_json(options, names);
+    openfpga_ctx.set_query_result(json);
+    VTR_LOG("%s\n", json.c_str());
     return CMD_EXEC_SUCCESS;
   }
 
-  /* Report all the options */
-  for (const std::string& name : options.names()) {
+  for (const std::string& name : names) {
     print_app_option(name, *options.find(name));
   }
   return CMD_EXEC_SUCCESS;
@@ -89,6 +109,14 @@ void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell_cmd_report.set_option_short_name(report_opt_name, "n");
   shell_cmd_report.set_option_require_value(report_opt_name,
                                             openfpga::OPT_STRING);
+  shell_cmd_report.add_option(
+    "changed", false,
+    "Report only the options that do not have their default value");
+  CommandOptionId report_opt_json = shell_cmd_report.add_option(
+    "json", false,
+    "Report as a JSON answer of the kind app_options, which is given to the "
+    "caller as the data of the result");
+  shell_cmd_report.set_option_short_name(report_opt_json, "j");
   ShellCommandId shell_cmd_report_id = shell.add_command(
     shell_cmd_report, "Report the value of one or all the application options");
   shell.set_command_class(shell_cmd_report_id, cmd_class);
