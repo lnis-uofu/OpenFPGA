@@ -11,12 +11,37 @@
  * log why, when the answer cannot be made. The schema of each kind is
  * openfpga_flow/schemas/<kind>.schema.json
  *
+ * device (stage DEVICE): the device that the flow works on, which is there as
+ * soon as the inputs are read
+ *   grid                   {width, height, layers, layout: its name}
+ *   channel_width          {x, y, fixed}: the widest channel of the routing
+ *                          resource graph that VPR made with the device. It
+ *                          is the width that is set (fixed true), or else the
+ *                          width that VPR estimates the delays of the
+ *                          placement with (place.place_chan_width, 100 by
+ *                          default). null if there is no graph
+ *   tile_types[]           the types of the tiles that are on the grid: name,
+ *                          width, height (in tiles), capacity (the blocks that
+ *                          one tile holds, all its sub tiles), is_io, the
+ *                          number of input_pins, output_pins and clock_pins,
+ *                          count (the tiles of this type on the grid), slots
+ *                          (the places for blocks that they make: count times
+ *                          capacity, as VPR counts them)
+ *                          sub_tiles[]: name, capacity, equivalent_blocks[]
+ *                          (the types of blocks that fit)
+ *   io_sides               {left, right, bottom, top}: the I/O tiles on each
+ *                          side of the perimeter (a corner is not counted)
+ *   locations              only if a tile type was asked for: type, total,
+ *                          returned, truncated, tiles[]: x, y, layer, the
+ *                          lower left corner of each tile of the type
+ *
  * utilization (stage PACKED): the use of the blocks of the device
  *   device_utilization     as VPR reports it
  *   grid                   {width, height}
  *   block_types[]          name, is_io, used (blocks of the netlist),
- *                          available (places of the device: the tiles of the
- *                          type, with their capacity), utilization
+ *                          available (places for blocks: a tile has as many as
+ *                          its capacity, as in the resource usage that VPR
+ *                          reports), utilization
  *   limiting_resources[]   the block types that limit the size of the device
  *
  * placement (stage PLACED): where the blocks are
@@ -48,6 +73,7 @@
 /* Begin namespace openfpga */
 namespace openfpga {
 
+constexpr int DEVICE_SCHEMA_VERSION = 1;
 constexpr int UTILIZATION_SCHEMA_VERSION = 1;
 constexpr int PLACEMENT_SCHEMA_VERSION = 1;
 constexpr int NET_ROUTE_SCHEMA_VERSION = 1;
@@ -56,6 +82,10 @@ constexpr int CLUSTER_REPORT_SCHEMA_VERSION = 1;
 
 /* The most blocks or clusters a query lists, unless a limit is given */
 constexpr size_t QUERY_LIST_DEFAULT_LIMIT = 1000;
+
+/* An empty type lists no locations */
+bool device_json(const bool fixed_channel_width, const std::string& type,
+                 const size_t limit, std::string& json);
 
 bool utilization_json(std::string& json);
 
