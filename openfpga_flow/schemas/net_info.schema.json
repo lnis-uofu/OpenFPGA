@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "net_info",
+  "description": "One net of the packed design, answer of 'net_info'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "net_info"
+    },
+    "stage": {
+      "const": "PACKED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "name",
+        "fanout",
+        "ignored",
+        "driver",
+        "sinks",
+        "bounding_box",
+        "routing",
+        "timing"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fanout": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ignored": {
+          "type": "boolean"
+        },
+        "driver": {
+          "type": "object",
+          "required": [
+            "block",
+            "port",
+            "bit"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "block": {
+              "type": "string"
+            },
+            "port": {
+              "type": "string"
+            },
+            "bit": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "sinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "block",
+              "port",
+              "bit"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "block": {
+                "type": "string"
+              },
+              "port": {
+                "type": "string"
+              },
+              "bit": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "bounding_box": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "xmin",
+            "ymin",
+            "xmax",
+            "ymax",
+            "half_perimeter"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "xmin": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ymin": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "xmax": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ymax": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "half_perimeter": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "routing": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "nodes",
+            "wires",
+            "wirelength"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "nodes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "wires": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "wirelength": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "timing": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "criticality",
+            "slack_ns"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "criticality": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "slack_ns": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}
