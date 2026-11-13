@@ -168,6 +168,7 @@ def test_every_answer_follows_its_schema(routed, validate):
         shell.net_route(net=net),
         shell.congestion(),
         shell.congestion(region_size=2),
+        shell.congestion(hotspots=3),
         shell.report_cluster(),
         shell.report_cluster(stats=True, query="out:*"),
         shell.find(pattern="*"),
@@ -542,6 +543,77 @@ def test_a_net_that_vpr_does_not_route_has_no_route(shell, and2_files, flow_dir)
     assert clock.status != 0 and clock.data is None
     assert "has no routing" in clock.log
     assert shell.net_route(net="a").data["kind"] == "net_route"
+
+
+def crossings(route_file):
+    """The nets that cross each segment of a channel, from the .route file: (channel, x, y) -> nets"""
+    found = {}
+    for name, nodes in parse_route(route_file).items():
+        for _, kind, low, high, _ in nodes:
+            if kind not in ("CHANX", "CHANY"):
+                continue
+            for x in range(low[0], high[0] + 1):
+                for y in range(low[1], high[1] + 1):
+                    found.setdefault((kind.lower(), x, y), set()).add(name)
+    return found
+
+
+def test_the_hotspots_are_the_fullest_segments_of_the_channels(routed):
+    answer = data(routed.shell.congestion(hotspots=1000))
+    spots = answer["hotspots"]
+    files = {
+        "chanx": parse_occupancy(Path("chanx_occupancy.txt")),
+        "chany": parse_occupancy(Path("chany_occupancy.txt")),
+    }
+    # Every segment in use is there, with what VPR wrote for it
+    in_use = {
+        (channel, x, y): value
+        for channel, tiles in files.items()
+        for (x, y), value in tiles.items()
+        if value[0] > 0
+    }
+    assert {(s["channel"], s["x"], s["y"]) for s in spots} == set(in_use)
+    assert len(spots) == len(in_use)
+    for spot in spots:
+        used, capacity = in_use[(spot["channel"], spot["x"], spot["y"])]
+        assert (spot["used"], spot["capacity"]) == (used, capacity)
+        assert spot["occupancy"] == pytest.approx(used / capacity)
+        assert spot["overused_nodes"] == 0
+    # The fullest first
+    keys = [(s["occupancy"], s["used"]) for s in spots]
+    assert keys == sorted(keys, reverse=True)
+    # The regions of one tile say the same
+    assert spots[0]["occupancy"] == max(
+        max(r["chanx"]["occupancy"], r["chany"]["occupancy"]) for r in answer["regions"]
+    )
+
+
+def test_the_hotspots_name_the_nets_that_cross_them(routed):
+    spots = data(routed.shell.congestion(hotspots=1000))["hotspots"]
+    expected = crossings(Path(f"{routed.name}.route"))
+    assert {(s["channel"], s["x"], s["y"]) for s in spots} == set(expected)
+    for spot in spots:
+        nets = expected[(spot["channel"], spot["x"], spot["y"])]
+        assert spot["num_nets"] == len(nets)
+        assert set(spot["nets"]) == nets and len(spot["nets"]) == len(nets)
+        # Each net has at least one wire there
+        assert spot["used"] >= spot["num_nets"]
+
+
+def test_the_hotspots_are_as_many_as_asked(routed):
+    shell = routed.shell
+    everything = data(shell.congestion(hotspots=1000))["hotspots"]
+    for count in (1, 3):
+        assert data(shell.congestion(hotspots=count))["hotspots"] == everything[:count]
+    assert "hotspots" not in data(shell.congestion())
+    assert "hotspots" not in data(shell.congestion(region_size=2))
+    # The rest of the answer does not change
+    plain = data(shell.congestion())
+    asked = data(shell.congestion(hotspots=2))
+    assert {k: v for k, v in asked.items() if k != "hotspots"} == plain
+    for bad in (0, -1):
+        assert shell.congestion(hotspots=bad, check=False).status != 0
+    assert shell.run("congestion --hotspots many", check=False).status != 0
 
 
 def test_congestion_is_the_channel_occupancy_of_vpr(routed):
