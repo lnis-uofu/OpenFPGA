@@ -101,6 +101,31 @@ A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come f
 
 A new failure of a known kind needs a rule in ``openfpga_python_diagnostics.py`` and a test with the text that it comes from.
 
+.. _session_constraints:
+
+Constraints and options that change a flow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The inputs that VPR takes besides the architecture and the circuit are options of the flow, and ``Session`` has a method for each. They return a ``Change``: the ``option``, its value ``before`` and ``after``, and the stages that were reached and are not any more (``dropped``, in the order of the flow). The next command of a stage that was dropped runs with the new value.
+
+.. code-block:: python
+
+  session.read_vpr_constraints("floorplan.xml")   # Change(option='filename.read_vpr_constraints_file', ..., dropped=['DEVICE', 'PACKED', 'PLACED'])
+  session.read_sdc("timing.sdc")
+  session.set_route_chan_width(24)
+  session.set_option("place.seed", 3)             # any option; dropped=['PLACED', 'ROUTED', 'ANALYZED']
+  session.read_sdc(None)                          # take the timing constraints away
+  session.clear_constraints()                     # the floorplan and the timing constraints
+
+- ``read_vpr_constraints(file)``: the floorplan of VPR (XML), i.e., the atoms of a partition and the regions where they must be packed and placed. ``None`` takes it away
+- ``read_sdc(file)``: the timing constraints of VPR, i.e., the clocks and their periods, and the input and output delays. They set what a path requires (``data_required_ns`` of ``critical_paths()``). ``None`` takes them away
+- ``set_route_chan_width(width)``: route with this channel width instead of looking for the smallest
+- ``set_option(name, value)``: any option, as ``options[name] = value``, with its ``Change``
+
+VPR reads these when the device is made, so the options belong to the stage ``DEVICE`` and the whole flow runs again. A file is written as a whole path in the option, and a file that does not exist raises ``FileNotFoundError`` before anything changes. The constraints are not checked until VPR reads them: a constraint that VPR refuses makes the next command fail, with the message of VPR.
+
+The pin constraints of OpenFPGA are not inputs of a stage: they are options of the commands that follow the stages, e.g., ``route_clock_rr_graph`` and ``pcf2place``. Give them with ``session.command("route_clock_rr_graph", pin_constraints_file="pcf.xml")``, which the journal records.
+
 .. _journal_and_replay:
 
 Journal and replay
