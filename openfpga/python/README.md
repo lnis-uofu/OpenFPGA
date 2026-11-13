@@ -33,7 +33,7 @@ The module is made of the classes that SWIG generates from `openfpga/src/openfpg
 and of the Python code in this directory, which the `.i` file includes (`%pythoncode`):
 
 - `openfpga_python_diagnostics.py`: `Diagnostic` and `parse_diagnostics()`, what went wrong as data.
-- `openfpga_python_session.py`: `Session`, the typed answers of the queries, the options and the checkpoints.
+- `openfpga_python_session.py`: `Session`, the typed answers of the queries, the options, the checkpoints and the journal.
 - `openfpga_python_worker.py`: `RemoteSession`, a `Session` in a process of its own.
 
 These files are not modules that can be imported by themselves: they use the names that the `.i` file defines

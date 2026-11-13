@@ -8,6 +8,7 @@ import dataclasses
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import time
 import typing
@@ -689,8 +690,10 @@ class Options:
     or a value that the option refuses, raises OpenfpgaError.
     """
 
-    def __init__(self, shell):
+    def __init__(self, shell, run=None):
         self._shell = shell
+        # How a command is run, when it has to be seen by the Session (its journal)
+        self._run = run
 
     def _report(self, **flags):
         return _answer_options(self._shell.report_app_option(json=True, **flags))
@@ -712,7 +715,10 @@ class Options:
         """Set an option. A bool is written as true or false"""
         if isinstance(value, bool):
             value = "true" if value else "false"
-        self._shell.set_app_option(name=name, value=value)
+        if self._run is not None:
+            self._run("set_app_option", name=name, value=value)
+        else:
+            self._shell.set_app_option(name=name, value=value)
 
     def reset(self, name):
         """Give an option its default value"""
@@ -756,6 +762,136 @@ def _read_manifest(path, missing_ok=False):
     if not isinstance(manifest, dict) or manifest.get("format") != _CHECKPOINT_FORMAT:
         raise CheckpointError("'%s' is not a checkpoint of a format that is read" % path)
     return manifest
+
+
+# The journal -----------------------------------------------------------------------
+
+# The commands that only answer: they do not change the flow, so the journal does not have them
+_QUERY_COMMANDS = frozenset(
+    (
+        "help",
+        "report_session",
+        "report_app_option",
+        "timing_summary",
+        "critical_paths",
+        "device",
+        "utilization",
+        "placement",
+        "net_route",
+        "congestion",
+        "report_cluster",
+        "find",
+        "block_info",
+        "net_info",
+    )
+)
+
+JOURNAL_PYTHON = "replay.py"
+JOURNAL_SHELL = "replay.openfpga"
+
+
+class ReplayError(RuntimeError):
+    """A command of a journal failed when it was replayed. line is the command,
+    number its place in the script, and the OpenfpgaError that it raised is the
+    cause"""
+
+    def __init__(self, line, number, error):
+        super().__init__("Replay stopped at the command %d, '%s': %s" % (number, line, error))
+        self.line = line
+        self.number = number
+
+
+class _Journal:
+    """The commands of a Session that changed the flow, in the order they were run, written
+    as a Python script (replay.py) and as a shell script (replay.openfpga) of a directory.
+    A command that failed is written as a comment: it is not replayed. Both files are written
+    again when a command ends, so that a run that is cut short leaves scripts that run. The
+    shell script ends with exit, as the shell does not stop at the end of a script"""
+
+    def __init__(self, directory):
+        self.directory = os.fspath(directory)
+        os.makedirs(self.directory, exist_ok=True)
+        where = (
+            "# The commands of an OpenFPGA session, written by openfpga.Session(journal=...)\n"
+            "# Written in %s: the files of the flow are written in the current directory\n"
+            % os.getcwd()
+        )
+        self._python = [where, "import openfpga\n\nsession = openfpga.Session()\n"]
+        self._shell = [where]
+        self._write()
+
+    def _write(self):
+        for file, lines, end in (
+            (JOURNAL_PYTHON, self._python, []),
+            (JOURNAL_SHELL, self._shell, ["exit\n"]),
+        ):
+            path = os.path.join(self.directory, file)
+            with open(path + ".part", "w") as handle:
+                handle.write("".join(lines + end))
+            os.replace(path + ".part", path)
+
+    @staticmethod
+    def _plain(value):
+        return os.fspath(value) if isinstance(value, os.PathLike) else value
+
+    def record(self, name, args, options, error=None):
+        """Write a command. The files are written as whole paths, so that a replay in another
+        directory reads the same files"""
+        args = [self._plain(arg) for arg in args]
+        options = {
+            key: (os.path.abspath(self._plain(value)) if key == "file" else self._plain(value))
+            for key, value in options.items()
+            if value is not None and value is not False
+        }
+        line = _command_line(name, args, options)
+        call = ", ".join(
+            [repr(name)]
+            + [repr(arg) for arg in args]
+            + ["%s=%r" % (key, value) for key, value in options.items()]
+        )
+        if error is None:
+            python = "session.command(%s)\n" % call
+            if name == "set_app_option" and not args and set(options) == {"name", "value"}:
+                python = "session.options[%r] = %r\n" % (options["name"], options["value"])
+            shell = line + "\n"
+        else:
+            errors = getattr(error, "errors", None) or []
+            reason = " ".join((errors[0].message if errors else str(error)).split())
+            python = shell = "# Failed, not replayed: %s (%s)\n" % (line, reason)
+        self._python.append(python)
+        self._shell.append(shell)
+        self._write()
+
+
+def _parse_line(line):
+    """The name, the positional arguments and the options of a command line, as
+    Session.command takes them: --key value, and --key alone for a switch"""
+    # Not the rules of a POSIX shell: a backslash is part of a path, and only the double quotes group
+    words = [
+        word[1:-1] if len(word) > 1 and word[0] == word[-1] == '"' else word
+        for word in shlex.split(line, posix=False)
+    ]
+    args, options = [], {}
+    key = None
+    for word in words[1:]:
+        if word.startswith("--") and len(word) > 2:
+            key = word[2:]
+            options[key] = True
+        elif key is not None and options[key] is True:
+            options[key] = word
+        else:
+            args.append(word)
+    return words[0], args, options
+
+
+def _journal_script(path):
+    """The shell script of a journal: a directory, or one of its two files"""
+    path = os.fspath(path)
+    if os.path.isdir(path):
+        return os.path.join(path, JOURNAL_SHELL)
+    if path.endswith(".py"):
+        return os.path.join(os.path.dirname(path), JOURNAL_SHELL)
+    return path
 
 
 # The Session -------------------------------------------------------------------------
@@ -821,16 +957,23 @@ class Session:
     Session.restore() makes a session that is at that point, in this process or
     another. With checkpoint_dir, a checkpoint is made after each stage.
 
+    With journal=directory, the commands that change the flow (the inputs, the
+    options, the stages) are written as they are run, in replay.py and in
+    replay.openfpga, so that the flow can be run again by a person, or with
+    Session.replay(). A command that is run with session.shell, as the queries
+    are, is not written.
+
     The files of the flow are written in the current directory of the process.
     The queries read the stage that they need, and fail if it is not valid,
     which is the case after an option or an input that changed it, with the
     command to run first.
     """
 
-    def __init__(self, shell=None, checkpoint_dir=None):
+    def __init__(self, shell=None, checkpoint_dir=None, journal=None):
         self.shell = shell if shell is not None else OpenfpgaShell()
-        self.options = Options(self.shell)
+        self.options = Options(self.shell, run=self.command)
         self.checkpoint_dir = checkpoint_dir
+        self._journal = _Journal(journal) if journal is not None else None
 
     # The commands ----------------------------------------------------------------
 
@@ -839,8 +982,17 @@ class Session:
         are written as --key value, and key=True as the switch --key"""
         started = time.monotonic()
         line = _command_line(name, args, options)
-        result = self.shell.run(line)
+        try:
+            result = self.shell.run(line)
+        except OpenfpgaError as error:
+            self._write_journal(name, args, options, error)
+            raise
+        self._write_journal(name, args, options)
         return StepResult(line, result.log, time.monotonic() - started)
+
+    def _write_journal(self, name, args, options, error=None):
+        if self._journal is not None and name not in _QUERY_COMMANDS:
+            self._journal.record(name, args, options, error)
 
     # The inputs ------------------------------------------------------------------
 
@@ -892,6 +1044,36 @@ class Session:
     def read_routing(self, file):
         """Take the routing (.route) of a file, instead of running route"""
         return self._stage("read_routing", file=file)
+
+    # The journal and the replay --------------------------------------------------
+
+    @classmethod
+    def replay(cls, path, shell=None, **session_options):
+        """Run the commands of a journal again, in a new Session, and return it.
+
+        path is the directory of the journal, or one of its files: the commands
+        are read from the shell script (replay.openfpga), a command per line,
+        and may be a script that a person wrote. The commands run in the
+        current directory, with the options and inputs they name. Session
+        options, e.g., journal=, are those of the new Session. A command that
+        fails raises ReplayError.
+        """
+        script = _journal_script(path)
+        with open(script) as handle:
+            lines = handle.read().splitlines()
+        session = cls(shell, **session_options)
+        for number, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            name, args, options = _parse_line(line)
+            if name == "exit":
+                break
+            try:
+                session.command(name, *args, **options)
+            except OpenfpgaError as error:
+                raise ReplayError(line, number, error) from error
+        return session
 
     # The state and the checkpoints -----------------------------------------------
 
@@ -957,7 +1139,7 @@ class Session:
         return directory
 
     @classmethod
-    def restore(cls, directory, shell=None, check_inputs=True):
+    def restore(cls, directory, shell=None, check_inputs=True, **session_options):
         """Make a Session that is at the point of a checkpoint.
 
         It sets the options, reads the inputs, and reads the results of the
@@ -965,7 +1147,8 @@ class Session:
         goes on from there, in this process or in another one, and gives the
         same results. ANALYZED is run again. A file of the results that does
         not match its checksum raises CheckpointError, and so does an input
-        that changed, unless check_inputs is False.
+        that changed, unless check_inputs is False. The other arguments are those
+        of the Session, e.g., journal=.
         """
         directory = os.fspath(directory)
         manifest = _read_manifest(os.path.join(directory, _CHECKPOINT_MANIFEST))
@@ -982,7 +1165,7 @@ class Session:
                         "The input '%s' (%s) is not the one of the checkpoint"
                         % (key, entry["file"])
                     )
-        session = cls(shell)
+        session = cls(shell, **session_options)
         for option in manifest["options"]:
             session.options.set(option["name"], option["value"])
         inputs = manifest["inputs"]

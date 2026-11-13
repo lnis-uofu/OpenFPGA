@@ -218,7 +218,7 @@ class _RemoteOptions:
 _REMOTE_METHODS = frozenset(
     name
     for name, member in vars(Session).items()
-    if callable(member) and not name.startswith("_") and name not in ("restore",)
+    if callable(member) and not name.startswith("_") and name not in ("restore", "replay")
 )
 
 # The calls that a worker takes: the methods, and the ones of the options
