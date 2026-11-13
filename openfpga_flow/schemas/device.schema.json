@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "device",
+  "description": "The device that the flow works on: the grid, the width of the channels, the types of tiles and where the I/O are, answer of 'device'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "device"
+    },
+    "stage": {
+      "const": "DEVICE"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "grid",
+        "channel_width",
+        "tile_types",
+        "io_sides"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "grid": {
+          "type": "object",
+          "required": [
+            "width",
+            "height",
+            "layers",
+            "layout"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "layers": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "layout": {
+              "type": "string"
+            }
+          }
+        },
+        "channel_width": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "x",
+                "y",
+                "fixed"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "y": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fixed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        },
+        "tile_types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "width",
+              "height",
+              "capacity",
+              "is_io",
+              "input_pins",
+              "output_pins",
+              "clock_pins",
+              "count",
+              "slots",
+              "sub_tiles"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "is_io": {
+                "type": "boolean"
+              },
+              "input_pins": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_pins": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "clock_pins": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "slots": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sub_tiles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "capacity",
+                    "equivalent_blocks"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "capacity": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "equivalent_blocks": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "io_sides": {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "bottom",
+            "top"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "left": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "right": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bottom": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "top": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "locations": {
+          "type": "object",
+          "required": [
+            "type",
+            "total",
+            "returned",
+            "truncated",
+            "tiles"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "returned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "tiles": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "x",
+                  "y",
+                  "layer"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "y": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "layer": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -42,6 +42,181 @@ double ratio(const size_t used, const size_t total) {
 
 }  // End anonymous namespace
 
+bool device_json(const bool fixed_channel_width, const std::string& type,
+                 const size_t limit, std::string& json_text) {
+  const auto& device_ctx = g_vpr_ctx.device();
+  const auto& grid = device_ctx.grid;
+  if (0 == grid.width() || 0 == grid.height()) {
+    VTR_LOG_ERROR(
+      "The device has not been created: read the VPR architecture, the "
+      "OpenFPGA architecture and the circuit first\n");
+    return false;
+  }
+  if (limit < 1) {
+    VTR_LOG_ERROR("The limit must be at least 1\n");
+    return false;
+  }
+  const t_physical_tile_type* asked = nullptr;
+  if (!type.empty()) {
+    std::string names;
+    for (const t_physical_tile_type& tile : device_ctx.physical_tile_types) {
+      if (tile.is_empty()) {
+        continue;
+      }
+      if (tile.name == type) {
+        asked = &tile;
+      }
+      names += (names.empty() ? "" : ", ") + tile.name;
+    }
+    if (nullptr == asked) {
+      VTR_LOG_ERROR("The device has no tile type '%s' (the types are: %s)\n",
+                    type.c_str(), names.c_str());
+      return false;
+    }
+  }
+
+  JsonWriter json;
+  begin_response(json, "device", DEVICE_SCHEMA_VERSION, "DEVICE");
+  json.begin_object();
+  json.key("grid").begin_object();
+  json.key("width").value(static_cast<int64_t>(grid.width()));
+  json.key("height").value(static_cast<int64_t>(grid.height()));
+  json.key("layers").value(static_cast<int64_t>(grid.get_num_layers()));
+  json.key("layout").value(grid.name());
+  json.end_object();
+
+  /* The routing resource graph is made with the device: with the width that
+   * is set, or with the one of the estimate of the delays of the placement */
+  const auto& chan_width = device_ctx.chan_width;
+  json.key("channel_width");
+  if (chan_width.x_max > 0 || chan_width.y_max > 0) {
+    json.begin_object();
+    json.key("x").value(static_cast<int64_t>(chan_width.x_max));
+    json.key("y").value(static_cast<int64_t>(chan_width.y_max));
+    json.key("fixed").value(fixed_channel_width);
+    json.end_object();
+  } else {
+    json.null();
+  }
+
+  /* The tiles of each type: the lower left corner of each one */
+  std::map<const t_physical_tile_type*, int64_t> tile_count;
+  for (size_t layer = 0; layer < grid.get_num_layers(); ++layer) {
+    for (size_t x = 0; x < grid.width(); ++x) {
+      for (size_t y = 0; y < grid.height(); ++y) {
+        const t_physical_tile_loc loc(static_cast<int>(x), static_cast<int>(y),
+                                      static_cast<int>(layer));
+        if (grid.is_root_location(loc)) {
+          ++tile_count[grid.get_physical_type(loc)];
+        }
+      }
+    }
+  }
+
+  json.key("tile_types").begin_array();
+  for (const t_physical_tile_type& tile : device_ctx.physical_tile_types) {
+    if (tile.is_empty()) {
+      continue;
+    }
+    json.begin_object();
+    json.key("name").value(tile.name);
+    json.key("width").value(static_cast<int64_t>(tile.width));
+    json.key("height").value(static_cast<int64_t>(tile.height));
+    json.key("capacity").value(static_cast<int64_t>(tile.capacity));
+    json.key("is_io").value(tile.is_io());
+    json.key("input_pins").value(static_cast<int64_t>(tile.num_input_pins));
+    json.key("output_pins").value(static_cast<int64_t>(tile.num_output_pins));
+    json.key("clock_pins").value(static_cast<int64_t>(tile.num_clock_pins));
+    const auto found = tile_count.find(&tile);
+    json.key("count").value(tile_count.end() == found ? 0 : found->second);
+    json.key("slots").value(
+      static_cast<int64_t>(grid.num_instances(&tile, -1)));
+    json.key("sub_tiles").begin_array();
+    for (const t_sub_tile& sub_tile : tile.sub_tiles) {
+      json.begin_object();
+      json.key("name").value(sub_tile.name);
+      json.key("capacity")
+        .value(static_cast<int64_t>(sub_tile.capacity.high -
+                                    sub_tile.capacity.low + 1));
+      json.key("equivalent_blocks").begin_array();
+      for (const t_logical_block_type_ptr block : sub_tile.equivalent_sites) {
+        json.value(block->name);
+      }
+      json.end_array();
+      json.end_object();
+    }
+    json.end_array();
+    json.end_object();
+  }
+  json.end_array();
+
+  /* The I/O tiles on the sides of the perimeter. A corner belongs to no side:
+   * it is a tile of a type that is not an I/O in the architectures that put
+   * the I/O on the sides, and it would be counted twice otherwise */
+  int64_t left = 0;
+  int64_t right = 0;
+  int64_t bottom = 0;
+  int64_t top = 0;
+  const int width = static_cast<int>(grid.width());
+  const int height = static_cast<int>(grid.height());
+  for (size_t layer = 0; layer < grid.get_num_layers(); ++layer) {
+    const int layer_num = static_cast<int>(layer);
+    for (int x = 1; x < width - 1; ++x) {
+      bottom += grid.get_physical_type({x, 0, layer_num})->is_io() ? 1 : 0;
+      top +=
+        grid.get_physical_type({x, height - 1, layer_num})->is_io() ? 1 : 0;
+    }
+    for (int y = 1; y < height - 1; ++y) {
+      left += grid.get_physical_type({0, y, layer_num})->is_io() ? 1 : 0;
+      right +=
+        grid.get_physical_type({width - 1, y, layer_num})->is_io() ? 1 : 0;
+    }
+  }
+  json.key("io_sides").begin_object();
+  json.key("left").value(left);
+  json.key("right").value(right);
+  json.key("bottom").value(bottom);
+  json.key("top").value(top);
+  json.end_object();
+
+  if (nullptr != asked) {
+    const auto found = tile_count.find(asked);
+    const size_t total = tile_count.end() == found ? 0 : found->second;
+    std::vector<t_physical_tile_loc> tiles;
+    for (size_t layer = 0;
+         layer < grid.get_num_layers() && tiles.size() < limit; ++layer) {
+      for (int x = 0; x < width && tiles.size() < limit; ++x) {
+        for (int y = 0; y < height && tiles.size() < limit; ++y) {
+          const t_physical_tile_loc loc(x, y, static_cast<int>(layer));
+          if (grid.get_physical_type(loc) == asked &&
+              grid.is_root_location(loc)) {
+            tiles.push_back(loc);
+          }
+        }
+      }
+    }
+    json.key("locations").begin_object();
+    json.key("type").value(asked->name);
+    json.key("total").value(static_cast<int64_t>(total));
+    json.key("returned").value(static_cast<int64_t>(tiles.size()));
+    json.key("truncated").value(tiles.size() < total);
+    json.key("tiles").begin_array();
+    for (const t_physical_tile_loc& loc : tiles) {
+      json.begin_object();
+      json.key("x").value(static_cast<int64_t>(loc.x));
+      json.key("y").value(static_cast<int64_t>(loc.y));
+      json.key("layer").value(static_cast<int64_t>(loc.layer_num));
+      json.end_object();
+    }
+    json.end_array();
+    json.end_object();
+  }
+  json.end_object();
+  end_response(json);
+  json_text = json.str();
+  return true;
+}
+
 bool utilization_json(std::string& json_text) {
   const auto& device_ctx = g_vpr_ctx.device();
   const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;

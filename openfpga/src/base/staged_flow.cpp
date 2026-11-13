@@ -601,6 +601,14 @@ bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
   if (!in_staged_flow(session) || session.reached(stage)) {
     return true;
   }
+  if (OpenFpgaStage::DEVICE == stage) {
+    VTR_LOG_ERROR(
+      "Cannot run '%s': the stage DEVICE has not been reached, because not "
+      "all the inputs are read (or one was read again). Use the commands "
+      "'read_vpr_arch', 'read_openfpga_arch' and 'read_circuit' first\n",
+      command);
+    return false;
+  }
   VTR_LOG_ERROR(
     "Cannot run '%s': the stage %s has not been reached, or it was dropped "
     "because an earlier stage or an option changed. Use the command '%s' "

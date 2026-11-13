@@ -118,6 +118,22 @@ int critical_paths_command(const OpenfpgaContext& openfpga_ctx,
                 });
 }
 
+int device_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                   const CommandContext& cmd_context) {
+  size_t limit = 0;
+  if (!count_option(cmd, cmd_context, "limit", QUERY_LIST_DEFAULT_LIMIT,
+                    limit)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  const std::string type = string_option(cmd, cmd_context, "type");
+  return answer(openfpga_ctx, OpenFpgaStage::DEVICE, "device",
+                [&](const vpr::VprRun& run, std::string& json) {
+                  return device_json(NO_FIXED_CHANNEL_WIDTH !=
+                                       run.setup.RouterOpts.fixed_channel_width,
+                                     type, limit, json);
+                });
+}
+
 int utilization_command(const OpenfpgaContext& openfpga_ctx, const Command&,
                         const CommandContext&) {
   return answer(openfpga_ctx, OpenFpgaStage::PACKED, "utilization",
@@ -224,6 +240,16 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                     "Answer with the worst setup paths of the routed design, "
                     "with the delay of each point",
                     critical_paths_command);
+
+  Command device("device");
+  add_option(device, "type", "t", false, OPT_STRING,
+             "Also list the locations of the tiles of this type");
+  add_option(device, "limit", "l", false, OPT_INT,
+             "Most locations to list. Default: 1000");
+  add_query_command(shell, cmd_class, device,
+                    "Answer with the device: the grid, the width of the "
+                    "channels, the types of tiles and where the I/O are",
+                    device_command);
 
   add_query_command(shell, cmd_class, Command("utilization"),
                     "Answer with the use of the blocks of the device by the "
