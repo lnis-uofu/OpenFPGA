@@ -199,6 +199,16 @@ def _classify(message):
     return None
 
 
+_INTERLEAVED = re.compile(r"(?<=[^\n])(?=(?:Error|Warning) \d+:)")
+
+
+def _split_interleaved(log):
+    """The log with an "Error n:" or a "Warning n:" that follows other text on its
+    line (stdout is buffered and stderr is not, so VPR's message can land in the
+    middle of a line that it printed) on a line of its own"""
+    return _INTERLEAVED.sub("\n", log)
+
+
 def parse_diagnostics(log, error=""):
     """The Diagnostic objects of the text of a failure, in the order of the log:
     the errors, then the warnings (at most MAX_WARNINGS).
@@ -209,7 +219,7 @@ def parse_diagnostics(log, error=""):
     all but there is an error text, that text is the diagnostic."""
     errors = []
     warnings = []
-    lines = (log or "").splitlines()
+    lines = _split_interleaved(log or "").splitlines()
     index = 0
     while index < len(lines):
         line = lines[index]

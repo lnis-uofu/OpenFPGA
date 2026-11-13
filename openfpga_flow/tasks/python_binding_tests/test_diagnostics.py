@@ -385,3 +385,25 @@ def test_a_timeout_and_a_cancel_have_a_kind(openfpga_module, golden, tmp_path):
         with pytest.raises(openfpga_module.WorkerTimeout) as timeout:
             worker.place(timeout_s=0.5)
         assert timeout.value.diagnostics[0].kind == "worker_timeout"
+
+
+def test_an_error_in_the_middle_of_a_line_is_found(openfpga_module, ready):
+    """stdout is buffered and stderr is not: the error of VPR can land after the text of a line
+    that was not finished, and its message is on the lines after it"""
+    log = (
+        "placer_opts.seed: 1\nanneal_sched.inner_num: 0.500000Error 1: \nType: Other\n"
+        "File: /vtr/vpr/src/base/check_setup.cpp\nLine: 210\n"
+        "Message: Place channel width must be even for unidirectional.\n\n"
+        "placer_opts.anneal_init_t_estimator: EQUILIBRIUM\n"
+    )
+    (found,) = openfpga_module.parse_diagnostics(log)
+    assert found.severity == "error"
+    assert "Place channel width must be even" in found.message
+    # The same for the message of the exception, and in a real command
+    session = ready(chan_width=20)
+    session.pack()
+    session.options["place.place_chan_width"] = 101
+    with pytest.raises(openfpga_module.OpenfpgaError) as error:
+        session.pack()
+    assert "must be even" in str(error.value)
+    assert any("must be even" in d.message for d in error.value.errors)
