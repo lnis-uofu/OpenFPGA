@@ -289,6 +289,86 @@ static void test_failed_input() {
   CHECK(session.uninitialized());
 }
 
+static void test_failure_message() {
+  OpenFpgaSession session;
+  run_all(session);
+
+  /* The message is kept with the stage that failed, until it is forgotten */
+  CHECK(nullptr == session.failure(OpenFpgaStage::ROUTED));
+  session.fail(OpenFpgaStage::ROUTED, "no legal routing");
+  CHECK(nullptr != session.failure(OpenFpgaStage::ROUTED));
+  CHECK("no legal routing" == *session.failure(OpenFpgaStage::ROUTED));
+  CHECK(nullptr == session.failure(OpenFpgaStage::PLACED));
+  CHECK(!session.reached(OpenFpgaStage::ROUTED));
+  CHECK(session.reached(OpenFpgaStage::PLACED));
+
+  /* A failure without a message is not remembered */
+  session.fail(OpenFpgaStage::PACKED);
+  CHECK(nullptr == session.failure(OpenFpgaStage::PACKED));
+
+  /* Running the stage again forgets it */
+  run_all(session);
+  session.fail(OpenFpgaStage::ROUTED, "again");
+  CHECK(session.complete(OpenFpgaStage::ROUTED));
+  CHECK(nullptr == session.failure(OpenFpgaStage::ROUTED));
+
+  /* So does dropping the stage for another reason: an earlier stage that runs
+   * again, an option that it depends on, or an input that is read again */
+  session.fail(OpenFpgaStage::ROUTED, "once more");
+  CHECK(session.complete(OpenFpgaStage::PLACED));
+  CHECK(nullptr == session.failure(OpenFpgaStage::ROUTED));
+
+  session.fail(OpenFpgaStage::ROUTED, "the width");
+  std::string error;
+  CHECK(session.set_app_option("router.route_chan_width", "21", error));
+  CHECK(nullptr == session.failure(OpenFpgaStage::ROUTED));
+
+  run_all(session);
+  session.fail(OpenFpgaStage::ROUTED, "input");
+  CHECK(session.read_input(OpenFpgaInput::CIRCUIT));
+  CHECK(nullptr == session.failure(OpenFpgaStage::ROUTED));
+
+  /* The session forgets everything on a reset */
+  run_all(session);
+  session.fail(OpenFpgaStage::PLACED, "reset");
+  session.reset();
+  CHECK(nullptr == session.failure(OpenFpgaStage::PLACED));
+}
+
+static void test_stage_log() {
+  OpenFpgaSession session;
+  run_all(session);
+
+  /* What a stage printed, and its time, are kept with the stage */
+  CHECK(nullptr == session.stage_log(OpenFpgaStage::PLACED));
+  session.set_stage_log(OpenFpgaStage::PLACED, "placed");
+  session.set_stage_seconds(OpenFpgaStage::PLACED, 1.5);
+  CHECK("placed" == *session.stage_log(OpenFpgaStage::PLACED));
+  CHECK(1.5 == *session.stage_seconds(OpenFpgaStage::PLACED));
+  CHECK(nullptr == session.stage_log(OpenFpgaStage::PACKED));
+
+  /* A stage that is not reached has none */
+  session.fail(OpenFpgaStage::ROUTED);
+  session.set_stage_log(OpenFpgaStage::ROUTED, "routed");
+  CHECK(nullptr == session.stage_log(OpenFpgaStage::ROUTED));
+
+  /* They are forgotten with the stage: when it runs again, or an earlier
+   * stage does, and on a reset */
+  CHECK(session.complete(OpenFpgaStage::PLACED));
+  CHECK(nullptr == session.stage_log(OpenFpgaStage::PLACED));
+  CHECK(nullptr == session.stage_seconds(OpenFpgaStage::PLACED));
+
+  session.set_stage_log(OpenFpgaStage::PLACED, "again");
+  session.set_stage_log(OpenFpgaStage::ROUTED, "routed");
+  CHECK(session.complete(OpenFpgaStage::PACKED));
+  CHECK(nullptr == session.stage_log(OpenFpgaStage::PLACED));
+
+  run_all(session);
+  session.set_stage_log(OpenFpgaStage::PACKED, "packed");
+  session.reset();
+  CHECK(nullptr == session.stage_log(OpenFpgaStage::PACKED));
+}
+
 static void test_failure() {
   OpenFpgaSession session;
 
@@ -493,6 +573,8 @@ int main() {
   test_reread_inputs();
   test_failed_input();
   test_failure();
+  test_failure_message();
+  test_stage_log();
   test_reset();
   test_names();
   test_vpr_generation();

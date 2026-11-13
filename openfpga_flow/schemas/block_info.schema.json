@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "block_info",
+  "description": "One cluster of the packed design, answer of 'block_info'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "block_info"
+    },
+    "stage": {
+      "const": "PACKED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "placed",
+        "location",
+        "pins",
+        "atoms"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "placed": {
+          "type": "boolean"
+        },
+        "location": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "x",
+            "y",
+            "sub_tile",
+            "layer"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sub_tile": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "layer": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "pins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "port",
+              "bit",
+              "direction",
+              "net"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "port": {
+                "type": "string"
+              },
+              "bit": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "direction": {
+                "enum": [
+                  "input",
+                  "output",
+                  "clock"
+                ]
+              },
+              "net": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "atoms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "model",
+              "path"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "path": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

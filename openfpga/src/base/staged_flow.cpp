@@ -1,5 +1,6 @@
 #include "staged_flow.h"
 
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -134,6 +135,43 @@ void drop_run(OpenFpgaSession& session) {
   session.set_vpr_generation(vpr::vpr_run_generation());
 }
 
+/* A stage failed. If VPR ended the stage without an error (the circuit does
+ * not fit, the router found no legal routing), it left what it had made,
+ * e.g., the routing with the nodes that nets share: keep it, so that it can be
+ * read to tell why, and mark the run as failed. If it stopped with an error,
+ * VPR may have been interrupted anywhere: the packing and the placement are
+ * not read after that, but the device is made before them and they do not
+ * change it, so it is kept for them. A routing is not */
+void keep_failed_run(OpenFpgaSession& session, VprRun& run,
+                     const OpenFpgaStage& stage, const bool vpr_ended) {
+  if (vpr_ended || OpenFpgaStage::PACKED == stage ||
+      OpenFpgaStage::PLACED == stage) {
+    run.failed = true;
+  } else {
+    drop_run(session);
+  }
+}
+
+/* Why a stage failed, for the session to tell */
+std::string failure_message(const OpenFpgaStage& stage, const VprRun& run) {
+  switch (stage) {
+    case OpenFpgaStage::PACKED:
+      return "Packing failed: the circuit could not be packed on the device";
+    case OpenFpgaStage::PLACED:
+      return "Placement failed: the blocks could not be placed on the device";
+    case OpenFpgaStage::ROUTED:
+      if (NO_FIXED_CHANNEL_WIDTH != run.setup.RouterOpts.fixed_channel_width) {
+        return "Routing failed: the router found no legal routing with the "
+               "channel width " +
+               std::to_string(run.setup.RouterOpts.fixed_channel_width);
+      }
+      return "Routing failed: the router found no legal routing";
+    default:
+      break;
+  }
+  return to_string(stage) + " failed";
+}
+
 /* The command line of VPR for the flow. The stages are run by the commands,
  * so that all of them are asked of VPR. If the circuit is not known yet, it
  * has a placeholder name */
@@ -239,7 +277,7 @@ bool do_pack(OpenFpgaSession& session, VprRun& run,
   run.setup.PackerOpts.doPacking = e_stage_action::DO;
   if (!ok || !packed) {
     VTR_LOG_ERROR("Packing failed\n");
-    drop_run(session);
+    keep_failed_run(session, run, OpenFpgaStage::PACKED, ok);
     return false;
   }
   run.last_stage = OpenFpgaStage::PACKED;
@@ -261,7 +299,7 @@ bool do_place(OpenFpgaSession& session, VprRun& run,
   run.setup.PlacerOpts.do_placement = e_stage_action::DO;
   if (!ok || !placed) {
     VTR_LOG_ERROR("Placement failed\n");
-    drop_run(session);
+    keep_failed_run(session, run, OpenFpgaStage::PLACED, ok);
     return false;
   }
   run.last_stage = OpenFpgaStage::PLACED;
@@ -295,7 +333,7 @@ bool do_route(OpenFpgaSession& session, VprRun& run,
   run.setup.RouterOpts.doRouting = e_stage_action::DO;
   if (!ok || !run.route_status.success()) {
     VTR_LOG_ERROR("Routing failed\n");
-    drop_run(session);
+    keep_failed_run(session, run, OpenFpgaStage::ROUTED, ok);
     return false;
   }
   run.last_stage = OpenFpgaStage::ROUTED;
@@ -347,7 +385,7 @@ bool ensure_device(OpenFpgaSession& session) {
   }
   /* The data of the run is good if it was made from the same options */
   VprRun* run = vpr::current_vpr_run();
-  if (nullptr == run || !run->initialized || run->args != args) {
+  if (nullptr == run || !run->initialized || run->failed || run->args != args) {
     if (!init_run(session, args)) {
       return false;
     }
@@ -369,7 +407,7 @@ bool prepare_vpr(OpenFpgaSession& session, const OpenFpgaStage& target) {
     return false;
   }
   VprRun* run = vpr::current_vpr_run();
-  if (nullptr != run && run->initialized && run->args == args &&
+  if (nullptr != run && run->initialized && !run->failed && run->args == args &&
       run->last_stage == target) {
     return true;
   }
@@ -505,6 +543,9 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
     return false;
   }
   VprRun& run = *vpr::current_vpr_run();
+  const auto started = std::chrono::steady_clock::now();
+  /* The run may be released by a stage that fails */
+  const std::string failed_message = failure_message(stage, run);
   bool ok = false;
   switch (stage) {
     case OpenFpgaStage::PACKED:
@@ -525,10 +566,13 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
       return false;
   }
   if (!ok) {
-    session.fail(stage);
+    session.fail(stage, failed_message);
     return false;
   }
   session.complete(stage);
+  session.set_stage_seconds(stage, std::chrono::duration<double>(
+                                     std::chrono::steady_clock::now() - started)
+                                     .count());
   return true;
 }
 
@@ -571,6 +615,8 @@ bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
     return false;
   }
   VprRun& run = *vpr::current_vpr_run();
+  /* The run may be released by a stage that fails */
+  const std::string failed_message = failure_message(stage, run);
   bool ok = false;
   switch (stage) {
     case OpenFpgaStage::PACKED:
@@ -584,7 +630,7 @@ bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
       break;
   }
   if (!ok) {
-    session.fail(stage);
+    session.fail(stage, failed_message);
     return false;
   }
   session.complete(stage);
@@ -600,6 +646,22 @@ bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
                  const char* command) {
   if (!in_staged_flow(session) || session.reached(stage)) {
     return true;
+  }
+  if (OpenFpgaStage::DEVICE == stage) {
+    VTR_LOG_ERROR(
+      "Cannot run '%s': the stage DEVICE has not been reached, because not "
+      "all the inputs are read (or one was read again). Use the commands "
+      "'read_vpr_arch', 'read_openfpga_arch' and 'read_circuit' first\n",
+      command);
+    return false;
+  }
+  if (const std::string* failure = session.failure(stage)) {
+    VTR_LOG_ERROR(
+      "Cannot run '%s': the stage %s has not been reached, because it failed "
+      "(%s). Change what made it fail, and use the command '%s' again\n",
+      command, to_string(stage).c_str(), failure->c_str(),
+      stage_command(stage));
+    return false;
   }
   VTR_LOG_ERROR(
     "Cannot run '%s': the stage %s has not been reached, or it was dropped "

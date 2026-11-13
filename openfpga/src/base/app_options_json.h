@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "app_options.h"
+#include "json_writer.h"
 
 /********************************************************************
  * The application options as the answer of a query, of the kind app_options.
@@ -26,6 +27,11 @@ namespace openfpga {
 
 /* Version of the schema of the kind app_options */
 constexpr int APP_OPTIONS_SCHEMA_VERSION = 1;
+
+/* Write one option as an object of the entry of the list above. The option
+ * must exist */
+void write_app_option_json(JsonWriter& json, const AppOptions& options,
+                           const std::string& name);
 
 /* The answer for the options with these names, which must exist */
 std::string app_options_json(const AppOptions& options,

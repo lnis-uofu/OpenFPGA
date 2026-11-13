@@ -40,6 +40,12 @@ void release_vpr_run(bool announce) {
     cluster_ctx.atoms_lookup.clear();
     cluster_ctx.post_routing_clb_pin_nets.clear();
     cluster_ctx.pre_routing_net_pin_mapping.clear();
+    /* The floorplan is read when VPR starts, and only if there is a file: the
+     * one of the previous run would stay for the next one */
+    FloorplanningContext& floorplanning = g_vpr_ctx.mutable_floorplanning();
+    floorplanning.constraints = UserPlaceConstraints();
+    floorplanning.relative_macros = UserRelativeMacros();
+    floorplanning.cluster_constraints.clear();
   } catch (const std::exception& exc) {
     VTR_LOG_ERROR("Fail to free VPR data: %s\n", exc.what());
   }

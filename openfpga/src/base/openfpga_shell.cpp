@@ -3,6 +3,7 @@
 #include <cctype>
 #include <exception>
 #include <mutex>
+#include <utility>
 
 #include "app_options_commands.h"
 #include "basic_command.h"
@@ -75,8 +76,8 @@ static std::recursive_mutex& command_mutex() {
   return mutex;
 }
 
-/* Return true if the command line calls the built-in command 'exit' */
-static bool is_exit_command(const char* cmd_line) {
+/* The name of the command that a command line calls */
+static std::string command_name(const char* cmd_line) {
   const char* cur = cmd_line;
   while (*cur != '\0' && std::isspace(static_cast<unsigned char>(*cur))) {
     ++cur;
@@ -86,7 +87,12 @@ static bool is_exit_command(const char* cmd_line) {
     name.push_back(*cur);
     ++cur;
   }
-  return name == "exit";
+  return name;
+}
+
+/* Return true if the command line calls the built-in command 'exit' */
+static bool is_exit_command(const char* cmd_line) {
+  return command_name(cmd_line) == "exit";
 }
 
 int OpenfpgaShell::execute_guarded(const char* cmd_line, std::string& error) {
@@ -133,6 +139,21 @@ CommandResult OpenfpgaShell::execute(const char* cmd_line) {
   result.log = capture.stop();
   if (0 == result.status) {
     result.data = openfpga_ctx_.query_result();
+    /* What a stage printed is kept with its results, for report_run */
+    if (nullptr != cmd_line) {
+      const std::string name = command_name(cmd_line);
+      static const std::pair<const char*, openfpga::OpenFpgaStage> stages[] = {
+        {"pack", openfpga::OpenFpgaStage::PACKED},
+        {"place", openfpga::OpenFpgaStage::PLACED},
+        {"route", openfpga::OpenFpgaStage::ROUTED},
+        {"analysis", openfpga::OpenFpgaStage::ANALYZED}};
+      for (const auto& entry : stages) {
+        if (name == entry.first) {
+          openfpga_ctx_.mutable_session().set_stage_log(entry.second,
+                                                        result.log);
+        }
+      }
+    }
   }
   openfpga_ctx_.clear_query_result();
   return result;

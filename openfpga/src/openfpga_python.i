@@ -60,7 +60,9 @@ class OpenfpgaError(RuntimeError):
         self.error = result.error
         detail = self.error
         if not detail:
-            lines = [line for line in self.log.splitlines() if line.strip()]
+            lines = [
+                line for line in _split_interleaved(self.log).splitlines() if line.strip()
+            ]
             # Error messages are not always at the end of the log, as stderr
             # is not ordered against stdout. Quote them first when present
             errors = self._error_lines(lines)
@@ -72,6 +74,18 @@ class OpenfpgaError(RuntimeError):
 
     # Lines of a VPR error after "Error <n>:" (Type, File, Line, Message)
     VPR_ERROR_LINES = 4
+
+    @property
+    def diagnostics(self):
+        """What went wrong, as a list of Diagnostic objects: the kind of each
+        failure, the file and line it names, and a hint on what to try. See
+        parse_diagnostics()."""
+        return parse_diagnostics(self.log, self.error)
+
+    @property
+    def errors(self):
+        """The diagnostics of the severity 'error' only"""
+        return [item for item in self.diagnostics if item.severity == "error"]
 
     @classmethod
     def _error_lines(cls, lines):
@@ -196,6 +210,9 @@ def _shell_getattr(self, name):
 
 OpenfpgaShell.__getattr__ = _shell_getattr
 %}
+
+/* What went wrong, as data */
+%pythoncode "openfpga_python_diagnostics.py"
 
 /* The Session of the flow, in pure Python */
 %pythoncode "openfpga_python_session.py"

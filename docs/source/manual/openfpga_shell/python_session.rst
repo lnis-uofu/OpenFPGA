@@ -49,10 +49,143 @@ Options
 
 ``session.options`` gives the application options (see :ref:`openfpga_basic_commands`). ``options["place.seed"]`` is the value, with the type of the option (``str``, ``int``, ``float`` or ``bool``), and ``options["place.seed"] = 3`` sets it. A ``bool`` is written ``true`` or ``false``, and a path is accepted for a file. ``get(name)`` gives an ``AppOption`` with the ``default``, the ``help``, the ``choices`` of a selection and the ``stage`` that the option changes. ``list()`` and ``changed()`` give all the options, and those that do not have their default value, and ``reset(name)`` gives an option its default. An option that does not exist, or a value that it refuses, raises ``OpenfpgaError``.
 
+What went wrong
+~~~~~~~~~~~~~~~
+
+A failure is text in the log of a command. ``OpenfpgaError.diagnostics`` (and ``errors``, which keeps the errors) reads it into ``Diagnostic`` objects, so that a program does not have to:
+
+.. code-block:: python
+
+  try:
+      session.read_vpr_arch("bad.xml", layout="2x2")
+  except openfpga.OpenfpgaError as error:
+      found = error.errors[0]
+      found.kind      # 'xml_syntax'
+      found.file      # 'bad.xml'
+      found.line      # 1
+      found.hint      # "Fix the XML of 'bad.xml' at the line that the message gives"
+
+A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come first, and at most ten warnings are kept), a ``kind``, the ``message`` as it is in the log, the ``file`` and ``line`` of the user that the message names (``None`` if it names none), the ``source`` (where VPR raised an error, for a report of a bug), a ``hint`` on what to try (``None`` when there is nothing to say), and ``data``, the facts that the message contains. The kinds do not change with the wording of a message:
+
+.. list-table::
+  :header-rows: 1
+
+  * - ``kind``
+    - Meaning, and its ``data``
+  * - ``input_not_read``
+    - An input is missing: ``input``, ``command`` to run
+  * - ``stage_not_reached``
+    - The stage that a command needs is not valid: ``stage``, ``command`` to run
+  * - ``stage_failed``
+    - The stage that a command needs ran and failed (see :ref:`failed_stages`): ``stage``, ``command`` to run again, ``reason``
+  * - ``no_vpr_data``
+    - A query was asked before any flow
+  * - ``file_not_found``
+    - A file cannot be opened; ``file`` is set when the log says which
+  * - ``xml_syntax``
+    - An XML file cannot be parsed, with its ``file`` and ``line``
+  * - ``option_unknown``, ``option_value_invalid``
+    - An application option that does not exist, or a value it refuses: ``option``, ``type``, ``reason``
+  * - ``command_unknown``, ``command_option_missing``
+    - A command that does not exist, or an option that it requires: ``command`` or ``option``
+  * - ``layout_not_found``
+    - The device layout is not in the architecture: ``layout``, ``valid_layouts``
+  * - ``route_failed``, ``route_unroutable``
+    - The routing failed; for ``route_unroutable``, ``channel_width`` is the width that did not route
+  * - ``worker_crashed``, ``worker_timeout``, ``worker_cancelled``, ``worker_not_running``
+    - Failures of a ``RemoteSession`` worker (``WorkerError.diagnostics``); ``worker_crashed`` has the ``exitcode`` and the ``signal``, and its diagnostics go on with what the worker wrote before it ended
+  * - ``vpr_<type>``
+    - An error that VPR gave a type, e.g., ``vpr_architecture_file``, that no rule knows
+  * - ``error``, ``warning``
+    - Anything else
+
+A new failure of a known kind needs a rule in ``openfpga_python_diagnostics.py`` and a test with the text that it comes from.
+
+.. _session_constraints:
+
+Constraints and options that change a flow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The inputs that VPR takes besides the architecture and the circuit are options of the flow, and ``Session`` has a method for each. They return a ``Change``: the ``option``, its value ``before`` and ``after``, and the stages that were reached and are not any more (``dropped``, in the order of the flow). The next command of a stage that was dropped runs with the new value.
+
+.. code-block:: python
+
+  session.read_vpr_constraints("floorplan.xml")   # Change(option='filename.read_vpr_constraints_file', ..., dropped=['DEVICE', 'PACKED', 'PLACED'])
+  session.read_sdc("timing.sdc")
+  session.set_route_chan_width(24)
+  session.set_option("place.seed", 3)             # any option; dropped=['PLACED', 'ROUTED', 'ANALYZED']
+  session.read_sdc(None)                          # take the timing constraints away
+  session.clear_constraints()                     # the floorplan and the timing constraints
+
+- ``read_vpr_constraints(file)``: the floorplan of VPR (XML), i.e., the atoms of a partition and the regions where they must be packed and placed. ``None`` takes it away
+- ``read_sdc(file)``: the timing constraints of VPR, i.e., the clocks and their periods, and the input and output delays. They set what a path requires (``data_required_ns`` of ``critical_paths()``). ``None`` takes them away
+- ``set_route_chan_width(width)``: route with this channel width instead of looking for the smallest
+- ``set_option(name, value)``: any option, as ``options[name] = value``, with its ``Change``
+
+VPR reads these when the device is made, so the options belong to the stage ``DEVICE`` and the whole flow runs again. A file is written as a whole path in the option, and a file that does not exist raises ``FileNotFoundError`` before anything changes. The constraints are not checked until VPR reads them: a constraint that VPR refuses makes the next command fail, with the message of VPR.
+
+The pin constraints of OpenFPGA are not inputs of a stage: they are options of the commands that follow the stages, e.g., ``route_clock_rr_graph`` and ``pcf2place``. Give them with ``session.command("route_clock_rr_graph", pin_constraints_file="pcf.xml")``, which the journal records.
+
+.. _journal_and_replay:
+
+Journal and replay
+~~~~~~~~~~~~~~~~~~
+
+``Session(journal="run.journal")`` writes the commands that changed the flow, in the order they ran, in two files of that directory:
+
+- ``replay.py``: a Python script, ``session.options["router.route_chan_width"] = 20``, ``session.command("pack")``, ...
+- ``replay.openfpga``: a script of the shell, ``set_app_option --name router.route_chan_width --value 20``, ``pack``, ... It ends with ``exit``, as the shell does not stop at the end of a script, and runs with ``openfpga -f replay.openfpga``
+
+.. code-block:: python
+
+  session = openfpga.Session(journal="run.journal")
+  session.options["router.route_chan_width"] = 20
+  session.read_vpr_arch("arch.xml", layout="2x2")
+  ...
+
+  # Later, in another directory or process, or by hand: python run.journal/replay.py
+  session = openfpga.Session.replay("run.journal")
+
+What is written:
+
+- the commands that the Session runs: the options, the inputs, the stages, the files of the results that are read (``read_packing``, ...), and any command that is run with ``session.command()``. Files are written as whole paths, so that a replay in another directory reads the same files. The files of the flow are written in the current directory of the replay
+- not the queries (``utilization()``, ``congestion()``, ...), nor what is run with ``session.shell``: that is the way to ask, and to run what has no method, without a mark in the journal
+- a command that failed is a comment, ``# Failed, not replayed: route (...)``, with the reason
+- the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again
+- ``Session.restore(directory, journal=...)`` writes the commands that restore does: the options, the inputs and the results that are read from the checkpoint
+
+``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. A ``RemoteSession`` has no journal yet.
+
+.. _failed_stages:
+
+Stages that fail
+~~~~~~~~~~~~~~~~
+
+When the packing, the placement or the routing fails (the circuit does not fit the device, the router finds no legal routing), the stage is not reached, and what VPR made until then is kept, so that it can be read to tell why it failed:
+
+.. code-block:: python
+
+  session.options["router.route_chan_width"] = 8
+  try:
+      session.route()
+  except openfpga.OpenfpgaError:
+      pass
+  session.state().failed        # StageFailure(stage='ROUTED', message='Routing failed: ...')
+  session.congestion(hotspots=5)  # routed is False: the wires that nets share, and the nets
+  session.utilization()          # the stages before it answer as before
+
+- ``state().failed`` has the ``stage`` and the ``message``. It is ``None`` once the stage is run again, or an option or an input that made it out of date is set
+- the queries of the stages before it, e.g., ``utilization()``, ``placement()``, ``find()`` and ``net_info()``, answer as they did before. After a failed packing, ``device()`` does
+- ``congestion()`` reads the routing of a route that failed: ``routed`` is ``False``, and ``summary.overused_nodes`` is the number of wires that nets share. With ``hotspots``, the segments where that happens are listed with their nets
+- the queries that need the stage that failed (``timing_summary()``, ``critical_paths()``, ``net_route()``) raise ``OpenfpgaError`` with the diagnostic ``stage_failed``, which has the stage, the reason and the command to run again
+- the next command of a stage starts again from fresh data of VPR, and gives the results it gives without the failure. ``checkpoint()`` does not save the stage that failed
+
+A router that cannot reach a pin at all, e.g., with a channel width that is too small for the architecture, stops at once, and its routing has no shared wires: the log of VPR says ``Cannot route from ...``.
+
 State and checkpoints
 ~~~~~~~~~~~~~~~~~~~~~
 
-``state()`` gives what the flow has done (``SessionState``, from the query ``report_session``): the stages that are ``reached``, the ``inputs`` (the files they were read from) and the ``results`` (the files of the packing, the placement and the routing).
+``state()`` gives what the flow has done (``SessionState``, from the query ``report_session``): the stages that are ``reached``, the ``inputs`` (the files they were read from), the ``results`` (the files of the packing, the placement and the routing) and ``failed``, the stage that failed last and left its data, see :ref:`failed_stages`.
 
 ``checkpoint(directory)`` saves the flow, and ``Session.restore(directory)`` makes a session that is at the same point, in this process or in another one:
 
@@ -73,7 +206,7 @@ A new checkpoint in the same directory replaces the old one, and the manifest is
 Queries
 ~~~~~~~
 
-The queries of :ref:`openfpga_query_commands` are methods that return objects (immutable dataclasses) instead of JSON: ``timing_summary()`` (``TimingSummary``), ``critical_paths(count)`` (``CriticalPaths``), ``utilization()`` (``Utilization``), ``placement(block_type, prefix, limit)`` (``Placement``), ``net_route(net)`` (``NetRoute``), ``congestion(region_size)`` (``Congestion``) and ``cluster_report(query, stats, limit)`` (``ClusterReport``). The fields are the ones of the answers, listed with the commands, and ``stage`` tells which stage the answer was read from. Values that are not finite, e.g., the Fmax of a circuit without path, are ``None``.
+The queries of :ref:`openfpga_query_commands` are methods that return objects (immutable dataclasses) instead of JSON: ``timing_summary()`` (``TimingSummary``), ``critical_paths(count)`` (``CriticalPaths``), ``utilization()`` (``Utilization``), ``placement(block_type, prefix, limit)`` (``Placement``), ``net_route(net)`` (``NetRoute``), ``congestion(region_size, hotspots)`` (``Congestion``), ``cluster_report(query, stats, limit)`` (``ClusterReport``), ``device(tile_type, limit)`` (``Device``), ``find(pattern, kind, limit)`` (``Found``), ``block_info(block)`` (``BlockInfo``) and ``net_info(net)`` (``NetInfo``) and ``run_report()`` (``RunReport``) and ``stage_info(stage, changed, query, limit)`` (``StageReport``). The fields are the ones of the answers, listed with the commands, and ``stage`` tells which stage the answer was read from. Values that are not finite, e.g., the Fmax of a circuit without path, are ``None``.
 
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped.
 

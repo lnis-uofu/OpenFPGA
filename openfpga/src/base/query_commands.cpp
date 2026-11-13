@@ -5,6 +5,8 @@
 
 #include "command_exit_codes.h"
 #include "query_design.h"
+#include "query_run.h"
+#include "query_stage.h"
 #include "query_timing.h"
 #include "session_json.h"
 #include "staged_flow.h"
@@ -21,8 +23,9 @@ using Query = std::function<bool(const vpr::VprRun&, std::string&)>;
 /* Make the answer of a query, and give it: print it, and hand it to the
  * caller of the command */
 int answer(const OpenfpgaContext& openfpga_ctx, const OpenFpgaStage& stage,
-           const char* command, const Query& query) {
-  if (!stage_ready(openfpga_ctx.session(), stage, command)) {
+           const char* command, const Query& query,
+           const bool stage_is_needed = true) {
+  if (stage_is_needed && !stage_ready(openfpga_ctx.session(), stage, command)) {
     return CMD_EXEC_FATAL_ERROR;
   }
   const vpr::VprRun* run = vpr::current_vpr_run();
@@ -40,6 +43,15 @@ int answer(const OpenfpgaContext& openfpga_ctx, const OpenFpgaStage& stage,
   openfpga_ctx.set_query_result(json);
   VTR_LOG("%s\n", json.c_str());
   return CMD_EXEC_SUCCESS;
+}
+
+/* True if the data of a stage is there to read. Outside of the flow that is
+ * run stage by stage, e.g., after the command vpr, whatever VPR holds is read,
+ * and the queries find out from the data if there is any */
+bool stage_data(const OpenfpgaContext& openfpga_ctx,
+                const OpenFpgaStage& stage) {
+  return !staged_flow_current(openfpga_ctx.session()) ||
+         openfpga_ctx.session().reached(stage);
 }
 
 /* The value of an option that is a whole number. Return false and log if it
@@ -97,6 +109,36 @@ int report_session_command(const OpenfpgaContext& openfpga_ctx, const Command&,
   return CMD_EXEC_SUCCESS;
 }
 
+int report_stage_command(const OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd,
+                         const CommandContext& cmd_context) {
+  size_t limit = 0;
+  if (!count_option(cmd, cmd_context, "limit", QUERY_LIST_DEFAULT_LIMIT,
+                    limit)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  std::string json;
+  if (!stage_info_json(openfpga_ctx.session(),
+                       string_option(cmd, cmd_context, "stage"),
+                       cmd_context.option_enable(cmd, cmd.option("changed")),
+                       string_option(cmd, cmd_context, "query"), limit, json)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  openfpga_ctx.set_query_result(json);
+  VTR_LOG("%s\n", json.c_str());
+  return CMD_EXEC_SUCCESS;
+}
+
+int report_run_command(const OpenfpgaContext& openfpga_ctx, const Command&,
+                       const CommandContext&) {
+  const bool in_flow = staged_flow_current(openfpga_ctx.session());
+  return answer(openfpga_ctx, OpenFpgaStage::DEVICE, "report_run",
+                [&](const vpr::VprRun& run, std::string& json) {
+                  return run_report_json(openfpga_ctx.session(), in_flow, run,
+                                         json);
+                });
+}
+
 int timing_summary_command(const OpenfpgaContext& openfpga_ctx, const Command&,
                            const CommandContext&) {
   return answer(openfpga_ctx, OpenFpgaStage::ROUTED, "timing_summary",
@@ -115,6 +157,22 @@ int critical_paths_command(const OpenfpgaContext& openfpga_ctx,
   return answer(openfpga_ctx, OpenFpgaStage::ROUTED, "critical_paths",
                 [count](const vpr::VprRun& run, std::string& json) {
                   return critical_paths_json(run, count, json);
+                });
+}
+
+int device_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                   const CommandContext& cmd_context) {
+  size_t limit = 0;
+  if (!count_option(cmd, cmd_context, "limit", QUERY_LIST_DEFAULT_LIMIT,
+                    limit)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  const std::string type = string_option(cmd, cmd_context, "type");
+  return answer(openfpga_ctx, OpenFpgaStage::DEVICE, "device",
+                [&](const vpr::VprRun& run, std::string& json) {
+                  return device_json(NO_FIXED_CHANNEL_WIDTH !=
+                                       run.setup.RouterOpts.fixed_channel_width,
+                                     type, limit, json);
                 });
 }
 
@@ -156,10 +214,25 @@ int congestion_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
   if (!count_option(cmd, cmd_context, "region_size", 1, region_size)) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  return answer(openfpga_ctx, OpenFpgaStage::ROUTED, "congestion",
-                [region_size](const vpr::VprRun&, std::string& json) {
-                  return congestion_json(static_cast<int>(region_size), json);
-                });
+  size_t hotspots = 0;
+  if (cmd_context.option_enable(cmd, cmd.option("hotspots")) &&
+      !count_option(cmd, cmd_context, "hotspots", 0, hotspots)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* The routing of a route that failed is read, to tell why it failed: the
+   * stage is then not reached, but the session knows that it failed, and that
+   * its data is there */
+  const OpenFpgaSession& session = openfpga_ctx.session();
+  const bool failed = staged_flow_current(session) &&
+                      !session.reached(OpenFpgaStage::ROUTED) &&
+                      nullptr != session.failure(OpenFpgaStage::ROUTED);
+  return answer(
+    openfpga_ctx, OpenFpgaStage::ROUTED, "congestion",
+    [&](const vpr::VprRun&, std::string& json) {
+      return congestion_json(static_cast<int>(region_size), hotspots, !failed,
+                             json);
+    },
+    !failed);
 }
 
 int report_cluster_command(const OpenfpgaContext& openfpga_ctx,
@@ -175,6 +248,43 @@ int report_cluster_command(const OpenfpgaContext& openfpga_ctx,
   return answer(openfpga_ctx, OpenFpgaStage::PACKED, "report_cluster",
                 [&](const vpr::VprRun&, std::string& json) {
                   return cluster_report_json(query, with_stats, limit, json);
+                });
+}
+
+int find_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                 const CommandContext& cmd_context) {
+  size_t limit = 0;
+  if (!count_option(cmd, cmd_context, "limit", QUERY_LIST_DEFAULT_LIMIT,
+                    limit)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  const std::string pattern = string_option(cmd, cmd_context, "pattern");
+  const std::string kind = string_option(cmd, cmd_context, "kind");
+  const bool placed = stage_data(openfpga_ctx, OpenFpgaStage::PLACED);
+  return answer(openfpga_ctx, OpenFpgaStage::PACKED, "find",
+                [&](const vpr::VprRun&, std::string& json) {
+                  return find_json(pattern, kind, limit, placed, json);
+                });
+}
+
+int block_info_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                       const CommandContext& cmd_context) {
+  const std::string block = string_option(cmd, cmd_context, "block");
+  const bool placed = stage_data(openfpga_ctx, OpenFpgaStage::PLACED);
+  return answer(openfpga_ctx, OpenFpgaStage::PACKED, "block_info",
+                [&](const vpr::VprRun&, std::string& json) {
+                  return block_info_json(block, placed, json);
+                });
+}
+
+int net_info_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                     const CommandContext& cmd_context) {
+  const std::string net = string_option(cmd, cmd_context, "net");
+  const bool placed = stage_data(openfpga_ctx, OpenFpgaStage::PLACED);
+  const bool routed = stage_data(openfpga_ctx, OpenFpgaStage::ROUTED);
+  return answer(openfpga_ctx, OpenFpgaStage::PACKED, "net_info",
+                [&](const vpr::VprRun& run, std::string& json) {
+                  return net_info_json(run, net, placed, routed, json);
                 });
 }
 
@@ -211,6 +321,28 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
     "from and the files of the results of the stages",
     report_session_command);
 
+  Command report_stage("report_stage");
+  add_option(report_stage, "stage", "s", false, OPT_STRING,
+             "Only this stage, e.g., PLACED or place. Default: all");
+  report_stage.add_option("changed", false,
+                          "Only the options that do not have their default "
+                          "value");
+  add_option(report_stage, "query", "q", false, OPT_STRING,
+             "Only the options whose name matches this shell-style pattern, "
+             "e.g., 'place.*'");
+  add_option(report_stage, "limit", "l", false, OPT_INT,
+             "Most options to list for each stage. Default: 1000");
+  add_query_command(shell, cmd_class, report_stage,
+                    "Answer with what can be changed for each stage: its "
+                    "options, their values, and the stages that a change drops",
+                    report_stage_command);
+
+  add_query_command(shell, cmd_class, Command("report_run"),
+                    "Answer with what each stage of the flow did: the clusters "
+                    "of the packing, the cost of the placement, the wirelength "
+                    "and iterations of the routing, and the time of each stage",
+                    report_run_command);
+
   add_query_command(
     shell, cmd_class, Command("timing_summary"),
     "Answer with the timing of the routed design: slacks, critical path "
@@ -224,6 +356,16 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                     "Answer with the worst setup paths of the routed design, "
                     "with the delay of each point",
                     critical_paths_command);
+
+  Command device("device");
+  add_option(device, "type", "t", false, OPT_STRING,
+             "Also list the locations of the tiles of this type");
+  add_option(device, "limit", "l", false, OPT_INT,
+             "Most locations to list. Default: 1000");
+  add_query_command(shell, cmd_class, device,
+                    "Answer with the device: the grid, the width of the "
+                    "channels, the types of tiles and where the I/O are",
+                    device_command);
 
   add_query_command(shell, cmd_class, Command("utilization"),
                     "Answer with the use of the blocks of the device by the "
@@ -252,6 +394,9 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_option(congestion, "region_size", "r", false, OPT_INT,
              "Aggregate the channels in regions of this many tiles on a "
              "side. Default: 1");
+  add_option(congestion, "hotspots", "s", false, OPT_INT,
+             "Also list this many of the fullest segments of the channels, "
+             "with the nets that cross them");
   add_query_command(shell, cmd_class, congestion,
                     "Answer with the use of the routing channels of the "
                     "routed design",
@@ -269,6 +414,32 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_query_command(shell, cmd_class, report_cluster,
                     "Answer with the clusters of the packed design",
                     report_cluster_command);
+
+  Command find("find");
+  add_option(find, "pattern", "p", true, OPT_STRING,
+             "Shell-style pattern of the name, e.g., 'n1*'");
+  add_option(find, "kind", "k", false, OPT_STRING,
+             "Look for 'block' or for 'net' only. Default: both");
+  add_option(find, "limit", "l", false, OPT_INT,
+             "Most blocks and most nets to list. Default: 1000");
+  add_query_command(shell, cmd_class, find,
+                    "Answer with the blocks and the nets of the packed design "
+                    "whose name matches a pattern",
+                    find_command);
+
+  Command block_info("block_info");
+  add_option(block_info, "block", "b", true, OPT_STRING, "Name of the cluster");
+  add_query_command(shell, cmd_class, block_info,
+                    "Answer with a cluster of the packed design: its pins, "
+                    "its place and the blocks of the circuit that it holds",
+                    block_info_command);
+
+  Command net_info("net_info");
+  add_option(net_info, "net", "n", true, OPT_STRING, "Name of the net");
+  add_query_command(shell, cmd_class, net_info,
+                    "Answer with a net of the packed design: the blocks it "
+                    "connects, its bounding box, routing and criticality",
+                    net_info_command);
 }
 
 } /* End namespace openfpga */
