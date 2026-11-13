@@ -587,8 +587,8 @@ static void build_physical_block_interc_port_bitstream(
             parent_configurable_block, module_manager, module_name_map,
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
-            &(physical_pb_graph_node->input_pins[iport][ipin]), physical_mode,
-            unused_mux_config, verbose);
+            &(physical_pb_graph_node->pins_by_input_port[iport][ipin]),
+            physical_mode, unused_mux_config, verbose);
         }
       }
       break;
@@ -602,8 +602,8 @@ static void build_physical_block_interc_port_bitstream(
             parent_configurable_block, module_manager, module_name_map,
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
-            &(physical_pb_graph_node->output_pins[iport][ipin]), physical_mode,
-            unused_mux_config, verbose);
+            &(physical_pb_graph_node->pins_by_output_port[iport][ipin]),
+            physical_mode, unused_mux_config, verbose);
         }
       }
       break;
@@ -617,8 +617,8 @@ static void build_physical_block_interc_port_bitstream(
             parent_configurable_block, module_manager, module_name_map,
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
-            &(physical_pb_graph_node->clock_pins[iport][ipin]), physical_mode,
-            unused_mux_config, verbose);
+            &(physical_pb_graph_node->pins_by_clock_port[iport][ipin]),
+            physical_mode, unused_mux_config, verbose);
         }
       }
       break;

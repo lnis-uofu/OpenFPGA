@@ -77,10 +77,9 @@ static bool rec_direct_search_sink_pb_graph_pins(
         source_pb_pin->output_edges[iedge]->interconnect->type) {
       return false;
     }
-    for (int ipin = 0;
-         ipin < source_pb_pin->output_edges[iedge]->num_output_pins; ++ipin) {
+    {
       t_pb_graph_pin* cand_sink_pb_pin =
-        source_pb_pin->output_edges[iedge]->output_pins[ipin];
+        source_pb_pin->output_edges[iedge]->output_pin();
       if ((true ==
            is_primitive_pb_type(cand_sink_pb_pin->parent_node->pb_type)) &&
           (IN_PORT == cand_sink_pb_pin->port->type)) {
@@ -184,11 +183,9 @@ static void rec_find_routed_sink_pb_graph_pins(
                 sink_pb_pin->parent_node->pb_type)) {
             continue;
           }
-          for (int ipin = 0;
-               ipin < source_pb_pin->output_edges[iedge]->num_output_pins;
-               ++ipin) {
+          {
             const t_pb_graph_pin* cand_sink_pb_pin =
-              source_pb_pin->output_edges[iedge]->output_pins[ipin];
+              source_pb_pin->output_edges[iedge]->output_pin();
             auto cand_remapped_result =
               pb_pin_mapped_nets.find(cand_sink_pb_pin);
             AtomNetId cand_sink_pb_pin_net = AtomNetId::INVALID();
@@ -495,7 +492,7 @@ static std::vector<LbRRNodeId> find_lb_net_physical_sink_lb_rr_nodes(
     }
 
     LbRRNodeId sink_lb_rr_node =
-      lb_rr_graph.find_node(LB_INTERMEDIATE, physical_sink_pin);
+      lb_rr_graph.find_node(e_lb_rr_type::INTERMEDIATE, physical_sink_pin);
     if (true != lb_rr_graph.valid_node_id(sink_lb_rr_node)) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
                      "Fail to find the lb_rr_node for pb_graph_pin '%s'\n",
@@ -765,7 +762,7 @@ static void add_lb_router_nets(
      * graph, they are all connected to a common source node
      */
     LbRRNodeId source_lb_rr_node =
-      lb_rr_graph.find_node(LB_INTERMEDIATE, source_pb_pin);
+      lb_rr_graph.find_node(e_lb_rr_type::INTERMEDIATE, source_pb_pin);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(source_lb_rr_node));
 
     /* Output verbose messages for debugging only */
@@ -910,7 +907,7 @@ static void add_lb_router_nets(
     t_pb_graph_pin* physical_source_pb_pin =
       device_annotation.physical_pb_graph_pin(source_pb_pin);
     LbRRNodeId source_lb_rr_node =
-      lb_rr_graph.find_node(LB_SOURCE, physical_source_pb_pin);
+      lb_rr_graph.find_node(e_lb_rr_type::SOURCE, physical_source_pb_pin);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(source_lb_rr_node));
 
     AtomNetId atom_net_id = pb->pb_route[pin].atom_net_id;
@@ -1050,7 +1047,7 @@ static bool find_vpr_bus_mux_selections(const AtomContext& atom_ctx,
     for (int iedge = 0; iedge < pin->num_input_edges; ++iedge) {
       const t_pb_graph_edge* edge = pin->input_edges[iedge];
       if ((pb_route.driver_pb_pin_id !=
-           edge->input_pins[0]->pin_count_in_cluster) ||
+           edge->input_pin()->pin_count_in_cluster) ||
           (!edge->is_bus_mux())) {
         continue;
       }
@@ -1063,7 +1060,7 @@ static bool find_vpr_bus_mux_selections(const AtomContext& atom_ctx,
         break;
       }
       conflicts.insert(name);
-      std::string first_pin = first.edge->output_pins[0]->to_string();
+      std::string first_pin = first.edge->output_pin()->to_string();
       std::string first_net = atom_ctx.netlist().net_name(first.net);
       std::string pin_name = pin->to_string();
       std::string net_name = atom_ctx.netlist().net_name(pb_route.atom_net_id);

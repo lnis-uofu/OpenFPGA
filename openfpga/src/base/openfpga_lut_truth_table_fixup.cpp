@@ -62,7 +62,7 @@ static void fix_up_lut_atom_block_truth_table(
     std::vector<int> rotated_pin_map(pb_type->ports[iport].num_pins, -1);
     for (int ipin = 0; ipin < pb_type->ports[iport].num_pins; ++ipin) {
       int node_index =
-        pb_graph_node->input_pins[iport][ipin].pin_count_in_cluster;
+        pb_graph_node->pins_by_input_port[iport][ipin].pin_count_in_cluster;
       if (pb_route.count(node_index)) {
         /* The pin is mapped to a net, find the original pin in the atom netlist
          */

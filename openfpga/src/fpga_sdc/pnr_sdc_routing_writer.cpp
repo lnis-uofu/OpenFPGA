@@ -38,7 +38,7 @@ namespace openfpga {
  * multiplexer in a Switch Block
  *******************************************************************/
 static float find_pnr_sdc_switch_tmax(const t_rr_switch_inf& switch_inf) {
-  return switch_inf.R * switch_inf.Cout + switch_inf.Tdel;
+  return switch_inf.R * switch_inf.Cout + switch_inf.Tdel_max;
 }
 
 /********************************************************************

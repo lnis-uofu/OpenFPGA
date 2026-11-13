@@ -146,7 +146,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation, &(top_pb_graph_node->input_pins[iport][ipin]),
+        tile_annotation, &(top_pb_graph_node->pins_by_input_port[iport][ipin]),
         border_side, perimeter_cb, INPUT2INPUT_INTERC);
     }
   }
@@ -157,7 +157,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation, &(top_pb_graph_node->output_pins[iport][ipin]),
+        tile_annotation, &(top_pb_graph_node->pins_by_output_port[iport][ipin]),
         border_side, perimeter_cb, OUTPUT2OUTPUT_INTERC);
     }
   }
@@ -168,7 +168,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation, &(top_pb_graph_node->clock_pins[iport][ipin]),
+        tile_annotation, &(top_pb_graph_node->pins_by_clock_port[iport][ipin]),
         border_side, perimeter_cb, INPUT2INPUT_INTERC);
     }
   }
@@ -951,8 +951,8 @@ static void add_module_pb_graph_port_interc(
           add_module_pb_graph_pin_interc(
             module_manager, pb_module, memory_modules, memory_instances,
             device_annotation, circuit_lib,
-            &(des_pb_graph_node->input_pins[iport][ipin]), physical_mode,
-            group_config_block, verbose);
+            &(des_pb_graph_node->pins_by_input_port[iport][ipin]),
+            physical_mode, group_config_block, verbose);
         }
       }
       break;
@@ -965,8 +965,8 @@ static void add_module_pb_graph_port_interc(
           add_module_pb_graph_pin_interc(
             module_manager, pb_module, memory_modules, memory_instances,
             device_annotation, circuit_lib,
-            &(des_pb_graph_node->output_pins[iport][ipin]), physical_mode,
-            group_config_block, verbose);
+            &(des_pb_graph_node->pins_by_output_port[iport][ipin]),
+            physical_mode, group_config_block, verbose);
         }
       }
       break;
@@ -978,8 +978,8 @@ static void add_module_pb_graph_port_interc(
           add_module_pb_graph_pin_interc(
             module_manager, pb_module, memory_modules, memory_instances,
             device_annotation, circuit_lib,
-            &(des_pb_graph_node->clock_pins[iport][ipin]), physical_mode,
-            group_config_block, verbose);
+            &(des_pb_graph_node->pins_by_clock_port[iport][ipin]),
+            physical_mode, group_config_block, verbose);
         }
       }
       break;

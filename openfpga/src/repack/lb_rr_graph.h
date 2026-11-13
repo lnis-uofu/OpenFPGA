@@ -161,6 +161,7 @@
 
 /* Header from vpr library */
 #include "lb_rr_graph_fwd.h"
+#include "lb_type_rr_graph.h"  // e_lb_rr_type
 #include "pack_types.h"
 
 /* begin namespace openfpga */
