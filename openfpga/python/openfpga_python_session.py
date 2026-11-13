@@ -100,6 +100,110 @@ class CriticalPaths:
 
 
 @dataclasses.dataclass(frozen=True)
+class ChannelWidth:
+    x: int
+    y: int
+
+
+@dataclasses.dataclass(frozen=True)
+class DeviceChannelWidth:
+    """The widest channel of the routing resource graph that VPR made with the
+    device. fixed is True if it is the width that was set (router.route_chan_width);
+    otherwise it is the width that VPR estimates the delays of the placement with
+    (place.place_chan_width), and the router is free to find its own"""
+
+    x: int
+    y: int
+    fixed: bool
+
+
+@dataclasses.dataclass(frozen=True)
+class DeviceSize:
+    """The grid of the device, in tiles. layout is the name of the layout of the
+    architecture that it was made from"""
+
+    width: int
+    height: int
+    layers: int
+    layout: str
+
+
+@dataclasses.dataclass(frozen=True)
+class SubTileType:
+    """A sub tile of a tile: capacity is how many blocks of it the tile holds, and
+    equivalent_blocks the types of blocks that fit in it"""
+
+    name: str
+    capacity: int
+    equivalent_blocks: List[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class TileType:
+    """A type of tile of the device. count is how many tiles of it the grid has,
+    and slots the places for blocks that they make (count times capacity, as VPR
+    counts them)"""
+
+    name: str
+    width: int
+    height: int
+    capacity: int
+    is_io: bool
+    input_pins: int
+    output_pins: int
+    clock_pins: int
+    count: int
+    slots: int
+    sub_tiles: List[SubTileType]
+
+
+@dataclasses.dataclass(frozen=True)
+class IoSides:
+    """The I/O tiles on each side of the perimeter. A corner is not counted"""
+
+    left: int
+    right: int
+    bottom: int
+    top: int
+
+
+@dataclasses.dataclass(frozen=True)
+class TileLocation:
+    """The lower left corner of a tile"""
+
+    x: int
+    y: int
+    layer: int
+
+
+@dataclasses.dataclass(frozen=True)
+class TileLocations:
+    """Where the tiles of a type are. truncated is True when there are more than
+    the limit"""
+
+    type: str
+    total: int
+    returned: int
+    truncated: bool
+    tiles: List[TileLocation]
+
+
+@dataclasses.dataclass(frozen=True)
+class Device:
+    """Answer of device: the device that the flow works on, which is there as
+    soon as the inputs are read. channel_width is None if there is no routing
+    graph (see DeviceChannelWidth). locations is set when the locations of a type of tile
+    were asked for"""
+
+    stage: str
+    grid: DeviceSize
+    channel_width: Optional[DeviceChannelWidth]
+    tile_types: List[TileType]
+    io_sides: IoSides
+    locations: Optional[TileLocations] = None
+
+
+@dataclasses.dataclass(frozen=True)
 class BlockTypeUsage:
     name: str
     is_io: bool
@@ -179,12 +283,6 @@ class ChannelUsage:
     used: int
     capacity: int
     occupancy: float
-
-
-@dataclasses.dataclass(frozen=True)
-class ChannelWidth:
-    x: int
-    y: int
 
 
 @dataclasses.dataclass(frozen=True)
@@ -348,6 +446,7 @@ def _build(cls, data):
 # The version of the schema that each class reads
 _SCHEMA_VERSIONS = {
     "session": 1,
+    "device": 1,
     "app_options": 1,
     "timing_summary": 1,
     "critical_paths": 1,
@@ -720,6 +819,13 @@ class Session:
         """The count worst setup paths (the default of the command if not
         set), with their points"""
         return self._query("critical_paths", "critical_paths", CriticalPaths, count=count)
+
+    def device(self, tile_type=None, limit=None):
+        """The device: the grid, the width of the channels, the types of tiles and
+        the I/O of the sides. With tile_type, it also lists where the tiles of that
+        type are (at most limit of them, 1000 if not set). Available as soon as
+        the inputs are read"""
+        return self._query("device", "device", Device, type=tile_type, limit=limit)
 
     def utilization(self):
         """The use of the device, per type of block"""
