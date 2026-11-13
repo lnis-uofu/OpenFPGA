@@ -4,7 +4,9 @@
 #include <map>
 #include <sstream>
 
+#include "vpr_error.h"
 #include "vpr_option_table.h"
+#include "vpr_read_options.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -109,7 +111,16 @@ t_options read_vpr_options(const std::vector<std::string>& args) {
   for (const std::string& arg : args) {
     argv.push_back(arg.c_str());
   }
-  return read_options(static_cast<int>(argv.size()), argv.data());
+  t_options vpr_options;
+  if (vpr::read_options_no_exit(static_cast<int>(argv.size()), argv.data(),
+                                vpr_options) !=
+      vpr::e_vpr_options_request::RUN) {
+    /* A value that looks like --help or --version, e.g., in a free text */
+    VPR_FATAL_ERROR(VPR_ERROR_OTHER,
+                    "The options of VPR ask for its help or version instead "
+                    "of a run");
+  }
+  return vpr_options;
 }
 
 } /* End namespace openfpga */

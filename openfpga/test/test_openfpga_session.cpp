@@ -364,17 +364,33 @@ static void test_names() {
   CHECK(openfpga::to_string(OpenFpgaInput::CIRCUIT) == "CIRCUIT");
 }
 
-static void test_data_access() {
+static void test_vpr_generation() {
   OpenFpgaSession session;
-  /* The VPR data can be reached for reading and writing */
-  session.mutable_setup().NetlistOpts.sweep_dangling_nets = false;
-  CHECK(!session.setup().NetlistOpts.sweep_dangling_nets);
-  CHECK(&session.options() == &session.mutable_options());
-  CHECK(&session.arch() == &session.mutable_arch());
-  CHECK(&session.setup() == &session.mutable_setup());
-  /* Resetting keeps the data: releasing it is up to VPR */
+  CHECK(0 == session.vpr_generation());
+  session.set_vpr_generation(7);
+  CHECK(7 == session.vpr_generation());
+  /* Resetting forgets the inputs and the stages, not the generation */
   session.reset();
-  CHECK(!session.setup().NetlistOpts.sweep_dangling_nets);
+  CHECK(7 == session.vpr_generation());
+}
+
+static void test_required_stage() {
+  CHECK(openfpga::required_stage(OpenFpgaStage::UNINIT) ==
+        OpenFpgaStage::UNINIT);
+  CHECK(openfpga::required_stage(OpenFpgaStage::DEVICE) ==
+        OpenFpgaStage::UNINIT);
+  CHECK(openfpga::required_stage(OpenFpgaStage::PACKED) ==
+        OpenFpgaStage::DEVICE);
+  CHECK(openfpga::required_stage(OpenFpgaStage::PLACED) ==
+        OpenFpgaStage::PACKED);
+  CHECK(openfpga::required_stage(OpenFpgaStage::ROUTED) ==
+        OpenFpgaStage::PLACED);
+  CHECK(openfpga::required_stage(OpenFpgaStage::ANALYZED) ==
+        OpenFpgaStage::ROUTED);
+  CHECK(openfpga::required_stage(OpenFpgaStage::REPACKED) ==
+        OpenFpgaStage::ROUTED);
+  CHECK(openfpga::required_stage(OpenFpgaStage::BITSTREAM) ==
+        OpenFpgaStage::REPACKED);
 }
 
 static void test_context_has_session() {
@@ -399,7 +415,8 @@ int main() {
   test_failure();
   test_reset();
   test_names();
-  test_data_access();
+  test_vpr_generation();
+  test_required_stage();
   test_context_has_session();
 
   if (0 != num_failures) {
