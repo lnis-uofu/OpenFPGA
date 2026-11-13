@@ -30,6 +30,23 @@ report_session
 
     report_session
 
+report_run
+~~~~~~~~~~
+
+  Answer with what each stage of the flow did, in one place: kind ``run_report``, read from the stage ``DEVICE`` (it works as soon as the inputs are read, and the parts of the stages that are not reached are ``null``). It reads the data of VPR, and for what only the log of VPR says, what the stage printed when a command of the session ran it.
+
+  - ``stages``: the stages that are reached (``PACKED``, ``PLACED``, ``ROUTED``, ``ANALYZED``) with the ``seconds`` that the command took, ``null`` if the results were read from a file
+  - ``packing``: the number of ``clusters``, ``atoms`` (the blocks of the circuit) and ``nets``, and the ``blocks`` of each type
+  - ``placement``: ``half_perimeter``, the sum over the nets of the half perimeter of the box around their blocks, from the data. From the log of the placement: ``cost``, ``bb_cost``, ``td_cost``, the ``estimated_critical_path_delay_ns`` and ``estimated_fmax_mhz`` that the placer ends with, ``num_temperatures`` and ``swap_attempts``
+  - ``routing``: the ``channel_width``, the ``wirelength`` (the tiles that the wires span, which is what VPR adds up) and the number of ``wires``, from the data. From the log of the routing: ``iterations`` and ``critical_path_delay_ns``
+  - ``failed``: the stage that failed last, as in ``report_session``
+
+  What comes from a log is ``null`` when the stage was not run by a command (e.g., ``read_placement``), and the tests compare each number with the log of VPR, so that a change of the log is noticed.
+
+  .. code-block::
+
+    report_run
+
 timing_summary
 ~~~~~~~~~~~~~~
 
