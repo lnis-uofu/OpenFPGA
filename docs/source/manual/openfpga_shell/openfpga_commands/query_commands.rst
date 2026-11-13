@@ -55,10 +55,33 @@ critical_paths
 
     critical_paths --count 10
 
+device
+~~~~~~
+
+  Answer with the device that the flow works on: kind ``device``, read from the stage ``DEVICE``, so it is there as soon as the three inputs are read.
+
+  - ``grid``: ``width``, ``height``, ``layers`` and the name of the ``layout`` of the architecture
+  - ``channel_width``: ``x``, ``y`` and ``fixed``. It is the widest channel of the routing resource graph that VPR made with the device: the width that was set with ``router.route_chan_width`` (``fixed`` is true), or else the width that VPR estimates the delays of the placement with (``place.place_chan_width``, 100 by default), when the router is free to find its own. ``null`` if there is no graph
+  - ``tile_types``: for each type of tile that is on the grid, its ``name``, ``width`` and ``height`` in tiles, ``capacity`` (the blocks one tile holds), ``is_io``, the number of ``input_pins``, ``output_pins`` and ``clock_pins``, ``count`` (the tiles of this type) and ``slots`` (the places for blocks that they make, ``count`` times ``capacity``, as VPR counts them), and its ``sub_tiles`` with their ``capacity`` and the types of blocks that fit (``equivalent_blocks``)
+  - ``io_sides``: the I/O tiles on the ``left``, ``right``, ``bottom`` and ``top`` of the perimeter. A corner is not counted
+  - ``locations``: only when a type is asked for: ``type``, ``total``, ``returned``, ``truncated`` and ``tiles``, the lower left corner (``x``, ``y``, ``layer``) of each tile of that type
+
+  .. option:: --type <string>
+
+    Also list where the tiles of this type are, e.g., ``io`` or ``clb``. An unknown name is refused, with the names that exist
+
+  .. option:: --limit <int>
+
+    Most locations to list. Default: 1000
+
+  .. code-block::
+
+    device --type io --limit 20
+
 utilization
 ~~~~~~~~~~~
 
-  Answer with the use of the blocks of the device by the packed design: kind ``utilization``, read from the stage ``PACKED``. For each type of block, the ``used`` blocks of the netlist, the ``available`` places of the device (the tiles of the type with their capacity, so a tile of inputs and outputs holds several blocks), and their ratio. ``device_utilization`` is the figure of VPR, and ``limiting_resources`` lists the block types that limit the size of the device.
+  Answer with the use of the blocks of the device by the packed design: kind ``utilization``, read from the stage ``PACKED``. For each type of block, the ``used`` blocks of the netlist, the ``available`` places of the device (a tile holds as many blocks as its capacity, so a tile of inputs and outputs holds several, and VPR counts them the same way in the resource usage that it logs), and their ratio. ``device_utilization`` is the figure of VPR, and ``limiting_resources`` lists the block types that limit the size of the device.
 
   .. code-block::
 
