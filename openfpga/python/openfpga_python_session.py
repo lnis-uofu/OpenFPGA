@@ -352,6 +352,60 @@ class ClusterReport:
 
 
 @dataclasses.dataclass(frozen=True)
+class FoundBlock:
+    """A block of the packing. x, y, sub_tile and layer are None until the
+    design is placed"""
+
+    name: str
+    type: str
+    placed: bool
+    x: Optional[int]
+    y: Optional[int]
+    sub_tile: Optional[int]
+    layer: Optional[int]
+
+
+@dataclasses.dataclass(frozen=True)
+class FoundNet:
+    """A net of the packing. fanout is its number of sinks. ignored is True
+    for a net that VPR does not route, e.g., a clock"""
+
+    name: str
+    fanout: int
+    ignored: bool
+
+
+@dataclasses.dataclass(frozen=True)
+class FoundBlocks:
+    total: int
+    matched: int
+    returned: int
+    truncated: bool
+    items: List[FoundBlock]
+
+
+@dataclasses.dataclass(frozen=True)
+class FoundNets:
+    total: int
+    matched: int
+    returned: int
+    truncated: bool
+    items: List[FoundNet]
+
+
+@dataclasses.dataclass(frozen=True)
+class Found:
+    """Answer of find: the blocks and the nets whose name matches the pattern.
+    The one that was not looked for (see kind) is None"""
+
+    stage: str
+    pattern: str
+    kind: Optional[str]
+    blocks: Optional[FoundBlocks]
+    nets: Optional[FoundNets]
+
+
+@dataclasses.dataclass(frozen=True)
 class AppOption:
     """An application option, see Options. value and default are of the type
     of the option: str, int, float or bool (None for a number that is not
@@ -455,6 +509,7 @@ _SCHEMA_VERSIONS = {
     "net_route": 1,
     "congestion": 1,
     "cluster_report": 1,
+    "find": 1,
 }
 
 
@@ -807,8 +862,10 @@ class Session:
 
     # The queries -----------------------------------------------------------------
 
-    def _query(self, command, kind, cls, **options):
-        return _answer(self.shell.run(_command_line(command, (), options)), kind, cls)
+    def _query(self, command, answer_kind, cls, **options):
+        """Run a query. answer_kind is the kind of the answer, apart from the
+        options, which may use any name, e.g., kind"""
+        return _answer(self.shell.run(_command_line(command, (), options)), answer_kind, cls)
 
     def timing_summary(self):
         """The timing of the routed design: slacks, critical path delay and
@@ -852,3 +909,9 @@ class Session:
         return self._query(
             "report_cluster", "cluster_report", ClusterReport, query=query, stats=stats, limit=limit
         )
+
+    def find(self, pattern, kind=None, limit=None):
+        """The blocks and the nets whose name matches the shell-style pattern
+        (at most limit of each, 1000 if not set). kind is "block" or "net" to
+        look for one of them only. Blocks have their location once placed"""
+        return self._query("find", "find", Found, pattern=pattern, kind=kind, limit=limit)

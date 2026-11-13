@@ -154,3 +154,24 @@ report_cluster
   .. code-block::
 
     report_cluster --query "out:*" --stats
+
+find
+~~~~
+
+  Answer with the blocks and the nets of the packed design whose name matches a pattern: kind ``find``, read from the stage ``PACKED``. ``blocks`` and ``nets`` each have ``total`` (all of them), ``matched``, ``returned``, ``truncated`` and ``items``. A block has its ``name``, ``type`` and, once the design is placed, its place (``placed``, ``x``, ``y``, ``sub_tile`` and ``layer``: ``null`` before that). A net has its ``name``, its ``fanout`` (the number of sinks) and ``ignored``, which is true for a net that VPR does not route, e.g., a clock. The part that was not looked for (see ``--kind``) is ``null``.
+
+  .. option:: --pattern <string>
+
+    Shell-style pattern of the name (``*``, ``?`` and ``[...]``), e.g., ``n1*``
+
+  .. option:: --kind <string>
+
+    Look for ``block`` or for ``net`` only. Default: both
+
+  .. option:: --limit <int>
+
+    Most blocks, and most nets, to list. Default: 1000
+
+  .. code-block::
+
+    find --pattern "out:*" --kind block
