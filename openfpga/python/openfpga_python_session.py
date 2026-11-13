@@ -531,6 +531,81 @@ class NetInfo:
 
 
 @dataclasses.dataclass(frozen=True)
+class StageFailure:
+    """A stage that failed and left what it had made, e.g., a route that found
+    no legal routing: the queries that read the data of the stages before it
+    still work, and congestion reads the routing that failed"""
+
+    stage: str
+    message: str
+
+
+@dataclasses.dataclass(frozen=True)
+class StageRun:
+    """A stage that is reached. seconds is None if it was not run by a command
+    of this session (its results were read from a file)"""
+
+    stage: str
+    seconds: Optional[float]
+
+
+@dataclasses.dataclass(frozen=True)
+class BlockCount:
+    type: str
+    count: int
+
+
+@dataclasses.dataclass(frozen=True)
+class PackingReport:
+    clusters: int
+    atoms: int
+    nets: int
+    blocks: List[BlockCount]
+
+
+@dataclasses.dataclass(frozen=True)
+class PlacementReport:
+    """half_perimeter is the sum over the nets of the half perimeter of the box
+    around their blocks. The others are from the log of the placement, and None
+    if the stage was not run by a command of this session"""
+
+    half_perimeter: int
+    cost: Optional[float]
+    bb_cost: Optional[float]
+    td_cost: Optional[float]
+    estimated_critical_path_delay_ns: Optional[float]
+    estimated_fmax_mhz: Optional[float]
+    num_temperatures: Optional[int]
+    swap_attempts: Optional[int]
+
+
+@dataclasses.dataclass(frozen=True)
+class RoutingReport:
+    """wirelength is the tiles that the wires span, as VPR adds it up. iterations
+    and critical_path_delay_ns are from the log of the routing, and None if the
+    stage was not run by a command of this session"""
+
+    channel_width: int
+    wirelength: int
+    wires: int
+    iterations: Optional[int]
+    critical_path_delay_ns: Optional[float]
+
+
+@dataclasses.dataclass(frozen=True)
+class RunReport:
+    """Answer of report_run: what each stage that is reached did. packing,
+    placement and routing are None until their stage is reached"""
+
+    stage: str
+    stages: List[StageRun]
+    packing: Optional[PackingReport]
+    placement: Optional[PlacementReport]
+    routing: Optional[RoutingReport]
+    failed: Optional[StageFailure]
+
+
+@dataclasses.dataclass(frozen=True)
 class AppOption:
     """An application option, see Options. value and default are of the type
     of the option: str, int, float or bool (None for a number that is not
@@ -579,16 +654,6 @@ class SessionResults:
     packing: Optional[str]
     placement: Optional[str]
     routing: Optional[str]
-
-
-@dataclasses.dataclass(frozen=True)
-class StageFailure:
-    """A stage that failed and left what it had made, e.g., a route that found
-    no legal routing: the queries that read the data of the stages before it
-    still work, and congestion reads the routing that failed"""
-
-    stage: str
-    message: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -648,6 +713,7 @@ _SCHEMA_VERSIONS = {
     "find": 1,
     "block_info": 1,
     "net_info": 1,
+    "run_report": 1,
 }
 
 
@@ -771,6 +837,7 @@ _QUERY_COMMANDS = frozenset(
     (
         "help",
         "report_session",
+        "report_run",
         "report_app_option",
         "timing_summary",
         "critical_paths",
@@ -1250,3 +1317,9 @@ class Session:
         size of its routing and how critical it is, as far as the stages that
         are reached tell"""
         return self._query("net_info", "net_info", NetInfo, net=net)
+
+    def run_report(self):
+        """What each stage that is reached did: the packing, the cost of the
+        placement, the wirelength and iterations of the routing, and the time
+        of each stage"""
+        return self._query("report_run", "run_report", RunReport)
