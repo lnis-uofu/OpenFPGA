@@ -180,3 +180,33 @@ find
   .. code-block::
 
     find --pattern "out:*" --kind block
+
+block_info
+~~~~~~~~~~
+
+  Answer with one cluster of the packed design: kind ``block_info``, read from the stage ``PACKED``. It has its ``name``, ``type``, and ``location`` (``x``, ``y``, ``sub_tile`` and ``layer``) once the design is placed (``placed`` tells, and ``location`` is ``null`` before that). ``pins`` are the pins of the cluster that are connected: ``port``, ``bit``, ``direction`` (``input``, ``output`` or ``clock``) and the ``net``. ``atoms`` are the blocks of the circuit that the cluster holds, which is how a name of the circuit finds its place in the device: each has its ``name``, ``model`` (e.g., ``.names`` or ``.latch``) and ``path`` in the cluster, as VPR writes it (``clb[0]/fle[2][n1_lut6]/ble6[0]/lut6[0]``, with the mode in brackets).
+
+  .. option:: --block <string>
+
+    Name of the cluster, as in ``find`` and ``placement``
+
+  .. code-block::
+
+    block_info --block n1
+
+net_info
+~~~~~~~~
+
+  Answer with one net between the clusters of the packed design: kind ``net_info``, read from the stage ``PACKED``. It has its ``name``, ``fanout`` (the number of sinks), ``ignored`` (true for a net that VPR does not route, e.g., a clock), the ``driver`` and the ``sinks`` (each has the ``block``, ``port`` and ``bit`` of a pin). The next parts come from the stages that are reached, and are ``null`` before them:
+
+  - ``bounding_box`` (placed): ``xmin``, ``ymin``, ``xmax``, ``ymax`` of the blocks that the net connects, and ``half_perimeter``, their width plus height
+  - ``routing`` (routed): ``nodes`` of its routing tree, ``wires`` (the nodes of the channels) and ``wirelength``, the tiles that the wires span, which is what VPR adds up in its wirelength
+  - ``timing`` (routed, and the timing analysis is on): ``criticality`` of the worst connection of the net, from 0 to 1, and ``slack_ns``, its worst setup slack. It is analyzed again from the routing, as in ``timing_summary``
+
+  .. option:: --net <string>
+
+    Name of the net
+
+  .. code-block::
+
+    net_info --net n1

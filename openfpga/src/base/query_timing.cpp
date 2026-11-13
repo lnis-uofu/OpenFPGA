@@ -1,6 +1,8 @@
 #include "query_timing.h"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -65,6 +67,36 @@ void write_ns(JsonWriter& json, const char* name, const double seconds) {
 }
 
 }  // End anonymous namespace
+
+bool net_timing(const vpr::VprRun& run, const ClusterNetId net,
+                double& criticality, double& slack_ns) {
+  if (!run.setup.TimingEnabled || run.setup.RouterOpts.flat_routing ||
+      g_vpr_ctx.routing().route_trees.empty()) {
+    return false;
+  }
+  const auto& atom_ctx = g_vpr_ctx.atom();
+  const AtomNetId atom_net = atom_ctx.lookup().atom_net(net);
+  if (!atom_net.is_valid()) {
+    return false;
+  }
+  std::unique_ptr<RoutedTiming> timing = analyze_routed_timing(run);
+  if (nullptr == timing) {
+    return false;
+  }
+  const auto& netlist = atom_ctx.netlist();
+  criticality = 0.;
+  double slack = std::numeric_limits<double>::infinity();
+  for (const AtomPinId pin : netlist.net_sinks(atom_net)) {
+    criticality =
+      std::max<double>(criticality, timing->info->setup_pin_criticality(pin));
+    slack = std::min<double>(slack, timing->info->setup_pin_slack(pin));
+  }
+  if (!std::isfinite(slack)) {
+    return false;
+  }
+  slack_ns = sec_to_nanosec(slack);
+  return true;
+}
 
 bool timing_summary_json(const vpr::VprRun& run, std::string& json_text) {
   std::unique_ptr<RoutedTiming> timing = analyze_routed_timing(run);

@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <string>
 
+#include "vpr_run.h"
+
 /********************************************************************
  * The answers of the queries about the design, which are read from the data
  * of VPR: the packing, the placement and the routing. Each one names the
@@ -82,6 +84,23 @@
  *   placed, x, y, sub_tile, layer (null until the design is placed). A net
  *   item: name, fanout (the number of sinks), ignored (VPR does not route it,
  *   e.g., a clock)
+ *
+ * block_info (stage PACKED): one cluster
+ *   name, type, placed, location {x, y, sub_tile, layer} (null until placed),
+ *   pins[]: port, bit, direction (input, output or clock), net (the pins of the
+ *   cluster that are connected), atoms[]: the blocks of the circuit that the
+ *   cluster holds: name, model, path (where in the cluster: the type of the
+ *   cluster, then the type and index of each level down to the primitive, with
+ *   the mode of each in brackets, as the packed netlist file writes them)
+ *
+ * net_info (stage PACKED): one net between clusters
+ *   name, fanout, ignored, driver {block, port, bit}, sinks[] likewise,
+ *   bounding_box {xmin, ymin, xmax, ymax, half_perimeter} of the blocks that it
+ *   connects (null until placed), routing {nodes, wires, wirelength} (null
+ *   until routed: the wires are the nodes of the channels, and the wirelength
+ *   counts the tiles that they span, as VPR does), timing {criticality,
+ *   slack_ns} (null until routed or if the timing analysis is off: the
+ *   criticality of the worst connection of the net, and its worst setup slack)
  *******************************************************************/
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -93,6 +112,8 @@ constexpr int NET_ROUTE_SCHEMA_VERSION = 1;
 constexpr int CONGESTION_SCHEMA_VERSION = 1;
 constexpr int CLUSTER_REPORT_SCHEMA_VERSION = 1;
 constexpr int FIND_SCHEMA_VERSION = 1;
+constexpr int BLOCK_INFO_SCHEMA_VERSION = 1;
+constexpr int NET_INFO_SCHEMA_VERSION = 1;
 
 /* The most blocks or clusters a query lists, unless a limit is given */
 constexpr size_t QUERY_LIST_DEFAULT_LIMIT = 1000;
@@ -121,7 +142,16 @@ bool cluster_report_json(const std::string& query, const bool with_stats,
 
 /* An empty kind looks for blocks and nets, else it is "block" or "net" */
 bool find_json(const std::string& pattern, const std::string& kind,
-               const size_t limit, std::string& json);
+               const size_t limit, const bool has_placement, std::string& json);
+
+/* has_placement and has_routing say that the stages are reached: what the
+ * answer gives of them is null if not */
+bool block_info_json(const std::string& block, const bool has_placement,
+                     std::string& json);
+
+bool net_info_json(const vpr::VprRun& run, const std::string& net,
+                   const bool has_placement, const bool has_routing,
+                   std::string& json);
 
 } /* End namespace openfpga */
 
