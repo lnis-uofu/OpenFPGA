@@ -172,9 +172,15 @@ int congestion_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
   if (!count_option(cmd, cmd_context, "region_size", 1, region_size)) {
     return CMD_EXEC_FATAL_ERROR;
   }
+  size_t hotspots = 0;
+  if (cmd_context.option_enable(cmd, cmd.option("hotspots")) &&
+      !count_option(cmd, cmd_context, "hotspots", 0, hotspots)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
   return answer(openfpga_ctx, OpenFpgaStage::ROUTED, "congestion",
-                [region_size](const vpr::VprRun&, std::string& json) {
-                  return congestion_json(static_cast<int>(region_size), json);
+                [region_size, hotspots](const vpr::VprRun&, std::string& json) {
+                  return congestion_json(static_cast<int>(region_size),
+                                         hotspots, json);
                 });
 }
 
@@ -293,6 +299,9 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_option(congestion, "region_size", "r", false, OPT_INT,
              "Aggregate the channels in regions of this many tiles on a "
              "side. Default: 1");
+  add_option(congestion, "hotspots", "s", false, OPT_INT,
+             "Also list this many of the fullest segments of the channels, "
+             "with the nets that cross them");
   add_query_command(shell, cmd_class, congestion,
                     "Answer with the use of the routing channels of the "
                     "routed design",

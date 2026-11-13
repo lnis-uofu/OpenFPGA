@@ -130,9 +130,14 @@ congestion
 
     Number of tiles on a side of a region. Default: 1
 
+  .. option:: --hotspots <int>
+
+    Also list this many of the fullest segments of the channels in ``hotspots``, the fullest first (ties go by the number of wires, then by the position). A segment is a place along a channel, beside a tile (``x``, ``y``), that wires cross: it has its ``channel`` (``chanx`` or ``chany``), the ``used`` wires, the ``capacity`` and ``occupancy``, ``overused_nodes`` (the wires there that more than one net uses), and the nets that cross it: ``num_nets`` and ``nets``, their names (at most 50). It tells what is in the way of a design that does not route
+
   .. code-block::
 
     congestion --region_size 2
+    congestion --hotspots 5
 
 report_cluster
 ~~~~~~~~~~~~~~

@@ -303,8 +303,27 @@ class CongestionRegion:
 
 
 @dataclasses.dataclass(frozen=True)
+class Hotspot:
+    """A segment of a channel that wires cross: channel is "chanx" or "chany", x
+    and y the tile that it is beside. nets are the names of the nets that cross
+    it (at most 50 of the num_nets)"""
+
+    channel: str
+    x: int
+    y: int
+    used: int
+    capacity: int
+    occupancy: float
+    overused_nodes: int
+    num_nets: int
+    nets: List[str]
+
+
+@dataclasses.dataclass(frozen=True)
 class Congestion:
-    """Answer of congestion: the use of the routing channels, by region"""
+    """Answer of congestion: the use of the routing channels, by region.
+    hotspots, the fullest segments of the channels with the nets that cross
+    them, is set when they were asked for"""
 
     stage: str
     grid: Grid
@@ -312,6 +331,7 @@ class Congestion:
     region_size: int
     summary: CongestionSummary
     regions: List[CongestionRegion]
+    hotspots: Optional[List[Hotspot]] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -899,9 +919,13 @@ class Session:
         """The routing tree of a net"""
         return self._query("net_route", "net_route", NetRoute, net=net)
 
-    def congestion(self, region_size=None):
-        """The use of the channels, by regions of region_size tiles"""
-        return self._query("congestion", "congestion", Congestion, region_size=region_size)
+    def congestion(self, region_size=None, hotspots=None):
+        """The use of the channels, by regions of region_size tiles. With
+        hotspots, the fullest segments of the channels (that many) are listed
+        with the nets that cross them"""
+        return self._query(
+            "congestion", "congestion", Congestion, region_size=region_size, hotspots=hotspots
+        )
 
     def cluster_report(self, query=None, stats=False, limit=None):
         """The clusters whose name matches the pattern query, with the use of

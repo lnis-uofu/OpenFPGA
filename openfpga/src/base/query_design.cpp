@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <map>
+#include <set>
+#include <tuple>
 #include <vector>
 
 #include "glob_match.h"
@@ -502,7 +504,8 @@ bool net_route_json(const std::string& net, std::string& json_text) {
   return true;
 }
 
-bool congestion_json(const int region_size, std::string& json_text) {
+bool congestion_json(const int region_size, const size_t hotspots,
+                     std::string& json_text) {
   const auto& device_ctx = g_vpr_ctx.device();
   const auto& route_ctx = g_vpr_ctx.routing();
   const auto& rr_graph = device_ctx.rr_graph;
@@ -532,6 +535,9 @@ bool congestion_json(const int region_size, std::string& json_text) {
    * wires of the channel there */
   std::vector<std::vector<int>> used_x(height, std::vector<int>(width, 0));
   std::vector<std::vector<int>> used_y(height, std::vector<int>(width, 0));
+  /* The wires in use by more than one net that cross each segment */
+  std::vector<std::vector<int>> overused_x(height, std::vector<int>(width, 0));
+  std::vector<std::vector<int>> overused_y(height, std::vector<int>(width, 0));
   int64_t overused = 0;
   for (const RRNodeId inode : rr_graph.nodes()) {
     const int occ = occupancy[size_t(inode)];
@@ -542,7 +548,8 @@ bool congestion_json(const int region_size, std::string& json_text) {
     if (type != e_rr_type::CHANX && type != e_rr_type::CHANY) {
       continue;
     }
-    if (occ > rr_graph.node_capacity(inode)) {
+    const bool is_overused = occ > rr_graph.node_capacity(inode);
+    if (is_overused) {
       ++overused;
     }
     for (int x = rr_graph.node_xlow(inode); x <= rr_graph.node_xhigh(inode);
@@ -550,6 +557,9 @@ bool congestion_json(const int region_size, std::string& json_text) {
       for (int y = rr_graph.node_ylow(inode); y <= rr_graph.node_yhigh(inode);
            ++y) {
         (type == e_rr_type::CHANX ? used_x : used_y)[y][x] += 1;
+        if (is_overused) {
+          (type == e_rr_type::CHANX ? overused_x : overused_y)[y][x] += 1;
+        }
       }
     }
   }
@@ -586,6 +596,97 @@ bool congestion_json(const int region_size, std::string& json_text) {
     }
   }
 
+  /* The most used segments of the channels: the fullest first. A segment is
+   * a place along a channel that one wire or more cross */
+  struct Hotspot {
+    bool horizontal;
+    int x, y, used, capacity, overused;
+    double occupancy;
+    std::vector<ClusterNetId> nets;
+  };
+  std::vector<Hotspot> spots;
+  if (hotspots > 0) {
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
+        const bool has_x = y <= height - 2 && x >= 1 && x <= width - 2;
+        const bool has_y = x <= width - 2 && y >= 1 && y <= height - 2;
+        if (has_x && used_x[y][x] > 0) {
+          const int cap = chan_width.x_list[y];
+          spots.push_back({true,
+                           x,
+                           y,
+                           used_x[y][x],
+                           cap,
+                           overused_x[y][x],
+                           ratio(used_x[y][x], cap),
+                           {}});
+        }
+        if (has_y && used_y[y][x] > 0) {
+          const int cap = chan_width.y_list[x];
+          spots.push_back({false,
+                           x,
+                           y,
+                           used_y[y][x],
+                           cap,
+                           overused_y[y][x],
+                           ratio(used_y[y][x], cap),
+                           {}});
+        }
+      }
+    }
+    /* The fullest first. The rest of the order is fixed, so that the answer is
+     * the same each time */
+    std::sort(spots.begin(), spots.end(),
+              [](const Hotspot& a, const Hotspot& b) {
+                if (a.occupancy != b.occupancy) {
+                  return a.occupancy > b.occupancy;
+                }
+                if (a.used != b.used) {
+                  return a.used > b.used;
+                }
+                if (a.horizontal != b.horizontal) {
+                  return a.horizontal;
+                }
+                return a.y != b.y ? a.y < b.y : a.x < b.x;
+              });
+    if (spots.size() > hotspots) {
+      spots.resize(hotspots);
+    }
+    /* The nets that cross them: look at the routing of each net once, for the
+     * segments that were kept */
+    std::map<std::tuple<bool, int, int>, size_t> kept;
+    for (size_t i = 0; i < spots.size(); ++i) {
+      kept[std::make_tuple(spots[i].horizontal, spots[i].x, spots[i].y)] = i;
+    }
+    for (const ClusterNetId net : g_vpr_ctx.clustering().clb_nlist.nets()) {
+      const auto& tree = route_ctx.route_trees[ParentNetId(size_t(net))];
+      if (!tree) {
+        continue;
+      }
+      std::set<size_t> crossed;
+      for (const RouteTreeNode& node : tree->all_nodes()) {
+        const e_rr_type type = rr_graph.node_type(node.inode);
+        if (type != e_rr_type::CHANX && type != e_rr_type::CHANY) {
+          continue;
+        }
+        for (int x = rr_graph.node_xlow(node.inode);
+             x <= rr_graph.node_xhigh(node.inode); ++x) {
+          for (int y = rr_graph.node_ylow(node.inode);
+               y <= rr_graph.node_yhigh(node.inode); ++y) {
+            const auto found =
+              kept.find(std::make_tuple(type == e_rr_type::CHANX, x, y));
+            if (found != kept.end()) {
+              crossed.insert(found->second);
+            }
+          }
+        }
+      }
+      for (const size_t i : crossed) {
+        spots[i].nets.push_back(net);
+      }
+    }
+  }
+
   JsonWriter json;
   begin_response(json, "congestion", CONGESTION_SCHEMA_VERSION, "ROUTED");
   json.begin_object();
@@ -618,6 +719,29 @@ bool congestion_json(const int region_size, std::string& json_text) {
     json.end_object();
   }
   json.end_array();
+  if (hotspots > 0) {
+    const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+    json.key("hotspots").begin_array();
+    for (const Hotspot& spot : spots) {
+      json.begin_object();
+      json.key("channel").value(spot.horizontal ? "chanx" : "chany");
+      json.key("x").value(spot.x);
+      json.key("y").value(spot.y);
+      json.key("used").value(spot.used);
+      json.key("capacity").value(spot.capacity);
+      json.key("occupancy").value(spot.occupancy);
+      json.key("overused_nodes").value(spot.overused);
+      json.key("num_nets").value(static_cast<int64_t>(spot.nets.size()));
+      json.key("nets").begin_array();
+      for (size_t i = 0; i < std::min(spot.nets.size(), HOTSPOT_NETS_MAX);
+           ++i) {
+        json.value(clb_nlist.net_name(spot.nets[i]));
+      }
+      json.end_array();
+      json.end_object();
+    }
+    json.end_array();
+  }
   json.end_object();
   end_response(json);
   json_text = json.str();

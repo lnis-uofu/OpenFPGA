@@ -51,8 +51,9 @@ def plain(answer):
     """The answer as the dict that the shell gave, without what the object adds"""
     data = dataclasses.asdict(answer)
     del data["stage"]
-    if data.get("stats", 0) is None:
-        del data["stats"]
+    for optional in ("stats", "hotspots"):
+        if data.get(optional, 0) is None:
+            del data[optional]
     return data
 
 
@@ -200,6 +201,10 @@ def test_the_options_of_the_queries(routed):
     assert plain(stats) == raw(routed, "report_cluster --stats")["data"]
 
     assert routed.congestion(region_size=1).region_size == 1
+    assert routed.congestion().hotspots is None
+    spots = routed.congestion(hotspots=2)
+    assert len(spots.hotspots) == 2 and spots.hotspots[0].nets
+    assert plain(spots) == raw(routed, "congestion", hotspots=2)["data"]
 
     found = routed.find("out:*", kind="block", limit=1)
     assert found.kind == "block" and found.nets is None
