@@ -270,6 +270,11 @@ def test_every_failure_has_a_diagnostic(openfpga_module, ready, golden, tmp_path
         session.place()
         session.route()
 
+    def no_data_in_a_worker():
+        # A worker is a process of its own, which has no data of VPR
+        with openfpga_module.RemoteSession(cwd=tmp_path) as worker:
+            worker.run_report()
+
     def after_a_failed_route():
         # The fabric is built on a routing that worked, and repack needs the routing
         session = ready()
@@ -298,6 +303,7 @@ def test_every_failure_has_a_diagnostic(openfpga_module, ready, golden, tmp_path
         "command_option_missing": lambda: ready().command("read_packing"),
         "layout_not_found": small_device,
         "route_unroutable": unroutable,
+        "no_vpr_data": no_data_in_a_worker,
     }
     for kind, call in cases.items():
         error = failure(openfpga_module, call)

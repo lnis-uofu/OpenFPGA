@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "run_report",
+  "description": "What each stage of the flow did, answer of 'report_run'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "run_report"
+    },
+    "stage": {
+      "const": "DEVICE"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "stages",
+        "packing",
+        "placement",
+        "routing",
+        "failed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stage",
+              "seconds"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stage": {
+                "enum": [
+                  "PACKED",
+                  "PLACED",
+                  "ROUTED",
+                  "ANALYZED"
+                ]
+              },
+              "seconds": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "packing": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "clusters",
+            "atoms",
+            "nets",
+            "blocks"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "clusters": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "atoms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nets": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "count"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "placement": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "half_perimeter",
+            "cost",
+            "bb_cost",
+            "td_cost",
+            "estimated_critical_path_delay_ns",
+            "estimated_fmax_mhz",
+            "num_temperatures",
+            "swap_attempts"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "half_perimeter": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cost": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "bb_cost": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "td_cost": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "estimated_critical_path_delay_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "estimated_fmax_mhz": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "num_temperatures": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "swap_attempts": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "routing": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "channel_width",
+            "wirelength",
+            "wires",
+            "iterations",
+            "critical_path_delay_ns"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "channel_width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "wirelength": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "wires": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "iterations": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "critical_path_delay_ns": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "failed": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "stage",
+                "message"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "stage": {
+                  "enum": [
+                    "PACKED",
+                    "PLACED",
+                    "ROUTED"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

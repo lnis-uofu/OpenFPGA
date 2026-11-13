@@ -121,6 +121,11 @@ def test_a_failed_route_is_recorded_and_the_stages_before_it_stay(failed):
     assert "Routing failed" in state.failed.message
     assert str(failed.session.options["router.route_chan_width"]) in state.failed.message
     assert state.results.routing is None and state.results.placement is not None
+    # The report of the run says the same, and has the stages before
+    report = failed.session.run_report()
+    assert report.failed == state.failed
+    assert [s.stage for s in report.stages] == ["PACKED", "PLACED"]
+    assert report.placement is not None and report.routing is None
 
 
 def test_the_results_of_the_stages_before_stay(failed):

@@ -31,7 +31,7 @@ The module is built from the source of OpenFPGA (a checkout with its submodules)
 
 The build uses ``scikit-build-core``, which ``pip`` fetches, and builds only the Python module (not the ``openfpga`` executable, Yosys or the tests). It needs a C++17 compiler, CMake, SWIG, the Python development headers and the Tcl development headers (``tcl-dev`` or ``tcl-devel``, which VPR's SDC parser uses). CMake takes the compiler that is first in the ``PATH``: set ``CC`` and ``CXX`` for another one, e.g., ``CC=gcc-12 CXX=g++-12 pip install .``. The result is ``import openfpga``. The build is kept in ``build/python``, so that the next ``pip install .`` only builds what changed.
 
-``session_quickstart.py`` runs a small design through the four stages in a worker process, and prints the stages reached, the time of each and the files of the results. Its ``--in-process`` option runs a ``Session`` instead, and ``--help`` lists the files that it takes.
+``session_quickstart.py`` runs a small design through the four stages in a worker process, and prints the stages reached, the time of each, the critical path delay, the wirelength and the blocks of each type (from ``run_report()``), and the files of the results. Its ``--in-process`` option runs a ``Session`` instead, and ``--help`` lists the files that it takes.
 
 Commands
 ~~~~~~~~
@@ -177,7 +177,7 @@ A new checkpoint in the same directory replaces the old one, and the manifest is
 Answers
 ~~~~~~~
 
-A command that answers in JSON (see :ref:`query_answers`) gives its answer to the session as an object (an immutable dataclass) instead of JSON. The fields are the ones of the answer, and ``stage`` tells which stage the answer was read from, for the classes that have it. Values that are not finite are ``None``.
+A command that answers in JSON (see :ref:`query_answers`) gives its answer to the session as an object (an immutable dataclass) instead of JSON. The session reports of :ref:`openfpga_session_report_commands` are methods: ``state()`` (``SessionState``, from ``report_session``) and ``run_report()`` (``RunReport``, from ``report_run``). The fields are the ones of the answer, and ``stage`` tells which stage the answer was read from, for the classes that have it. Values that are not finite are ``None``.
 
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped. A command that a plugin adds can answer with a kind of its own: ``openfpga.register_answer_kind(kind, version)`` makes the module read it, and a subclass of ``Session`` reads the answer with ``self._query(command, answer_kind, cls, **options)``.
 

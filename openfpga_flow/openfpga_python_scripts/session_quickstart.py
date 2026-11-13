@@ -75,11 +75,17 @@ def main():
             getattr(session, stage)()
             times[stage] = round(time.monotonic() - started, 3)
 
-        # What the flow did: the stages that are reached, and the files of their results
+        # What the flow did: the stages that are reached, the numbers of each stage, and the
+        # files of their results
         state = session.state()
+        report = session.run_report()
         summary = {
             "stages": state.reached,
             "seconds": times,
+            "critical_path_delay_ns": report.routing.critical_path_delay_ns,
+            "wirelength": report.routing.wirelength,
+            "channel_width": report.routing.channel_width,
+            "blocks": {block.type: block.count for block in report.packing.blocks},
             "results": {
                 name: path for name, path in vars(state.results).items() if path is not None
             },
@@ -92,6 +98,11 @@ def main():
     print(f"The flow ran in {workdir}")
     print("Stages reached: " + ", ".join(summary["stages"]))
     print("Seconds: " + ", ".join(f"{name} {value}" for name, value in times.items()))
+    print(
+        f"Critical path delay: {summary['critical_path_delay_ns']} ns, "
+        f"wirelength: {summary['wirelength']}, channel width: {summary['channel_width']}"
+    )
+    print("Blocks: " + ", ".join(f"{name} {count}" for name, count in summary["blocks"].items()))
     print("Results:")
     for name, path in summary["results"].items():
         print(f"  {name}: {path}")

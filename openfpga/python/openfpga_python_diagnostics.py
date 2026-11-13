@@ -88,6 +88,12 @@ _MESSAGE_RULES = [
         lambda d: "Run '%s' first" % d["command"],
     ),
     (
+        re.compile(r"the stage DEVICE has not been reached, because not all the inputs are read"),
+        "stage_not_reached",
+        lambda m: {"stage": "DEVICE"},
+        lambda d: "Read the three inputs: read_vpr_arch, read_openfpga_arch and read_circuit",
+    ),
+    (
         re.compile(
             r"Cannot run '(\w+)': the stage (\w+) has not been reached, because it failed "
             r"\((.*?)\)\. Change what made it fail, and use the command '(\w+)' again"

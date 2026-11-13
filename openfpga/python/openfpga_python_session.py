@@ -78,6 +78,71 @@ class StageFailure:
 
 
 @dataclasses.dataclass(frozen=True)
+class StageRun:
+    """A stage that is reached. seconds is None if it was not run by a command
+    of this session (its results were read from a file)"""
+
+    stage: str
+    seconds: Optional[float]
+
+
+@dataclasses.dataclass(frozen=True)
+class BlockCount:
+    type: str
+    count: int
+
+
+@dataclasses.dataclass(frozen=True)
+class PackingReport:
+    clusters: int
+    atoms: int
+    nets: int
+    blocks: List[BlockCount]
+
+
+@dataclasses.dataclass(frozen=True)
+class PlacementReport:
+    """half_perimeter is the sum over the nets of the half perimeter of the box
+    around their blocks. The others are from the log of the placement, and None
+    if the stage was not run by a command of this session"""
+
+    half_perimeter: int
+    cost: Optional[float]
+    bb_cost: Optional[float]
+    td_cost: Optional[float]
+    estimated_critical_path_delay_ns: Optional[float]
+    estimated_fmax_mhz: Optional[float]
+    num_temperatures: Optional[int]
+    swap_attempts: Optional[int]
+
+
+@dataclasses.dataclass(frozen=True)
+class RoutingReport:
+    """wirelength is the tiles that the wires span, as VPR adds it up. iterations
+    and critical_path_delay_ns are from the log of the routing, and None if the
+    stage was not run by a command of this session"""
+
+    channel_width: int
+    wirelength: int
+    wires: int
+    iterations: Optional[int]
+    critical_path_delay_ns: Optional[float]
+
+
+@dataclasses.dataclass(frozen=True)
+class RunReport:
+    """Answer of report_run: what each stage that is reached did. packing,
+    placement and routing are None until their stage is reached"""
+
+    stage: str
+    stages: List[StageRun]
+    packing: Optional[PackingReport]
+    placement: Optional[PlacementReport]
+    routing: Optional[RoutingReport]
+    failed: Optional[StageFailure]
+
+
+@dataclasses.dataclass(frozen=True)
 class SessionState:
     """Answer of report_session: what the flow has done. reached lists the stages
     that are valid (DEVICE, PACKED, PLACED, ROUTED, ANALYZED, ...); a stage that
@@ -122,6 +187,7 @@ def _build(cls, data):
 # The version of the schema of each kind of answer that is read
 _SCHEMA_VERSIONS = {
     "session": 1,
+    "run_report": 1,
     "app_options": 1,
 }
 
@@ -438,7 +504,9 @@ class Session:
     # The commands that only answer: they do not change the flow, so the journal
     # does not have them. A subclass that adds such commands extends the set:
     # READ_ONLY_COMMANDS = Session.READ_ONLY_COMMANDS | {...}
-    READ_ONLY_COMMANDS = frozenset(("help", "version", "report_session", "report_app_option"))
+    READ_ONLY_COMMANDS = frozenset(
+        ("help", "version", "report_session", "report_run", "report_app_option")
+    )
 
     def __init__(self, shell=None, checkpoint_dir=None, journal=None):
         self.shell = shell if shell is not None else OpenfpgaShell()
@@ -658,3 +726,9 @@ class Session:
         instance of the dataclass cls. answer_kind is the kind of the answer,
         see register_answer_kind"""
         return _answer(self.shell.run(_command_line(command, (), options)), answer_kind, cls)
+
+    def run_report(self):
+        """What each stage that is reached did: the packing, the cost of the
+        placement, the wirelength and iterations of the routing, and the time
+        of each stage"""
+        return self._query("report_run", "run_report", RunReport)

@@ -10,6 +10,8 @@
  * json_response.h. They do not change anything:
  * - report_session: the stages that are reached, the inputs and the files of
  *   the results, see session_json.h. Needs no stage
+ * - report_run: what each stage of the flow did, see query_run.h. Needs the
+ *   stage DEVICE
  *******************************************************************/
 /* Begin namespace openfpga */
 namespace openfpga {
