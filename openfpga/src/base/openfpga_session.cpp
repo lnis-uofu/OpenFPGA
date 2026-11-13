@@ -1,5 +1,7 @@
 #include "openfpga_session.h"
 
+#include "app_option_stage.h"
+
 /* Begin namespace openfpga */
 namespace openfpga {
 
@@ -187,6 +189,38 @@ void OpenFpgaSession::fail(const OpenFpgaStage& stage) {
   invalidate_stage_and_dependents(stage);
 }
 
+bool OpenFpgaSession::set_app_option(const std::string& name,
+                                     const std::string& text,
+                                     std::string& error) {
+  const AppOptionValue* option = app_options_.find(name);
+  const std::string before = nullptr == option ? "" : option->to_string();
+  if (!app_options_.set(name, text, error)) {
+    return false;
+  }
+  if (before != app_options_.find(name)->to_string()) {
+    invalidate_for_option(name);
+  }
+  return true;
+}
+
+bool OpenFpgaSession::reset_app_option(const std::string& name) {
+  if (nullptr == app_options_.find(name)) {
+    return false;
+  }
+  const bool changed = !app_options_.is_default(name);
+  app_options_.reset(name);
+  if (changed) {
+    invalidate_for_option(name);
+  }
+  return true;
+}
+
+void OpenFpgaSession::reset_app_options() {
+  for (const std::string& name : app_options_.names()) {
+    reset_app_option(name);
+  }
+}
+
 void OpenFpgaSession::reset() {
   inputs_ = 0;
   stages_ = 0;
@@ -202,5 +236,15 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
 }
 
 void OpenFpgaSession::invalidate_all_stages() { stages_ = 0; }
+
+void OpenFpgaSession::invalidate_for_option(const std::string& name) {
+  OpenFpgaStage stage = OpenFpgaStage::DEVICE;
+  /* An option without a stage cannot be located: drop everything */
+  if (!app_option_stage(name, stage)) {
+    invalidate_all_stages();
+    return;
+  }
+  invalidate_stage_and_dependents(stage);
+}
 
 } /* End namespace openfpga */
