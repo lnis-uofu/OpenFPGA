@@ -60,7 +60,9 @@ class OpenfpgaError(RuntimeError):
         self.error = result.error
         detail = self.error
         if not detail:
-            lines = [line for line in self.log.splitlines() if line.strip()]
+            lines = [
+                line for line in _split_interleaved(self.log).splitlines() if line.strip()
+            ]
             # Error messages are not always at the end of the log, as stderr
             # is not ordered against stdout. Quote them first when present
             errors = self._error_lines(lines)
