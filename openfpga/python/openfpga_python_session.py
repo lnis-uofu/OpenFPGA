@@ -90,6 +90,50 @@ class Change:
 
 
 @dataclasses.dataclass(frozen=True)
+class StageOptions:
+    """The options that tune a stage: total of the stage, matched by the filters,
+    returned (at most the limit), truncated if more matched than were returned"""
+
+    total: int
+    matched: int
+    returned: int
+    truncated: bool
+    items: List["AppOption"]
+
+
+@dataclasses.dataclass(frozen=True)
+class StageInfo:
+    """A stage of the flow and what can be changed for it. requires is the stage
+    before it; commands reach it; dropped_by_change are the stages that are
+    dropped when one of its options changes (it, and the ones after it); failed
+    is why it failed, if it did"""
+
+    stage: str
+    requires: Optional[str]
+    commands: List[str]
+    reached: bool
+    failed: Optional[str]
+    dropped_by_change: List[str]
+    options: StageOptions
+
+
+@dataclasses.dataclass(frozen=True)
+class StageFilter:
+    stage: Optional[str]
+    changed: bool
+    query: Optional[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class StageReport:
+    """Answer of report_stage: the stages, and for each what can be changed"""
+
+    stage: str
+    filter: StageFilter
+    stages: List[StageInfo]
+
+
+@dataclasses.dataclass(frozen=True)
 class StageRun:
     """A stage that is reached. seconds is None if it was not run by a command
     of this session (its results were read from a file)"""
@@ -201,6 +245,7 @@ _SCHEMA_VERSIONS = {
     "session": 1,
     "run_report": 1,
     "app_options": 1,
+    "stage_info": 1,
 }
 
 
@@ -522,7 +567,14 @@ class Session:
     # does not have them. A subclass that adds such commands extends the set:
     # READ_ONLY_COMMANDS = Session.READ_ONLY_COMMANDS | {...}
     READ_ONLY_COMMANDS = frozenset(
-        ("help", "version", "report_session", "report_run", "report_app_option")
+        (
+            "help",
+            "version",
+            "report_session",
+            "report_run",
+            "report_stage",
+            "report_app_option",
+        )
     )
 
     def __init__(self, shell=None, checkpoint_dir=None, journal=None):
@@ -810,3 +862,19 @@ class Session:
         placement, the wirelength and iterations of the routing, and the time
         of each stage"""
         return self._query("report_run", "run_report", RunReport)
+
+    def stage_info(self, stage=None, changed=False, query=None, limit=None):
+        """What can be changed for a stage (all the stages if not set; a name
+        like PLACED or place), as a StageReport: its options with their values
+        and defaults, the commands that reach it and the stages that a change
+        drops. changed keeps the options that are not at their default, query
+        the ones whose name matches a pattern such as 'place.*'"""
+        return self._query(
+            "report_stage",
+            "stage_info",
+            StageReport,
+            stage=stage,
+            changed=changed,
+            query=query,
+            limit=limit,
+        )

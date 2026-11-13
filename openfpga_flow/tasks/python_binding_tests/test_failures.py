@@ -126,6 +126,11 @@ def test_a_failed_route_is_recorded_and_the_stages_before_it_stay(failed):
     assert report.failed == state.failed
     assert [s.stage for s in report.stages] == ["PACKED", "PLACED"]
     assert report.placement is not None and report.routing is None
+    # The report of the stages has the failure with the stage
+    (routed,) = failed.session.stage_info(stage="ROUTED").stages
+    assert not routed.reached and "Routing failed" in routed.failed
+    (placed,) = failed.session.stage_info(stage="PLACED").stages
+    assert placed.reached and placed.failed is None
 
 
 def test_the_results_of_the_stages_before_stay(failed):
