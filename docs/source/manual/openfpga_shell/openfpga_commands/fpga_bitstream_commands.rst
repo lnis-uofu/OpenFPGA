@@ -12,7 +12,7 @@ Repack's functionality are in the following aspects:
 
 - It annotates the net mapping results from operating modes (considered by VPR) to the physical modes (considered by OpenFPGA)
 
-- On a bus-based multiplexer (``<mux bus="true"/>`` in VPR architecture), all the bits share one select. Repack uses only the input set that VPR used on it, and does not use a bus-based multiplexer that VPR did not use. Repack finds the input set VPR used by the name of the multiplexer, so:
+- On a bus-based multiplexer (``<mux bus="true"/>`` in VPR architecture), all the bits share one select. Repack uses only the input set that VPR used on it, and does not use a bus-based multiplexer that VPR did not use. The bitstream generator selects that input set on the multiplexer. Repack finds the input set VPR used by the name of the multiplexer, so:
 
   - The physical mode must have the same bus-based multiplexers as the operating modes, with the same names and the same order of input sets. An operating mode cannot simplify a bus-based multiplexer of the physical mode, *e.g.*, into a ``<direct>``: repack would never use the physical multiplexer, and fail to route.
   - A name must denote a single bus-based multiplexer in the physical modes of a block. For instance, a bus-based multiplexer cannot be defined under a ``pb_type`` whose ``num_pb`` is larger than 1 in the physical mode.

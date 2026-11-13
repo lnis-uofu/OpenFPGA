@@ -9,6 +9,7 @@
   - DSP block
     - 8-bit multiplier
     - input and output registers
+    - operand A can take the low byte of the registered product (feedback)
 
   Details on Modelling:
 
@@ -377,13 +378,18 @@
             <T_clock_to_Q max="124e-12" port="ff_Y.Q" clock="clk"/>
           </pb_type>
           <interconnect>
-            <!-- Bus-based mux, combine 8-bit-wide 2:1 mux -->
-            <mux name="a2a_bus" input="mult_8x8_slice.A_cfg[7:0] ff_A[7:0].Q" output="mult_8x8.A[7:0]" bus="true"/>
+            <!-- Bus-based mux, combine 8-bit-wide 3:1 mux. The first input feeds
+                 the low byte of the registered product back to operand A, so
+                 the output pins of ff_Y are inputs of the mux -->
+            <mux name="a2a_bus" input="ff_Y[7:0].Q mult_8x8_slice.A_cfg[7:0] ff_A[7:0].Q" output="mult_8x8.A[7:0]" bus="true"/>
             <direct name="a2ff" input="mult_8x8_slice.A_cfg[7:0]" output="ff_A[7:0].D"/>
             <mux name="b2b_bus" input="mult_8x8_slice.B_cfg[7:0] ff_B[7:0].Q" output="mult_8x8.B[7:0]" bus="true"/>
             <direct name="b2ff" input="mult_8x8_slice.B_cfg[7:0]" output="ff_B[7:0].D"/>
             <mux name="out2out_bus" input="mult_8x8.Y[15:0] ff_Y[15:0].Q" output="mult_8x8_slice.OUT_cfg[15:0]" bus="true"/>
-            <direct name="out2ff" input="mult_8x8.Y[15:0]" output="ff_Y[15:0].D"/>
+            <!-- Pack the output registers with the multiplier -->
+            <direct name="out2ff" input="mult_8x8.Y[15:0]" output="ff_Y[15:0].D">
+              <pack_pattern name="mult_8x8_oreg" in_port="mult_8x8.Y[15:0]" out_port="ff_Y[15:0].D"/>
+            </direct>
             <complete name="clk_ff_A" input="mult_8x8_slice.clk" output="ff_A.clk"/>
             <complete name="clk_ff_B" input="mult_8x8_slice.clk" output="ff_B.clk"/>
             <complete name="clk_ff_Y" input="mult_8x8_slice.clk" output="ff_Y.clk"/>

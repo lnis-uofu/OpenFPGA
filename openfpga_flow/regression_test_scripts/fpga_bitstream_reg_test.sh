@@ -42,6 +42,7 @@ run-task fpga_bitstream/repack_ignore_nets $@
 
 echo -e "Testing repacker capability in following VPR's input set on bus-based muxes";
 run-task fpga_bitstream/repack_bus_mux $@
+run-task fpga_bitstream/repack_bus_mux_feedback $@
 
 echo -e "Testing overloading parameters from eblif";
 run-task fpga_bitstream/overload_eblif_param $@
