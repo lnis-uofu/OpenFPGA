@@ -76,6 +76,8 @@ A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come f
     - An input is missing: ``input``, ``command`` to run
   * - ``stage_not_reached``
     - The stage that a command needs is not valid: ``stage``, ``command`` to run
+  * - ``stage_failed``
+    - The stage that a command needs ran and failed (see :ref:`failed_stages`): ``stage``, ``command`` to run again, ``reason``
   * - ``no_vpr_data``
     - A query was asked before any flow
   * - ``file_not_found``
@@ -99,10 +101,36 @@ A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come f
 
 A new failure of a known kind needs a rule in ``openfpga_python_diagnostics.py`` and a test with the text that it comes from.
 
+.. _failed_stages:
+
+Stages that fail
+~~~~~~~~~~~~~~~~
+
+When the packing, the placement or the routing fails (the circuit does not fit the device, the router finds no legal routing), the stage is not reached, and what VPR made until then is kept, so that it can be read to tell why it failed:
+
+.. code-block:: python
+
+  session.options["router.route_chan_width"] = 8
+  try:
+      session.route()
+  except openfpga.OpenfpgaError:
+      pass
+  session.state().failed        # StageFailure(stage='ROUTED', message='Routing failed: ...')
+  session.congestion(hotspots=5)  # routed is False: the wires that nets share, and the nets
+  session.utilization()          # the stages before it answer as before
+
+- ``state().failed`` has the ``stage`` and the ``message``. It is ``None`` once the stage is run again, or an option or an input that made it out of date is set
+- the queries of the stages before it, e.g., ``utilization()``, ``placement()``, ``find()`` and ``net_info()``, answer as they did before. After a failed packing, ``device()`` does
+- ``congestion()`` reads the routing of a route that failed: ``routed`` is ``False``, and ``summary.overused_nodes`` is the number of wires that nets share. With ``hotspots``, the segments where that happens are listed with their nets
+- the queries that need the stage that failed (``timing_summary()``, ``critical_paths()``, ``net_route()``) raise ``OpenfpgaError`` with the diagnostic ``stage_failed``, which has the stage, the reason and the command to run again
+- the next command of a stage starts again from fresh data of VPR, and gives the results it gives without the failure. ``checkpoint()`` does not save the stage that failed
+
+A router that cannot reach a pin at all, e.g., with a channel width that is too small for the architecture, stops at once, and its routing has no shared wires: the log of VPR says ``Cannot route from ...``.
+
 State and checkpoints
 ~~~~~~~~~~~~~~~~~~~~~
 
-``state()`` gives what the flow has done (``SessionState``, from the query ``report_session``): the stages that are ``reached``, the ``inputs`` (the files they were read from) and the ``results`` (the files of the packing, the placement and the routing).
+``state()`` gives what the flow has done (``SessionState``, from the query ``report_session``): the stages that are ``reached``, the ``inputs`` (the files they were read from), the ``results`` (the files of the packing, the placement and the routing) and ``failed``, the stage that failed last and left its data, see :ref:`failed_stages`.
 
 ``checkpoint(directory)`` saves the flow, and ``Session.restore(directory)`` makes a session that is at the same point, in this process or in another one:
 

@@ -59,7 +59,9 @@
  * congestion (stage ROUTED): the use of the routing channels, aggregated in
  *   regions of region_size by region_size tiles. A channel is used by the
  *   wires of the nets that cross it
- *   grid, channel_width {x, y}, region_size, summary {chanx, chany,
+ *   grid, channel_width {x, y}, routed (false for the routing that a failed
+ *   route left: the nets share nodes, so overused_nodes says how many),
+ *   region_size, summary {chanx, chany,
  *   overused_nodes}, regions[]: x_low, y_low, x_high, y_high, chanx, chany.
  *   chanx and chany are {used, capacity, occupancy}, and only the regions
  *   with a wire in use are listed. With hotspots: hotspots[], the fullest
@@ -135,7 +137,7 @@ bool net_route_json(const std::string& net, std::string& json);
 
 /* No hot spots if hotspots is 0 */
 bool congestion_json(const int region_size, const size_t hotspots,
-                     std::string& json);
+                     const bool routed, std::string& json);
 
 bool cluster_report_json(const std::string& query, const bool with_stats,
                          const size_t limit, std::string& json);

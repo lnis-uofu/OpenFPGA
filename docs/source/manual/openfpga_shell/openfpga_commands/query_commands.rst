@@ -23,6 +23,7 @@ report_session
 
   - ``reached``: the stages that are valid, in the order of the flow (``DEVICE``, ``PACKED``, ``PLACED``, ``ROUTED``, ``ANALYZED``, ...). A stage that an option or an input made out of date is not in it. The list is empty when the data of VPR that the session worked with was replaced, e.g., by ``vpr`` or by another shell
   - ``inputs``: ``vpr_arch`` (``file`` and ``layout``), ``openfpga_arch`` and ``circuit`` (``file``): where each was read from, as a whole path. ``null`` for an input that is not read
+  - ``failed``: ``stage`` and ``message`` of the stage (``PACKED``, ``PLACED`` or ``ROUTED``) that failed last and left what it made, e.g., a route that found no legal routing; ``null`` otherwise, and once the stage runs again or is dropped. The queries of the stages before it still answer, and ``congestion`` reads the routing that failed
   - ``results``: ``packing``, ``placement`` and ``routing``: the file of the results of a stage that is reached, which is the one that VPR wrote, or the one that ``read_packing``, ``read_placement`` or ``read_routing`` read instead of running the stage. ``null`` for the other stages. The path is whole, from the current directory of the process
 
   .. code-block::
@@ -130,7 +131,7 @@ net_route
 congestion
 ~~~~~~~~~~
 
-  Answer with the use of the routing channels: kind ``congestion``, read from the stage ``ROUTED``. A channel segment is used by the wires of the nets that cross it. The answer gives the ``used`` wires, the ``capacity`` and the ``occupancy`` of the horizontal (``chanx``) and vertical (``chany``) channels, for the whole device in ``summary`` and for each region. A region is a square of tiles; only the regions that have a wire in use are listed. ``overused_nodes`` is the number of wires that more than one net uses, which is none in a legal routing. The wires in use add up to the wirelength of VPR, and the regions, with a size of one tile, to its channel occupancy files.
+  Answer with the use of the routing channels: kind ``congestion``, read from the stage ``ROUTED``. A channel segment is used by the wires of the nets that cross it. The answer gives ``routed`` (``false`` when it reads the routing that a failed route left, which is allowed after a failure: then the wires that more than one net uses are counted once as wires in use, and ``overused_nodes`` tells how many there are), the ``used`` wires, the ``capacity`` and the ``occupancy`` of the horizontal (``chanx``) and vertical (``chany``) channels, for the whole device in ``summary`` and for each region. A region is a square of tiles; only the regions that have a wire in use are listed. ``overused_nodes`` is the number of wires that more than one net uses, which is none in a legal routing. The wires in use add up to the wirelength of VPR, and the regions, with a size of one tile, to its channel occupancy files.
 
   .. option:: --region_size <int>
 

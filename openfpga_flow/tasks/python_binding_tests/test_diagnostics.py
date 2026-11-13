@@ -270,6 +270,19 @@ def test_every_failure_has_a_diagnostic(openfpga_module, ready, golden, tmp_path
         session.place()
         session.route()
 
+    def no_data_in_a_worker():
+        # A worker is a process of its own, which has no data of VPR
+        with openfpga_module.RemoteSession(cwd=tmp_path) as worker:
+            worker.placement()
+
+    def after_a_failed_route():
+        session = ready(chan_width=2)
+        session.pack()
+        session.place()
+        with pytest.raises(openfpga_module.OpenfpgaError):
+            session.route()
+        session.timing_summary()
+
     def small_device():
         session = ready(inputs=False)
         session.read_vpr_arch(golden.vpr_arch, layout="1x1")
@@ -277,17 +290,18 @@ def test_every_failure_has_a_diagnostic(openfpga_module, ready, golden, tmp_path
         session.read_circuit(golden.circuit)
 
     cases = {
+        "no_vpr_data": lambda: no_data_in_a_worker(),
         "file_not_found": lambda: ready(False).read_vpr_arch("/nope/a.xml", layout="2x2"),
         "xml_syntax": lambda: ready(False).read_vpr_arch("bad.xml", layout="2x2"),
         "input_not_read": lambda: ready(False).pack(),
         "stage_not_reached": lambda: ready().place(),
+        "stage_failed": after_a_failed_route,
         "option_unknown": lambda: ready().options.__setitem__("place.nothing", 1),
         "option_value_invalid": lambda: ready().options.__setitem__("place.seed", "many"),
         "command_unknown": lambda: ready().command("no_such_command"),
         "command_option_missing": lambda: ready().command("read_packing"),
         "layout_not_found": small_device,
         "route_unroutable": unroutable,
-        "no_vpr_data": lambda: openfpga_module.Session().placement(),
     }
     for kind, call in cases.items():
         error = failure(openfpga_module, call)
