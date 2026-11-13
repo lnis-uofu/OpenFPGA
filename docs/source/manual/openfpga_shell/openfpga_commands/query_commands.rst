@@ -30,6 +30,39 @@ report_session
 
     report_session
 
+report_stage
+~~~~~~~~~~~~
+
+  Answer with what can be changed for each stage of the flow: kind ``stage_info``, from the table of the application options. It is a bounded list, for the question "what can I change after ``place``?". It reads the session only, so it works at any time and needs no data of VPR.
+
+  For each stage (``DEVICE``, ``PACKED``, ``PLACED``, ``ROUTED``, ``ANALYZED``, ``REPACKED``, ``BITSTREAM``):
+
+  - ``requires``: the stage before it in the flow, and ``commands``: the commands that reach it
+  - ``reached`` and ``failed`` (the message, if the stage failed and left its data): as in ``report_session``
+  - ``dropped_by_change``: the stages that are dropped when an option of this stage changes, i.e., this one and the ones that depend on it. The earlier stages are kept
+  - ``options``: ``total`` (the options of the stage), ``matched`` (by the filters), ``returned``, ``truncated`` and ``items``, which are the entries of ``report_app_option --json`` (name, type, value, default, ``is_default``, help, choices and stage)
+
+  .. option:: --stage <string>
+
+    Only this stage: its name in any case (``PLACED``), or a command that reaches it (``place``, ``read_routing``). An unknown stage is refused, with the names that exist. Default: all
+
+  .. option:: --changed
+
+    Only the options that do not have their default value
+
+  .. option:: --query <string>
+
+    Only the options whose name matches this shell-style pattern, e.g., ``place.*``
+
+  .. option:: --limit <int>
+
+    Most options to list for each stage. Default: 1000
+
+  .. code-block::
+
+    report_stage --stage place --query "place.*" --limit 20
+    report_stage --changed
+
 report_run
 ~~~~~~~~~~
 
