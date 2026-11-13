@@ -80,6 +80,21 @@ set_app_option
     set_app_option --name router.flat_routing --value true
     set_app_option --name place.place_algorithm --value bounding_box
 
+.. _reset_app_option:
+
+reset_app_option
+~~~~~~~~~~~~~~~~
+
+  Give an application option its default value back, with the same effect on the stages as :ref:`set_app_option <set_app_option>` has when the value changes. It is the way to take away an option whose default is empty, e.g., a file, as ``set_app_option`` cannot be given an empty value.
+
+  .. option:: --name <string>
+
+    Name of the option, e.g., ``filename.sdc_file``
+
+  .. code-block::
+
+    reset_app_option --name filename.sdc_file
+
 .. _report_app_option:
 
 report_app_option
