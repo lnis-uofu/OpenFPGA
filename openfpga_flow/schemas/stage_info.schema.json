@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stage_info",
+  "description": "What can be changed for each stage of the flow, answer of 'report_stage'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "stage_info"
+    },
+    "stage": {
+      "const": "DEVICE"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "filter",
+        "stages"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "filter": {
+          "type": "object",
+          "required": [
+            "stage",
+            "changed",
+            "query"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "stage": {
+              "enum": [
+                "DEVICE",
+                "PACKED",
+                "PLACED",
+                "ROUTED",
+                "ANALYZED",
+                "REPACKED",
+                "BITSTREAM",
+                null
+              ]
+            },
+            "changed": {
+              "type": "boolean"
+            },
+            "query": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stage",
+              "requires",
+              "commands",
+              "reached",
+              "failed",
+              "dropped_by_change",
+              "options"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stage": {
+                "enum": [
+                  "DEVICE",
+                  "PACKED",
+                  "PLACED",
+                  "ROUTED",
+                  "ANALYZED",
+                  "REPACKED",
+                  "BITSTREAM"
+                ]
+              },
+              "requires": {
+                "enum": [
+                  "DEVICE",
+                  "PACKED",
+                  "PLACED",
+                  "ROUTED",
+                  "ANALYZED",
+                  "REPACKED",
+                  "BITSTREAM",
+                  null
+                ]
+              },
+              "commands": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "reached": {
+                "type": "boolean"
+              },
+              "failed": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dropped_by_change": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "DEVICE",
+                    "PACKED",
+                    "PLACED",
+                    "ROUTED",
+                    "ANALYZED",
+                    "REPACKED",
+                    "BITSTREAM"
+                  ]
+                },
+                "minItems": 1
+              },
+              "options": {
+                "type": "object",
+                "required": [
+                  "total",
+                  "matched",
+                  "returned",
+                  "truncated",
+                  "items"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "matched": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "returned": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "truncated": {
+                    "type": "boolean"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/option"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "option": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "value",
+        "default",
+        "is_default",
+        "help",
+        "choices",
+        "stage"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_0-9]+\\.[A-Za-z_0-9]+$"
+        },
+        "type": {
+          "enum": [
+            "string",
+            "int",
+            "float",
+            "bool",
+            "selection"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/value"
+        },
+        "default": {
+          "$ref": "#/$defs/value"
+        },
+        "is_default": {
+          "type": "boolean"
+        },
+        "help": {
+          "type": "string"
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stage": {
+          "enum": [
+            "DEVICE",
+            "PACKED",
+            "PLACED",
+            "ROUTED",
+            "ANALYZED",
+            "REPACKED",
+            "BITSTREAM"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "int"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              },
+              "default": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "float"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "default": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bool"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              },
+              "default": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "string",
+                  "selection"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "default": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "selection"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "choices": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "value": {
+      "type": [
+        "string",
+        "integer",
+        "number",
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

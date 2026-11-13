@@ -6,6 +6,7 @@
 #include "command_exit_codes.h"
 #include "query_design.h"
 #include "query_run.h"
+#include "query_stage.h"
 #include "query_timing.h"
 #include "session_json.h"
 #include "staged_flow.h"
@@ -103,6 +104,26 @@ int report_session_command(const OpenfpgaContext& openfpga_ctx, const Command&,
                            const CommandContext&) {
   const std::string json =
     session_json(openfpga_ctx.session(), vpr::current_vpr_run());
+  openfpga_ctx.set_query_result(json);
+  VTR_LOG("%s\n", json.c_str());
+  return CMD_EXEC_SUCCESS;
+}
+
+int report_stage_command(const OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd,
+                         const CommandContext& cmd_context) {
+  size_t limit = 0;
+  if (!count_option(cmd, cmd_context, "limit", QUERY_LIST_DEFAULT_LIMIT,
+                    limit)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  std::string json;
+  if (!stage_info_json(openfpga_ctx.session(),
+                       string_option(cmd, cmd_context, "stage"),
+                       cmd_context.option_enable(cmd, cmd.option("changed")),
+                       string_option(cmd, cmd_context, "query"), limit, json)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
   openfpga_ctx.set_query_result(json);
   VTR_LOG("%s\n", json.c_str());
   return CMD_EXEC_SUCCESS;
@@ -299,6 +320,22 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
     "Answer with the stages that are reached, the files the inputs were read "
     "from and the files of the results of the stages",
     report_session_command);
+
+  Command report_stage("report_stage");
+  add_option(report_stage, "stage", "s", false, OPT_STRING,
+             "Only this stage, e.g., PLACED or place. Default: all");
+  report_stage.add_option("changed", false,
+                          "Only the options that do not have their default "
+                          "value");
+  add_option(report_stage, "query", "q", false, OPT_STRING,
+             "Only the options whose name matches this shell-style pattern, "
+             "e.g., 'place.*'");
+  add_option(report_stage, "limit", "l", false, OPT_INT,
+             "Most options to list for each stage. Default: 1000");
+  add_query_command(shell, cmd_class, report_stage,
+                    "Answer with what can be changed for each stage: its "
+                    "options, their values, and the stages that a change drops",
+                    report_stage_command);
 
   add_query_command(shell, cmd_class, Command("report_run"),
                     "Answer with what each stage of the flow did: the clusters "
