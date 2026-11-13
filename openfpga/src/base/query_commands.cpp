@@ -42,6 +42,15 @@ int answer(const OpenfpgaContext& openfpga_ctx, const OpenFpgaStage& stage,
   return CMD_EXEC_SUCCESS;
 }
 
+/* True if the data of a stage is there to read. Outside of the flow that is
+ * run stage by stage, e.g., after the command vpr, whatever VPR holds is read,
+ * and the queries find out from the data if there is any */
+bool stage_data(const OpenfpgaContext& openfpga_ctx,
+                const OpenFpgaStage& stage) {
+  return !staged_flow_current(openfpga_ctx.session()) ||
+         openfpga_ctx.session().reached(stage);
+}
+
 /* The value of an option that is a whole number. Return false and log if it
  * is not one */
 bool whole_number(const char* option, const std::string& text, int& number) {
@@ -209,9 +218,31 @@ int find_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
   }
   const std::string pattern = string_option(cmd, cmd_context, "pattern");
   const std::string kind = string_option(cmd, cmd_context, "kind");
+  const bool placed = stage_data(openfpga_ctx, OpenFpgaStage::PLACED);
   return answer(openfpga_ctx, OpenFpgaStage::PACKED, "find",
                 [&](const vpr::VprRun&, std::string& json) {
-                  return find_json(pattern, kind, limit, json);
+                  return find_json(pattern, kind, limit, placed, json);
+                });
+}
+
+int block_info_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                       const CommandContext& cmd_context) {
+  const std::string block = string_option(cmd, cmd_context, "block");
+  const bool placed = stage_data(openfpga_ctx, OpenFpgaStage::PLACED);
+  return answer(openfpga_ctx, OpenFpgaStage::PACKED, "block_info",
+                [&](const vpr::VprRun&, std::string& json) {
+                  return block_info_json(block, placed, json);
+                });
+}
+
+int net_info_command(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                     const CommandContext& cmd_context) {
+  const std::string net = string_option(cmd, cmd_context, "net");
+  const bool placed = stage_data(openfpga_ctx, OpenFpgaStage::PLACED);
+  const bool routed = stage_data(openfpga_ctx, OpenFpgaStage::ROUTED);
+  return answer(openfpga_ctx, OpenFpgaStage::PACKED, "net_info",
+                [&](const vpr::VprRun& run, std::string& json) {
+                  return net_info_json(run, net, placed, routed, json);
                 });
 }
 
@@ -331,6 +362,20 @@ void add_query_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                     "Answer with the blocks and the nets of the packed design "
                     "whose name matches a pattern",
                     find_command);
+
+  Command block_info("block_info");
+  add_option(block_info, "block", "b", true, OPT_STRING, "Name of the cluster");
+  add_query_command(shell, cmd_class, block_info,
+                    "Answer with a cluster of the packed design: its pins, "
+                    "its place and the blocks of the circuit that it holds",
+                    block_info_command);
+
+  Command net_info("net_info");
+  add_option(net_info, "net", "n", true, OPT_STRING, "Name of the net");
+  add_query_command(shell, cmd_class, net_info,
+                    "Answer with a net of the packed design: the blocks it "
+                    "connects, its bounding box, routing and criticality",
+                    net_info_command);
 }
 
 } /* End namespace openfpga */

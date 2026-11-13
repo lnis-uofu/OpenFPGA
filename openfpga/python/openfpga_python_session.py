@@ -426,6 +426,100 @@ class Found:
 
 
 @dataclasses.dataclass(frozen=True)
+class BlockLocation:
+    x: int
+    y: int
+    sub_tile: int
+    layer: int
+
+
+@dataclasses.dataclass(frozen=True)
+class BlockPin:
+    """A pin of a cluster that is connected: direction is input, output or clock"""
+
+    port: str
+    bit: int
+    direction: str
+    net: Optional[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class BlockAtom:
+    """A block of the circuit that a cluster holds. path is where it is in the
+    cluster, e.g., "clb[default]/fle[2][n1_lut6]/ble6[0]/lut6[0]" """
+
+    name: str
+    model: str
+    path: Optional[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class BlockInfo:
+    """Answer of block_info: a cluster, its pins and the atoms in it. placed is
+    False, and location None, until the design is placed"""
+
+    stage: str
+    name: str
+    type: str
+    placed: bool
+    location: Optional[BlockLocation]
+    pins: List[BlockPin]
+    atoms: List[BlockAtom]
+
+
+@dataclasses.dataclass(frozen=True)
+class NetPin:
+    block: str
+    port: str
+    bit: int
+
+
+@dataclasses.dataclass(frozen=True)
+class NetBoundingBox:
+    xmin: int
+    ymin: int
+    xmax: int
+    ymax: int
+    half_perimeter: int
+
+
+@dataclasses.dataclass(frozen=True)
+class NetRouting:
+    """The size of the routing of a net: wires are the nodes of the channels,
+    and wirelength the tiles that they span"""
+
+    nodes: int
+    wires: int
+    wirelength: int
+
+
+@dataclasses.dataclass(frozen=True)
+class NetTiming:
+    """criticality is the one of the worst connection of the net, and slack_ns
+    its worst setup slack"""
+
+    criticality: float
+    slack_ns: float
+
+
+@dataclasses.dataclass(frozen=True)
+class NetInfo:
+    """Answer of net_info: a net between clusters. bounding_box, routing and
+    timing are None until the design is placed, routed, and (for timing)
+    if the timing analysis is on"""
+
+    stage: str
+    name: str
+    fanout: int
+    ignored: bool
+    driver: NetPin
+    sinks: List[NetPin]
+    bounding_box: Optional[NetBoundingBox]
+    routing: Optional[NetRouting]
+    timing: Optional[NetTiming]
+
+
+@dataclasses.dataclass(frozen=True)
 class AppOption:
     """An application option, see Options. value and default are of the type
     of the option: str, int, float or bool (None for a number that is not
@@ -530,6 +624,8 @@ _SCHEMA_VERSIONS = {
     "congestion": 1,
     "cluster_report": 1,
     "find": 1,
+    "block_info": 1,
+    "net_info": 1,
 }
 
 
@@ -939,3 +1035,14 @@ class Session:
         (at most limit of each, 1000 if not set). kind is "block" or "net" to
         look for one of them only. Blocks have their location once placed"""
         return self._query("find", "find", Found, pattern=pattern, kind=kind, limit=limit)
+
+    def block_info(self, block):
+        """A cluster: its pins and nets, where it is placed and the blocks of
+        the circuit that it holds"""
+        return self._query("block_info", "block_info", BlockInfo, block=block)
+
+    def net_info(self, net):
+        """A net between clusters: what it connects, its bounding box, the
+        size of its routing and how critical it is, as far as the stages that
+        are reached tell"""
+        return self._query("net_info", "net_info", NetInfo, net=net)

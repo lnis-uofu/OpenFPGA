@@ -1,6 +1,7 @@
 #include "query_design.h"
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <set>
 #include <tuple>
@@ -10,6 +11,7 @@
 #include "globals.h"
 #include "json_response.h"
 #include "json_writer.h"
+#include "query_timing.h"
 #include "stats.h"
 #include "vpr_utils.h"
 #include "vtr_log.h"
@@ -333,7 +335,8 @@ bool placement_json(const std::string& type, const std::string& prefix,
 }
 
 bool find_json(const std::string& pattern, const std::string& kind,
-               const size_t limit, std::string& json_text) {
+               const size_t limit, const bool has_placement,
+               std::string& json_text) {
   const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
   const auto& block_locs = g_vpr_ctx.placement().block_locs();
   if (0 == clb_nlist.blocks().size()) {
@@ -384,7 +387,7 @@ bool find_json(const std::string& pattern, const std::string& kind,
       json.key("name").value(clb_nlist.block_name(blk));
       json.key("type").value(clb_nlist.block_type(blk)->name);
       /* Where it is, once the design is placed */
-      const bool placed = size_t(blk) < block_locs.size() &&
+      const bool placed = has_placement && size_t(blk) < block_locs.size() &&
                           block_locs[blk].loc.x >= 0 &&
                           block_locs[blk].loc.y >= 0;
       json.key("placed").value(placed);
@@ -430,6 +433,240 @@ bool find_json(const std::string& pattern, const std::string& kind,
       json.end_object();
     }
     json.end_array();
+    json.end_object();
+  } else {
+    json.null();
+  }
+  json.end_object();
+  end_response(json);
+  json_text = json.str();
+  return true;
+}
+
+namespace {
+
+/* Where a primitive is in its cluster, as the instances of the packed netlist
+ * file name it: the type of the cluster, then for each level the type and
+ * the index in the parent, with the mode in brackets for each that is not a
+ * primitive. The cluster has no index: it is the one that is asked for */
+std::string pb_path(const t_pb* pb) {
+  std::vector<std::string> levels;
+  for (const t_pb* level = pb; level != nullptr; level = level->parent_pb) {
+    const t_pb_graph_node* node = level->pb_graph_node;
+    std::string text = node->pb_type->name;
+    if (nullptr != level->parent_pb) {
+      text += "[" + std::to_string(node->placement_index) + "]";
+    }
+    if (!level->is_primitive()) {
+      text += "[" + std::string(node->pb_type->modes[level->mode].name) + "]";
+    }
+    levels.push_back(text);
+  }
+  std::string path;
+  for (auto it = levels.rbegin(); it != levels.rend(); ++it) {
+    path += (path.empty() ? "" : "/") + *it;
+  }
+  return path;
+}
+
+const char* port_type_name(const PortType type) {
+  switch (type) {
+    case PortType::INPUT:
+      return "input";
+    case PortType::OUTPUT:
+      return "output";
+    default:
+      return "clock";
+  }
+}
+
+/* The place of a block that is placed, else null */
+bool block_location(const bool has_placement, const ClusterBlockId blk,
+                    t_pl_loc& loc) {
+  const auto& block_locs = g_vpr_ctx.placement().block_locs();
+  if (!has_placement || size_t(blk) >= block_locs.size() ||
+      block_locs[blk].loc.x < 0 || block_locs[blk].loc.y < 0) {
+    return false;
+  }
+  loc = block_locs[blk].loc;
+  return true;
+}
+
+}  // End anonymous namespace
+
+bool block_info_json(const std::string& block, const bool has_placement,
+                     std::string& json_text) {
+  const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+  const auto& atom_ctx = g_vpr_ctx.atom();
+  if (0 == clb_nlist.blocks().size()) {
+    VTR_LOG_ERROR("The design has no packing: run the stage PACKED first\n");
+    return false;
+  }
+  const ClusterBlockId blk = clb_nlist.find_block(block);
+  if (!blk.is_valid()) {
+    VTR_LOG_ERROR("The block '%s' does not exist\n", block.c_str());
+    return false;
+  }
+
+  JsonWriter json;
+  begin_response(json, "block_info", BLOCK_INFO_SCHEMA_VERSION, "PACKED");
+  json.begin_object();
+  json.key("name").value(block);
+  json.key("type").value(clb_nlist.block_type(blk)->name);
+  t_pl_loc loc;
+  const bool placed = block_location(has_placement, blk, loc);
+  json.key("placed").value(placed);
+  json.key("location");
+  if (placed) {
+    json.begin_object();
+    json.key("x").value(loc.x);
+    json.key("y").value(loc.y);
+    json.key("sub_tile").value(loc.sub_tile);
+    json.key("layer").value(loc.layer);
+    json.end_object();
+  } else {
+    json.null();
+  }
+
+  json.key("pins").begin_array();
+  for (const ClusterPinId pin : clb_nlist.block_pins(blk)) {
+    json.begin_object();
+    json.key("port").value(clb_nlist.port_name(clb_nlist.pin_port(pin)));
+    json.key("bit").value(static_cast<int64_t>(clb_nlist.pin_port_bit(pin)));
+    json.key("direction").value(port_type_name(clb_nlist.pin_port_type(pin)));
+    json.key("net");
+    const ClusterNetId net = clb_nlist.pin_net(pin);
+    net.is_valid() ? json.value(clb_nlist.net_name(net)) : json.null();
+    json.end_object();
+  }
+  json.end_array();
+
+  /* The atoms of the circuit that the cluster holds, and where in the
+   * cluster they are */
+  json.key("atoms").begin_array();
+  const auto& atom_nlist = atom_ctx.netlist();
+  const auto& models = g_vpr_ctx.device().arch->models;
+  for (const AtomBlockId atom : atom_nlist.blocks()) {
+    if (atom_ctx.lookup().atom_clb(atom) != blk) {
+      continue;
+    }
+    json.begin_object();
+    json.key("name").value(atom_nlist.block_name(atom));
+    json.key("model").value(
+      models.get_model(atom_nlist.block_model(atom)).name);
+    const t_pb* pb = atom_ctx.lookup().atom_pb_bimap().atom_pb(atom);
+    json.key("path");
+    pb != nullptr ? json.value(pb_path(pb)) : json.null();
+    json.end_object();
+  }
+  json.end_array();
+  json.end_object();
+  end_response(json);
+  json_text = json.str();
+  return true;
+}
+
+bool net_info_json(const vpr::VprRun& run, const std::string& net_name,
+                   const bool has_placement, const bool has_routing,
+                   std::string& json_text) {
+  const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+  const auto& rr_graph = g_vpr_ctx.device().rr_graph;
+  if (0 == clb_nlist.blocks().size()) {
+    VTR_LOG_ERROR("The design has no packing: run the stage PACKED first\n");
+    return false;
+  }
+  const ClusterNetId net = clb_nlist.find_net(net_name);
+  if (!net.is_valid()) {
+    VTR_LOG_ERROR("The net '%s' does not exist\n", net_name.c_str());
+    return false;
+  }
+
+  JsonWriter json;
+  begin_response(json, "net_info", NET_INFO_SCHEMA_VERSION, "PACKED");
+  json.begin_object();
+  json.key("name").value(net_name);
+  json.key("fanout").value(
+    static_cast<int64_t>(clb_nlist.net_sinks(net).size()));
+  json.key("ignored").value(clb_nlist.net_is_ignored(net));
+
+  auto write_pin = [&](const ClusterPinId pin) {
+    json.begin_object();
+    json.key("block").value(clb_nlist.block_name(clb_nlist.pin_block(pin)));
+    json.key("port").value(clb_nlist.port_name(clb_nlist.pin_port(pin)));
+    json.key("bit").value(static_cast<int64_t>(clb_nlist.pin_port_bit(pin)));
+    json.end_object();
+  };
+  json.key("driver");
+  write_pin(clb_nlist.net_driver(net));
+  json.key("sinks").begin_array();
+  for (const ClusterPinId pin : clb_nlist.net_sinks(net)) {
+    write_pin(pin);
+  }
+  json.end_array();
+
+  /* The box around the blocks of the net, once placed */
+  json.key("bounding_box");
+  int xmin = std::numeric_limits<int>::max(), ymin = xmin;
+  int xmax = -1, ymax = -1;
+  bool placed = true;
+  for (const ClusterPinId pin : clb_nlist.net_pins(net)) {
+    t_pl_loc loc;
+    if (!block_location(has_placement, clb_nlist.pin_block(pin), loc)) {
+      placed = false;
+      break;
+    }
+    xmin = std::min(xmin, loc.x);
+    ymin = std::min(ymin, loc.y);
+    xmax = std::max(xmax, loc.x);
+    ymax = std::max(ymax, loc.y);
+  }
+  if (placed) {
+    json.begin_object();
+    json.key("xmin").value(xmin);
+    json.key("ymin").value(ymin);
+    json.key("xmax").value(xmax);
+    json.key("ymax").value(ymax);
+    json.key("half_perimeter").value((xmax - xmin) + (ymax - ymin));
+    json.end_object();
+  } else {
+    json.null();
+  }
+
+  /* The size of the routing, once routed */
+  json.key("routing");
+  const auto& route_ctx = g_vpr_ctx.routing();
+  const bool routed = has_routing && !route_ctx.route_trees.empty() &&
+                      route_ctx.route_trees[ParentNetId(size_t(net))];
+  if (routed) {
+    int64_t nodes = 0, wires = 0, wirelength = 0;
+    for (const RouteTreeNode& node :
+         route_ctx.route_trees[ParentNetId(size_t(net))]->all_nodes()) {
+      ++nodes;
+      const e_rr_type type = rr_graph.node_type(node.inode);
+      if (type == e_rr_type::CHANX || type == e_rr_type::CHANY) {
+        ++wires;
+        wirelength +=
+          (rr_graph.node_xhigh(node.inode) - rr_graph.node_xlow(node.inode)) +
+          (rr_graph.node_yhigh(node.inode) - rr_graph.node_ylow(node.inode)) +
+          1;
+      }
+    }
+    json.begin_object();
+    json.key("nodes").value(nodes);
+    json.key("wires").value(wires);
+    json.key("wirelength").value(wirelength);
+    json.end_object();
+  } else {
+    json.null();
+  }
+
+  /* How critical the net is, once routed and if the timing is analyzed */
+  json.key("timing");
+  double criticality = 0., slack_ns = 0.;
+  if (routed && net_timing(run, net, criticality, slack_ns)) {
+    json.begin_object();
+    json.key("criticality").value(criticality);
+    json.key("slack_ns").value(slack_ns);
     json.end_object();
   } else {
     json.null();
