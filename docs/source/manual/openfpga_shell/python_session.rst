@@ -101,6 +101,36 @@ A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come f
 
 A new failure of a known kind needs a rule in ``openfpga_python_diagnostics.py`` and a test with the text that it comes from.
 
+.. _journal_and_replay:
+
+Journal and replay
+~~~~~~~~~~~~~~~~~~
+
+``Session(journal="run.journal")`` writes the commands that changed the flow, in the order they ran, in two files of that directory:
+
+- ``replay.py``: a Python script, ``session.options["router.route_chan_width"] = 20``, ``session.command("pack")``, ...
+- ``replay.openfpga``: a script of the shell, ``set_app_option --name router.route_chan_width --value 20``, ``pack``, ... It ends with ``exit``, as the shell does not stop at the end of a script, and runs with ``openfpga -f replay.openfpga``
+
+.. code-block:: python
+
+  session = openfpga.Session(journal="run.journal")
+  session.options["router.route_chan_width"] = 20
+  session.read_vpr_arch("arch.xml", layout="2x2")
+  ...
+
+  # Later, in another directory or process, or by hand: python run.journal/replay.py
+  session = openfpga.Session.replay("run.journal")
+
+What is written:
+
+- the commands that the Session runs: the options, the inputs, the stages, the files of the results that are read (``read_packing``, ...), and any command that is run with ``session.command()``. Files are written as whole paths, so that a replay in another directory reads the same files. The files of the flow are written in the current directory of the replay
+- not the queries (``utilization()``, ``congestion()``, ...), nor what is run with ``session.shell``: that is the way to ask, and to run what has no method, without a mark in the journal
+- a command that failed is a comment, ``# Failed, not replayed: route (...)``, with the reason
+- the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again
+- ``Session.restore(directory, journal=...)`` writes the commands that restore does: the options, the inputs and the results that are read from the checkpoint
+
+``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. A ``RemoteSession`` has no journal yet.
+
 .. _failed_stages:
 
 Stages that fail
