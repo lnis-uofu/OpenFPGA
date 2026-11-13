@@ -22,6 +22,7 @@
 #include "netlist_manager.h"
 #include "openfpga_arch.h"
 #include "openfpga_flow_manager.h"
+#include "openfpga_session.h"
 #include "rr_clock_spatial_lookup.h"
 #include "simulation_setting.h"
 #include "tile_direct.h"
@@ -102,6 +103,7 @@ class OpenfpgaContext : public Context {
   const openfpga::TileDirect& tile_direct() const { return tile_direct_; }
   const openfpga::ModuleManager& module_graph() const { return module_graph_; }
   const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
+  const openfpga::OpenFpgaSession& session() const { return session_; }
   const openfpga::BitstreamManager& bitstream_manager() const {
     return bitstream_manager_;
   }
@@ -169,6 +171,7 @@ class OpenfpgaContext : public Context {
   openfpga::TileDirect& mutable_tile_direct() { return tile_direct_; }
   openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
   openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
+  openfpga::OpenFpgaSession& mutable_session() { return session_; }
   openfpga::BitstreamManager& mutable_bitstream_manager() {
     return bitstream_manager_;
   }
@@ -259,6 +262,9 @@ class OpenfpgaContext : public Context {
 
   /* Flow status */
   openfpga::FlowManager flow_manager_;
+
+  /* Flow run stage by stage, and the stage it has reached */
+  openfpga::OpenFpgaSession session_;
 };
 
 #endif
