@@ -206,8 +206,17 @@ bool OpenFpgaSession::complete(const OpenFpgaStage& stage) {
   return true;
 }
 
-void OpenFpgaSession::fail(const OpenFpgaStage& stage) {
+void OpenFpgaSession::fail(const OpenFpgaStage& stage,
+                           const std::string& message) {
   invalidate_stage_and_dependents(stage);
+  if (!message.empty()) {
+    failures_[stage] = message;
+  }
+}
+
+const std::string* OpenFpgaSession::failure(const OpenFpgaStage& stage) const {
+  const auto found = failures_.find(stage);
+  return failures_.end() == found ? nullptr : &found->second;
 }
 
 bool OpenFpgaSession::set_app_option(const std::string& name,
@@ -248,6 +257,7 @@ void OpenFpgaSession::reset() {
   stages_ = 0;
   linked_generation_ = 0;
   imported_.clear();
+  failures_.clear();
 }
 
 void OpenFpgaSession::invalidate_stage_and_dependents(
@@ -256,6 +266,7 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
     if (is_or_depends_on(other, stage)) {
       stages_ &= ~bit(other);
       imported_.erase(other);
+      failures_.erase(other);
     }
   }
 }
@@ -263,6 +274,7 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
 void OpenFpgaSession::invalidate_all_stages() {
   stages_ = 0;
   imported_.clear();
+  failures_.clear();
 }
 
 void OpenFpgaSession::invalidate_for_option(const std::string& name) {

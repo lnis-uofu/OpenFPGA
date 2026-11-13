@@ -22,6 +22,10 @@
  *             that was read instead of running the stage. null for the
  *             others. The path is whole, from the current directory of the
  *             process
+ *   failed    {stage, message} of the stage that failed last and left its
+ *             data, which can be read, e.g., a route that found no legal
+ *             routing. null if there is none, and when the stage is run
+ *             again or dropped
  *******************************************************************/
 /* Begin namespace openfpga */
 namespace openfpga {

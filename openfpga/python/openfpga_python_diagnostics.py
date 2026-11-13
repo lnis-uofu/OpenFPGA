@@ -41,6 +41,7 @@ class Diagnostic:
 DIAGNOSTIC_KINDS = (
     "input_not_read",
     "stage_not_reached",
+    "stage_failed",
     "no_vpr_data",
     "file_not_found",
     "xml_syntax",
@@ -91,6 +92,16 @@ _MESSAGE_RULES = [
         "stage_not_reached",
         lambda m: {"stage": "DEVICE"},
         lambda d: "Read the three inputs: read_vpr_arch, read_openfpga_arch and read_circuit",
+    ),
+    (
+        re.compile(
+            r"Cannot run '(\w+)': the stage (\w+) has not been reached, because it failed "
+            r"\((.*?)\)\. Change what made it fail, and use the command '(\w+)' again"
+        ),
+        "stage_failed",
+        lambda m: {"stage": m.group(2), "command": m.group(4), "reason": m.group(3)},
+        lambda d: "The stage %s failed (%s): change what made it fail, then run '%s' again"
+        % (d["stage"], d["reason"], d["command"]),
     ),
     (
         re.compile(
