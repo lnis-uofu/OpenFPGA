@@ -99,7 +99,7 @@ def register(server, registry: SessionRegistry, config: Config) -> Catalogue:
     catalogue = Catalogue(registry, config)
 
     def reply(data: Any, more: Optional[str] = None) -> str:
-        folders = [str(config.root)] + [str(d) for d in config.input_dirs]
+        folders = list(config.folders())
         return answers.text(budget.fit(answers.relative(data, folders), config.answer_chars, more))
 
     async def guarded(function) -> str:

@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from . import answers, budget
 from .config import Config
-from .errors import InvalidArgument, OptionNotAllowed
+from .errors import InvalidArgument, OptionNotAllowed, SessionFull
 from .paths import resolve_file
 from .registry import Entry, SessionRegistry
 
@@ -46,6 +46,24 @@ def _number(name: str, value: Optional[int], default: int, low: int, high: int) 
     return value
 
 
+def _text(name: str, value: Optional[str], required: bool = False) -> Optional[str]:
+    """Text that goes on the command line of the shell: a name, a pattern. The shell has no way to
+    write a double quote or a line break, and what a model gives is not worth more than 200
+    characters"""
+    if value is None and not required:
+        return None
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or len(value) > 200
+        or any(c in value for c in '"\n\r\0')
+    ):
+        raise InvalidArgument(
+            "%s is text of 1 to 200 characters, with no double quote and no line break" % name
+        )
+    return value
+
+
 def _check_option(name: str, kind: str):
     if name.startswith("filename.") or "file" in name or name in _PATH_OPTIONS:
         raise OptionNotAllowed(
@@ -62,13 +80,22 @@ def register(
     tool: Callable[[], Callable],
     run: Callable[[Callable[[], Dict[str, Any]]], Any],
 ) -> None:
-    folders = [str(config.root)] + [str(d) for d in config.input_dirs]
+    folders = list(config.folders())
 
     def reply(data: Any, more: Optional[str] = None, from_start: bool = False):
         return budget.fit(answers.relative(data, folders), config.answer_chars, more, from_start)
 
     def session_of(sid: str) -> Entry:
         return registry.get(sid)
+
+    def check_room(entry: Entry):
+        """Refuse a call that writes files when the session has used its share"""
+        used = registry.directory_bytes(entry)
+        if used > config.session_max_bytes:
+            raise SessionFull(
+                "The files of session %s take %d bytes, more than the %d that it may"
+                % (entry.id, used, config.session_max_bytes)
+            )
 
     def keep_log(entry: Entry, stage: str, log: str):
         entry.logs[stage] = log[-_LOG_KEEP:]
@@ -111,6 +138,7 @@ def register(
         def work():
             entry = session_of(session)
             handle = entry.session
+            check_room(entry)
             try:
                 if from_file is not None:
                     if stage not in _READS:
@@ -180,7 +208,10 @@ def register(
         def work():
             count = _number("limit", limit, 20, 1, 200)
             report = session_of(session).session.stage_info(
-                stage=stage, changed=changed, query=query, limit=count
+                stage=_text("stage", stage),
+                changed=changed,
+                query=_text("query", query),
+                limit=count,
             )
             return reply(
                 _plain("stage_info", report),
@@ -197,7 +228,7 @@ def register(
 
         def work():
             handle = session_of(session).session
-            option = handle.options.get(name)
+            option = handle.options.get(_text("name", name, True))
             data = dataclasses.asdict(option)
             info = handle.stage_info(stage=option.stage, limit=1).stages
             data["dropped_by_change"] = list(info[0].dropped_by_change) if info else []
@@ -213,6 +244,9 @@ def register(
 
         def work():
             handle = session_of(session).session
+            _text("name", name, True)
+            if isinstance(value, str):
+                _text("value", value, True)
             _check_option(name, handle.options.get(name).type)
             return reply(dataclasses.asdict(handle.set_option(name, value)))
 
@@ -280,7 +314,9 @@ def register(
 
         def work():
             count = _number("limit", limit, 50, 1, 1000)
-            device = session_of(session).session.device(tile_type=tile_type, limit=count)
+            device = session_of(session).session.device(
+                tile_type=_text("tile_type", tile_type), limit=count
+            )
             return reply(_plain("device", device), "call get_device again with a higher limit")
 
         return await run(work)
@@ -308,6 +344,7 @@ def register(
         def work():
             count = _number("limit", limit, 20, 1, 200)
             handle = session_of(session).session
+            _text("pattern", pattern, True)
             if kind == "cluster":
                 data = _plain("cluster_report", handle.cluster_report(pattern, limit=count))
             else:
@@ -322,7 +359,9 @@ def register(
         it holds. block is a name from find. A long list is cut."""
 
         def work():
-            data = _plain("block_info", session_of(session).session.block_info(block))
+            data = _plain(
+                "block_info", session_of(session).session.block_info(_text("block", block, True))
+            )
             return reply(data, "the lists are cut; find gives the nets, get_net one of them")
 
         return await run(work)
@@ -335,9 +374,13 @@ def register(
 
         def work():
             handle = session_of(session).session
-            data = _plain("net_info", handle.net_info(net))
+            wanted = _text("net", net, True)
+            data = _plain("net_info", handle.net_info(wanted))
             if route:
-                data = {"net_info": data, "net_route": _plain("net_route", handle.net_route(net))}
+                data = {
+                    "net_info": data,
+                    "net_route": _plain("net_route", handle.net_route(wanted)),
+                }
             return reply(data, "the routing tree is cut; ask with route false for the summary")
 
         return await run(work)
@@ -356,7 +399,7 @@ def register(
         def work():
             count = _number("limit", limit, 20, 1, 200)
             data = session_of(session).session.placement(
-                block_type=type, prefix=prefix, limit=count
+                block_type=_text("type", type), prefix=_text("prefix", prefix), limit=count
             )
             return reply(
                 _plain("placement", data),
@@ -422,6 +465,7 @@ def register(
 
         def work():
             entry = session_of(session)
+            check_room(entry)
             label = name or "checkpoint-%d" % (len(_named(config, entry)) + 1)
             if not _NAME.fullmatch(label):
                 raise InvalidArgument(

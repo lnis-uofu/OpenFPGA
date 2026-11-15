@@ -8,6 +8,7 @@ thread safe: the tools of the server call it from worker threads.
 import concurrent.futures
 import dataclasses
 import itertools
+import os
 import re
 import shutil
 import threading
@@ -154,6 +155,24 @@ class SessionRegistry:
             self._entries.clear()
         for entry in entries:
             self._end(entry, False)
+
+    def directory_bytes(self, entry: Entry) -> int:
+        """What the files of a session take. Links are not followed"""
+        total = 0
+        stack = [str(self.config.root / entry.directory)]
+        while stack:
+            try:
+                with os.scandir(stack.pop()) as items:
+                    for item in items:
+                        if item.is_symlink():
+                            continue
+                        if item.is_dir(follow_symlinks=False):
+                            stack.append(item.path)
+                        else:
+                            total += item.stat(follow_symlinks=False).st_size
+            except OSError:
+                pass
+        return total
 
     def spawn(self, function):
         return self._spawner.submit(function).result()
