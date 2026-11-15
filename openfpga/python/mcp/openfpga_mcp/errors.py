@@ -1,0 +1,29 @@
+"""The failures that a tool reports as diagnostics. kind names what happened, as the kinds of
+diagnostics of the flow do, and hint what to try"""
+
+from typing import Optional
+
+
+class RegistryError(Exception):
+    """Base of the failures that the registry reports. kind names what happened, as the kinds
+    of diagnostics do"""
+
+    kind = "error"
+    hint: Optional[str] = None
+
+
+class UnknownSession(RegistryError):
+    kind = "unknown_session"
+    hint = "session_list gives the open sessions, session_open starts another"
+
+
+class SessionClosed(RegistryError):
+    """The session was open and the server closed it (idle for too long)"""
+
+    kind = "session_closed"
+    hint = "session_open starts another session"
+
+
+class SessionLimit(RegistryError):
+    kind = "too_many_sessions"
+    hint = "session_close one that is not needed, or wait until one is closed for being idle"
