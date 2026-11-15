@@ -101,7 +101,7 @@ class SessionRegistry:
                 number = next(self._numbers)
                 sid = "s%d" % number
                 directory = self.config.root / sid
-            session = self._spawn(
+            session = self.spawn(
                 lambda: openfpga.RemoteSession(
                     cwd=directory,
                     checkpoint_dir=directory / "checkpoints",
@@ -128,7 +128,7 @@ class SessionRegistry:
     def restart(self, entry: Entry):
         """Start another worker for a session, restored from its last checkpoint. Returns the
         state of the session"""
-        return self._spawn(entry.session.restart)
+        return self.spawn(entry.session.restart)
 
     def close(self, sid: str, delete_files: bool = False) -> None:
         """End a session. Its directory stays, unless delete_files"""
@@ -155,7 +155,7 @@ class SessionRegistry:
         for entry in entries:
             self._end(entry, False)
 
-    def _spawn(self, function):
+    def spawn(self, function):
         return self._spawner.submit(function).result()
 
     # Inside ----------------------------------------------------------------------

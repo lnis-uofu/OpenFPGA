@@ -63,7 +63,13 @@ def fit(
         candidates = [
             (len(answers.text(items)), path, items)
             for path, items in _lists(answer["data"])
-            if len(items) > 0
+            if len(items) > 1
+        ] or [
+            # A list of one item is cut only when no other list can be: an outer list of one
+            # item (the stage, the session) must not take the items inside it away
+            (len(answers.text(items)), path, items)
+            for path, items in _lists(answer["data"])
+            if len(items) == 1
         ]
         if not candidates:
             return answers.failed(
@@ -79,7 +85,7 @@ def fit(
         _, path, items = max(candidates, key=lambda c: c[0])
         # Keep what fits, by proportion, and always at least one item less
         before = len(items)
-        keep = min(before - 1, int(before * target / size))
+        keep = min(before - 1, max(1 if before > 1 else 0, int(before * target / size)))
         if from_start:
             del items[: before - keep]
         else:

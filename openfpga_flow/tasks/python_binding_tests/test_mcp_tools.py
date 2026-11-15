@@ -533,3 +533,15 @@ def test_the_budget_cuts_the_longest_list_and_says_so():
     assert said["truncated"] is True and said["more"] == "more" and said["data"]["items"] == [1]
     # No list to cut
     assert budget.fit({"text": "x" * 5000}, 1000)["diagnostics"][0]["kind"] == "answer_too_large"
+
+
+def test_the_budget_keeps_the_items_inside_a_list_of_one():
+    """The answer for a stage is a list of one stage that has a long list of options"""
+    inner = [{"name": "option%d" % i, "help": "text " * 10} for i in range(100)]
+    data = {"stages": [{"stage": "PLACED", "items": inner}]}
+    answer = budget.fit(data, 1500)
+    assert len(json.dumps(answer, separators=(",", ":"))) <= 1500
+    (stage,) = answer["data"]["stages"]
+    assert 1 <= len(stage["items"]) < 100 and answer["truncated"] is True
+    assert stage["items"] == inner[: len(stage["items"])]
+    assert "stages[0].items" in answer["more"]
