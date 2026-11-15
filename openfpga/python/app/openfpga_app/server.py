@@ -35,13 +35,14 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         return FileResponse(page, headers={"Cache-Control": "no-store"})
 
     async def session(request: Request) -> Response:
-        return JSONResponse(backend.view())
+        return JSONResponse(await backend.view())
 
     async def app_config(request: Request) -> Response:
         return JSONResponse(
             {
                 "schema_version": 1,
                 "console": config.console,
+                "backend": backend.kind,
                 "model": {"endpoint": config.model_endpoint, "name": config.model_name},
             }
         )
@@ -83,6 +84,21 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
             return JSONResponse({"error": "command is one line of text"}, 400)
         return JSONResponse(await backend.console(command))
 
+    async def new_session(request: Request) -> Response:
+        name = (await body(request)).get("name")
+        if name is not None and not isinstance(name, str):
+            return JSONResponse({"error": "name is text"}, 400)
+        return JSONResponse(await backend.new_session(name))
+
+    async def close_session(request: Request) -> Response:
+        return JSONResponse(await backend.close_session())
+
+    async def restore_session(request: Request) -> Response:
+        checkpoint = (await body(request)).get("checkpoint")
+        if checkpoint is not None and not isinstance(checkpoint, str):
+            return JSONResponse({"error": "checkpoint is text"}, 400)
+        return JSONResponse(await backend.restore_session(checkpoint))
+
     routes = [
         Route("/", index),
         Route("/api/session", session),
@@ -90,6 +106,9 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/chat", chat, methods=["POST"]),
         Route("/api/cancel", cancel, methods=["POST"]),
         Route("/api/console", console, methods=["POST"]),
+        Route("/api/session/new", new_session, methods=["POST"]),
+        Route("/api/session/close", close_session, methods=["POST"]),
+        Route("/api/session/restore", restore_session, methods=["POST"]),
     ]
     if (static / "assets").is_dir():
         routes.append(Mount("/assets", StaticFiles(directory=static / "assets")))

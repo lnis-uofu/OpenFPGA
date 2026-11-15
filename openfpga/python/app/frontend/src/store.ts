@@ -7,7 +7,10 @@ import {
   AppEvent,
   SessionView,
   cancel,
+  closeSession,
   fetchConfig,
+  newSession,
+  restoreSession,
   fetchSession,
   runConsole,
   streamChat,
@@ -180,6 +183,32 @@ export async function loadAll() {
     fetchConfig().then((c) => (config.value = c)).catch(() => undefined),
   ]);
 }
+
+// The sessions -------------------------------------------------------------------------------------
+
+/** What an answer of the sessions endpoints says went wrong, as a banner (nothing if it went well) */
+function reportFailure(answer: Answer) {
+  if (answer.ok) {
+    banner.value = null;
+    return;
+  }
+  const d = answer.diagnostics?.[0];
+  banner.value = { kind: d?.kind ?? "error", message: d?.message ?? "The call failed", hint: d?.hint };
+}
+
+async function sessionAction(action: () => Promise<Answer>) {
+  try {
+    reportFailure(await action());
+  } catch (error) {
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  }
+  await refreshView();
+}
+
+export const makeSession = (name?: string) => sessionAction(() => newSession(name));
+export const endSession = () => sessionAction(() => closeSession());
+/** Back to the last checkpoint, or to a named one */
+export const restore = (checkpoint?: string) => sessionAction(() => restoreSession(checkpoint));
 
 // The conversation -------------------------------------------------------------------------
 

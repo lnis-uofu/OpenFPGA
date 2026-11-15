@@ -19,7 +19,15 @@ VIEW_VERSION = 1
 
 
 class Backend(Protocol):
-    def view(self) -> Dict[str, Any]: ...
+    kind: str  # "demo" or "session": the page enables the buttons of the sessions for the second
+
+    async def view(self) -> Dict[str, Any]: ...
+
+    async def new_session(self, name: Optional[str] = None) -> Dict[str, Any]: ...
+
+    async def close_session(self) -> Dict[str, Any]: ...
+
+    async def restore_session(self, checkpoint: Optional[str] = None) -> Dict[str, Any]: ...
 
     def chat(self, message: str) -> AsyncIterator[Dict[str, Any]]: ...
 
@@ -86,8 +94,25 @@ class DemoBackend:
 
     # The view ------------------------------------------------------------------------------
 
-    def view(self) -> Dict[str, Any]:
+    kind = "demo"
+
+    async def view(self) -> Dict[str, Any]:
         return copy.deepcopy(self._view)
+
+    async def _unavailable(self, *_args) -> Dict[str, Any]:
+        return {
+            "ok": False,
+            "diagnostics": [
+                {
+                    "severity": "error",
+                    "kind": "demo",
+                    "message": "This is the recorded demo: it has no sessions of its own",
+                    "hint": "Start the app with --root to work on real sessions",
+                }
+            ],
+        }
+
+    new_session = close_session = restore_session = _unavailable
 
     def _latest(self, status: str, text: str):
         self._view["latest"] = {"status": status, "text": text}

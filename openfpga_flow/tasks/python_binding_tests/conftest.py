@@ -35,6 +35,7 @@ try:
     import openfpga_app  # noqa: F401
 except ImportError:
     sys.path.insert(0, str(APP_SOURCE))
+    MCP_PATH.append(str(APP_SOURCE))  # a process that runs the app finds it too
 
 
 @pytest.fixture(scope="session")

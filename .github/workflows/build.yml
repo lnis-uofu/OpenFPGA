@@ -1299,7 +1299,7 @@ jobs:
         run: |
           cd "${RUNNER_TEMP}"
           unset PYTHONPATH
-          "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_app_server.py" -q
+          "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_app_server.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_app_session.py" -q
 
       - name: Run the web app in a browser
         working-directory: openfpga/python/app/frontend
@@ -1307,6 +1307,12 @@ jobs:
           npx playwright install --with-deps chromium
           mv ../openfpga_app/static ../openfpga_app/static.source
           PYTHON="${RUNNER_TEMP}/clean-env/bin/python" PYTHONPATH= npm run e2e
+
+      # The same page over a real session, with the installed module: a flow from the chat lines
+      # and the console, with no model
+      - name: Run the web app over a real session in a browser
+        working-directory: openfpga/python/app/frontend
+        run: INSTALLED=1 PYTHON="${RUNNER_TEMP}/clean-env/bin/python" npm run e2e:session
 
       - name: Upload the wheel
         uses: actions/upload-artifact@v7

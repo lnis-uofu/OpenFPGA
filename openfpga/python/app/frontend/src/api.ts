@@ -35,6 +35,7 @@ export interface SessionView {
 export interface AppConfig {
   schema_version: number;
   console: boolean;
+  backend: "demo" | "session";
   model: { endpoint: string | null; name: string | null };
 }
 
@@ -81,6 +82,21 @@ export const fetchConfig = (): Promise<AppConfig> => fetch("/api/config").then((
 export async function cancel(): Promise<void> {
   await fetch("/api/cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
 }
+
+/** An answer of a tool, as the sessions endpoints give it */
+async function post(path: string, body: unknown): Promise<Answer> {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return json<Answer>(response);
+}
+
+export const newSession = (name?: string): Promise<Answer> => post("/api/session/new", name ? { name } : {});
+export const closeSession = (): Promise<Answer> => post("/api/session/close", {});
+export const restoreSession = (checkpoint?: string): Promise<Answer> =>
+  post("/api/session/restore", checkpoint ? { checkpoint } : {});
 
 export async function runConsole(command: string): Promise<ConsoleAnswer> {
   const response = await fetch("/api/console", {

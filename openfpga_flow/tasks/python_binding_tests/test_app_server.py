@@ -240,7 +240,7 @@ def test_the_result_files_are_names_while_the_stages_are_reached(config, static)
     async def run():
         async for item in backend.chat("go"):
             if item["type"] == "tool_call_finished" and item["call_id"].endswith("-9"):
-                seen.append(backend.view()["files"]["results"])
+                seen.append((await backend.view())["files"]["results"])
 
     asyncio.run(run())
     assert seen == [["routing_test.net", "routing_test.place", "routing_test.route"]]
@@ -281,7 +281,9 @@ def test_a_cancel_ends_the_conversation(config, static):
 
 def test_a_failure_of_the_backend_is_an_event(config, static):
     class Broken:
-        def view(self):
+        kind = "demo"
+
+        async def view(self):
             return empty_view()
 
         def cancel(self):

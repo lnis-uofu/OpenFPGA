@@ -75,7 +75,7 @@ beforeEach(() => {
 describe("the top bar", () => {
   it("shows only the latest state and the model", () => {
     view.value = filled();
-    config.value = { schema_version: 1, console: false, model: { endpoint: "http://127.0.0.1:11434/v1", name: "llama3.1" } };
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: "http://127.0.0.1:11434/v1", name: "llama3.1" } };
     render(<TopBar />);
     expect(screen.getByRole("status").textContent).toContain("s1 · PLACED ✔ 2.1 s");
     expect(screen.getByText(/llama3.1/)).toBeTruthy();
@@ -138,6 +138,99 @@ describe("the sidebar", () => {
     view.value = { ...filled(), session: { id: "s1", name: "s1", worker: "ended", ended: "killed", idle_s: 0 } };
     render(<Sidebar />);
     expect(screen.getByText(/worker ended: killed/)).toBeTruthy();
+  });
+});
+
+describe("the sessions of the sidebar", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const answers = (ok = true) =>
+    vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify(
+            url === "/api/session"
+              ? emptyView()
+              : ok
+                ? { ok: true, data: {} }
+                : { ok: false, diagnostics: [{ kind: "too_many_sessions", message: "4 sessions are open", hint: "close one" }] },
+          ),
+          { status: 200 },
+        ),
+      ),
+    );
+
+  it("are not there in the demo", () => {
+    view.value = filled();
+    render(<Sidebar />);
+    expect((screen.getByText("+ new") as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByText("close") as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByText("restore")).toBeNull();
+  });
+
+  it("open a session from the page, also when there is none", async () => {
+    real();
+    const fetchMock = answers();
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("+ new"));
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/new"));
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session"));
+  });
+
+  it("close the session and restore a worker that ended", async () => {
+    real();
+    const fetchMock = answers();
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = { ...filled(), session: { id: "s1", name: "s1", worker: "ended", ended: "killed", idle_s: 0 } };
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("Restore"));
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/restore"));
+    fireEvent.click(screen.getByText("close"));
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/close"));
+  });
+
+  it("go back to a checkpoint by its name, and to the last with no name", async () => {
+    real();
+    const fetchMock = answers();
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = {
+      ...filled(),
+      checkpoints: [
+        { name: "last", kind: "after the last stage", stages: ["DEVICE", "PACKED"] },
+        { name: "placed", kind: "named", stages: ["DEVICE", "PACKED", "PLACED"] },
+      ],
+    };
+    render(<Sidebar />);
+    const [last, placed] = screen.getAllByText("restore");
+    fireEvent.click(placed);
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(0));
+    const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/restore")!;
+    expect(JSON.parse((sent[1] as RequestInit).body as string)).toEqual({ checkpoint: "placed" });
+    fireEvent.click(last);
+    await waitFor(() => expect(fetchMock.mock.calls.filter((c) => c[0] === "/api/session/restore")).toHaveLength(2));
+    const second = fetchMock.mock.calls.filter((c) => c[0] === "/api/session/restore")[1];
+    expect(JSON.parse((second[1] as RequestInit).body as string)).toEqual({});
+  });
+
+  it("show what went wrong when the call fails", async () => {
+    real();
+    vi.stubGlobal("fetch", answers(false));
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("+ new"));
+    const { banner } = await import("./store");
+    await waitFor(() => expect(banner.value?.kind).toBe("too_many_sessions"));
+    expect(banner.value?.hint).toBe("close one");
+  });
+});
+
+describe("the chat of a session with no model", () => {
+  it("says how to call a tool, in place of asking for a flow", () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+    render(<Workspace />);
+    expect(screen.getByText(/No model is connected/)).toBeTruthy();
+    expect(screen.getByText("/help")).toBeTruthy();
   });
 });
 
@@ -326,7 +419,7 @@ describe("the console", () => {
   });
 
   it("runs a command and shows the answer, and recalls it with the arrow", async () => {
-    config.value = { schema_version: 1, console: true, model: { endpoint: null, name: null } };
+    config.value = { schema_version: 1, console: true, backend: "demo", model: { endpoint: null, name: null } };
     consoleOpen.value = true;
     const fetchMock = vi.fn(() =>
       Promise.resolve(new Response(JSON.stringify({ ok: true, output: "reached: DEVICE", state_changed: false }), { status: 200 })),
@@ -345,7 +438,7 @@ describe("the console", () => {
   });
 
   it("shows an error of the shell as an error", async () => {
-    config.value = { schema_version: 1, console: true, model: { endpoint: null, name: null } };
+    config.value = { schema_version: 1, console: true, backend: "demo", model: { endpoint: null, name: null } };
     consoleOpen.value = true;
     vi.stubGlobal(
       "fetch",
@@ -402,7 +495,7 @@ describe("the page", () => {
         new Response(
           JSON.stringify(
             url === "/api/config"
-              ? { schema_version: 1, console: false, model: { endpoint: null, name: "demo-model" } }
+              ? { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: "demo-model" } }
               : filled(),
           ),
           { status: 200 },

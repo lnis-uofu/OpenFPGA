@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Message, banner, busy, messages, sendMessage, stop } from "../store";
+import { Message, banner, busy, config, messages, sendMessage, stop } from "../store";
 import { CallGroup } from "./ToolCard";
 
 /** The parts of a message in order: text, then the calls in a row as one group */
@@ -49,9 +49,15 @@ export function Chat() {
   return (
     <section class="chat" aria-label="Chat">
       <div class="messages" role="log" aria-live="polite">
-        {messages.value.length === 0 && (
-          <p class="muted empty">Ask for a flow to be run, or what the last result means.</p>
-        )}
+        {messages.value.length === 0 &&
+          (config.value?.backend === "session" ? (
+            <p class="muted empty">
+              No model is connected. A line that starts with <code>/</code> is a tool call: try <code>/help</code>, then{" "}
+              <code>/session_open</code>.
+            </p>
+          ) : (
+            <p class="muted empty">Ask for a flow to be run, or what the last result means.</p>
+          ))}
         {messages.value.map((m) => (
           <MessageView key={m.id} message={m} />
         ))}

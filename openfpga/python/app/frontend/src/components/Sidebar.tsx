@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { sidebarOpen, view } from "../store";
+import { busy, config, endSession, makeSession, restore, sidebarOpen, view } from "../store";
 
 const SYMBOL = { reached: "✔", not_reached: "○", failed: "✖", running: "░" } as const;
 
@@ -28,6 +28,8 @@ export function Sidebar() {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const v = view.value;
   const session = v.session;
+  // The buttons of the sessions work on real sessions, not on the recorded demo
+  const real = config.value?.backend === "session";
   const files = v.files;
   return (
     <aside class={`sidebar ${sidebarOpen.value ? "" : "closed"}`} aria-label="Session and design files">
@@ -41,12 +43,28 @@ export function Sidebar() {
               {session.worker === "running" ? "worker running" : session.worker === "none" ? "closed" : `⚠ worker ended${session.ended ? `: ${session.ended}` : ""}`}
             </div>
             <div class="buttons">
-              <button disabled title="Not connected yet">+ new</button>
-              <button disabled title="Not connected yet">close</button>
+              <button disabled={!real || busy.value} onClick={() => void makeSession()} title={real ? "Open another session" : "Not in the demo"}>
+                + new
+              </button>
+              <button disabled={!real || busy.value} onClick={() => void endSession()} title={real ? "End the worker; the files stay" : "Not in the demo"}>
+                close
+              </button>
+              {session.worker === "ended" && (
+                <button disabled={!real} onClick={() => void restore()}>
+                  Restore
+                </button>
+              )}
             </div>
           </>
         ) : (
-          <div class="muted">(no session)</div>
+          <>
+            <div class="muted">(no session)</div>
+            <div class="buttons">
+              <button disabled={!real} onClick={() => void makeSession()} title={real ? "Open a session" : "Not in the demo"}>
+                + new
+              </button>
+            </div>
+          </>
         )}
       </Section>
       <Section title="Stages">
@@ -96,8 +114,13 @@ export function Sidebar() {
       <Section title="Checkpoints">
         {v.checkpoints.length ? (
           v.checkpoints.map((c) => (
-            <div key={c.name}>
+            <div key={c.name} class="checkpoint">
               {c.name} <span class="muted">· {c.stages[c.stages.length - 1] ?? ""}</span>
+              {real && (
+                <button class="link" title="Go back to this checkpoint" onClick={() => void restore(c.name === "last" ? undefined : c.name)}>
+                  restore
+                </button>
+              )}
             </div>
           ))
         ) : (
