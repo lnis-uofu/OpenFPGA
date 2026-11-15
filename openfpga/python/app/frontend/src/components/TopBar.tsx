@@ -1,4 +1,4 @@
-import { config, settingsOpen, sidebarOpen, view } from "../store";
+import { config, settingsOpen, sidebarOpen, usage, view } from "../store";
 
 const SYMBOL = { none: "○", running: "░", reached: "✔", failed: "⚠" } as const;
 
@@ -16,6 +16,14 @@ export function TopBar() {
         <span aria-hidden="true">{SYMBOL[latest.status]}</span> {latest.text}
       </span>
       <span class="spacer" />
+      {usage.value && (
+        <span
+          class={`context ${usage.value.used > usage.value.limit * 0.8 ? "context-full" : ""}`}
+          title={`Step ${usage.value.step}: the context of the model is ${usage.value.used} of ${usage.value.limit} tokens`}
+        >
+          ctx {usage.value.used.toLocaleString()}/{usage.value.limit.toLocaleString()}
+        </span>
+      )}
       <span class="model" title={model?.endpoint ?? "recorded demo"}>
         <span class={model?.endpoint ? "dot ok" : "dot off"} aria-hidden="true">●</span> {model?.name ?? "demo"}
       </span>

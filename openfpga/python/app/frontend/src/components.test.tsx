@@ -8,6 +8,8 @@ import { CallGroup, ToolCard } from "./components/ToolCard";
 import { TopBar } from "./components/TopBar";
 import { Workspace } from "./components/Workspace";
 import {
+  busy,
+  usage,
   CHAT,
   activeTab,
   applyEvent,
@@ -91,6 +93,30 @@ describe("the top bar", () => {
     render(<TopBar />);
     fireEvent.click(screen.getByLabelText("Settings"));
     expect(settingsOpen.value).toBe(true);
+  });
+});
+
+describe("what the model costs", () => {
+  it("shows how full the context is, and warns when it is nearly full", () => {
+    render(<TopBar />);
+    expect(screen.queryByText(/ctx/)).toBeNull();
+    applyEvent({ type: "usage", id: "m1", step: 2, prompt_tokens: 3000, completion_tokens: 20, context_tokens: 3100, context_limit: 8192 });
+    expect(usage.value).toEqual({ step: 2, used: 3100, limit: 8192 });
+  });
+
+  it("draws it in the top bar", async () => {
+    usage.value = { step: 3, used: 7000, limit: 8192 };
+    render(<TopBar />);
+    const label = screen.getByText(/ctx 7,000\/8,192/);
+    expect(label.className).toContain("context-full");
+    expect(label.title).toContain("Step 3");
+  });
+
+  it("says that it is working while a message is answered", () => {
+    busy.value = true;
+    render(<Workspace />);
+    expect(screen.getByText(/working…/)).toBeTruthy();
+    busy.value = false;
   });
 });
 

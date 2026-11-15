@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "e2e": "node e2e/smoke.mjs",
-    "e2e:session": "node e2e/session.mjs"
+    "e2e:session": "node e2e/session.mjs",
+    "e2e:model": "node e2e/model.mjs"
   },
   "dependencies": {
     "@preact/signals": "^2.0.0",

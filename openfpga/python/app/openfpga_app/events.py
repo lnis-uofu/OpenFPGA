@@ -14,6 +14,7 @@ EVENT_TYPES = (
     "tool_call_started",
     "tool_call_finished",
     "state_changed",
+    "usage",
     "error",
     "done",
 )
@@ -56,6 +57,27 @@ def tool_call_finished(
 def state_changed(reason: str) -> Dict[str, Any]:
     """The page asks for the session again: something changed it, e.g. a command of the console"""
     return event("state_changed", reason=reason)
+
+
+def usage(
+    message_id: str,
+    step: int,
+    prompt_tokens: Optional[int],
+    completion_tokens: Optional[int],
+    context_tokens: int,
+    context_limit: int,
+) -> Dict[str, Any]:
+    """What one step of the model cost: the tokens that the endpoint counted (None if it does
+    not say), and the size of the context against its limit"""
+    return event(
+        "usage",
+        id=message_id,
+        step=step,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        context_tokens=context_tokens,
+        context_limit=context_limit,
+    )
 
 
 def error(message: str, kind: str = "error", hint: Optional[str] = None) -> Dict[str, Any]:

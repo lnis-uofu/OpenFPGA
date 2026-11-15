@@ -61,6 +61,11 @@ export function Chat() {
         {messages.value.map((m) => (
           <MessageView key={m.id} message={m} />
         ))}
+        {busy.value && (
+          <p class="muted working" role="status">
+            ░ working…
+          </p>
+        )}
         {b && (
           <div class="banner" role="alert">
             ⚠ {b.message}

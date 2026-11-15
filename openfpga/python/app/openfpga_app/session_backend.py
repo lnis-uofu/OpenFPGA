@@ -7,11 +7,11 @@ and the console runs commands of the OpenFPGA shell in it. A model that chooses 
 where the chat line is read, later.
 """
 
+from pathlib import Path
 import inspect
 import json
 import shlex
 import time
-import typing
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import anyio.to_thread
@@ -21,6 +21,9 @@ from openfpga_mcp.registry import SessionRegistry
 from openfpga_mcp.resources import _checkpoints
 
 from . import events
+from .agent import AgentConfig, AgentLoop
+from .agent.arguments import check_arguments, literal
+from .agent.model import Model
 from .backend import STAGES, empty_view
 
 _NO_MODEL = (
@@ -51,63 +54,19 @@ class ToolTable:
         return store
 
 
-def _literal(text: str) -> Any:
-    """A value written in a chat line: a number, true, false, null or a quoted string if it is
-    one, else the text itself"""
-    try:
-        return json.loads(text)
-    except ValueError:
-        return text
-
-
-def _check_type(name: str, hint: Any, value: Any) -> Any:
-    """The value for an argument, or a ValueError that says what the tool takes: the tools check
-    their own limits; this is the type, and the words of a Literal"""
-    origin = typing.get_origin(hint)
-    if origin is typing.Union:
-        kinds = typing.get_args(hint)
-        if value is None and type(None) in kinds:
-            return None
-        options = [kind for kind in kinds if kind is not type(None)]
-        if len(options) == 1:  # an optional argument: its own message
-            return _check_type(name, options[0], value)
-        for kind in options:
-            try:
-                return _check_type(name, kind, value)
-            except ValueError:
-                continue
-        raise ValueError("%s has the wrong type" % name)
-    if origin is typing.Literal:
-        if value not in typing.get_args(hint):
-            raise ValueError(
-                "%s is one of: %s" % (name, ", ".join(map(str, typing.get_args(hint))))
-            )
-        return value
-    if hint is bool:
-        if isinstance(value, bool):
-            return value
-    elif hint is int:
-        if isinstance(value, int) and not isinstance(value, bool):
-            return value
-    elif hint is float:
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            return float(value)
-    elif hint is str:
-        if isinstance(value, str):
-            return value
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            return str(value)  # a name that looks like a number
-    else:
-        return value
-    raise ValueError("%s has the wrong type" % name)
-
-
 class SessionBackend:
     """The backend of the page over real sessions"""
 
     kind = "session"
 
-    def __init__(self, config: Config, registry: Optional[SessionRegistry] = None):
+    def __init__(
+        self,
+        config: Config,
+        registry: Optional[SessionRegistry] = None,
+        model: Optional[Model] = None,
+        agent_config: Optional[AgentConfig] = None,
+        record: Optional[Path] = None,
+    ):
         self.config = config
         self.registry = registry or SessionRegistry(config)
         table = ToolTable()
@@ -127,6 +86,65 @@ class SessionBackend:
         self._cancelled = False
         self._last = empty_view()
         self._counter = 0
+        self.agent: Optional[AgentLoop] = None
+        if model is not None:
+            self.agent = AgentLoop(
+                model,
+                self.tools,
+                agent_config or AgentConfig(),
+                self.invoke,
+                session=lambda: self.sid,
+                files=self._files_listing,
+                on_cancel=self._cancel_running,
+                record=record,
+            )
+
+    def _files_listing(self) -> str:
+        """The files that read_inputs can use, for the start of the prompt: a model cannot guess
+        them. At most 1,500 characters, the first of each folder"""
+        lines: List[str] = []
+        room = 1500
+        folders = list(self.config.design_dirs)
+        if self.sid is not None:
+            try:
+                folders.insert(
+                    0, uploads.folder(self.config.root, self.registry.get(self.sid).directory)
+                )
+            except Exception:  # noqa: BLE001 - no such session any more
+                pass
+        for folder in folders:
+            try:
+                names = sorted(p.name for p in folder.iterdir() if p.is_file())
+            except OSError:
+                continue
+            shown: List[str] = []
+            for name in names:
+                if room < len(name) + 2:
+                    break
+                shown.append(name)
+                room -= len(name) + 2
+            more = len(names) - len(shown)
+            if shown:
+                lines.append(
+                    "%s: %s%s"
+                    % (folder.name, ", ".join(shown), " (+%d more)" % more if more else "")
+                )
+        return "\n".join(lines)
+
+    def _cancel_running(self) -> None:
+        if self._running and self.sid:
+            try:
+                self.registry.get(self.sid).session.cancel()
+            except Exception:  # noqa: BLE001 - nothing to cancel
+                pass
+
+    def _changed_outside(self, what: str) -> None:
+        """The state of the session changed, not by the conversation: the model is told"""
+        if self.agent is not None:
+            self.agent.note(
+                "%s. The state may have changed since your last results: call get_state before "
+                "you rely on them." % what
+            )
 
     def close(self) -> None:
         self.registry.close_all()
@@ -257,10 +275,24 @@ class SessionBackend:
     async def _tool(self, tool: str, /, **arguments) -> Dict[str, Any]:
         return json.loads(await self.tools[tool](**arguments))
 
+    async def invoke(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Run a tool, for a line of the chat or for the agent, and keep which session is current"""
+        self._running = name
+        try:
+            answer = json.loads(await self.tools[name](**arguments))
+        finally:
+            self._running = None
+        if name == "session_open" and answer.get("ok"):
+            self.sid = answer["data"]["session"]
+        if name == "session_close" and answer.get("ok") and arguments.get("session") == self.sid:
+            self.sid = None
+        return answer
+
     async def new_session(self, name: Optional[str] = None) -> Dict[str, Any]:
         answer = await self._tool("session_open", name=name)
         if answer.get("ok"):
             self.sid = answer["data"]["session"]
+            self._changed_outside("The person opened session %s" % self.sid)
         return answer
 
     async def close_session(self) -> Dict[str, Any]:
@@ -268,23 +300,29 @@ class SessionBackend:
             return answers.failed([answers.diagnostic("no_session", "There is no session")])
         answer = await self._tool("session_close", session=self.sid)
         if answer.get("ok"):
+            self._changed_outside("The person closed session %s" % self.sid)
             self.sid = None
         return answer
 
     async def restore_session(self, checkpoint: Optional[str] = None) -> Dict[str, Any]:
         if self.sid is None:
             return answers.failed([answers.diagnostic("no_session", "There is no session")])
-        return await self._tool("session_restore", session=self.sid, checkpoint=checkpoint)
+        answer = await self._tool("session_restore", session=self.sid, checkpoint=checkpoint)
+        if answer.get("ok"):
+            self._changed_outside(
+                "The person restored session %s from %s"
+                % (self.sid, checkpoint or "the last checkpoint")
+            )
+        return answer
 
     # The conversation: a line is a tool call ---------------------------------------------------
 
     def cancel(self) -> None:
         self._cancelled = True
-        if self._running and self.sid:
-            try:
-                self.registry.get(self.sid).session.cancel()
-            except Exception:  # noqa: BLE001 - nothing to cancel
-                pass
+        if self.agent is not None:
+            self.agent.cancel()  # also ends the call that runs
+        else:
+            self._cancel_running()
 
     def _help(self, name: Optional[str]) -> str:
         if name:
@@ -302,33 +340,13 @@ class SessionBackend:
         return "\n".join(lines)
 
     def _arguments(self, function: Callable, tokens: List[str]) -> Dict[str, Any]:
-        signature = inspect.signature(function)
-        hints = typing.get_type_hints(function)
         given: Dict[str, Any] = {}
         for token in tokens:
             key, equals, value = token.partition("=")
             if not equals or not key:
                 raise ValueError("'%s' is not key=value" % token)
-            if key not in signature.parameters:
-                raise ValueError(
-                    "There is no argument '%s' (it takes: %s)"
-                    % (key, ", ".join(signature.parameters))
-                )
-            given[key] = _literal(value)
-        if "session" in signature.parameters and "session" not in given and self.sid:
-            given["session"] = self.sid
-        checked = {k: _check_type(k, hints.get(k, Any), v) for k, v in given.items()}
-        for key, parameter in signature.parameters.items():
-            if parameter.default is inspect.Parameter.empty and key not in checked:
-                raise ValueError(
-                    "%s needs %s=…%s"
-                    % (
-                        function.__name__,
-                        key,
-                        " (open a session first: /session_open)" if key == "session" else "",
-                    )
-                )
-        return checked
+            given[key] = literal(value)
+        return check_arguments(function, given, self.sid)
 
     async def chat(self, message: str) -> AsyncIterator[Dict[str, Any]]:
         self._counter += 1
@@ -342,8 +360,14 @@ class SessionBackend:
             yield events.message_start(message_id)
             text = message.strip()
             if not text.startswith("/"):
-                yield events.text_delta(message_id, _NO_MODEL)
-                yield events.done(message_id)
+                if self.agent is None:
+                    yield events.text_delta(message_id, _NO_MODEL)
+                    yield events.done(message_id)
+                    return
+                # The agent writes its own message_start: this one is the same message
+                async for item in self.agent.run(message_id, text):
+                    if item["type"] != "message_start":
+                        yield item
                 return
             try:
                 words = shlex.split(text[1:])
@@ -360,6 +384,7 @@ class SessionBackend:
                 known = {i.id for i in self.registry.list()}
                 if len(tokens) == 1 and tokens[0] in known:
                     self.sid = tokens[0]
+                    self._changed_outside("The person switched to session %s" % self.sid)
                     yield events.text_delta(message_id, "Now on session %s." % self.sid)
                     yield events.state_changed("use")
                 else:
@@ -386,22 +411,12 @@ class SessionBackend:
                 return
             call_id = "c%d" % self._counter
             yield events.tool_call_started(message_id, call_id, name, arguments)
-            self._running = name
             if name in ("run_stage", "read_inputs"):
                 yield events.state_changed("running")
             started = time.monotonic()
-            try:
-                answer = json.loads(await function(**arguments))
-            finally:
-                self._running = None
-            if name == "session_open" and answer.get("ok"):
-                self.sid = answer["data"]["session"]
-            if (
-                name == "session_close"
-                and answer.get("ok")
-                and arguments.get("session") == self.sid
-            ):
-                self.sid = None
+            answer = await self.invoke(name, arguments)
+            if self.agent is not None and name != "get_state":
+                self._changed_outside("The person called /%s" % name)
             yield events.tool_call_finished(
                 message_id, call_id, bool(answer.get("ok")), time.monotonic() - started, answer
             )
@@ -457,6 +472,8 @@ class SessionBackend:
                 changed = changed or after != before
             except Exception:  # noqa: BLE001 - the worker may have ended
                 changed = True
+            if changed and self.agent is not None:
+                self._changed_outside("The person ran the console command: %s" % command[:100])
             return {"ok": ok, "output": output, "state_changed": changed}
 
         try:

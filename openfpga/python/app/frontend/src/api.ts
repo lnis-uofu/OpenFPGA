@@ -62,6 +62,15 @@ export type AppEvent =
       result: Answer;
     }
   | { type: "state_changed"; reason: string }
+  | {
+      type: "usage";
+      id: string;
+      step: number;
+      prompt_tokens: number | null;
+      completion_tokens: number | null;
+      context_tokens: number;
+      context_limit: number;
+    }
   | { type: "error"; kind: string; message: string; hint?: string | null }
   | { type: "done"; id: string; cancelled: boolean };
 

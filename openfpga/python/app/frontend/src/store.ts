@@ -77,6 +77,8 @@ export const consoleBusy = signal(false);
 const wide = () => typeof window === "undefined" || window.innerWidth > 900;
 export const sidebarOpen = signal(wide());
 export const settingsOpen = signal(false);
+/** What the last step of the model cost and how full its context is (none before a model answers) */
+export const usage = signal<{ step: number; used: number; limit: number } | null>(null);
 
 export function resetStore() {
   view.value = emptyView();
@@ -93,6 +95,7 @@ export function resetStore() {
   consoleBusy.value = false;
   sidebarOpen.value = wide();
   settingsOpen.value = false;
+  usage.value = null;
 }
 
 // The events -------------------------------------------------------------------------------
@@ -160,6 +163,9 @@ export function applyEvent(event: AppEvent) {
     }
     case "state_changed":
       void refreshView();
+      break;
+    case "usage":
+      usage.value = { step: event.step, used: event.context_tokens, limit: event.context_limit };
       break;
     case "error":
       banner.value = { kind: event.kind, message: event.message, hint: event.hint };
