@@ -1234,6 +1234,19 @@ jobs:
           make checkout_submodule SUBMODULE=vtr-verilog-to-routing
           make checkout_regtest
 
+      # The page of the web app is built here and goes into the wheel: whoever installs it needs no Node
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build the front end of the web app
+        working-directory: openfpga/python/app/frontend
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+
       - name: Build the wheel
         shell: bash
         run: |
@@ -1249,9 +1262,10 @@ jobs:
         shell: bash
         run: |
           python3 -m venv "${RUNNER_TEMP}/clean-env"
-          "${RUNNER_TEMP}/clean-env/bin/pip" install "$(ls dist/*.whl)[mcp]" pytest jsonschema
+          "${RUNNER_TEMP}/clean-env/bin/pip" install "$(ls dist/*.whl)[mcp,app]" pytest jsonschema
           "${RUNNER_TEMP}/clean-env/bin/pip" show -f openfpga
           test -x "${RUNNER_TEMP}/clean-env/bin/openfpga-mcp"
+          test -x "${RUNNER_TEMP}/clean-env/bin/openfpga-app"
 
       - name: Run the example from the installed module
         shell: bash
@@ -1277,6 +1291,22 @@ jobs:
           cd "${RUNNER_TEMP}"
           unset PYTHONPATH
           "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}"/openfpga_flow/tasks/python_binding_tests/test_mcp_*.py -q
+
+      # The web app from the installed package: its server, then its page in a real browser (the
+      # bundle that is served is the one in the wheel, not the one of the source tree)
+      - name: Run the tests of the web app with the installed package
+        shell: bash
+        run: |
+          cd "${RUNNER_TEMP}"
+          unset PYTHONPATH
+          "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_app_server.py" -q
+
+      - name: Run the web app in a browser
+        working-directory: openfpga/python/app/frontend
+        run: |
+          npx playwright install --with-deps chromium
+          mv ../openfpga_app/static ../openfpga_app/static.source
+          PYTHON="${RUNNER_TEMP}/clean-env/bin/python" PYTHONPATH= npm run e2e
 
       - name: Upload the wheel
         uses: actions/upload-artifact@v7

@@ -19,9 +19,12 @@ classifiers = [
 [project.optional-dependencies]
 # The MCP server (openfpga_mcp): the SDK needs Python 3.10 or later
 mcp = ["mcp>=2.0,<3; python_version >= '3.10'"]
+# The local web app (openfpga_app). The front end is built before the wheel (see the app README)
+app = ["starlette>=0.37", "uvicorn>=0.30"]
 
 [project.scripts]
 openfpga-mcp = "openfpga_mcp.cli:main"
+openfpga-app = "openfpga_app.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/lnis-uofu/OpenFPGA"
@@ -35,8 +38,11 @@ install.components = ["python"]
 cmake.build-type = "Release"
 # Kept between builds, so that a second `pip install .` does not build everything again
 build-dir = "build/python"
-# The module itself is installed by CMake; the server of MCP is plain Python
-wheel.packages = ["openfpga/python/mcp/openfpga_mcp"]
+# The module itself is installed by CMake; the server of MCP and the web app are plain Python
+# (the web app's front end is the built files in openfpga_app/static, which git ignores)
+wheel.packages = ["openfpga/python/mcp/openfpga_mcp", "openfpga/python/app/openfpga_app"]
+# Ignored by git because it is built, and wanted in the package all the same
+sdist.include = ["openfpga/python/app/openfpga_app/static"]
 
 [tool.scikit-build.metadata.version]
 provider = "scikit_build_core.metadata.regex"
