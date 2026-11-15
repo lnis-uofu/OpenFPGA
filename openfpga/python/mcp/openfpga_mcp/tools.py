@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union
 from . import answers, budget
 from .config import Config
 from .errors import InvalidArgument, OptionNotAllowed, SessionFull
-from .paths import resolve_file
+from .paths import check_kind, resolve_file
 from .registry import Entry, SessionRegistry
 
 Stage = Literal["pack", "place", "route", "analysis"]
@@ -125,6 +125,10 @@ def register(
             files = [
                 resolve_file(config, where, name) for name in (vpr_arch, openfpga_arch, circuit)
             ]
+            for argument, name, path in zip(
+                ("vpr_arch", "openfpga_arch", "circuit"), (vpr_arch, openfpga_arch, circuit), files
+            ):
+                check_kind(argument, name, path)
             handle = entry.session
             handle.read_vpr_arch(files[0], layout=layout)
             handle.read_openfpga_arch(files[1])
@@ -281,11 +285,18 @@ def register(
             _choice("kind", kind, ("vpr_constraints", "sdc", "chan_width"))
             if kind == "chan_width":
                 if (width is None) == (not clear) or file is not None:
-                    raise InvalidArgument("chan_width takes a width, or clear, and no file")
+                    error = InvalidArgument("chan_width takes a width, or clear, and no file")
+                    error.hint = "For a channel width: kind=chan_width and width=N"
+                    raise error
                 value = -1 if clear else _number("width", width, 0, 1, 10000)
                 return reply(dataclasses.asdict(handle.set_route_chan_width(value)))
             if (file is None) == (not clear) or width is not None:
-                raise InvalidArgument("%s takes a file, or clear, and no width" % kind)
+                error = InvalidArgument("%s takes a file, or clear, and no width" % kind)
+                error.hint = (
+                    "For a channel width use kind=chan_width and width=N; "
+                    "%s takes file=NAME (or clear=true)" % kind
+                )
+                raise error
             path = None if clear else resolve_file(config, entry.directory, file)
             change = (
                 handle.read_vpr_constraints if kind == "vpr_constraints" else handle.read_sdc

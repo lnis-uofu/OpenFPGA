@@ -51,3 +51,9 @@ class OptionNotAllowed(RegistryError):
 class SessionFull(RegistryError):
     kind = "session_full"
     hint = "session_close ends the session; its files stay in the workspace"
+
+
+class WrongFileKind(RegistryError):
+    """A file that is given for one input but is another kind of file"""
+
+    kind = "wrong_file_kind"

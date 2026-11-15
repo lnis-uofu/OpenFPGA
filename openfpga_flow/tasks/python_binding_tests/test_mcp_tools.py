@@ -544,3 +544,51 @@ def test_the_budget_keeps_the_items_inside_a_list_of_one():
     assert 1 <= len(stage["items"]) < 100 and answer["truncated"] is True
     assert stage["items"] == inner[: len(stage["items"])]
     assert "stages[0].items" in answer["more"]
+
+
+# What a model gets wrong when it names the inputs ------------------------------------------------------------
+
+
+def test_a_name_that_is_half_a_name_gets_the_names_it_may_mean(script, golden):
+    async def steps(call):
+        sid = (await call("session_open"))["data"]["session"]
+        return [
+            await read_inputs(call, golden, sid, vpr_arch="tileable_40nm.xml"),
+            await read_inputs(call, golden, sid, circuit="routing_tset.blif"),
+            await read_inputs(call, golden, sid, vpr_arch="auto"),
+        ]
+
+    half, typo, auto = script.run(steps)
+    assert half["diagnostics"][0]["kind"] == "file_not_found"
+    # Many files of the folder contain it: some are named, and how many more
+    assert half["diagnostics"][0]["hint"].startswith("Did you mean: ")
+    assert "more that contain it" in half["diagnostics"][0]["hint"]
+    assert golden.circuit.name in typo["diagnostics"][0]["hint"]
+    assert auto["diagnostics"][0]["kind"] == "file_not_found"
+
+
+def test_a_file_that_is_given_for_the_wrong_input_says_what_it_is_and_where_it_belongs(
+    script, golden
+):
+    async def steps(call):
+        sid = (await call("session_open"))["data"]["session"]
+        swapped = await call(
+            "read_inputs",
+            session=sid,
+            vpr_arch=golden.openfpga_arch.name,
+            layout=golden.layout,
+            openfpga_arch=golden.vpr_arch.name,
+            circuit=golden.circuit.name,
+        )
+        circuit = await read_inputs(call, golden, sid, circuit=golden.vpr_arch.name)
+        blif_as_arch = await read_inputs(call, golden, sid, vpr_arch=golden.circuit.name)
+        return swapped, circuit, blif_as_arch, await call("get_state", session=sid)
+
+    swapped, circuit, blif, state = script.run(steps)
+    d = swapped["diagnostics"][0]
+    assert d["kind"] == "wrong_file_kind"
+    assert "an architecture of OpenFPGA" in d["message"] and d["hint"].endswith("as openfpga_arch")
+    assert circuit["diagnostics"][0]["hint"].endswith("as vpr_arch")
+    assert blif["diagnostics"][0]["hint"].endswith("as circuit")
+    # Nothing was read: the session is as it was
+    assert state["data"]["state"]["reached"] == []
