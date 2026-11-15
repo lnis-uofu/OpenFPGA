@@ -12,6 +12,7 @@ from mcp.server.mcpserver import MCPServer
 
 from . import answers
 from .config import Config
+from . import tools
 from .registry import SessionRegistry
 
 _LOOPBACK = ("127.0.0.1", "localhost", "::1")
@@ -82,19 +83,23 @@ def build_server(config: Config, registry: Optional[SessionRegistry] = None) -> 
         return await run(work)
 
     @tool()
-    async def session_restore(session: str) -> str:
+    async def session_restore(session: str, checkpoint: Optional[str] = None) -> str:
         """Start a new worker for a session whose worker ended (crashed, was killed, took longer
         than the limit of a call), and bring it back to the last stage that was finished: the
-        server saves a checkpoint after each stage. The stage that was running is lost. Returns
-        the state: the stages reached."""
+        server saves a checkpoint after each stage. The stage that was running is lost. With
+        checkpoint (a name given to the checkpoint tool) it goes back to that one. Returns the
+        state: the stages reached."""
 
         def work():
             entry = registry.get(session)
+            if checkpoint is not None:
+                tools.restore_named(config, entry, checkpoint)
             state = registry.restart(entry)
             return answers.ok(dataclasses.asdict(state))
 
         return await run(work)
 
+    tools.register(server, registry, config, tool, run)
     return server
 
 
@@ -107,6 +112,7 @@ def main(argv=None) -> int:
     parser.add_argument("--max-sessions", type=int, default=Config.max_sessions)
     parser.add_argument("--call-timeout", type=float, default=Config.call_timeout_s, metavar="S")
     parser.add_argument("--idle-timeout", type=float, default=Config.idle_timeout_s, metavar="S")
+    parser.add_argument("--answer-chars", type=int, default=Config.answer_chars, metavar="N")
     parser.add_argument("--transport", choices=("stdio", "http"), default="stdio")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
@@ -122,6 +128,7 @@ def main(argv=None) -> int:
         max_sessions=args.max_sessions,
         call_timeout_s=args.call_timeout,
         idle_timeout_s=args.idle_timeout,
+        answer_chars=args.answer_chars,
     )
     server = build_server(config)
     # A termination of the process ends the workers too
