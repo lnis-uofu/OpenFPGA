@@ -16,6 +16,13 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
 ]
 
+[project.optional-dependencies]
+# The MCP server (openfpga_mcp): the SDK needs Python 3.10 or later
+mcp = ["mcp>=2.0,<3; python_version >= '3.10'"]
+
+[project.scripts]
+openfpga-mcp = "openfpga_mcp.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/lnis-uofu/OpenFPGA"
 Documentation = "https://openfpga.readthedocs.io"
@@ -28,7 +35,8 @@ install.components = ["python"]
 cmake.build-type = "Release"
 # Kept between builds, so that a second `pip install .` does not build everything again
 build-dir = "build/python"
-wheel.packages = []
+# The module itself is installed by CMake; the server of MCP is plain Python
+wheel.packages = ["openfpga/python/mcp/openfpga_mcp"]
 
 [tool.scikit-build.metadata.version]
 provider = "scikit_build_core.metadata.regex"

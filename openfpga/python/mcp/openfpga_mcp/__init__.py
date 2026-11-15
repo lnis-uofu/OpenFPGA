@@ -1,12 +1,21 @@
 """A server for the Model Context Protocol over OpenFPGA sessions.
 
-See DESIGN.md next to this package. It needs the `mcp` package (pip install
-.[mcp]) and the `openfpga` module.
+See README.md and DESIGN.md next to this package. The server needs the `mcp` package
+(pip install 'openfpga[mcp]') and the `openfpga` module; the rest of the package does not.
 """
 
 from .config import Config
-from .registry import SessionClosed, SessionLimit, SessionRegistry, UnknownSession
-from .server import build_server
+from .errors import SessionClosed, SessionLimit, UnknownSession
+from .registry import SessionRegistry
+
+
+def build_server(*arguments, **options):
+    """A server over the sessions of a registry, see server.build_server. The SDK is imported
+    here and not with the package"""
+    from .server import build_server as build
+
+    return build(*arguments, **options)
+
 
 __all__ = [
     "Config",

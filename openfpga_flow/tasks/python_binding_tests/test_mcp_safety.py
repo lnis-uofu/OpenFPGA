@@ -22,8 +22,6 @@ from test_mcp_tools import Script, golden, make_config, open_flow, read_inputs  
 
 from openfpga_mcp import Config, build_server  # noqa: E402
 
-MCP_DIR = Path(__file__).resolve().parents[3] / "openfpga" / "python" / "mcp"
-
 
 @pytest.fixture
 def script(openfpga_module, tmp_path, golden):
@@ -213,7 +211,7 @@ def test_the_size_of_a_directory_does_not_follow_links(openfpga_module, tmp_path
 def test_a_call_that_runs_can_be_ended_by_closing_its_session(script, golden):
     async def steps(call):
         sid = await open_flow(call, golden, stages=("pack",))
-        await call("set_option", session=sid, name="place.place_inner_num", value=2000)
+        await call("set_option", session=sid, name="place.place_inner_num", value=200000)
         started = time.monotonic()
         running = asyncio.ensure_future(call("run_stage", session=sid, stage="place"))
         await asyncio.sleep(1.0)
@@ -241,16 +239,12 @@ def free_port():
 
 
 @pytest.fixture
-def http_server(openfpga_module, tmp_path):
+def http_server(mcp_environment, tmp_path):
     port = free_port()
-    environment = dict(os.environ)
-    environment["PYTHONPATH"] = os.pathsep.join(
-        [str(Path(openfpga_module.__file__).parent), str(MCP_DIR)]
-    )
     process = subprocess.Popen(
         [sys.executable, "-m", "openfpga_mcp", "--root", str(tmp_path / "w"), "--transport"]
         + ["http", "--port", str(port)],
-        env=environment,
+        env=mcp_environment,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
