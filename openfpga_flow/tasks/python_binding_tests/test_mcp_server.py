@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("mcp")
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "openfpga" / "python" / "mcp"))
 
 from mcp.client import Client  # noqa: E402
 
@@ -198,21 +197,13 @@ def test_the_command_line_refuses_another_address(tmp_path):
         main(["--root", str(tmp_path), "--transport", "http", "--host", "0.0.0.0"])
 
 
-def test_the_server_runs_as_a_program_over_stdio(openfpga_module, tmp_path):
+def test_the_server_runs_as_a_program_over_stdio(mcp_environment, tmp_path):
     from mcp.client.stdio import StdioServerParameters
 
-    here = Path(__file__).resolve()
-    environment = dict(os.environ)
-    environment["PYTHONPATH"] = os.pathsep.join(
-        [
-            str(Path(openfpga_module.__file__).parent),
-            str(here.parents[3] / "openfpga" / "python" / "mcp"),
-        ]
-    )
     program = StdioServerParameters(
         command=sys.executable,
         args=["-m", "openfpga_mcp", "--root", str(tmp_path / "workspace")],
-        env=environment,
+        env=mcp_environment,
     )
 
     async def main():

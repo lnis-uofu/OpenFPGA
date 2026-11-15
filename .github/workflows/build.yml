@@ -1249,8 +1249,9 @@ jobs:
         shell: bash
         run: |
           python3 -m venv "${RUNNER_TEMP}/clean-env"
-          "${RUNNER_TEMP}/clean-env/bin/pip" install dist/*.whl pytest jsonschema
+          "${RUNNER_TEMP}/clean-env/bin/pip" install "$(ls dist/*.whl)[mcp]" pytest jsonschema
           "${RUNNER_TEMP}/clean-env/bin/pip" show -f openfpga
+          test -x "${RUNNER_TEMP}/clean-env/bin/openfpga-mcp"
 
       - name: Run the example from the installed module
         shell: bash
@@ -1267,6 +1268,15 @@ jobs:
           cd "${RUNNER_TEMP}"
           unset PYTHONPATH
           "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_smoke.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_session.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_quickstart.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_worker.py" -q
+
+      # The server of MCP, from the installed package and its command, with a flow that is
+      # compared with a recording
+      - name: Run the tests of the MCP server with the installed package
+        shell: bash
+        run: |
+          cd "${RUNNER_TEMP}"
+          unset PYTHONPATH
+          "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}"/openfpga_flow/tasks/python_binding_tests/test_mcp_*.py -q
 
       - name: Upload the wheel
         uses: actions/upload-artifact@v7

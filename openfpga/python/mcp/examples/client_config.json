@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "openfpga": {
+      "command": "openfpga-mcp",
+      "args": [
+        "--root", "/home/me/openfpga-workspace",
+        "--input-dir", "/home/me/openfpga/openfpga_flow/vpr_arch",
+        "--input-dir", "/home/me/openfpga/openfpga_flow/openfpga_arch",
+        "--input-dir", "/home/me/designs"
+      ]
+    }
+  }
+}

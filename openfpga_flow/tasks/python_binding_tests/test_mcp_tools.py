@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("mcp")
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "openfpga" / "python" / "mcp"))
 
 from mcp.client import Client  # noqa: E402
 
@@ -442,8 +441,8 @@ def test_a_missing_file_is_a_diagnostic(script, golden):
 def test_a_stage_that_takes_too_long_ends_the_worker_and_can_be_restored(script, golden):
     async def steps(call):
         sid = await open_flow(call, golden, stages=("pack",))
-        # A placement that takes a few seconds, and a limit of a fraction of one
-        await call("set_option", session=sid, name="place.place_inner_num", value=500)
+        # A placement that takes far longer than the limit, which ends it
+        await call("set_option", session=sid, name="place.place_inner_num", value=20000)
         script.server.registry.get(sid).session.timeout_s = 0.3
         slow = await call("run_stage", session=sid, stage="place")
         script.server.registry.get(sid).session.timeout_s = 120

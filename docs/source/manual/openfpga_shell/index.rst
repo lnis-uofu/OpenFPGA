@@ -14,3 +14,4 @@ OpenFPGA Shell
    openfpga_commands/index
 
    python_session
+   mcp_server

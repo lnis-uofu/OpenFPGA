@@ -18,6 +18,28 @@ if (MODULE_DIR / "openfpga.py").exists():
     sys.path.insert(0, str(MODULE_DIR))
 
 
+# The server of MCP: the installed package if there is one, else the one of the sources
+MCP_SOURCE = REPO_ROOT / "openfpga" / "python" / "mcp"
+try:
+    import openfpga_mcp  # noqa: F401
+
+    MCP_PATH = []
+except ImportError:
+    sys.path.insert(0, str(MCP_SOURCE))
+    MCP_PATH = [str(MCP_SOURCE)]
+
+
+@pytest.fixture(scope="session")
+def mcp_environment(openfpga_module):
+    """The environment of a process that runs the server: it finds the module of OpenFPGA and, when
+    the package is not installed, the one of the sources"""
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        [os.path.dirname(openfpga_module.__file__)] + MCP_PATH
+    )
+    return environment
+
+
 @pytest.fixture(scope="session")
 def openfpga_module():
     try:
