@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from typing import Tuple
 
+MAX_ANSWER_CHARS = 16000
+
 
 @dataclasses.dataclass(frozen=True)
 class Config:
@@ -15,6 +17,8 @@ class Config:
     max_sessions: int = 4
     call_timeout_s: float = 600.0
     idle_timeout_s: float = 3600.0
+    # The size of an answer, in characters: 4,000 is about 1,000 tokens; 16,000 at most
+    answer_chars: int = 4000
     # Folders that the inputs of a flow (architectures, circuits) can be read from, besides root
     input_dirs: Tuple[Path, ...] = ()
 
@@ -26,5 +30,7 @@ class Config:
         )
         if self.max_sessions < 1:
             raise ValueError("max_sessions must be at least 1")
+        if not 500 <= self.answer_chars <= MAX_ANSWER_CHARS:
+            raise ValueError("answer_chars is between 500 and %d" % MAX_ANSWER_CHARS)
         if self.call_timeout_s <= 0 or self.idle_timeout_s <= 0:
             raise ValueError("the timeouts must be more than 0")

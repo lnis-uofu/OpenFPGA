@@ -27,3 +27,22 @@ class SessionClosed(RegistryError):
 class SessionLimit(RegistryError):
     kind = "too_many_sessions"
     hint = "session_close one that is not needed, or wait until one is closed for being idle"
+
+
+class InvalidArgument(RegistryError):
+    kind = "invalid_argument"
+
+
+class PathRefused(RegistryError):
+    """A file name that is not inside the workspace or the folders of the inputs"""
+
+    kind = "path_refused"
+    hint = "Give a name relative to the workspace, or to a folder of the inputs: no '..'"
+
+
+class FileNotInWorkspace(RegistryError):
+    kind = "file_not_found"
+
+
+class OptionNotAllowed(RegistryError):
+    kind = "option_not_allowed"
