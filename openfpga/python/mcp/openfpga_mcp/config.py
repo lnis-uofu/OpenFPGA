@@ -17,10 +17,23 @@ class Config:
     max_sessions: int = 4
     call_timeout_s: float = 600.0
     idle_timeout_s: float = 3600.0
+    # What the files of one session may take, in bytes: a stage or a checkpoint that would add to a
+    # directory that is over it is refused
+    session_max_bytes: int = 512 * 1024 * 1024
     # The size of an answer, in characters: 4,000 is about 1,000 tokens; 16,000 at most
     answer_chars: int = 4000
     # Folders that the inputs of a flow (architectures, circuits) can be read from, besides root
     input_dirs: Tuple[Path, ...] = ()
+
+    def folders(self) -> Tuple[str, ...]:
+        """The workspace and the folders of the inputs, as they are written and as they resolve
+        (a folder that is a link): paths under them are shown without them"""
+        found = []
+        for folder in (self.root,) + tuple(self.input_dirs):
+            for text in (str(folder), str(folder.resolve())):
+                if text not in found:
+                    found.append(text)
+        return tuple(found)
 
     def __post_init__(self):
         root = Path(os.path.abspath(os.fspath(self.root)))
@@ -32,5 +45,7 @@ class Config:
             raise ValueError("max_sessions must be at least 1")
         if not 500 <= self.answer_chars <= MAX_ANSWER_CHARS:
             raise ValueError("answer_chars is between 500 and %d" % MAX_ANSWER_CHARS)
+        if self.session_max_bytes < 1:
+            raise ValueError("session_max_bytes must be at least 1")
         if self.call_timeout_s <= 0 or self.idle_timeout_s <= 0:
             raise ValueError("the timeouts must be more than 0")

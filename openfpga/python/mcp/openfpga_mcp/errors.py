@@ -46,3 +46,8 @@ class FileNotInWorkspace(RegistryError):
 
 class OptionNotAllowed(RegistryError):
     kind = "option_not_allowed"
+
+
+class SessionFull(RegistryError):
+    kind = "session_full"
+    hint = "session_close ends the session; its files stay in the workspace"
