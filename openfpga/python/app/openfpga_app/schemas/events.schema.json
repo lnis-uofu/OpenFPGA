@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openfpga.readthedocs.io/schemas/app_events.schema.json",
+  "title": "An event of a conversation of the OpenFPGA web app",
+  "oneOf": [
+    {"$ref": "#/$defs/message_start"},
+    {"$ref": "#/$defs/text_delta"},
+    {"$ref": "#/$defs/tool_call_started"},
+    {"$ref": "#/$defs/tool_call_finished"},
+    {"$ref": "#/$defs/state_changed"},
+    {"$ref": "#/$defs/error"},
+    {"$ref": "#/$defs/done"}
+  ],
+  "$defs": {
+    "base": {
+      "type": "object",
+      "required": ["type", "schema_version"],
+      "properties": {"schema_version": {"const": 1}}
+    },
+    "message_start": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "id", "role"],
+      "properties": {"type": {"const": "message_start"}, "id": {"type": "string"}, "role": {"const": "assistant"}},
+      "unevaluatedProperties": false
+    },
+    "text_delta": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "id", "text"],
+      "properties": {"type": {"const": "text_delta"}, "id": {"type": "string"}, "text": {"type": "string"}},
+      "unevaluatedProperties": false
+    },
+    "tool_call_started": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "id", "call_id", "tool", "arguments"],
+      "properties": {
+        "type": {"const": "tool_call_started"},
+        "id": {"type": "string"},
+        "call_id": {"type": "string"},
+        "tool": {"type": "string"},
+        "arguments": {"type": "object"}
+      },
+      "unevaluatedProperties": false
+    },
+    "tool_call_finished": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "id", "call_id", "ok", "seconds", "truncated", "result"],
+      "properties": {
+        "type": {"const": "tool_call_finished"},
+        "id": {"type": "string"},
+        "call_id": {"type": "string"},
+        "ok": {"type": "boolean"},
+        "seconds": {"type": "number", "minimum": 0},
+        "truncated": {"type": "boolean"},
+        "result": {"type": "object"}
+      },
+      "unevaluatedProperties": false
+    },
+    "state_changed": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "reason"],
+      "properties": {"type": {"const": "state_changed"}, "reason": {"type": "string"}},
+      "unevaluatedProperties": false
+    },
+    "error": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "kind", "message"],
+      "properties": {
+        "type": {"const": "error"},
+        "kind": {"type": "string"},
+        "message": {"type": "string"},
+        "hint": {"type": ["string", "null"]}
+      },
+      "unevaluatedProperties": false
+    },
+    "done": {
+      "allOf": [{"$ref": "#/$defs/base"}],
+      "required": ["type", "id", "cancelled"],
+      "properties": {"type": {"const": "done"}, "id": {"type": "string"}, "cancelled": {"type": "boolean"}},
+      "unevaluatedProperties": false
+    }
+  }
+}

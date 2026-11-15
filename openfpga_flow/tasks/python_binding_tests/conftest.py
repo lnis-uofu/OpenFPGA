@@ -29,6 +29,14 @@ except ImportError:
     MCP_PATH = [str(MCP_SOURCE)]
 
 
+# The web app: the installed package if there is one, else the one of the sources
+APP_SOURCE = REPO_ROOT / "openfpga" / "python" / "app"
+try:
+    import openfpga_app  # noqa: F401
+except ImportError:
+    sys.path.insert(0, str(APP_SOURCE))
+
+
 @pytest.fixture(scope="session")
 def mcp_environment(openfpga_module):
     """The environment of a process that runs the server: it finds the module of OpenFPGA and, when

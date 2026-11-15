@@ -58,3 +58,6 @@ package-lock.json
 openfpga_flow/.vs/
 vcpkg_installed/
 CMakeSettings.json
+
+# The built front end of the web app (built in CI and put in the wheel)
+openfpga/python/app/openfpga_app/static/

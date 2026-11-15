@@ -1,0 +1,1086 @@
+[
+ {
+  "answer": {
+   "data": {
+    "directory": "s1",
+    "name": "transcript",
+    "session": "s1"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "name": "transcript"
+  },
+  "tool": "session_open"
+ },
+ {
+  "answer": {
+   "data": {
+    "after": "route",
+    "before": "ideal",
+    "dropped": [],
+    "option": "general.clock_modeling"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "name": "general.clock_modeling",
+   "session": "s1",
+   "value": "route"
+  },
+  "tool": "set_option"
+ },
+ {
+  "answer": {
+   "data": {
+    "after": 20,
+    "before": -1,
+    "dropped": [],
+    "option": "router.route_chan_width"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "name": "router.route_chan_width",
+   "session": "s1",
+   "value": 20
+  },
+  "tool": "set_option"
+ },
+ {
+  "answer": {
+   "data": {
+    "failed": null,
+    "inputs": {
+     "circuit": {
+      "file": "routing_test.blif"
+     },
+     "openfpga_arch": {
+      "file": "k6_frac_N10_40nm_openfpga.xml"
+     },
+     "vpr_arch": {
+      "file": "k6_frac_N10_tileable_40nm.xml",
+      "layout": "2x2"
+     }
+    },
+    "kind": "session",
+    "reached": [
+     "DEVICE"
+    ],
+    "results": {
+     "packing": null,
+     "placement": null,
+     "routing": null
+    },
+    "schema_version": 1
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "circuit": "routing_test.blif",
+   "layout": "2x2",
+   "openfpga_arch": "k6_frac_N10_40nm_openfpga.xml",
+   "session": "s1",
+   "vpr_arch": "k6_frac_N10_tileable_40nm.xml"
+  },
+  "tool": "read_inputs"
+ },
+ {
+  "answer": {
+   "data": {
+    "channel_width": {
+     "fixed": true,
+     "x": 20,
+     "y": 20
+    },
+    "grid": {
+     "height": 4,
+     "layers": 1,
+     "layout": "2x2",
+     "width": 4
+    },
+    "io_sides": {
+     "bottom": 2,
+     "left": 2,
+     "right": 2,
+     "top": 2
+    },
+    "kind": "device",
+    "locations": null,
+    "schema_version": 1,
+    "stage": "DEVICE",
+    "tile_types": [
+     {
+      "capacity": 8,
+      "clock_pins": 0,
+      "count": 8,
+      "height": 1,
+      "input_pins": 8,
+      "is_io": true,
+      "name": "io",
+      "output_pins": 8,
+      "slots": 64,
+      "sub_tiles": [
+       {
+        "capacity": 8,
+        "equivalent_blocks": [
+         "io"
+        ],
+        "name": "io"
+       }
+      ],
+      "width": 1
+     },
+     {
+      "capacity": 1,
+      "clock_pins": 1,
+      "count": 4,
+      "height": 1,
+      "input_pins": 40,
+      "is_io": false,
+      "name": "clb",
+      "output_pins": 20,
+      "slots": 4,
+      "sub_tiles": [
+       {
+        "capacity": 1,
+        "equivalent_blocks": [
+         "clb"
+        ],
+        "name": "clb"
+       }
+      ],
+      "width": 1
+     }
+    ]
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1"
+  },
+  "tool": "get_device"
+ },
+ {
+  "answer": {
+   "data": {
+    "reached": [
+     "DEVICE",
+     "PACKED"
+    ],
+    "seconds": 0.0,
+    "stage": "pack"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1",
+   "stage": "pack"
+  },
+  "tool": "run_stage"
+ },
+ {
+  "answer": {
+   "data": {
+    "reached": [
+     "DEVICE",
+     "PACKED",
+     "PLACED"
+    ],
+    "seconds": 0.0,
+    "stage": "place"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1",
+   "stage": "place"
+  },
+  "tool": "run_stage"
+ },
+ {
+  "answer": {
+   "data": {
+    "reached": [
+     "DEVICE",
+     "PACKED",
+     "PLACED",
+     "ROUTED"
+    ],
+    "seconds": 0.0,
+    "stage": "route"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1",
+   "stage": "route"
+  },
+  "tool": "run_stage"
+ },
+ {
+  "answer": {
+   "data": {
+    "reached": [
+     "DEVICE",
+     "PACKED",
+     "PLACED",
+     "ROUTED",
+     "ANALYZED"
+    ],
+    "seconds": 0.0,
+    "stage": "analysis"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1",
+   "stage": "analysis"
+  },
+  "tool": "run_stage"
+ },
+ {
+  "answer": {
+   "data": {
+    "run": {
+     "failed": null,
+     "kind": "run_report",
+     "packing": {
+      "atoms": 10,
+      "blocks": [
+       {
+        "count": 2,
+        "type": "clb"
+       },
+       {
+        "count": 7,
+        "type": "io"
+       }
+      ],
+      "clusters": 9,
+      "nets": 7
+     },
+     "placement": {
+      "bb_cost": 1.15,
+      "cost": 1,
+      "estimated_critical_path_delay_ns": 0.676,
+      "estimated_fmax_mhz": 1480.0,
+      "half_perimeter": 9,
+      "num_temperatures": 39,
+      "swap_attempts": 360,
+      "td_cost": 7.07e-10
+     },
+     "routing": {
+      "channel_width": 20,
+      "critical_path_delay_ns": 1.42,
+      "iterations": 4,
+      "wirelength": 44,
+      "wires": 30
+     },
+     "schema_version": 1,
+     "stage": "DEVICE",
+     "stages": [
+      {
+       "seconds": 0.0,
+       "stage": "PACKED"
+      },
+      {
+       "seconds": 0.0,
+       "stage": "PLACED"
+      },
+      {
+       "seconds": 0.0,
+       "stage": "ROUTED"
+      },
+      {
+       "seconds": 0.0,
+       "stage": "ANALYZED"
+      }
+     ]
+    },
+    "state": {
+     "failed": null,
+     "inputs": {
+      "circuit": {
+       "file": "routing_test.blif"
+      },
+      "openfpga_arch": {
+       "file": "k6_frac_N10_40nm_openfpga.xml"
+      },
+      "vpr_arch": {
+       "file": "k6_frac_N10_tileable_40nm.xml",
+       "layout": "2x2"
+      }
+     },
+     "kind": "session",
+     "reached": [
+      "DEVICE",
+      "PACKED",
+      "PLACED",
+      "ROUTED",
+      "ANALYZED"
+     ],
+     "results": {
+      "packing": "s1/routing_test.net",
+      "placement": "s1/routing_test.place",
+      "routing": "s1/routing_test.route"
+     },
+     "schema_version": 1
+    }
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1"
+  },
+  "tool": "get_state"
+ },
+ {
+  "answer": {
+   "data": {
+    "critical_paths": {
+     "kind": "critical_paths",
+     "paths": [
+      {
+       "capture_clock": "clk",
+       "clock_capture_path": [],
+       "clock_launch_path": [
+        {
+         "arrival_ns": 0,
+         "block": "clk",
+         "delay_ns": 0,
+         "net": "clk",
+         "pin": "clk.inpad[0]",
+         "type": ".input"
+        },
+        {
+         "arrival_ns": 0.521,
+         "block": "OUT1",
+         "delay_ns": 0.521,
+         "net": "clk",
+         "pin": "OUT1.clk[0]",
+         "type": ".latch"
+        }
+       ],
+       "data_arrival_ns": 1.42,
+       "data_required_ns": 0,
+       "endpoint": "out:OUT1.outpad[0]",
+       "index": 0,
+       "launch_clock": "clk",
+       "points": [
+        {
+         "arrival_ns": 0.645,
+         "block": "OUT1",
+         "delay_ns": 0.124,
+         "net": "OUT1",
+         "pin": "OUT1.Q[0]",
+         "type": ".latch"
+        },
+        {
+         "arrival_ns": 1.42,
+         "block": "out:OUT1",
+         "delay_ns": 0.775,
+         "net": "OUT1",
+         "pin": "out:OUT1.outpad[0]",
+         "type": ".output"
+        }
+       ],
+       "slack_ns": -1.42,
+       "startpoint": "OUT1.Q[0]"
+      }
+     ],
+     "requested": 1,
+     "returned": 1,
+     "schema_version": 1,
+     "stage": "ROUTED"
+    },
+    "timing_summary": {
+     "clock_domains": [
+      {
+       "capture_clock": "clk",
+       "critical_path_delay_ns": 1.42,
+       "fmax_mhz": 704.0,
+       "intra_domain": true,
+       "launch_clock": "clk",
+       "total_negative_slack_ns": -4.05,
+       "worst_slack_ns": -1.42
+      }
+     ],
+     "hold": {
+      "total_negative_slack_ns": -1.24,
+      "worst_negative_slack_ns": -0.433
+     },
+     "kind": "timing_summary",
+     "schema_version": 1,
+     "setup": {
+      "critical_path": {
+       "capture_clock": "clk",
+       "launch_clock": "clk"
+      },
+      "critical_path_delay_ns": 1.42,
+      "fmax_mhz": 704.0,
+      "total_negative_slack_ns": -4.05,
+      "worst_negative_slack_ns": -1.42
+     },
+     "stage": "ROUTED"
+    }
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "paths": 1,
+   "session": "s1"
+  },
+  "tool": "get_timing"
+ },
+ {
+  "answer": {
+   "data": {
+    "block_types": [
+     {
+      "available": 64,
+      "is_io": true,
+      "name": "io",
+      "used": 7,
+      "utilization": 0.109
+     },
+     {
+      "available": 4,
+      "is_io": false,
+      "name": "clb",
+      "used": 2,
+      "utilization": 0.5
+     }
+    ],
+    "device_utilization": 0.18,
+    "grid": {
+     "height": 4,
+     "width": 4
+    },
+    "kind": "utilization",
+    "limiting_resources": [],
+    "schema_version": 1,
+    "stage": "PACKED"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1"
+  },
+  "tool": "get_utilization"
+ },
+ {
+  "answer": {
+   "data": {
+    "blocks": {
+     "items": [
+      {
+       "layer": 0,
+       "name": "OUT1",
+       "placed": true,
+       "sub_tile": 0,
+       "type": "clb",
+       "x": 1,
+       "y": 2
+      },
+      {
+       "layer": 0,
+       "name": "OUT0",
+       "placed": true,
+       "sub_tile": 0,
+       "type": "clb",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "layer": 0,
+       "name": "out:OUT0",
+       "placed": true,
+       "sub_tile": 6,
+       "type": "io",
+       "x": 2,
+       "y": 0
+      }
+     ],
+     "matched": 9,
+     "returned": 3,
+     "total": 9,
+     "truncated": true
+    },
+    "kind": "block",
+    "nets": null,
+    "pattern": "*",
+    "schema_version": 1,
+    "stage": "PACKED"
+   },
+   "more": "call find again with a narrower pattern or a higher limit",
+   "ok": true,
+   "truncated": true
+  },
+  "arguments": {
+   "kind": "block",
+   "limit": 3,
+   "pattern": "*",
+   "session": "s1"
+  },
+  "tool": "find"
+ },
+ {
+  "answer": {
+   "data": {
+    "atoms": [
+     {
+      "model": ".latch",
+      "name": "OUT1",
+      "path": "clb[default]/fle[9][n2_lut5]/lut5inter[0][default]/ble5[1][default]/ff[0]"
+     }
+    ],
+    "kind": "block_info",
+    "location": {
+     "layer": 0,
+     "sub_tile": 0,
+     "x": 1,
+     "y": 2
+    },
+    "name": "OUT1",
+    "pins": [
+     {
+      "bit": 0,
+      "direction": "input",
+      "net": "IN1",
+      "port": "I"
+     },
+     {
+      "bit": 19,
+      "direction": "output",
+      "net": "OUT1",
+      "port": "O"
+     },
+     {
+      "bit": 0,
+      "direction": "clock",
+      "net": "clk",
+      "port": "clk"
+     }
+    ],
+    "placed": true,
+    "schema_version": 1,
+    "stage": "PACKED",
+    "type": "clb"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "block": "OUT1",
+   "session": "s1"
+  },
+  "tool": "get_block"
+ },
+ {
+  "answer": {
+   "data": {
+    "blocks": null,
+    "kind": "net",
+    "nets": {
+     "items": [
+      {
+       "fanout": 1,
+       "ignored": false,
+       "name": "IN1"
+      },
+      {
+       "fanout": 1,
+       "ignored": false,
+       "name": "OUT1"
+      }
+     ],
+     "matched": 7,
+     "returned": 2,
+     "total": 7,
+     "truncated": true
+    },
+    "pattern": "*",
+    "schema_version": 1,
+    "stage": "PACKED"
+   },
+   "more": "call find again with a narrower pattern or a higher limit",
+   "ok": true,
+   "truncated": true
+  },
+  "arguments": {
+   "kind": "net",
+   "limit": 2,
+   "pattern": "*",
+   "session": "s1"
+  },
+  "tool": "find"
+ },
+ {
+  "answer": {
+   "data": {
+    "bounding_box": {
+     "half_perimeter": 1,
+     "xmax": 1,
+     "xmin": 0,
+     "ymax": 2,
+     "ymin": 2
+    },
+    "driver": {
+     "bit": 0,
+     "block": "IN1",
+     "port": "inpad"
+    },
+    "fanout": 1,
+    "ignored": false,
+    "kind": "net_info",
+    "name": "IN1",
+    "routing": {
+     "nodes": 5,
+     "wirelength": 1,
+     "wires": 1
+    },
+    "schema_version": 1,
+    "sinks": [
+     {
+      "bit": 0,
+      "block": "OUT1",
+      "port": "I"
+     }
+    ],
+    "stage": "PACKED",
+    "timing": {
+     "criticality": 0.292,
+     "slack_ns": -0.0662
+    }
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "net": "IN1",
+   "session": "s1"
+  },
+  "tool": "get_net"
+ },
+ {
+  "answer": {
+   "data": {
+    "blocks": [
+     {
+      "layer": 0,
+      "name": "OUT1",
+      "sub_tile": 0,
+      "type": "clb",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "layer": 0,
+      "name": "OUT0",
+      "sub_tile": 0,
+      "type": "clb",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "layer": 0,
+      "name": "out:OUT0",
+      "sub_tile": 6,
+      "type": "io",
+      "x": 2,
+      "y": 0
+     }
+    ],
+    "filter": {
+     "prefix": null,
+     "type": null
+    },
+    "grid": {
+     "height": 4,
+     "width": 4
+    },
+    "kind": "placement",
+    "returned": 3,
+    "schema_version": 1,
+    "stage": "PLACED",
+    "total": 9,
+    "truncated": true
+   },
+   "more": "call get_placement again with a type or a prefix, or a higher limit",
+   "ok": true,
+   "truncated": true
+  },
+  "arguments": {
+   "limit": 3,
+   "session": "s1"
+  },
+  "tool": "get_placement"
+ },
+ {
+  "answer": {
+   "data": {
+    "channel_width": {
+     "x": 20,
+     "y": 20
+    },
+    "grid": {
+     "height": 4,
+     "width": 4
+    },
+    "hotspots": [
+     {
+      "capacity": 20,
+      "channel": "chanx",
+      "nets": [
+       "OUT1",
+       "clk",
+       "IN2",
+       "OUT2",
+       "OUT0"
+      ],
+      "num_nets": 5,
+      "occupancy": 0.35,
+      "overused_nodes": 0,
+      "used": 7,
+      "x": 1,
+      "y": 0
+     }
+    ],
+    "kind": "congestion",
+    "region_size": 1,
+    "regions": [
+     {
+      "chanx": {
+       "capacity": 0,
+       "occupancy": 0,
+       "used": 0
+      },
+      "chany": {
+       "capacity": 20,
+       "occupancy": 0.2,
+       "used": 4
+      },
+      "x_high": 0,
+      "x_low": 0,
+      "y_high": 1,
+      "y_low": 1
+     },
+     {
+      "chanx": {
+       "capacity": 0,
+       "occupancy": 0,
+       "used": 0
+      },
+      "chany": {
+       "capacity": 20,
+       "occupancy": 0.15,
+       "used": 3
+      },
+      "x_high": 0,
+      "x_low": 0,
+      "y_high": 2,
+      "y_low": 2
+     },
+     {
+      "chanx": {
+       "capacity": 20,
+       "occupancy": 0.35,
+       "used": 7
+      },
+      "chany": {
+       "capacity": 0,
+       "occupancy": 0,
+       "used": 0
+      },
+      "x_high": 1,
+      "x_low": 1,
+      "y_high": 0,
+      "y_low": 0
+     },
+     {
+      "chanx": {
+       "capacity": 20,
+       "occupancy": 0.15,
+       "used": 3
+      },
+      "chany": {
+       "capacity": 20,
+       "occupancy": 0.2,
+       "used": 4
+      },
+      "x_high": 1,
+      "x_low": 1,
+      "y_high": 1,
+      "y_low": 1
+     },
+     {
+      "chanx": {
+       "capacity": 20,
+       "occupancy": 0.1,
+       "used": 2
+      },
+      "chany": {
+       "capacity": 20,
+       "occupancy": 0.2,
+       "used": 4
+      },
+      "x_high": 1,
+      "x_low": 1,
+      "y_high": 2,
+      "y_low": 2
+     },
+     {
+      "chanx": {
+       "capacity": 20,
+       "occupancy": 0.35,
+       "used": 7
+      },
+      "chany": {
+       "capacity": 0,
+       "occupancy": 0,
+       "used": 0
+      },
+      "x_high": 2,
+      "x_low": 2,
+      "y_high": 0,
+      "y_low": 0
+     },
+     {
+      "chanx": {
+       "capacity": 20,
+       "occupancy": 0.2,
+       "used": 4
+      },
+      "chany": {
+       "capacity": 20,
+       "occupancy": 0.1,
+       "used": 2
+      },
+      "x_high": 2,
+      "x_low": 2,
+      "y_high": 1,
+      "y_low": 1
+     },
+     {
+      "chanx": {
+       "capacity": 20,
+       "occupancy": 0.1,
+       "used": 2
+      },
+      "chany": {
+       "capacity": 20,
+       "occupancy": 0.1,
+       "used": 2
+      },
+      "x_high": 2,
+      "x_low": 2,
+      "y_high": 2,
+      "y_low": 2
+     }
+    ],
+    "routed": true,
+    "schema_version": 1,
+    "stage": "ROUTED",
+    "summary": {
+     "chanx": {
+      "capacity": 120,
+      "occupancy": 0.208,
+      "used": 25
+     },
+     "chany": {
+      "capacity": 120,
+      "occupancy": 0.158,
+      "used": 19
+     },
+     "overused_nodes": 0
+    }
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "hotspots": 1,
+   "session": "s1"
+  },
+  "tool": "get_congestion"
+ },
+ {
+  "answer": {
+   "data": {
+    "choices": [],
+    "default": 1,
+    "dropped_by_change": [
+     "PLACED",
+     "ROUTED",
+     "ANALYZED",
+     "REPACKED",
+     "BITSTREAM"
+    ],
+    "help": "Placement random number generator seed",
+    "is_default": true,
+    "name": "place.seed",
+    "stage": "PLACED",
+    "type": "int",
+    "value": 1
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "name": "place.seed",
+   "session": "s1"
+  },
+  "tool": "describe_option"
+ },
+ {
+  "answer": {
+   "data": {
+    "after": 3,
+    "before": 1,
+    "dropped": [
+     "PLACED",
+     "ROUTED",
+     "ANALYZED"
+    ],
+    "option": "place.seed"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "name": "place.seed",
+   "session": "s1",
+   "value": 3
+  },
+  "tool": "set_option"
+ },
+ {
+  "answer": {
+   "data": {
+    "after": 24,
+    "before": 20,
+    "dropped": [
+     "DEVICE",
+     "PACKED"
+    ],
+    "option": "router.route_chan_width"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "kind": "chan_width",
+   "session": "s1",
+   "width": 24
+  },
+  "tool": "set_constraint"
+ },
+ {
+  "answer": {
+   "data": {
+    "run": null,
+    "state": {
+     "failed": null,
+     "inputs": {
+      "circuit": {
+       "file": "routing_test.blif"
+      },
+      "openfpga_arch": {
+       "file": "k6_frac_N10_40nm_openfpga.xml"
+      },
+      "vpr_arch": {
+       "file": "k6_frac_N10_tileable_40nm.xml",
+       "layout": "2x2"
+      }
+     },
+     "kind": "session",
+     "reached": [],
+     "results": {
+      "packing": null,
+      "placement": null,
+      "routing": null
+     },
+     "schema_version": 1
+    }
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1"
+  },
+  "tool": "get_state"
+ },
+ {
+  "answer": {
+   "diagnostics": [
+    {
+     "data": {
+      "command": "place",
+      "stage": "PLACED"
+     },
+     "file": null,
+     "hint": "Run 'place' first",
+     "kind": "stage_not_reached",
+     "line": null,
+     "message": "Cannot run the stage ROUTED: the stage PLACED has not been reached, use the command 'place' first",
+     "severity": "error"
+    }
+   ],
+   "ok": false,
+   "reached": []
+  },
+  "arguments": {
+   "session": "s1",
+   "stage": "route"
+  },
+  "tool": "run_stage"
+ },
+ {
+  "answer": {
+   "data": {
+    "closed": true,
+    "session": "s1"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
+  },
+  "arguments": {
+   "session": "s1"
+  },
+  "tool": "session_close"
+ }
+]
