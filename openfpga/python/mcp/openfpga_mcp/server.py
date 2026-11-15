@@ -12,7 +12,7 @@ from mcp.server.mcpserver import MCPServer
 
 from . import answers
 from .config import Config
-from . import tools
+from . import resources, tools
 from .registry import SessionRegistry
 
 _LOOPBACK = ("127.0.0.1", "localhost", "::1")
@@ -100,6 +100,7 @@ def build_server(config: Config, registry: Optional[SessionRegistry] = None) -> 
         return await run(work)
 
     tools.register(server, registry, config, tool, run)
+    resources.register(server, registry, config)
     return server
 
 
