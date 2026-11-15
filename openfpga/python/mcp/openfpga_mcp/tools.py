@@ -64,6 +64,14 @@ def _text(name: str, value: Optional[str], required: bool = False) -> Optional[s
     return value
 
 
+def _choice(name: str, value: Optional[str], allowed) -> Optional[str]:
+    """One of the words that a tool accepts. The signature says it (a Literal) for a client that
+    checks, and this is for one that does not: a word is never used to find a method by name"""
+    if value is not None and value not in allowed:
+        raise InvalidArgument("%s is one of: %s" % (name, ", ".join(allowed)))
+    return value
+
+
 def _check_option(name: str, kind: str):
     if name.startswith("filename.") or "file" in name or name in _PATH_OPTIONS:
         raise OptionNotAllowed(
@@ -139,6 +147,7 @@ def register(
             entry = session_of(session)
             handle = entry.session
             check_room(entry)
+            _choice("stage", stage, ("pack", "place", "route", "analysis"))
             try:
                 if from_file is not None:
                     if stage not in _READS:
@@ -269,6 +278,7 @@ def register(
         def work():
             entry = session_of(session)
             handle = entry.session
+            _choice("kind", kind, ("vpr_constraints", "sdc", "chan_width"))
             if kind == "chan_width":
                 if (width is None) == (not clear) or file is not None:
                     raise InvalidArgument("chan_width takes a width, or clear, and no file")
@@ -345,6 +355,7 @@ def register(
             count = _number("limit", limit, 20, 1, 200)
             handle = session_of(session).session
             _text("pattern", pattern, True)
+            _choice("kind", kind, ("block", "net", "cluster"))
             if kind == "cluster":
                 data = _plain("cluster_report", handle.cluster_report(pattern, limit=count))
             else:
@@ -436,6 +447,7 @@ def register(
 
         def work():
             entry = session_of(session)
+            _choice("stage", stage, ("pack", "place", "route", "analysis"))
             lines = _number("tail", tail, 40, 1, _LOG_TAIL_MAX)
             log = entry.logs.get(stage)
             if log is None:
