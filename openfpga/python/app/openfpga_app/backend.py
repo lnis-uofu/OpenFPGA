@@ -29,6 +29,10 @@ class Backend(Protocol):
 
     async def restore_session(self, checkpoint: Optional[str] = None) -> Dict[str, Any]: ...
 
+    async def upload(self, name: str, data: bytes, overwrite: bool) -> Dict[str, Any]: ...
+
+    async def remove_upload(self, name: str) -> Dict[str, Any]: ...
+
     def chat(self, message: str) -> AsyncIterator[Dict[str, Any]]: ...
 
     def cancel(self) -> None: ...
@@ -45,7 +49,7 @@ def empty_view() -> Dict[str, Any]:
         "stages": [
             {"stage": s, "status": "not_reached", "seconds": None, "message": None} for s in STAGES
         ],
-        "files": {"inputs": [], "constraints": [], "results": []},
+        "files": {"inputs": [], "constraints": [], "results": [], "uploads": []},
         "options_changed": [],
         "checkpoints": [],
     }
@@ -112,7 +116,7 @@ class DemoBackend:
             ],
         }
 
-    new_session = close_session = restore_session = _unavailable
+    new_session = close_session = restore_session = upload = remove_upload = _unavailable
 
     def _latest(self, status: str, text: str):
         self._view["latest"] = {"status": status, "text": text}

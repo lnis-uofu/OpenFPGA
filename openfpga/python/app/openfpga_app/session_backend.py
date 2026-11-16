@@ -7,11 +7,11 @@ and the console runs commands of the OpenFPGA shell in it. A model that chooses 
 where the chat line is read, later.
 """
 
-from pathlib import Path
 import inspect
 import json
 import shlex
 import time
+from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import anyio.to_thread
@@ -20,7 +20,7 @@ from openfpga_mcp.config import Config
 from openfpga_mcp.registry import SessionRegistry
 from openfpga_mcp.resources import _checkpoints
 
-from . import events
+from . import events, uploads
 from .agent import AgentConfig, AgentLoop
 from .agent.arguments import check_arguments, literal
 from .agent.model import Model
@@ -197,6 +197,7 @@ class SessionBackend:
         except Exception:  # closed by the idle limit, or gone
             self.sid = None
             return view
+        view["files"]["uploads"] = uploads.listing(self.config.root, entry.directory)
         info = next((i for i in self.registry.list() if i.id == entry.id), None)
         running = bool(info and info.running)
         view["session"] = {
@@ -219,8 +220,9 @@ class SessionBackend:
             # it. What was known stays, and the latest state says what is going on
             previous = self._last
             if previous["session"] and previous["session"]["id"] == entry.id:
-                for key in ("stages", "files", "options_changed"):
+                for key in ("stages", "options_changed"):
                     view[key] = previous[key]
+                view["files"] = {**previous["files"], "uploads": view["files"]["uploads"]}
             what = "a command" if self._running in (None, "console") else self._running
             view["latest"] = {"status": "running", "text": "%s · %s running" % (entry.id, what)}
             return view
@@ -319,6 +321,59 @@ class SessionBackend:
             self.sid = answer["data"]["session"]
             self._changed_outside("The person opened session %s" % self.sid)
         return answer
+
+    async def upload(self, name: str, data: bytes, overwrite: bool) -> Dict[str, Any]:
+        """A file that the person gives to the session (one is opened if there is none). It is
+        written in the folder uploads of the session, and the model is told that it is there"""
+        try:
+            uploads.check_name(name)
+            if self.sid is None:
+                opened = await self.new_session()
+                if not opened.get("ok"):
+                    return opened
+            entry = self.registry.get(self.sid)
+            used = await anyio.to_thread.run_sync(self.registry.directory_bytes, entry)
+            if used + len(data) > self.config.session_max_bytes:
+                raise uploads.UploadRefused(
+                    "session_full",
+                    "Session %s has %d bytes of files; this one would pass the %d that it may"
+                    % (entry.id, used, self.config.session_max_bytes),
+                )
+            saved = await anyio.to_thread.run_sync(
+                uploads.save, self.config.root, entry.directory, name, data, overwrite
+            )
+        except uploads.UploadRefused as refused:
+            return answers.failed(
+                [answers.diagnostic(refused.kind, refused.message, hint=refused.hint or None)]
+            )
+        except Exception as error:  # noqa: BLE001 - a session that is gone, a disk that is full
+            return answers.from_exception(error)
+        self._changed_outside(
+            "The person uploaded %s (%s) to session %s; read_inputs can use it by its name"
+            % (saved["name"], saved["kind"].replace("_", " "), self.sid)
+        )
+        return {"ok": True, "data": saved, "truncated": False, "more": None}
+
+    async def remove_upload(self, name: str) -> Dict[str, Any]:
+        """Delete a file that the person gave to the session; the model is told that it is gone"""
+        try:
+            uploads.check_name(name)
+            if self.sid is None:
+                raise uploads.UploadRefused("no_session", "There is no session")
+            entry = self.registry.get(self.sid)
+            removed = await anyio.to_thread.run_sync(
+                uploads.remove, self.config.root, entry.directory, name
+            )
+        except uploads.UploadRefused as refused:
+            return answers.failed(
+                [answers.diagnostic(refused.kind, refused.message, hint=refused.hint or None)]
+            )
+        except Exception as error:  # noqa: BLE001
+            return answers.from_exception(error)
+        self._changed_outside(
+            "The person removed the uploaded file %s from session %s" % (removed["name"], self.sid)
+        )
+        return {"ok": True, "data": removed, "truncated": False, "more": None}
 
     async def close_session(self) -> Dict[str, Any]:
         if self.sid is None:

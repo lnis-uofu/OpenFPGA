@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Message, banner, busy, config, messages, sendMessage, stop } from "../store";
+import { Message, banner, busy, config, messages, sendMessage, stop, uploadFiles } from "../store";
 import { Markdown } from "../markdown";
 import { CallGroup } from "./ToolCard";
 
@@ -69,6 +69,9 @@ export function Chat() {
   const list = useRef<HTMLDivElement>(null);
   const stuck = useRef(true); // follow the stream only while the reader is at the bottom
   const [away, setAway] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const real = config.value?.backend === "session";
+  const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
   useEffect(() => {
     if (stuck.current) end.current?.scrollIntoView?.({ block: "end" });
   });
@@ -97,7 +100,30 @@ export function Chat() {
   const noModel = config.value?.backend === "session" && !config.value.model.endpoint;
   const b = banner.value;
   return (
-    <section class="chat" aria-label="Chat">
+    <section
+      class="chat"
+      aria-label="Chat"
+      onDragOver={(e) => {
+        if (real && hasFiles(e)) {
+          e.preventDefault(); // the browser would open the file instead
+          setDragging(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setDragging(false);
+      }}
+      onDrop={(e) => {
+        if (!real || !hasFiles(e)) return;
+        e.preventDefault();
+        setDragging(false);
+        void uploadFiles(Array.from(e.dataTransfer?.files ?? []));
+      }}
+    >
+      {dragging && (
+        <div class="drop" aria-hidden="true">
+          Drop files to copy them into the session
+        </div>
+      )}
       <div class="messages" role="log" aria-live="polite" ref={list} onScroll={onScroll}>
         <div class="thread">
         {messages.value.length === 0 &&

@@ -52,6 +52,20 @@ tokens and the seconds). What the person does meanwhile (console, buttons, `/` l
 the model at its next message. All 21 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
+## Giving files to a session
+
+"⤒ Upload files…" in the sidebar (Design files, under Inputs), or a drop of files on the chat, copies
+them into the session: the folder `uploads` of the session's directory in the workspace. If there
+is no session, one is opened. The tools and the model use them by their plain name, as they use the
+files of the designs folders (`read_inputs ... circuit=mine.blif`); another session does not see them.
+What a file is (VPR architecture, OpenFPGA architecture, circuit) is read from its first lines and
+shown next to it, and the model is told at its next message that the file is there. A name that
+is taken is replaced only if you say so. The ✕ beside a file in the list deletes it from the
+session (after a question), and the model is told. Files are per session; there is no folder
+shared by all of them. Accepted: `.xml .blif .eblif .v .sv .vh .sdc .pcf .json
+.csv .txt`, a plain name (letters, digits and `. _ + -`, at most 100), 50 MB at most for a file,
+and what a session may hold in all (512 MB). Not in the demo.
+
 ## Without a model
 
 The chat takes lines that start with `/`: `/help` lists the tools, `/session_open`,

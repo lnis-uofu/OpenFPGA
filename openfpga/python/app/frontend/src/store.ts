@@ -5,7 +5,9 @@ import {
   Answer,
   AppConfig,
   AppEvent,
+  MAX_UPLOAD_BYTES,
   SessionView,
+  UPLOAD_EXTENSIONS,
   cancel,
   closeSession,
   fetchConfig,
@@ -14,6 +16,8 @@ import {
   fetchSession,
   runConsole,
   streamChat,
+  removeUploadedFile,
+  uploadFile,
 } from "./api";
 
 export type Part = { kind: "text"; text: string } | { kind: "call"; callId: string };
@@ -77,6 +81,8 @@ export const consoleBusy = signal(false);
 const wide = () => typeof window === "undefined" || window.innerWidth > 900;
 export const sidebarOpen = signal(wide());
 export const settingsOpen = signal(false);
+/** A file is on its way to the session */
+export const uploading = signal(false);
 /** What the last step of the model cost and how full its context is (none before a model answers) */
 export const usage = signal<{ step: number; used: number; limit: number } | null>(null);
 
@@ -95,6 +101,7 @@ export function resetStore() {
   consoleBusy.value = false;
   sidebarOpen.value = wide();
   settingsOpen.value = false;
+  uploading.value = false;
   usage.value = null;
 }
 
@@ -215,6 +222,58 @@ export const makeSession = (name?: string) => sessionAction(() => newSession(nam
 export const endSession = () => sessionAction(() => closeSession());
 /** Back to the last checkpoint, or to a named one */
 export const restore = (checkpoint?: string) => sessionAction(() => restoreSession(checkpoint));
+
+/** Give files to the session (one is opened if there is none). A name that is taken is replaced
+ * only if the person says so */
+export async function uploadFiles(files: File[]) {
+  if (!files.length || uploading.value) return;
+  uploading.value = true;
+  banner.value = null;
+  try {
+    for (const file of files) {
+      const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")).toLowerCase() : "";
+      if (!UPLOAD_EXTENSIONS.includes(extension)) {
+        banner.value = {
+          kind: "invalid_type",
+          message: `${file.name} is not a kind of file that a flow reads`,
+          hint: `Accepted: ${UPLOAD_EXTENSIONS.join(", ")}`,
+        };
+        break;
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        banner.value = { kind: "too_large", message: `${file.name} is larger than ${MAX_UPLOAD_BYTES / 1024 / 1024} MB` };
+        break;
+      }
+      let result = await uploadFile(file);
+      if (result.status === 409) {
+        if (!window.confirm(`There is already a file "${file.name}" in the session. Replace it?`)) continue;
+        result = await uploadFile(file, true);
+      }
+      if (!result.answer.ok) {
+        reportFailure(result.answer);
+        break;
+      }
+    }
+  } catch (error) {
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  } finally {
+    uploading.value = false;
+    await refreshView();
+  }
+}
+
+/** Take a file that was uploaded out of the session */
+export async function removeUpload(name: string) {
+  banner.value = null;
+  try {
+    const answer = await removeUploadedFile(name);
+    if (!answer.ok) reportFailure(answer);
+  } catch (error) {
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  } finally {
+    await refreshView();
+  }
+}
 
 // The conversation -------------------------------------------------------------------------
 

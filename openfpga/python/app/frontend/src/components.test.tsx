@@ -8,6 +8,7 @@ import { CallGroup, ToolCard } from "./components/ToolCard";
 import { TopBar } from "./components/TopBar";
 import { Workspace } from "./components/Workspace";
 import {
+  banner,
   busy,
   usage,
   CHAT,
@@ -270,6 +271,146 @@ describe("the sessions of the sidebar", () => {
     const { banner } = await import("./store");
     await waitFor(() => expect(banner.value?.kind).toBe("too_many_sessions"));
     expect(banner.value?.hint).toBe("close one");
+  });
+});
+
+describe("uploading files to the session", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const answer = (status: number, body: unknown) => Promise.resolve(new Response(JSON.stringify(body), { status }));
+  const ok = { ok: true, data: { name: "a.blif", kind: "circuit", bytes: 3 } };
+  const taken = { ok: false, diagnostics: [{ kind: "file_exists", message: "There is already a file 'a.blif'" }] };
+  const pick = (file: File) => fireEvent.change(screen.getByLabelText("Upload files"), { target: { files: [file] } });
+
+  it("lists what was uploaded, with what it is and its size", () => {
+    const v = filled();
+    v.files.uploads = [
+      { name: "mine.blif", kind: "circuit", bytes: 900 },
+      { name: "arch.xml", kind: "openfpga_arch", bytes: 20480 },
+    ];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getByText("mine.blif")).toBeTruthy();
+    expect(screen.getAllByText("circuit")).toHaveLength(2); // the input of that name, and the chip
+    expect(screen.getByText("900 B")).toBeTruthy();
+    expect(screen.getByText("OpenFPGA arch")).toBeTruthy();
+    expect(screen.getByText("20 kB")).toBeTruthy();
+  });
+
+  it("removes a file after the person confirms, and reads the session again", async () => {
+    real();
+    const v = filled();
+    v.files.uploads = [{ name: "mine.blif", kind: "circuit", bytes: 900 }];
+    view.value = v;
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      answer(200, url === "/api/session" ? emptyView() : { ok: true, data: {} }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirm);
+    render(<Sidebar />);
+    fireEvent.click(screen.getByLabelText("Remove mine.blif"));
+    expect(confirm).toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled(); // not confirmed: nothing is sent
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByLabelText("Remove mine.blif"));
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
+    const sent = fetchMock.mock.calls.find((c) => String(c[0]).startsWith("/api/upload"))!;
+    expect(sent[0]).toBe("/api/upload?name=mine.blif");
+    expect(sent[1]?.method).toBe("DELETE");
+  });
+
+  it("is not there in the demo", () => {
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    render(<Sidebar />);
+    expect((screen.getByText(/Upload files/) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("sends the file as it is, by its name, and reads the session again", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      url.startsWith("/api/upload") ? answer(200, ok) : answer(200, emptyView()),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Sidebar />);
+    const file = new File(["abc"], "a b.blif");
+    pick(file);
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
+    const sent = fetchMock.mock.calls.find((c) => String(c[0]).startsWith("/api/upload"))!;
+    expect(sent[0]).toBe("/api/upload?name=a%20b.blif");
+    expect((sent[1] as RequestInit).body).toBe(file);
+    expect(banner.value).toBeNull();
+  });
+
+  it("asks before it replaces a file, and sends it again only if the person agrees", async () => {
+    real();
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        calls.push(url);
+        if (url === "/api/upload?name=a.blif") return answer(409, taken);
+        if (url === "/api/upload?name=a.blif&overwrite=1") return answer(200, ok);
+        return answer(200, emptyView());
+      }),
+    );
+    const confirm = vi.spyOn(window, "confirm");
+    confirm.mockReturnValueOnce(false);
+    render(<Sidebar />);
+    pick(new File(["abc"], "a.blif"));
+    await waitFor(() => expect(confirm).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(calls).toContain("/api/session"));
+    expect(calls.filter((u) => u.includes("overwrite"))).toHaveLength(0);
+    confirm.mockReturnValueOnce(true);
+    calls.length = 0;
+    pick(new File(["abc"], "a.blif"));
+    await waitFor(() => expect(calls).toContain("/api/upload?name=a.blif&overwrite=1"));
+  });
+
+  it("does not send a kind of file that a flow does not read, and says why", async () => {
+    real();
+    const fetchMock = vi.fn((_url: string) => answer(200, emptyView()));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Sidebar />);
+    pick(new File(["x"], "run.exe"));
+    await waitFor(() => expect(banner.value?.kind).toBe("invalid_type"));
+    expect(banner.value?.hint).toContain(".blif");
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).startsWith("/api/upload"))).toBe(false);
+  });
+
+  it("shows what the server refused", async () => {
+    real();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) =>
+        url.startsWith("/api/upload")
+          ? answer(413, { ok: false, diagnostics: [{ kind: "session_full", message: "Session s1 has used its share", hint: null }] })
+          : answer(200, emptyView()),
+      ),
+    );
+    render(<Sidebar />);
+    pick(new File(["abc"], "a.blif"));
+    await waitFor(() => expect(banner.value?.message).toBe("Session s1 has used its share"));
+  });
+
+  it("takes files that are dropped on the chat, in a session and not in the demo", async () => {
+    real();
+    const fetchMock = vi.fn((url: string) => (url.startsWith("/api/upload") ? answer(200, ok) : answer(200, emptyView())));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Workspace />);
+    const chat = screen.getByLabelText("Chat");
+    const file = new File(["abc"], "a.blif");
+    fireEvent.dragOver(chat, { dataTransfer: { types: ["Files"] } });
+    expect(screen.getByText(/Drop files to copy/)).toBeTruthy();
+    fireEvent.drop(chat, { dataTransfer: { types: ["Files"], files: [file] } });
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => String(c[0]).startsWith("/api/upload"))).toBe(true));
+    expect(screen.queryByText(/Drop files to copy/)).toBeNull();
+    // In the demo the drop is left to the browser: no overlay, no request
+    fetchMock.mockClear();
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    fireEvent.drop(chat, { dataTransfer: { types: ["Files"], files: [file] } });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

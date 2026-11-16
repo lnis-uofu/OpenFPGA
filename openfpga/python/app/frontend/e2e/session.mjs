@@ -3,7 +3,7 @@
 //   OPENFPGA_PYTHON_PATH=<dir of openfpga.py> PYTHON=python3 npm run e2e:session
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import assert from "node:assert/strict";
@@ -71,6 +71,29 @@ try {
   await page.click("text=+ new");
   await page.waitForSelector("text=worker running");
   assert.ok(await page.isVisible("strong:has-text('s1')"));
+
+  // A file from the person's own disk goes into the session, and the tools read it by its name
+  await page.setInputFiles('[aria-label="Upload files"]', {
+    name: "mine.blif",
+    mimeType: "application/octet-stream",
+    buffer: readFileSync(path.join(inputs[2], files.circuit)),
+  });
+  await page.waitForSelector(".upload-row:has-text('mine.blif'):has-text('circuit')");
+  assert.ok(existsSync(path.join(root, "s1", "uploads", "mine.blif")), "written in the session directory");
+  await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=mine.blif`);
+  await page.waitForSelector(".file-row .file:has-text('mine.blif')", { timeout: 30000 }); // read as an input
+
+  // A file that is taken out of the session
+  await page.setInputFiles('[aria-label="Upload files"]', {
+    name: "gone.blif",
+    mimeType: "application/octet-stream",
+    buffer: readFileSync(path.join(inputs[2], files.circuit)),
+  });
+  await page.waitForSelector(".upload-row:has-text('gone.blif')");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.click('[aria-label="Remove gone.blif"]');
+  await page.waitForSelector(".upload-row:has-text('gone.blif')", { state: "detached" });
+  assert.ok(!existsSync(path.join(root, "s1", "uploads", "gone.blif")), "deleted from the session directory");
 
   // A flow from the chat lines
   await say("/set_option name=general.clock_modeling value=route");

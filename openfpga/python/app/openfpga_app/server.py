@@ -10,7 +10,7 @@ from starlette.responses import FileResponse, JSONResponse, Response, StreamingR
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
-from . import events
+from . import events, uploads
 from .backend import Backend
 from .config import AppConfig
 from .security import SecurityMiddleware
@@ -23,6 +23,20 @@ _NO_BUILD = """<!doctype html><meta charset="utf-8"><title>OpenFPGA</title>
 <h1>OpenFPGA</h1><p>The front end is not built. In
 <code>openfpga/python/app/frontend</code> run <code>npm install</code> and
 <code>npm run build</code>.</p></body>"""
+
+
+def _refused(refused: "uploads.UploadRefused") -> Dict[str, Any]:
+    return {
+        "ok": False,
+        "diagnostics": [
+            {
+                "severity": "error",
+                "kind": refused.kind,
+                "message": refused.message,
+                "hint": refused.hint or None,
+            }
+        ],
+    }
 
 
 def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = None) -> Starlette:
@@ -99,6 +113,41 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
             return JSONResponse({"error": "checkpoint is text"}, 400)
         return JSONResponse(await backend.restore_session(checkpoint))
 
+    async def upload(request: Request) -> Response:
+        name = request.query_params.get("name", "")
+        overwrite = request.query_params.get("overwrite") == "1"
+        limit = uploads.MAX_FILE_BYTES
+        try:
+            uploads.check_name(name)
+        except uploads.UploadRefused as refused:
+            return JSONResponse(_refused(refused), 400)
+        declared = request.headers.get("content-length")
+        if declared is not None and declared.isdigit() and int(declared) > limit:
+            return JSONResponse(_refused(uploads.UploadRefused("too_large", "File too large")), 413)
+        data = bytearray()
+        async for chunk in request.stream():
+            data += chunk
+            if len(data) > limit:  # a stream that does not say its size
+                return JSONResponse(
+                    _refused(uploads.UploadRefused("too_large", "File too large")), 413
+                )
+        answer = await backend.upload(name, bytes(data), overwrite)
+        if answer.get("ok"):
+            return JSONResponse(answer)
+        kind = (answer.get("diagnostics") or [{}])[0].get("kind")
+        status = {"file_exists": 409, "too_large": 413, "session_full": 413, "demo": 404}.get(
+            kind, 400
+        )
+        return JSONResponse(answer, status)
+
+    async def remove_upload(request: Request) -> Response:
+        answer = await backend.remove_upload(request.query_params.get("name", ""))
+        if answer.get("ok"):
+            return JSONResponse(answer)
+        kind = (answer.get("diagnostics") or [{}])[0].get("kind")
+        status = {"file_not_found": 404, "no_session": 404, "demo": 404}.get(kind, 400)
+        return JSONResponse(answer, status)
+
     routes = [
         Route("/", index),
         Route("/api/session", session),
@@ -109,6 +158,8 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/session/new", new_session, methods=["POST"]),
         Route("/api/session/close", close_session, methods=["POST"]),
         Route("/api/session/restore", restore_session, methods=["POST"]),
+        Route("/api/upload", upload, methods=["POST"]),
+        Route("/api/upload", remove_upload, methods=["DELETE"]),
     ]
     if (static / "assets").is_dir():
         routes.append(Mount("/assets", StaticFiles(directory=static / "assets")))

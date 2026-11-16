@@ -27,10 +27,20 @@ export interface SessionView {
   } | null;
   latest: { status: "none" | "running" | "reached" | "failed"; text: string };
   stages: StageView[];
-  files: { inputs: InputFile[]; constraints: string[]; results: string[] };
+  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[] };
   options_changed: { name: string; value: unknown }[];
   checkpoints: { name: string; kind: string; stages: string[] }[];
 }
+
+export interface UploadedFile {
+  name: string;
+  kind: "vpr_arch" | "openfpga_arch" | "circuit" | "other";
+  bytes: number;
+}
+
+/** The most that the server takes for one file, and the kinds of file that a flow reads */
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+export const UPLOAD_EXTENSIONS = [".xml", ".blif", ".eblif", ".v", ".sv", ".vh", ".sdc", ".pcf", ".json", ".csv", ".txt"];
 
 export interface AppConfig {
   schema_version: number;
@@ -99,6 +109,29 @@ async function post(path: string, body: unknown): Promise<Answer> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  return json<Answer>(response);
+}
+
+/** A file for the session: the body is the file itself. 409 says that the name is taken */
+export async function uploadFile(file: File, overwrite = false): Promise<{ status: number; answer: Answer }> {
+  const query = `name=${encodeURIComponent(file.name)}${overwrite ? "&overwrite=1" : ""}`;
+  const response = await fetch(`/api/upload?${query}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });
+  let answer: Answer;
+  try {
+    answer = (await response.json()) as Answer;
+  } catch {
+    answer = { ok: false, diagnostics: [{ kind: "server", message: `${response.status} ${response.statusText}` }] };
+  }
+  return { status: response.status, answer };
+}
+
+/** Delete a file that was uploaded to the session */
+export async function removeUploadedFile(name: string): Promise<Answer> {
+  const response = await fetch(`/api/upload?name=${encodeURIComponent(name)}`, { method: "DELETE" });
   return json<Answer>(response);
 }
 

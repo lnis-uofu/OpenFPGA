@@ -1,5 +1,6 @@
-import { useState } from "preact/hooks";
-import { busy, config, endSession, makeSession, restore, sidebarOpen, view } from "../store";
+import { useRef, useState } from "preact/hooks";
+import { UPLOAD_EXTENSIONS } from "../api";
+import { busy, config, endSession, makeSession, removeUpload, restore, sidebarOpen, uploadFiles, uploading, view } from "../store";
 
 const SYMBOL = { reached: "✔", not_reached: "○", failed: "✖", running: "░" } as const;
 
@@ -30,9 +31,18 @@ function Name(props: { name: string }) {
   );
 }
 
+const KIND = { vpr_arch: "VPR arch", openfpga_arch: "OpenFPGA arch", circuit: "circuit", other: "file" } as const;
+
+function size(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} kB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 /** The left sidebar: the session, its stages, the design files and the checkpoints */
 export function Sidebar() {
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const picker = useRef<HTMLInputElement>(null);
   const v = view.value;
   const session = v.session;
   // The buttons of the sessions work on real sessions, not on the recorded demo
@@ -114,6 +124,49 @@ export function Sidebar() {
         ) : (
           <div class="muted">(none)</div>
         )}
+        <h3>Uploaded</h3>
+        {(files.uploads ?? []).length > 0 && (
+          <div class="uploads">
+            {(files.uploads ?? []).map((f) => (
+              <div key={f.name} class="upload-row">
+                <Name name={f.name} />
+                <span class="chip">{KIND[f.kind]}</span>
+                <span class="muted upload-size">{size(f.bytes)}</span>
+                <button
+                  class="upload-remove"
+                  aria-label={`Remove ${f.name}`}
+                  title="Remove this file from the session"
+                  onClick={() => {
+                    if (window.confirm(`Remove "${f.name}" from the session?`)) void removeUpload(f.name);
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <input
+          ref={picker}
+          type="file"
+          multiple
+          hidden
+          aria-label="Upload files"
+          accept={UPLOAD_EXTENSIONS.join(",")}
+          onChange={(e) => {
+            const input = e.target as HTMLInputElement;
+            void uploadFiles(Array.from(input.files ?? []));
+            input.value = ""; // the same file can be chosen again
+          }}
+        />
+        <button
+          class="upload-button"
+          disabled={!real || uploading.value}
+          title={real ? "Copy files into this session (architectures, circuits, constraints)" : "Not in the demo"}
+          onClick={() => picker.current?.click()}
+        >
+          {uploading.value ? "Uploading…" : "⤒ Upload files…"}
+        </button>
         <h3>Constraints</h3>
         {files.constraints.length ? (
           <div class="chips">

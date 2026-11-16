@@ -111,6 +111,13 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .file { background: none; border: none; padding: 1px 0; text-align: left; font-family: var(--mono); font-size: 12px; color: var(--text); border-radius: 3px; }
 .file:hover { text-decoration: underline; }
 .copied { color: var(--ok); font-family: var(--font); font-size: 11px; }
+.uploads { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
+.upload-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; }
+.upload-size { font-size: 11px; font-variant-numeric: tabular-nums; }
+.upload-remove { margin-left: auto; padding: 0 5px; font-size: 11px; line-height: 1.4; border: none; background: none; color: var(--muted); cursor: pointer; }
+.upload-remove:hover { color: var(--bad, #d33); }
+.upload-button { font-size: 12px; margin-top: 2px; }
+.drop { position: absolute; inset: 8px; z-index: 3; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--bg) 85%, transparent); color: var(--accent); font-size: 16px; pointer-events: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
 .results { display: flex; flex-direction: column; gap: 2px; }
