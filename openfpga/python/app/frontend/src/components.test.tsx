@@ -143,6 +143,28 @@ describe("the sidebar", () => {
     expect(screen.getByText(/last/)).toBeTruthy();
   });
 
+  it("draws how far the flow went, and what a failed stage said", () => {
+    const v = filled();
+    v.stages[3] = { ...v.stages[3], status: "failed", message: "no route at channel width 2" };
+    view.value = v;
+    render(<Sidebar />);
+    const bar = screen.getByRole("progressbar", { name: "Stages reached" });
+    expect(bar.getAttribute("aria-valuenow")).toBe("3");
+    expect(bar.getAttribute("aria-valuemax")).toBe("5");
+    expect((bar.firstChild as HTMLElement).style.width).toBe("60%");
+    expect(screen.getByText("no route at channel width 2")).toBeTruthy();
+  });
+
+  it("says that a click on a name copied it", async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    view.value = filled();
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("routing_test.net"));
+    expect(writeText).toHaveBeenCalledWith("routing_test.net");
+    await waitFor(() => expect(screen.getByText(/✓ copied/)).toBeTruthy());
+  });
+
   it("cuts a long name in the middle and keeps the whole one in the title", () => {
     view.value = filled();
     render(<Sidebar />);
@@ -248,6 +270,32 @@ describe("the sessions of the sidebar", () => {
     const { banner } = await import("./store");
     await waitFor(() => expect(banner.value?.kind).toBe("too_many_sessions"));
     expect(banner.value?.hint).toBe("close one");
+  });
+});
+
+describe("the chat of a session with a model", () => {
+  it("does not say that there is no model, and offers examples that fill the box", () => {
+    config.value = {
+      schema_version: 1,
+      console: false,
+      backend: "session",
+      model: { endpoint: "http://127.0.0.1:8081/v1", name: "qwen2.5-7b" },
+    };
+    render(<Workspace />);
+    expect(screen.queryByText(/No model is connected/)).toBeNull();
+    fireEvent.click(screen.getByText(/Which options of the router/));
+    expect((screen.getByLabelText("Message") as HTMLTextAreaElement).value).toMatch(/^Which options of the router/);
+  });
+
+  it("shows an answer as Markdown, and what the person wrote as it was written", () => {
+    messages.value = [
+      { id: "u1", role: "user", parts: [{ kind: "text", text: "give **me** the Fmax" }] },
+      { id: "m1", role: "assistant", parts: [{ kind: "text", text: "The Fmax is **1063.455 MHz**:\n\n- slack `-0.9`" }] },
+    ];
+    render(<Workspace />);
+    expect(screen.getByText("1063.455 MHz").tagName).toBe("STRONG");
+    expect(screen.getByText("-0.9").tagName).toBe("CODE");
+    expect(screen.getByText("give **me** the Fmax")).toBeTruthy();
   });
 });
 

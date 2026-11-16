@@ -1,4 +1,5 @@
 import { config, settingsOpen } from "../store";
+import { THEMES, setTheme, theme } from "../theme";
 
 /** Settings: the model (read from the config, not edited here) and the console. The servers of MCP
  * are not connected in this version */
@@ -11,6 +12,14 @@ export function Settings() {
         <div class="dialog-head">
           <h1>Settings</h1>
           <button onClick={() => (settingsOpen.value = false)}>← Back</button>
+        </div>
+        <h2>Theme</h2>
+        <div class="theme-choice" role="group" aria-label="Theme">
+          {THEMES.map((name) => (
+            <button type="button" key={name} aria-pressed={theme.value === name} onClick={() => setTheme(name)}>
+              {name === "auto" ? "Auto (the system)" : name === "light" ? "Light" : "Dark"}
+            </button>
+          ))}
         </div>
         <h2>Model</h2>
         <p class="muted">Read from the configuration of the app; edit it there.</p>

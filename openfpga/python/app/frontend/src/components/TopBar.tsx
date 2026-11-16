@@ -1,4 +1,7 @@
 import { config, settingsOpen, sidebarOpen, usage, view } from "../store";
+import { nextTheme, theme } from "../theme";
+
+const THEME_SYMBOL = { auto: "◐", light: "☀", dark: "☾" } as const;
 
 const SYMBOL = { none: "○", running: "░", reached: "✔", failed: "⚠" } as const;
 
@@ -27,6 +30,14 @@ export function TopBar() {
       <span class="model" title={model?.endpoint ?? "recorded demo"}>
         <span class={model?.endpoint ? "dot ok" : "dot off"} aria-hidden="true">●</span> {model?.name ?? "demo"}
       </span>
+      <button
+        class="icon"
+        aria-label={`Theme: ${theme.value}`}
+        title={`Theme: ${theme.value} (click for the next: auto, light, dark)`}
+        onClick={nextTheme}
+      >
+        {THEME_SYMBOL[theme.value]}
+      </button>
       <button class="icon" aria-label="Settings" onClick={() => (settingsOpen.value = true)}>
         ⚙
       </button>

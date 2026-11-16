@@ -47,6 +47,7 @@ try {
   await page.fill("textarea", "Run the flow on routing_test and tell me the Fmax.");
   await page.keyboard.press("Enter");
   await page.waitForSelector("text=recorded demo", { timeout: 60000 });
+  if (process.env.SHOT_CHAT) await page.screenshot({ path: process.env.SHOT_CHAT });
   // The sidebar followed the conversation
   assert.ok(await page.isVisible("text=chan width 24"));
   assert.ok(await page.isVisible("text=layout 2x2"));
@@ -71,6 +72,22 @@ try {
   await page.keyboard.press("Enter");
   await page.waitForSelector("text=Demo console");
   assert.ok(await page.isVisible("text=model › run_stage"));
+
+  // The theme: the system's while it is auto; a choice wins over the system and is kept
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await page.emulateMedia({ colorScheme: "dark" });
+  assert.equal(await background(), "rgb(20, 22, 26)");
+  await page.click('[aria-label="Theme: auto"]'); // light
+  assert.equal(await page.getAttribute("html", "data-theme"), "light");
+  assert.equal(await background(), "rgb(255, 255, 255)");
+  await page.reload();
+  assert.equal(await page.getAttribute("html", "data-theme"), "light", "the choice is kept");
+  await page.click('[aria-label="Theme: light"]'); // dark
+  await page.emulateMedia({ colorScheme: "light" });
+  assert.equal(await background(), "rgb(20, 22, 26)");
+  await page.click('[aria-label="Theme: dark"]'); // auto again
+  assert.equal(await page.getAttribute("html", "data-theme"), null);
+  assert.equal(await background(), "rgb(255, 255, 255)");
 
   assert.deepEqual(errors, []);
   if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
