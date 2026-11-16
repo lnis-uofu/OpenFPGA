@@ -81,6 +81,17 @@ AtomNetId PhysicalPb::pb_graph_pin_atom_net(
   return AtomNetId::INVALID();
 }
 
+const t_pb_graph_pin* PhysicalPb::pb_graph_pin_driver(
+  const PhysicalPbId& pb, const t_pb_graph_pin* pb_graph_pin) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  auto result = pin_drivers_[pb].find(pb_graph_pin);
+  if (result == pin_drivers_[pb].end()) {
+    /* Not routed from another pin */
+    return nullptr;
+  }
+  return result->second;
+}
+
 bool PhysicalPb::is_wire_lut_output(const PhysicalPbId& pb,
                                     const t_pb_graph_pin* pb_graph_pin) const {
   VTR_ASSERT(true == valid_pb_id(pb));
@@ -151,6 +162,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   pb_graph_nodes_.push_back(pb_graph_node);
   atom_blocks_.emplace_back();
   pin_atom_nets_.emplace_back();
+  pin_drivers_.emplace_back();
   wire_lut_outputs_.emplace_back();
 
   child_pbs_.emplace_back();
@@ -250,6 +262,15 @@ void PhysicalPb::set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
   }
 
   pin_atom_nets_[pb][pb_graph_pin] = atom_net;
+}
+
+void PhysicalPb::set_pb_graph_pin_driver(
+  const PhysicalPbId& pb, const t_pb_graph_pin* pb_graph_pin,
+  const t_pb_graph_pin* driver_pb_graph_pin) {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  /* A pin is routed from a single pin */
+  auto result = pin_drivers_[pb].insert({pb_graph_pin, driver_pb_graph_pin});
+  VTR_ASSERT(result.first->second == driver_pb_graph_pin);
 }
 
 void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,

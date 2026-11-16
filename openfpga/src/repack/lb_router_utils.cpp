@@ -108,6 +108,27 @@ void save_lb_router_results_to_physical_pb(
                    phy_pb.pb_graph_pin_atom_net(pb_id, pb_graph_pin));
       }
     }
+
+    /* Save the pin that each routed pin is driven from */
+    for (const auto& edge : lb_router.net_routed_edges(net)) {
+      t_pb_graph_pin* driver_pb_graph_pin =
+        lgk2phy_pb_map.pb_graph_pin(lb_rr_graph.node_pb_graph_pin(edge.first));
+      t_pb_graph_pin* pb_graph_pin =
+        lgk2phy_pb_map.pb_graph_pin(lb_rr_graph.node_pb_graph_pin(edge.second));
+      /* Skip the nodes which are not pins, e.g., the sink of a primitive or
+       * the nodes modeling the routing outside the block */
+      if ((nullptr == driver_pb_graph_pin) || (nullptr == pb_graph_pin)) {
+        continue;
+      }
+      const PhysicalPbId& pb_id = phy_pb.find_pb(pb_graph_pin->parent_node);
+      VTR_ASSERT(true == phy_pb.valid_pb_id(pb_id));
+
+      VTR_LOGV(verbose, "Save driver '%s' of physical pb_graph_pin '%s'\n",
+               driver_pb_graph_pin->to_string().c_str(),
+               pb_graph_pin->to_string().c_str());
+
+      phy_pb.set_pb_graph_pin_driver(pb_id, pb_graph_pin, driver_pb_graph_pin);
+    }
   }
 }
 

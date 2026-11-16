@@ -71,6 +71,11 @@ class PhysicalPb {
   std::vector<AtomBlockId> atom_blocks(const PhysicalPbId& pb) const;
   AtomNetId pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                   const t_pb_graph_pin* pb_graph_pin) const;
+  /* Find the pin that a pin of the block is routed from, in the routing
+   * results of repack. Return nullptr if repack did not route the pin from
+   * another pin of the block, e.g., for an input pin of the block */
+  const t_pb_graph_pin* pb_graph_pin_driver(
+    const PhysicalPbId& pb, const t_pb_graph_pin* pb_graph_pin) const;
   bool is_wire_lut_output(const PhysicalPbId& pb,
                           const t_pb_graph_pin* pb_graph_pin) const;
   std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> truth_tables(
@@ -98,6 +103,9 @@ class PhysicalPb {
   void set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                  const t_pb_graph_pin* pb_graph_pin,
                                  const AtomNetId& atom_net);
+  void set_pb_graph_pin_driver(const PhysicalPbId& pb,
+                               const t_pb_graph_pin* pb_graph_pin,
+                               const t_pb_graph_pin* driver_pb_graph_pin);
   void set_wire_lut_output(const PhysicalPbId& pb,
                            const t_pb_graph_pin* pb_graph_pin,
                            const bool& wire_lut_output);
@@ -125,6 +133,13 @@ class PhysicalPb {
   vtr::vector<PhysicalPbId, std::vector<AtomBlockId>> atom_blocks_;
   vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, AtomNetId>>
     pin_atom_nets_;
+  /* The pin that each pin is routed from, in the routing results of repack.
+   * Several pins may carry the same net, e.g., the output of a LUT used as a
+   * wire carries the net of its input, so the nets alone cannot tell which
+   * input a programmable interconnect selects */
+  vtr::vector<PhysicalPbId,
+              std::map<const t_pb_graph_pin*, const t_pb_graph_pin*>>
+    pin_drivers_;
   vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, bool>>
     wire_lut_outputs_;
 

@@ -87,6 +87,24 @@ std::vector<LbRRNodeId> LbRouter::net_routed_nodes(const NetId& net) const {
   return routed_nodes;
 }
 
+std::vector<std::pair<LbRRNodeId, LbRRNodeId>> LbRouter::net_routed_edges(
+  const NetId& net) const {
+  VTR_ASSERT(true == is_routed());
+  VTR_ASSERT(true == valid_net_id(net));
+
+  std::vector<std::pair<LbRRNodeId, LbRRNodeId>> edges;
+
+  /* Walk through the routing tree of each source of the net */
+  for (const t_trace* rt_tree : lb_net_rt_trees_[net]) {
+    if (nullptr == rt_tree) {
+      continue;
+    }
+    rec_collect_trace_edges(rt_tree, edges);
+  }
+
+  return edges;
+}
+
 /**************************************************
  * Private accessors
  *************************************************/
@@ -154,6 +172,15 @@ void LbRouter::rec_collect_trace_nodes(
 
   for (const t_trace& next : trace->next_nodes) {
     rec_collect_trace_nodes(&next, routed_nodes);
+  }
+}
+
+void LbRouter::rec_collect_trace_edges(
+  const t_trace* trace,
+  std::vector<std::pair<LbRRNodeId, LbRRNodeId>>& edges) const {
+  for (const t_trace& next : trace->next_nodes) {
+    edges.push_back({trace->current_node, next.current_node});
+    rec_collect_trace_edges(&next, edges);
   }
 }
 
