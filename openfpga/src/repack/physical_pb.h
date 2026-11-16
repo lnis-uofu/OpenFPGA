@@ -71,6 +71,11 @@ class PhysicalPb {
   std::vector<AtomBlockId> atom_blocks(const PhysicalPbId& pb) const;
   AtomNetId pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                   const t_pb_graph_pin* pb_graph_pin) const;
+  /* Find the pin that a pin of the block is routed from, in the routing
+   * results of repack. Return nullptr if repack did not route the pin from
+   * another pin of the block, e.g., for an input pin of the block */
+  const t_pb_graph_pin* pb_graph_pin_driver(
+    const PhysicalPbId& pb, const t_pb_graph_pin* pb_graph_pin) const;
   bool is_wire_lut_output(const PhysicalPbId& pb,
                           const t_pb_graph_pin* pb_graph_pin) const;
   std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> truth_tables(
@@ -81,9 +86,6 @@ class PhysicalPb {
   std::vector<FixedBitstreamInfo> fixed_mode_select_bitstreams(
     const PhysicalPbId& pb) const;
   std::vector<MifDataInfo> mif_data(const PhysicalPbId& pb) const;
-  /* Find the input set that a bus-based mux of the block is routed from, by
-   * the name of the mux. Return -1 for a bus-based mux which is not used */
-  int bus_mux_selection(const std::string& mux_name) const;
 
  public: /* Public mutators */
   PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
@@ -98,6 +100,9 @@ class PhysicalPb {
   void set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                  const t_pb_graph_pin* pb_graph_pin,
                                  const AtomNetId& atom_net);
+  void set_pb_graph_pin_driver(const PhysicalPbId& pb,
+                               const t_pb_graph_pin* pb_graph_pin,
+                               const t_pb_graph_pin* driver_pb_graph_pin);
   void set_wire_lut_output(const PhysicalPbId& pb,
                            const t_pb_graph_pin* pb_graph_pin,
                            const bool& wire_lut_output);
@@ -110,9 +115,6 @@ class PhysicalPb {
   void add_mif_data(const PhysicalPbId& pb, const AtomBlockId& atom_block,
                     const std::string& operating_pb_path,
                     const std::string& source, const std::string& selector);
-  /* Give the input set that each used bus-based mux of the block is routed
-   * from, by the name of the mux */
-  void set_bus_mux_selections(const std::map<std::string, int>& selections);
 
  public: /* Public validators/invalidators */
   bool valid_pb_id(const PhysicalPbId& pb_id) const;
@@ -125,6 +127,10 @@ class PhysicalPb {
   vtr::vector<PhysicalPbId, std::vector<AtomBlockId>> atom_blocks_;
   vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, AtomNetId>>
     pin_atom_nets_;
+  /* The pin that each pin is routed from, in the routing results of repack */
+  vtr::vector<PhysicalPbId,
+              std::map<const t_pb_graph_pin*, const t_pb_graph_pin*>>
+    pin_drivers_;
   vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, bool>>
     wire_lut_outputs_;
 
@@ -149,11 +155,6 @@ class PhysicalPb {
   vtr::vector<PhysicalPbId, std::vector<FixedBitstreamInfo>>
     fixed_mode_select_bitstreams_;
   vtr::vector<PhysicalPbId, std::vector<MifDataInfo>> mif_data_;
-
-  /* Input set that each used bus-based mux of the block is routed from, by the
-   * name of the mux. All the bits of a bus-based mux share one select, and a
-   * name denotes a single bus-based mux of the physical modes of a block */
-  std::map<std::string, int> bus_mux_selections_;
 
   /* Fast lookup */
   std::map<const t_pb_graph_node*, PhysicalPbId> type2id_map_;

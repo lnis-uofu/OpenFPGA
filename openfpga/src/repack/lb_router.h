@@ -8,6 +8,7 @@
 #include <queue>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "lb_rr_graph.h"
@@ -70,6 +71,9 @@ namespace openfpga {
  *  // Read out routing results
  *  // Here is an example to check which nodes are mapped to the 'net' created
  *before std::vector<LbRRNodeId> routed_nodes = lb_router.net_routed_nodes(net);
+ *  // and the node that drives each routed node of the 'net'
+ *  std::vector<std::pair<LbRRNodeId, LbRRNodeId>> edges =
+ *    lb_router.net_routed_edges(net);
  *
  *******************************************************************/
 
@@ -238,6 +242,14 @@ class LbRouter {
    */
   std::vector<LbRRNodeId> net_routed_nodes(const NetId& net) const;
 
+  /**
+   * Get the routing results for a net as the edges of its routing trees. Each
+   * edge is a pair of nodes: the node that drives a routed node, and the routed
+   * node
+   */
+  std::vector<std::pair<LbRRNodeId, LbRRNodeId>> net_routed_edges(
+    const NetId& net) const;
+
  public: /* Public mutators */
   /**
    * Add net to be routed
@@ -289,6 +301,10 @@ class LbRouter {
   /* Recursively find all the nodes in the trace */
   void rec_collect_trace_nodes(const t_trace* trace,
                                std::vector<LbRRNodeId>& routed_nodes) const;
+  /* Recursively find all the edges in the trace */
+  void rec_collect_trace_edges(
+    const t_trace* trace,
+    std::vector<std::pair<LbRRNodeId, LbRRNodeId>>& edges) const;
 
  private: /* Private mutators */
   /*It is possible that a net may connect multiple times to a logically
