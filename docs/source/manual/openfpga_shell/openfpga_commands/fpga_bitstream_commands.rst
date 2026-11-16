@@ -33,7 +33,7 @@ Repack's functionality are in the following aspects:
 
   .. note:: Run VPR with ``--flat_routing on``. Otherwise, VPR may drive the bits of a bus-based multiplexer from different input sets. Repack checks the input sets VPR used before rerouting any block, and errors out if the physical modes cannot follow them, rather than programming an input set VPR did not use.
 
-- It re-routes all the nets by considering the programmable interconnects in physical modes **only**.
+- It re-routes all the nets by considering the programmable interconnects in physical modes **only**, and records the pin each routed pin is driven from. The bitstream generator configures each multiplexer to select the pin recorded for its output.
 
   .. note:: This must be done before bitstream generator and testbench generation. Strongly recommend it is done after all the fix-up have been applied
 

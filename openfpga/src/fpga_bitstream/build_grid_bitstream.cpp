@@ -2,6 +2,7 @@
  * This file includes functions that are used for building bitstreams
  * for grids (CLBs, heterogenerous blocks, I/Os, etc.)
  *******************************************************************/
+#include <algorithm>
 #include <cmath>
 #include <string>
 
@@ -244,73 +245,49 @@ static void build_primitive_bitstream(
 }
 
 /********************************************************************
- * Find the mux path id (the index of the selected input) for the mux that
- * drives a given destination pin, based on the routing results stored in
- * physical_pb. Returns DEFAULT_PATH_ID when the destination is unmapped, has no
- * net, or none of the mux inputs carries the destination's net.
+ * Find the input that repack routed a destination pin from, among the inputs
+ * of the interconnect that drives the pin, and return its index (the path id).
+ * Return DEFAULT_PATH_ID if repack did not route the destination pin.
+ * Error out if repack routed it from a pin which is not an input of the
+ * interconnect.
+ *
+ * The nets on the pins do not tell which input is selected in general, since
+ * several inputs may carry the net of the destination: a net may enter the
+ * block on two pins, and the output of a LUT used as a wire carries the net of
+ * its input. If that output is an input of the mux that drives the LUT,
+ * selecting it closes a loop.
  *******************************************************************/
-static int find_physical_block_pin_mux_path_id(const PhysicalPb& physical_pb,
-                                               t_pb_graph_pin* des_pb_graph_pin,
-                                               t_interconnect* cur_interc,
-                                               const size_t& fan_in) {
-  const PhysicalPbId& des_pb_id =
-    physical_pb.find_pb(des_pb_graph_pin->parent_node);
-  if (true != physical_pb.valid_pb_id(des_pb_id)) {
-    return DEFAULT_PATH_ID;
-  }
-  AtomNetId output_net =
-    physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin);
-  if (AtomNetId::INVALID() == output_net) {
-    return DEFAULT_PATH_ID;
-  }
-  size_t mux_input_pin_id = 0;
-  for (t_pb_graph_pin* src_pb_graph_pin :
-       pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
-    const PhysicalPbId& src_pb_id =
-      physical_pb.find_pb(src_pb_graph_pin->parent_node);
-    /* If the src pb id is not valid, we bypass it */
-    if ((true == physical_pb.valid_pb_id(src_pb_id)) &&
-        (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) ==
-         output_net)) {
-      break;
-    }
-    mux_input_pin_id++;
-  }
-  VTR_ASSERT(mux_input_pin_id <= fan_in);
-  /* Unmapped pin, use default path id */
-  if (fan_in == mux_input_pin_id) {
-    return DEFAULT_PATH_ID;
-  }
-  return (int)mux_input_pin_id;
-}
-
-/********************************************************************
- * Check if a given input of the mux that drives a destination pin carries the
- * net of the destination pin, based on the routing results stored in
- * physical_pb. Returns false when the destination is unmapped or has no net.
- *******************************************************************/
-static bool is_physical_block_pin_net_on_mux_input(
+static int find_physical_block_pin_routed_mux_path_id(
   const PhysicalPb& physical_pb, t_pb_graph_pin* des_pb_graph_pin,
-  t_interconnect* cur_interc, const size_t& mux_input_pin_id) {
+  t_interconnect* cur_interc) {
   const PhysicalPbId& des_pb_id =
     physical_pb.find_pb(des_pb_graph_pin->parent_node);
   if (true != physical_pb.valid_pb_id(des_pb_id)) {
-    return false;
+    return DEFAULT_PATH_ID;
   }
-  AtomNetId output_net =
-    physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin);
-  if (AtomNetId::INVALID() == output_net) {
-    return false;
+  const t_pb_graph_pin* driver_pb_graph_pin =
+    physical_pb.pb_graph_pin_driver(des_pb_id, des_pb_graph_pin);
+  if (nullptr == driver_pb_graph_pin) {
+    return DEFAULT_PATH_ID;
   }
+  /* The fabric wires the i-th input of the mux to the i-th pin given by
+   * pb_graph_pin_inputs() */
   std::vector<t_pb_graph_pin*> src_pb_graph_pins =
     pb_graph_pin_inputs(des_pb_graph_pin, cur_interc);
-  VTR_ASSERT(mux_input_pin_id < src_pb_graph_pins.size());
-  t_pb_graph_pin* src_pb_graph_pin = src_pb_graph_pins[mux_input_pin_id];
-  const PhysicalPbId& src_pb_id =
-    physical_pb.find_pb(src_pb_graph_pin->parent_node);
-  return (true == physical_pb.valid_pb_id(src_pb_id)) &&
-         (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) ==
-          output_net);
+  auto result = std::find(src_pb_graph_pins.begin(), src_pb_graph_pins.end(),
+                          driver_pb_graph_pin);
+  if (src_pb_graph_pins.end() == result) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Pin '%s' is routed from '%s', which is not an input of "
+                   "interconnect '%s' (Arch[LINE%d])! The physical modes of a "
+                   "logical site and of its physical equivalent site must have "
+                   "the same interconnect.\n",
+                   des_pb_graph_pin->to_string().c_str(),
+                   driver_pb_graph_pin->to_string().c_str(),
+                   cur_interc->name.c_str(), cur_interc->line_num);
+    exit(CMD_EXEC_FATAL_ERROR);
+  }
+  return (int)std::distance(src_pb_graph_pins.begin(), result);
 }
 
 /********************************************************************
@@ -391,46 +368,39 @@ static void build_physical_block_pin_interc_bitstream(
         if (des_pb_graph_pin != rep_pb_graph_pin) {
           return;
         }
-        /* All the bits of the bus share a single selector. Repack routes
-         * every bit from one input set and saves that set in the physical pb.
-         * The nets on the pins do not always tell which input a bit is routed
-         * from: the source pin of a net can itself be an input of the mux, and
-         * then it carries the net of a bit that is routed from another input.
-         * The path id equals the selected input-port index. A mux without a
-         * saved input set, or with no bit routed through it, is not used. */
-        int bus_path_id = physical_pb.bus_mux_selection(cur_interc->name);
+        /* All the bits of the bus share a single selector, so all the bits
+         * that repack routed through the mux must be routed from the same
+         * input. Repack follows the input set VPR used. A mux with no bit
+         * routed through it is not used. */
         mux_input_pin_id = size_t(DEFAULT_PATH_ID);
-        if (0 <= bus_path_id) {
-          VTR_ASSERT(size_t(bus_path_id) < fan_in);
-          for (t_pb_graph_pin* bus_pin : bus_pins) {
-            int pin_path_id = find_physical_block_pin_mux_path_id(
-              physical_pb, bus_pin, cur_interc, fan_in);
-            if (DEFAULT_PATH_ID == pin_path_id) {
-              continue;
-            }
-            /* A bit that is routed through the mux must find its net on the
-             * selected input */
-            if (false ==
-                is_physical_block_pin_net_on_mux_input(
-                  physical_pb, bus_pin, cur_interc, size_t(bus_path_id))) {
-              VTR_LOGF_ERROR(
-                __FILE__, __LINE__,
-                "Bus-based mux '%s' (Arch[LINE%d]) is routed from input %d, "
-                "but the net of bit '%s' is on input %d and not on input %d. "
-                "Check the packing/routing results.\n",
-                cur_interc->name.c_str(), cur_interc->line_num, bus_path_id,
-                bus_pin->to_string().c_str(), pin_path_id, bus_path_id);
-              exit(CMD_EXEC_FATAL_ERROR);
-            }
-            if (size_t(DEFAULT_PATH_ID) == mux_input_pin_id) {
-              mux_input_pin_id = size_t(bus_path_id);
-              net_pb_graph_pin = bus_pin;
-            }
+        t_pb_graph_pin* routed_bus_pin = nullptr;
+        for (t_pb_graph_pin* bus_pin : bus_pins) {
+          int pin_path_id = find_physical_block_pin_routed_mux_path_id(
+            physical_pb, bus_pin, cur_interc);
+          if (DEFAULT_PATH_ID == pin_path_id) {
+            continue;
+          }
+          if (nullptr == routed_bus_pin) {
+            routed_bus_pin = bus_pin;
+            mux_input_pin_id = size_t(pin_path_id);
+            net_pb_graph_pin = bus_pin;
+            continue;
+          }
+          if (size_t(pin_path_id) != mux_input_pin_id) {
+            VTR_LOGF_ERROR(
+              __FILE__, __LINE__,
+              "Bus-based mux '%s' (Arch[LINE%d]) has one select for all the "
+              "bits, but bit '%s' is routed from input %lu and bit '%s' from "
+              "input %d. Check the repacking results.\n",
+              cur_interc->name.c_str(), cur_interc->line_num,
+              routed_bus_pin->to_string().c_str(), mux_input_pin_id,
+              bus_pin->to_string().c_str(), pin_path_id);
+            exit(CMD_EXEC_FATAL_ERROR);
           }
         }
       } else {
-        int pin_path_id = find_physical_block_pin_mux_path_id(
-          physical_pb, des_pb_graph_pin, cur_interc, fan_in);
+        int pin_path_id = find_physical_block_pin_routed_mux_path_id(
+          physical_pb, des_pb_graph_pin, cur_interc);
         mux_input_pin_id = (DEFAULT_PATH_ID == pin_path_id)
                              ? size_t(DEFAULT_PATH_ID)
                              : size_t(pin_path_id);
@@ -453,6 +423,18 @@ static void build_physical_block_pin_interc_bitstream(
               physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin));
           }
         }
+      }
+
+      /* A pin which carries a net in the packing results but which repack did
+       * not route keeps the default path, which may not deliver the net */
+      if ((size_t(DEFAULT_PATH_ID) == mux_input_pin_id) &&
+          (AtomNetId::INVALID() != output_net)) {
+        VTR_LOG_WARN(
+          "Pin '%s' carries net '%s', but repack did not route it. "
+          "Interconnect '%s' (Arch[LINE%d]) keeps its default path.\n",
+          net_pb_graph_pin->to_string().c_str(),
+          atom_ctx.netlist().net_name(output_net).c_str(),
+          cur_interc->name.c_str(), cur_interc->line_num);
       }
 
       /* Overwrite the default path if defined in bitstream annotation */
