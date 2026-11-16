@@ -2,7 +2,7 @@
 <!--
   Test architecture of the regression task fpga_bitstream/repack_wire_lut_feedback,
   derived from k4_N4_tileable_40nm.xml: the output of fle[3] has no direct
-  path to the CLB outputs, and the crossbar lists the fle outputs first.
+  path to the CLB outputs.
 
   Architecture with no fracturable LUTs
 
@@ -309,13 +309,7 @@
 		     Since all our outputs LUT outputs go to a BLE output, and have a delay of
 		     25 ps to do so, we subtract 25 ps from the 100 ps delay of a feedback
 		     to get the part that should be marked on the crossbar.	 -->
-        <!-- The output of fle[3] has no direct connection to the CLB outputs: a
-             net it drives can leave the CLB only through the LUT of another
-             fle used as a wire. The crossbar lists the fle outputs in
-             ascending order before the CLB inputs, so the output of that
-             LUT is an input of its own crossbar mux and comes before the
-             output of fle[3]. -->
-        <complete name="crossbar" input="fle[0].out fle[1].out fle[2].out fle[3].out clb.I" output="fle[3:0].in">
+        <complete name="crossbar" input="clb.I fle[3:0].out" output="fle[3:0].in">
           <delay_constant max="95e-12" in_port="clb.I" out_port="fle[3:0].in"/>
           <delay_constant max="75e-12" in_port="fle[3:0].out" out_port="fle[3:0].in"/>
         </complete>
@@ -326,6 +320,11 @@
                then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                naive specification).
           -->
+        <!-- The output of fle[3] has no direct connection to the CLB outputs: a
+             net it drives leaves the CLB only through the LUT of another fle
+             used as a wire. The crossbar lists the outputs of fle[0] to fle[3]
+             in this order, so the output of that LUT comes before the output
+             of fle[3] in its own crossbar mux. -->
         <direct name="clbouts1" input="fle[2:0].out" output="clb.O"/>
       </interconnect>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
