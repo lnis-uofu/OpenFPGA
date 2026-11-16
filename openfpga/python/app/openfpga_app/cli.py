@@ -39,6 +39,11 @@ def main(argv=None) -> int:
     parser.add_argument("--context-tokens", type=int, default=8192)
     parser.add_argument("--max-steps", type=int, default=20)
     parser.add_argument(
+        "--no-auto-session",
+        action="store_true",
+        help="do not open a session for a tool call that needs one when none is open",
+    )
+    parser.add_argument(
         "--record-dir", type=Path, help="a record of each conversation is written here"
     )
     parser.add_argument("--max-sessions", type=int, default=4)
@@ -83,6 +88,7 @@ def main(argv=None) -> int:
                     tool_mode=args.tool_mode,
                     context_tokens=args.context_tokens,
                     max_steps=args.max_steps,
+                    auto_session=not args.no_auto_session,
                 )
                 model = OpenAICompatModel(agent_config)
                 if args.record_dir:

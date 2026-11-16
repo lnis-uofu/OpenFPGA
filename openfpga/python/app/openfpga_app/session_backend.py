@@ -101,9 +101,23 @@ class SessionBackend:
 
     def _files_listing(self) -> str:
         """The files that read_inputs can use, for the start of the prompt: a model cannot guess
-        them. At most 1,500 characters, the first of each folder"""
-        lines: List[str] = []
-        room = 1500
+        them, and it gives one for another (an OpenFPGA architecture as the VPR one). The files of
+        the session (uploaded or written) are listed by what they are. From the designs folders the
+        design directories (the folders with a manifest design.json) are listed with their top
+        module, and the BLIF circuits that are not inside one, with the folders under
+        them (a short name is enough when it is the only one of its name; otherwise its path), 500
+        characters for each kind (1500 for the designs: synthesize takes the name of one)"""
+        from openfpga_mcp.paths import (
+            CREATED,
+            UPLOADS,
+            design_directories,
+            design_files,
+            looks_like_blif,
+            root_element,
+        )
+
+        kinds = {"architecture": "vpr_arch", "openfpga_architecture": "openfpga_arch"}
+        found: Dict[str, List[str]] = {"vpr_arch": [], "openfpga_arch": [], "circuit": []}
         folders = list(self.config.design_dirs)
         if self.sid is not None:
             try:
@@ -114,20 +128,31 @@ class SessionBackend:
                 pass
         for folder in folders:
             try:
-                names = sorted(p.name for p in folder.iterdir() if p.is_file())
+                paths = sorted(p for p in folder.iterdir() if p.is_file())
             except OSError:
                 continue
+            for path in paths[:2000]:
+                if path.suffix == ".xml":
+                    kind = kinds.get(root_element(str(path)) or "")
+                elif path.suffix == ".blif" and looks_like_blif(str(path)):
+                    kind = "circuit"
+                else:
+                    kind = None
+                if kind:
+                    found[kind].append(path.name)
+        lines = []
+        for kind, names in found.items():
             shown: List[str] = []
+            room = 500
             for name in names:
                 if room < len(name) + 2:
                     break
                 shown.append(name)
                 room -= len(name) + 2
-            more = len(names) - len(shown)
             if shown:
+                more = len(names) - len(shown)
                 lines.append(
-                    "%s: %s%s"
-                    % (folder.name, ", ".join(shown), " (+%d more)" % more if more else "")
+                    "%s: %s%s" % (kind, ", ".join(shown), " (+%d more)" % more if more else "")
                 )
         return "\n".join(lines)
 

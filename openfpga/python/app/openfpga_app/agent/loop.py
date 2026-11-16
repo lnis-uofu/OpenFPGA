@@ -8,6 +8,7 @@ read again. The limits: steps, time, the size of the context (old tool answers b
 the same call again and again, a failure of the same kind again and again, and a cancel.
 """
 
+import inspect
 import json
 import time
 from pathlib import Path
@@ -215,6 +216,39 @@ class AgentLoop:
                 answer: Dict[str, Any]
                 seconds = 0.0
                 function = self.tools.get(request.name)
+                opened = None
+                if (
+                    config.auto_session
+                    and not self._cancelled
+                    and not skipped
+                    and not request.error
+                    and function is not None
+                    and "session_open" in self.tools
+                    and self._session() is None
+                    and not request.arguments.get("session")
+                    and "session" in inspect.signature(function).parameters
+                ):
+                    # A model that forgets to open a session is not sent back to do it: the loop
+                    # opens one, as a call that the person sees, and says so in the answer
+                    opened = "open_%s" % request.id
+                    yield events.tool_call_started(message_id, opened, "session_open", {})
+                    yield events.state_changed("running")
+                    begun = time.monotonic()
+                    first = await self._invoke("session_open", {})
+                    took = time.monotonic() - begun
+                    yield events.tool_call_finished(
+                        message_id, opened, bool(first.get("ok")), took, first
+                    )
+                    self._record(
+                        "tool",
+                        name="session_open",
+                        arguments={},
+                        answer=first,
+                        seconds=round(took, 2),
+                        automatic=True,
+                    )
+                    if not first.get("ok"):
+                        opened = None
                 yield events.tool_call_started(
                     message_id, request.id, request.name, request.arguments
                 )
@@ -250,6 +284,11 @@ class AgentLoop:
                         begun = time.monotonic()
                         answer = await self._invoke(request.name, arguments)
                         seconds = time.monotonic() - begun
+                        if opened and isinstance(answer, dict):
+                            answer["note"] = (
+                                "No session was open, so session %s was opened for this call"
+                                % self._session()
+                            )
                 content = json.dumps(answer, separators=(",", ":"), ensure_ascii=False)
                 self._record(
                     "tool",

@@ -23,6 +23,8 @@ class AgentConfig:
     keep_recent_results: int = 2
     # The same call this many times in a row, or a failure of the same kind, stops the loop
     repeat_limit: int = 3
+    # A tool that needs a session when none is open: open one (shown as a call) instead of an error
+    auto_session: bool = True
     # The descriptions of the tools: all of the text, or the first sentence only
     compact_descriptions: bool = False
 

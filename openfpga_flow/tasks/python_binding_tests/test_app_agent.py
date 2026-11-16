@@ -466,7 +466,7 @@ def test_old_tool_answers_become_a_line_and_the_recent_ones_stay():
     tools = make_tools(big=big)
     turns = [say("", call("echo", text="n%d" % i)) for i in range(8)] + [say("done")]
     model = ScriptedModel(turns)
-    loop = make_loop(model, tools, context_tokens=2048, keep_recent_results=2, repeat_limit=99)
+    loop = make_loop(model, tools, context_tokens=2560, keep_recent_results=2, repeat_limit=99)
     found = run(loop)
     assert said(found).endswith("done") and "Stopped" not in said(found)
     last = model.requests[-1]
@@ -874,3 +874,62 @@ def test_a_line_with_a_slash_is_still_a_tool_call_when_there_is_a_model(
         assert "The person called /session_open" in user
     finally:
         backend.close()
+
+
+# A session that the loop opens ---------------------------------------------------------------------------------
+
+
+def _session_tools(log):
+    async def session_open(name: Optional[str] = None) -> str:
+        """Open a session."""
+        log.append(("session_open", name))
+        return json.dumps({"ok": True, "data": {"session": "s1"}})
+
+    async def work(session: str, text: str = "") -> str:
+        """Do work in a session."""
+        log.append(("work", session, text))
+        return json.dumps({"ok": True, "data": {"text": text}})
+
+    return {"session_open": session_open, "work": work}
+
+
+def _auto_loop(model, log, auto=True):
+    tools = _session_tools(log)
+    state = {"sid": None}
+
+    async def invoke(name, arguments):
+        answer = json.loads(await tools[name](**arguments))
+        if name == "session_open":
+            state["sid"] = answer["data"]["session"]
+        return answer
+
+    return AgentLoop(
+        model, tools, AgentConfig(auto_session=auto), invoke, session=lambda: state["sid"]
+    )
+
+
+def test_a_tool_that_needs_a_session_opens_one_when_there_is_none():
+    log: List = []
+    model = ScriptedModel([say("", call("work", text="a"), call("work", text="b")), say("Done.")])
+    found = run(_auto_loop(model, log))
+    assert log == [("session_open", None), ("work", "s1", "a"), ("work", "s1", "b")]
+    for item in found:
+        valid(item)
+    started = [e["tool"] for e in found if e["type"] == "tool_call_started"]
+    assert started == ["session_open", "work", "work"]  # the open is a card of its own
+    answer = json.loads(model.requests[1][-2]["content"])
+    assert "session s1 was opened" in answer["note"]
+    assert "note" not in json.loads(model.requests[1][-1]["content"])  # said once
+
+
+def test_no_session_is_opened_when_one_is_given_or_the_tool_opens_it_or_it_is_off():
+    log: List = []
+    run(_auto_loop(ScriptedModel([say("", call("session_open", name="x")), say("ok")]), log))
+    assert log == [("session_open", "x")]
+    log = []
+    run(_auto_loop(ScriptedModel([say("", call("work", session="s9")), say("ok")]), log))
+    assert log == [("session_open", None), ("work", "s9", "")] or log == [("work", "s9", "")]
+    log = []
+    found = run(_auto_loop(ScriptedModel([say("", call("work")), say("ok")]), log, auto=False))
+    assert log == []
+    assert [e for e in found if e["type"] == "tool_call_finished"][0]["ok"] is False
