@@ -86,9 +86,6 @@ class PhysicalPb {
   std::vector<FixedBitstreamInfo> fixed_mode_select_bitstreams(
     const PhysicalPbId& pb) const;
   std::vector<MifDataInfo> mif_data(const PhysicalPbId& pb) const;
-  /* Find the input set that a bus-based mux of the block is routed from, by
-   * the name of the mux. Return -1 for a bus-based mux which is not used */
-  int bus_mux_selection(const std::string& mux_name) const;
 
  public: /* Public mutators */
   PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
@@ -118,9 +115,6 @@ class PhysicalPb {
   void add_mif_data(const PhysicalPbId& pb, const AtomBlockId& atom_block,
                     const std::string& operating_pb_path,
                     const std::string& source, const std::string& selector);
-  /* Give the input set that each used bus-based mux of the block is routed
-   * from, by the name of the mux */
-  void set_bus_mux_selections(const std::map<std::string, int>& selections);
 
  public: /* Public validators/invalidators */
   bool valid_pb_id(const PhysicalPbId& pb_id) const;
@@ -133,10 +127,7 @@ class PhysicalPb {
   vtr::vector<PhysicalPbId, std::vector<AtomBlockId>> atom_blocks_;
   vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, AtomNetId>>
     pin_atom_nets_;
-  /* The pin that each pin is routed from, in the routing results of repack.
-   * Several pins may carry the same net, e.g., the output of a LUT used as a
-   * wire carries the net of its input, so the nets alone cannot tell which
-   * input a programmable interconnect selects */
+  /* The pin that each pin is routed from, in the routing results of repack */
   vtr::vector<PhysicalPbId,
               std::map<const t_pb_graph_pin*, const t_pb_graph_pin*>>
     pin_drivers_;
@@ -164,11 +155,6 @@ class PhysicalPb {
   vtr::vector<PhysicalPbId, std::vector<FixedBitstreamInfo>>
     fixed_mode_select_bitstreams_;
   vtr::vector<PhysicalPbId, std::vector<MifDataInfo>> mif_data_;
-
-  /* Input set that each used bus-based mux of the block is routed from, by the
-   * name of the mux. All the bits of a bus-based mux share one select, and a
-   * name denotes a single bus-based mux of the physical modes of a block */
-  std::map<std::string, int> bus_mux_selections_;
 
   /* Fast lookup */
   std::map<const t_pb_graph_node*, PhysicalPbId> type2id_map_;
