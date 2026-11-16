@@ -1,0 +1,8 @@
+<vpr_constraints tool_name="vpr">
+  <partition_list>
+    <!-- The output of fle[3] can leave the CLB only through the LUT of another fle used as a wire -->
+    <partition name="and_lut_in_fle3">
+      <add_atom name_pattern="c" logical_block_location="clb[0].fle[3]{n1_lut4}.ble4[0].lut4[0]"/>
+    </partition>
+  </partition_list>
+</vpr_constraints>

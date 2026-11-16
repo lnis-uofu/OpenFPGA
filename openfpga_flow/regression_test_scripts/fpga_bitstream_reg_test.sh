@@ -38,6 +38,7 @@ run-task fpga_bitstream/load_external_architecture_bitstream $@
 echo -e "Testing repacker capability in identifying wire LUTs";
 run-task fpga_bitstream/repack_wire_lut $@
 run-task fpga_bitstream/repack_wire_lut_strong $@
+run-task fpga_bitstream/repack_wire_lut_feedback $@
 run-task fpga_bitstream/repack_ignore_nets $@
 
 echo -e "Testing repacker capability in following VPR's input set on bus-based muxes";
