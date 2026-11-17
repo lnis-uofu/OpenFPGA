@@ -220,3 +220,67 @@ def test_the_demo_has_no_packages_and_no_session_to_create():
         assert client.get("/api/device-packages").json()["data"]["packages"] == []
         answer = client.post("/api/session/new", json={"device_package": LOGIC}).json()
         assert answer["diagnostics"][0]["kind"] == "demo"
+
+
+# A circuit that is uploaded is read ---------------------------------------------------------
+
+
+def put(client, name, data, overwrite=False):
+    query = "name=%s%s" % (name, "&overwrite=1" if overwrite else "")
+    return client.post(
+        "/api/upload?" + query, content=data, headers={"Content-Type": "application/octet-stream"}
+    )
+
+
+def test_a_circuit_that_is_uploaded_is_read_when_the_session_waits_for_one(client, golden):
+    assert client.post("/api/session/new", json={"device_package": LOGIC}).json()["ok"]
+    answer = put(client, "and2.blif", golden.circuit.read_bytes())
+    assert answer.status_code == 200
+    assert answer.json()["data"]["loaded"] is True
+    shown = view(client)
+    assert [f["label"] for f in shown["files"]["inputs"]] == ["vpr arch", "openfpga arch", "circuit"]
+    assert shown["files"]["inputs"][2]["name"].endswith("uploads/and2.blif")
+    assert shown["stages"][0]["status"] == "reached"  # DEVICE
+    assert call(say(client, "/run_stage stage=pack"))["ok"]
+
+    # A circuit that is there is not replaced by another upload: the stages would be dropped
+    second = put(client, "other.blif", golden.circuit.read_bytes())
+    assert second.json()["data"]["loaded"] is False and "load_error" not in second.json()["data"]
+    assert view(client)["files"]["inputs"][2]["name"].endswith("and2.blif")
+    assert view(client)["stages"][1]["status"] == "reached"  # PACKED is still there
+
+
+def test_what_is_not_a_circuit_or_has_no_architectures_is_only_uploaded(client, golden):
+    assert put(client, "notes.txt", b"hello").json()["data"]["loaded"] is False  # opens a session
+    assert [f["label"] for f in view(client)["files"]["inputs"]] == []
+    answer = put(client, "and2.blif", golden.circuit.read_bytes())
+    assert answer.json()["data"]["loaded"] is False  # the session has no architectures
+    assert view(client)["files"]["inputs"] == []
+
+
+def test_a_circuit_that_cannot_be_read_is_uploaded_and_the_reason_is_given(client):
+    assert client.post("/api/session/new", json={"device_package": LOGIC}).json()["ok"]
+    bad = b".model m\n.inputs a\n.outputs b\n.names a b c d e f g h i j k l m n o p\n1 1\n.end\n"
+    answer = put(client, "bad.blif", bad)
+    assert answer.status_code == 200
+    data = answer.json()["data"]
+    assert data["loaded"] is False
+    assert data.get("load_error"), data
+    assert [f["label"] for f in view(client)["files"]["inputs"]] == ["vpr arch", "openfpga arch"]
+
+
+def test_the_model_is_told_that_the_circuit_was_read(openfpga_module, tmp_path, golden):
+    from openfpga_app.agent.scripted import ScriptedModel, say as say_
+    from test_app_agent import _collect
+
+    model = ScriptedModel([say_("Understood.")])
+    backend = SessionBackend(config(tmp_path, golden), model=model)
+    try:
+        assert asyncio.run(backend.new_session(device_package=LOGIC))["ok"]
+        data = asyncio.run(backend.upload("and2.blif", golden.circuit.read_bytes(), False))["data"]
+        assert data["loaded"]
+        asyncio.run(_collect(backend.chat("What next?")))
+        user = [m for m in model.requests[-1] if m["role"] == "user"][-1]["content"]
+        assert "uploaded and2.blif (circuit) to session s1, and it was read as the circuit" in user
+    finally:
+        backend.close()

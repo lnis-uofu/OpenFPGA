@@ -36,6 +36,7 @@ def test_a_file_goes_to_the_session_and_opens_one_if_there_is_none(client, backe
         "name": "mine.blif",
         "kind": "circuit",
         "bytes": len(circuit(golden)),
+        "loaded": False,  # a session with no architectures has nothing to read it with
     }
     shown = view(client)
     assert shown["session"]["id"] == "s1"

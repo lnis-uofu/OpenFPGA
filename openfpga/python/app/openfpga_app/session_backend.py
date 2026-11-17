@@ -417,11 +417,40 @@ class SessionBackend:
             )
         except Exception as error:  # noqa: BLE001 - a session that is gone, a disk that is full
             return answers.from_exception(error)
-        self._changed_outside(
-            "The person uploaded %s (%s) to session %s; read_inputs can use it by its name"
-            % (saved["name"], saved["kind"].replace("_", " "), self.sid)
+        saved["loaded"] = False
+        if saved["kind"] == "circuit" and await anyio.to_thread.run_sync(
+            self._waits_for_circuit, entry
+        ):
+            # The session has its architectures and no circuit: this is the one to read
+            read = await self.invoke("read_inputs", {"session": entry.id, "circuit": saved["name"]})
+            if read.get("ok"):
+                saved["loaded"] = True
+            else:
+                first = (read.get("diagnostics") or [{}])[0]
+                saved["load_error"] = first.get("message", "The circuit could not be read")
+                saved["load_hint"] = first.get("hint")
+        what = "The person uploaded %s (%s) to session %s" % (
+            saved["name"],
+            saved["kind"].replace("_", " "),
+            self.sid,
         )
+        if saved["loaded"]:
+            what += ", and it was read as the circuit (read_inputs): no need to read it again"
+        elif "load_error" in saved:
+            what += "; reading it as the circuit failed: %s" % saved["load_error"]
+        else:
+            what += "; read_inputs can use it by its name"
+        self._changed_outside(what)
         return {"ok": True, "data": saved, "truncated": False, "more": None}
+
+    def _waits_for_circuit(self, entry) -> bool:
+        """The session has read both architectures (it was created from a device package) and has
+        no circuit. A circuit that is there is not replaced: that drops the stages that were run"""
+        session = entry.session
+        if session._lock.locked():  # a call is running: it is not the moment
+            return False
+        inputs = session.state().inputs
+        return bool(inputs.vpr_arch and inputs.openfpga_arch and not inputs.circuit)
 
     async def remove_upload(self, name: str) -> Dict[str, Any]:
         """Delete a file that the person gave to the session; the model is told that it is gone"""

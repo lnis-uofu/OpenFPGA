@@ -402,6 +402,27 @@ describe("uploading files to the session", () => {
     expect(sent[1]?.method).toBe("DELETE");
   });
 
+  it("says when the circuit that was uploaded could not be read, and keeps quiet when it was", async () => {
+    real();
+    let body: unknown = { ok: true, data: { name: "a.blif", kind: "circuit", bytes: 3, loaded: true } };
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      url.startsWith("/api/upload") ? answer(200, body) : answer(200, emptyView()),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Sidebar />);
+    pick(new File(["abc"], "a.blif"));
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
+    expect(banner.value).toBeNull();
+    body = {
+      ok: true,
+      data: { name: "a.blif", kind: "circuit", bytes: 3, loaded: false, load_error: "no .model", load_hint: "check the file" },
+    };
+    pick(new File(["abc"], "a.blif"));
+    await waitFor(() => expect(banner.value?.kind).toBe("circuit_not_read"));
+    expect(banner.value?.message).toContain("a.blif was uploaded, but reading it as the circuit failed: no .model");
+    expect(banner.value?.hint).toBe("check the file");
+  });
+
   it("is not there in the demo", () => {
     config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
     render(<Sidebar />);

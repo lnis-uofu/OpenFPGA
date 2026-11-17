@@ -168,7 +168,7 @@ try {
     buffer: readFileSync(path.join(inputs[2], files.circuit)),
   });
   await page.waitForSelector(".upload-row:has-text('design.blif')");
-  await say("/read_inputs circuit=design.blif");
+  // The session has its architectures and no circuit: the upload is read as the circuit, by itself
   await page.waitForSelector(".file-row .file:has-text('design.blif')", { timeout: 30000 });
   assert.equal(await page.locator("text=Waiting for a circuit").count(), 0);
   await say("/run_stage stage=pack");

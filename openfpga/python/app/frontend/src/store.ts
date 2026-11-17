@@ -315,6 +315,15 @@ export async function uploadFiles(files: File[]) {
         reportFailure(result.answer);
         break;
       }
+      // A circuit is read by itself when the session waits for one; if that failed the file is there
+      const data = result.answer.data as { load_error?: string; load_hint?: string | null } | undefined;
+      if (data?.load_error) {
+        banner.value = {
+          kind: "circuit_not_read",
+          message: `${file.name} was uploaded, but reading it as the circuit failed: ${data.load_error}`,
+          hint: data.load_hint,
+        };
+      }
     }
   } catch (error) {
     banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
