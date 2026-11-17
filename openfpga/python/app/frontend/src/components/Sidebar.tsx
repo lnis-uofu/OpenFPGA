@@ -1,12 +1,11 @@
 import { useRef, useState } from "preact/hooks";
 import { UPLOAD_EXTENSIONS } from "../api";
+import { PackagePicker } from "./PackagePicker";
 import {
   busy,
   config,
-  devicePackages,
   endSession,
   makeSession,
-  makeSessionFromPackage,
   openFile,
   packagesOpen,
   removeUpload,
@@ -62,43 +61,6 @@ function size(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} kB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-/** The packages that a session can be created from: it reads their architectures and waits for the circuit */
-function PackagePicker() {
-  const found = devicePackages.value;
-  return (
-    <div class="packages" role="region" aria-label="Device packages">
-      {found === null ? (
-        <div class="muted">Looking…</div>
-      ) : (
-        <>
-          {found.packages.length === 0 && (
-            <div class="muted">No device packages. Start the app with --device-packages FOLDER.</div>
-          )}
-          {found.packages.map((p) => (
-            <div key={p.name} class="package">
-              <div class="package-head">
-                <strong>{p.name}</strong>
-                <span class="chip">{p.layout}</span>
-                {p.lut_size != null && <span class="chip">K{p.lut_size}</span>}
-              </div>
-              <div class="muted package-text">{p.description}</div>
-              {p.tags.length > 0 && <div class="muted package-text">{p.tags.join(" · ")}</div>}
-              <button disabled={busy.value} onClick={() => void makeSessionFromPackage(p.name)}>
-                Create session
-              </button>
-            </div>
-          ))}
-          {found.problems.map((p) => (
-            <div key={p.name} class="package package-bad" title={p.message}>
-              <strong>{p.name}</strong> <span class="muted">cannot be used: {p.message.replace(/^The device package '[^']*' cannot be used: /, "")}</span>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  );
 }
 
 /** The left sidebar: the session, its stages, the design files and the checkpoints */

@@ -1,6 +1,6 @@
 // The state of the page: signals that the components read, and the one function that turns an
 // event of the server into a change of them.
-import { signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import {
   Answer,
   AppConfig,
@@ -130,6 +130,8 @@ export function resetStore() {
   calls.value = {};
   tabs.value = [];
   openFiles.value = {};
+  loaded.value = false;
+  welcomeChat.value = false;
   consoleHeight.value = CONSOLE_HEIGHT_DEFAULT;
   activeTab.value = CHAT;
   split.value = false;
@@ -231,12 +233,39 @@ export async function refreshView() {
   }
 }
 
+/** The first view and the configuration have come (or failed): until then the page shows nothing
+ * of the session, so that it does not draw the full interface and then the welcome screen */
+export const loaded = signal(false);
+
 export async function loadAll() {
-  await Promise.all([
-    refreshView(),
-    fetchConfig().then((c) => (config.value = c)).catch(() => undefined),
-  ]);
+  try {
+    await Promise.all([
+      refreshView(),
+      fetchConfig().then((c) => (config.value = c)).catch(() => undefined),
+    ]);
+  } finally {
+    loaded.value = true;
+  }
 }
+
+/** A message was sent from the welcome screen: its answer is shown there, in a small window, and the
+ * screen stays until a session exists and the answer is complete */
+export const welcomeChat = signal(false);
+
+/** The welcome screen: real sessions, and either nothing has happened yet (no session, nothing said),
+ * or the person asked something from it and the answer is still coming or there is no session yet.
+ * A session that is created from the buttons, or one that exists when the answer ends, gives the
+ * full interface */
+export function welcoming(): boolean {
+  if (!loaded.value || config.value?.backend !== "session") return false;
+  if (welcomeChat.value) return true;
+  return view.value.session === null && messages.value.length === 0;
+}
+
+// The answer is complete and there is a session: the welcome screen is done with
+effect(() => {
+  if (welcomeChat.value && view.value.session !== null && !busy.value) welcomeChat.value = false;
+});
 
 // The sessions -------------------------------------------------------------------------------------
 

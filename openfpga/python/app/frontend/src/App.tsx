@@ -4,8 +4,9 @@ import { Console } from "./components/Console";
 import { Settings } from "./components/Settings";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
+import { Welcome } from "./components/Welcome";
 import { Workspace } from "./components/Workspace";
-import { activeTab, closeTab, consoleOpen, loadAll, nextTab, settingsOpen, sidebarOpen, stop, CHAT } from "./store";
+import { activeTab, closeTab, consoleOpen, loaded, loadAll, nextTab, settingsOpen, sidebarOpen, stop, welcoming, CHAT } from "./store";
 
 /** The keys: Ctrl+K the chat, Ctrl+. stop, Ctrl+` the console, Ctrl+B the sidebar,
  * Ctrl+J and Ctrl+Shift+J the next and the previous tab, Ctrl+W close a result tab, Esc close */
@@ -54,11 +55,19 @@ export function App() {
   return (
     <div class="app">
       <TopBar />
-      <div class="body">
-        <Sidebar />
-        <Workspace />
-      </div>
-      <Console />
+      {!loaded.value ? (
+        <div class="body" />
+      ) : welcoming() ? (
+        <Welcome />
+      ) : (
+        <>
+          <div class="body">
+            <Sidebar />
+            <Workspace />
+          </div>
+          <Console />
+        </>
+      )}
       <Settings />
     </div>
   );

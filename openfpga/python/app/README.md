@@ -52,6 +52,19 @@ tokens and the seconds). What the person does meanwhile (console, buttons, `/` l
 the model at its next message. All 21 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
+## The first screen
+
+With real sessions the page starts on an empty screen: a prompt in the middle, and at the bottom the
+two ways to start a session, "Create session" and "Create session from device package…" (it lists the
+packages to choose from). A session created from a button gives the full interface at once.
+
+What you ask from the prompt is answered on the same screen, in a small window below it (the text as it
+comes, the tool calls, the state of the session on top, a Stop button in place of Send). The screen
+stays while the model works, and gives the full interface when the answer is complete and a session
+exists, that is when the session is loaded. An answer that needs no session stays on the screen; "Open
+the full interface ›" leaves it. If the session is closed later the first screen does not come back
+(only when nothing was ever said). The recorded demo starts on the full interface.
+
 ## Creating a session from a device package
 
 A device package (`openfpga_flow/device-packages/`, format in `docs/spec_device_package.md`) holds the

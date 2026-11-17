@@ -3,14 +3,14 @@ import { Message, banner, busy, config, messages, sendMessage, stop, uploadFiles
 import { Markdown } from "../markdown";
 import { CallGroup } from "./ToolCard";
 
-const EXAMPLES = [
+export const EXAMPLES = [
   "Run the flow on routing_test with a channel width of 20 and tell me the Fmax.",
   "Which options of the router can I change?",
   "Where is the critical path, and how long is it?",
 ];
 
 /** The parts of a message in order: text, then the calls in a row as one group */
-function MessageView(props: { message: Message }) {
+export function MessageView(props: { message: Message }) {
   const { message } = props;
   const blocks: preact.ComponentChildren[] = [];
   let run: string[] = [];

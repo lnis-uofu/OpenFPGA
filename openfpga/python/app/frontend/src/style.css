@@ -263,3 +263,24 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
 .theme-choice { display: flex; gap: 6px; margin: 6px 0; }
 .theme-choice button[aria-pressed="true"] { border-color: var(--accent); background: var(--user); }
+
+/* The welcome screen: a prompt in the middle, the two ways to start a session at the bottom */
+.welcome { display: flex; flex-direction: column; min-height: 0; padding: 16px 24px; overflow: auto; }
+.welcome-centre { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+.welcome-centre h1 { margin: 0; font-size: 28px; font-weight: 600; }
+.welcome-centre p { margin: 0; }
+.welcome-prompt { display: flex; gap: 8px; align-items: flex-end; width: min(44em, 100%); padding: 8px 8px 8px 16px; border: 1px solid var(--line); border-radius: 22px; background: var(--bg); box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1); }
+.welcome-prompt:focus-within { border-color: var(--accent); }
+.welcome-prompt textarea { flex: 1; resize: none; border: none; outline: none; padding: 8px 0; background: none; max-height: 200px; line-height: 1.5; font-size: 15px; }
+.welcome-prompt button { padding: 9px 16px; }
+.welcome .banner { max-width: 44em; text-align: left; }
+.welcome-packages { max-height: 42vh; overflow: auto; padding: 4px 0 12px; }
+.welcome-packages .packages { flex-direction: row; flex-wrap: wrap; justify-content: center; margin-top: 0; }
+.welcome-packages .package { width: 250px; }
+.welcome-buttons { display: flex; justify-content: center; gap: 12px; padding: 12px 0 6px; flex-wrap: wrap; }
+.welcome-buttons button { padding: 9px 18px; font-size: 14px; border-radius: 8px; }
+.welcome-buttons .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.welcome-log { width: min(44em, 100%); text-align: left; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+.welcome-log-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.welcome-log-head button { font-size: 12px; padding: 2px 8px; }
+.welcome-log-body { max-height: 34vh; overflow: auto; padding: 4px 12px 8px; }

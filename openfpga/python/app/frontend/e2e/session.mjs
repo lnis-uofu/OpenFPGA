@@ -65,11 +65,23 @@ try {
     await page.waitForFunction(() => document.querySelector("button[type=submit]"), null, { timeout: 60000 });
   };
 
-  // No model: the chat says how to call a tool
+  // The first screen: a prompt in the middle and the two ways to start a session, nothing else
   await page.waitForSelector("text=No model is connected");
-  // A session is opened from the sidebar
-  await page.click("text=+ new");
-  await page.waitForSelector("text=worker running");
+  await page.waitForSelector('[aria-label="Start"] textarea');
+  assert.ok(await page.isVisible("text=Create session from device package…"));
+  assert.equal(await page.locator('[aria-label="Session and design files"]').count(), 0, "no sidebar yet");
+  if (process.env.SHOT_WELCOME) await page.screenshot({ path: process.env.SHOT_WELCOME });
+  // What is asked from it is answered in a small window below the prompt, and the screen stays
+  await page.fill('[aria-label="Start"] textarea', "/help");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector('[aria-label="Answer"]:has-text("session_open")', { timeout: 30000 });
+  assert.equal(await page.locator('[aria-label="Session and design files"]').count(), 0, "still the first screen");
+  if (process.env.SHOT_WELCOME2) await page.screenshot({ path: process.env.SHOT_WELCOME2 });
+  // A session is opened from there: when the answer is complete, the full interface comes
+  await page.fill('[aria-label="Start"] textarea', "/session_open");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector("text=worker running", { timeout: 30000 });
+  assert.equal(await page.locator('[aria-label="Start"]').count(), 0, "the welcome screen is gone");
   assert.ok(await page.isVisible("strong:has-text('s1')"));
 
   // A file from the person's own disk goes into the session, and the tools read it by its name
