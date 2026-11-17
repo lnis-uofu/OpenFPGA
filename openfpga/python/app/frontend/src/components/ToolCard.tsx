@@ -1,4 +1,6 @@
 import { useState } from "preact/hooks";
+import { Markdown } from "../markdown";
+import { resultMarkdown } from "../resultMarkdown";
 import { calls, openResult, stop } from "../store";
 
 const SYMBOL = { running: "░", done: "✔", failed: "✖", cancelled: "■" } as const;
@@ -15,6 +17,7 @@ function shortArguments(args: Record<string, unknown>): string {
 export function ToolCard(props: { callId: string; startOpen?: boolean }) {
   const [open, setOpen] = useState(props.startOpen ?? false);
   const [all, setAll] = useState(false);
+  const [raw, setRaw] = useState(false); // the JSON as the model read it, instead of the formatted text
   const call = calls.value[props.callId];
   if (!call) return null;
   const result = call.result;
@@ -41,6 +44,7 @@ export function ToolCard(props: { callId: string; startOpen?: boolean }) {
             <span class="label">Arguments</span> <code>{JSON.stringify(call.arguments)}</code>
           </div>
           {call.state === "failed" &&
+            raw && // the formatted result has them
             diagnostics.map((d, i) => (
               <div class="diagnostic" key={i}>
                 <strong>{d.kind}</strong> {d.message}
@@ -53,16 +57,23 @@ export function ToolCard(props: { callId: string; startOpen?: boolean }) {
                 <span class="label">Result</span> {result.ok ? "ok" : "failed"} · {text.length.toLocaleString()} characters
               </div>
               {call.truncated && <div class="notice">⚠ {result.more ?? "The result was cut."}</div>}
-              <pre class="json">
-                {all || text.length <= SHOWN ? text : `${text.slice(0, SHOWN)}…`}
-              </pre>
-              {text.length > SHOWN && (
+              {raw ? (
+                <pre class="json">{all || text.length <= SHOWN ? text : `${text.slice(0, SHOWN)}…`}</pre>
+              ) : (
+                <div class="result-md">
+                  <Markdown text={resultMarkdown(call.tool, result)} />
+                </div>
+              )}
+              {raw && text.length > SHOWN && (
                 <button class="link" onClick={() => setAll(!all)}>
                   {all ? "Show less" : "Show all"}
                 </button>
               )}
               <div class="buttons">
                 <button onClick={() => openResult(call.callId)}>Open in tab</button>
+                <button onClick={() => setRaw(!raw)} aria-pressed={raw}>
+                  {raw ? "Formatted" : "JSON"}
+                </button>
                 <button onClick={() => navigator.clipboard?.writeText(JSON.stringify(result))}>Copy JSON</button>
               </div>
             </>

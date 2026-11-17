@@ -86,6 +86,16 @@ no session is made. Nothing is written into a package. The folders of packages a
 DIR` (repeat it), or `openfpga_flow/device-packages` of `$OPENFPGA_PATH` when that is set.
 Not in the demo.
 
+## Results as formatted text
+
+The answer of a tool (in a card of the chat, in the window of the first screen and in a result tab) is
+shown as formatted text and not as JSON: a sentence for the simple tools (`run_stage`, `session_open`,
+`set_option` ...), a table of fields for an answer with fields, a table of rows for a list of records
+(at most 25 rows, with how many more there are), a heading for each part, numbers to five digits,
+names in code, long text in a code block, and the diagnostics of a failure with their hint. "JSON"
+shows what the model read, unchanged; "Copy JSON" copies it. Only the page changes: the answers of the
+tools are the same.
+
 ## Opening files, and the console
 
 A click on a file name in the sidebar (an input, an uploaded file, a result such as the `.net`, `.place`

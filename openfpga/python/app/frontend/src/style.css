@@ -284,3 +284,12 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .welcome-log-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 12px; }
 .welcome-log-head button { font-size: 12px; padding: 2px 8px; }
 .welcome-log-body { max-height: 34vh; overflow: auto; padding: 4px 12px 8px; }
+
+/* The answer of a tool as formatted text */
+.result-md { margin: 6px 0; max-height: 360px; overflow: auto; padding: 2px 4px; }
+.result-md-tab { max-height: none; }
+.result-md .md-heading { margin: 10px 0 4px; font-size: 13px; text-transform: capitalize; color: var(--muted); }
+.result-md table { border-collapse: collapse; font-size: 12.5px; }
+.result-md th, .result-md td { border: none; border-bottom: 1px solid var(--line); padding: 3px 14px 3px 0; text-align: left; vertical-align: top; }
+.result-md th { background: none; font-weight: 600; color: var(--muted); text-transform: capitalize; }
+.result-md td code { font-size: 12px; }

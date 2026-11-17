@@ -117,16 +117,17 @@ try {
   await say("/set_option name=general.clock_modeling value=route");
   await say("/set_option name=router.route_chan_width value=20");
   await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=${files.circuit}`);
-  assert.ok(await page.isVisible("text=layout 2x2"));
+  await page.waitForSelector("text=layout 2x2", { timeout: 30000 });
   for (const stage of ["pack", "place", "route", "analysis"]) await say(`/run_stage stage=${stage}`);
-  assert.ok(await page.isVisible("text=ANALYZED ✔"));
-  assert.ok(await page.isVisible("text=routing_test.route"));
+  await page.waitForSelector("text=ANALYZED ✔", { timeout: 30000 });
+  await page.waitForSelector("text=routing_test.route", { timeout: 30000 });
 
   // A result opens in a tab
   await say("/get_timing paths=1");
   await page.click('button.card-head:has-text("get_timing")');
   await page.click("text=Open in tab");
-  assert.ok(await page.isVisible("text=timing_summary"));
+  await page.waitForSelector("text=timing summary", { timeout: 30000 });
+  if (process.env.SHOT_RESULT) await page.screenshot({ path: process.env.SHOT_RESULT });
   await page.click('[role=tab]:has-text("Chat")');
 
   // The console runs the shell in the same session; the sidebar follows
@@ -135,11 +136,11 @@ try {
   await page.keyboard.press("Enter");
   await page.waitForSelector("text=Options changed (");
   await page.click("text=Options changed (");
-  assert.ok(await page.isVisible("text=place.seed = 3"));
+  await page.waitForSelector("text=place.seed = 3", { timeout: 30000 });
   await page.fill('[aria-label="Command"]', "report_session");
   await page.keyboard.press("Enter");
   await page.waitForSelector(".line-output");
-  assert.ok(await page.isVisible("text=model › run_stage"));
+  await page.waitForSelector("text=model › run_stage", { timeout: 30000 });
 
   // The console is made higher by dragging its top edge, and lower again with the keys
   const before = await page.locator(".console-lines").evaluate((e) => e.getBoundingClientRect().height);
@@ -171,7 +172,7 @@ try {
   await page.click(".package:has-text('k6_frac_n10_2x2') >> text=Create session");
   await page.waitForSelector("text=Waiting for a circuit");
   assert.ok(await page.isVisible("text=device k6_frac_n10_2x2 · 2x2 · K6"));
-  assert.ok(await page.isVisible("text=layout 2x2"));
+  await page.waitForSelector("text=layout 2x2", { timeout: 30000 });
   assert.equal(await page.locator(".file-row .file-label:has-text('circuit')").count(), 0, "no circuit yet");
   assert.ok(!(await page.isVisible("header >> text=DEVICE ✔")), "nothing reached");
   await page.setInputFiles('[aria-label="Upload files"]', {

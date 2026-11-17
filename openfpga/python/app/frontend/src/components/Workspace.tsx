@@ -1,10 +1,14 @@
+import { useState } from "preact/hooks";
+import { Markdown } from "../markdown";
+import { resultMarkdown } from "../resultMarkdown";
 import { CHAT, activeTab, calls, closeTab, pinTab, split, tabs } from "../store";
 import { Chat } from "./Chat";
 import { FileView } from "./FileView";
 
-/** What a result tab shows. The drawings of each kind are not designed yet: the JSON of the
- * result, as the model read it (work in progress) */
+/** What a result tab shows. The drawings of each kind are not designed yet: the result as
+ * formatted text (Markdown), and the JSON as the model read it on request (work in progress) */
 export function ResultView(props: { callId: string }) {
+  const [raw, setRaw] = useState(false);
   const call = calls.value[props.callId];
   const tab = tabs.value.find((t) => t.id === props.callId);
   if (!call || !call.result) return <p class="muted">The result is gone.</p>;
@@ -16,10 +20,19 @@ export function ResultView(props: { callId: string }) {
         <button onClick={() => pinTab(props.callId)} aria-pressed={tab?.pinned ?? false}>
           {tab?.pinned ? "Unpin" : "Pin"}
         </button>
+        <button onClick={() => setRaw(!raw)} aria-pressed={raw}>
+          {raw ? "Formatted" : "JSON"}
+        </button>
         <button onClick={() => navigator.clipboard?.writeText(JSON.stringify(call.result))}>Copy JSON</button>
       </div>
-      <p class="wip">Work in progress: the drawings of the results are not designed yet. This is the result as JSON.</p>
-      <pre class="json">{JSON.stringify(call.result, null, 1)}</pre>
+      <p class="wip">Work in progress: the drawings of the results are not designed yet. This is the result as text.</p>
+      {raw ? (
+        <pre class="json">{JSON.stringify(call.result, null, 1)}</pre>
+      ) : (
+        <div class="result-md result-md-tab">
+          <Markdown text={resultMarkdown(call.tool, call.result)} />
+        </div>
+      )}
     </section>
   );
 }

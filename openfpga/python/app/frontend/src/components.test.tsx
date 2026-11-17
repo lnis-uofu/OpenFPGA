@@ -590,9 +590,28 @@ describe("a tool card", () => {
     expect((fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe("/api/cancel");
   });
 
-  it("cuts a long result and shows it all on request", () => {
+  it("shows the result as formatted text, with the JSON on request", () => {
+    give("a", "run_stage", true, { data: { stage: "pack", seconds: 0.4, reached: ["DEVICE", "PACKED"] } });
+    const { container } = render(<ToolCard callId="a" startOpen />);
+    expect(screen.getByText(/finished in 0.4 s/)).toBeTruthy();
+    expect(container.querySelector("pre.json")).toBeNull();
+    fireEvent.click(screen.getByText("JSON"));
+    expect(container.querySelector("pre.json")?.textContent).toContain('"stage"');
+    fireEvent.click(screen.getByText("Formatted"));
+    expect(container.querySelector("pre.json")).toBeNull();
+  });
+
+  it("makes a table of what has fields", () => {
+    give("a", "get_utilization", true, { data: { device_utilization: 0.18, block_types: [{ name: "io", used: 7 }] } });
+    const { container } = render(<ToolCard callId="a" startOpen />);
+    expect(container.querySelectorAll(".result-md table").length).toBe(2); // the fields, and the blocks
+    expect(screen.getByText("0.18")).toBeTruthy();
+  });
+
+  it("cuts a long JSON and shows it all on request", () => {
     give("a", "find", true, { data: { text: "x".repeat(2000) } });
     render(<ToolCard callId="a" startOpen />);
+    fireEvent.click(screen.getByText("JSON"));
     expect(screen.getByText("Show all")).toBeTruthy();
     fireEvent.click(screen.getByText("Show all"));
     expect(screen.getByText("Show less")).toBeTruthy();
