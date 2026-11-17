@@ -24,12 +24,23 @@ export interface SessionView {
     worker: "running" | "ended" | "none";
     ended: string | null;
     idle_s: number;
+    device_package?: DevicePackageInfo | null;
   } | null;
   latest: { status: "none" | "running" | "reached" | "failed"; text: string };
   stages: StageView[];
   files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[] };
   options_changed: { name: string; value: unknown }[];
   checkpoints: { name: string; kind: string; stages: string[] }[];
+}
+
+/** A device package: what the page shows to choose one (the files of it are the server's) */
+export interface DevicePackageInfo {
+  name: string;
+  version: string;
+  description: string;
+  layout: string;
+  lut_size: number | null;
+  tags: string[];
 }
 
 export interface UploadedFile {
@@ -129,13 +140,31 @@ export async function uploadFile(file: File, overwrite = false): Promise<{ statu
   return { status: response.status, answer };
 }
 
+/** The text of a file of the session, an input or a package, for the viewer */
+export async function fetchFile(name: string): Promise<Answer> {
+  const response = await fetch(`/api/file?name=${encodeURIComponent(name)}`);
+  try {
+    return (await response.json()) as Answer;
+  } catch {
+    return { ok: false, diagnostics: [{ kind: "server", message: `${response.status} ${response.statusText}` }] };
+  }
+}
+
 /** Delete a file that was uploaded to the session */
 export async function removeUploadedFile(name: string): Promise<Answer> {
   const response = await fetch(`/api/upload?name=${encodeURIComponent(name)}`, { method: "DELETE" });
   return json<Answer>(response);
 }
 
-export const newSession = (name?: string): Promise<Answer> => post("/api/session/new", name ? { name } : {});
+export const newSession = (name?: string, devicePackage?: string): Promise<Answer> =>
+  post("/api/session/new", { ...(name ? { name } : {}), ...(devicePackage ? { device_package: devicePackage } : {}) });
+
+/** The packages that a session can be created from, and the ones that are damaged */
+export async function fetchDevicePackages(): Promise<{ packages: DevicePackageInfo[]; problems: { name: string; message: string }[] }> {
+  const answer = await json<Answer>(await fetch("/api/device-packages"));
+  const data = (answer.data ?? {}) as { packages?: DevicePackageInfo[]; problems?: { name: string; message: string }[] };
+  return { packages: data.packages ?? [], problems: data.problems ?? [] };
+}
 export const closeSession = (): Promise<Answer> => post("/api/session/close", {});
 export const restoreSession = (checkpoint?: string): Promise<Answer> =>
   post("/api/session/restore", checkpoint ? { checkpoint } : {});

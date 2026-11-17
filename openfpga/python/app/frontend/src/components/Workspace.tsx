@@ -1,5 +1,6 @@
 import { CHAT, activeTab, calls, closeTab, pinTab, split, tabs } from "../store";
 import { Chat } from "./Chat";
+import { FileView } from "./FileView";
 
 /** What a result tab shows. The drawings of each kind are not designed yet: the JSON of the
  * result, as the model read it (work in progress) */
@@ -21,6 +22,10 @@ export function ResultView(props: { callId: string }) {
       <pre class="json">{JSON.stringify(call.result, null, 1)}</pre>
     </section>
   );
+}
+
+function TabContent(props: { tab: { id: string; file?: string } }) {
+  return props.tab.file ? <FileView name={props.tab.file} /> : <ResultView callId={props.tab.id} />;
 }
 
 function TabButton(props: { id: string; title: string; closable: boolean; pinned?: boolean; unread?: boolean }) {
@@ -66,7 +71,7 @@ export function Workspace() {
             <span class="spacer" />
             <button class="split-toggle" onClick={() => (split.value = false)}>⫴ one view</button>
           </div>
-          <ResultView callId={current.id} />
+          <TabContent tab={current} />
         </div>
       </main>
     );
@@ -79,7 +84,7 @@ export function Workspace() {
         <span class="spacer" />
         <button class="split-toggle" onClick={() => (split.value = true)}>⫴ split</button>
       </div>
-      {shown ? <ResultView callId={shown.id} /> : <Chat />}
+      {shown ? <TabContent tab={shown} /> : <Chat />}
     </main>
   );
 }

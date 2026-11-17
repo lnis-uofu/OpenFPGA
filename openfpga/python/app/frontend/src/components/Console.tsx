@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { config, consoleBusy, consoleLines, consoleOpen, consoleRun, view } from "../store";
+import {
+  CONSOLE_HEIGHT_DEFAULT,
+  config,
+  consoleBusy,
+  consoleHeight,
+  consoleLines,
+  consoleOpen,
+  consoleRun,
+  setConsoleHeight,
+  view,
+} from "../store";
 
 /** The console of the OpenFPGA shell: a drawer under the page. Off unless the app was started with
  * --console, because it runs any command */
@@ -42,8 +52,40 @@ export function Console() {
     }
   };
   const session = view.value.session;
+  const drag = (e: PointerEvent) => {
+    // Dragging the top edge up makes the console higher
+    const handle = e.currentTarget as HTMLElement;
+    const startY = e.clientY;
+    const start = consoleHeight.value;
+    handle.setPointerCapture?.(e.pointerId);
+    const move = (m: PointerEvent) => setConsoleHeight(start + (startY - m.clientY));
+    const stopDrag = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stopDrag);
+      handle.removeEventListener("pointercancel", stopDrag);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", stopDrag);
+    handle.addEventListener("pointercancel", stopDrag);
+    e.preventDefault();
+  };
   return (
-    <footer class="console">
+    <footer class="console" style={{ "--console-h": `${consoleHeight.value}px` }}>
+      <div
+        class="console-resize"
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize the console"
+        aria-valuenow={consoleHeight.value}
+        tabIndex={0}
+        title="Drag to resize (arrow keys too; double click for the usual size)"
+        onPointerDown={drag}
+        onDblClick={() => setConsoleHeight(CONSOLE_HEIGHT_DEFAULT)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowUp") (e.preventDefault(), setConsoleHeight(consoleHeight.value + 24));
+          else if (e.key === "ArrowDown") (e.preventDefault(), setConsoleHeight(consoleHeight.value - 24));
+        }}
+      />
       <div class="console-head">
         <button class="console-toggle" aria-expanded="true" onClick={toggle}>
           ▾ Console

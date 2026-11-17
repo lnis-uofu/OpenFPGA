@@ -5,6 +5,7 @@ import {
   Answer,
   AppConfig,
   AppEvent,
+  DevicePackageInfo,
   MAX_UPLOAD_BYTES,
   SessionView,
   UPLOAD_EXTENSIONS,
@@ -16,6 +17,8 @@ import {
   fetchSession,
   runConsole,
   streamChat,
+  fetchDevicePackages,
+  fetchFile,
   removeUploadedFile,
   uploadFile,
 } from "./api";
@@ -37,7 +40,8 @@ export interface ToolCall {
   result: Answer | null;
 }
 export interface ResultTab {
-  id: string; // the call that it shows
+  id: string; // the call that it shows, or "file:NAME" for a file
+  file?: string; // the name of the file, for a tab of the viewer
   title: string;
   pinned: boolean;
   unread: boolean;
@@ -71,8 +75,41 @@ export const config = signal<AppConfig | null>(null);
 export const messages = signal<Message[]>([]);
 export const calls = signal<Record<string, ToolCall>>({});
 export const tabs = signal<ResultTab[]>([]);
+/** The files that are open in the viewer, by name */
+export interface FileState {
+  status: "loading" | "ready" | "failed";
+  text: string;
+  bytes: number;
+  truncated: boolean;
+  message: string;
+}
+export const openFiles = signal<Record<string, FileState>>({});
+export const CONSOLE_HEIGHT_DEFAULT = 180;
+export const CONSOLE_HEIGHT_MIN = 80;
+const CONSOLE_HEIGHT_KEY = "openfpga-console-height";
 export const activeTab = signal<string>(CHAT);
 export const split = signal(false);
+
+function storedHeight(): number {
+  try {
+    const n = Number(window.localStorage.getItem(CONSOLE_HEIGHT_KEY));
+    return Number.isFinite(n) && n >= CONSOLE_HEIGHT_MIN ? n : CONSOLE_HEIGHT_DEFAULT;
+  } catch {
+    return CONSOLE_HEIGHT_DEFAULT;
+  }
+}
+/** The height of the lines of the console in px: dragged by the person and kept in this browser */
+export const consoleHeight = signal(storedHeight());
+
+export function setConsoleHeight(px: number) {
+  const most = Math.max(CONSOLE_HEIGHT_MIN + 40, Math.floor(window.innerHeight * 0.7));
+  consoleHeight.value = Math.round(Math.min(most, Math.max(CONSOLE_HEIGHT_MIN, px)));
+  try {
+    window.localStorage.setItem(CONSOLE_HEIGHT_KEY, String(consoleHeight.value));
+  } catch {
+    /* not kept */
+  }
+}
 export const busy = signal(false);
 export const banner = signal<{ kind: string; message: string; hint?: string | null } | null>(null);
 export const consoleOpen = signal(false);
@@ -92,6 +129,8 @@ export function resetStore() {
   messages.value = [];
   calls.value = {};
   tabs.value = [];
+  openFiles.value = {};
+  consoleHeight.value = CONSOLE_HEIGHT_DEFAULT;
   activeTab.value = CHAT;
   split.value = false;
   busy.value = false;
@@ -102,6 +141,8 @@ export function resetStore() {
   sidebarOpen.value = wide();
   settingsOpen.value = false;
   uploading.value = false;
+  packagesOpen.value = false;
+  devicePackages.value = null;
   usage.value = null;
 }
 
@@ -219,6 +260,27 @@ async function sessionAction(action: () => Promise<Answer>) {
 }
 
 export const makeSession = (name?: string) => sessionAction(() => newSession(name));
+
+/** The picker of device packages under the session buttons */
+export const packagesOpen = signal(false);
+export const devicePackages = signal<{ packages: DevicePackageInfo[]; problems: { name: string; message: string }[] } | null>(null);
+
+export async function togglePackages() {
+  packagesOpen.value = !packagesOpen.value;
+  if (!packagesOpen.value) return;
+  try {
+    devicePackages.value = await fetchDevicePackages(); // read again each time: a package may have been added
+  } catch (error) {
+    packagesOpen.value = false;
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  }
+}
+
+/** A session that reads the files of a device package and waits for the circuit */
+export async function makeSessionFromPackage(name: string) {
+  packagesOpen.value = false;
+  await sessionAction(() => newSession(undefined, name));
+}
 export const endSession = () => sessionAction(() => closeSession());
 /** Back to the last checkpoint, or to a named one */
 export const restore = (checkpoint?: string) => sessionAction(() => restoreSession(checkpoint));
@@ -325,10 +387,49 @@ export function openResult(callId: string, activate = true) {
 }
 
 export function closeTab(id: string) {
+  const closed = tabs.value.find((t) => t.id === id);
+  if (closed?.file) {
+    const { [closed.file]: _gone, ...kept } = openFiles.value;
+    openFiles.value = kept;
+  }
   const rest = tabs.value.filter((t) => t.id !== id);
   tabs.value = rest;
   if (activeTab.value === id) activeTab.value = rest.length ? rest[rest.length - 1].id : CHAT;
   if (!rest.length) split.value = false;
+}
+
+export const fileTabId = (name: string) => `file:${name}`;
+
+/** Open a file in a tab of the viewer (or go to it), and read it again: a result may have changed */
+export async function openFile(name: string) {
+  const id = fileTabId(name);
+  if (!tabs.value.some((t) => t.id === id)) {
+    tabs.value = [...tabs.value, { id, title: name.split("/").pop() || name, pinned: false, unread: false, file: name }];
+  }
+  activeTab.value = id;
+  await loadFile(name);
+}
+
+export async function loadFile(name: string) {
+  const before = openFiles.value[name];
+  openFiles.value = {
+    ...openFiles.value,
+    [name]: { status: "loading", text: before?.text ?? "", bytes: before?.bytes ?? 0, truncated: false, message: "" },
+  };
+  let next: FileState;
+  try {
+    const answer = await fetchFile(name);
+    if (answer.ok) {
+      const data = answer.data as { text: string; bytes: number; truncated: boolean };
+      next = { status: "ready", text: data.text, bytes: data.bytes, truncated: data.truncated, message: "" };
+    } else {
+      const d = answer.diagnostics?.[0];
+      next = { status: "failed", text: "", bytes: 0, truncated: false, message: d ? d.message + (d.hint ? ` (${d.hint})` : "") : "The file could not be read" };
+    }
+  } catch (error) {
+    next = { status: "failed", text: "", bytes: 0, truncated: false, message: String(error) };
+  }
+  if (name in openFiles.value) openFiles.value = { ...openFiles.value, [name]: next }; // not if the tab was closed
 }
 
 export function pinTab(id: string) {

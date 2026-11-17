@@ -23,7 +23,13 @@ class Backend(Protocol):
 
     async def view(self) -> Dict[str, Any]: ...
 
-    async def new_session(self, name: Optional[str] = None) -> Dict[str, Any]: ...
+    async def new_session(
+        self, name: Optional[str] = None, device_package: Optional[str] = None
+    ) -> Dict[str, Any]: ...
+
+    async def device_packages(self) -> Dict[str, Any]: ...
+
+    async def read_file(self, name: str) -> Dict[str, Any]: ...
 
     async def close_session(self) -> Dict[str, Any]: ...
 
@@ -116,7 +122,10 @@ class DemoBackend:
             ],
         }
 
-    new_session = close_session = restore_session = upload = remove_upload = _unavailable
+    async def device_packages(self) -> Dict[str, Any]:
+        return {"ok": True, "data": {"packages": [], "problems": []}}
+
+    new_session = close_session = restore_session = upload = remove_upload = read_file = _unavailable
 
     def _latest(self, status: str, text: str):
         self._view["latest"] = {"status": status, "text": text}

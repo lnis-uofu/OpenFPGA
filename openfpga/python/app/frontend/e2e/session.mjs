@@ -80,6 +80,12 @@ try {
   });
   await page.waitForSelector(".upload-row:has-text('mine.blif'):has-text('circuit')");
   assert.ok(existsSync(path.join(root, "s1", "uploads", "mine.blif")), "written in the session directory");
+  // The file opens in a tab, in Monaco
+  await page.click(".upload-row .file:has-text('mine.blif')");
+  await page.waitForSelector(".file-view .monaco-editor", { timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("model"), null, { timeout: 15000 });
+  assert.ok(await page.isVisible('[role=tab]:has-text("mine.blif")'));
+  await page.click('[role=tab]:has-text("Chat")');
   await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=mine.blif`);
   await page.waitForSelector(".file-row .file:has-text('mine.blif')", { timeout: 30000 }); // read as an input
 
@@ -123,12 +129,55 @@ try {
   await page.waitForSelector(".line-output");
   assert.ok(await page.isVisible("text=model › run_stage"));
 
+  // The console is made higher by dragging its top edge, and lower again with the keys
+  const before = await page.locator(".console-lines").evaluate((e) => e.getBoundingClientRect().height);
+  const edge = await page.locator(".console-resize").boundingBox();
+  await page.mouse.move(edge.x + edge.width / 2, edge.y + edge.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(edge.x + edge.width / 2, edge.y - 120, { steps: 6 });
+  await page.mouse.up();
+  const after = await page.locator(".console-lines").evaluate((e) => e.getBoundingClientRect().height);
+  assert.ok(after > before + 80, `the console is higher: ${before} -> ${after}`);
+  await page.focus(".console-resize");
+  await page.keyboard.press("ArrowDown");
+  const lower = await page.locator(".console-lines").evaluate((e) => e.getBoundingClientRect().height);
+  assert.ok(lower < after, "the arrow lowers it");
+  await page.dblclick(".console-resize");
+  assert.equal(Math.round(await page.locator(".console-lines").evaluate((e) => e.getBoundingClientRect().height)), 180);
+
   // The seed dropped the stages after the packing; the last checkpoint has them all
   assert.ok(await page.isVisible("header >> text=PACKED ✔"));
   await page.click("text=restore");
   await page.waitForSelector("header >> text=ANALYZED ✔");
   await page.click("text=close");
   await page.waitForSelector("text=(no session)");
+
+  // A session from a device package: the architectures are read, and it waits for the circuit
+  await page.click("text=from device…");
+  await page.waitForSelector(".package:has-text('k6_frac_n10_2x2')");
+  if (process.env.SHOT_PICKER) await page.screenshot({ path: process.env.SHOT_PICKER });
+  await page.click(".package:has-text('k6_frac_n10_2x2') >> text=Create session");
+  await page.waitForSelector("text=Waiting for a circuit");
+  assert.ok(await page.isVisible("text=device k6_frac_n10_2x2 · 2x2 · K6"));
+  assert.ok(await page.isVisible("text=layout 2x2"));
+  assert.equal(await page.locator(".file-row .file-label:has-text('circuit')").count(), 0, "no circuit yet");
+  assert.ok(!(await page.isVisible("header >> text=DEVICE ✔")), "nothing reached");
+  await page.setInputFiles('[aria-label="Upload files"]', {
+    name: "design.blif",
+    mimeType: "application/octet-stream",
+    buffer: readFileSync(path.join(inputs[2], files.circuit)),
+  });
+  await page.waitForSelector(".upload-row:has-text('design.blif')");
+  await say("/read_inputs circuit=design.blif");
+  await page.waitForSelector(".file-row .file:has-text('design.blif')", { timeout: 30000 });
+  assert.equal(await page.locator("text=Waiting for a circuit").count(), 0);
+  await say("/run_stage stage=pack");
+  await page.waitForSelector("header >> text=PACKED ✔", { timeout: 60000 });
+  // A result of the flow and a file of the package open in the viewer
+  await page.click(".results .file:has-text('.net')");
+  await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("block"), null, { timeout: 30000 });
+  await page.click(".file-row .file[title$='arch/vpr_arch.xml']");
+  await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("architecture"), null, { timeout: 30000 });
 
   assert.deepEqual(errors, []);
   if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });

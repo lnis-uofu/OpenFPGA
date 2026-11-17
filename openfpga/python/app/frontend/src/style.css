@@ -109,7 +109,15 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .file-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; margin-bottom: 8px; }
 .file-label { flex: 0 0 100%; font-size: 12px; color: var(--muted); }
 .file { background: none; border: none; padding: 1px 0; text-align: left; font-family: var(--mono); font-size: 12px; color: var(--text); border-radius: 3px; }
-.file:hover { text-decoration: underline; }
+.file:hover { text-decoration: underline; cursor: pointer; }
+.file-name { display: inline-flex; align-items: baseline; gap: 4px; }
+.copy-name { background: none; border: none; padding: 0 3px; font-size: 11px; color: var(--muted); cursor: pointer; opacity: 0; }
+.file-row:hover .copy-name, .upload-row:hover .copy-name, .results > *:hover .copy-name, .copy-name:focus-visible { opacity: 1; }
+.file-view { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px 0 0; }
+.file-view .result-head { padding: 0 16px 6px; }
+.editor-host { flex: 1; min-height: 0; border-top: 1px solid var(--line); }
+.file-plain { flex: 1; margin: 0; padding: 8px 16px; overflow: auto; font-family: var(--mono); font-size: 13px; background: var(--code); }
+.file-error { color: var(--bad); padding: 0 16px; }
 .copied { color: var(--ok); font-family: var(--font); font-size: 11px; }
 .uploads { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
 .upload-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; }
@@ -119,6 +127,14 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .upload-button { font-size: 12px; margin-top: 2px; }
 .drop { position: absolute; inset: 8px; z-index: 3; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--bg) 85%, transparent); color: var(--accent); font-size: 16px; pointer-events: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.device-line { font-size: 12px; margin-top: 2px; }
+.packages { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.package { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--bg); }
+.package-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; }
+.package-text { font-size: 12px; margin: 2px 0 6px; }
+.package button { font-size: 12px; padding: 3px 10px; }
+.package-bad { font-size: 12px; border-style: dashed; color: var(--bad); }
+.waiting { margin-top: 6px; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--line); }
 .chip { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
 .results { display: flex; flex-direction: column; gap: 2px; }
 .fold { background: none; border: none; padding: 4px 0; margin-top: 10px; color: var(--muted); font-size: 12px; }
@@ -209,11 +225,13 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .wip { color: var(--warn); font-size: 12px; }
 
 /* The console */
-.console { border-top: 1px solid var(--line); background: var(--panel); }
+.console { position: relative; border-top: 1px solid var(--line); background: var(--panel); }
+.console-resize { position: absolute; left: 0; right: 0; top: -4px; height: 8px; cursor: ns-resize; z-index: 5; touch-action: none; }
+.console-resize:hover, .console-resize:focus-visible, .console-resize:active { background: var(--accent, #3b6fd4); opacity: 0.45; outline: none; }
 .console.collapsed { padding: 2px 8px; }
 .console-toggle { border: none; background: none; padding: 3px 6px; }
 .console-head { display: flex; align-items: center; gap: 10px; padding: 2px 8px; }
-.console-lines { height: 180px; overflow: auto; padding: 4px 12px; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; }
+.console-lines { height: var(--console-h, 180px); overflow: auto; padding: 4px 12px; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; }
 .line-model { color: var(--accent); }
 .line-error { color: var(--bad); }
 .console-input { display: flex; gap: 4px; padding: 4px 12px 8px; font-family: var(--mono); }

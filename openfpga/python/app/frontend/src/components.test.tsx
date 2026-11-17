@@ -274,6 +274,87 @@ describe("the sessions of the sidebar", () => {
   });
 });
 
+describe("creating a session from a device package", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const reply = (body: unknown) => Promise.resolve(new Response(JSON.stringify(body)));
+  const listing = {
+    ok: true,
+    data: {
+      packages: [
+        { name: "k6_frac_n10_2x2", version: "0.1.0", description: "K6 logic only", layout: "2x2", lut_size: 6, tags: ["tileable"] },
+        { name: "k4_n4_dsp16_3x4", version: "0.1.0", description: "K4 with a multiplier", layout: "3x4", lut_size: 4, tags: [] },
+      ],
+      problems: [{ name: "broken", message: "The device package 'broken' cannot be used: the file 'a.xml' was changed (checksum)" }],
+    },
+  };
+
+  it("is not there in the demo", () => {
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    render(<Sidebar />);
+    expect((screen.getByText("from device…") as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("lists the packages, with a damaged one shown as such", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("from device…"));
+    await screen.findByText("k6_frac_n10_2x2");
+    expect(screen.getByText("K6 logic only")).toBeTruthy();
+    expect(screen.getByText("3x4")).toBeTruthy();
+    expect(screen.getByText("K4")).toBeTruthy();
+    expect(screen.getByText(/cannot be used: the file 'a.xml' was changed/)).toBeTruthy();
+    fireEvent.click(screen.getByText("from device…")); // a second click closes it
+    expect(screen.queryByText("k6_frac_n10_2x2")).toBeNull();
+  });
+
+  it("says how to get packages when there are none", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => reply({ ok: true, data: { packages: [], problems: [] } })));
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("from device…"));
+    await screen.findByText(/--device-packages/);
+  });
+
+  it("creates the session of the package that is chosen, and reads the session again", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      reply(url === "/api/device-packages" ? listing : url === "/api/session" ? emptyView() : { ok: true, data: {} }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("from device…"));
+    await screen.findByText("k6_frac_n10_2x2");
+    fireEvent.click(screen.getAllByText("Create session")[0]);
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
+    const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/new")!;
+    expect(JSON.parse(String(sent[1]?.body))).toEqual({ device_package: "k6_frac_n10_2x2" });
+    expect(screen.queryByText("Create session")).toBeNull(); // the picker closed
+  });
+
+  it("shows the device of the session and waits for the circuit", async () => {
+    real();
+    const v = filled();
+    v.session = {
+      ...v.session!,
+      device_package: { name: "k6_frac_n10_2x2", version: "0.1.0", description: "K6 logic only", layout: "2x2", lut_size: 6, tags: [] },
+    };
+    v.files.inputs = [
+      { label: "vpr arch", name: "vpr_arch.xml", extra: "layout 2x2" },
+      { label: "openfpga arch", name: "openfpga_arch.xml", extra: null },
+    ];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getByText(/device k6_frac_n10_2x2 · 2x2 · K6/)).toBeTruthy();
+    expect(screen.getByText(/Waiting for a circuit/)).toBeTruthy();
+    v.files.inputs = [...v.files.inputs, { label: "circuit", name: "mine.blif", extra: null }];
+    view.value = { ...v };
+    await waitFor(() => expect(screen.queryByText(/Waiting for a circuit/)).toBeNull());
+  });
+});
+
 describe("uploading files to the session", () => {
   const real = () => {
     config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };

@@ -52,6 +52,45 @@ tokens and the seconds). What the person does meanwhile (console, buttons, `/` l
 the model at its next message. All 21 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
+## Creating a session from a device package
+
+A device package (`openfpga_flow/device-packages/`, format in `docs/spec_device_package.md`) holds the
+files of one device. "from device…" under Session lists the packages; "Create session" opens a
+session, reads the VPR architecture (with the layout that the package's grid names) and the OpenFPGA
+architecture from the package, and stops there: the sidebar says it waits for a circuit, and nothing
+is run. Give the circuit and run the stages as usual: a circuit that you upload (a `.blif`, found by
+its first lines) is read by itself, as `read_inputs` with only the circuit; or ask the model for a
+circuit of the designs folders (they are looked for under the folders, by their name; the prompt of the model
+lists only the BLIF circuits of them, a path when two have one name, and the architectures come from a
+device package or from files that you name or upload), or type `/read_inputs circuit=NAME` (the architectures need not be given
+again). A circuit is read by itself only when the session has both architectures and no circuit yet: a
+second upload is only copied, because reading another circuit drops the stages that were run. If the
+reading fails, the file stays uploaded and a banner gives the reason. The model is told what was done.
+
+A package is checked before it is used (format version, name, license, that its paths are files inside
+it, the layout of the grid, its checksums); a package that fails is shown as such with the reason, and
+no session is made. Nothing is written into a package. The folders of packages are `--device-packages
+DIR` (repeat it), or `openfpga_flow/device-packages` of `$OPENFPGA_PATH` when that is set.
+Not in the demo.
+
+## Opening files, and the console
+
+A click on a file name in the sidebar (an input, an uploaded file, a result such as the `.net`, `.place`
+or `.route` of the flow, a file of a device package) opens it in a tab of the centre, in Monaco, the
+editor of VS Code, read only: colours for XML (the architectures and the packing), SystemVerilog and
+Tcl (the constraints), line numbers, folding, search (Ctrl+F) and go to line (Ctrl+G). "Reload" reads
+the file again (a result may have changed), "Copy text" copies it. The small ⧉ beside a name copies the
+name. The server reads only what the tools may read (the directory of the session with its uploads, the
+workspace, the designs folders, the device packages), only text, and at most one megabyte of it.
+Not in the demo, which has no files.
+
+Monaco is a separate chunk of about 3 MB (800 kB compressed) that the page loads the first time that
+a file is opened: the page does not carry it before. It is bundled in `openfpga_app/static/` by
+`npm run build` (the package `monaco-editor` is a development dependency; a user needs no Node).
+
+The console (`--console`) is made higher or lower by dragging its top edge, or with the arrow keys when
+the edge has the focus; a double click gives the usual height back. The height is kept in the browser.
+
 ## Giving files to a session
 
 "⤒ Upload files…" in the sidebar (Design files, under Inputs), or a drop of files on the chat, copies

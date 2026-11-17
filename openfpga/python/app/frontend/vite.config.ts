@@ -8,6 +8,8 @@ export default defineConfig({
     outDir: "../openfpga_app/static",
     emptyOutDir: true,
     sourcemap: false,
+    // Monaco is its own chunk, read the first time that a file is opened
+    chunkSizeWarningLimit: 3500,
   },
   server: {
     // The development server asks the app (started with --demo) for the API

@@ -15,12 +15,13 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import anyio.to_thread
-from openfpga_mcp import answers, session_tools, tools
+from openfpga_mcp import answers, device_packages, session_tools, tools
+from openfpga_mcp.errors import RegistryError
 from openfpga_mcp.config import Config
 from openfpga_mcp.registry import SessionRegistry
 from openfpga_mcp.resources import _checkpoints
 
-from . import events, uploads
+from . import events, uploads, viewer
 from .agent import AgentConfig, AgentLoop
 from .agent.arguments import check_arguments, literal
 from .agent.model import Model
@@ -81,6 +82,7 @@ class SessionBackend:
         tools.register(None, self.registry, config, table.tool, run)
         self.tools = table.tools
         self.sid: Optional[str] = None
+        self._packages: Dict[str, Dict[str, Any]] = {}  # the device package of a session, by id
         self._running: Optional[str] = None
         self._busy = False
         self._cancelled = False
@@ -183,6 +185,10 @@ class SessionBackend:
     def _name(self, path: str, session_dir: str = "") -> str:
         """A path as a name that can be given back: inside the workspace, or a designs folder, and
         for the results inside the directory of the session"""
+        for folder in self.config.package_dirs:
+            for base in (str(folder), str(folder.resolve())):
+                if path.startswith(base.rstrip("/") + "/"):
+                    return path[len(base.rstrip("/")) + 1 :]  # package/arch/vpr_arch.xml
         shown = answers.relative(path, list(self.config.folders()))
         if session_dir and shown.startswith(session_dir + "/"):
             shown = shown[len(session_dir) + 1 :]
@@ -206,6 +212,7 @@ class SessionBackend:
             "worker": "running" if running else "ended",
             "ended": None if running else (info.ended if info else None),
             "idle_s": info.idle_s if info else 0,
+            "device_package": self._packages.get(entry.id),
         }
         view["checkpoints"] = [
             {"name": c["name"], "kind": c["kind"], "stages": c["stages"]}
@@ -315,12 +322,74 @@ class SessionBackend:
             self.sid = None
         return answer
 
-    async def new_session(self, name: Optional[str] = None) -> Dict[str, Any]:
-        answer = await self._tool("session_open", name=name)
-        if answer.get("ok"):
-            self.sid = answer["data"]["session"]
-            self._changed_outside("The person opened session %s" % self.sid)
+    async def new_session(
+        self, name: Optional[str] = None, device_package: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Open a session. With a device package the session reads its two architectures and
+        stops there: the person gives the circuit (the model is told what to do next)"""
+        package = None
+        if device_package is not None:
+            try:
+                package = await anyio.to_thread.run_sync(
+                    device_packages.find, self.config, device_package
+                )
+            except RegistryError as error:
+                return answers.from_exception(error)
+        answer = await self._tool("session_open", name=name or (package.name if package else None))
+        if not answer.get("ok"):
+            return answer
+        sid = answer["data"]["session"]
+        if package is not None:
+            try:
+                entry = self.registry.get(sid)
+                await anyio.to_thread.run_sync(self._read_package, entry.session, package)
+            except Exception as error:  # noqa: BLE001 - a file that VPR or OpenFPGA refuses
+                self.registry.close(sid, delete_files=True)  # nothing half made is kept
+                return answers.from_exception(error)
+            self._packages[sid] = package.summary()
+        self.sid = sid
+        if package is None:
+            self._changed_outside("The person opened session %s" % sid)
+        else:
+            self._changed_outside(
+                "The person created session %s from the device package %s (%s): its VPR "
+                "architecture (layout %s) and its OpenFPGA architecture are read, and there is "
+                "no circuit yet. When the person names a circuit, read it with read_inputs and "
+                "only circuit=<file>, and do not give the architectures again"
+                % (sid, package.name, package.description or "no description", package.layout)
+            )
         return answer
+
+    @staticmethod
+    def _read_package(session, package) -> None:
+        session.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
+        session.read_openfpga_arch(str(package.openfpga_arch))
+
+    async def read_file(self, name: str) -> Dict[str, Any]:
+        """The text of a file that the sidebar names, for the viewer of the page"""
+        try:
+            directory = ""
+            if self.sid is not None:
+                directory = self.registry.get(self.sid).directory
+            data = await anyio.to_thread.run_sync(
+                viewer.read_text, self.config, directory, name
+            )
+        except RegistryError as error:
+            return answers.from_exception(error)
+        except Exception as error:  # noqa: BLE001 - a file that is gone, a disk that fails
+            return answers.from_exception(error)
+        return {"ok": True, "data": data, "truncated": False, "more": None}
+
+    async def device_packages(self) -> Dict[str, Any]:
+        """The packages that a session can be created from, and the ones that cannot be used"""
+        found = await anyio.to_thread.run_sync(device_packages.discover, self.config)
+        return {
+            "ok": True,
+            "data": {
+                "packages": [p.summary() for p in found["packages"]],
+                "problems": found["problems"],
+            },
+        }
 
     async def upload(self, name: str, data: bytes, overwrite: bool) -> Dict[str, Any]:
         """A file that the person gives to the session (one is opened if there is none). It is

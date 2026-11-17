@@ -1,10 +1,20 @@
 """openfpga-app: start the web app"""
 
 import argparse
+import os
 import signal
 import sys
 import time
 from pathlib import Path
+
+
+def _package_dirs(given):
+    """The folders of device packages: the ones asked for, or those of this repository"""
+    if given:
+        return tuple(given)
+    base = os.environ.get("OPENFPGA_PATH")
+    folder = Path(base) / "openfpga_flow" / "device-packages" if base else None
+    return (folder,) if folder is not None and folder.is_dir() else ()
 
 
 def main(argv=None) -> int:
@@ -24,6 +34,14 @@ def main(argv=None) -> int:
     parser.add_argument("--root", type=Path, help="the workspace: a directory for each session")
     parser.add_argument(
         "--designs-dir", action="append", default=[], type=Path, help="a folder to read inputs from"
+    )
+    parser.add_argument(
+        "--device-packages",
+        action="append",
+        default=[],
+        type=Path,
+        help="a folder of device packages, to create sessions from (default: "
+        "openfpga_flow/device-packages of $OPENFPGA_PATH)",
     )
     parser.add_argument(
         "--model-url",
@@ -98,6 +116,7 @@ def main(argv=None) -> int:
                 Config(
                     root=args.root,
                     design_dirs=tuple(args.designs_dir),
+                    package_dirs=_package_dirs(args.device_packages),
                     max_sessions=args.max_sessions,
                     call_timeout_s=args.call_timeout,
                 ),

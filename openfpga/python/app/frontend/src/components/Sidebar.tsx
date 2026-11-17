@@ -1,6 +1,22 @@
 import { useRef, useState } from "preact/hooks";
 import { UPLOAD_EXTENSIONS } from "../api";
-import { busy, config, endSession, makeSession, removeUpload, restore, sidebarOpen, uploadFiles, uploading, view } from "../store";
+import {
+  busy,
+  config,
+  devicePackages,
+  endSession,
+  makeSession,
+  makeSessionFromPackage,
+  openFile,
+  packagesOpen,
+  removeUpload,
+  restore,
+  sidebarOpen,
+  togglePackages,
+  uploadFiles,
+  uploading,
+  view,
+} from "../store";
 
 const SYMBOL = { reached: "✔", not_reached: "○", failed: "✖", running: "░" } as const;
 
@@ -14,9 +30,11 @@ function Section(props: { title: string; children: preact.ComponentChildren }) {
 }
 
 function Name(props: { name: string }) {
-  // A long name is cut in the middle: the whole name is in the title, and a click copies it
+  // A long name is cut in the middle: the whole name is in the title. A click opens the file in a
+  // tab (in the recorded demo there is no file: it copies the name); the small button copies it
   const { name } = props;
   const [copied, setCopied] = useState(false);
+  const real = config.value?.backend === "session";
   const shown = name.length > 26 ? `${name.slice(0, 14)}…${name.slice(-10)}` : name;
   const copy = () => {
     void navigator.clipboard?.writeText(name);
@@ -24,10 +42,17 @@ function Name(props: { name: string }) {
     setTimeout(() => setCopied(false), 1200);
   };
   return (
-    <button class="file" title={name} onClick={copy}>
-      {shown}
+    <span class="file-name">
+      <button class="file" title={real ? `Open ${name}` : name} onClick={() => (real ? void openFile(name) : copy())}>
+        {shown}
+      </button>
+      {real && (
+        <button class="copy-name" aria-label={`Copy ${name}`} title="Copy the name" onClick={copy}>
+          ⧉
+        </button>
+      )}
       {copied && <span class="copied"> ✓ copied</span>}
-    </button>
+    </span>
   );
 }
 
@@ -37,6 +62,43 @@ function size(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} kB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** The packages that a session can be created from: it reads their architectures and waits for the circuit */
+function PackagePicker() {
+  const found = devicePackages.value;
+  return (
+    <div class="packages" role="region" aria-label="Device packages">
+      {found === null ? (
+        <div class="muted">Looking…</div>
+      ) : (
+        <>
+          {found.packages.length === 0 && (
+            <div class="muted">No device packages. Start the app with --device-packages FOLDER.</div>
+          )}
+          {found.packages.map((p) => (
+            <div key={p.name} class="package">
+              <div class="package-head">
+                <strong>{p.name}</strong>
+                <span class="chip">{p.layout}</span>
+                {p.lut_size != null && <span class="chip">K{p.lut_size}</span>}
+              </div>
+              <div class="muted package-text">{p.description}</div>
+              {p.tags.length > 0 && <div class="muted package-text">{p.tags.join(" · ")}</div>}
+              <button disabled={busy.value} onClick={() => void makeSessionFromPackage(p.name)}>
+                Create session
+              </button>
+            </div>
+          ))}
+          {found.problems.map((p) => (
+            <div key={p.name} class="package package-bad" title={p.message}>
+              <strong>{p.name}</strong> <span class="muted">cannot be used: {p.message.replace(/^The device package '[^']*' cannot be used: /, "")}</span>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
 }
 
 /** The left sidebar: the session, its stages, the design files and the checkpoints */
@@ -58,12 +120,26 @@ export function Sidebar() {
               <span class={`status-dot ${session.worker === "running" ? "on" : "off"}`} aria-hidden="true" />
               <strong>{session.id}</strong> <span class="muted">{session.name !== session.id ? session.name : ""}</span>
             </div>
+            {session.device_package && (
+              <div class="muted device-line" title={session.device_package.description}>
+                device {session.device_package.name} · {session.device_package.layout}
+                {session.device_package.lut_size != null ? ` · K${session.device_package.lut_size}` : ""}
+              </div>
+            )}
             <div class={`session-state ${session.worker === "running" ? "muted" : "warn"}`}>
               {session.worker === "running" ? "worker running" : session.worker === "none" ? "closed" : `⚠ worker ended${session.ended ? `: ${session.ended}` : ""}`}
             </div>
             <div class="buttons">
               <button disabled={!real || busy.value} onClick={() => void makeSession()} title={real ? "Open another session" : "Not in the demo"}>
                 + new
+              </button>
+              <button
+                disabled={!real || busy.value}
+                aria-expanded={packagesOpen.value}
+                onClick={() => void togglePackages()}
+                title={real ? "Create a session from a device package: its architectures are read" : "Not in the demo"}
+              >
+                from device…
               </button>
               <button disabled={!real || busy.value} onClick={() => void endSession()} title={real ? "End the worker; the files stay" : "Not in the demo"}>
                 close
@@ -82,9 +158,18 @@ export function Sidebar() {
               <button disabled={!real} onClick={() => void makeSession()} title={real ? "Open a session" : "Not in the demo"}>
                 + new
               </button>
+              <button
+                disabled={!real || busy.value}
+                aria-expanded={packagesOpen.value}
+                onClick={() => void togglePackages()}
+                title={real ? "Create a session from a device package: its architectures are read" : "Not in the demo"}
+              >
+                from device…
+              </button>
             </div>
           </>
         )}
+        {real && packagesOpen.value && <PackagePicker />}
       </Section>
       <Section title="Stages">
         <div
@@ -123,6 +208,9 @@ export function Sidebar() {
           ))
         ) : (
           <div class="muted">(none)</div>
+        )}
+        {session?.device_package && !files.inputs.some((f) => f.label === "circuit") && (
+          <div class="waiting">Waiting for a circuit: upload one below, then say which to read.</div>
         )}
         <h3>Uploaded</h3>
         {(files.uploads ?? []).length > 0 && (

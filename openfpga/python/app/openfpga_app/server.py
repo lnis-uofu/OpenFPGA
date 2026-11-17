@@ -102,7 +102,21 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         name = (await body(request)).get("name")
         if name is not None and not isinstance(name, str):
             return JSONResponse({"error": "name is text"}, 400)
-        return JSONResponse(await backend.new_session(name))
+        package = (await body(request)).get("device_package")
+        if package is not None and not isinstance(package, str):
+            return JSONResponse({"error": "device_package is text"}, 400)
+        return JSONResponse(await backend.new_session(name, package))
+
+    async def file(request: Request) -> Response:
+        answer = await backend.read_file(request.query_params.get("name", ""))
+        if answer.get("ok"):
+            return JSONResponse(answer)
+        kind = (answer.get("diagnostics") or [{}])[0].get("kind")
+        status = {"file_not_found": 404, "path_refused": 403, "demo": 404}.get(kind, 400)
+        return JSONResponse(answer, status)
+
+    async def device_packages(request: Request) -> Response:
+        return JSONResponse(await backend.device_packages())
 
     async def close_session(request: Request) -> Response:
         return JSONResponse(await backend.close_session())
@@ -155,6 +169,8 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/chat", chat, methods=["POST"]),
         Route("/api/cancel", cancel, methods=["POST"]),
         Route("/api/console", console, methods=["POST"]),
+        Route("/api/device-packages", device_packages),
+        Route("/api/file", file),
         Route("/api/session/new", new_session, methods=["POST"]),
         Route("/api/session/close", close_session, methods=["POST"]),
         Route("/api/session/restore", restore_session, methods=["POST"]),
