@@ -24,6 +24,8 @@ class Config:
     answer_chars: int = 4000
     # Folders that the inputs of a flow (architectures, circuits) can be read from, besides root
     input_dirs: Tuple[Path, ...] = ()
+    # Folders that hold device packages (one folder for each package, see docs/spec_device_package.md)
+    package_dirs: Tuple[Path, ...] = ()
 
     def folders(self) -> Tuple[str, ...]:
         """The workspace and the folders of the inputs, as they are written and as they resolve
@@ -40,6 +42,11 @@ class Config:
         object.__setattr__(self, "root", root)
         object.__setattr__(
             self, "input_dirs", tuple(Path(os.path.abspath(os.fspath(d))) for d in self.input_dirs)
+        )
+        object.__setattr__(
+            self,
+            "package_dirs",
+            tuple(Path(os.path.abspath(os.fspath(d))) for d in self.package_dirs),
         )
         if self.max_sessions < 1:
             raise ValueError("max_sessions must be at least 1")

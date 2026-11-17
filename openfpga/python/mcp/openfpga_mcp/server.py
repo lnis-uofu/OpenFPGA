@@ -56,6 +56,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--root", required=True, type=Path, help="the workspace directory")
     parser.add_argument("--input-dir", action="append", default=[], type=Path)
+    parser.add_argument("--device-packages", action="append", default=[], type=Path, metavar="FOLDER", help="a folder of device packages")
     parser.add_argument("--max-sessions", type=int, default=Config.max_sessions)
     parser.add_argument("--call-timeout", type=float, default=Config.call_timeout_s, metavar="S")
     parser.add_argument("--idle-timeout", type=float, default=Config.idle_timeout_s, metavar="S")
@@ -73,6 +74,7 @@ def main(argv=None) -> int:
     config = Config(
         root=args.root,
         input_dirs=tuple(args.input_dir),
+        package_dirs=tuple(args.device_packages),
         max_sessions=args.max_sessions,
         call_timeout_s=args.call_timeout,
         idle_timeout_s=args.idle_timeout,

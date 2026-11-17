@@ -57,3 +57,21 @@ class WrongFileKind(RegistryError):
     """A file that is given for one input but is another kind of file"""
 
     kind = "wrong_file_kind"
+
+
+class SessionNotEmpty(RegistryError):
+    """A device package is not read over files that a session has read: that drops its stages"""
+
+    kind = "session_not_empty"
+    hint = "session_open starts a session that is empty, and use_device_package reads a package there"
+
+
+class PackageNotFound(RegistryError):
+    kind = "package_not_found"
+
+
+class PackageInvalid(RegistryError):
+    """A device package that cannot be used: the manifest, a path, a file or a checksum"""
+
+    kind = "package_invalid"
+    hint = "Check the package against docs/spec_device_package.md"

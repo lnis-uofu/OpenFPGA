@@ -7,7 +7,7 @@ itself): register() takes the decorator that stores a tool and the runner that c
 import dataclasses
 from typing import Callable, Optional
 
-from . import answers, tools
+from . import answers, device_packages, tools
 from .config import Config
 from .registry import SessionRegistry
 
@@ -66,5 +66,36 @@ def register(
                 tools.restore_named(config, entry, checkpoint)
             state = registry.restart(entry)
             return answers.ok(dataclasses.asdict(state))
+
+        return await run(work)
+
+    @tool()
+    async def list_device_packages(name: Optional[str] = None) -> str:
+        """The device packages that can be used (a package is one device with its architectures
+        and the files that go with them). Without a name: for each package its name, version,
+        description, layout (the grid, for example 2x2), LUT size, channel width and tags, and the
+        packages that are damaged with the reason. With the name of a package: its resources, that
+        is its files (role, path inside the package, size), its architectures, the reference
+        design with the result it should give, and the start of its README. Fails with
+        package_not_found for a name that is not there."""
+
+        def work():
+            if name is not None:
+                found = device_packages.describe(device_packages.find(config, name))
+                return answers.ok(found)
+            found = device_packages.discover(config)
+            return answers.ok(
+                {
+                    "packages": [
+                        {
+                            **p.summary(),
+                            "channel_width": p.channel_width,
+                            "files": len(p.files),
+                        }
+                        for p in found["packages"]
+                    ],
+                    "problems": found["problems"],
+                }
+            )
 
         return await run(work)

@@ -11,9 +11,9 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
-from . import answers, budget
+from . import answers, budget, device_packages
 from .config import Config
-from .errors import InvalidArgument, OptionNotAllowed, SessionFull
+from .errors import InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
 from .paths import check_kind, resolve_file
 from .registry import Entry, SessionRegistry
 
@@ -112,28 +112,82 @@ def register(
 
     @tool()
     async def read_inputs(
-        session: str, vpr_arch: str, layout: str, openfpga_arch: str, circuit: str
+        session: str,
+        circuit: str,
+        vpr_arch: Optional[str] = None,
+        layout: Optional[str] = None,
+        openfpga_arch: Optional[str] = None,
     ):
-        """Read the inputs of a flow: the architecture of VPR (an XML file) with the name of its
-        device layout (for example 2x2; 'auto' is not accepted), the architecture of OpenFPGA
-        (XML) and the circuit (a BLIF netlist). File names are relative to the workspace or to a
-        folder of the inputs: no absolute path and no '..'. Returns the state of the session."""
+        """Read the inputs of a flow: the circuit (a BLIF netlist), the architecture of VPR (an
+        XML file) with the name of its device layout (for example 2x2; 'auto' is not accepted)
+        and the architecture of OpenFPGA (XML). File names are relative to the workspace or to a
+        folder of the inputs: no absolute path and no '..'. A session that was created from a
+        device package has both architectures already: give only the circuit. Returns the state
+        of the session."""
 
         def work():
             entry = session_of(session)
             where = entry.directory
-            files = [
-                resolve_file(config, where, name) for name in (vpr_arch, openfpga_arch, circuit)
-            ]
-            for argument, name, path in zip(
-                ("vpr_arch", "openfpga_arch", "circuit"), (vpr_arch, openfpga_arch, circuit), files
-            ):
-                check_kind(argument, name, path)
             handle = entry.session
-            handle.read_vpr_arch(files[0], layout=layout)
-            handle.read_openfpga_arch(files[1])
-            handle.read_circuit(files[2])
+            if vpr_arch is None and layout is not None:
+                raise InvalidArgument("layout goes with vpr_arch: give both, or neither")
+            if vpr_arch is not None and layout is None:
+                raise InvalidArgument("layout is needed with vpr_arch (for example 2x2)")
+            have = handle.state().inputs
+            for argument, name, kept in (
+                ("vpr_arch", vpr_arch, have.vpr_arch),
+                ("openfpga_arch", openfpga_arch, have.openfpga_arch),
+            ):
+                if name is None and kept is None:
+                    raise InvalidArgument(
+                        "%s is needed: no architecture has been read in this session "
+                        "(a session created from a device package has them)" % argument
+                    )
+            given = [
+                (argument, name, resolve_file(config, where, name))
+                for argument, name in (
+                    ("vpr_arch", vpr_arch),
+                    ("openfpga_arch", openfpga_arch),
+                    ("circuit", circuit),
+                )
+                if name is not None
+            ]
+            for argument, name, path in given:
+                check_kind(argument, name, path)
+            paths = {argument: path for argument, _name, path in given}
+            if "vpr_arch" in paths:
+                handle.read_vpr_arch(paths["vpr_arch"], layout=layout)
+            if "openfpga_arch" in paths:
+                handle.read_openfpga_arch(paths["openfpga_arch"])
+            handle.read_circuit(paths["circuit"])
             return reply(_plain("session", handle.state()))
+
+        return await run(work)
+
+    @tool()
+    async def use_device_package(session: str, name: str):
+        """Read a device package into a session: its VPR architecture (with the layout of its
+        grid) and its OpenFPGA architecture, so that the session targets that device. Give the
+        name of a package from list_device_packages. Only a session with nothing read yet takes a
+        package (fails with session_not_empty otherwise). It stops there: read_inputs with only
+        the circuit is the next call, and the architectures are not given again. Returns the
+        package and the state of the session."""
+
+        def work():
+            entry = session_of(session)
+            handle = entry.session
+            package = device_packages.find(config, name)
+            have = handle.state().inputs
+            if have.vpr_arch or have.openfpga_arch or have.circuit:
+                raise SessionNotEmpty(
+                    "Session %s has already read files, and a device package would replace them"
+                    % session
+                )
+            handle.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
+            handle.read_openfpga_arch(str(package.openfpga_arch))
+            return reply(
+                {"device_package": package.summary(), "state": _plain("session", handle.state())}
+            )
 
         return await run(work)
 
