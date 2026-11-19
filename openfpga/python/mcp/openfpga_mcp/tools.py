@@ -18,6 +18,8 @@ from .paths import check_kind, resolve_file
 from .registry import Entry, SessionRegistry
 
 Stage = Literal["pack", "place", "route", "analysis"]
+_ORDER = ("pack", "place", "route", "analysis")
+_STAGE_NAMES = {"pack": "PACKED", "place": "PLACED", "route": "ROUTED", "analysis": "ANALYZED"}
 _READS = {"pack": "read_packing", "place": "read_placement", "route": "read_routing"}
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 _LOG_KEEP = 256 * 1024  # of the log of a stage: the end of it
@@ -193,8 +195,9 @@ def register(
 
     @tool()
     async def run_stage(session: str, stage: Stage, from_file: Optional[str] = None):
-        """Run a stage of the flow: pack, place, route or analysis, in this order; a stage needs
-        the one before it. Returns the seconds it took and the stages reached. When it fails the
+        """Run a stage of the flow: pack, place, route or analysis, in this order. The stages
+        before it that were not run yet are run first (route runs pack and place when needed),
+        and "ran" lists what was run. Returns the seconds and the stages reached. When it fails the
         answer has the diagnostics and what failed (for example the router finds no legal
         routing); the data of the stage is kept, so get_congestion and the queries of the earlier
         stages still answer, and the next run of a stage starts again. With from_file (a file of
@@ -205,7 +208,9 @@ def register(
             entry = session_of(session)
             handle = entry.session
             check_room(entry)
-            _choice("stage", stage, ("pack", "place", "route", "analysis"))
+            _choice("stage", stage, _ORDER)
+            ran: List[str] = []
+            seconds = 0.0
             try:
                 if from_file is not None:
                     if stage not in _READS:
@@ -213,6 +218,12 @@ def register(
                     path = resolve_file(config, entry.directory, from_file, workspace_only=True)
                     step = getattr(handle, _READS[stage])(path)
                 else:
+                    for earlier in _ORDER[: _ORDER.index(stage)]:
+                        if _STAGE_NAMES[earlier] not in handle.state().reached:
+                            step = getattr(handle, earlier)()
+                            keep_log(entry, earlier, step.log)
+                            seconds += step.elapsed_s
+                            ran.append(earlier)
                     step = getattr(handle, stage)()
             except Exception as error:
                 log = getattr(error, "log", None)
@@ -221,6 +232,8 @@ def register(
                     failure = answers.from_exception(error)
                     state = handle.state()
                     failure["reached"] = list(state.reached)
+                    if ran:
+                        failure["ran"] = ran
                     if state.failed is not None:
                         failure["failed"] = dataclasses.asdict(state.failed)
                     return failure
@@ -230,8 +243,9 @@ def register(
             return reply(
                 {
                     "stage": stage,
-                    "seconds": round(step.elapsed_s, 2),
+                    "seconds": round(seconds + step.elapsed_s, 2),
                     "reached": list(state.reached),
+                    **({"ran": ran + [stage]} if ran else {}),
                 }
             )
 

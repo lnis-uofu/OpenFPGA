@@ -1045,22 +1045,24 @@
  },
  {
   "answer": {
-   "diagnostics": [
-    {
-     "data": {
-      "command": "place",
-      "stage": "PLACED"
-     },
-     "file": null,
-     "hint": "Run 'place' first",
-     "kind": "stage_not_reached",
-     "line": null,
-     "message": "Cannot run the stage ROUTED: the stage PLACED has not been reached, use the command 'place' first",
-     "severity": "error"
-    }
-   ],
-   "ok": false,
-   "reached": []
+   "data": {
+    "ran": [
+     "pack",
+     "place",
+     "route"
+    ],
+    "reached": [
+     "DEVICE",
+     "PACKED",
+     "PLACED",
+     "ROUTED"
+    ],
+    "seconds": 0.0,
+    "stage": "route"
+   },
+   "more": null,
+   "ok": true,
+   "truncated": false
   },
   "arguments": {
    "session": "s1",
