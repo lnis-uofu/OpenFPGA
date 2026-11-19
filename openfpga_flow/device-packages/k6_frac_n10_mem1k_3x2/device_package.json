@@ -1,0 +1,126 @@
+{
+  "format_version": "1.0",
+  "name": "k6_frac_n10_mem1k_3x2",
+  "version": "0.1.0",
+  "description": "K6 N10 tileable fabric with adder chains and 1 kbit dual-port memory, 3x2 core",
+  "license": "MIT",
+  "openfpga": {
+    "min_version": "1.3.17",
+    "max_version": null
+  },
+  "device": {
+    "grid": {
+      "width": 3,
+      "height": 2
+    },
+    "lut_size": 6,
+    "channel_width": 50,
+    "tags": [
+      "tileable",
+      "frac_lut",
+      "adder_chain",
+      "bram"
+    ]
+  },
+  "files": [
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/spice/adder.sp"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/adder.v"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/dff.v"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/dpram1k.v"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/gpio.v"
+    },
+    {
+      "role": "openfpga_arch",
+      "path": "arch/openfpga_arch.xml"
+    },
+    {
+      "role": "simulation_setting",
+      "path": "arch/simulation_setting.xml"
+    },
+    {
+      "role": "x_tech_model",
+      "path": "arch/tech/45nm.pm"
+    },
+    {
+      "role": "vpr_arch",
+      "path": "arch/vpr_arch.xml"
+    },
+    {
+      "role": "reference_design",
+      "path": "reference/dual_port_ram_1k.v"
+    },
+    {
+      "role": "x_openfpga_script",
+      "path": "reference/flow.openfpga"
+    },
+    {
+      "role": "yosys_script",
+      "path": "synthesis/synth_script.ys"
+    },
+    {
+      "role": "yosys_bram_rules",
+      "path": "synthesis/techlib/k6_frac_N10_tileable_adder_chain_mem1K_40nm_bram.txt"
+    },
+    {
+      "role": "yosys_map",
+      "path": "synthesis/techlib/k6_frac_N10_tileable_adder_chain_mem1K_40nm_bram_map.v"
+    },
+    {
+      "role": "yosys_cell_sim",
+      "path": "synthesis/techlib/k6_frac_N10_tileable_adder_chain_mem1K_40nm_cell_sim.v"
+    },
+    {
+      "role": "x_yosys_rewrite_script",
+      "path": "synthesis/ys_tmpl_rewrite_flow.ys"
+    },
+    {
+      "role": "x_yosys_rewrite_script",
+      "path": "synthesis/ys_tmpl_yosys_vpr_flow_with_rewrite.ys"
+    }
+  ],
+  "flow_defaults": {
+    "vpr_options": {
+      "device": "3x2",
+      "constant_net_method": "route"
+    },
+    "yosys_options": {
+      "read_verilog": [
+        "-nolatches"
+      ]
+    }
+  },
+  "reference": {
+    "design": "reference/dual_port_ram_1k.v",
+    "top": "dual_port_ram_1k",
+    "source_task": "fpga_verilog/bram/dpram1k",
+    "expected": {
+      "bitstreams": {
+        "fabric_bitstream.bit": "b52f99bf5d40e26b4e6f979322f3cbf121f1e12abb6666251110a47064a214c3",
+        "fabric_independent_bitstream.xml": "e6ff428459f9476160b44b1f28ceb41c4519d8274ac4d90c391015d16b20a324"
+      },
+      "channel_width": 50,
+      "critical_path_delay_ns": 1.92248,
+      "fmax_mhz": 520.161,
+      "netlist_blocks": {
+        "clb": 0,
+        "io": 33,
+        "memory": 1
+      },
+      "wirelength": 369
+    }
+  }
+}

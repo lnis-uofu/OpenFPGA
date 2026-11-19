@@ -1,0 +1,95 @@
+{
+  "format_version": "1.0",
+  "name": "k6_frac_n10_2x2",
+  "version": "0.1.0",
+  "description": "K6 N10 fracturable-LUT tileable fabric, 2x2 core, logic only (I/O and CLB)",
+  "license": "MIT",
+  "openfpga": {
+    "min_version": "1.3.17",
+    "max_version": null
+  },
+  "device": {
+    "grid": {
+      "width": 2,
+      "height": 2
+    },
+    "lut_size": 6,
+    "channel_width": 20,
+    "tags": [
+      "tileable",
+      "frac_lut"
+    ]
+  },
+  "files": [
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/dff.v"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/gpio.v"
+    },
+    {
+      "role": "openfpga_arch",
+      "path": "arch/openfpga_arch.xml"
+    },
+    {
+      "role": "simulation_setting",
+      "path": "arch/simulation_setting.xml"
+    },
+    {
+      "role": "x_tech_model",
+      "path": "arch/tech/45nm.pm"
+    },
+    {
+      "role": "vpr_arch",
+      "path": "arch/vpr_arch.xml"
+    },
+    {
+      "role": "x_reference_activity",
+      "path": "reference/and2.act"
+    },
+    {
+      "role": "x_reference_blif",
+      "path": "reference/and2.blif"
+    },
+    {
+      "role": "reference_design",
+      "path": "reference/and2.v"
+    },
+    {
+      "role": "x_openfpga_script",
+      "path": "reference/flow.openfpga"
+    },
+    {
+      "role": "yosys_script",
+      "path": "synthesis/synth_script.ys"
+    }
+  ],
+  "flow_defaults": {
+    "vpr_options": {
+      "clock_modeling": "route",
+      "device": "2x2",
+      "route_chan_width": 20
+    },
+    "yosys_options": {
+      "read_verilog": []
+    }
+  },
+  "reference": {
+    "design": "reference/and2.v",
+    "top": "and2",
+    "source_task": "basic_tests/generate_fabric",
+    "expected": {
+      "bitstreams": {},
+      "channel_width": 20,
+      "critical_path_delay_ns": 1.15361,
+      "fmax_mhz": 866.846,
+      "netlist_blocks": {
+        "clb": 1,
+        "io": 3
+      },
+      "wirelength": 11
+    }
+  }
+}

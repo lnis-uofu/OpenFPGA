@@ -1,0 +1,123 @@
+{
+  "format_version": "1.0",
+  "name": "k4_n4_dsp16_3x4",
+  "version": "0.1.0",
+  "description": "K4 N4 tileable fabric with a 16x16 fracturable multiplier (two 8x8 modes), 3x4 core",
+  "license": "MIT",
+  "openfpga": {
+    "min_version": "1.3.17",
+    "max_version": null
+  },
+  "device": {
+    "grid": {
+      "width": 3,
+      "height": 4
+    },
+    "lut_size": 4,
+    "channel_width": 58,
+    "tags": [
+      "tileable",
+      "frac_lut",
+      "dsp"
+    ]
+  },
+  "files": [
+    {
+      "role": "bitstream_setting",
+      "path": "arch/bitstream_setting.xml"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/dff.v"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/frac_mult_16x16.v"
+    },
+    {
+      "role": "x_cell_library",
+      "path": "arch/cell_library/verilog/gpio.v"
+    },
+    {
+      "role": "openfpga_arch",
+      "path": "arch/openfpga_arch.xml"
+    },
+    {
+      "role": "simulation_setting",
+      "path": "arch/simulation_setting.xml"
+    },
+    {
+      "role": "x_tech_model",
+      "path": "arch/tech/45nm.pm"
+    },
+    {
+      "role": "vpr_arch",
+      "path": "arch/vpr_arch.xml"
+    },
+    {
+      "role": "x_openfpga_script",
+      "path": "reference/flow.openfpga"
+    },
+    {
+      "role": "reference_design",
+      "path": "reference/mult8.v"
+    },
+    {
+      "role": "yosys_script",
+      "path": "synthesis/synth_script.ys"
+    },
+    {
+      "role": "yosys_cell_sim",
+      "path": "synthesis/techlib/k4_N4_tileable_frac_dsp16_40nm_cell_sim.v"
+    },
+    {
+      "role": "yosys_map",
+      "path": "synthesis/techlib/k4_N4_tileable_frac_dsp16_40nm_dsp_map.v"
+    },
+    {
+      "role": "x_yosys_rewrite_script",
+      "path": "synthesis/ys_tmpl_rewrite_flow.ys"
+    },
+    {
+      "role": "x_yosys_rewrite_script",
+      "path": "synthesis/ys_tmpl_yosys_vpr_dsp_flow_with_rewrite.ys"
+    }
+  ],
+  "flow_defaults": {
+    "vpr_options": {
+      "clock_modeling": "route",
+      "circuit_format": "eblif"
+    },
+    "yosys_options": {
+      "read_verilog": [
+        "-nolatches"
+      ],
+      "dsp_map": [
+        "-D DSP_A_MAXWIDTH=8",
+        "-D DSP_B_MAXWIDTH=8",
+        "-D DSP_A_MINWIDTH=2",
+        "-D DSP_B_MINWIDTH=2",
+        "-D DSP_NAME=mult_8x8"
+      ]
+    }
+  },
+  "reference": {
+    "design": "reference/mult8.v",
+    "top": "mult8",
+    "source_task": "fpga_bitstream/extract_dsp_mode_bit",
+    "expected": {
+      "bitstreams": {
+        "fabric_independent_bitstream.xml": "bc5306cb438caba1915d3dd0a8c03e3bcb479db956a92b70f660d7979c7a070b"
+      },
+      "channel_width": 58,
+      "critical_path_delay_ns": 5.83984,
+      "fmax_mhz": 171.237,
+      "netlist_blocks": {
+        "clb": 0,
+        "io": 32,
+        "mult_16": 1
+      },
+      "wirelength": 289
+    }
+  }
+}
