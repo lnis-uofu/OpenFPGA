@@ -8,6 +8,7 @@ read again. The limits: steps, time, the size of the context (old tool answers b
 the same call again and again, a failure of the same kind again and again, and a cancel.
 """
 
+import dataclasses
 import inspect
 import json
 import time
@@ -21,6 +22,20 @@ from .config import AgentConfig
 from .model import Model, ModelError, ModelTurn, TextChunk, ToolCallRequest
 from .prompt import system_prompt
 from .schema import tool_definitions
+from .stated import stated_files
+
+# The failures whose hint names the call to make next, and what is said when the model does not
+NEXT_CALL_KINDS = ("input_not_read", "stage_not_reached")
+NUDGE = (
+    "[The last call failed because something comes first. Make that call yourself now, with file "
+    "names from the list of files; do not ask the person and do not tell them to do it.]"
+)
+
+FINAL_ONLY = (
+    "[The files that the person named were refused, as the last answer says. Make no more calls: "
+    "say in your answer which file is of which kind (or that it does not exist), and ask which "
+    "file to use.]"
+)
 
 Invoke = Callable[[str, Dict[str, Any]], Awaitable[Dict[str, Any]]]
 
@@ -129,6 +144,16 @@ class AgentLoop:
 
     # One message of the user ----------------------------------------------------------------------
 
+    def _as_stated(self, request: ToolCallRequest, stated: Dict[str, str]) -> ToolCallRequest:
+        """read_inputs gets the files that the person named, in the inputs they named them for"""
+        if request.name != "read_inputs" or request.error:
+            return request
+        changed = {k: v for k, v in stated.items() if request.arguments.get(k) != v}
+        if not changed:
+            return request
+        self._record("as_stated", before=request.arguments, set=changed)
+        return dataclasses.replace(request, arguments={**request.arguments, **changed})
+
     async def run(self, message_id: str, text: str) -> AsyncIterator[Dict[str, Any]]:
         config = self.config
         self._cancelled = False
@@ -140,6 +165,10 @@ class AgentLoop:
         started = time.monotonic()
         previous: Optional[str] = None
         repeats = failures = 0
+        nudged = False
+        stated = stated_files(text)
+        as_stated: set = set()
+        final_only = told = False
         last_kind: Optional[str] = None
         stop: Optional[str] = None
         step = 0
@@ -157,11 +186,15 @@ class AgentLoop:
                 stop = "the context is full (%d tokens)" % self._tokens()
                 break
             step += 1
+            if final_only and not told:
+                told = True  # after the answers of all the calls of the reply that failed
+                self.history.append({"role": "user", "content": FINAL_ONLY})
             messages = self._messages()
-            characters = context.size(messages, self.definitions)
+            definitions = [] if final_only else self.definitions
+            characters = context.size(messages, definitions)
             turn: Optional[ModelTurn] = None
             try:
-                async for item in self.model.stream(messages, self.definitions):
+                async for item in self.model.stream(messages, definitions):
                     if isinstance(item, TextChunk):
                         yield events.text_delta(message_id, item.text)
                     else:
@@ -193,6 +226,14 @@ class AgentLoop:
                 self._tokens(),
                 config.context_tokens,
             )
+            if final_only:
+                turn.tool_calls = []  # no tools were offered: what the model says is the answer
+            if stated:
+                for i, requested in enumerate(turn.tool_calls):
+                    fixed = self._as_stated(requested, stated)
+                    if fixed is not requested:
+                        as_stated.add(fixed.id)
+                        turn.tool_calls[i] = fixed
             assistant: Dict[str, Any] = {"role": "assistant", "content": turn.text or None}
             if turn.tool_calls:
                 assistant["tool_calls"] = [
@@ -205,6 +246,13 @@ class AgentLoop:
                 ]
             self.history.append(assistant)
             if not turn.tool_calls:
+                # A reply that ends after a call that failed because something comes first, and asks
+                # the person to do it: say once that the call is the model's to make
+                if last_kind in NEXT_CALL_KINDS and not nudged:
+                    nudged = True
+                    self._record("nudge", after=last_kind)
+                    self.history.append({"role": "user", "content": NUDGE})
+                    continue
                 break
             skipped = False
             for request in turn.tool_calls:
@@ -312,6 +360,10 @@ class AgentLoop:
                 )
                 if kind == "not_run":
                     continue  # it did not fail: it was not tried
+                if request.id in as_stated and kind in ("wrong_file_kind", "file_not_found"):
+                    # The person's own choice of files is what failed: it is theirs to settle
+                    final_only = True
+                    self._record("final_only", after=kind)
                 skipped = skipped or not answer.get("ok")
                 failures = failures + 1 if kind and kind == last_kind else (1 if kind else 0)
                 last_kind = kind

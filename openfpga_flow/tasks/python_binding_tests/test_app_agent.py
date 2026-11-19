@@ -933,3 +933,80 @@ def test_no_session_is_opened_when_one_is_given_or_the_tool_opens_it_or_it_is_of
     found = run(_auto_loop(ScriptedModel([say("", call("work")), say("ok")]), log, auto=False))
     assert log == []
     assert [e for e in found if e["type"] == "tool_call_finished"][0]["ok"] is False
+
+
+def test_a_reply_that_asks_after_a_failure_of_order_is_told_once_to_make_the_call():
+    model = ScriptedModel(
+        [
+            say("", call("fail", kind="input_not_read")),
+            say("Please give me the file names."),
+            say("", call("echo", text="x")),
+            say("done"),
+        ]
+    )
+    loop = make_loop(model)
+    run(loop)
+    assert [r["kind"] for r in loop.records].count("nudge") == 1
+    assert model.requests[2][-1]["role"] == "user" and "Make that call yourself" in model.requests[2][-1]["content"]
+
+
+def test_a_failure_that_is_not_of_order_is_not_nudged():
+    model = ScriptedModel([say("", call("fail", kind="file_not_found")), say("That file does not exist.")])
+    loop = make_loop(model)
+    run(loop)
+    assert [r["kind"] for r in loop.records].count("nudge") == 0 and len(model.requests) == 2
+
+
+def test_the_files_that_the_message_names_for_an_input_are_found():
+    from openfpga_app.agent.stated import stated_files
+
+    assert stated_files("Open routing_test.blif and use k6_openfpga.xml as the VPR architecture.") == {
+        "vpr_arch": "k6_openfpga.xml"
+    }
+    assert stated_files("use a.xml as the OpenFPGA architecture and b.blif as the circuit") == {
+        "openfpga_arch": "a.xml",
+        "circuit": "b.blif",
+    }
+    assert stated_files("vpr architecture: v.xml") == {"vpr_arch": "v.xml"}
+    assert stated_files("Run the flow on routing_test at width 20") == {}
+
+
+def test_read_inputs_gets_the_files_that_the_person_named_not_the_ones_the_model_chose():
+    wrong = {"vpr_arch": "right.xml", "openfpga_arch": "o.xml", "circuit": "c.blif", "layout": "2x2"}
+    model = ScriptedModel([say("", call("echo", **wrong)), say("done")])
+    tools = make_tools()
+
+    async def read_inputs(session=None, circuit=None, vpr_arch=None, layout=None, openfpga_arch=None):
+        return json.dumps({"ok": True, "data": {}})
+
+    tools = {**tools, "read_inputs": read_inputs}
+    loop = make_loop(model, tools)
+    run(loop, "Use o.xml as the VPR architecture.")
+    assert not [r for r in loop.records if r["kind"] == "as_stated"]  # not a read_inputs call
+    model = ScriptedModel([say("", call("read_inputs", **wrong)), say("done")])
+    loop = make_loop(model, tools)
+    run(loop, "Use o.xml as the VPR architecture.")
+    assert [r["set"] for r in loop.records if r["kind"] == "as_stated"] == [{"vpr_arch": "o.xml"}]
+    tool = next(r for r in loop.records if r["kind"] == "tool")
+    assert tool["arguments"]["vpr_arch"] == "o.xml" and tool["arguments"]["openfpga_arch"] == "o.xml"
+
+
+def test_files_that_the_person_named_and_the_tool_refused_end_the_calls_and_ask_for_the_answer():
+    async def read_inputs(session=None, circuit=None, vpr_arch=None, layout=None, openfpga_arch=None):
+        return json.dumps(
+            {"ok": False, "diagnostics": [{"kind": "wrong_file_kind", "message": "no", "hint": "h"}]}
+        )
+
+    tools = {**make_tools(), "read_inputs": read_inputs}
+    model = ScriptedModel(
+        [
+            say("", call("read_inputs", vpr_arch="right.xml", circuit="c.blif")),
+            say("o.xml is an OpenFPGA architecture, not a VPR one. Which file should I use?"),
+        ]
+    )
+    loop = make_loop(model, tools)
+    run(loop, "Use o.xml as the VPR architecture.")
+    assert [r["kind"] for r in loop.records].count("final_only") == 1
+    assert model.tools_seen[1] == [] and "Make no more calls" in model.requests[1][-1]["content"]
+    assert len(model.requests) == 2
+

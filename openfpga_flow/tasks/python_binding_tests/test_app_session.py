@@ -173,6 +173,13 @@ def test_a_constraint_drops_the_stages_and_the_sidebar_shows_it(client, golden):
 
 def test_a_failure_is_a_finished_call_with_its_diagnostics(client, golden):
     set_up(client, golden, stages=("pack",))
+    done = call(say(client, "/run_stage stage=pack from_file=missing.net"))
+    assert done["ok"] is False
+    assert done["result"]["diagnostics"][0]["kind"]
+
+
+def test_a_stage_runs_the_stages_before_it_that_were_not_run(client, golden):
+    set_up(client, golden, stages=("pack",))
     done = call(say(client, "/run_stage stage=route"))
     assert done["ok"] is True
     assert done["result"]["data"]["ran"] == ["place", "route"]
