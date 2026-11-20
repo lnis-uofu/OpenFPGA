@@ -96,7 +96,24 @@ try {
   await page.click(".upload-row .file:has-text('mine.blif')");
   await page.waitForSelector(".file-view .monaco-editor", { timeout: 30000 });
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("model"), null, { timeout: 15000 });
+  // The circuit is coloured as BLIF: the directives, the cubes and the names are not one colour
+  await page.waitForFunction(
+    () => new Set([...document.querySelectorAll(".file-view .view-lines span[class^='mtk']")].map((e) => e.className)).size >= 3,
+    null,
+    { timeout: 15000 },
+  ); // the tokens come a moment after the text
+  if (process.env.SHOT_BLIF) await page.screenshot({ path: process.env.SHOT_BLIF });
   assert.ok(await page.isVisible('[role=tab]:has-text("mine.blif")'));
+  // The file of the session is edited in the editor and saved in place (Ctrl+S)
+  assert.ok(await page.isDisabled(".save-file"), "nothing to save yet");
+  await page.click(".file-view .monaco-editor .view-lines");
+  await page.keyboard.press("Control+Home");
+  await page.keyboard.type("# edited by hand\n"); // a comment at the start: VPR reads none after .end
+  await page.waitForSelector(".save-file:not([disabled])");
+  await page.keyboard.press("Control+s");
+  await page.waitForSelector(".file-note-ok:has-text('Saved.')", { timeout: 15000 });
+  assert.ok(readFileSync(path.join(root, "s1", "uploads", "mine.blif"), "utf8").includes("# edited by hand"), "saved on the disk");
+  assert.ok(await page.isDisabled(".save-file"), "saved: nothing more to save");
   await page.click('[role=tab]:has-text("Chat")');
   await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=mine.blif`);
   await page.waitForSelector(".file-row .file:has-text('mine.blif')", { timeout: 30000 }); // read as an input
@@ -164,6 +181,14 @@ try {
   await page.waitForSelector("header >> text=ANALYZED ✔");
   await page.click("text=close");
   await page.waitForSelector("text=Create session from device package…"); // back at the welcome screen
+
+  // The closed session is saved: it opens again from its last checkpoint, with its stages
+  await page.click("text=Open session…");
+  await page.waitForSelector(".session-entry:has-text('saved')", { timeout: 15000 });
+  await page.click(".session-entry button:has-text('Open')");
+  await page.waitForSelector("header >> text=ANALYZED ✔", { timeout: 60000 });
+  await page.click("text=close");
+  await page.waitForSelector("text=Create session from device package…");
 
   // A session from a device package: the architectures are read, and it waits for the circuit
   await page.click("text=Create session from device package…");

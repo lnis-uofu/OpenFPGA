@@ -7,13 +7,16 @@ import {
   messages,
   packagesOpen,
   sendMessage,
+  sessionsOpen,
   stop,
   togglePackages,
+  toggleSessions,
   view,
   welcomeChat,
 } from "../store";
 import { EXAMPLES, MessageView, chatInput } from "./Chat";
 import { PackagePicker } from "./PackagePicker";
+import { SessionPicker } from "./SessionPicker";
 
 /** The first screen, while there is no session and nothing has been said: a prompt in the middle and
  * the two ways to start a session at the bottom. It gives way to the full interface as soon as a
@@ -129,12 +132,20 @@ export function Welcome() {
           <PackagePicker />
         </div>
       )}
+      {sessionsOpen.value && (
+        <div class="welcome-packages">
+          <SessionPicker />
+        </div>
+      )}
       <div class="welcome-buttons">
         <button class="primary" disabled={busy.value} onClick={() => void makeSession()}>
           Create session
         </button>
         <button disabled={busy.value} aria-expanded={packagesOpen.value} onClick={() => void togglePackages()}>
           Create session from device package…
+        </button>
+        <button disabled={busy.value} aria-expanded={sessionsOpen.value} onClick={() => void toggleSessions()}>
+          Open session…
         </button>
       </div>
     </main>

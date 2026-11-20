@@ -77,3 +77,18 @@ def test_the_walk_is_bounded_and_skips_hidden_folders(designs, monkeypatch):
     assert "h.blif" not in names and "deep.blif" not in names and "top.blif" in names
     monkeypatch.setattr(paths, "DESIGN_MAX_FILES", 2)
     assert len(list(paths.design_files(config))) == 2
+
+
+def test_the_prompt_lists_only_the_circuits_of_the_designs_folders(openfpga_module, designs):
+    from openfpga_app.session_backend import SessionBackend
+
+    config, _ = designs
+    backend = SessionBackend(config)
+    try:
+        lines = dict(l.split(": ", 1) for l in backend._files_listing().splitlines())
+        assert set(lines) == {"circuit"}  # no architecture is listed from the designs folder
+        shown = lines["circuit"].split(", ")
+        # A name that is the only one of its name is short; the others are given by their path
+        assert sorted(shown) == ["routing_test.blif", "top.blif", "ubm/a/same.blif", "ubm/b/same.blif"]
+    finally:
+        backend.close()

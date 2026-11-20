@@ -49,7 +49,7 @@ calls of the endpoint, `json` makes the model answer with a JSON object that the
 constrains to the tools (a smaller prompt, and a different way to go wrong). `--record-dir`
 writes each conversation as lines of JSON (what the model said, each call and its answer, the
 tokens and the seconds). What the person does meanwhile (console, buttons, `/` lines) is told to
-the model at its next message. All 23 tools are shown to the model; the files it can read are
+the model at its next message. All 24 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
 ## The first screen
@@ -100,12 +100,30 @@ tools are the same.
 
 A click on a file name in the sidebar (an input, an uploaded file, a result such as the `.net`, `.place`
 or `.route` of the flow, a file of a device package) opens it in a tab of the centre, in Monaco, the
-editor of VS Code, read only: colours for XML (the architectures and the packing), SystemVerilog and
+editor of VS Code: colours for XML (the architectures and the packing), SystemVerilog and
 Tcl (the constraints), line numbers, folding, search (Ctrl+F) and go to line (Ctrl+G). "Reload" reads
 the file again (a result may have changed), "Copy text" copies it. The small ⧉ beside a name copies the
 name. The server reads only what the tools may read (the directory of the session with its uploads, the
 workspace, the designs folders, the device packages), only text, and at most one megabyte of it.
 Not in the demo, which has no files.
+
+**Opening a session.** The first screen has "Open session…": a list of the sessions that can be opened.
+A live one (a worker holds it) is switched to; a saved one is a directory `sN` of the workspace that no
+worker holds and that has a checkpoint (it was closed, or an earlier run of the server made it): a worker is
+started from the last checkpoint, under the same id, with its stages, options and device package (the name and
+the package are kept in `session.json` in its directory). A session that ran no stage has no checkpoint and
+is not listed. The model is told that the session changed. `GET /api/sessions` lists, `POST /api/session/open`
+(`{session}`) opens; the sidebar has no list yet.
+
+**Editing.** The files of the session's `uploads` (what the person gave) and of `created` (what the model
+wrote) are edited in the tab: "Save" (or Ctrl+S) writes the text in place, a dot after the name says that
+there are changes that are not saved, and "Reload" asks before it throws them away. Any other file of a kind
+that a flow reads (an input of a folder, a package file) stays read only; "Edit a copy" copies it into the
+session's uploads, under its own name, and opens the copy (a copy that is there is not replaced). Results
+and the files of packages are never changed. The model is told that the person edited a file; if the session
+had read it as an input the answer says so, and `read_inputs` must read it again for the change to count.
+The text saved is UTF-8, at most one megabyte. `PUT /api/file?name=N` saves and `POST /api/file/copy?name=N`
+copies, with the token as the other endpoints; not in the demo. BLIF has its own colours (`blif.ts`).
 
 Monaco is a separate chunk of about 3 MB (800 kB compressed) that the page loads the first time that
 a file is opened: the page does not carry it before. It is bundled in `openfpga_app/static/` by

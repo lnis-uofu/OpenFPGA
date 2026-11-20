@@ -14,12 +14,17 @@ import {
   fetchConfig,
   newSession,
   applyDevicePackage,
+  fetchSessions,
+  openSessionById,
+  type SessionEntry,
   restoreSession,
   fetchSession,
   runConsole,
   streamChat,
   fetchDevicePackages,
   fetchFile,
+  saveFileText,
+  copyFileToSession,
   removeUploadedFile,
   uploadFile,
 } from "./api";
@@ -83,6 +88,8 @@ export interface FileState {
   bytes: number;
   truncated: boolean;
   message: string;
+  editable?: boolean; // a file of the session's uploads or one that the model wrote
+  copyable?: boolean; // another file: a copy can be made in the session and edited there
 }
 export const openFiles = signal<Record<string, FileState>>({});
 export const CONSOLE_HEIGHT_DEFAULT = 180;
@@ -134,6 +141,8 @@ export function resetStore() {
   loaded.value = false;
   welcomeChat.value = false;
   closedSession.value = false;
+  sessionsOpen.value = false;
+  sessionList.value = null;
   consoleHeight.value = CONSOLE_HEIGHT_DEFAULT;
   activeTab.value = CHAT;
   split.value = false;
@@ -307,12 +316,35 @@ export const devicePackages = signal<{ packages: DevicePackageInfo[]; problems: 
 export async function togglePackages() {
   packagesOpen.value = !packagesOpen.value;
   if (!packagesOpen.value) return;
+  sessionsOpen.value = false;
   try {
     devicePackages.value = await fetchDevicePackages(); // read again each time: a package may have been added
   } catch (error) {
     packagesOpen.value = false;
     banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
   }
+}
+
+/** The picker of sessions to open (the first screen): the live ones and the saved ones of the workspace */
+export const sessionsOpen = signal(false);
+export const sessionList = signal<{ live: SessionEntry[]; saved: SessionEntry[] } | null>(null);
+
+export async function toggleSessions() {
+  sessionsOpen.value = !sessionsOpen.value;
+  if (!sessionsOpen.value) return;
+  packagesOpen.value = false;
+  try {
+    sessionList.value = await fetchSessions(); // read again each time: a session may have been made or closed
+  } catch (error) {
+    sessionsOpen.value = false;
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  }
+}
+
+/** Open a session from the list: the full interface shows it */
+export async function openSession(id: string) {
+  sessionsOpen.value = false;
+  await sessionAction(() => openSessionById(id));
 }
 
 /** A session that reads the files of a device package and waits for the circuit */
@@ -479,8 +511,8 @@ export async function loadFile(name: string) {
   try {
     const answer = await fetchFile(name);
     if (answer.ok) {
-      const data = answer.data as { text: string; bytes: number; truncated: boolean };
-      next = { status: "ready", text: data.text, bytes: data.bytes, truncated: data.truncated, message: "" };
+      const data = answer.data as { text: string; bytes: number; truncated: boolean; editable?: boolean; copyable?: boolean };
+      next = { status: "ready", text: data.text, bytes: data.bytes, truncated: data.truncated, message: "", editable: data.editable, copyable: data.copyable };
     } else {
       const d = answer.diagnostics?.[0];
       next = { status: "failed", text: "", bytes: 0, truncated: false, message: d ? d.message + (d.hint ? ` (${d.hint})` : "") : "The file could not be read" };
@@ -489,6 +521,42 @@ export async function loadFile(name: string) {
     next = { status: "failed", text: "", bytes: 0, truncated: false, message: String(error) };
   }
   if (name in openFiles.value) openFiles.value = { ...openFiles.value, [name]: next }; // not if the tab was closed
+}
+
+/** Save the text that the person edited. The answer says if it worked, why not, and whether the
+ * session had read the file (then the stages that used it are out of date) */
+export async function saveFile(name: string, text: string): Promise<{ ok: boolean; message: string; inUse: boolean }> {
+  try {
+    const answer = await saveFileText(name, text);
+    if (!answer.ok) {
+      const d = answer.diagnostics?.[0];
+      return { ok: false, message: d ? d.message + (d.hint ? ` (${d.hint})` : "") : "The file was not saved", inUse: false };
+    }
+    const data = answer.data as { bytes: number; in_use?: boolean };
+    const before = openFiles.value[name];
+    if (before) openFiles.value = { ...openFiles.value, [name]: { ...before, text, bytes: data.bytes, truncated: false } };
+    await refreshView();
+    return { ok: true, message: "", inUse: !!data.in_use };
+  } catch (error) {
+    return { ok: false, message: String(error), inUse: false };
+  }
+}
+
+/** Make a copy of a file that cannot be edited, in the uploads of the session, and open the copy */
+export async function editCopy(name: string) {
+  try {
+    const answer = await copyFileToSession(name);
+    if (!answer.ok) {
+      reportFailure(answer);
+      return;
+    }
+    banner.value = null;
+    const copy = (answer.data as { name: string }).name;
+    await refreshView();
+    await openFile(copy);
+  } catch (error) {
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  }
 }
 
 export function pinTab(id: string) {

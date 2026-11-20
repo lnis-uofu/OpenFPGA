@@ -6,29 +6,13 @@ the page is the person's own, but a file is still data that comes through a sock
 """
 
 import os
-import re
 from pathlib import Path
 from typing import Any, Dict, List
 
-from openfpga_mcp.paths import UPLOADS, looks_like_blif, root_element
+from openfpga_mcp.filenames import EXTENSIONS, NAME as _NAME, kind_of
+from openfpga_mcp.paths import CREATED, UPLOADS
 
-# What an input of a flow can be: architectures and constraints (XML), circuits, timing constraints
-EXTENSIONS = {
-    ".xml",
-    ".blif",
-    ".eblif",
-    ".v",
-    ".sv",
-    ".vh",
-    ".sdc",
-    ".pcf",
-    ".json",
-    ".csv",
-    ".txt",
-}
 MAX_FILE_BYTES = 50 * 1024 * 1024
-_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,99}$")
-_KINDS = {"architecture": "vpr_arch", "openfpga_architecture": "openfpga_arch"}
 
 
 class UploadRefused(Exception):
@@ -54,15 +38,6 @@ def check_name(name: str) -> str:
             "Accepted: %s" % ", ".join(sorted(EXTENSIONS)),
         )
     return name
-
-
-def kind_of(path: Path) -> str:
-    """What a file is, from its first lines: vpr_arch, openfpga_arch, circuit or other"""
-    if path.suffix.lower() == ".xml":
-        return _KINDS.get(root_element(str(path)) or "", "other")
-    if path.suffix.lower() in (".blif", ".eblif") and looks_like_blif(str(path)):
-        return "circuit"
-    return "other"
 
 
 def folder(root: Path, session_dir: str) -> Path:
@@ -92,8 +67,9 @@ def save(root: Path, session_dir: str, name: str, data: bytes, overwrite: bool) 
     return {"name": name, "kind": kind_of(destination), "bytes": len(data)}
 
 
-def listing(root: Path, session_dir: str) -> List[Dict[str, Any]]:
-    target = folder(root, session_dir)
+def listing(root: Path, session_dir: str, name: str = UPLOADS) -> List[Dict[str, Any]]:
+    """The files of the folder 'uploads' (the person's) or 'created' (the model's)"""
+    target = root / session_dir / name
     items: List[Dict[str, Any]] = []
     try:
         for entry in sorted(target.iterdir(), key=lambda p: p.name):

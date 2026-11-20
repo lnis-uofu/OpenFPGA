@@ -10,7 +10,7 @@ from starlette.responses import FileResponse, JSONResponse, Response, StreamingR
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
-from . import events, uploads
+from . import events, uploads, viewer
 from .backend import Backend
 from .config import AppConfig
 from .security import SecurityMiddleware
@@ -118,8 +118,41 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         if answer.get("ok"):
             return JSONResponse(answer)
         kind = (answer.get("diagnostics") or [{}])[0].get("kind")
-        status = {"file_not_found": 404, "path_refused": 403, "demo": 404}.get(kind, 400)
+        status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "ambiguous_file": 409}.get(kind, 400)
         return JSONResponse(answer, status)
+
+    async def save_file(request: Request) -> Response:
+        name = request.query_params.get("name", "")
+        data = bytearray()
+        async for chunk in request.stream():
+            data += chunk
+            if len(data) > viewer.MAX_SHOWN_BYTES + 1024:
+                return JSONResponse(_refused(uploads.UploadRefused("too_large", "Text too large")), 413)
+        try:
+            text = bytes(data).decode("utf-8")
+        except UnicodeDecodeError:
+            return JSONResponse({"error": "the text is not UTF-8"}, 400)
+        answer = await backend.write_file(name, text)
+        return _file_answer(answer)
+
+    async def copy_file(request: Request) -> Response:
+        return _file_answer(await backend.copy_file(request.query_params.get("name", "")))
+
+    def _file_answer(answer: Dict[str, Any]) -> Response:
+        if answer.get("ok"):
+            return JSONResponse(answer)
+        kind = (answer.get("diagnostics") or [{}])[0].get("kind")
+        status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "no_session": 404, "unknown_session": 404, "ambiguous_file": 409}.get(kind, 400)
+        return JSONResponse(answer, status)
+
+    async def sessions(request: Request) -> Response:
+        return JSONResponse(await backend.list_sessions())
+
+    async def open_session(request: Request) -> Response:
+        session = (await body(request)).get("session")
+        if not isinstance(session, str) or not session or len(session) > 64:
+            return JSONResponse({"error": "session is the id of a session"}, 400)
+        return _file_answer(await backend.open_session(session))
 
     async def device_packages(request: Request) -> Response:
         return JSONResponse(await backend.device_packages())
@@ -177,6 +210,10 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/console", console, methods=["POST"]),
         Route("/api/device-packages", device_packages),
         Route("/api/file", file),
+        Route("/api/file", save_file, methods=["PUT"]),
+        Route("/api/file/copy", copy_file, methods=["POST"]),
+        Route("/api/sessions", sessions),
+        Route("/api/session/open", open_session, methods=["POST"]),
         Route("/api/session/new", new_session, methods=["POST"]),
         Route("/api/session/device", apply_package, methods=["POST"]),
         Route("/api/session/close", close_session, methods=["POST"]),

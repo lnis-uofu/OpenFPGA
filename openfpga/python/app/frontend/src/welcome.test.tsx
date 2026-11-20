@@ -14,6 +14,8 @@ const opened = (): SessionView => ({
 });
 
 /** A server: the configuration, the view (which a call of the sessions changes) and the packages */
+const saved: { id: string; name: string; stages: string[]; device_package: null }[] = [];
+
 function server(config: unknown, calls: { url: string; body?: string }[] = []) {
   let current: SessionView = emptyView();
   chat.open = () => {
@@ -38,6 +40,16 @@ function server(config: unknown, calls: { url: string; body?: string }[] = []) {
     if (url === "/api/session/new") {
       current = opened();
       return reply({ ok: true, data: { session: "s1" } });
+    }
+    if (url === "/api/sessions") {
+      return reply({
+        ok: true,
+        data: { live: [], saved: saved.map((s) => ({ ...s, modified: Date.now() / 1000 - 3600 })) },
+      });
+    }
+    if (url === "/api/session/open") {
+      current = opened();
+      return reply({ ok: true, data: { session: "s3" } });
     }
     if (url === "/api/session/close") {
       current = emptyView();
@@ -80,6 +92,7 @@ const say = async (text: string) => {
 const sidebar = () => screen.queryByLabelText("Session and design files");
 
 beforeEach(() => {
+  saved.length = 0;
   resetStore();
   chat.controller = null;
 });
@@ -134,6 +147,34 @@ describe("the welcome screen", () => {
     fireEvent.click(screen.getByText("Create session", { selector: ".package button" }));
     await waitFor(() => expect(sidebar()).toBeTruthy());
     expect(calls.find((c) => c.url === "/api/session/new")?.body).toBe(JSON.stringify({ device_package: "k6_frac_n10_2x2" }));
+  });
+
+  it("opens a saved session that is chosen from the list", async () => {
+    const calls: { url: string; body?: string }[] = [];
+    saved.push({ id: "s3", name: "old run", stages: ["DEVICE", "PACKED"], device_package: null });
+    server(real, calls);
+    render(<App />);
+    fireEvent.click(await screen.findByText("Open session…"));
+    await screen.findByText("old run");
+    expect(screen.getByText("saved")).toBeTruthy();
+    expect(screen.getByText(/packed · 60 min ago/)).toBeTruthy();
+    expect(sidebar()).toBeNull(); // still the welcome screen
+    fireEvent.click(screen.getByText("Open", { selector: ".session-entry button" }));
+    await waitFor(() => expect(sidebar()).toBeTruthy());
+    expect(calls.find((c) => c.url === "/api/session/open")?.body).toBe(JSON.stringify({ session: "s3" }));
+  });
+
+  it("says that there is no session to open, and shows one list at a time", async () => {
+    server(real);
+    render(<App />);
+    fireEvent.click(await screen.findByText("Open session…"));
+    await screen.findByText(/No session to open/);
+    fireEvent.click(screen.getByText("Create session from device package…"));
+    await screen.findByText("k6_frac_n10_2x2");
+    expect(screen.queryByText(/No session to open/)).toBeNull(); // the other list closed
+    fireEvent.click(screen.getByText("Open session…"));
+    await screen.findByText(/No session to open/);
+    expect(screen.queryByText("k6_frac_n10_2x2")).toBeNull();
   });
 
   it("shows the answer to a message in a small window below the prompt, not in the full interface", async () => {

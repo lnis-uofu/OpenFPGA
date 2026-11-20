@@ -84,3 +84,81 @@ def test_the_viewer_needs_the_token_and_the_demo_has_no_files(client):
     ) as demo:
         demo.headers["Authorization"] = "Bearer t"
         assert fetch(demo, "a.txt").status_code == 404
+
+
+def save(client, name, text):
+    return client.put(
+        "/api/file", params={"name": name}, content=text.encode(), headers={"Content-Type": "text/plain"}
+    )
+
+
+def test_a_file_of_the_uploads_is_editable_and_saved_in_place(client, backend, golden):
+    assert put(client, "mine.blif", b".model m\n.end\n").status_code == 200
+    data = fetch(client, "mine.blif").json()["data"]
+    assert data["editable"] is True and data["copyable"] is False
+
+    saved = save(client, "mine.blif", ".model changed\n.end\n")
+    assert saved.status_code == 200, saved.json()
+    assert saved.json()["data"] == {
+        "name": "mine.blif",
+        "bytes": len(".model changed\n.end\n"),
+        "kind": "circuit",  # by its first lines
+        "in_use": False,
+    }
+    assert fetch(client, "mine.blif").json()["data"]["text"] == ".model changed\n.end\n"
+    folder = backend.config.root / "s1" / "uploads"
+    assert [p.name for p in folder.iterdir()] == ["mine.blif"]  # no half file is left
+
+
+def test_a_file_that_the_session_read_says_so_when_it_is_saved(client, backend, golden):
+    assert client.post("/api/session/new", json={"device_package": LOGIC}).json()["ok"]
+    assert put(client, "mine.blif", golden.circuit.read_bytes()).status_code == 200
+    assert call(say(client, "/read_inputs circuit=mine.blif"))["ok"]
+    text = golden.circuit.read_text() + "\n# a comment\n"
+    answer = save(client, "mine.blif", text).json()
+    assert answer["ok"] and answer["data"]["in_use"] is True and answer["data"]["kind"] == "circuit"
+
+
+def test_the_files_of_the_inputs_and_the_results_are_not_edited_but_can_be_copied(client, golden):
+    shown = fetch(client, golden.circuit.name).json()["data"]
+    assert shown["editable"] is False and shown["copyable"] is True
+    refused = save(client, golden.circuit.name, "x")
+    assert refused.status_code == 400 and refused.json()["diagnostics"][0]["kind"] == "invalid_argument"
+    assert fetch(client, golden.circuit.name).json()["data"]["text"] == golden.circuit.read_text()
+
+    copied = client.post("/api/file/copy", params={"name": golden.circuit.name})
+    assert copied.status_code == 200, copied.json()
+    assert copied.json()["data"]["name"] == golden.circuit.name
+    assert copied.json()["data"]["kind"] == "circuit"
+    # The copy is the one that is found now, and it is editable; the original is the same
+    assert fetch(client, golden.circuit.name).json()["data"]["editable"] is True
+    assert save(client, golden.circuit.name, ".model e\n.end\n").status_code == 200
+    assert golden.circuit.read_text() != ".model e\n.end\n"
+    again = client.post("/api/file/copy", params={"name": golden.circuit.name})
+    assert again.status_code == 400  # a copy that is there is not replaced
+
+
+def test_a_file_of_a_package_or_of_another_kind_is_not_saved(client):
+    assert client.post("/api/session/new", json={"device_package": LOGIC}).json()["ok"]
+    for name in (LOGIC + "/arch/vpr_arch.xml", "../x.xml", "nope.xml"):
+        assert save(client, name, "<a/>").status_code in (400, 403, 404)
+    assert "<architecture" in fetch(client, LOGIC + "/arch/vpr_arch.xml").json()["data"]["text"]
+
+
+def test_the_text_that_is_saved_is_limited_and_utf8(client):
+    assert put(client, "mine.blif", b".model m\n").status_code == 200
+    big = save(client, "mine.blif", "x" * (viewer.MAX_SHOWN_BYTES + 2048))
+    assert big.status_code == 413
+    bad = client.put("/api/file", params={"name": "mine.blif"}, content=b"\xff\xfe")
+    assert bad.status_code == 400
+    assert fetch(client, "mine.blif").json()["data"]["text"] == ".model m\n"
+
+
+def test_nothing_is_saved_in_the_demo():
+    with TestClient(
+        create_app(AppConfig(port=8770, token="t"), DemoBackend(delay=0)),
+        base_url="http://" + HOST,
+    ) as demo:
+        demo.headers["Authorization"] = "Bearer t"
+        assert save(demo, "a.blif", "x").status_code == 404
+        assert demo.post("/api/file/copy", params={"name": "a.blif"}).status_code == 404

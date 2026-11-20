@@ -31,7 +31,15 @@ class Backend(Protocol):
 
     async def apply_device_package(self, device_package: str) -> Dict[str, Any]: ...
 
+    async def list_sessions(self) -> Dict[str, Any]: ...
+
+    async def open_session(self, session: str) -> Dict[str, Any]: ...
+
     async def read_file(self, name: str) -> Dict[str, Any]: ...
+
+    async def write_file(self, name: str, text: str) -> Dict[str, Any]: ...
+
+    async def copy_file(self, name: str) -> Dict[str, Any]: ...
 
     async def close_session(self) -> Dict[str, Any]: ...
 
@@ -57,7 +65,7 @@ def empty_view() -> Dict[str, Any]:
         "stages": [
             {"stage": s, "status": "not_reached", "seconds": None, "message": None} for s in STAGES
         ],
-        "files": {"inputs": [], "constraints": [], "results": [], "uploads": []},
+        "files": {"inputs": [], "constraints": [], "results": [], "uploads": [], "created": []},
         "options_changed": [],
         "checkpoints": [],
     }
@@ -127,7 +135,12 @@ class DemoBackend:
     async def device_packages(self) -> Dict[str, Any]:
         return {"ok": True, "data": {"packages": [], "problems": []}}
 
-    new_session = apply_device_package = close_session = restore_session = upload = remove_upload = read_file = _unavailable
+    new_session = apply_device_package = close_session = restore_session = upload = remove_upload = read_file = write_file = copy_file = _unavailable
+    open_session = _unavailable
+
+    async def list_sessions(self) -> Dict[str, Any]:
+        return {"ok": True, "data": {"live": [], "saved": []}, "truncated": False, "more": None}
+
 
     def _latest(self, status: str, text: str):
         self._view["latest"] = {"status": status, "text": text}

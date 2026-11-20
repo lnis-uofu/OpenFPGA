@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/preact";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/preact";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Console } from "./components/Console";
 import { Sidebar } from "./components/Sidebar";
@@ -21,17 +21,32 @@ import {
 import { languageOf } from "./language";
 
 // Monaco does not run in jsdom: a stand-in that keeps what it was given
-const fake = vi.hoisted(() => ({ fail: false, created: [] as { options: Record<string, unknown>; editor: { value: string; disposed: boolean } }[] }));
+type FakeEditor = { value: string; disposed: boolean; listener?: () => void; commands: { key: number; run: () => void }[]; type(v: string): void };
+const fake = vi.hoisted(() => ({ fail: false, created: [] as { options: Record<string, unknown>; editor: FakeEditor }[] }));
 vi.mock("./monaco", () => ({
   get monaco() {
     if (fake.fail) throw new Error("the editor did not load");
     return {
+      KeyMod: { CtrlCmd: 2048 },
+      KeyCode: { KeyS: 49 },
       editor: {
         setTheme: () => undefined,
         create: (_host: unknown, options: Record<string, unknown>) => {
           const editor = {
             value: String(options.value),
             disposed: false,
+            listener: undefined as (() => void) | undefined,
+            commands: [] as { key: number; run: () => void }[],
+            type(v: string) {
+              this.value = v; // what a person typing leaves, and the event of it
+              this.listener?.();
+            },
+            onDidChangeModelContent(fn: () => void) {
+              this.listener = fn;
+            },
+            addCommand(key: number, run: () => void) {
+              this.commands.push({ key, run });
+            },
             getValue() {
               return this.value;
             },
@@ -67,6 +82,8 @@ describe("the languages of the viewer", () => {
     expect(languageOf("design.net")).toBe("xml"); // the packing is XML
     expect(languageOf("top.V")).toBe("systemverilog");
     expect(languageOf("constraints.sdc")).toBe("tcl");
+    expect(languageOf("and2.blif")).toBe("blif");
+    expect(languageOf("AND2.EBLIF")).toBe("blif");
     expect(languageOf("design.place")).toBe("plaintext");
     expect(languageOf("README")).toBe("plaintext");
   });
@@ -84,7 +101,7 @@ describe("opening a file in a tab", () => {
     expect(tabs.value[0].title).toBe("design.net");
     await waitFor(() => expect(fake.created).toHaveLength(1));
     expect(fake.created[0].options).toMatchObject({ value: "<block/>", language: "xml", readOnly: true });
-    expect(screen.getByText("2.0 kB")).toBeTruthy();
+    expect(screen.getByText(/2\.0 kB/)).toBeTruthy();
   });
 
   it("opens from the sidebar by a click on the name, and the small button only copies it", async () => {
@@ -196,5 +213,102 @@ describe("the height of the console", () => {
     consoleOpen.value = false;
     render(<Console />);
     expect(screen.queryByRole("separator")).toBeNull();
+  });
+});
+
+
+describe("editing a file", () => {
+  const editable = (text: string) => file(text, { editable: true, copyable: false });
+
+  it("lets a file of the session be edited: Save is there when the text changed, and saves it", async () => {
+    const calls: { url: string; init?: RequestInit }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init?: RequestInit) => {
+        calls.push({ url, init });
+        if (init?.method === "PUT") return reply(200, { ok: true, data: { name: "a.blif", bytes: 5, kind: "circuit", in_use: false } });
+        if (url === "/api/session") return reply(200, emptyView());
+        return reply(200, editable("one"));
+      }),
+    );
+    render(<Workspace />);
+    await openFile("a.blif");
+    await waitFor(() => expect(fake.created).toHaveLength(1));
+    expect(fake.created[0].options).toMatchObject({ readOnly: false });
+    const save = screen.getByText("Save") as HTMLButtonElement;
+    expect(save.disabled).toBe(true); // nothing changed yet
+    act(() => fake.created[0].editor.type("two!!"));
+    await waitFor(() => expect((screen.getByText("Save") as HTMLButtonElement).disabled).toBe(false));
+    expect(screen.getByText(/a\.blif ●/)).toBeTruthy(); // marked as not saved
+    fireEvent.click(screen.getByText("Save"));
+    await screen.findByText("Saved.");
+    const put = calls.find((c) => c.init?.method === "PUT")!;
+    expect(put.url).toBe("/api/file?name=a.blif");
+    expect(put.init?.body).toBe("two!!");
+    expect((screen.getByText("Save") as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByText(/●/)).toBeNull();
+  });
+
+  it("saves with Ctrl+S, and says when the session had read the file", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init?: RequestInit) =>
+        init?.method === "PUT"
+          ? reply(200, { ok: true, data: { name: "a.blif", bytes: 3, kind: "circuit", in_use: true } })
+          : url === "/api/session"
+            ? reply(200, emptyView())
+            : reply(200, editable("one")),
+      ),
+    );
+    render(<Workspace />);
+    await openFile("a.blif");
+    await waitFor(() => expect(fake.created).toHaveLength(1));
+    act(() => fake.created[0].editor.type("abc"));
+    const command = fake.created[0].editor.commands.find((c) => c.key === (2048 | 49))!;
+    act(() => command.run());
+    expect((await screen.findByRole("status")).textContent).toContain("read it again");
+  });
+
+  it("shows the reason when a save is refused, and keeps the text", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init?: RequestInit) =>
+        init?.method === "PUT"
+          ? reply(400, { ok: false, diagnostics: [{ kind: "invalid_argument", message: "cannot be edited here", hint: "x" }] })
+          : reply(200, editable("one")),
+      ),
+    );
+    render(<Workspace />);
+    await openFile("a.blif");
+    await waitFor(() => expect(fake.created).toHaveLength(1));
+    act(() => fake.created[0].editor.type("two"));
+    fireEvent.click(await screen.findByText("Save"));
+    expect((await screen.findByRole("status")).textContent).toContain("cannot be edited here");
+    expect(fake.created[0].editor.value).toBe("two");
+    expect((screen.getByText("Save") as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("keeps any other file read only, and offers a copy that is opened for editing", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init?: RequestInit) => {
+        calls.push(`${init?.method ?? "GET"} ${url}`);
+        if (url.startsWith("/api/file/copy")) return reply(200, { ok: true, data: { name: "d.blif", bytes: 3, kind: "circuit" } });
+        if (url === "/api/session") return reply(200, emptyView());
+        if (url === "/api/file?name=d.blif") return reply(200, editable("copy"));
+        return reply(200, file("orig", { editable: false, copyable: true }));
+      }),
+    );
+    render(<Workspace />);
+    await openFile("/in/d.blif".slice(1));
+    await waitFor(() => expect(fake.created).toHaveLength(1));
+    expect(fake.created[0].options).toMatchObject({ readOnly: true });
+    expect(screen.queryByText("Save")).toBeNull();
+    expect(screen.getByText(/read only/)).toBeTruthy();
+    fireEvent.click(screen.getByText("Edit a copy"));
+    await waitFor(() => expect(activeTab.value).toBe("file:d.blif"));
+    expect(calls).toContain("POST /api/file/copy?name=in%2Fd.blif");
+    await waitFor(() => expect(screen.queryByText("Save")).toBeTruthy());
   });
 });

@@ -407,6 +407,23 @@ describe("uploading files to the session", () => {
     expect(screen.getByText("20 kB")).toBeTruthy();
   });
 
+  it("lists the files that the model wrote, apart from the uploads, with no remove button", () => {
+    const v = filled();
+    v.files.created = [{ name: "my_arch.xml", kind: "vpr_arch", bytes: 2048 }];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getByText("Written by the model")).toBeTruthy();
+    expect(screen.getByText("my_arch.xml")).toBeTruthy();
+    expect(screen.getByText("VPR arch")).toBeTruthy();
+    expect(screen.queryByLabelText("Remove my_arch.xml")).toBeNull();
+  });
+
+  it("has no heading for them when there are none", () => {
+    view.value = filled();
+    render(<Sidebar />);
+    expect(screen.queryByText("Written by the model")).toBeNull();
+  });
+
   it("removes a file after the person confirms, and reads the session again", async () => {
     real();
     const v = filled();

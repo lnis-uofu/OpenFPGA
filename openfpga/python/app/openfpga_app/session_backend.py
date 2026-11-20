@@ -9,6 +9,7 @@ where the chat line is read, later.
 
 import inspect
 import json
+import os
 import shlex
 import time
 from pathlib import Path
@@ -16,7 +17,7 @@ from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import anyio.to_thread
 from openfpga_mcp import answers, device_packages, session_tools, tools
-from openfpga_mcp.errors import RegistryError
+from openfpga_mcp.errors import InvalidArgument, RegistryError
 from openfpga_mcp.config import Config
 from openfpga_mcp.registry import SessionRegistry
 from openfpga_mcp.resources import _checkpoints
@@ -120,28 +121,45 @@ class SessionBackend:
 
         kinds = {"architecture": "vpr_arch", "openfpga_architecture": "openfpga_arch"}
         found: Dict[str, List[str]] = {"vpr_arch": [], "openfpga_arch": [], "circuit": []}
-        folders = list(self.config.design_dirs)
         if self.sid is not None:
             try:
-                folders.insert(
-                    0, uploads.folder(self.config.root, self.registry.get(self.sid).directory)
-                )
+                directory = self.config.root / self.registry.get(self.sid).directory
             except Exception:  # noqa: BLE001 - no such session any more
-                pass
-        for folder in folders:
-            try:
-                paths = sorted(p for p in folder.iterdir() if p.is_file())
-            except OSError:
-                continue
-            for path in paths[:2000]:
-                if path.suffix == ".xml":
-                    kind = kinds.get(root_element(str(path)) or "")
-                elif path.suffix == ".blif" and looks_like_blif(str(path)):
-                    kind = "circuit"
-                else:
-                    kind = None
-                if kind:
-                    found[kind].append(path.name)
+                directory = None
+            for folder in ([directory / UPLOADS, directory / CREATED] if directory else []):
+                try:
+                    paths = sorted(p for p in folder.iterdir() if p.is_file())
+                except OSError:
+                    continue
+                for path in paths[:2000]:
+                    if path.suffix == ".xml":
+                        kind = kinds.get(root_element(str(path)) or "")
+                    elif path.suffix == ".blif" and looks_like_blif(str(path)):
+                        kind = "circuit"
+                    else:
+                        kind = None
+                    if kind:
+                        found[kind].append(path.name)
+        designs = design_directories(self.config)
+        by_name: Dict[str, int] = {}
+        for design in designs:
+            by_name[design["name"]] = by_name.get(design["name"], 0) + 1
+        for design in designs:
+            label = design["name"] if by_name[design["name"]] == 1 else design["relative"]
+            found[DESIGN_KIND].append(
+                "%s (top %s)" % (label, design["top"]) if design["top"] else label
+            )
+        inside = [d["folder"] for d in designs]
+        circuits = sorted(
+            (p, r)
+            for p, r in design_files(self.config)
+            if p.suffix == ".blif" and not any(f in p.parents for f in inside)
+        )
+        count: Dict[str, int] = {}
+        for path, _relative in circuits:
+            count[path.name] = count.get(path.name, 0) + 1
+        for path, relative in circuits:
+            found["circuit"].append(path.name if count[path.name] == 1 else relative)
         lines = []
         for kind, names in found.items():
             shown: List[str] = []
@@ -204,6 +222,7 @@ class SessionBackend:
             self.sid = None
             return view
         view["files"]["uploads"] = uploads.listing(self.config.root, entry.directory)
+        view["files"]["created"] = uploads.listing(self.config.root, entry.directory, "created")
         info = next((i for i in self.registry.list() if i.id == entry.id), None)
         running = bool(info and info.running)
         view["session"] = {
@@ -229,7 +248,11 @@ class SessionBackend:
             if previous["session"] and previous["session"]["id"] == entry.id:
                 for key in ("stages", "options_changed"):
                     view[key] = previous[key]
-                view["files"] = {**previous["files"], "uploads": view["files"]["uploads"]}
+                view["files"] = {
+                    **previous["files"],
+                    "uploads": view["files"]["uploads"],
+                    "created": view["files"]["created"],
+                }
             what = "a command" if self._running in (None, "console") else self._running
             view["latest"] = {"status": "running", "text": "%s · %s running" % (entry.id, what)}
             return view
@@ -319,7 +342,7 @@ class SessionBackend:
         if name == "session_open" and answer.get("ok"):
             self.sid = answer["data"]["session"]
         if name == "use_device_package" and answer.get("ok"):
-            self._packages[arguments["session"]] = answer["data"]["device_package"]
+            self._set_package(arguments["session"], answer["data"]["device_package"])
         if name == "session_close" and answer.get("ok") and arguments.get("session") == self.sid:
             self.sid = None
         return answer
@@ -348,7 +371,7 @@ class SessionBackend:
             except Exception as error:  # noqa: BLE001 - a file that VPR or OpenFPGA refuses
                 self.registry.close(sid, delete_files=True)  # nothing half made is kept
                 return answers.from_exception(error)
-            self._packages[sid] = package.summary()
+            self._set_package(sid, package.summary())
         self.sid = sid
         if package is None:
             self._changed_outside("The person opened session %s" % sid)
@@ -381,7 +404,7 @@ class SessionBackend:
         answer = await self._tool("use_device_package", session=self.sid, name=device_package)
         if not answer.get("ok"):
             return answer
-        self._packages[self.sid] = answer["data"]["device_package"]
+        self._set_package(self.sid, answer["data"]["device_package"])
         self._changed_outside(
             "The person loaded the device package %s (%s) into session %s: its VPR architecture "
             "(layout %s) and its OpenFPGA architecture are read, and there is no circuit yet. "
@@ -410,6 +433,124 @@ class SessionBackend:
         except Exception as error:  # noqa: BLE001 - a file that is gone, a disk that fails
             return answers.from_exception(error)
         return {"ok": True, "data": data, "truncated": False, "more": None}
+
+    def _set_package(self, sid: str, summary: Dict[str, Any]) -> None:
+        """The device package of a session: shown by the page and kept for a later open"""
+        self._packages[sid] = summary
+        try:
+            self.registry.update_meta(self.registry.get(sid), device_package=summary)
+        except RegistryError:
+            pass
+
+    async def list_sessions(self) -> Dict[str, Any]:
+        """The sessions that the page may open: the live ones (switch to one) and the saved ones of
+        the workspace (a worker is started from the last checkpoint)"""
+        infos = await anyio.to_thread.run_sync(self.registry.list)
+        saved = await anyio.to_thread.run_sync(self.registry.saved)
+        live = []
+        for info in infos:
+            meta = self.registry.read_meta(info.directory)
+            live.append(
+                {
+                    "id": info.id,
+                    "name": info.name,
+                    "running": info.running,
+                    "idle_s": info.idle_s,
+                    "stages": info.stages,
+                    "device_package": self._packages.get(info.id) or meta.get("device_package"),
+                    "current": info.id == self.sid,
+                }
+            )
+        return {"ok": True, "data": {"live": live, "saved": saved}, "truncated": False, "more": None}
+
+    async def open_session(self, session: str) -> Dict[str, Any]:
+        """Make a session the current one: a live one is switched to, a saved one is started again
+        from its last checkpoint. The model is told"""
+        if self._running is not None:
+            return answers.failed(
+                [answers.diagnostic("busy", "A call is running", hint="Wait for it to end")]
+            )
+        try:
+            live = {i.id for i in await anyio.to_thread.run_sync(self.registry.list)}
+            if session in live:
+                entry = self.registry.get(session)
+                how = "switched to"
+            else:
+                entry = await anyio.to_thread.run_sync(self.registry.adopt, session)
+                meta = self.registry.read_meta(entry.directory)
+                if meta.get("device_package"):
+                    self._packages[entry.id] = meta["device_package"]
+                how = "opened again from its last checkpoint:"
+        except RegistryError as error:
+            return answers.from_exception(error)
+        except Exception as error:  # noqa: BLE001 - a worker that does not start, a bad checkpoint
+            return answers.from_exception(error)
+        self.sid = entry.id
+        self._changed_outside(
+            "The person %s session %s (%s). Call get_state before you rely on what you knew of "
+            "another session" % (how, entry.id, entry.name)
+        )
+        return {"ok": True, "data": {"session": entry.id, "name": entry.name}, "truncated": False, "more": None}
+
+    async def write_file(self, name: str, text: str) -> Dict[str, Any]:
+        """Save the text of a file that the person edited (a file of the session's uploads or of
+        those that the model wrote); the model is told, and the answer says if the session read it"""
+        try:
+            if self.sid is None:
+                raise InvalidArgument("There is no session")
+            entry = self.registry.get(self.sid)
+            saved = await anyio.to_thread.run_sync(
+                viewer.write_text, self.config, entry.directory, name, text
+            )
+            in_use = await anyio.to_thread.run_sync(self._is_input, entry, saved.pop("path"))
+        except RegistryError as error:
+            return answers.from_exception(error)
+        except Exception as error:  # noqa: BLE001 - a file that is gone, a disk that fails
+            return answers.from_exception(error)
+        saved["in_use"] = in_use
+        what = "The person edited the file %s in session %s" % (name, self.sid)
+        if in_use:
+            what += (
+                ", and the session had read it: the stages that used it are out of date until "
+                "read_inputs reads it again"
+            )
+        self._changed_outside(what)
+        return {"ok": True, "data": saved, "truncated": False, "more": None}
+
+    @staticmethod
+    def _is_input(entry, path: str) -> bool:
+        """The session has read this file as one of its inputs"""
+        session = entry.session
+        if session._lock.locked():
+            return False
+        inputs = session.state().inputs
+        return any(
+            f is not None and os.path.realpath(f.file) == os.path.realpath(path)
+            for f in (inputs.vpr_arch, inputs.openfpga_arch, inputs.circuit)
+        )
+
+    async def copy_file(self, name: str) -> Dict[str, Any]:
+        """A copy of a file that cannot be edited, in the uploads of the session, to edit there"""
+        try:
+            directory = ""
+            if self.sid is not None:
+                directory = self.registry.get(self.sid).directory
+            else:
+                opened = await self.new_session()
+                if not opened.get("ok"):
+                    return opened
+                directory = self.registry.get(self.sid).directory
+            saved = await anyio.to_thread.run_sync(
+                viewer.copy_to_uploads, self.config, directory, name
+            )
+        except RegistryError as error:
+            return answers.from_exception(error)
+        except Exception as error:  # noqa: BLE001
+            return answers.from_exception(error)
+        self._changed_outside(
+            "The person made a copy of %s in the uploads of session %s, to edit it" % (name, self.sid)
+        )
+        return {"ok": True, "data": saved, "truncated": False, "more": None}
 
     async def device_packages(self) -> Dict[str, Any]:
         """The packages that a session can be created from, and the ones that cannot be used"""

@@ -828,7 +828,8 @@ def test_a_scripted_model_runs_a_flow_through_the_real_tools(openfpga_module, tm
         assert view["session"]["name"] == "agent"
         # The model was told the files that it can use, and that the session is open
         system = model.requests[0][0]["content"]
-        assert golden.vpr_arch.name in system and golden.circuit.name in system
+        assert golden.circuit.name in system  # only the circuits of a designs folder are listed
+        assert golden.vpr_arch.name not in system
         # The answers that the model read are the answers of the tools
         timing = json.loads(model.requests[-1][-1]["content"])
         assert timing["data"]["timing_summary"]["setup"]["fmax_mhz"] > 0

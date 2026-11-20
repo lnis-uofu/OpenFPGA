@@ -28,7 +28,7 @@ export interface SessionView {
   } | null;
   latest: { status: "none" | "running" | "reached" | "failed"; text: string };
   stages: StageView[];
-  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[] };
+  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[]; created?: UploadedFile[] };
   options_changed: { name: string; value: unknown }[];
   checkpoints: { name: string; kind: string; stages: string[] }[];
 }
@@ -106,6 +106,15 @@ async function json<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+/** The answer in the body of a response, also for a refusal (4xx has diagnostics); the status if there is none */
+async function answerOf(response: Response): Promise<Answer> {
+  try {
+    return (await response.json()) as Answer;
+  } catch {
+    return { ok: false, diagnostics: [{ kind: "server", message: `${response.status} ${response.statusText}` }] };
+  }
+}
+
 export const fetchSession = (): Promise<SessionView> => fetch("/api/session").then((r) => json<SessionView>(r));
 export const fetchConfig = (): Promise<AppConfig> => fetch("/api/config").then((r) => json<AppConfig>(r));
 
@@ -150,6 +159,20 @@ export async function fetchFile(name: string): Promise<Answer> {
   }
 }
 
+/** Save the text of a file of the session that may be edited */
+export async function saveFileText(name: string, text: string): Promise<Answer> {
+  const response = await fetch(`/api/file?name=${encodeURIComponent(name)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+    body: text,
+  });
+  return answerOf(response);
+}
+
+/** A copy of a file that cannot be edited, in the uploads of the session */
+export const copyFileToSession = async (name: string): Promise<Answer> =>
+  answerOf(await fetch(`/api/file/copy?name=${encodeURIComponent(name)}`, { method: "POST" }));
+
 /** Delete a file that was uploaded to the session */
 export async function removeUploadedFile(name: string): Promise<Answer> {
   const response = await fetch(`/api/upload?name=${encodeURIComponent(name)}`, { method: "DELETE" });
@@ -169,6 +192,27 @@ export async function fetchDevicePackages(): Promise<{ packages: DevicePackageIn
   const data = (answer.data ?? {}) as { packages?: DevicePackageInfo[]; problems?: { name: string; message: string }[] };
   return { packages: data.packages ?? [], problems: data.problems ?? [] };
 }
+/** A session that the page may open: a live one (switch) or a saved one (started from its checkpoint) */
+export interface SessionEntry {
+  id: string;
+  name: string;
+  stages: string[];
+  device_package: DevicePackageInfo | null;
+  running?: boolean;
+  idle_s?: number;
+  current?: boolean;
+  modified?: number; // seconds since 1970, of the last checkpoint of a saved session
+}
+
+export async function fetchSessions(): Promise<{ live: SessionEntry[]; saved: SessionEntry[] }> {
+  const answer = await json<Answer>(await fetch("/api/sessions"));
+  const data = (answer.data ?? {}) as { live?: SessionEntry[]; saved?: SessionEntry[] };
+  return { live: data.live ?? [], saved: data.saved ?? [] };
+}
+
+export const openSessionById = async (session: string): Promise<Answer> =>
+  answerOf(await fetch("/api/session/open", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session }) }));
+
 export const closeSession = (): Promise<Answer> => post("/api/session/close", {});
 export const restoreSession = (checkpoint?: string): Promise<Answer> =>
   post("/api/session/restore", checkpoint ? { checkpoint } : {});

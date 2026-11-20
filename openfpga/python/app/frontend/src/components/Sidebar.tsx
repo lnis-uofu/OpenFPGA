@@ -196,6 +196,20 @@ export function Sidebar() {
             ))}
           </div>
         )}
+        {(files.created ?? []).length > 0 && (
+          <>
+            <h3>Written by the model</h3>
+            <div class="uploads">
+              {(files.created ?? []).map((f) => (
+                <div key={f.name} class="upload-row">
+                  <Name name={f.name} />
+                  <span class="chip">{KIND[f.kind]}</span>
+                  <span class="muted upload-size">{size(f.bytes)}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         <input
           ref={picker}
           type="file"

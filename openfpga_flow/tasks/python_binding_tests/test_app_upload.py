@@ -225,3 +225,113 @@ def test_the_demo_has_no_upload():
         assert answer.status_code == 404
         assert answer.json()["diagnostics"][0]["kind"] == "demo"
         assert client.delete("/api/upload?name=a.blif").status_code == 404
+
+
+def test_the_model_writes_a_file_in_its_session_only_and_the_tools_read_it(
+    client, backend, golden
+):
+    assert call(say(client, "/session_open name=w"))["ok"]
+    text_of_circuit = circuit(golden).decode()
+    written = call(say(client, "/write_file name=mine.blif content=x"))
+    assert written["ok"] is True  # "x" is text; it is a file, whatever it holds
+    sid = view(client)["session"]["id"]
+    folder = backend.config.root / sid / "created"
+    assert [p.name for p in folder.iterdir()] == ["mine.blif"]  # not in the uploads, no half file
+
+    async def write(**arguments):
+        return await backend.invoke("write_file", {"session": sid, **arguments})
+
+    import asyncio
+
+    first = asyncio.run(write(name="mine2.blif", content=text_of_circuit))
+    assert first["ok"] and first["data"]["kind"] == "circuit"
+    assert first["data"]["bytes"] == len(text_of_circuit.encode())
+    inputs = {
+        "session": sid,
+        "vpr_arch": golden.vpr_arch.name,
+        "layout": golden.layout,
+        "openfpga_arch": golden.openfpga_arch.name,
+        "circuit": "mine2.blif",
+    }
+    assert asyncio.run(backend.invoke("read_inputs", inputs))["ok"]  # found by its name
+    shown = view(client)
+    assert [f["name"] for f in shown["files"]["created"]] == ["mine.blif", "mine2.blif"]
+    assert shown["files"]["uploads"] == []
+
+    # A name that is taken is kept unless the model says overwrite
+    again = asyncio.run(write(name="mine2.blif", content="changed\n"))
+    assert again["diagnostics"][0]["kind"] == "file_exists"
+    assert (folder / "mine2.blif").read_text() == text_of_circuit
+    assert asyncio.run(write(name="mine2.blif", content="changed\n", overwrite=True))["ok"]
+    assert (folder / "mine2.blif").read_text() == "changed\n"
+
+
+@pytest.mark.parametrize(
+    "name,content",
+    [
+        ("../escape.xml", "<a/>"),
+        ("sub/dir.xml", "<a/>"),
+        ("/etc/x.xml", "<a/>"),
+        (".hidden.xml", "<a/>"),
+        ("run.sh", "echo"),
+        ("a.net", "<a/>"),  # a result of the flow is not a file that is written
+        ("empty.xml", "  \n"),
+        ("big.xml", "<a>" + "x" * 300_000 + "</a>"),
+    ],
+)
+def test_a_file_is_refused_outside_the_session_with_a_bad_name_or_size(
+    client, backend, name, content
+):
+    import asyncio
+
+    assert call(say(client, "/session_open name=w"))["ok"]
+    sid = view(client)["session"]["id"]
+    answer = asyncio.run(backend.invoke("write_file", {"session": sid, "name": name, "content": content}))
+    assert answer["ok"] is False and answer["diagnostics"][0]["kind"] == "invalid_argument"
+    created = backend.config.root / sid / "created"
+    assert not created.exists() or list(created.iterdir()) == []
+    assert not (backend.config.root / "escape.xml").exists()
+
+
+def test_an_xml_file_that_is_not_well_formed_is_written_and_says_so(client, backend):
+    import asyncio
+
+    assert call(say(client, "/session_open name=w"))["ok"]
+    sid = view(client)["session"]["id"]
+    bad = asyncio.run(backend.invoke("write_file", {"session": sid, "name": "a.xml", "content": "<a><b></a>"}))
+    assert bad["ok"] and "xml_error" in bad["data"]
+    good = asyncio.run(backend.invoke("write_file", {"session": sid, "name": "b.xml", "content": "<architecture/>"}))
+    assert "xml_error" not in good["data"] and good["data"]["kind"] == "vpr_arch"
+    entity = asyncio.run(
+        backend.invoke(
+            "write_file",
+            {"session": sid, "name": "c.xml", "content": '<!DOCTYPE a [<!ENTITY x "y">]><a>&x;</a>'},
+        )
+    )
+    assert "entity" in entity["data"]["xml_error"]
+
+
+def test_a_text_with_backslash_n_and_no_line_break_is_written_with_line_breaks(client, backend):
+    import asyncio
+
+    assert call(say(client, "/session_open name=w"))["ok"]
+    sid = view(client)["session"]["id"]
+    folder = backend.config.root / sid / "created"
+
+    def write(name, content):
+        return asyncio.run(
+            backend.invoke("write_file", {"session": sid, "name": name, "content": content})
+        )
+
+    escaped = write("a.sdc", "create_clock -period 5 clk\\nset_input_delay 1 -clock clk [all_inputs]\\n")
+    assert escaped["ok"] and "unescaped" in escaped["data"]
+    assert (folder / "a.sdc").read_text() == (
+        "create_clock -period 5 clk\nset_input_delay 1 -clock clk [all_inputs]\n"
+    )
+    assert escaped["data"]["bytes"] == len((folder / "a.sdc").read_bytes())
+    # A text that has line breaks is left as it is: a string of Verilog may hold backslash and n
+    kept = write("b.v", 'module m;\ninitial $display("x\\n");\nendmodule\n')
+    assert "unescaped" not in kept["data"]
+    assert '$display("x\\n")' in (folder / "b.v").read_text()
+    # One line with no backslash is as it is
+    assert "unescaped" not in write("c.txt", "one line")["data"]

@@ -238,6 +238,15 @@ def _plan_unroutable(design: Design) -> List[ModelTurn]:
 # The checkers ---------------------------------------------------------------------------------------
 
 
+def _architectures(design: Design) -> str:
+    """The architectures in the words of the person: a designs folder lists only the circuits"""
+    return "Use %s as the VPR architecture (layout %s) and %s as the OpenFPGA architecture." % (
+        design.vpr_arch.name,
+        design.layout,
+        design.openfpga_arch.name,
+    )
+
+
 def _check_flow_fmax(outcome: Outcome, design: Design) -> List[str]:
     problems = []
     if outcome.reached() != list(STAGES[: len(STAGES)]):
@@ -303,8 +312,8 @@ SCENARIOS: Dict[str, Scenario] = {
         Scenario(
             "flow_fmax",
             "Run the whole flow at a given channel width and report the Fmax",
-            lambda d: "Run the flow on %s with a channel width of %d and tell me the Fmax."
-            % (d.name, d.chan_width),
+            lambda d: "Run the flow on %s with a channel width of %d and tell me the Fmax. %s"
+            % (d.name, d.chan_width, _architectures(d)),
             _plan_flow_fmax,
             _check_flow_fmax,
         ),
@@ -319,7 +328,7 @@ SCENARIOS: Dict[str, Scenario] = {
         Scenario(
             "set_width",
             "Set a channel width and route",
-            lambda d: "Route %s with a channel width of 22." % d.name,
+            lambda d: "Route %s with a channel width of 22. %s" % (d.name, _architectures(d)),
             _plan_set_width,
             _check_set_width,
         ),
@@ -341,7 +350,8 @@ SCENARIOS: Dict[str, Scenario] = {
         Scenario(
             "unroutable_width",
             "A width that cannot route: find out and explain",
-            lambda d: "Route %s with a channel width of 2 and tell me what happens." % d.name,
+            lambda d: "Route %s with a channel width of 2 and tell me what happens. %s"
+            % (d.name, _architectures(d)),
             _plan_unroutable,
             _check_unroutable,
         ),
