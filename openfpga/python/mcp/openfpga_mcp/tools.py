@@ -8,15 +8,18 @@ import dataclasses
 import os
 import re
 import shutil
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
-from . import answers, budget, device_packages
+from . import answers, budget, device_packages, filenames
 from .config import Config
-from .errors import InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
-from .paths import check_kind, resolve_file
+from .errors import FileExists, InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
+from .paths import CREATED, check_kind, resolve_file
 from .registry import Entry, SessionRegistry
 
+_WRITE_MAX_BYTES = 256 * 1024  # the text that a model may write in one file
+_WRITE_MAX_FILES = 50
 Stage = Literal["pack", "place", "route", "analysis"]
 _ORDER = ("pack", "place", "route", "analysis")
 _STAGE_NAMES = {"pack": "PACKED", "place": "PLACED", "route": "ROUTED", "analysis": "ANALYZED"}
@@ -123,7 +126,7 @@ def register(
         """Read the inputs of a flow: the circuit (a BLIF netlist), the architecture of VPR (an
         XML file) with the name of its device layout (for example 2x2; 'auto' is not accepted)
         and the architecture of OpenFPGA (XML). File names are relative to the workspace or to a
-        folder of the inputs: no absolute path and no '..'. A session that was created from a
+        designs folder: no absolute path and no '..'. A session that was created from a
         device package has both architectures already: give only the circuit. Returns the state
         of the session."""
 
@@ -190,6 +193,66 @@ def register(
             return reply(
                 {"device_package": package.summary(), "state": _plain("session", handle.state())}
             )
+
+        return await run(work)
+
+    @tool()
+    async def write_file(session: str, name: str, content: str, overwrite: bool = False):
+        """Write a text file in the directory of the session: an architecture or a constraints
+        file (XML), a circuit (BLIF or Verilog), a timing constraint (SDC) or a pin constraint
+        (PCF). Only here, never anywhere else: give a plain name (letters, digits and . _ + -)
+        with no folder, and an extension of a file that a flow reads. read_inputs and
+        set_constraint find the file by its name afterwards. A name that was written before is
+        kept unless overwrite is true. Returns the name, what the file is (vpr_arch,
+        openfpga_arch, circuit or other), its size, and what is wrong with it when an XML file is
+        not well formed. Put real line breaks in content, not the two characters backslash and n
+        (a text that has only those is read as one that has line breaks)."""
+
+        def work():
+            entry = session_of(session)
+            problem = filenames.name_problem(name)
+            if problem:
+                raise InvalidArgument(problem)
+            if not isinstance(content, str) or not content.strip():
+                raise InvalidArgument("content is the text of the file, and it is not empty")
+            text, unescaped = filenames.unescape_lines(content)
+            data = text.encode("utf-8")
+            if len(data) > _WRITE_MAX_BYTES:
+                raise InvalidArgument(
+                    "the file is %d bytes; the most that can be written is %d"
+                    % (len(data), _WRITE_MAX_BYTES)
+                )
+            check_room(entry)
+            folder = config.root / entry.directory / CREATED
+            folder.mkdir(parents=True, exist_ok=True)
+            destination = folder / name
+            if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+                raise InvalidArgument("'%s' cannot be replaced" % name)
+            if destination.exists() and not overwrite:
+                raise FileExists(
+                    "There is already a file '%s' that was written in this session" % name
+                )
+            if not destination.exists() and sum(1 for _ in folder.iterdir()) >= _WRITE_MAX_FILES:
+                raise InvalidArgument("at most %d files can be written in a session" % _WRITE_MAX_FILES)
+            temporary = folder / (".%s.part" % name)
+            temporary.write_bytes(data)
+            os.replace(temporary, destination)  # a half file is never seen under the name
+            result: Dict[str, Any] = {
+                "name": name,
+                "kind": filenames.kind_of(destination),
+                "bytes": len(data),
+            }
+            if unescaped:
+                result["unescaped"] = "the text had the two characters \\n and no line break: they were written as line breaks"
+            if name.lower().endswith(".xml"):
+                if "<!ENTITY" in text:  # a flow does not need them, and they can grow a parse
+                    result["xml_error"] = "entity declarations are not accepted"
+                else:
+                    try:
+                        ET.fromstring(text)
+                    except ET.ParseError as error:
+                        result["xml_error"] = str(error)
+            return reply(result)
 
         return await run(work)
 

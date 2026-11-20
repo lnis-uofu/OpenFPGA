@@ -1,6 +1,6 @@
 # MCP server for OpenFPGA: tool design note
 
-Status: reviewed. The server in `openfpga_mcp/` follows it, with 23 tools: 21 of the 23 of the design, `list_device_packages` and `use_device_package`: `get_journal` and `replay` wait for a journal in workers (G2), and the memory limit of a worker (G4) is not there yet. The directory is provisional: it depends on the answer to issue #2879, question 1.
+Status: reviewed. The server in `openfpga_mcp/` follows it, with 24 tools: 21 of the 23 of the design, `list_device_packages`, `use_device_package` and `write_file`: `get_journal` and `replay` wait for a journal in workers (G2), and the memory limit of a worker (G4) is not there yet. The directory is provisional: it depends on the answer to issue #2879, question 1.
 
 This note fixes the tools, their arguments, the size of each answer and the limits, before the server is written. The server is a thin layer: every tool calls one method of `openfpga.RemoteSession` (see `openfpga/python/README.md`), and the facts in an answer are the ones of the queries, not text that the server writes.
 
@@ -48,6 +48,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 | `session_close` | `session` | `ok` |
 | `session_restore` | `session`, `checkpoint?` | the state after the restore: from the last checkpoint of that session, or a named one |
 | `session_list` | none | the open sessions: id, name, stages reached, whether the worker runs, idle time |
+| `write_file` | `session`, `name`, `content`, `overwrite?` | writes a text file in `<session>/created/` only (plain name, an extension of a file that a flow reads, 256 KB, 50 files); `read_inputs` and `set_constraint` find it by name. Added after the design (owner, 2026-11-19) |
 | `use_device_package` | `session`, `name` | reads the architectures of a package into a session that has read nothing (`session_not_empty` otherwise) and stops there: the circuit is next. Added after the design |
 | `list_device_packages` | `name?` | the usable device packages with their device (layout, LUT size, channel width, tags), or with a name one package: files (role, path in the package, size), architectures, reference design, start of its README. Added after the design; the server needs `--device-packages FOLDER` |
 
@@ -55,7 +56,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 
 | Tool | Arguments | Gives |
 |------|-----------|-------|
-| `read_inputs` | `session`, `circuit`, and `vpr_arch` with `layout`, `openfpga_arch` | the state. The two architectures are optional when the session already has them (it was created from a device package, `openfpga_mcp/device_packages.py`): then only the circuit is read. The files are names inside the allowed input folders (see Safety), or in the folder `uploads` of the session's own directory (what the web app puts there when a person gives a file to the session) |
+| `read_inputs` | `session`, `circuit`, and `vpr_arch` with `layout`, `openfpga_arch` | the state. The two architectures are optional when the session already has them (it was created from a device package, `openfpga_mcp/device_packages.py`): then only the circuit is read. The files are names inside the allowed designs folders (see Safety), or in the folder `uploads` of the session's own directory (what the web app puts there when a person gives a file to the session) |
 | `run_stage` | `session`, `stage` (`pack`, `place`, `route`, `analysis`), `from_file?` | the stage, the seconds it took, the stages that are reached; the earlier stages not yet run are run first and listed in `ran`; on failure, the diagnostics and the `failed` record. With `from_file` the results are read from a file of the workspace (`read_packing`, `read_placement`, `read_routing`) instead of computed |
 | `get_state` | `session` | `report_session` and `report_run`: stages reached, inputs, files of the results, `failed`, and what each stage did (clusters, placement cost, routing iterations, wirelength, seconds) |
 
@@ -92,7 +93,7 @@ A query on a stage that is not reached answers `ok: false` with the diagnostic `
 | `get_journal` | `session`, `format?` (`openfpga` or `python`), `tail?` | the commands that changed the flow; cut from the start if long. Needs a journal in workers (G2 in the plan) |
 | `replay` | `session`, `journal` | a new session that has run the commands of a journal of the workspace. Needs G2 |
 
-That is 23 tools. The first version has 23 (the 21, `list_device_packages` and `use_device_package`): `get_journal` and `replay` wait for a journal in workers (G2).
+That is 23 tools. The first version has 24 (the 21, `list_device_packages`, `use_device_package` and `write_file`): `get_journal` and `replay` wait for a journal in workers (G2).
 
 ## Resources and prompts
 

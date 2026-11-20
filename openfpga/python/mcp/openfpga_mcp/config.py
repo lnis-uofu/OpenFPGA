@@ -23,15 +23,15 @@ class Config:
     # The size of an answer, in characters: 4,000 is about 1,000 tokens; 16,000 at most
     answer_chars: int = 4000
     # Folders that the inputs of a flow (architectures, circuits) can be read from, besides root
-    input_dirs: Tuple[Path, ...] = ()
+    design_dirs: Tuple[Path, ...] = ()
     # Folders that hold device packages (one folder for each package, see docs/spec_device_package.md)
     package_dirs: Tuple[Path, ...] = ()
 
     def folders(self) -> Tuple[str, ...]:
-        """The workspace and the folders of the inputs, as they are written and as they resolve
+        """The workspace and the designs folders, as they are written and as they resolve
         (a folder that is a link): paths under them are shown without them"""
         found = []
-        for folder in (self.root,) + tuple(self.input_dirs):
+        for folder in (self.root,) + tuple(self.design_dirs):
             for text in (str(folder), str(folder.resolve())):
                 if text not in found:
                     found.append(text)
@@ -41,7 +41,7 @@ class Config:
         root = Path(os.path.abspath(os.fspath(self.root)))
         object.__setattr__(self, "root", root)
         object.__setattr__(
-            self, "input_dirs", tuple(Path(os.path.abspath(os.fspath(d))) for d in self.input_dirs)
+            self, "design_dirs", tuple(Path(os.path.abspath(os.fspath(d))) for d in self.design_dirs)
         )
         object.__setattr__(
             self,

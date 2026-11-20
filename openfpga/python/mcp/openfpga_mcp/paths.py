@@ -2,7 +2,9 @@
 
 A name is relative: no absolute path, no '..', and a symlink that leaves the allowed folders is
 refused (checked after it is resolved). A name is looked for in the directory of the session, in
-the workspace, and in the folders of the inputs, in this order.
+the workspace, and in the designs folders, in this order. A short name (no folder in it) that is in
+none of these places directly is looked for in the folders under the designs folders, up to a depth
+and a number of files; two files of that name are an error that lists them, never a choice.
 """
 
 import difflib
@@ -12,7 +14,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .config import Config
-from .errors import FileNotInWorkspace, InvalidArgument, PathRefused, WrongFileKind
+from .errors import AmbiguousFile, FileNotInWorkspace, InvalidArgument, PathRefused, WrongFileKind
 
 
 def _inside(path: Path, base: Path) -> bool:
@@ -23,11 +25,41 @@ def _inside(path: Path, base: Path) -> bool:
     return True
 
 
+DESIGN_DEPTH = 6  # the folders under a designs folder that are looked into
+DESIGN_MAX_FILES = 20000  # the files that are looked at in all of them
 UPLOADS = "uploads"
+CREATED = "created"  # the files that the model wrote in the session
+
+
+def design_files(config: Config):
+    """The files under the designs folders as (path, name from the folder), folders first by name.
+    Links and names that start with a dot are skipped, and the walk is bounded"""
+    seen = 0
+    for base in config.design_dirs:
+        stack = [(base, 0)]
+        while stack:
+            folder, depth = stack.pop()
+            try:
+                with os.scandir(folder) as scan:
+                    entries = sorted(scan, key=lambda e: e.name, reverse=True)
+            except OSError:
+                continue
+            for entry in entries:
+                if entry.name.startswith(".") or entry.is_symlink():
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    if depth < DESIGN_DEPTH:
+                        stack.append((Path(entry.path), depth + 1))
+                elif entry.is_file(follow_symlinks=False):
+                    seen += 1
+                    if seen > DESIGN_MAX_FILES:
+                        return
+                    path = Path(entry.path)
+                    yield path, path.relative_to(base).as_posix()
 
 
 def resolve_file(config: Config, session_dir: str, name: str, workspace_only: bool = False) -> str:
-    """The whole path of a file that exists. workspace_only leaves out the folders of the inputs
+    """The whole path of a file that exists. workspace_only leaves out the designs folders
     (for the results of a flow, which are written in the workspace)"""
     if not isinstance(name, str) or not name.strip() or "\0" in name:
         raise InvalidArgument("A file name is needed")
@@ -38,11 +70,16 @@ def resolve_file(config: Config, session_dir: str, name: str, workspace_only: bo
     root = config.root.resolve()
     allowed: List[Path] = [root]
     if not workspace_only:
-        allowed += [d.resolve() for d in config.input_dirs]
+        allowed += [d.resolve() for d in config.design_dirs]
     # The files that the person uploaded to the session are in its folder 'uploads'
-    bases = [config.root / session_dir, config.root / session_dir / UPLOADS, config.root]
+    bases = [
+        config.root / session_dir,
+        config.root / session_dir / UPLOADS,
+        config.root / session_dir / CREATED,
+        config.root,
+    ]
     if not workspace_only:
-        bases += list(config.input_dirs)
+        bases += list(config.design_dirs)
     for base in bases:
         candidate = base / name
         if not candidate.is_file():
@@ -51,11 +88,29 @@ def resolve_file(config: Config, session_dir: str, name: str, workspace_only: bo
         if not any(_inside(real, a) for a in allowed):
             raise PathRefused("'%s' leads outside the workspace" % name)
         return str(real)
+    if not workspace_only and "/" not in name:
+        found = {}
+        for path, relative in design_files(config):
+            if path.name == name:
+                found.setdefault(path.resolve(), relative)
+        if len(found) == 1:
+            real = next(iter(found))
+            if not any(_inside(real, a) for a in allowed):
+                raise PathRefused("'%s' leads outside the workspace" % name)
+            return str(real)
+        if found:
+            shown = sorted(found.values())
+            error = AmbiguousFile(
+                "There are %d files named '%s' in the designs folders: %s%s"
+                % (len(shown), name, ", ".join(shown[:5]), ", ..." if len(shown) > 5 else "")
+            )
+            error.hint = "Give the path, for example %s" % shown[0]
+            raise error
     error = FileNotInWorkspace(
         "There is no file '%s' in the workspace%s"
-        % (name, "" if workspace_only else " or in the folders of the inputs"),
+        % (name, "" if workspace_only else " or in the designs folders"),
     )
-    close, more = _close_names(name, bases)
+    close, more = _close_names(config, name, bases, not workspace_only)
     if close:
         error.hint = "Did you mean: %s%s?" % (
             ", ".join(close),
@@ -64,7 +119,7 @@ def resolve_file(config: Config, session_dir: str, name: str, workspace_only: bo
     raise error
 
 
-def _close_names(name: str, bases: List[Path]):
+def _close_names(config: Config, name: str, bases: List[Path], designs: bool = True):
     """The names of the files that a wrong name may have meant: one that contains it, or one that is
     like it. A model gives half of a name, or a name that it remembers wrong"""
     names = set()
@@ -73,6 +128,8 @@ def _close_names(name: str, bases: List[Path]):
             names.update(p.name for p in base.iterdir() if p.is_file())
         except OSError:
             continue
+    if designs:
+        names.update(path.name for path, _ in design_files(config))
     inside = sorted(n for n in names if len(name) >= 4 and name.lower() in n.lower())
     like = difflib.get_close_matches(name, sorted(names), n=3, cutoff=0.6)
     found: List[str] = []
@@ -145,5 +202,5 @@ def check_kind(argument: str, name: str, path: str) -> None:
     if belongs and belongs != argument:
         error.hint = "Give '%s' as %s" % (name, belongs)
     else:
-        error.hint = "Look for another file with the names that the folders of the inputs have"
+        error.hint = "Look for another file with the names that the designs folders have"
     raise error

@@ -120,7 +120,7 @@ def test_a_link_inside_an_input_folder_that_leaves_it_is_refused(openfpga_module
     os.symlink(outside, inputs / "link.blif")
     (inputs / "fine.blif").write_text(".model y\n.end\n")
     folders = {golden.vpr_arch.parent, golden.openfpga_arch.parent, inputs}
-    server = build_server(Config(root=tmp_path / "workspace", input_dirs=tuple(folders)))
+    server = build_server(Config(root=tmp_path / "workspace", design_dirs=tuple(folders)))
     script = Script(server)
     try:
 
@@ -312,7 +312,7 @@ def test_a_body_that_is_too_large_is_refused(http_server):
 
 
 def test_paths_are_hidden_when_a_folder_is_a_link(openfpga_module, tmp_path, golden):
-    """The input folder is given as a link: the paths that resolve are hidden as well"""
+    """The designs folder is given as a link: the paths that resolve are hidden as well"""
     links = tmp_path / "links"
     links.mkdir()
     folders = []
@@ -321,7 +321,7 @@ def test_paths_are_hidden_when_a_folder_is_a_link(openfpga_module, tmp_path, gol
     ):
         os.symlink(source, links / f"in{index}")
         folders.append(links / f"in{index}")
-    server = build_server(Config(root=tmp_path / "workspace", input_dirs=tuple(folders)))
+    server = build_server(Config(root=tmp_path / "workspace", design_dirs=tuple(folders)))
     script = Script(server)
     try:
 

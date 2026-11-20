@@ -47,13 +47,13 @@ def test_the_example_of_a_configuration_starts_the_server(mcp_environment, tmp_p
     assert entry["command"] == "openfpga-mcp"
     # The same arguments, with this machine's directories
     arguments = list(entry["args"])
-    assert arguments.count("--root") == 1 and arguments.count("--input-dir") >= 1
+    assert arguments.count("--root") == 1 and arguments.count("--designs-dir") >= 1
     workspace = tmp_path / "workspace"
     inputs = [golden.vpr_arch.parent, golden.openfpga_arch.parent, golden.circuit.parent]
     arguments[arguments.index("--root") + 1] = str(workspace)
     values = iter(inputs)
     for index, word in enumerate(arguments):
-        if word == "--input-dir":
+        if word == "--designs-dir":
             arguments[index + 1] = str(next(values, inputs[0]))
     command, prefix = server_command()
     program = StdioServerParameters(command=command, args=prefix + arguments, env=mcp_environment)
@@ -82,7 +82,7 @@ def test_the_example_of_a_configuration_starts_the_server(mcp_environment, tmp_p
             return tools, opened, read
 
     tools, opened, read = asyncio.run(main())
-    assert len(tools) == 23 and {"session_open", "run_stage", "get_timing"} <= tools
+    assert len(tools) == 24 and {"session_open", "run_stage", "get_timing"} <= tools
     assert opened["ok"] and (workspace / "s1").is_dir()
     assert read["ok"], read
 
@@ -90,7 +90,7 @@ def test_the_example_of_a_configuration_starts_the_server(mcp_environment, tmp_p
 def test_the_documented_options_exist(tmp_path):
     from openfpga_mcp.server import main
 
-    for word in ("--root", "--input-dir", "--transport", "--max-sessions", "--call-timeout"):
+    for word in ("--root", "--designs-dir", "--transport", "--max-sessions", "--call-timeout"):
         assert word in (REPO / "openfpga/python/mcp/README.md").read_text()
     with pytest.raises(SystemExit) as stopped:
         main(["--help"])

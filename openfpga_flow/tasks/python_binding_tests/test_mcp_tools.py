@@ -32,7 +32,7 @@ def golden():
 
 def make_config(tmp_path, golden, **kwargs):
     folders = {golden.vpr_arch.parent, golden.openfpga_arch.parent, golden.circuit.parent}
-    return Config(root=tmp_path / "workspace", input_dirs=tuple(folders), **kwargs)
+    return Config(root=tmp_path / "workspace", design_dirs=tuple(folders), **kwargs)
 
 
 class Script:
@@ -139,7 +139,7 @@ def test_a_flow_runs_through_the_tools(script, golden):
     # The workspace is not shown: only names inside it
     shown = json.dumps(after)
     assert str(script.server.registry.config.root) not in shown
-    for folder in script.server.registry.config.input_dirs:
+    for folder in script.server.registry.config.design_dirs:
         assert str(folder) not in shown
     assert after["data"]["state"]["inputs"]["circuit"]["file"] == golden.circuit.name
     within(after)

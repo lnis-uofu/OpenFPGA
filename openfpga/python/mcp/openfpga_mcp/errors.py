@@ -33,11 +33,17 @@ class InvalidArgument(RegistryError):
     kind = "invalid_argument"
 
 
+class AmbiguousFile(RegistryError):
+    """A short name that more than one file in the designs folders has"""
+
+    kind = "ambiguous_file"
+
+
 class PathRefused(RegistryError):
-    """A file name that is not inside the workspace or the folders of the inputs"""
+    """A file name that is not inside the workspace or the designs folders"""
 
     kind = "path_refused"
-    hint = "Give a name relative to the workspace, or to a folder of the inputs: no '..'"
+    hint = "Give a name relative to the workspace, or to a designs folder: no '..'"
 
 
 class FileNotInWorkspace(RegistryError):
@@ -57,6 +63,11 @@ class WrongFileKind(RegistryError):
     """A file that is given for one input but is another kind of file"""
 
     kind = "wrong_file_kind"
+
+
+class FileExists(RegistryError):
+    kind = "file_exists"
+    hint = "Give another name, or overwrite=true to replace the file that was written before"
 
 
 class SessionNotEmpty(RegistryError):

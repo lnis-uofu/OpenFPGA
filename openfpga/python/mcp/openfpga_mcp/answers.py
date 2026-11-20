@@ -56,7 +56,7 @@ _RESTORE_HINT = (
 
 
 def relative(node: Any, folders: List[str]) -> Any:
-    """The data with the paths inside the workspace, and inside the folders of the inputs, made
+    """The data with the paths inside the workspace, and inside the designs folders, made
     relative to them: the model sees names that it can give back, and not where things are"""
     if isinstance(node, str):
         for folder in folders:

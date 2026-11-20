@@ -8,6 +8,7 @@ thread safe: the tools of the server call it from worker threads.
 import concurrent.futures
 import dataclasses
 import itertools
+import json
 import os
 import re
 import shutil
@@ -24,6 +25,8 @@ from .errors import (  # noqa: F401 - the failures are part of what the registry
 )
 
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 _.-]{0,63}")
+_DIRECTORY = re.compile(r"s\d+")  # the directories that this registry makes
+META = "session.json"  # the name of the session and what the page knows of it, kept in its directory
 
 
 @dataclasses.dataclass
@@ -112,6 +115,92 @@ class SessionRegistry:
             now = self._clock()
             entry = Entry(sid, name or sid, session, sid, now, now)
             self._entries[sid] = entry
+            self.update_meta(entry, name=entry.name)
+            return entry
+
+    # What a session keeps in its directory, and sessions that a server finds there ----------
+
+    def read_meta(self, directory: str) -> Dict:
+        try:
+            data = json.loads((self.config.root / directory / META).read_text())
+        except (OSError, ValueError):
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def update_meta(self, entry: Entry, **fields) -> None:
+        """Keep the name of a session and what the page knows of it (the device package), so that
+        the session can be opened again after a restart. A disk that fails does not stop a flow"""
+        try:
+            meta = {**self.read_meta(entry.directory), **fields}
+            target = self.config.root / entry.directory / META
+            temporary = target.with_name(".%s.part" % META)
+            temporary.write_text(json.dumps(meta))
+            os.replace(temporary, target)
+        except OSError:
+            pass
+
+    def saved(self) -> List[Dict]:
+        """The sessions of the workspace that no worker holds and that have a checkpoint: the
+        ones that an earlier server made, and the ones that were closed. Newest first"""
+        with self._lock:
+            live = {e.directory for e in self._entries.values()}
+        found = []
+        try:
+            children = [p for p in self.config.root.iterdir() if _DIRECTORY.fullmatch(p.name)]
+        except OSError:
+            return []
+        for path in children:
+            if path.name in live or path.is_symlink():
+                continue
+            try:
+                manifest = json.loads((path / "checkpoints" / "checkpoint.json").read_text())
+                modified = (path / "checkpoints" / "checkpoint.json").stat().st_mtime
+            except (OSError, ValueError):
+                continue
+            meta = self.read_meta(path.name)
+            found.append(
+                {
+                    "id": path.name,
+                    "name": meta.get("name") or path.name,
+                    "stages": manifest.get("stages", []),
+                    "device_package": meta.get("device_package"),
+                    "modified": modified,
+                }
+            )
+        return sorted(found, key=lambda s: -s["modified"])
+
+    def adopt(self, directory: str) -> Entry:
+        """Start a worker for a session of an earlier server (or one that was closed), restored
+        from its last checkpoint, and hold it under the id of its directory"""
+        import openfpga
+
+        if not _DIRECTORY.fullmatch(directory or ""):
+            raise UnknownSession("'%s' is not a session of this workspace" % directory)
+        path = self.config.root / directory
+        checkpoint = path / "checkpoints"
+        if path.is_symlink() or not (checkpoint / "checkpoint.json").is_file():
+            raise UnknownSession("Session %s has no checkpoint to open it from" % directory)
+        with self._lock:
+            self._reap()
+            if any(e.directory == directory for e in self._entries.values()):
+                raise ValueError("Session %s is open already" % directory)
+            if len(self._entries) >= self.config.max_sessions:
+                raise SessionLimit(
+                    "%d sessions are open, which is the limit" % self.config.max_sessions
+                )
+            session = self.spawn(
+                lambda: openfpga.RemoteSession.restore(
+                    checkpoint,
+                    cwd=path,
+                    checkpoint_dir=checkpoint,
+                    timeout_s=self.config.call_timeout_s,
+                )
+            )
+            now = self._clock()
+            meta = self.read_meta(directory)
+            entry = Entry(directory, meta.get("name") or directory, session, directory, now, now)
+            self._entries[directory] = entry
+            self._gone.pop(directory, None)
             return entry
 
     def get(self, sid: str) -> Entry:

@@ -17,12 +17,15 @@ Without the extra the package is there and says what is missing when it starts.
 
 ## Run
 
-    openfpga-mcp --root WORKSPACE --input-dir DIR [--input-dir DIR ...]
+    openfpga-mcp --root WORKSPACE --designs-dir DIR [--designs-dir DIR ...]
 
 - `--root` is the workspace. Each session has a directory in it, and nothing outside it is
   written. Give it a directory that you do not mind a model filling.
-- `--input-dir` is a folder that architectures, circuits and constraints can be read from, by
-  name. Nothing else on the machine can be read.
+- `--designs-dir` is a folder that architectures, circuits and constraints can be read from, by
+  name (it was `--input-dir`). A short name (no folder in it) that is not at the top of a folder
+  is looked for in the folders under it, up to 6 levels and 20,000 files, skipping links and names
+  that start with a dot; two files of that name are an error (`ambiguous_file`) that lists their
+  paths, and the caller gives the path. Nothing else on the machine can be read.
 - `--transport http --port N` serves on `127.0.0.1` instead of stdio (a request with a `Host` or
   `Origin` of another site is refused). Another address is refused until the access checks of
   the web app exist.
@@ -37,14 +40,14 @@ keys). The client starts the server and speaks to it on its standard input and o
 
 Without a client, a generic stdio test of the command is
 
-    python -m openfpga_mcp --root /tmp/work --input-dir openfpga_flow/vpr_arch
+    python -m openfpga_mcp --root /tmp/work --designs-dir openfpga_flow/vpr_arch
 
 and a client of the SDK reads it with `mcp.client.Client(StdioServerParameters(...))`.
 
 ## A flow
 
 A model opens a session, reads the inputs (`vpr_arch`, `layout`, `openfpga_arch` and `circuit`
-are names inside the input folders), runs `pack`, `place`, `route` and `analysis` with
+are names inside the designs folders), runs `pack`, `place`, `route` and `analysis` with
 `run_stage`, and asks `get_timing`, `get_utilization`, `get_congestion`, `find` and so on. A
 stage that fails comes back as `ok: false` with diagnostics, and what it made is kept for
 `get_congestion` and the earlier queries. `session_restore` brings a session back after a crash

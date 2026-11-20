@@ -55,8 +55,8 @@ def test_the_tools_are_listed_with_their_descriptions(served):
 
     tools = client_run(served, steps)
     # The 23 tools of DESIGN.md, less get_journal and replay (they wait for a journal in workers),
-    # plus list_device_packages and use_device_package
-    assert len(tools) == 23
+    # plus list_device_packages, use_device_package and write_file
+    assert len(tools) == 24
     assert {"session_open", "session_close", "session_list", "session_restore"} <= set(tools)
     assert all(len(text) > 40 for text in tools.values())
 
