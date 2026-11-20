@@ -74,6 +74,7 @@ if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   add_dependencies(libopenfpga yosys)
   target_link_libraries(libopenfpga
                         libyosys
+                        ${CMAKE_DL_LIBS}
                         )
 endif()
 
