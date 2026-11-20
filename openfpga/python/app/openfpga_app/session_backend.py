@@ -85,6 +85,7 @@ class SessionBackend:
         self.sid: Optional[str] = None
         self._packages: Dict[str, Dict[str, Any]] = {}  # the device package of a session, by id
         self._running: Optional[str] = None
+        self._synthesis_runs: Dict[str, Dict[str, Any]] = {}  # the last synthesis of each session
         self._busy = False
         self._cancelled = False
         self._last = empty_view()
@@ -223,6 +224,10 @@ class SessionBackend:
             return view
         view["files"]["uploads"] = uploads.listing(self.config.root, entry.directory)
         view["files"]["created"] = uploads.listing(self.config.root, entry.directory, "created")
+        view["files"]["synthesis"] = [
+            {**item, "name": "synth/" + item["name"]}  # a name that the viewer resolves in the session
+            for item in uploads.listing(self.config.root, entry.directory, "synth")
+        ]
         info = next((i for i in self.registry.list() if i.id == entry.id), None)
         running = bool(info and info.running)
         view["session"] = {
@@ -246,12 +251,13 @@ class SessionBackend:
             # it. What was known stays, and the latest state says what is going on
             previous = self._last
             if previous["session"] and previous["session"]["id"] == entry.id:
-                for key in ("stages", "options_changed"):
+                for key in ("stages", "options_changed", "synthesis"):
                     view[key] = previous[key]
                 view["files"] = {
                     **previous["files"],
                     "uploads": view["files"]["uploads"],
                     "created": view["files"]["created"],
+                    "synthesis": view["files"]["synthesis"],
                 }
             what = "a command" if self._running in (None, "console") else self._running
             view["latest"] = {"status": "running", "text": "%s · %s running" % (entry.id, what)}
@@ -278,6 +284,7 @@ class SessionBackend:
                     item["status"] = "failed"
                     item["message"] = state.failed.message
         inputs = state.inputs
+        view["synthesis"] = self._synthesis_stage(entry, inputs.circuit)
         files = view["files"]
         if inputs.vpr_arch:
             files["inputs"].append(
@@ -335,10 +342,17 @@ class SessionBackend:
     async def invoke(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Run a tool, for a line of the chat or for the agent, and keep which session is current"""
         self._running = name
+        started = time.monotonic()
         try:
             answer = json.loads(await self.tools[name](**arguments))
         finally:
             self._running = None
+        if name == "synthesize" and arguments.get("session"):
+            failed = (answer.get("diagnostics") or [{}])[0].get("message", "Synthesis failed")
+            self._synthesis_runs[arguments["session"]] = {
+                "seconds": round(time.monotonic() - started, 1) if answer.get("ok") else None,
+                "error": None if answer.get("ok") else str(failed)[:300],
+            }
         if name == "session_open" and answer.get("ok"):
             self.sid = answer["data"]["session"]
         if name == "use_device_package" and answer.get("ok"):
@@ -434,11 +448,33 @@ class SessionBackend:
             return answers.from_exception(error)
         return {"ok": True, "data": data, "truncated": False, "more": None}
 
+    def _synthesis_stage(self, entry, circuit) -> Dict[str, Any]:
+        """The stage of synthesis for the sidebar. It is reached when the circuit is the netlist of a
+        synthesis (a file of the folder synth of the session), skipped when it is a netlist that was
+        given (nothing to synthesize), failed when the last synthesis failed, and not reached before
+        a circuit is read"""
+        run = self._synthesis_runs.get(entry.id) or {}
+        if run.get("error"):
+            return {"status": "failed", "seconds": None, "message": run["error"]}
+        if circuit is None:
+            return {"status": "not_reached", "seconds": None, "message": None}
+        folder = os.path.realpath(self.config.root / entry.directory / "synth")
+        made = os.path.dirname(os.path.realpath(circuit.file)) == folder
+        if made:
+            return {"status": "reached", "seconds": run.get("seconds"), "message": None}
+        return {
+            "status": "skipped",
+            "seconds": None,
+            "message": "Not needed: the design is a netlist (%s)" % os.path.basename(circuit.file),
+        }
+
     def _set_package(self, sid: str, summary: Dict[str, Any]) -> None:
         """The device package of a session: shown by the page and kept for a later open"""
         self._packages[sid] = summary
         try:
-            self.registry.update_meta(self.registry.get(sid), device_package=summary)
+            self.registry.update_meta(
+                self.registry.get(sid), device_package=summary, package_name=summary.get("name")
+            )  # the page shows it; synthesize reads the name
         except RegistryError:
             pass
 

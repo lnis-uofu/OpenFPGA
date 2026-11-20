@@ -1011,3 +1011,39 @@ def test_files_that_the_person_named_and_the_tool_refused_end_the_calls_and_ask_
     assert model.tools_seen[1] == [] and "Make no more calls" in model.requests[1][-1]["content"]
     assert len(model.requests) == 2
 
+
+
+def test_a_device_package_that_the_model_makes_up_is_skipped_when_the_person_named_the_architectures():
+    calls = []
+
+    async def use_device_package(session=None, name=None):
+        calls.append(name)
+        return json.dumps({"ok": False, "diagnostics": [{"kind": "package_not_found", "message": "no"}]})
+
+    async def read_inputs(session=None, circuit=None, vpr_arch=None, layout=None, openfpga_arch=None):
+        return json.dumps({"ok": True, "data": {"read": vpr_arch}})
+
+    tools = {**make_tools(), "use_device_package": use_device_package, "read_inputs": read_inputs}
+    model = ScriptedModel(
+        [
+            say(
+                "",
+                call("use_device_package", name="k6_frac_N10_40nm"),
+                call("read_inputs", vpr_arch="o.xml", circuit="c.blif"),
+            ),
+            say("done"),
+        ]
+    )
+    loop = make_loop(model, tools)
+    run(loop, "Use o.xml as the VPR architecture.")
+    assert calls == []  # the tool was not called
+    answers = [json.loads(m["content"]) for m in model.requests[1] if m.get("role") == "tool"]
+    assert answers[0]["ok"] is True and answers[0]["data"]["skipped"] is True
+    assert answers[1]["ok"] is True  # and the call after it ran
+    assert [r["kind"] for r in loop.records].count("skipped_package") == 1
+
+    # Without architectures in the words of the person the tool is called as usual
+    model = ScriptedModel([say("", call("use_device_package", name="k6")), say("done")])
+    loop = make_loop(model, tools)
+    run(loop, "Run the flow on c.blif")
+    assert calls == ["k6"]

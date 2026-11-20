@@ -1,7 +1,7 @@
 // The API of the app: what the server sends, and the calls that the page makes.
 // The events are those of openfpga_app/schemas/events.schema.json (schema_version 1).
 
-export type StageStatus = "reached" | "not_reached" | "failed" | "running";
+export type StageStatus = "reached" | "not_reached" | "failed" | "running" | "skipped";
 
 export interface StageView {
   stage: string;
@@ -27,8 +27,10 @@ export interface SessionView {
     device_package?: DevicePackageInfo | null;
   } | null;
   latest: { status: "none" | "running" | "reached" | "failed"; text: string };
+  /** Synthesis, before the stages: skipped when the design is a netlist */
+  synthesis?: StageView;
   stages: StageView[];
-  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[]; created?: UploadedFile[] };
+  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[]; created?: UploadedFile[]; synthesis?: UploadedFile[] };
   options_changed: { name: string; value: unknown }[];
   checkpoints: { name: string; kind: string; stages: string[] }[];
 }

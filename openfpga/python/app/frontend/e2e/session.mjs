@@ -116,7 +116,12 @@ try {
   assert.ok(await page.isDisabled(".save-file"), "saved: nothing more to save");
   await page.click('[role=tab]:has-text("Chat")');
   await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=mine.blif`);
-  await page.waitForSelector(".file-row .file:has-text('mine.blif')", { timeout: 30000 }); // read as an input
+  await page.waitForSelector(".upload-row.loaded .file:has-text('mine.blif')", { timeout: 30000 }); // read as the circuit
+  // The design is a netlist: synthesis is not needed, and is greyed out; the architecture is a button
+  await page.waitForSelector(".stage-skipped:has-text('SYNTHESIS')");
+  assert.equal(await page.locator(".file-row .file-label:has-text('vpr arch')").count(), 0, "the architecture files are not listed");
+  assert.ok(await page.isVisible("button:has-text('Show architecture')"));
+  if (process.env.SHOT_SIDEBAR_BLIF) await page.screenshot({ path: process.env.SHOT_SIDEBAR_BLIF });
 
   // A file that is taken out of the session
   await page.setInputFiles('[aria-label="Upload files"]', {
@@ -135,6 +140,7 @@ try {
   await say("/set_option name=router.route_chan_width value=20");
   await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=${files.circuit}`);
   await page.waitForSelector("text=layout 2x2", { timeout: 30000 });
+
   for (const stage of ["pack", "place", "route", "analysis"]) await say(`/run_stage stage=${stage}`);
   await page.waitForSelector("text=ANALYZED ✔", { timeout: 30000 });
   await page.waitForSelector("text=routing_test.route", { timeout: 30000 });
@@ -198,7 +204,9 @@ try {
   await page.waitForSelector("text=Waiting for a circuit");
   assert.ok(await page.isVisible("text=device k6_frac_n10_2x2 · 2x2 · K6"));
   await page.waitForSelector("text=layout 2x2", { timeout: 30000 });
-  assert.equal(await page.locator(".file-row .file-label:has-text('circuit')").count(), 0, "no circuit yet");
+
+  await page.click('[role=tab]:has-text("Chat")');
+  assert.equal(await page.locator(".upload-row.loaded").count(), 0, "no circuit yet");
   assert.ok(!(await page.isVisible("header >> text=DEVICE ✔")), "nothing reached");
   await page.setInputFiles('[aria-label="Upload files"]', {
     name: "design.blif",
@@ -207,15 +215,28 @@ try {
   });
   await page.waitForSelector(".upload-row:has-text('design.blif')");
   // The session has its architectures and no circuit: the upload is read as the circuit, by itself
-  await page.waitForSelector(".file-row .file:has-text('design.blif')", { timeout: 30000 });
+  await page.waitForSelector(".upload-row.loaded .file:has-text('design.blif')", { timeout: 30000 });
   assert.equal(await page.locator("text=Waiting for a circuit").count(), 0);
   await say("/run_stage stage=pack");
   await page.waitForSelector("header >> text=PACKED ✔", { timeout: 60000 });
   // A result of the flow and a file of the package open in the viewer
   await page.click(".results .file:has-text('.net')");
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("block"), null, { timeout: 30000 });
-  await page.click(".file-row .file[title$='arch/vpr_arch.xml']");
+  await page.click("button:has-text('Show architecture')"); // opens the two architecture files in tabs
+  await page.waitForSelector('[role=tab]:has-text("vpr_arch.xml")');
+  await page.click('[role=tab]:has-text("vpr_arch.xml")');
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("architecture"), null, { timeout: 30000 });
+
+  await page.click('[role=tab]:has-text("Chat")');
+  // Verilog is synthesized for the package of the session: the netlist is the circuit, and the files show
+  await say('/write_file name=inv.v content="module inv(input a, output y);\n  assign y = ~a;\nendmodule\n"');
+  await say("/synthesize top=inv files=inv.v");
+  await page.waitForSelector(".upload-row .file:has-text('synth/inv.blif')", { timeout: 60000 });
+  await page.waitForSelector(".upload-row.loaded .file:has-text('synth/inv.blif')", { timeout: 30000 }); // read as the circuit
+  await page.waitForSelector(".stage-reached:has-text('SYNTHESIS')"); // synthesis is a stage that was reached
+  if (process.env.SHOT_SIDEBAR) await page.screenshot({ path: process.env.SHOT_SIDEBAR });
+  await page.click(".upload-row .file:has-text('synth/inv.blif')");
+  await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("inv"), null, { timeout: 30000 });
 
   assert.deepEqual(errors, []);
   if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });

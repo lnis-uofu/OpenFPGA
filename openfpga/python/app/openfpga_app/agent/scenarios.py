@@ -163,6 +163,30 @@ def _fmax_in(messages: List[Dict[str, Any]]) -> float:
 
 PACKAGE = "k6_frac_n10_2x2"  # the device package of the architectures of the design
 
+# A design in Verilog, put in the designs folder of the synthesis scenario
+COUNTER_V = """module counter(input clk, input rst, output reg [3:0] q);
+  always @(posedge clk) begin
+    if (rst) q <= 4'd0; else q <= q + 4'd1;
+  end
+endmodule
+"""
+
+
+def _prepare_synthesis(inputs: Path, design: Design) -> None:
+    (inputs / "counter.v").write_text(COUNTER_V)
+
+
+def _plan_synthesis(design: Design) -> List[ModelTurn]:
+    return (
+        [say("", call("session_open", name="counter"))]
+        + [say("", call("use_device_package", name=PACKAGE))]
+        + [say("", call("synthesize", top="counter", files="counter.v"))]
+        + [say("", call("set_constraint", kind="chan_width", width=design.chan_width))]
+        + _stages("pack", "place", "route", "analysis")
+        + [say("", call("get_timing", paths=1))]
+        + [lambda messages: say("The Fmax is %.2f MHz." % _fmax_in(messages))]
+    )
+
 
 def _plan_device_package(design: Design) -> List[ModelTurn]:
     return (
@@ -270,6 +294,16 @@ def _check_device_package(outcome: Outcome, design: Design) -> List[str]:
     return problems + _check_flow_fmax(outcome, design)
 
 
+def _check_synthesis(outcome: Outcome, design: Design) -> List[str]:
+    problems = []
+    done = [c for c in outcome.ok_calls("synthesize") if c.arguments.get("top") == "counter"]
+    if not done:
+        problems.append("counter.v was not synthesized with top counter")
+    elif not done[-1].answer.get("data", {}).get("circuit_read"):
+        problems.append("the netlist was not read as the circuit")
+    return problems + _check_flow_fmax(outcome, design)
+
+
 def _check_set_width(outcome: Outcome, design: Design) -> List[str]:
     problems = []
     if "ROUTED" not in outcome.reached():
@@ -324,6 +358,16 @@ SCENARIOS: Dict[str, Scenario] = {
             "of %d. Tell me the Fmax." % (PACKAGE, d.circuit.name, d.chan_width),
             _plan_device_package,
             _check_device_package,
+        ),
+        Scenario(
+            "synth_flow",
+            "A design in Verilog: synthesize it for a device package, run the flow, report the Fmax",
+            lambda d: "Use the device package %s. Synthesize counter.v (the top module is counter) "
+            "and run the whole flow at a channel width of %d. Tell me the Fmax."
+            % (PACKAGE, d.chan_width),
+            _plan_synthesis,
+            _check_synthesis,
+            prepare=_prepare_synthesis,
         ),
         Scenario(
             "set_width",

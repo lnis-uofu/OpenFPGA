@@ -1,5 +1,5 @@
 import { useRef, useState } from "preact/hooks";
-import { UPLOAD_EXTENSIONS } from "../api";
+import { UPLOAD_EXTENSIONS, type SessionView } from "../api";
 import { PackagePicker } from "./PackagePicker";
 import {
   busy,
@@ -17,7 +17,7 @@ import {
   view,
 } from "../store";
 
-const SYMBOL = { reached: "✔", not_reached: "○", failed: "✖", running: "░" } as const;
+const SYMBOL = { reached: "✔", not_reached: "○", failed: "✖", running: "░", skipped: "–" } as const;
 
 function Section(props: { title: string; children: preact.ComponentChildren }) {
   return (
@@ -63,6 +63,36 @@ function size(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+const ORIGIN = { input: "design folder", upload: "uploaded", model: "by the model", synthesis: "synthesis" } as const;
+
+interface DesignRow {
+  name: string;
+  kind: keyof typeof KIND;
+  bytes?: number;
+  origin: keyof typeof ORIGIN;
+  loaded: boolean;
+}
+
+/** Every design file in one list: what the person uploaded, what the model wrote, what a synthesis
+ * made, and the circuit that was read from a designs folder. The architectures are not in it (the
+ * button of the architecture opens them). The circuit that the session has read is marked */
+function designFiles(files: SessionView["files"]): DesignRow[] {
+  const circuit = files.inputs.find((f) => f.label === "circuit");
+  const is = (name: string) => !!circuit && (circuit.name === name || circuit.name.endsWith("/" + name));
+  const rows: DesignRow[] = [];
+  for (const [list, origin] of [
+    [files.uploads ?? [], "upload"],
+    [files.created ?? [], "model"],
+    [files.synthesis ?? [], "synthesis"],
+  ] as const) {
+    for (const f of list) rows.push({ name: f.name, kind: f.kind, bytes: f.bytes, origin, loaded: is(f.name) });
+  }
+  if (circuit && !rows.some((r) => r.loaded)) {
+    rows.unshift({ name: circuit.name, kind: "circuit", origin: "input", loaded: true });
+  }
+  return rows;
+}
+
 /** The left sidebar: the session, its stages, the design files and the checkpoints */
 export function Sidebar() {
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -72,7 +102,16 @@ export function Sidebar() {
   // The buttons of the sessions work on real sessions, not on the recorded demo
   const real = config.value?.backend === "session";
   const files = v.files;
-  const reached = v.stages.filter((s) => s.status === "reached").length;
+  // Synthesis is the first stage; a skipped one (the design is a netlist) is not counted
+  const stages = [
+    ...(v.synthesis ? [{ ...v.synthesis, stage: "SYNTHESIS" }] : []),
+    ...v.stages,
+  ];
+  const counted = stages.filter((s) => s.status !== "skipped");
+  const reached = counted.filter((s) => s.status === "reached").length;
+  const rows = designFiles(files);
+  const vpr = files.inputs.find((f) => f.label === "vpr arch");
+  const oarch = files.inputs.find((f) => f.label === "openfpga arch");
   return (
     <aside class={`sidebar ${sidebarOpen.value ? "" : "closed"}`} aria-label="Session and design files">
       <Section title="Session">
@@ -139,13 +178,13 @@ export function Sidebar() {
           role="progressbar"
           aria-label="Stages reached"
           aria-valuemin={0}
-          aria-valuemax={v.stages.length}
+          aria-valuemax={counted.length}
           aria-valuenow={reached}
         >
-          <div class="progress-fill" style={{ width: `${(reached / Math.max(1, v.stages.length)) * 100}%` }} />
+          <div class="progress-fill" style={{ width: `${(reached / Math.max(1, counted.length)) * 100}%` }} />
         </div>
         <ol class="stages">
-          {v.stages.map((s) => (
+          {stages.map((s) => (
             <li key={s.stage} class={`stage stage-${s.status}`} title={s.message ?? undefined}>
               <span class="stage-mark" aria-hidden="true">
                 {SYMBOL[s.status]}
@@ -159,56 +198,57 @@ export function Sidebar() {
         </ol>
       </Section>
       <Section title="Design files">
-        <h3>Inputs</h3>
-        {files.inputs.length ? (
-          files.inputs.map((f) => (
-            <div key={f.label} class="file-row">
-              <span class="file-label">{f.label}</span>
-              <Name name={f.name} />
-              {f.extra && <span class="chip">{f.extra}</span>}
-            </div>
-          ))
+        <div class="architecture-row">
+          <span class="file-label">Architecture</span>
+          {vpr || oarch ? (
+            <>
+              {session?.device_package && <span class="chip">{session.device_package.name}</span>}
+              {vpr?.extra && <span class="chip">{vpr.extra}</span>}
+              <button
+                class="show-architecture"
+                disabled={!real}
+                title={real ? "Open the VPR and the OpenFPGA architecture files" : "Not in the demo"}
+                onClick={() => {
+                  if (vpr) void openFile(vpr.name);
+                  if (oarch) void openFile(oarch.name);
+                }}
+              >
+                Show architecture
+              </button>
+            </>
+          ) : (
+            <span class="muted">(not read)</span>
+          )}
+        </div>
+        {rows.length ? (
+          <div class="uploads design-files">
+            {rows.map((f) => (
+              <div key={f.name} class={`upload-row ${f.loaded ? "loaded" : ""}`}>
+                <Name name={f.name} />
+                <span class="chip">{KIND[f.kind]}</span>
+                {f.loaded && <span class="chip chip-loaded">loaded</span>}
+                <span class="chip chip-origin">{ORIGIN[f.origin]}</span>
+                {f.bytes != null && <span class="muted upload-size">{size(f.bytes)}</span>}
+                {f.origin === "upload" && (
+                  <button
+                    class="upload-remove"
+                    aria-label={`Remove ${f.name}`}
+                    title="Remove this file from the session"
+                    onClick={() => {
+                      if (window.confirm(`Remove "${f.name}" from the session?`)) void removeUpload(f.name);
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
           <div class="muted">(none)</div>
         )}
         {session?.device_package && !files.inputs.some((f) => f.label === "circuit") && (
           <div class="waiting">Waiting for a circuit: upload one below, then say which to read.</div>
-        )}
-        <h3>Uploaded</h3>
-        {(files.uploads ?? []).length > 0 && (
-          <div class="uploads">
-            {(files.uploads ?? []).map((f) => (
-              <div key={f.name} class="upload-row">
-                <Name name={f.name} />
-                <span class="chip">{KIND[f.kind]}</span>
-                <span class="muted upload-size">{size(f.bytes)}</span>
-                <button
-                  class="upload-remove"
-                  aria-label={`Remove ${f.name}`}
-                  title="Remove this file from the session"
-                  onClick={() => {
-                    if (window.confirm(`Remove "${f.name}" from the session?`)) void removeUpload(f.name);
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        {(files.created ?? []).length > 0 && (
-          <>
-            <h3>Written by the model</h3>
-            <div class="uploads">
-              {(files.created ?? []).map((f) => (
-                <div key={f.name} class="upload-row">
-                  <Name name={f.name} />
-                  <span class="chip">{KIND[f.kind]}</span>
-                  <span class="muted upload-size">{size(f.bytes)}</span>
-                </div>
-              ))}
-            </div>
-          </>
         )}
         <input
           ref={picker}
@@ -231,6 +271,8 @@ export function Sidebar() {
         >
           {uploading.value ? "Uploading…" : "⤒ Upload files…"}
         </button>
+      </Section>
+      <Section title="Constraints and results">
         <h3>Constraints</h3>
         {files.constraints.length ? (
           <div class="chips">

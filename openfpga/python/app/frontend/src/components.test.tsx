@@ -61,6 +61,7 @@ const filled = (): SessionView => ({
   files: {
     inputs: [
       { label: "vpr arch", name: "k6_frac_N10_tileable_40nm_with_a_long_name.xml", extra: "layout 2x2" },
+      { label: "openfpga arch", name: "k6_frac_N10_40nm_openfpga.xml", extra: null },
       { label: "circuit", name: "routing_test.blif", extra: null },
     ],
     constraints: ["chan width 24"],
@@ -124,10 +125,10 @@ describe("what the model costs", () => {
 describe("the sidebar", () => {
   it("has every section, with nothing in it, before there is a session", () => {
     render(<Sidebar />);
-    for (const title of ["Session", "Stages", "Design files", "Checkpoints"]) expect(screen.getByText(title)).toBeTruthy();
+    for (const title of ["Session", "Stages", "Design files", "Constraints and results", "Checkpoints"]) expect(screen.getByText(title)).toBeTruthy();
     expect(screen.getByText("(no session)")).toBeTruthy();
     expect(screen.getAllByText("(none)").length).toBeGreaterThanOrEqual(4);
-    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.getAllByRole("listitem")).toHaveLength(6); // synthesis, then the five stages of the flow
   });
 
   it("shows the stages, the files and the checkpoints of a session", () => {
@@ -135,10 +136,12 @@ describe("the sidebar", () => {
     render(<Sidebar />);
     expect(screen.getByText("worker running")).toBeTruthy();
     const stages = screen.getAllByRole("listitem").map((li) => li.textContent ?? "");
-    expect(stages[0]).toContain("✔");
-    expect(stages[2]).toContain("2.1 s");
-    expect(stages[3]).toContain("○");
+    expect(stages[0]).toContain("SYNTHESIS");
+    expect(stages[1]).toContain("✔"); // DEVICE
+    expect(stages[3]).toContain("2.1 s");
+    expect(stages[4]).toContain("○");
     expect(screen.getByText("layout 2x2")).toBeTruthy();
+    expect(screen.queryByText(/k6_frac_N10_tileable_40nm_with_a_long_name/)).toBeNull(); // the architecture is a button
     expect(screen.getByText("chan width 24")).toBeTruthy();
     expect(screen.getByText("routing_test.net")).toBeTruthy();
     expect(screen.getByText(/last/)).toBeTruthy();
@@ -151,8 +154,8 @@ describe("the sidebar", () => {
     render(<Sidebar />);
     const bar = screen.getByRole("progressbar", { name: "Stages reached" });
     expect(bar.getAttribute("aria-valuenow")).toBe("3");
-    expect(bar.getAttribute("aria-valuemax")).toBe("5");
-    expect((bar.firstChild as HTMLElement).style.width).toBe("60%");
+    expect(bar.getAttribute("aria-valuemax")).toBe("6");
+    expect((bar.firstChild as HTMLElement).style.width).toBe("50%");
     expect(screen.getByText("no route at channel width 2")).toBeTruthy();
   });
 
@@ -167,9 +170,11 @@ describe("the sidebar", () => {
   });
 
   it("cuts a long name in the middle and keeps the whole one in the title", () => {
-    view.value = filled();
+    const v = filled();
+    v.files.uploads = [{ name: "k6_frac_N10_tileable_40nm_with_a_long_name.blif", kind: "circuit", bytes: 10 }];
+    view.value = v;
     render(<Sidebar />);
-    const name = "k6_frac_N10_tileable_40nm_with_a_long_name.xml";
+    const name = "k6_frac_N10_tileable_40nm_with_a_long_name.blif";
     const button = screen.getByTitle(name);
     expect(button.textContent).toContain("…");
     expect(button.textContent!.length).toBeLessThan(name.length);
@@ -407,21 +412,43 @@ describe("uploading files to the session", () => {
     expect(screen.getByText("20 kB")).toBeTruthy();
   });
 
-  it("lists the files that the model wrote, apart from the uploads, with no remove button", () => {
+  it("lists the files that the model wrote with the others, marked by their origin, with no remove button", () => {
     const v = filled();
     v.files.created = [{ name: "my_arch.xml", kind: "vpr_arch", bytes: 2048 }];
     view.value = v;
     render(<Sidebar />);
-    expect(screen.getByText("Written by the model")).toBeTruthy();
+    expect(screen.queryByText("Written by the model")).toBeNull(); // one list, not one for each origin
     expect(screen.getByText("my_arch.xml")).toBeTruthy();
     expect(screen.getByText("VPR arch")).toBeTruthy();
+    expect(screen.getByText("by the model")).toBeTruthy();
     expect(screen.queryByLabelText("Remove my_arch.xml")).toBeNull();
   });
 
-  it("has no heading for them when there are none", () => {
+  it("lists the files of the synthesis in the same list, with the netlist that is read marked as loaded", () => {
+    const v = filled();
+    v.files.inputs = [
+      { label: "vpr arch", name: "vpr_arch.xml", extra: "layout 2x2" },
+      { label: "circuit", name: "s1/synth/and2.blif", extra: null },
+    ];
+    v.files.synthesis = [
+      { name: "synth/and2.blif", kind: "circuit", bytes: 300 },
+      { name: "synth/synth.ys", kind: "other", bytes: 800 },
+    ];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.queryByText("Synthesis", { selector: "h3" })).toBeNull();
+    expect(screen.getByText("synth/and2.blif")).toBeTruthy();
+    expect(screen.getAllByText("synthesis")).toHaveLength(2); // the origin of both files
+    expect(screen.getAllByText("loaded")).toHaveLength(1);
+    expect(screen.queryByText("s1/synth/and2.blif")).toBeNull(); // the circuit input is not listed twice
+  });
+
+  it("lists only the circuit that was read when there is nothing else", () => {
     view.value = filled();
     render(<Sidebar />);
-    expect(screen.queryByText("Written by the model")).toBeNull();
+    expect(screen.getByText("routing_test.blif")).toBeTruthy(); // the circuit from a designs folder
+    expect(screen.getByText("design folder")).toBeTruthy();
+    expect(screen.getByText("loaded")).toBeTruthy();
   });
 
   it("removes a file after the person confirms, and reads the session again", async () => {
@@ -891,5 +918,86 @@ describe("the page", () => {
     fireEvent.click(screen.getByLabelText("Settings"));
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByText(/Not connected in this version/)).toBeTruthy();
+  });
+});
+
+describe("the architecture of the sidebar", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+
+  it("has a label and a button instead of the two architecture files, and the button opens both", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(JSON.stringify({ ok: true, data: { name: "x", text: "<a/>", bytes: 4, truncated: false } })))));
+    view.value = filled();
+    render(<Sidebar />);
+    expect(screen.getByText("Architecture")).toBeTruthy();
+    expect(screen.queryByText("k6_frac_N10_40nm_openfpga.xml")).toBeNull();
+    fireEvent.click(screen.getByText("Show architecture"));
+    await waitFor(() =>
+      expect(tabs.value.map((t) => t.id)).toEqual([
+        "file:k6_frac_N10_tileable_40nm_with_a_long_name.xml",
+        "file:k6_frac_N10_40nm_openfpga.xml",
+      ]),
+    );
+  });
+
+  it("says that it is not read, and has no button, before the architectures are read", () => {
+    real();
+    const v = filled();
+    v.files.inputs = [];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getByText("(not read)")).toBeTruthy();
+    expect(screen.queryByText("Show architecture")).toBeNull();
+  });
+
+  it("names the device package next to it", () => {
+    real();
+    const v = filled();
+    v.session = { ...v.session!, device_package: { name: "k6_frac_n10_2x2", version: "0.1.0", description: "d", layout: "2x2", lut_size: 6, tags: [] } };
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getAllByText("k6_frac_n10_2x2").length).toBeGreaterThan(0);
+  });
+});
+
+describe("synthesis as a stage", () => {
+  const withSynthesis = (status: "reached" | "failed" | "skipped" | "not_reached", extra = {}) => {
+    const v = filled();
+    v.synthesis = { stage: "SYNTHESIS", status, seconds: null, message: null, ...extra };
+    view.value = v;
+  };
+
+  it("is the first stage", () => {
+    withSynthesis("not_reached");
+    render(<Sidebar />);
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(6);
+    expect(items[0].textContent).toContain("SYNTHESIS");
+    expect(items[0].className).toContain("stage-not_reached");
+  });
+
+  it("shows the time when it ran, and what it said when it failed", () => {
+    withSynthesis("reached", { seconds: 1.4 });
+    const { unmount } = render(<Sidebar />);
+    expect(screen.getAllByRole("listitem")[0].textContent).toContain("1.4 s");
+    unmount();
+    withSynthesis("failed", { message: "syntax error, unexpected ';'" });
+    render(<Sidebar />);
+    expect(screen.getByText("syntax error, unexpected ';'")).toBeTruthy();
+  });
+
+  it("is greyed out when the design is a netlist, says why, and is not counted in the progress", () => {
+    withSynthesis("skipped", { message: "Not needed: the design is a netlist (routing_test.blif)" });
+    render(<Sidebar />);
+    const first = screen.getAllByRole("listitem")[0];
+    expect(first.className).toContain("stage-skipped");
+    expect(first.getAttribute("title")).toContain("the design is a netlist");
+    expect(first.textContent).toContain("–");
+    const bar = screen.getByRole("progressbar", { name: "Stages reached" });
+    expect(bar.getAttribute("aria-valuemax")).toBe("5"); // the five stages of the flow
+    expect(bar.getAttribute("aria-valuenow")).toBe("3");
+    expect((bar.firstChild as HTMLElement).style.width).toBe("60%");
   });
 });

@@ -62,10 +62,13 @@ def empty_view() -> Dict[str, Any]:
         "schema_version": VIEW_VERSION,
         "session": None,
         "latest": {"status": "none", "text": "No session"},
+        # Synthesis comes before the stages of VPR: not_reached, reached (the circuit is the netlist
+        # of a synthesis), failed, or skipped (the design is a netlist, so it needs none)
+        "synthesis": {"status": "not_reached", "seconds": None, "message": None},
         "stages": [
             {"stage": s, "status": "not_reached", "seconds": None, "message": None} for s in STAGES
         ],
-        "files": {"inputs": [], "constraints": [], "results": [], "uploads": [], "created": []},
+        "files": {"inputs": [], "constraints": [], "results": [], "uploads": [], "created": [], "synthesis": []},
         "options_changed": [],
         "checkpoints": [],
     }
@@ -157,6 +160,12 @@ class DemoBackend:
             }
             for s in STAGES
         ]
+        # The demo reads a netlist: nothing is synthesized
+        self._view["synthesis"] = (
+            {"status": "skipped", "seconds": None, "message": "Not needed: the design is a netlist"}
+            if "DEVICE" in reached
+            else {"status": "not_reached", "seconds": None, "message": None}
+        )
 
     def _apply(self, step: Dict[str, Any], seconds: float):
         """What a tool call changes in the view, from its answer"""

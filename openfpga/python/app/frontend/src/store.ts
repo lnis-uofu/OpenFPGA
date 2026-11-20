@@ -65,6 +65,7 @@ export const emptyView = (): SessionView => ({
   schema_version: 1,
   session: null,
   latest: { status: "none", text: "No session" },
+  synthesis: { stage: "SYNTHESIS", status: "not_reached" as const, seconds: null, message: null },
   stages: ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED"].map((stage) => ({
     stage,
     status: "not_reached" as const,

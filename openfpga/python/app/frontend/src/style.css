@@ -302,3 +302,13 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 
 /* The sessions to open */
 .sessions .session-entry { min-width: 0; }
+
+/* The architecture row, one list of the design files, and a stage that is not needed */
+.architecture-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 2px 0 8px; }
+.show-architecture { font-size: 12px; padding: 2px 8px; }
+.design-files .upload-row { flex-wrap: wrap; row-gap: 2px; }
+.upload-row.loaded .file { font-weight: 600; }
+.chip-loaded { background: color-mix(in srgb, var(--ok) 14%, transparent); border-color: var(--ok); color: var(--ok); }
+.chip-origin { opacity: 0.75; }
+.stage-skipped { opacity: 0.45; }
+.stage-skipped .stage-name { text-decoration: line-through; text-decoration-thickness: 1px; }

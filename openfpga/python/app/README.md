@@ -49,7 +49,7 @@ calls of the endpoint, `json` makes the model answer with a JSON object that the
 constrains to the tools (a smaller prompt, and a different way to go wrong). `--record-dir`
 writes each conversation as lines of JSON (what the model said, each call and its answer, the
 tokens and the seconds). What the person does meanwhile (console, buttons, `/` lines) is told to
-the model at its next message. All 24 tools are shown to the model; the files it can read are
+the model at its next message. All 25 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
 ## The first screen
@@ -98,6 +98,17 @@ tools are the same.
 
 ## Opening files, and the console
 
+**The sidebar.** Stages: SYNTHESIS comes first, then the five stages of the flow. Synthesis is reached when
+the circuit is the netlist of a `synthesize` call (a file of the session's `synth` folder), failed when the
+last one failed (with its message), and greyed out (skipped, struck through, not counted in the progress bar)
+when the design is a netlist that was given, with the reason as its title; it is not reached before a circuit
+is read. Design files: one line for the architecture, with the device package and the layout as labels and a
+button "Show architecture" that opens the VPR and the OpenFPGA architecture files in tabs (they are not
+listed as files), then one list of every design file (what you uploaded, what the model wrote, what a
+synthesis made, and the circuit read from a designs folder), each with its kind and its origin, the circuit
+that the session has read marked "loaded", and the upload button. Constraints, results and the options that
+changed are in their own section. The view has `synthesis` (status, seconds, message) beside `stages`.
+
 A click on a file name in the sidebar (an input, an uploaded file, a result such as the `.net`, `.place`
 or `.route` of the flow, a file of a device package) opens it in a tab of the centre, in Monaco, the
 editor of VS Code: colours for XML (the architectures and the packing), SystemVerilog and
@@ -134,7 +145,7 @@ the edge has the focus; a double click gives the usual height back. The height i
 
 ## Giving files to a session
 
-"⤒ Upload files…" in the sidebar (Design files, under Inputs), or a drop of files on the chat, copies
+"⤒ Upload files…" in the sidebar (Design files, under the list of files), or a drop of files on the chat, copies
 them into the session: the folder `uploads` of the session's directory in the workspace. If there
 is no session, one is opened. The tools and the model use them by their plain name, as they use the
 files of the designs folders (`read_inputs ... circuit=mine.blif`); another session does not see them.

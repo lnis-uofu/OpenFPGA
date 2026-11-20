@@ -310,6 +310,22 @@ class AgentLoop:
                         "Not run: the call before it in this reply failed",
                         "Make one call at a time and read its answer before the next",
                     )
+                elif request.name == "use_device_package" and (
+                    stated.keys() & {"vpr_arch", "openfpga_arch"}
+                ):
+                    # The person named architecture files: read_inputs reads those, and a package
+                    # that a model makes up (from the name of a file) must not stop the calls after it
+                    answer = {
+                        "ok": True,
+                        "data": {
+                            "skipped": True,
+                            "reason": "The person named the architecture files, so no device "
+                            "package is used: read_inputs reads those files",
+                        },
+                        "truncated": False,
+                        "more": None,
+                    }
+                    self._record("skipped_package", arguments=request.arguments)
                 elif function is None:
                     answer = _invalid(
                         "invalid_call",
