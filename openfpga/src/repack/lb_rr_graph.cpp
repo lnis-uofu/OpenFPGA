@@ -29,6 +29,10 @@ LbRRGraph::edge_range LbRRGraph::edges() const {
   return vtr::make_range(edge_ids_.begin(), edge_ids_.end());
 }
 
+LbRRGraph::mux_range LbRRGraph::muxes() const {
+  return vtr::make_range(mux_ids_.begin(), mux_ids_.end());
+}
+
 /**************************************************
  * Public Accessors node-level attributes
  *************************************************/
@@ -139,6 +143,33 @@ t_mode* LbRRGraph::edge_mode(const LbRREdgeId& edge) const {
   return edge_modes_[edge];
 }
 
+/**************************************************
+ * Public Accessors: muxes
+ *************************************************/
+const t_interconnect* LbRRGraph::mux_interconnect(const LbRRMuxId& mux) const {
+  VTR_ASSERT(true == valid_mux_id(mux));
+  return mux_interconnects_[mux];
+}
+
+LbRRMuxId LbRRGraph::find_mux(const t_interconnect* interconnect,
+                              const t_pb_graph_node* owner) const {
+  auto result = mux_lookup_.find({interconnect, owner});
+  if (result == mux_lookup_.end()) {
+    return LbRRMuxId::INVALID();
+  }
+  return result->second;
+}
+
+LbRRMuxId LbRRGraph::edge_mux(const LbRREdgeId& edge) const {
+  VTR_ASSERT(true == valid_edge_id(edge));
+  return edge_muxes_[edge];
+}
+
+int LbRRGraph::edge_mux_input_set(const LbRREdgeId& edge) const {
+  VTR_ASSERT(true == valid_edge_id(edge));
+  return edge_mux_input_sets_[edge];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -160,6 +191,9 @@ void LbRRGraph::reserve_edges(const unsigned long& num_edges) {
 
   edge_src_nodes_.reserve(num_edges);
   edge_sink_nodes_.reserve(num_edges);
+
+  edge_muxes_.reserve(num_edges);
+  edge_mux_input_sets_.reserve(num_edges);
 }
 
 LbRRNodeId LbRRGraph::create_node(const e_lb_rr_type& type) {
@@ -245,6 +279,8 @@ LbRREdgeId LbRRGraph::create_edge(const LbRRNodeId& source,
   edge_sink_nodes_.push_back(sink);
   edge_intrinsic_costs_.push_back(0.);
   edge_modes_.push_back(mode);
+  edge_muxes_.push_back(LbRRMuxId::INVALID());
+  edge_mux_input_sets_.push_back(-1);
 
   node_out_edges_[source].push_back(edge);
   node_in_edges_[sink].push_back(edge);
@@ -258,6 +294,35 @@ void LbRRGraph::set_edge_intrinsic_cost(const LbRREdgeId& edge,
   edge_intrinsic_costs_[edge] = cost;
 }
 
+LbRRMuxId LbRRGraph::create_mux(const t_interconnect* interconnect,
+                                const t_pb_graph_node* owner) {
+  VTR_ASSERT(nullptr != interconnect);
+  VTR_ASSERT(nullptr != owner);
+  /* A mux should be created only once */
+  VTR_ASSERT(false == valid_mux_id(find_mux(interconnect, owner)));
+
+  /* Create an new id */
+  LbRRMuxId mux = LbRRMuxId(mux_ids_.size());
+  mux_ids_.push_back(mux);
+
+  /* Allocate other attributes */
+  mux_interconnects_.push_back(interconnect);
+
+  /* Register in fast look-up */
+  mux_lookup_[{interconnect, owner}] = mux;
+
+  return mux;
+}
+
+void LbRRGraph::set_edge_mux(const LbRREdgeId& edge, const LbRRMuxId& mux,
+                             const int& input_set) {
+  VTR_ASSERT(true == valid_edge_id(edge));
+  VTR_ASSERT(true == valid_mux_id(mux));
+  VTR_ASSERT(0 <= input_set);
+  edge_muxes_[edge] = mux;
+  edge_mux_input_sets_[edge] = input_set;
+}
+
 /******************************************************************************
  * Public validators/invalidators
  ******************************************************************************/
@@ -269,6 +334,10 @@ bool LbRRGraph::valid_node_id(const LbRRNodeId& node_id) const {
 bool LbRRGraph::valid_edge_id(const LbRREdgeId& edge_id) const {
   return (size_t(edge_id) < edge_ids_.size()) &&
          (edge_id == edge_ids_[edge_id]);
+}
+
+bool LbRRGraph::valid_mux_id(const LbRRMuxId& mux_id) const {
+  return (size_t(mux_id) < mux_ids_.size()) && (mux_id == mux_ids_[mux_id]);
 }
 
 /* This function run fundamental checks on internal data
@@ -324,7 +393,8 @@ bool LbRRGraph::validate_edge_sizes() const {
   return edge_src_nodes_.size() == num_edges &&
          edge_sink_nodes_.size() == num_edges &&
          edge_intrinsic_costs_.size() == num_edges &&
-         edge_modes_.size() == num_edges;
+         edge_modes_.size() == num_edges && edge_muxes_.size() == num_edges &&
+         edge_mux_input_sets_.size() == num_edges;
 }
 
 bool LbRRGraph::validate_sizes() const {
