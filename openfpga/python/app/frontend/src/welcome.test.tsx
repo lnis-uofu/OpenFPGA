@@ -192,7 +192,7 @@ describe("the welcome screen", () => {
     await waitFor(() => expect(calls.some((c) => c.url === "/api/cancel")).toBe(true));
   });
 
-  it("does not come back when the session is closed after it was used", async () => {
+  it("comes back when the session is closed, also after it was used", async () => {
     server(withModel);
     render(<App />);
     await say("Run the flow");
@@ -202,9 +202,8 @@ describe("the welcome screen", () => {
     chat.end();
     await waitFor(() => expect(sidebar()).toBeTruthy());
     fireEvent.click(screen.getByText("close"));
-    await waitFor(() => expect(screen.getByText(/No session/)).toBeTruthy());
-    expect(screen.queryByRole("textbox", { name: "Message" })).toBeTruthy(); // the chat's own box
-    expect(screen.queryByText("Create session from device package…")).toBeNull(); // not the first screen
+    await screen.findByText("Create session from device package…");
+    expect(sidebar()).toBeNull();
   });
 
   it("offers the examples when there is a model, and the first one fills the prompt", async () => {

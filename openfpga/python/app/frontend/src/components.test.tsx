@@ -334,6 +334,34 @@ describe("creating a session from a device package", () => {
     expect(screen.queryByText("Create session")).toBeNull(); // the picker closed
   });
 
+  it("offers to load a package into an open session that is empty, and only then", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      reply(url === "/api/device-packages" ? listing : url === "/api/session" ? filled() : { ok: true, data: {} }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const v = filled();
+    v.files.inputs = [];
+    view.value = v;
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("from device…"));
+    await screen.findByText("k6_frac_n10_2x2");
+    fireEvent.click(screen.getAllByText("Load into this session")[0]);
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session/device")).toBe(true));
+    const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/device")!;
+    expect(JSON.parse(String(sent[1]?.body))).toEqual({ device_package: "k6_frac_n10_2x2" });
+  });
+
+  it("does not offer it when the session has files", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
+    view.value = filled(); // has inputs
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("from device…"));
+    await screen.findByText("k6_frac_n10_2x2");
+    expect(screen.queryByText("Load into this session")).toBeNull();
+  });
+
   it("shows the device of the session and waits for the circuit", async () => {
     real();
     const v = filled();

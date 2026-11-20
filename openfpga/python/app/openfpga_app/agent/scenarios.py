@@ -161,6 +161,22 @@ def _fmax_in(messages: List[Dict[str, Any]]) -> float:
     raise AssertionError("no timing in the messages")
 
 
+PACKAGE = "k6_frac_n10_2x2"  # the device package of the architectures of the design
+
+
+def _plan_device_package(design: Design) -> List[ModelTurn]:
+    return (
+        [say("", call("list_device_packages"))]
+        + [say("", call("session_open", name=design.name))]
+        + [say("", call("use_device_package", name=PACKAGE))]
+        + [say("", call("set_constraint", kind="chan_width", width=design.chan_width))]
+        + [say("", call("read_inputs", circuit=design.circuit.name))]
+        + _stages("pack", "place", "route", "analysis")
+        + [say("", call("get_timing", paths=1))]
+        + [lambda messages: say("The Fmax is %.2f MHz." % _fmax_in(messages))]
+    )
+
+
 def _plan_set_width(design: Design) -> List[ModelTurn]:
     return (
         [say("", call("session_open", name=design.name))]
@@ -238,6 +254,13 @@ def _check_flow_fmax(outcome: Outcome, design: Design) -> List[str]:
     return problems
 
 
+def _check_device_package(outcome: Outcome, design: Design) -> List[str]:
+    problems = []
+    if not any(c.arguments.get("name") == PACKAGE for c in outcome.ok_calls("use_device_package")):
+        problems.append("the device package %s was not read into the session" % PACKAGE)
+    return problems + _check_flow_fmax(outcome, design)
+
+
 def _check_set_width(outcome: Outcome, design: Design) -> List[str]:
     problems = []
     if "ROUTED" not in outcome.reached():
@@ -284,6 +307,14 @@ SCENARIOS: Dict[str, Scenario] = {
             % (d.name, d.chan_width),
             _plan_flow_fmax,
             _check_flow_fmax,
+        ),
+        Scenario(
+            "device_package",
+            "Use a device package: list, read it into the session, run the flow",
+            lambda d: "Use the device package %s and run the flow on %s with a channel width "
+            "of %d. Tell me the Fmax." % (PACKAGE, d.circuit.name, d.chan_width),
+            _plan_device_package,
+            _check_device_package,
         ),
         Scenario(
             "set_width",

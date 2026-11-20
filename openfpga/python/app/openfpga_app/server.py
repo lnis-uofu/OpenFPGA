@@ -107,6 +107,12 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
             return JSONResponse({"error": "device_package is text"}, 400)
         return JSONResponse(await backend.new_session(name, package))
 
+    async def apply_package(request: Request) -> Response:
+        package = (await body(request)).get("device_package")
+        if not isinstance(package, str) or not package:
+            return JSONResponse({"error": "device_package is the name of a package"}, 400)
+        return JSONResponse(await backend.apply_device_package(package))
+
     async def file(request: Request) -> Response:
         answer = await backend.read_file(request.query_params.get("name", ""))
         if answer.get("ok"):
@@ -172,6 +178,7 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/device-packages", device_packages),
         Route("/api/file", file),
         Route("/api/session/new", new_session, methods=["POST"]),
+        Route("/api/session/device", apply_package, methods=["POST"]),
         Route("/api/session/close", close_session, methods=["POST"]),
         Route("/api/session/restore", restore_session, methods=["POST"]),
         Route("/api/upload", upload, methods=["POST"]),

@@ -318,6 +318,8 @@ class SessionBackend:
             self._running = None
         if name == "session_open" and answer.get("ok"):
             self.sid = answer["data"]["session"]
+        if name == "use_device_package" and answer.get("ok"):
+            self._packages[arguments["session"]] = answer["data"]["device_package"]
         if name == "session_close" and answer.get("ok") and arguments.get("session") == self.sid:
             self.sid = None
         return answer
@@ -359,6 +361,35 @@ class SessionBackend:
                 % (sid, package.name, package.description or "no description", package.layout)
             )
         return answer
+
+    async def apply_device_package(self, device_package: str) -> Dict[str, Any]:
+        """Read the architectures of a device package into the open session. Only a session with
+        nothing read yet takes it: files that were read are not replaced (that drops the stages)"""
+        if self.sid is None:
+            return answers.failed([answers.diagnostic("no_session", "There is no session")])
+        try:
+            package = await anyio.to_thread.run_sync(
+                device_packages.find, self.config, device_package
+            )
+            entry = self.registry.get(self.sid)
+        except Exception as error:  # noqa: BLE001 - a package that is not there or is damaged
+            return answers.from_exception(error)
+        if entry.session._lock.locked():
+            return answers.failed(
+                [answers.diagnostic("busy", "A call is running in the session", hint="Wait for it to end")]
+            )
+        answer = await self._tool("use_device_package", session=self.sid, name=device_package)
+        if not answer.get("ok"):
+            return answer
+        self._packages[self.sid] = answer["data"]["device_package"]
+        self._changed_outside(
+            "The person loaded the device package %s (%s) into session %s: its VPR architecture "
+            "(layout %s) and its OpenFPGA architecture are read, and there is no circuit yet. "
+            "When the person names a circuit, read it with read_inputs and only circuit=<file>, "
+            "and do not give the architectures again"
+            % (package.name, package.description or "no description", self.sid, package.layout)
+        )
+        return {"ok": True, "data": {"session": self.sid, "device_package": package.name}, "truncated": False, "more": None}
 
     @staticmethod
     def _read_package(session, package) -> None:

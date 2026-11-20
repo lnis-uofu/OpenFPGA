@@ -1,8 +1,11 @@
-import { busy, devicePackages, makeSessionFromPackage } from "../store";
+import { busy, devicePackages, loadPackageIntoSession, makeSessionFromPackage, view } from "../store";
 
 /** The packages that a session can be created from: it reads their architectures and waits for the circuit */
 export function PackagePicker() {
   const found = devicePackages.value;
+  // An open session with nothing read takes the package itself
+  const v = view.value;
+  const empty = !!v.session && v.session.worker === "running" && v.files.inputs.length === 0;
   return (
     <div class="packages" role="region" aria-label="Device packages">
       {found === null ? (
@@ -24,6 +27,11 @@ export function PackagePicker() {
               <button disabled={busy.value} onClick={() => void makeSessionFromPackage(p.name)}>
                 Create session
               </button>
+              {empty && (
+                <button disabled={busy.value} onClick={() => void loadPackageIntoSession(p.name)} title="Read its architectures into the open session">
+                  Load into this session
+                </button>
+              )}
             </div>
           ))}
           {found.problems.map((p) => (

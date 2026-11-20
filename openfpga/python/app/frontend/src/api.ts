@@ -159,6 +159,10 @@ export async function removeUploadedFile(name: string): Promise<Answer> {
 export const newSession = (name?: string, devicePackage?: string): Promise<Answer> =>
   post("/api/session/new", { ...(name ? { name } : {}), ...(devicePackage ? { device_package: devicePackage } : {}) });
 
+/** Read the architectures of a package into the open session (it must be empty) */
+export const applyDevicePackage = (devicePackage: string): Promise<Answer> =>
+  post("/api/session/device", { device_package: devicePackage });
+
 /** The packages that a session can be created from, and the ones that are damaged */
 export async function fetchDevicePackages(): Promise<{ packages: DevicePackageInfo[]; problems: { name: string; message: string }[] }> {
   const answer = await json<Answer>(await fetch("/api/device-packages"));

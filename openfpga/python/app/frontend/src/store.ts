@@ -13,6 +13,7 @@ import {
   closeSession,
   fetchConfig,
   newSession,
+  applyDevicePackage,
   restoreSession,
   fetchSession,
   runConsole,
@@ -132,6 +133,7 @@ export function resetStore() {
   openFiles.value = {};
   loaded.value = false;
   welcomeChat.value = false;
+  closedSession.value = false;
   consoleHeight.value = CONSOLE_HEIGHT_DEFAULT;
   activeTab.value = CHAT;
   split.value = false;
@@ -259,8 +261,16 @@ export const welcomeChat = signal(false);
 export function welcoming(): boolean {
   if (!loaded.value || config.value?.backend !== "session") return false;
   if (welcomeChat.value) return true;
+  if (view.value.session === null && closedSession.value) return true;
   return view.value.session === null && messages.value.length === 0;
 }
+
+/** The person closed the session: with none open the page goes back to the welcome screen (what
+ * was said stays, and shows again with the next session) */
+export const closedSession = signal(false);
+effect(() => {
+  if (view.value.session !== null) closedSession.value = false;
+});
 
 // The answer is complete and there is a session: the welcome screen is done with
 effect(() => {
@@ -310,7 +320,18 @@ export async function makeSessionFromPackage(name: string) {
   packagesOpen.value = false;
   await sessionAction(() => newSession(undefined, name));
 }
-export const endSession = () => sessionAction(() => closeSession());
+/** Read the architectures of a package into the open session */
+export async function loadPackageIntoSession(name: string) {
+  packagesOpen.value = false;
+  await sessionAction(() => applyDevicePackage(name));
+}
+export async function endSession() {
+  await sessionAction(async () => {
+    const answer = await closeSession();
+    if (answer.ok) closedSession.value = true;
+    return answer;
+  });
+}
 /** Back to the last checkpoint, or to a named one */
 export const restore = (checkpoint?: string) => sessionAction(() => restoreSession(checkpoint));
 

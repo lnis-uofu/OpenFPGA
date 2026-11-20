@@ -153,6 +153,34 @@ def test_a_session_from_a_package_reads_the_architectures_and_waits_for_the_circ
     assert call(say(client, "/run_stage stage=pack"))["ok"]
 
 
+def test_a_package_is_loaded_into_an_empty_session_and_not_into_one_that_has_files(
+    client, backend, golden
+):
+    assert client.post("/api/session/device", json={"device_package": LOGIC}).json()[
+        "diagnostics"
+    ][0]["kind"] == "no_session"
+    assert client.post("/api/session/new", json={"name": "empty"}).json()["ok"]
+    assert client.post("/api/session/device", json={"device_package": "nope"}).json()[
+        "diagnostics"
+    ][0]["kind"] == "package_not_found"
+    assert client.post("/api/session/device", json={}).status_code == 400
+    answer = client.post("/api/session/device", json={"device_package": LOGIC}).json()
+    assert answer["ok"], answer
+    shown = view(client)
+    assert shown["session"]["name"] == "empty"
+    assert shown["session"]["device_package"]["name"] == LOGIC
+    assert [f["label"] for f in shown["files"]["inputs"]] == ["vpr arch", "openfpga arch"]
+    assert call(say(client, f"/read_inputs circuit={golden.circuit.name}"))["ok"]
+    # It has files now: they are not replaced
+    again = client.post("/api/session/device", json={"device_package": LOGIC}).json()
+    assert again["diagnostics"][0]["kind"] == "session_not_empty"
+    assert [f["label"] for f in view(client)["files"]["inputs"]] == [
+        "vpr arch",
+        "openfpga arch",
+        "circuit",
+    ]
+
+
 def test_a_package_that_cannot_be_used_makes_no_session(client, backend):
     answer = client.post("/api/session/new", json={"device_package": "nope"})
     assert not answer.json()["ok"]
@@ -284,3 +312,59 @@ def test_the_model_is_told_that_the_circuit_was_read(openfpga_module, tmp_path, 
         assert "uploaded and2.blif (circuit) to session s1, and it was read as the circuit" in user
     finally:
         backend.close()
+
+
+def test_the_tool_lists_the_packages_and_the_resources_of_one(backend):
+    listed = json.loads(asyncio.run(backend.tools["list_device_packages"]()))
+    assert listed["ok"], listed
+    names = [p["name"] for p in listed["data"]["packages"]]
+    assert names == ["k4_n4_dsp16_3x4", "k6_frac_n10_2x2", "k6_frac_n10_mem1k_3x2"]
+    assert listed["data"]["problems"] == []
+    first = listed["data"]["packages"][1]
+    assert first["layout"] == "2x2" and first["lut_size"] == 6 and first["channel_width"] == 20
+    assert first["files"] > 2 and "path" not in first
+
+    one = json.loads(asyncio.run(backend.tools["list_device_packages"](name=LOGIC)))["data"]
+    assert one["vpr_arch"] == "arch/vpr_arch.xml" and one["openfpga_arch"] == "arch/openfpga_arch.xml"
+    roles = {f["role"] for f in one["files"]}
+    assert {"vpr_arch", "openfpga_arch"} <= roles
+    assert all(f["bytes"] > 0 and not f["path"].startswith("/") for f in one["files"])
+    assert one["reference"]["top"] == "and2" and one["reference"]["expected"]["channel_width"] == 20
+    assert one["readme"].startswith("# " + LOGIC)
+    assert str(PACKAGES) not in json.dumps(one)  # the folder on the disk is not told
+
+    missing = json.loads(asyncio.run(backend.tools["list_device_packages"](name="nope")))
+    assert missing["diagnostics"][0]["kind"] == "package_not_found"
+    assert "k6_frac_n10_2x2" in missing["diagnostics"][0]["hint"]
+
+
+def test_a_damaged_package_is_listed_with_its_reason(openfpga_module, tmp_path, golden, copy):
+    (copy / "arch/vpr_arch.xml").write_text("<changed/>")
+    backend = SessionBackend(
+        Config(root=tmp_path / "ws", package_dirs=(copy.parent,), call_timeout_s=120)
+    )
+    try:
+        listed = json.loads(asyncio.run(backend.tools["list_device_packages"]()))["data"]
+    finally:
+        backend.close()
+    assert listed["packages"] == []
+    assert "changed (checksum)" in listed["problems"][0]["message"]
+
+
+def test_the_model_reads_a_package_into_an_empty_session(backend, golden):
+    use = backend.invoke
+    assert asyncio.run(use("session_open", {"name": "empty"}))["ok"]
+    sid = backend.sid
+    answer = asyncio.run(use("use_device_package", {"session": sid, "name": "nope"}))
+    assert answer["diagnostics"][0]["kind"] == "package_not_found"
+    answer = asyncio.run(use("use_device_package", {"session": sid, "name": LOGIC}))
+    assert answer["ok"], answer
+    assert answer["data"]["device_package"]["layout"] == "2x2"
+    inputs = answer["data"]["state"]["inputs"]
+    assert inputs["vpr_arch"] and inputs["openfpga_arch"] and not inputs["circuit"]
+    shown = asyncio.run(backend.view())
+    assert shown["session"]["device_package"]["name"] == LOGIC  # the page shows it too
+    read = asyncio.run(use("read_inputs", {"session": sid, "circuit": golden.circuit.name}))
+    assert read["ok"], read
+    again = asyncio.run(use("use_device_package", {"session": sid, "name": LOGIC}))
+    assert again["diagnostics"][0]["kind"] == "session_not_empty"

@@ -163,10 +163,10 @@ try {
   await page.click("text=restore");
   await page.waitForSelector("header >> text=ANALYZED ✔");
   await page.click("text=close");
-  await page.waitForSelector("text=(no session)");
+  await page.waitForSelector("text=Create session from device package…"); // back at the welcome screen
 
   // A session from a device package: the architectures are read, and it waits for the circuit
-  await page.click("text=from device…");
+  await page.click("text=Create session from device package…");
   await page.waitForSelector(".package:has-text('k6_frac_n10_2x2')");
   if (process.env.SHOT_PICKER) await page.screenshot({ path: process.env.SHOT_PICKER });
   await page.click(".package:has-text('k6_frac_n10_2x2') >> text=Create session");
