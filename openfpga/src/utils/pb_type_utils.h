@@ -43,10 +43,18 @@ t_pb_type* try_find_pb_type_with_given_path(
   t_pb_type* top_pb_type, const std::vector<std::string>& target_pb_type_names,
   const std::vector<std::string>& target_pb_mode_names);
 
+t_pb_type* find_pb_type_by_path(
+  const std::vector<t_logical_block_type>& logical_block_types,
+  const std::vector<std::string>& target_pb_type_names,
+  const std::vector<std::string>& target_pb_mode_names);
+
 std::vector<t_interconnect*> pb_mode_interconnects(t_mode* pb_mode);
 
 t_interconnect* find_pb_mode_interconnect(t_mode* pb_mode,
                                           const char* interc_name);
+
+int find_pb_interconnect_input_id(const t_interconnect* pb_interc,
+                                  const std::string& input_name);
 
 e_interconnect pb_interconnect_physical_type(t_interconnect* pb_interc,
                                              const size_t& num_inputs);

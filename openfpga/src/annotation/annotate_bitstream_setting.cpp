@@ -478,94 +478,65 @@ static int annotate_bitstream_interconnect_setting(
       bitstream_setting.default_path(bitstream_interc_setting_id);
 
     /* Pb type information are located at the logic_block_types in the device
-     * context of VPR We iterate over the vectors and find the pb_type matches
-     * the parent_pb_type_name
+     * context of VPR. Find the pb_type which matches the parent_pb_type_name
      */
-    bool link_success = false;
-
-    for (const t_logical_block_type& lb_type :
-         vpr_device_ctx.logical_block_types) {
-      /* By pass nullptr for pb_type head */
-      if (nullptr == lb_type.pb_type) {
-        continue;
-      }
-      /* Check the name of the top-level pb_type, if it does not match, we can
-       * bypass */
-      if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
-        continue;
-      }
-      /* Match the name in the top-level, we go further to search the pb_type in
-       * the graph */
-      t_pb_type* target_pb_type = try_find_pb_type_with_given_path(
-        lb_type.pb_type, target_pb_type_names, target_pb_mode_names);
-      if (nullptr == target_pb_type) {
-        continue;
-      }
-
-      /* Found one, build annotation */
-      t_mode* physical_mode =
-        vpr_device_annotation.physical_mode(target_pb_type);
-
-      VTR_ASSERT(nullptr != physical_mode);
-      /* Ensure that the annotation is only applicable to physical mode  */
-      if (std::string(physical_mode->name) != expected_physical_mode_name) {
-        VTR_LOG_ERROR(
-          "The physical mode '%s' under pb_type '%s' does not match in the "
-          "bitstream setting '%s'!\n",
-          physical_mode->name, target_pb_type->name,
-          expected_physical_mode_name.c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      /* Find the interconnect name under the physical mode of a physical
-       * pb_type */
-      t_interconnect* pb_interc =
-        find_pb_mode_interconnect(physical_mode, interconnect_name.c_str());
-
-      if (nullptr == pb_interc) {
-        VTR_LOG_ERROR(
-          "Unable to find interconnect '%s' under physical mode '%s' of "
-          "pb_type '%s'!\n",
-          interconnect_name.c_str(), physical_mode->name, target_pb_type->name);
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      /* Find the default path and spot the path id from the input string
-       * recorded */
-      StringToken input_string_tokenizer(std::string(pb_interc->input_string));
-      std::vector<std::string> input_paths = input_string_tokenizer.split(' ');
-      size_t input_path_id = input_paths.size();
-      for (size_t ipath = 0; ipath < input_paths.size(); ++ipath) {
-        if (expected_input_path == input_paths[ipath]) {
-          input_path_id = ipath;
-          break;
-        }
-      }
-      /* If the input_path id is invalid, error out! */
-      if (input_path_id == input_paths.size()) {
-        VTR_LOG_ERROR(
-          "Invalid default path '%s' for interconnect '%s' which inputs are "
-          "'%s'\n",
-          expected_input_path.c_str(), interconnect_name.c_str(),
-          pb_interc->input_string.c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      vpr_bitstream_annotation.set_interconnect_default_path_id(pb_interc,
-                                                                input_path_id);
-
-      link_success = true;
-    }
+    t_pb_type* target_pb_type =
+      find_pb_type_by_path(vpr_device_ctx.logical_block_types,
+                           target_pb_type_names, target_pb_mode_names);
 
     /* If fail to link bitstream setting to architecture, error out immediately
      */
-    if (false == link_success) {
+    if (nullptr == target_pb_type) {
       VTR_LOG_ERROR(
         "Fail to find an interconnect '%s' with default path '%s', which is "
         "defined in bitstream setting from VPR architecture description\n",
         interconnect_name.c_str(), expected_input_path.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
+
+    /* Found one, build annotation */
+    t_mode* physical_mode = vpr_device_annotation.physical_mode(target_pb_type);
+
+    VTR_ASSERT(nullptr != physical_mode);
+    /* Ensure that the annotation is only applicable to physical mode  */
+    if (std::string(physical_mode->name) != expected_physical_mode_name) {
+      VTR_LOG_ERROR(
+        "The physical mode '%s' under pb_type '%s' does not match in the "
+        "bitstream setting '%s'!\n",
+        physical_mode->name, target_pb_type->name,
+        expected_physical_mode_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    /* Find the interconnect name under the physical mode of a physical
+     * pb_type */
+    t_interconnect* pb_interc =
+      find_pb_mode_interconnect(physical_mode, interconnect_name.c_str());
+
+    if (nullptr == pb_interc) {
+      VTR_LOG_ERROR(
+        "Unable to find interconnect '%s' under physical mode '%s' of "
+        "pb_type '%s'!\n",
+        interconnect_name.c_str(), physical_mode->name, target_pb_type->name);
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    /* Find the default path and spot the path id from the input string
+     * recorded */
+    int input_path_id =
+      find_pb_interconnect_input_id(pb_interc, expected_input_path);
+    /* If the input_path id is invalid, error out! */
+    if (0 > input_path_id) {
+      VTR_LOG_ERROR(
+        "Invalid default path '%s' for interconnect '%s' which inputs are "
+        "'%s'\n",
+        expected_input_path.c_str(), interconnect_name.c_str(),
+        pb_interc->input_string.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    vpr_bitstream_annotation.set_interconnect_default_path_id(
+      pb_interc, size_t(input_path_id));
   }
 
   return CMD_EXEC_SUCCESS;
