@@ -82,7 +82,7 @@ def test_the_example_of_a_configuration_starts_the_server(mcp_environment, tmp_p
             return tools, opened, read
 
     tools, opened, read = asyncio.run(main())
-    assert len(tools) == 24 and {"session_open", "run_stage", "get_timing"} <= tools
+    assert len(tools) == 25 and {"session_open", "run_stage", "get_timing"} <= tools
     assert opened["ok"] and (workspace / "s1").is_dir()
     assert read["ok"], read
 

@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
-from . import answers, budget, device_packages, filenames
+from . import answers, budget, device_packages, filenames, synthesis
 from .config import Config
 from .errors import FileExists, InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
 from .paths import CREATED, check_kind, resolve_file
@@ -138,16 +138,6 @@ def register(
                 raise InvalidArgument("layout goes with vpr_arch: give both, or neither")
             if vpr_arch is not None and layout is None:
                 raise InvalidArgument("layout is needed with vpr_arch (for example 2x2)")
-            have = handle.state().inputs
-            for argument, name, kept in (
-                ("vpr_arch", vpr_arch, have.vpr_arch),
-                ("openfpga_arch", openfpga_arch, have.openfpga_arch),
-            ):
-                if name is None and kept is None:
-                    raise InvalidArgument(
-                        "%s is needed: no architecture has been read in this session "
-                        "(a session created from a device package has them)" % argument
-                    )
             given = [
                 (argument, name, resolve_file(config, where, name))
                 for argument, name in (
@@ -159,6 +149,16 @@ def register(
             ]
             for argument, name, path in given:
                 check_kind(argument, name, path)
+            have = handle.state().inputs
+            for argument, name, kept in (
+                ("vpr_arch", vpr_arch, have.vpr_arch),
+                ("openfpga_arch", openfpga_arch, have.openfpga_arch),
+            ):
+                if name is None and kept is None:
+                    raise InvalidArgument(
+                        "%s is needed: no architecture has been read in this session "
+                        "(a session created from a device package has them)" % argument
+                    )
             paths = {argument: path for argument, _name, path in given}
             if "vpr_arch" in paths:
                 handle.read_vpr_arch(paths["vpr_arch"], layout=layout)
@@ -190,6 +190,7 @@ def register(
                 )
             handle.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
             handle.read_openfpga_arch(str(package.openfpga_arch))
+            registry.update_meta(entry, package_name=package.name)  # for synthesize
             return reply(
                 {"device_package": package.summary(), "state": _plain("session", handle.state())}
             )
@@ -255,6 +256,124 @@ def register(
             return reply(result)
 
         return await run(work)
+
+    @tool()
+    async def synthesize(
+        session: str, top: str, files: str, read: bool = True, lut_size: Optional[int] = None
+    ):
+        """Synthesize Verilog into a netlist of the LUTs of the device, with Yosys. top is the
+        name of the top module and files the Verilog files (.v, .sv, .vh) separated by commas,
+        as names of files of the session (uploaded, or written with write_file) or of a designs
+        folder. The device is the one of use_device_package: its LUT size and its synthesis
+        script. With no device package give lut_size. The netlist is written as
+        synth/<top>.blif in the session (and the one script of the session, synth/synth.ys); with read true it is also read as the circuit when the
+        architectures are read, and run_stage can follow. Returns the netlist (LUTs, flip-flops,
+        the widest LUT, ports) and the end of the log. Fails with yosys_error and the file and
+        line of the error: fix the Verilog (write_file) and call again."""
+
+        def work():
+            entry = session_of(session)
+            handle = entry.session
+            names = [n.strip() for n in str(files).split(",") if n.strip()]
+            paths = [Path(resolve_file(config, entry.directory, n)) for n in names]
+            package = None
+            package_name = registry.read_meta(entry.directory).get("package_name")
+            if package_name:
+                package = device_packages.find(config, package_name)
+            check_room(entry)
+            folder = config.root / entry.directory / "synth"
+            plan = synthesis.make_plan(top, paths, folder, package, lut_size)
+            folder.mkdir(parents=True, exist_ok=True)
+            for old in folder.glob("*.ys"):  # one script: not one for each top module
+                if old != plan.script_file:
+                    old.unlink()
+            plan.script_file.write_text(plan.script)
+            plan.blif.unlink(missing_ok=True)
+            try:
+                log = handle.command("yosys", file=str(plan.script_file)).log
+            except Exception as error:  # noqa: BLE001 - the command failed, or the worker did
+                log = getattr(error, "log", None)
+                if log is None:
+                    raise
+                return _synthesis_failure(plan, log, names, paths)
+            if not plan.blif.is_file():
+                return _synthesis_failure(plan, log, names, paths)
+            result: Dict[str, Any] = {
+                "top": plan.top,
+                "netlist": str(plan.blif),
+                "script": str(plan.script_file),
+                "device_package": plan.package,
+                "lut_size": plan.lut_size,
+                **synthesis.blif_stats(plan.blif),
+                "circuit_read": False,
+                "log_tail": synthesis.last_lines(log),
+            }
+            if result["widest_lut"] > plan.lut_size:
+                result["warning"] = "a LUT has %d inputs; the device has LUTs of %d" % (
+                    result["widest_lut"],
+                    plan.lut_size,
+                )
+            have = handle.state().inputs
+            if read and have.vpr_arch and have.openfpga_arch:
+                try:
+                    handle.read_circuit(str(plan.blif))
+                    result["circuit_read"] = True
+                except Exception as error:  # noqa: BLE001 - a netlist that the flow refuses
+                    return _circuit_not_read(plan, result, error)
+            elif read:
+                result["note"] = (
+                    "The architectures are not read: use_device_package, then read_inputs with "
+                    "circuit=%s" % plan.blif.relative_to(config.root / entry.directory)
+                )
+            return reply(result)
+
+        return await run(work)
+
+    def _circuit_not_read(plan, result: Dict[str, Any], error: BaseException):
+        """The netlist was made and the flow cannot read it: not a success, because the stages
+        that follow have no circuit. What the netlist has is in the data"""
+        text = str(error)
+        reason = text.split(":\n", 1)[-1].strip().splitlines()[-1][:300] if text else "unknown"
+        models = sorted(result.get("subckts") or {})
+        if "Subckt instantiates model" in text or "no such model" in text:
+            hint = (
+                "The design has cells that the device has no primitive for (%s), for example a "
+                "multiplier on a device with no DSP: change the Verilog, or use a device that has "
+                "them" % (", ".join(models) or "see subckts")
+            )
+        elif "extended BLIF" in text:
+            hint = "The device reads extended BLIF (.eblif): its package must say circuit_format eblif"
+        else:
+            hint = "read_log or the netlist (%s) tells more" % plan.blif.name
+        item = answers.diagnostic(
+            "circuit_not_read",
+            "The netlist %s was made but cannot be read as the circuit: %s" % (plan.blif.name, reason),
+            hint,
+            **{k: v for k, v in result.items() if k not in ("log_tail", "circuit_read")}
+        )
+        return answers.failed([item])
+
+    def _synthesis_failure(plan, log: str, names: List[str], paths: List[Path]):
+        message, where, line, errors = synthesis.error_details(log)
+        hint = "Fix the Verilog (write_file) and call synthesize again"
+        if re.search(r"Module `[^']*' not found", message):
+            modules = sorted(
+                {m for p in paths for m in re.findall(r"^\s*module\s+([A-Za-z_][\w$]*)", p.read_text(), re.M)}
+            )
+            hint = "top is the name of a module of the files: %s" % (", ".join(modules) or "none found")
+        item = answers.diagnostic(
+            "yosys_error",
+            message,
+            hint,
+            top=plan.top,
+            errors=errors[:5],
+            log_tail=synthesis.last_lines(log, 12),
+        )
+        if where:
+            base = Path(where).name
+            item["file"] = next((n for n, p in zip(names, paths) if p.name == base), base)
+            item["line"] = line
+        return answers.failed([item])
 
     @tool()
     async def run_stage(session: str, stage: Stage, from_file: Optional[str] = None):

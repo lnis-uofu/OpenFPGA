@@ -185,22 +185,36 @@ def discover(config: Config) -> Dict[str, Any]:
     return {"packages": found, "problems": problems}
 
 
-def find(config: Config, name: str) -> DevicePackage:
-    """One package by name"""
-    if not isinstance(name, str) or not _NAME.match(name):
-        raise PackageNotFound("'%s' is not the name of a device package" % name)
-    for folder in config.package_dirs:
-        if (folder / name / MANIFEST).is_file():
-            return load(folder / name)
-    names = []
+def _names(config: Config) -> List[str]:
+    names: List[str] = []
     for folder in config.package_dirs:
         try:
             names += [p.name for p in folder.iterdir() if (p / MANIFEST).is_file()]
         except OSError:
             continue
-    error = PackageNotFound("There is no device package '%s'" % name)
-    error.hint = ("The packages are: %s" % ", ".join(sorted(names))) if names else "There are none"
-    raise error
+    return sorted(names)
+
+
+def _not_found(message: str, config: Config) -> PackageNotFound:
+    error = PackageNotFound(message)
+    names = _names(config)
+    error.hint = (
+        "The packages are: %s. If the person named architecture files, give those to "
+        "read_inputs instead" % ", ".join(names)
+        if names
+        else "There are none: if the person named architecture files, give those to read_inputs"
+    )
+    return error
+
+
+def find(config: Config, name: str) -> DevicePackage:
+    """One package by name"""
+    if not isinstance(name, str) or not _NAME.match(name):
+        raise _not_found("'%s' is not the name of a device package" % name, config)
+    for folder in config.package_dirs:
+        if (folder / name / MANIFEST).is_file():
+            return load(folder / name)
+    raise _not_found("There is no device package '%s'" % name, config)
 
 
 _README_CHARS = 1200
