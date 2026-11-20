@@ -9,6 +9,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_tokenizer.h"
+
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -168,6 +171,42 @@ t_pb_type* try_find_pb_type_with_given_path(
 }
 
 /********************************************************************
+ * This function will search the logical block types of a device for
+ * a pb_type with a given name as well as its hierarchy.
+ * The first name in the hierarchy is the top-level pb_type of a logical block
+ * If not found, return null pointer
+ *******************************************************************/
+t_pb_type* find_pb_type_by_path(
+  const std::vector<t_logical_block_type>& logical_block_types,
+  const std::vector<std::string>& target_pb_type_names,
+  const std::vector<std::string>& target_pb_mode_names) {
+  /* We must have at least one pb_type in the list */
+  VTR_ASSERT_SAFE(0 < target_pb_type_names.size());
+
+  for (const t_logical_block_type& lb_type : logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    /* Check the name of the top-level pb_type, if it does not match, we can
+     * bypass */
+    if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
+      continue;
+    }
+    /* Match the name in the top-level, we go further to search the pb_type in
+     * the graph */
+    t_pb_type* target_pb_type = try_find_pb_type_with_given_path(
+      lb_type.pb_type, target_pb_type_names, target_pb_mode_names);
+    if (nullptr != target_pb_type) {
+      return target_pb_type;
+    }
+  }
+
+  /* Reach here, it means we find nothing */
+  return nullptr;
+}
+
+/********************************************************************
  * This function will return all the interconnects defined under a mode
  * of pb_type
  *******************************************************************/
@@ -195,6 +234,27 @@ t_interconnect* find_pb_mode_interconnect(t_mode* pb_mode,
 
   /* Reach here, it means we find nothing */
   return nullptr;
+}
+
+/********************************************************************
+ * This function will try to find an input of an interconnect by its name,
+ * as it is written in the input list of the interconnect in the architecture
+ * description, e.g., 'iopad.inpad'.
+ * The index follows the order of the input list.
+ * If not found, return -1
+ *******************************************************************/
+int find_pb_interconnect_input_id(const t_interconnect* pb_interc,
+                                  const std::string& input_name) {
+  StringToken input_string_tokenizer(pb_interc->input_string);
+  std::vector<std::string> input_names = input_string_tokenizer.split(' ');
+  for (size_t iinput = 0; iinput < input_names.size(); ++iinput) {
+    if (input_name == input_names[iinput]) {
+      return (int)iinput;
+    }
+  }
+
+  /* Reach here, it means we find nothing */
+  return -1;
 }
 
 /********************************************************************
