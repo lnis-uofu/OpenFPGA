@@ -12,8 +12,10 @@ class LbRRGraph;
 
 struct lb_rr_node_id_tag;
 struct lb_rr_edge_id_tag;
+struct lb_rr_mux_id_tag;
 
 typedef vtr::StrongId<lb_rr_node_id_tag> LbRRNodeId;
 typedef vtr::StrongId<lb_rr_edge_id_tag> LbRREdgeId;
+typedef vtr::StrongId<lb_rr_mux_id_tag> LbRRMuxId;
 
 #endif

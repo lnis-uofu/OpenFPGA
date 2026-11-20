@@ -56,7 +56,7 @@ namespace openfpga {
  *
  *  // Give the input set VPR used on each bus-based mux; a bus-based mux
  *  // not given is not used
- *  lb_router.set_bus_mux_selections(selections);
+ *  lb_router.set_bus_mux_selections(lb_rr_graph, selections);
  *
  *  // Run the router
  *  bool route_success = lb_router.try_route(lb_rr_graph, atom_ctx.nlist,
@@ -262,7 +262,8 @@ class LbRouter {
   /* Give the input set VPR used on each bus-based mux, by mux name. The router
    * only uses that input set, and does not use a bus-based mux VPR did not use.
    */
-  void set_bus_mux_selections(const std::map<std::string, int>& selections);
+  void set_bus_mux_selections(const LbRRGraph& lb_rr_graph,
+                              const std::map<std::string, int>& selections);
 
   /**
    * Perform routing algorithm on a given logical tile routing resource graph
@@ -351,8 +352,6 @@ class LbRouter {
                  const NetId& net) const;
 
  private: /* Private initializer and cleaner */
-  /* Find the bus-based mux and input set of each edge */
-  void build_bus_mux_lookup(const LbRRGraph& lb_rr_graph);
   void reset_explored_node_tb();
   void reset_net_rt();
   void reset_routing_status();
@@ -426,15 +425,9 @@ class LbRouter {
   /* current congestion factor */
   float pres_con_fac_;
 
-  /* Bus-based muxes of the routing resource graph: their names and the input
-   * set VPR used on each (-1 if VPR did not use the mux) */
-  std::vector<std::string> bus_mux_names_;
-  std::vector<int> bus_mux_selected_sets_;
-
-  /* Index of the bus-based mux an edge belongs to and the input set of the
-   * edge; -1 for an edge which is not part of a bus-based mux */
-  vtr::vector<LbRREdgeId, int> edge_bus_muxes_;
-  vtr::vector<LbRREdgeId, int> edge_bus_mux_sets_;
+  /* Input set VPR used on each mux recorded in the routing resource graph
+   * (-1 if VPR did not use the mux) */
+  vtr::vector<LbRRMuxId, int> mux_selected_sets_;
 };
 
 } /* end namespace openfpga */

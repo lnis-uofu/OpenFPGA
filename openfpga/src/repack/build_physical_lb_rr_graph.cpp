@@ -156,20 +156,31 @@ static void build_lb_rr_edge_pb_graph_pin(LbRRGraph& lb_rr_graph,
 
   /* Load edges only for physical mode! */
   for (int iedge = 0; iedge < pb_pin->num_output_edges; iedge++) {
-    VTR_ASSERT(1 == pb_pin->output_edges[iedge]->num_output_pins);
-    if (physical_mode !=
-        pb_pin->output_edges[iedge]->interconnect->parent_mode) {
+    const t_pb_graph_edge* pb_edge = pb_pin->output_edges[iedge];
+    VTR_ASSERT(1 == pb_edge->num_output_pins);
+    if (physical_mode != pb_edge->interconnect->parent_mode) {
       continue;
     }
     /* Find the node that we have already created */
-    LbRRNodeId to_node = lb_rr_graph.find_node(
-      LB_INTERMEDIATE, pb_pin->output_edges[iedge]->output_pins[0]);
+    LbRRNodeId to_node =
+      lb_rr_graph.find_node(LB_INTERMEDIATE, pb_edge->output_pins[0]);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(to_node));
     LbRREdgeId edge =
       lb_rr_graph.create_edge(from_node, to_node, physical_mode);
 
     /* TODO: Double check if this is the case */
     lb_rr_graph.set_edge_intrinsic_cost(edge, 1.);
+
+    /* Record the bus-based mux and the input set that the edge belongs to */
+    if (pb_edge->is_bus_mux()) {
+      LbRRMuxId mux =
+        lb_rr_graph.find_mux(pb_edge->interconnect, pb_edge->bus_mux_owner());
+      if (false == lb_rr_graph.valid_mux_id(mux)) {
+        mux = lb_rr_graph.create_mux(pb_edge->interconnect,
+                                     pb_edge->bus_mux_owner());
+      }
+      lb_rr_graph.set_edge_mux(edge, mux, pb_edge->driver_set);
+    }
   }
 }
 

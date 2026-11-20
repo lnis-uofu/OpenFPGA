@@ -150,6 +150,8 @@
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
 #include <limits>
+#include <map>
+#include <utility>
 #include <vector>
 
 /* Header from vtrutil library */
@@ -172,10 +174,12 @@ class LbRRGraph {
    * nodes/edges/switches/segments */
   typedef vtr::vector<LbRRNodeId, LbRRNodeId>::const_iterator node_iterator;
   typedef vtr::vector<LbRREdgeId, LbRREdgeId>::const_iterator edge_iterator;
+  typedef vtr::vector<LbRRMuxId, LbRRMuxId>::const_iterator mux_iterator;
 
   /* Ranges used to create range-based loop for nodes/edges/switches/segments */
   typedef vtr::Range<node_iterator> node_range;
   typedef vtr::Range<edge_iterator> edge_range;
+  typedef vtr::Range<mux_iterator> mux_range;
 
  public: /* Constructors */
   LbRRGraph();
@@ -199,6 +203,7 @@ class LbRRGraph {
    */
   node_range nodes() const;
   edge_range edges() const;
+  mux_range muxes() const;
 
   /* Node-level attributes */
   e_lb_rr_type node_type(const LbRRNodeId& node) const;
@@ -234,6 +239,26 @@ class LbRRGraph {
 
   float edge_intrinsic_cost(const LbRREdgeId& edge) const;
   t_mode* edge_mode(const LbRREdgeId& edge) const;
+
+  /* Muxes
+   * A mux is the instance of a mux interconnect in a pb_graph_node. Each bit
+   * of each input set is an edge of the graph. An edge records the mux and the
+   * input set that it belongs to, so that a router can restrict a mux to one
+   * input set.
+   * Only bus-based muxes, whose bits share one select, are recorded for now.
+   */
+  /* Get the interconnect that a mux is defined by */
+  const t_interconnect* mux_interconnect(const LbRRMuxId& mux) const;
+  /* Find the mux that an interconnect forms in a pb_graph_node.
+   * Return an invalid id if not found */
+  LbRRMuxId find_mux(const t_interconnect* interconnect,
+                     const t_pb_graph_node* owner) const;
+  /* Get the mux that an edge belongs to. Return an invalid id for an edge
+   * which is not part of a recorded mux */
+  LbRRMuxId edge_mux(const LbRREdgeId& edge) const;
+  /* Get the input set of the mux that an edge belongs to. Return -1 for an
+   * edge which is not part of a recorded mux */
+  int edge_mux_input_set(const LbRREdgeId& edge) const;
 
  public: /* Mutators */
   /* Reserve the lists of nodes, edges, switches etc. to be memory efficient.
@@ -281,12 +306,22 @@ class LbRRGraph {
                          t_mode* mode);
   void set_edge_intrinsic_cost(const LbRREdgeId& edge, const float& cost);
 
+  /* Add a mux, which an interconnect forms in a pb_graph_node */
+  LbRRMuxId create_mux(const t_interconnect* interconnect,
+                       const t_pb_graph_node* owner);
+  /* Set the mux and the input set that an edge belongs to */
+  void set_edge_mux(const LbRREdgeId& edge, const LbRRMuxId& mux,
+                    const int& input_set);
+
  public: /* Public validators */
   /* Validate is the node id does exist in the RRGraph */
   bool valid_node_id(const LbRRNodeId& node) const;
 
   /* Validate is the edge id does exist in the RRGraph */
   bool valid_edge_id(const LbRREdgeId& edge) const;
+
+  /* Validate is the mux id does exist in the RRGraph */
+  bool valid_mux_id(const LbRRMuxId& mux) const;
 
   bool validate() const;
 
@@ -331,6 +366,21 @@ class LbRRGraph {
   vtr::vector<LbRREdgeId, LbRRNodeId> edge_sink_nodes_;
   vtr::vector<LbRREdgeId, float> edge_intrinsic_costs_;
   vtr::vector<LbRREdgeId, t_mode*> edge_modes_;
+  /* Mux and its input set that an edge belongs to: an invalid id and -1 for
+   * an edge which is not part of a recorded mux */
+  vtr::vector<LbRREdgeId, LbRRMuxId> edge_muxes_;
+  vtr::vector<LbRREdgeId, int> edge_mux_input_sets_;
+
+  /* Mux related data */
+  vtr::vector<LbRRMuxId, LbRRMuxId> mux_ids_;
+  vtr::vector<LbRRMuxId, const t_interconnect*> mux_interconnects_;
+
+  /* Fast look-up to search a mux by its interconnect and the pb_graph_node
+   * that owns it. An interconnect forms one mux in each pb_graph_node of its
+   * pb_type
+   */
+  std::map<std::pair<const t_interconnect*, const t_pb_graph_node*>, LbRRMuxId>
+    mux_lookup_;
 
   /* Fast look-up to search a node by its type, coordinator and ptc_num
    * Indexing of fast look-up: [0..NUM_TYPES-1][t_pb_graph_pin*]

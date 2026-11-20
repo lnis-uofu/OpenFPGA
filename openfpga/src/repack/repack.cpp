@@ -1192,7 +1192,7 @@ static int repack_cluster(const AtomContext& atom_ctx,
   lb_router.set_physical_pb_modes(lb_rr_graph, device_annotation);
 
   /* Use only the bus-based mux input sets VPR used */
-  lb_router.set_bus_mux_selections(bus_mux_selections);
+  lb_router.set_bus_mux_selections(lb_rr_graph, bus_mux_selections);
 
   /* Run the router */
   bool route_success =
