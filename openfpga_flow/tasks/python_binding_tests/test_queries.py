@@ -5,9 +5,11 @@ Each answer is checked against what VPR reports for the same run: its log, repor
 the .place and .route files, the channel occupancy files and packing_pin_util.rpt.
 """
 
+import fnmatch
 import json
 import math
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -25,6 +27,9 @@ KINDS = [
     "net_route",
     "congestion",
     "cluster_report",
+    "find",
+    "block_info",
+    "net_info",
 ]
 
 
@@ -146,9 +151,16 @@ def parse_timing_report(path, count):
         for line in block[:arrival_at].splitlines():
             match = re.match(r"^(\S+) \((\.\w+)\).*?\s+(-?[\d.]+)\s+(-?[\d.]+)$", line)
             if match:
-                points.append((match.group(1), float(match.group(4))))
+                points.append((match.group(1), float(match.group(4)), float(match.group(3))))
+        # The clock to the block that captures the data comes after the arrival of the data
+        capture = []
+        required = block[arrival_at:]
+        for line in required[: required.index("data required time")].splitlines():
+            match = re.match(r"^(\S+) \((\.\w+)\).*?\s+(-?[\d.]+)\s+(-?[\d.]+)$", line)
+            if match:
+                capture.append((match.group(1), float(match.group(4)), float(match.group(3))))
         slack = float(re.search(r"slack \(\w+\)\s+(-?[\d.]+)", block).group(1))
-        paths.append((start, end, slack, points))
+        paths.append((start, end, slack, points, capture))
     return paths
 
 
@@ -158,6 +170,7 @@ def parse_timing_report(path, count):
 def test_every_answer_follows_its_schema(routed, validate):
     shell = routed.shell
     net = next(iter(parse_route(Path(f"{routed.name}.route"))))
+    block = data(shell.find(pattern="*", kind="block"))["blocks"]["items"][0]["name"]
     answers = [
         shell.timing_summary(),
         shell.critical_paths(count=3),
@@ -166,8 +179,12 @@ def test_every_answer_follows_its_schema(routed, validate):
         shell.net_route(net=net),
         shell.congestion(),
         shell.congestion(region_size=2),
+        shell.congestion(hotspots=3),
         shell.report_cluster(),
         shell.report_cluster(stats=True, query="out:*"),
+        shell.find(pattern="*"),
+        shell.block_info(block=block),
+        shell.net_info(net=net),
     ]
     seen = set()
     for result in answers:
@@ -232,7 +249,13 @@ def test_timing_summary_lists_the_clock_domains(routed):
         crit["launch_clock"],
         crit["capture_clock"],
     )
+    # The pairs add up to the sTNS of VPR, and a pair has no more than the worst of its paths
+    log = routed.logs["analysis"]
+    (tns,) = log_numbers(log, r"Final setup Total Negative Slack \(sTNS\): ([-\d.e]+) ns")
+    assert close(sum(d["total_negative_slack_ns"] for d in domains), tns)
     for domain in domains:
+        assert domain["total_negative_slack_ns"] <= 0
+        assert domain["total_negative_slack_ns"] <= min(0, domain["worst_slack_ns"]) + 1e-9
         assert domain["intra_domain"] == (domain["launch_clock"] == domain["capture_clock"])
         assert (domain["fmax_mhz"] is not None) == domain["intra_domain"]
 
@@ -241,16 +264,22 @@ def test_the_worst_paths_are_the_ones_of_the_timing_report(routed):
     paths = data(routed.shell.critical_paths(count=3))["paths"]
     expected = parse_timing_report(Path("report_timing.setup.rpt"), 3)
     assert len(paths) == len(expected) >= 2
-    for path, (start, end, slack, points) in zip(paths, expected):
+    for path, (start, end, slack, points, capture) in zip(paths, expected):
         assert path["startpoint"] == start
         assert path["endpoint"] == end
         assert path["slack_ns"] == pytest.approx(slack, abs=6e-4)
-        # The data path ends the way the report does, point by point
-        listed = [(p["pin"], p["arrival_ns"]) for p in path["points"]]
-        assert [name for name, _ in listed] == [name for name, _ in points[-len(listed) :]]
-        for (_, arrival), (_, reported) in zip(listed, points[-len(listed) :]):
-            assert arrival == pytest.approx(reported, abs=6e-4)
+        # The report lists the clock to the launching block, then the data path: point by point,
+        # with the time since the point before
+        listed = path["clock_launch_path"] + path["points"]
+        assert [p["pin"] for p in listed] == [name for name, _, _ in points]
+        for point, (_, arrival, delay) in zip(listed, points):
+            assert point["arrival_ns"] == pytest.approx(arrival, abs=6e-4)
+            assert point["delay_ns"] == pytest.approx(delay, abs=6e-4)
         assert path["data_arrival_ns"] == pytest.approx(path["points"][-1]["arrival_ns"])
+        assert [p["pin"] for p in path["clock_capture_path"]] == [name for name, _, _ in capture]
+        for point, (_, arrival, delay) in zip(path["clock_capture_path"], capture):
+            assert point["arrival_ns"] == pytest.approx(arrival, abs=6e-4)
+            assert point["delay_ns"] == pytest.approx(delay, abs=6e-4)
 
 
 def test_the_paths_are_worst_first_and_made_of_steps(routed):
@@ -262,14 +291,34 @@ def test_the_paths_are_worst_first_and_made_of_steps(routed):
         points = path["points"]
         assert points[0]["pin"] == path["startpoint"]
         assert points[-1]["pin"] == path["endpoint"]
+        # Each point is the time since the point before it, the clock path included
         before = 0.0
-        for point in points:
+        for point in path["clock_launch_path"] + points:
             assert point["delay_ns"] == pytest.approx(point["arrival_ns"] - before, abs=1e-9)
             before = point["arrival_ns"]
         # The slack of a path is what is required less what arrives
         assert path["slack_ns"] == pytest.approx(
             path["data_required_ns"] - path["data_arrival_ns"], abs=1e-6
         )
+
+
+def test_the_clock_paths_are_there_for_the_flip_flops(routed):
+    paths = data(routed.shell.critical_paths(count=100))["paths"]
+    for path in paths:
+        launch, capture = path["clock_launch_path"], path["clock_capture_path"]
+        # The clock is routed in this flow: it goes from its input to the pin of the flip-flop
+        launched_by_clock = path["startpoint"].endswith(".Q[0]")
+        captured_by_clock = path["endpoint"].endswith(".D[0]")
+        assert bool(launch) == launched_by_clock
+        assert bool(capture) == captured_by_clock
+        if launch:
+            assert launch[-1]["pin"] == path["startpoint"].replace(".Q[0]", ".clk[0]")
+            # The data leaves the flip-flop when the clock is there
+            assert path["points"][0]["arrival_ns"] >= launch[-1]["arrival_ns"]
+            assert path["points"][0]["delay_ns"] >= 0
+        if capture:
+            assert capture[-1]["pin"] == path["endpoint"].replace(".D[0]", ".clk[0]")
+    assert any(p["clock_launch_path"] for p in paths)
 
 
 def test_the_number_of_paths_is_what_is_asked_for(routed):
@@ -381,6 +430,313 @@ def test_a_list_is_cut_at_the_limit(routed):
         assert getattr(shell, command)(limit=0, check=False).status != 0
 
 
+# Find --------------------------------------------------------------------------------------
+
+
+def test_find_lists_the_blocks_where_the_place_file_has_them(routed):
+    answer = data(routed.shell.find(pattern="*"))
+    assert answer["kind"] is None and answer["pattern"] == "*"
+    blocks = answer["blocks"]
+    assert blocks["total"] == blocks["matched"] == blocks["returned"] == len(blocks["items"])
+    assert not blocks["truncated"]
+    placed = {b["name"]: (b["x"], b["y"], b["sub_tile"], b["layer"]) for b in blocks["items"]}
+    assert placed == parse_place(Path(f"{routed.name}.place"))
+    assert all(b["placed"] for b in blocks["items"])
+    types = {b["name"]: b["type"] for b in data(routed.shell.placement())["blocks"]}
+    assert {b["name"]: b["type"] for b in blocks["items"]} == types
+
+
+def test_find_has_no_location_before_the_placement(flow):
+    flow.run("pack")
+    blocks = data(flow.shell.find(pattern="*", kind="block"))["blocks"]
+    assert blocks["items"]
+    for block in blocks["items"]:
+        assert block["placed"] is False
+        assert (block["x"], block["y"], block["sub_tile"], block["layer"]) == (None,) * 4
+
+
+def test_find_nets_are_the_nets_that_vpr_routes(routed):
+    shell = routed.shell
+    nets = data(shell.find(pattern="*", kind="net"))["nets"]
+    routed_nets = parse_route(Path(f"{routed.name}.route"))
+    # A net that is ignored (a clock) is not routed
+    assert {n["name"] for n in nets["items"] if not n["ignored"]} == set(routed_nets)
+    assert nets["total"] == nets["matched"] == len(nets["items"])
+    for net in nets["items"]:
+        if not net["ignored"]:
+            assert net["fanout"] == data(shell.net_route(net=net["name"]))["num_sinks"]
+        assert net["fanout"] >= 1
+
+
+def test_find_matches_names_like_a_shell_does(routed):
+    shell = routed.shell
+    names = [b["name"] for b in data(shell.find(pattern="*"))["blocks"]["items"]]
+    nets = [n["name"] for n in data(shell.find(pattern="*"))["nets"]["items"]]
+    for pattern in ("out:*", "?*:*", "[io]*", names[0], "no_such_name*"):
+        found = data(shell.find(pattern=pattern))
+        assert [b["name"] for b in found["blocks"]["items"]] == [
+            n for n in names if fnmatch.fnmatchcase(n, pattern)
+        ]
+        assert [n["name"] for n in found["nets"]["items"]] == [
+            n for n in nets if fnmatch.fnmatchcase(n, pattern)
+        ]
+    assert data(shell.find(pattern="out:*"))["blocks"]["matched"] > 0
+
+
+def test_find_looks_for_one_kind_and_stops_at_the_limit(routed):
+    shell = routed.shell
+    blocks = data(shell.find(pattern="*", kind="block"))
+    assert blocks["kind"] == "block" and blocks["nets"] is None
+    nets = data(shell.find(pattern="*", kind="net"))
+    assert nets["kind"] == "net" and nets["blocks"] is None
+    cut = data(shell.find(pattern="*", limit=1))
+    for part in (cut["blocks"], cut["nets"]):
+        assert part["returned"] == len(part["items"]) == 1
+        assert part["truncated"] and part["matched"] > 1
+    for bad in ({"kind": "pin"}, {"limit": 0}):
+        assert shell.find(**{"pattern": "*", **bad}, check=False).status != 0
+    assert shell.run("find", check=False).status != 0
+
+
+def test_find_needs_the_packing(flow):
+    refused(flow.shell.find(pattern="*", check=False), "PACKED", "find")
+
+
+# Block and net information -----------------------------------------------------------------
+
+
+def packed_blocks(path):
+    """The clusters of a .net file: name -> (input nets, atoms), the atoms being the primitives
+    in it, as name -> path"""
+    root = ET.parse(path).getroot()
+    clusters = {}
+    for cluster in root.findall("block"):
+        inputs = {}
+        for port in cluster.find("inputs") or []:
+            for bit, net in enumerate(port.text.split()):
+                if net != "open":
+                    inputs[(port.get("name"), bit)] = net
+        atoms = {}
+
+        def walk(block, parents):
+            mode = block.get("mode")
+            leaf = not block.findall("block")
+            here = block.get("instance") + (f"[{mode}]" if mode and not leaf else "")
+            if not parents:
+                # The cluster has no index in the answer
+                here = here.split("[")[0] + (f"[{mode}]" if mode else "")
+            if leaf and block.get("name") != "open":
+                atoms[block.get("name")] = "/".join(parents + [here])
+            for child in block.findall("block"):
+                walk(child, parents + [here])
+
+        walk(cluster, [])
+        clusters[cluster.get("name")] = (inputs, atoms)
+    return clusters
+
+
+def circuit_atoms(blif):
+    """The names of the atoms of a circuit: its inputs, its outputs (named out:...), and the
+    outputs of its .names and .latch"""
+    names = set()
+    text = blif.read_text().replace("\\\n", " ")
+    for line in text.splitlines():
+        words = line.split()
+        if not words:
+            continue
+        if words[0] == ".inputs":
+            names.update(words[1:])
+        elif words[0] == ".outputs":
+            names.update("out:" + w for w in words[1:])
+        elif words[0] == ".names":
+            names.add(words[-1])
+        elif words[0] == ".latch":
+            names.add(words[2])
+    return names
+
+
+def test_a_block_is_what_the_packed_netlist_says(routed):
+    shell = routed.shell
+    packed = packed_blocks(Path(f"{routed.name}.net"))
+    assert packed
+    for name, (inputs, atoms) in packed.items():
+        answer = data(shell.block_info(block=name))
+        assert answer["name"] == name and answer["placed"]
+        pins = answer["pins"]
+        listed = {
+            (p["port"], p["bit"]): p["net"] for p in pins if p["direction"] in ("input", "clock")
+        }
+        # Every input of the cluster, as the file lists them (the clocks are not in its inputs)
+        assert {k: v for k, v in listed.items() if k in inputs} == inputs, name
+        assert all(p["net"] for p in pins)
+        assert {a["name"]: a["path"] for a in answer["atoms"]} == atoms, name
+
+
+def test_the_atoms_of_the_blocks_are_the_atoms_of_the_circuit(routed):
+    shell = routed.shell
+    seen = []
+    for name in packed_blocks(Path(f"{routed.name}.net")):
+        seen += [a["name"] for a in data(shell.block_info(block=name))["atoms"]]
+    assert len(seen) == len(set(seen))
+    # VPR sweeps what is not used (a net that nothing reads), so not every name of the file is there
+    assert set(seen) <= circuit_atoms(routed.circuit)
+
+
+def test_the_atoms_have_the_model_of_their_primitive(routed):
+    models = {}
+    for name in packed_blocks(Path(f"{routed.name}.net")):
+        for atom in data(routed.shell.block_info(block=name))["atoms"]:
+            primitive = atom["path"].split("/")[-1].split("[")[0]
+            models.setdefault(primitive, set()).add(atom["model"])
+    expected = {"lut": {".names"}, "ff": {".latch"}, "inpad": {".input"}, "outpad": {".output"}}
+    assert models and all(expected[primitive] == found for primitive, found in models.items())
+    assert {"inpad", "outpad"} <= set(models)
+
+
+def test_a_block_has_its_place_once_placed(flow):
+    shell = flow.shell
+    flow.run("pack")
+    name = data(shell.find(pattern="*", kind="block"))["blocks"]["items"][0]["name"]
+    before = data(shell.block_info(block=name))
+    assert before["placed"] is False and before["location"] is None
+    flow.run("place")
+    after = data(shell.block_info(block=name))
+    assert after["placed"] is True
+    placed = parse_place(Path(f"{flow.name}.place"))[name]
+    location = after["location"]
+    assert (location["x"], location["y"], location["sub_tile"], location["layer"]) == placed
+    assert {k: v for k, v in after.items() if k not in ("placed", "location")} == {
+        k: v for k, v in before.items() if k not in ("placed", "location")
+    }
+
+
+def test_block_info_refuses_what_it_cannot_answer(routed, flow):
+    shell = routed.shell
+    missing = shell.block_info(block="no_such_block", check=False)
+    assert missing.status != 0 and missing.data is None
+    assert "'no_such_block' does not exist" in missing.log
+    assert shell.run("block_info", check=False).status != 0
+
+
+def test_a_net_is_seen_from_its_blocks_and_from_itself(routed):
+    shell = routed.shell
+    nets = data(shell.find(pattern="*", kind="net"))["nets"]["items"]
+    # What each block says of its pins is what the net says of its blocks
+    drivers, sinks = {}, {}
+    for block in data(shell.find(pattern="*", kind="block"))["blocks"]["items"]:
+        for pin in data(shell.block_info(block=block["name"]))["pins"]:
+            where = (block["name"], pin["port"], pin["bit"])
+            (drivers if pin["direction"] == "output" else sinks).setdefault(pin["net"], []).append(
+                where
+            )
+    for net in nets:
+        answer = data(shell.net_info(net=net["name"]))
+        assert answer["name"] == net["name"]
+        assert answer["fanout"] == net["fanout"] == len(answer["sinks"])
+        assert answer["ignored"] == net["ignored"]
+        as_tuple = lambda pin: (pin["block"], pin["port"], pin["bit"])
+        assert drivers[net["name"]] == [as_tuple(answer["driver"])]
+        assert sorted(sinks[net["name"]]) == sorted(as_tuple(p) for p in answer["sinks"])
+
+
+def test_the_bounding_box_is_the_one_of_the_placed_blocks(routed):
+    shell = routed.shell
+    placed = parse_place(Path(f"{routed.name}.place"))
+    for net in data(shell.find(pattern="*", kind="net"))["nets"]["items"]:
+        answer = data(shell.net_info(net=net["name"]))
+        blocks = [answer["driver"]["block"]] + [s["block"] for s in answer["sinks"]]
+        xs = [placed[b][0] for b in blocks]
+        ys = [placed[b][1] for b in blocks]
+        box = answer["bounding_box"]
+        assert (box["xmin"], box["ymin"], box["xmax"], box["ymax"]) == (
+            min(xs),
+            min(ys),
+            max(xs),
+            max(ys),
+        )
+        assert box["half_perimeter"] == max(xs) - min(xs) + max(ys) - min(ys)
+
+
+def test_the_routing_of_a_net_adds_up_to_the_wirelength_of_vpr(routed):
+    shell = routed.shell
+    routes = parse_route(Path(f"{routed.name}.route"))
+    total = 0
+    for net in data(shell.find(pattern="*", kind="net"))["nets"]["items"]:
+        answer = data(shell.net_info(net=net["name"]))
+        if net["name"] not in routes:
+            assert answer["routing"] is None
+            continue
+        nodes = {}
+        for ident, kind, low, high, _ in routes[net["name"]]:
+            nodes[ident] = (kind, low, high)
+        wires = {i: v for i, v in nodes.items() if v[0] in ("CHANX", "CHANY")}
+        length = sum(h[0] - l[0] + h[1] - l[1] + 1 for _, l, h in wires.values())
+        assert answer["routing"] == {
+            "nodes": len(nodes),
+            "wires": len(wires),
+            "wirelength": length,
+        }
+        total += length
+    assert total == int(re.search(r"Total wirelength: (\d+)", routed.logs["analysis"]).group(1))
+
+
+def test_a_net_on_the_critical_path_is_critical(routed):
+    shell = routed.shell
+    path = data(shell.critical_paths(count=1))["paths"][0]
+    known = {n["name"] for n in data(shell.find(pattern="*", kind="net"))["nets"]["items"]}
+    on_path = [p["net"] for p in path["points"] if p["net"] in known]
+    assert on_path
+    for name in on_path:
+        timing = data(shell.net_info(net=name))["timing"]
+        assert timing["criticality"] == pytest.approx(1.0, abs=1e-4), name
+        assert timing["slack_ns"] == pytest.approx(path["slack_ns"], abs=1e-3), name
+    # No net is slower than the worst path, and none is more critical than 1
+    for net in data(shell.find(pattern="*", kind="net"))["nets"]["items"]:
+        timing = data(shell.net_info(net=net["name"]))["timing"]
+        if timing is not None:
+            assert 0 <= timing["criticality"] <= 1 + 1e-6
+            assert timing["slack_ns"] >= path["slack_ns"] - 1e-3
+
+
+def test_a_net_tells_what_the_stages_so_far_know(flow):
+    shell = flow.shell
+    flow.run("pack")
+    name = data(shell.find(pattern="*", kind="net"))["nets"]["items"][0]["name"]
+    answer = data(shell.net_info(net=name))
+    assert (answer["bounding_box"], answer["routing"], answer["timing"]) == (None, None, None)
+    flow.run("place")
+    answer = data(shell.net_info(net=name))
+    assert answer["bounding_box"] is not None
+    assert (answer["routing"], answer["timing"]) == (None, None)
+    flow.run("route")
+    answer = data(shell.net_info(net=name))
+    assert answer["routing"] is not None and answer["timing"] is not None
+
+
+def test_a_net_that_vpr_does_not_route_is_ignored(shell, and2_files, flow_dir):
+    flow = Flow(shell, and2_files, flow_dir, "and2_latch")
+    flow.inputs()
+    shell.set_app_option(name="general.clock_modeling", value="ideal")
+    flow.run("pack", "place", "route")
+    clock = data(shell.net_info(net="clk"))
+    assert clock["ignored"] is True
+    assert clock["routing"] is None
+    assert data(shell.net_info(net="a"))["ignored"] is False
+
+
+def test_net_info_refuses_what_it_cannot_answer(routed):
+    shell = routed.shell
+    missing = shell.net_info(net="no_such_net", check=False)
+    assert missing.status != 0 and missing.data is None
+    assert "'no_such_net' does not exist" in missing.log
+    assert shell.run("net_info", check=False).status != 0
+
+
+def test_the_information_needs_the_packing(flow):
+    refused(flow.shell.block_info(block="x", check=False), "PACKED", "block_info")
+    refused(flow.shell.net_info(net="x", check=False), "PACKED", "net_info")
+
+
 # Placement ---------------------------------------------------------------------------------
 
 
@@ -467,6 +823,77 @@ def test_a_net_that_vpr_does_not_route_has_no_route(shell, and2_files, flow_dir)
     assert clock.status != 0 and clock.data is None
     assert "has no routing" in clock.log
     assert shell.net_route(net="a").data["kind"] == "net_route"
+
+
+def crossings(route_file):
+    """The nets that cross each segment of a channel, from the .route file: (channel, x, y) -> nets"""
+    found = {}
+    for name, nodes in parse_route(route_file).items():
+        for _, kind, low, high, _ in nodes:
+            if kind not in ("CHANX", "CHANY"):
+                continue
+            for x in range(low[0], high[0] + 1):
+                for y in range(low[1], high[1] + 1):
+                    found.setdefault((kind.lower(), x, y), set()).add(name)
+    return found
+
+
+def test_the_hotspots_are_the_fullest_segments_of_the_channels(routed):
+    answer = data(routed.shell.congestion(hotspots=1000))
+    spots = answer["hotspots"]
+    files = {
+        "chanx": parse_occupancy(Path("chanx_occupancy.txt")),
+        "chany": parse_occupancy(Path("chany_occupancy.txt")),
+    }
+    # Every segment in use is there, with what VPR wrote for it
+    in_use = {
+        (channel, x, y): value
+        for channel, tiles in files.items()
+        for (x, y), value in tiles.items()
+        if value[0] > 0
+    }
+    assert {(s["channel"], s["x"], s["y"]) for s in spots} == set(in_use)
+    assert len(spots) == len(in_use)
+    for spot in spots:
+        used, capacity = in_use[(spot["channel"], spot["x"], spot["y"])]
+        assert (spot["used"], spot["capacity"]) == (used, capacity)
+        assert spot["occupancy"] == pytest.approx(used / capacity)
+        assert spot["overused_nodes"] == 0
+    # The fullest first
+    keys = [(s["occupancy"], s["used"]) for s in spots]
+    assert keys == sorted(keys, reverse=True)
+    # The regions of one tile say the same
+    assert spots[0]["occupancy"] == max(
+        max(r["chanx"]["occupancy"], r["chany"]["occupancy"]) for r in answer["regions"]
+    )
+
+
+def test_the_hotspots_name_the_nets_that_cross_them(routed):
+    spots = data(routed.shell.congestion(hotspots=1000))["hotspots"]
+    expected = crossings(Path(f"{routed.name}.route"))
+    assert {(s["channel"], s["x"], s["y"]) for s in spots} == set(expected)
+    for spot in spots:
+        nets = expected[(spot["channel"], spot["x"], spot["y"])]
+        assert spot["num_nets"] == len(nets)
+        assert set(spot["nets"]) == nets and len(spot["nets"]) == len(nets)
+        # Each net has at least one wire there
+        assert spot["used"] >= spot["num_nets"]
+
+
+def test_the_hotspots_are_as_many_as_asked(routed):
+    shell = routed.shell
+    everything = data(shell.congestion(hotspots=1000))["hotspots"]
+    for count in (1, 3):
+        assert data(shell.congestion(hotspots=count))["hotspots"] == everything[:count]
+    assert "hotspots" not in data(shell.congestion())
+    assert "hotspots" not in data(shell.congestion(region_size=2))
+    # The rest of the answer does not change
+    plain = data(shell.congestion())
+    asked = data(shell.congestion(hotspots=2))
+    assert {k: v for k, v in asked.items() if k != "hotspots"} == plain
+    for bad in (0, -1):
+        assert shell.congestion(hotspots=bad, check=False).status != 0
+    assert shell.run("congestion --hotspots many", check=False).status != 0
 
 
 def test_congestion_is_the_channel_occupancy_of_vpr(routed):

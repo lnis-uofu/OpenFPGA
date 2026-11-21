@@ -51,8 +51,9 @@ def plain(answer):
     """The answer as the dict that the shell gave, without what the object adds"""
     data = dataclasses.asdict(answer)
     del data["stage"]
-    if data.get("stats", 0) is None:
-        del data["stats"]
+    for optional in ("stats", "hotspots"):
+        if data.get(optional, 0) is None:
+            del data[optional]
     return data
 
 
@@ -174,6 +175,7 @@ def test_the_answers_are_what_the_shell_says(routed):
         ("placement", routed.placement()),
         ("congestion", routed.congestion()),
         ("report_cluster", routed.cluster_report()),
+        ("find --pattern *", routed.find("*")),
     ]
     for command, answer in queries:
         said = raw(routed, command)
@@ -199,6 +201,24 @@ def test_the_options_of_the_queries(routed):
     assert plain(stats) == raw(routed, "report_cluster --stats")["data"]
 
     assert routed.congestion(region_size=1).region_size == 1
+    assert routed.congestion().hotspots is None
+    spots = routed.congestion(hotspots=2)
+    assert len(spots.hotspots) == 2 and spots.hotspots[0].nets
+    assert plain(spots) == raw(routed, "congestion", hotspots=2)["data"]
+
+    block = routed.find("*", kind="block").blocks.items[0].name
+    info = routed.block_info(block)
+    assert info.name == block and info.placed and info.location is not None and info.atoms
+    assert plain(info) == raw(routed, "block_info", block=block)["data"]
+    net = routed.find("*", kind="net").nets.items[0].name
+    net_info = routed.net_info(net)
+    assert net_info.name == net and net_info.bounding_box and net_info.timing
+    assert plain(net_info) == raw(routed, "net_info", net=net)["data"]
+
+    found = routed.find("out:*", kind="block", limit=1)
+    assert found.kind == "block" and found.nets is None
+    assert found.blocks.returned == 1 and found.blocks.items[0].placed
+    assert plain(found) == raw(routed, "find --kind block", pattern="out:*", limit=1)["data"]
 
 
 def test_a_net_route(routed):

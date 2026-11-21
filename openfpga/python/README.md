@@ -26,3 +26,16 @@ pip install .
 The build needs a C++17 compiler, CMake, SWIG, the Python development headers,
 and the Tcl development headers (`tcl-dev`/`tcl-devel`) that VPR's SDC parser
 uses. See the documentation of OpenFPGA, *Python Session*, for the use.
+
+## Files of this directory
+
+The module is made of the classes that SWIG generates from `openfpga/src/openfpga_python.i`
+and of the Python code in this directory, which the `.i` file includes (`%pythoncode`):
+
+- `openfpga_python_diagnostics.py`: `Diagnostic` and `parse_diagnostics()`, what went wrong as data.
+- `openfpga_python_session.py`: `Session`, the typed answers of the queries, the options, the checkpoints and the journal.
+- `openfpga_python_worker.py`: `RemoteSession`, a `Session` in a process of its own.
+
+These files are not modules that can be imported by themselves: they use the names that the `.i` file defines
+(`OpenfpgaShell`, `OpenfpgaError`) and end up in the one module `openfpga`. The CMake file lists them as
+dependencies, so that the module is generated again when one of them changes.
