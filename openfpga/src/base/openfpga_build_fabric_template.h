@@ -147,6 +147,10 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     }
   }
 
+  /* The fabric is made from the linked architecture, not from a previous
+   * fabric */
+  openfpga_ctx.reset_fabric();
+
   if (true == cmd_context.option_enable(cmd, opt_compress_routing) &&
       false == openfpga_ctx.device_rr_gsb().is_compressed()) {
     compress_routing_hierarchy_template<T>(

@@ -590,34 +590,27 @@ void DeviceRRGSB::clear_gsb() {
     rr_gsb_[x].clear();
   }
   rr_gsb_.clear();
+  rr_gsb_edges_.clear();
 }
 
 void DeviceRRGSB::clear_gsb_unique_module_id() {
   /* clean rr_switch_block array */
-  for (size_t x = 0; x < rr_gsb_.size(); ++x) {
-    gsb_unique_module_id_[x].clear();
-  }
+  gsb_unique_module_id_.clear();
 }
 
 void DeviceRRGSB::clear_sb_unique_module_id() {
   /* clean rr_switch_block array */
-  for (size_t x = 0; x < rr_gsb_.size(); ++x) {
-    sb_unique_module_id_[x].clear();
-  }
+  sb_unique_module_id_.clear();
 }
 
 void DeviceRRGSB::clear_cb_unique_module_id(const e_rr_type& cb_type) {
   VTR_ASSERT(validate_cb_type(cb_type));
   switch (cb_type) {
     case e_rr_type::CHANX:
-      for (size_t x = 0; x < rr_gsb_.size(); ++x) {
-        cbx_unique_module_id_[x].clear();
-      }
+      cbx_unique_module_id_.clear();
       return;
     case e_rr_type::CHANY:
-      for (size_t x = 0; x < rr_gsb_.size(); ++x) {
-        cby_unique_module_id_[x].clear();
-      }
+      cby_unique_module_id_.clear();
       return;
     default:
       VTR_LOG_ERROR("Invalid type of connection block!\n");
