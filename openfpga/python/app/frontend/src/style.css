@@ -87,8 +87,8 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; align-self: center; background: var(--muted); }
 .status-dot.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
 .status-dot.off { background: var(--warn); }
-.buttons { display: flex; gap: 6px; margin-top: 10px; }
-.buttons button { font-size: 12px; padding: 3px 10px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.buttons button { font-size: 12px; padding: 3px 8px; white-space: nowrap; }
 .progress { height: 4px; border-radius: 2px; background: var(--line); margin: 0 0 10px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--ok); border-radius: 2px; transition: width 0.3s; }
 .stages { list-style: none; margin: 0; padding: 0; }
@@ -312,3 +312,23 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .chip-origin { opacity: 0.75; }
 .stage-skipped { opacity: 0.45; }
 .stage-skipped .stage-name { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* Designs in the sidebar: a line for the name and the button, a small line for the top and the files */
+.designs { display: flex; flex-direction: column; max-height: 240px; overflow-y: auto; }
+.design-row { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--border, #8884); }
+.design-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.design-detail { grid-column: 1 / -1; font-size: 0.8em; }
+.design-synthesize { padding: 1px 6px; font-size: 0.85em; }
+
+/* Drawings of the results */
+.drawing { margin: 8px 0; }
+.drawing svg { max-width: 100%; height: auto; display: block; }
+.drawing .grid-bg { fill: var(--surface, #8881); stroke: var(--border, #8886); }
+.drawing figcaption { margin-top: 4px; font-size: 0.85em; }
+.bar-row { display: grid; grid-template-columns: 7em 1fr 11em; gap: 8px; align-items: center; margin: 2px 0; }
+.bar-track { height: 12px; background: var(--surface, #8883); border-radius: 3px; overflow: hidden; }
+.bar-fill { display: block; height: 100%; background: #4e79a7; }
+.bar-row.limiting .bar-fill { background: #e15759; }
+.bar-value { font-variant-numeric: tabular-nums; font-size: 0.85em; }
+.legend { margin-left: 8px; display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.legend-item i { display: inline-block; width: 10px; height: 10px; margin-right: 3px; }

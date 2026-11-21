@@ -3,10 +3,11 @@ import { Markdown } from "../markdown";
 import { resultMarkdown } from "../resultMarkdown";
 import { CHAT, activeTab, calls, closeTab, pinTab, split, tabs } from "../store";
 import { Chat } from "./Chat";
+import { Drawing, kindOf } from "./Drawings";
 import { FileView } from "./FileView";
 
-/** What a result tab shows. The drawings of each kind are not designed yet: the result as
- * formatted text (Markdown), and the JSON as the model read it on request (work in progress) */
+/** What a result tab shows: the drawing for the kinds that have a shape (utilization, placement, congestion), the result as
+ * formatted text (Markdown), and the JSON as the model read it on request */
 export function ResultView(props: { callId: string }) {
   const [raw, setRaw] = useState(false);
   const call = calls.value[props.callId];
@@ -25,7 +26,12 @@ export function ResultView(props: { callId: string }) {
         </button>
         <button onClick={() => navigator.clipboard?.writeText(JSON.stringify(call.result))}>Copy JSON</button>
       </div>
-      <p class="wip">Work in progress: the drawings of the results are not designed yet. This is the result as text.</p>
+      {kindOf(call.result) ? (
+        <p class="muted drawn-note">Drawn from the data that the model read; the table below has the numbers.</p>
+      ) : (
+        <p class="wip">Work in progress: this kind of result has no drawing yet. This is the result as text.</p>
+      )}
+      {!raw && <Drawing result={call.result} />}
       {raw ? (
         <pre class="json">{JSON.stringify(call.result, null, 1)}</pre>
       ) : (

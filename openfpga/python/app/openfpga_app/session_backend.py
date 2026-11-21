@@ -223,8 +223,33 @@ class SessionBackend:
             shown = shown[len(session_dir) + 1 :]
         return shown.rsplit("/", 1)[-1] if shown.startswith("/") else shown
 
+    def _designs(self) -> List[Dict[str, Any]]:
+        """The design directories for the sidebar: found again at most every 5 seconds (the walk of
+        the designs folders is bounded, and the view is built for each event)"""
+        from openfpga_mcp.paths import design_directories
+
+        now = time.monotonic()
+        cached = getattr(self, "_designs_cache", None)
+        if cached is None or now - cached[0] > 5:
+            found = [
+                {
+                    "name": d["name"],
+                    "top": d["top"],
+                    "path": d["relative"],
+                    "files": d["rtl"],
+                    "description": d["manifest"].get("description")
+                    if isinstance(d["manifest"].get("description"), str)
+                    else None,
+                }
+                for d in design_directories(self.config)
+            ]
+            cached = (now, found)
+            self._designs_cache = cached
+        return cached[1]
+
     def _build_view(self) -> Dict[str, Any]:
         view = empty_view()
+        view["designs"] = self._designs()
         if self.sid is None:
             return view
         try:

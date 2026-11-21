@@ -33,6 +33,17 @@ export interface SessionView {
   files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[]; created?: UploadedFile[]; synthesis?: UploadedFile[] };
   options_changed: { name: string; value: unknown }[];
   checkpoints: { name: string; kind: string; stages: string[] }[];
+  /** The design directories of the designs folders (a folder with a design.json) */
+  designs?: DesignView[];
+}
+
+/** A design directory: what the sidebar shows of it; the files are the ones of the manifest */
+export interface DesignView {
+  name: string;
+  top: string | null;
+  path: string;
+  files: string[];
+  description: string | null;
 }
 
 /** A device package: what the page shows to choose one (the files of it are the server's) */

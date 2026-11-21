@@ -71,6 +71,9 @@ def empty_view() -> Dict[str, Any]:
         "files": {"inputs": [], "constraints": [], "results": [], "uploads": [], "created": [], "synthesis": []},
         "options_changed": [],
         "checkpoints": [],
+        # The design directories of the designs folders (a folder with a design.json): name, top
+        # module and rtl files; not part of a session
+        "designs": [],
     }
 
 

@@ -75,6 +75,7 @@ export const emptyView = (): SessionView => ({
   files: { inputs: [], constraints: [], results: [] },
   options_changed: [],
   checkpoints: [],
+  designs: [],
 });
 
 export const view = signal<SessionView>(emptyView());

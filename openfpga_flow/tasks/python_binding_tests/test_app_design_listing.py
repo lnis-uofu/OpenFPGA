@@ -67,3 +67,19 @@ def test_the_prompt_lists_the_designs_with_top_and_files_and_not_their_circuits(
     assert "synthesize(design=name)" in listing
     assert "alpha (top alpha_top)" in listing
     assert "plain.blif" in listing and "inside.blif" not in listing
+
+
+def test_the_view_has_the_design_directories_with_no_session(openfpga_module, tmp_path):
+    from openfpga_app.session_backend import SessionBackend
+
+    designs = tmp_path / "designs"
+    _design(designs / "group" / "alpha", "alpha", "alpha_top", ["a.v", "b.v"])
+    backend = SessionBackend(_config(tmp_path, designs))
+    try:
+        view = backend._build_view()
+    finally:
+        backend.close()
+    assert view["session"] is None
+    assert view["designs"] == [
+        {"name": "alpha", "top": "alpha_top", "path": "group/alpha", "files": ["a.v", "b.v"], "description": None}
+    ]

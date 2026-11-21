@@ -1,6 +1,7 @@
 import { useRef, useState } from "preact/hooks";
 import { UPLOAD_EXTENSIONS, type SessionView } from "../api";
 import { PackagePicker } from "./PackagePicker";
+import { SessionPicker } from "./SessionPicker";
 import {
   busy,
   config,
@@ -10,8 +11,11 @@ import {
   packagesOpen,
   removeUpload,
   restore,
+  sendMessage,
+  sessionsOpen,
   sidebarOpen,
   togglePackages,
+  toggleSessions,
   uploadFiles,
   uploading,
   view,
@@ -102,11 +106,12 @@ export function Sidebar() {
   // The buttons of the sessions work on real sessions, not on the recorded demo
   const real = config.value?.backend === "session";
   const files = v.files;
-  // Synthesis is the first stage; a skipped one (the design is a netlist) is not counted
-  const stages = [
-    ...(v.synthesis ? [{ ...v.synthesis, stage: "SYNTHESIS" }] : []),
-    ...v.stages,
-  ];
+  const designs = v.designs ?? [];
+  // Synthesis follows the device (its LUT size and script come from the device); a skipped one
+  // (the design is a netlist) is not counted
+  const device = v.stages.findIndex((s) => s.stage === "DEVICE");
+  const stages = [...v.stages];
+  if (v.synthesis) stages.splice(device + 1, 0, { ...v.synthesis, stage: "SYNTHESIS" });
   const counted = stages.filter((s) => s.status !== "skipped");
   const reached = counted.filter((s) => s.status === "reached").length;
   const rows = designFiles(files);
@@ -142,6 +147,14 @@ export function Sidebar() {
               >
                 from device…
               </button>
+              <button
+                disabled={!real || busy.value}
+                aria-expanded={sessionsOpen.value}
+                onClick={() => void toggleSessions()}
+                title={real ? "Switch to another session, or open a saved one" : "Not in the demo"}
+              >
+                sessions…
+              </button>
               <button disabled={!real || busy.value} onClick={() => void endSession()} title={real ? "End the worker; the files stay" : "Not in the demo"}>
                 close
               </button>
@@ -167,10 +180,19 @@ export function Sidebar() {
               >
                 from device…
               </button>
+              <button
+                disabled={!real || busy.value}
+                aria-expanded={sessionsOpen.value}
+                onClick={() => void toggleSessions()}
+                title={real ? "Switch to another session, or open a saved one" : "Not in the demo"}
+              >
+                sessions…
+              </button>
             </div>
           </>
         )}
         {real && packagesOpen.value && <PackagePicker />}
+        {real && sessionsOpen.value && <SessionPicker />}
       </Section>
       <Section title="Stages">
         <div
@@ -196,6 +218,37 @@ export function Sidebar() {
             </li>
           ))}
         </ol>
+      </Section>
+      <Section title="Designs">
+        {designs.length ? (
+          <div class="designs">
+            {designs.map((d) => (
+              <div key={d.path} class="design-row" title={d.description ?? undefined}>
+                <strong class="design-name">{d.name}</strong>
+                <button
+                  class="design-synthesize"
+                  disabled={!real || busy.value || !session}
+                  title={
+                    !real
+                      ? "Not in the demo"
+                      : session
+                        ? "Synthesize this design for the device of the session"
+                        : "Open a session first"
+                  }
+                  onClick={() => void sendMessage(`/synthesize design=${d.name}`)}
+                >
+                  Synthesize
+                </button>
+                <span class="design-detail muted">
+                  {d.top ? `top ${d.top} · ` : ""}
+                  {d.files.length} {d.files.length === 1 ? "file" : "files"}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="muted">(no design directory: a folder with a design.json in a designs folder)</div>
+        )}
       </Section>
       <Section title="Design files">
         <div class="architecture-row">

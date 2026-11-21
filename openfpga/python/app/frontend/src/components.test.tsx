@@ -136,8 +136,8 @@ describe("the sidebar", () => {
     render(<Sidebar />);
     expect(screen.getByText("worker running")).toBeTruthy();
     const stages = screen.getAllByRole("listitem").map((li) => li.textContent ?? "");
-    expect(stages[0]).toContain("SYNTHESIS");
-    expect(stages[1]).toContain("✔"); // DEVICE
+    expect(stages[0]).toContain("✔"); // DEVICE
+    expect(stages[1]).toContain("SYNTHESIS");
     expect(stages[3]).toContain("2.1 s");
     expect(stages[4]).toContain("○");
     expect(screen.getByText("layout 2x2")).toBeTruthy();
@@ -969,19 +969,20 @@ describe("synthesis as a stage", () => {
     view.value = v;
   };
 
-  it("is the first stage", () => {
+  it("is the stage after the device", () => {
     withSynthesis("not_reached");
     render(<Sidebar />);
     const items = screen.getAllByRole("listitem");
     expect(items).toHaveLength(6);
-    expect(items[0].textContent).toContain("SYNTHESIS");
-    expect(items[0].className).toContain("stage-not_reached");
+    expect(items[0].textContent).toContain("DEVICE");
+    expect(items[1].textContent).toContain("SYNTHESIS");
+    expect(items[1].className).toContain("stage-not_reached");
   });
 
   it("shows the time when it ran, and what it said when it failed", () => {
     withSynthesis("reached", { seconds: 1.4 });
     const { unmount } = render(<Sidebar />);
-    expect(screen.getAllByRole("listitem")[0].textContent).toContain("1.4 s");
+    expect(screen.getAllByRole("listitem")[1].textContent).toContain("1.4 s");
     unmount();
     withSynthesis("failed", { message: "syntax error, unexpected ';'" });
     render(<Sidebar />);
@@ -991,7 +992,7 @@ describe("synthesis as a stage", () => {
   it("is greyed out when the design is a netlist, says why, and is not counted in the progress", () => {
     withSynthesis("skipped", { message: "Not needed: the design is a netlist (routing_test.blif)" });
     render(<Sidebar />);
-    const first = screen.getAllByRole("listitem")[0];
+    const first = screen.getAllByRole("listitem")[1];
     expect(first.className).toContain("stage-skipped");
     expect(first.getAttribute("title")).toContain("the design is a netlist");
     expect(first.textContent).toContain("–");
@@ -999,5 +1000,111 @@ describe("synthesis as a stage", () => {
     expect(bar.getAttribute("aria-valuemax")).toBe("5"); // the five stages of the flow
     expect(bar.getAttribute("aria-valuenow")).toBe("3");
     expect((bar.firstChild as HTMLElement).style.width).toBe("60%");
+  });
+});
+
+describe("the sessions list of the sidebar", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const found = {
+    ok: true,
+    data: {
+      live: [
+        { id: "s1", name: "first", stages: ["DEVICE"], device_package: null, running: true, current: true },
+        { id: "s2", name: "second", stages: ["DEVICE", "PACKED"], device_package: null, running: true, current: false },
+      ],
+      saved: [{ id: "s3", name: "old", stages: ["DEVICE", "PACKED", "PLACED"], device_package: null, modified: 0 }],
+    },
+  };
+
+  it("opens a list of the sessions from the button, with the current one marked, and closes it again", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(JSON.stringify(found)))));
+    view.value = filled();
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("sessions…"));
+    await screen.findByText("second");
+    expect(screen.getByText("Current")).toBeTruthy();
+    expect(screen.getByText("old")).toBeTruthy();
+    expect(screen.getAllByText("Open")).toHaveLength(2); // the other live one, and the saved one
+    fireEvent.click(screen.getByText("sessions…"));
+    expect(screen.queryByText("second")).toBeNull();
+  });
+
+  it("switches to a live session from the list", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify(url === "/api/sessions" ? found : url === "/api/session" ? emptyView() : { ok: true, data: {} }))),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = filled();
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("sessions…"));
+    await screen.findByText("second");
+    fireEvent.click(screen.getAllByText("Open")[0]);
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find((c) => c[0] === "/api/session/open");
+      expect(JSON.parse(String(call?.[1]?.body))).toEqual({ session: "s2" });
+    });
+  });
+
+  it("is not there in the demo", () => {
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    render(<Sidebar />);
+    expect((screen.getByText("sessions…") as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe("the designs of the sidebar", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const designs = [
+    { name: "opencores_gpio", top: "gpio_top", path: "interface/opencores_gpio", files: ["gpio_top.v"], description: "GPIO" },
+    { name: "rtcclock", top: "rtcclock", path: "interface/rtcclock", files: ["a.v", "b.v"], description: null },
+  ];
+
+  it("lists the design directories with their top module and the number of files", () => {
+    real();
+    view.value = { ...filled(), designs };
+    render(<Sidebar />);
+    expect(screen.getByText("opencores_gpio")).toBeTruthy();
+    expect(screen.getByText("top gpio_top · 1 file")).toBeTruthy();
+    expect(screen.getByText("top rtcclock · 2 files")).toBeTruthy();
+  });
+
+  it("says what a design directory is when there is none", () => {
+    real();
+    view.value = { ...filled(), designs: [] };
+    render(<Sidebar />);
+    expect(screen.getByText(/no design directory/)).toBeTruthy();
+  });
+
+  it("synthesizes a design by its name, from the button, as the slash line of the tool", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(url === "/api/session" ? JSON.stringify(emptyView()) : "")),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = { ...filled(), designs };
+    render(<Sidebar />);
+    fireEvent.click(screen.getAllByText("Synthesize")[0]);
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find((c) => c[0] === "/api/chat");
+      expect(JSON.parse(String(call?.[1]?.body))).toEqual({ message: "/synthesize design=opencores_gpio" });
+    });
+  });
+
+  it("needs a session, and is not there in the demo", () => {
+    real();
+    view.value = { ...emptyView(), designs };
+    const { unmount } = render(<Sidebar />);
+    expect((screen.getAllByText("Synthesize")[0] as HTMLButtonElement).disabled).toBe(true);
+    unmount();
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    view.value = { ...filled(), designs };
+    render(<Sidebar />);
+    expect((screen.getAllByText("Synthesize")[0] as HTMLButtonElement).disabled).toBe(true);
   });
 });
