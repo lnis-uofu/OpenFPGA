@@ -466,7 +466,7 @@ def test_old_tool_answers_become_a_line_and_the_recent_ones_stay():
     tools = make_tools(big=big)
     turns = [say("", call("echo", text="n%d" % i)) for i in range(8)] + [say("done")]
     model = ScriptedModel(turns)
-    loop = make_loop(model, tools, context_tokens=2560, keep_recent_results=2, repeat_limit=99)
+    loop = make_loop(model, tools, context_tokens=2688, keep_recent_results=2, repeat_limit=99)
     found = run(loop)
     assert said(found).endswith("done") and "Stopped" not in said(found)
     last = model.requests[-1]

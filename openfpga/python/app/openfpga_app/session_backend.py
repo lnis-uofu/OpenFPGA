@@ -56,6 +56,11 @@ class ToolTable:
         return store
 
 
+# How the designs are named in the list for the model: it says what to do with them, because a model
+# that reads "design" runs "the wbscope design" as a circuit
+DESIGN_KIND = "design directory (Verilog: synthesize it with synthesize(design=name), never read it as a circuit)"
+
+
 class SessionBackend:
     """The backend of the page over real sessions"""
 
@@ -121,7 +126,12 @@ class SessionBackend:
         )
 
         kinds = {"architecture": "vpr_arch", "openfpga_architecture": "openfpga_arch"}
-        found: Dict[str, List[str]] = {"vpr_arch": [], "openfpga_arch": [], "circuit": []}
+        found: Dict[str, List[str]] = {
+            DESIGN_KIND: [],
+            "vpr_arch": [],
+            "openfpga_arch": [],
+            "circuit": [],
+        }
         if self.sid is not None:
             try:
                 directory = self.config.root / self.registry.get(self.sid).directory
@@ -164,7 +174,7 @@ class SessionBackend:
         lines = []
         for kind, names in found.items():
             shown: List[str] = []
-            room = 500
+            room = 1500 if kind == DESIGN_KIND else 500
             for name in names:
                 if room < len(name) + 2:
                     break
