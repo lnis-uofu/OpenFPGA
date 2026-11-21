@@ -916,6 +916,7 @@ _QUERY_COMMANDS = frozenset(
 
 JOURNAL_PYTHON = "replay.py"
 JOURNAL_SHELL = "replay.openfpga"
+JOURNAL_SCRIPTS = "scripts"  # the scripts of Yosys that the commands of the journal ran
 
 
 class ReplayError(RuntimeError):
@@ -936,9 +937,12 @@ class _Journal:
     again when a command ends, so that a run that is cut short leaves scripts that run. The
     shell script ends with exit, as the shell does not stop at the end of a script"""
 
-    def __init__(self, directory):
+    def __init__(self, directory, resume=False):
         self.directory = os.fspath(directory)
         os.makedirs(self.directory, exist_ok=True)
+        self._scripts = 0  # the scripts of Yosys that were copied here (see record)
+        if resume and self._resume():
+            return
         where = (
             "# The commands of an OpenFPGA session, written by openfpga.Session(journal=...)\n"
             "# Written in %s: the files of the flow are written in the current directory\n"
@@ -947,6 +951,24 @@ class _Journal:
         self._python = [where, "import openfpga\n\nsession = openfpga.Session()\n"]
         self._shell = [where]
         self._write()
+
+    def _resume(self):
+        """Go on with the files that are in the directory (a worker that started again, a session
+        that was opened again): what was written stays, and what comes next is added. False when
+        there is nothing to go on with"""
+        python = os.path.join(self.directory, JOURNAL_PYTHON)
+        shell = os.path.join(self.directory, JOURNAL_SHELL)
+        if not (os.path.isfile(python) and os.path.isfile(shell)):
+            return False
+        with open(python) as handle:
+            self._python = handle.readlines()
+        with open(shell) as handle:
+            self._shell = handle.readlines()
+        if self._shell and self._shell[-1] == "exit\n":  # the end is written again with each command
+            self._shell.pop()
+        folder = os.path.join(self.directory, JOURNAL_SCRIPTS)
+        self._scripts = len(os.listdir(folder)) if os.path.isdir(folder) else 0
+        return True
 
     def _write(self):
         for file, lines, end in (
@@ -957,6 +979,14 @@ class _Journal:
             with open(path + ".part", "w") as handle:
                 handle.write("".join(lines + end))
             os.replace(path + ".part", path)
+
+    def _keep_script(self, source):
+        folder = os.path.join(self.directory, JOURNAL_SCRIPTS)
+        os.makedirs(folder, exist_ok=True)
+        self._scripts += 1
+        kept = os.path.join(folder, "%03d.ys" % self._scripts)
+        shutil.copyfile(source, kept)
+        return os.path.abspath(kept)
 
     @staticmethod
     def _plain(value):
@@ -971,6 +1001,10 @@ class _Journal:
             for key, value in options.items()
             if value is not None and value is not False
         }
+        if name == "yosys" and error is None and os.path.isfile(options.get("file", "")):
+            # A script of Yosys is a file that its maker writes again for the next run: the journal
+            # keeps the one that was run, so that a replay runs the same synthesis
+            options["file"] = self._keep_script(options["file"])
         line = _command_line(name, args, options)
         call = ", ".join(
             [repr(name)]
@@ -1091,7 +1125,9 @@ class Session:
     options, the stages) are written as they are run, in replay.py and in
     replay.openfpga, so that the flow can be run again by a person, or with
     Session.replay(). A command that is run with session.shell, as the queries
-    are, is not written.
+    are, is not written. With resume_journal=True the files of the directory are
+    continued, not written again. The script of a yosys command is copied into
+    the directory (scripts/), so that a replay runs the script that was run.
 
     The files of the flow are written in the current directory of the process.
     The queries read the stage that they need, and fail if it is not valid,
@@ -1099,11 +1135,12 @@ class Session:
     command to run first.
     """
 
-    def __init__(self, shell=None, checkpoint_dir=None, journal=None):
+    def __init__(self, shell=None, checkpoint_dir=None, journal=None, resume_journal=False):
         self.shell = shell if shell is not None else OpenfpgaShell()
         self.options = Options(self.shell, run=self.command)
         self.checkpoint_dir = checkpoint_dir
-        self._journal = _Journal(journal) if journal is not None else None
+        # resume_journal: go on with the files of the directory instead of writing them again
+        self._journal = _Journal(journal, resume_journal) if journal is not None else None
 
     # The commands ----------------------------------------------------------------
 

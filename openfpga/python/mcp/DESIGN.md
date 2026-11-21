@@ -1,6 +1,6 @@
 # MCP server for OpenFPGA: tool design note
 
-Status: reviewed. The server in `openfpga_mcp/` follows it, with 25 tools: 21 of the 23 of the design, `list_device_packages`, `use_device_package`, `write_file` and `synthesize`: `get_journal` and `replay` wait for a journal in workers (G2), and the memory limit of a worker (G4) is not there yet. The directory is provisional: it depends on the answer to issue #2879, question 1.
+Status: reviewed. The server in `openfpga_mcp/` follows it, with 27 tools: the 23 of the design, `list_device_packages`, `use_device_package`, `write_file` and `synthesize`. The journal in workers (G2) and the memory limit of a worker (G4) are done. The directory is provisional: it depends on the answer to issue #2879, question 1.
 
 This note fixes the tools, their arguments, the size of each answer and the limits, before the server is written. The server is a thin layer: every tool calls one method of `openfpga.RemoteSession` (see `openfpga/python/README.md`), and the facts in an answer are the ones of the queries, not text that the server writes.
 
@@ -91,10 +91,10 @@ A query on a stage that is not reached answers `ok: false` with the diagnostic `
 |------|-----------|-------|
 | `read_log` | `session`, `stage`, `tail?` (lines, default 40) | the last lines of what the stage printed. Needs the log of each stage: the server keeps it (G5 in the plan) |
 | `checkpoint` | `session`, `name?` | the name and the stages saved |
-| `get_journal` | `session`, `format?` (`openfpga` or `python`), `tail?` | the commands that changed the flow; cut from the start if long. Needs a journal in workers (G2 in the plan) |
-| `replay` | `session`, `journal` | a new session that has run the commands of a journal of the workspace. Needs G2 |
+| `get_journal` | `session`, `format?` (`openfpga` or `python`), `tail?` | the commands that changed the flow (the inputs, the options, the stages, the synthesis); cut from the start if long. The journal is the folder `journal` of the session directory; a worker that starts again goes on with it |
+| `replay` | `journal`, `name?` | a new session that has run the commands of the journal of a session (its id, or `sN/journal`). Only the commands that change the flow run, with files inside the workspace, the designs folders and the packages, and a script of Yosys only from the journal's own `scripts/` (the one that was run, not the file that is written again); the replay stops at the first line that fails and the new session stays with what ran |
 
-That is 23 tools. The first version has 24 (the 21, `list_device_packages`, `use_device_package` and `write_file`): `get_journal` and `replay` wait for a journal in workers (G2).
+That is 23 tools. The server has 27: the 23, `list_device_packages`, `use_device_package`, `write_file` and `synthesize`.
 
 ## Resources and prompts
 
@@ -120,12 +120,12 @@ Prompts:
 
 | Need | Where | Plan |
 |------|-------|------|
-| A journal in `RemoteSession`, and `replay` in a worker | `openfpga/python/openfpga_python_worker.py` | G2 |
+| A journal in `RemoteSession`, and `replay` in a worker | `openfpga/python/openfpga_python_worker.py` | G2: done (`RemoteSession(journal=)`, `Session(resume_journal=)`) |
 | `limit` and `truncated` in the queries that list without one | the query commands | G3 |
-| A memory limit for a worker | `RemoteSession` | G4 |
+| A memory limit for a worker | `RemoteSession` | G4: done (`RemoteSession(memory_limit_mb=)`, `--worker-memory-mb`) |
 | The log of each stage, kept by the server (or a `report_log` query) | the server | G5 |
 
-None of these blocks the first version of the server: it cuts lists itself, keeps the logs itself, and leaves out `get_journal` and `replay` until G2 is done.
+None of these blocked the first version of the server: it cuts lists itself and keeps the logs itself. G2 and G4 were done afterwards.
 
 ## Testing
 

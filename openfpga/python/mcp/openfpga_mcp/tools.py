@@ -134,10 +134,8 @@ def register(
             entry = session_of(session)
             where = entry.directory
             handle = entry.session
-            if vpr_arch is None and layout is not None:
-                raise InvalidArgument("layout goes with vpr_arch: give both, or neither")
-            if vpr_arch is not None and layout is None:
-                raise InvalidArgument("layout is needed with vpr_arch (for example 2x2)")
+            # The files first: a file that is not there, or is of the wrong kind, is what the answer
+            # says, before an argument that is missing
             given = [
                 (argument, name, resolve_file(config, where, name))
                 for argument, name in (
@@ -149,6 +147,10 @@ def register(
             ]
             for argument, name, path in given:
                 check_kind(argument, name, path)
+            if vpr_arch is None and layout is not None:
+                raise InvalidArgument("layout goes with vpr_arch: give both, or neither")
+            if vpr_arch is not None and layout is None:
+                raise InvalidArgument("layout is needed with vpr_arch (for example 2x2)")
             have = handle.state().inputs
             for argument, name, kept in (
                 ("vpr_arch", vpr_arch, have.vpr_arch),
@@ -354,6 +356,19 @@ def register(
         return answers.failed([item])
 
     def _synthesis_failure(plan, log: str, names: List[str], paths: List[Path]):
+        if "std::bad_alloc" in log:
+            return answers.failed(
+                [
+                    answers.diagnostic(
+                        "out_of_memory",
+                        "Yosys ran out of memory on the design",
+                        "The worker of the session has a limit on its memory (--worker-memory-mb), "
+                        "or the machine is full: use a smaller design",
+                        top=plan.top,
+                        log_tail=synthesis.last_lines(log, 8),
+                    )
+                ]
+            )
         message, where, line, errors = synthesis.error_details(log)
         hint = "Fix the Verilog (write_file) and call synthesize again"
         if re.search(r"Module `[^']*' not found", message):

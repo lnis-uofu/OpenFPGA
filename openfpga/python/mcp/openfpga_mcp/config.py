@@ -20,6 +20,10 @@ class Config:
     # What the files of one session may take, in bytes: a stage or a checkpoint that would add to a
     # directory that is over it is refused
     session_max_bytes: int = 512 * 1024 * 1024
+    # The address space of the worker of a session, in MB (0: no limit). VPR and Yosys map more than
+    # they use, and the module itself maps 600 MB: below about 2,000 a worker does not start. A command
+    # that needs more fails with "out of memory" and the worker goes on
+    worker_memory_mb: int = 0
     # The size of an answer, in characters: 4,000 is about 1,000 tokens; 16,000 at most
     answer_chars: int = 4000
     # Folders that the inputs of a flow (architectures, circuits) can be read from, besides root
@@ -52,6 +56,8 @@ class Config:
             raise ValueError("max_sessions must be at least 1")
         if not 500 <= self.answer_chars <= MAX_ANSWER_CHARS:
             raise ValueError("answer_chars is between 500 and %d" % MAX_ANSWER_CHARS)
+        if self.worker_memory_mb < 0:
+            raise ValueError("worker_memory_mb is 0 (no limit) or a number of MB")
         if self.session_max_bytes < 1:
             raise ValueError("session_max_bytes must be at least 1")
         if self.call_timeout_s <= 0 or self.idle_timeout_s <= 0:

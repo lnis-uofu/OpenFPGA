@@ -300,3 +300,13 @@ def test_a_session_keeps_one_script_whatever_the_top_modules_that_were_synthesiz
     assert "counter" in second and "counter" not in first  # the script is the one of the last run
     # Each top keeps its own netlist
     assert sorted(p.name for p in folder.glob("*.blif")) == ["and2.blif", "counter.blif"]
+
+
+def test_a_file_that_is_not_there_is_named_before_a_layout_that_is_missing(server):
+    assert call(server, "session_open")["ok"]
+    write(server, "c.blif", ".model m\n.inputs a\n.outputs y\n.names a y\n1 1\n.end\n")
+    item = call(server, "read_inputs", circuit="c.blif", vpr_arch="no_such_arch.xml")["diagnostics"][0]
+    assert item["kind"] == "file_not_found" and "no_such_arch.xml" in item["message"]
+    write(server, "varch.xml", "<architecture>\n</architecture>\n")
+    item = call(server, "read_inputs", circuit="c.blif", vpr_arch="varch.xml")["diagnostics"][0]
+    assert item["kind"] == "invalid_argument" and "layout is needed" in item["message"]

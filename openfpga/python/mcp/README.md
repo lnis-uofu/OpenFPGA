@@ -30,7 +30,7 @@ Without the extra the package is there and says what is missing when it starts.
   `Origin` of another site is refused). Another address is refused until the access checks of
   the web app exist.
 - Limits: `--max-sessions` (4), `--call-timeout` (600 s), `--idle-timeout` (3600 s),
-  `--answer-chars` (4,000; at most 16,000), `--session-max-mb` (512).
+  `--answer-chars` (4,000; at most 16,000), `--session-max-mb` (512), `--worker-memory-mb` (the address space of a worker; 0, no limit, is the default; a command that needs more fails and the worker goes on).
 
 ## A client
 

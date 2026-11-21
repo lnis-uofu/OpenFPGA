@@ -43,6 +43,15 @@ def from_exception(error: BaseException) -> Dict[str, Any]:
         kind = getattr(error, "kind", None) or "error"
         plain = [diagnostic(kind, str(error), getattr(error, "hint", None))]
     for item in plain:
+        if "std::bad_alloc" in str(item.get("message", "")) or "MemoryError" in str(
+            item.get("message", "")
+        ):
+            item["kind"] = "out_of_memory"
+            item["message"] = "The command ran out of memory: " + str(item["message"]).split(":")[-1].strip()
+            item["hint"] = (
+                "The worker of the session has a limit on its memory (--worker-memory-mb), or the "
+                "machine is full: use a smaller design"
+            )
         if str(item.get("kind", "")).startswith("worker_"):
             # The tool that does it, not the method of the library
             item["hint"] = _RESTORE_HINT

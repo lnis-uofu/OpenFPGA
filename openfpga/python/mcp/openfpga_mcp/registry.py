@@ -26,6 +26,7 @@ from .errors import (  # noqa: F401 - the failures are part of what the registry
 
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 _.-]{0,63}")
 _DIRECTORY = re.compile(r"s\d+")  # the directories that this registry makes
+JOURNAL = "journal"  # the commands of the session, as scripts that run again (get_journal, replay)
 META = "session.json"  # the name of the session and what the page knows of it, kept in its directory
 
 
@@ -110,6 +111,8 @@ class SessionRegistry:
                     cwd=directory,
                     checkpoint_dir=directory / "checkpoints",
                     timeout_s=self.config.call_timeout_s,
+                    journal=directory / JOURNAL,
+                    memory_limit_mb=self.config.worker_memory_mb,
                 )
             )
             now = self._clock()
@@ -194,6 +197,8 @@ class SessionRegistry:
                     cwd=path,
                     checkpoint_dir=checkpoint,
                     timeout_s=self.config.call_timeout_s,
+                    journal=path / JOURNAL,
+                    memory_limit_mb=self.config.worker_memory_mb,
                 )
             )
             now = self._clock()

@@ -62,6 +62,13 @@ def main(argv=None) -> int:
     parser.add_argument("--idle-timeout", type=float, default=Config.idle_timeout_s, metavar="S")
     parser.add_argument("--answer-chars", type=int, default=Config.answer_chars, metavar="N")
     parser.add_argument("--session-max-mb", type=int, default=512, metavar="MB")
+    parser.add_argument(
+        "--worker-memory-mb",
+        type=int,
+        default=0,
+        metavar="MB",
+        help="the address space of the worker of a session (0: no limit; below about 2000 it does not start)",
+    )
     parser.add_argument("--transport", choices=("stdio", "http"), default="stdio")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
@@ -80,6 +87,7 @@ def main(argv=None) -> int:
         idle_timeout_s=args.idle_timeout,
         answer_chars=args.answer_chars,
         session_max_bytes=args.session_max_mb * 1024 * 1024,
+        worker_memory_mb=args.worker_memory_mb,
     )
     server = build_server(config)
     # A termination of the process ends the workers too
