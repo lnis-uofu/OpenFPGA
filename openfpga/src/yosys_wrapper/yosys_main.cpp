@@ -5,9 +5,7 @@
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
 #endif
-#include <sys/stat.h>
-
-#include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -19,28 +17,16 @@
 
 namespace openfpga {
 
-namespace {
-
 /* What Yosys reports through log_error(), which would otherwise end the whole
  * process with exit(1): the message that Yosys keeps of its last error */
 struct YosysFailure : public std::runtime_error {
   explicit YosysFailure(const std::string& what) : std::runtime_error(what) {}
 };
 
-bool is_directory(const std::string& path) {
-  struct stat info;
-  return stat(path.c_str(), &info) == 0 && S_ISDIR(info.st_mode);
-}
-
-bool is_file(const std::string& path) {
-  struct stat info;
-  return stat(path.c_str(), &info) == 0 && S_ISREG(info.st_mode);
-}
-
 /* The folder of the file that holds this code: the openfpga executable, or the
  * Python module that was loaded. Yosys looks for its share/ folder and for
  * yosys-abc next to the running executable, which is python for the module */
-std::string folder_of_this_code() {
+static std::string folder_of_this_code() {
 #if defined(__unix__) || defined(__APPLE__)
   Dl_info info;
   if (dladdr(reinterpret_cast<void*>(&folder_of_this_code), &info) == 0 ||
@@ -51,41 +37,38 @@ std::string folder_of_this_code() {
   size_t slash = file.rfind('/');
   return slash == std::string::npos ? std::string(".") : file.substr(0, slash);
 #else
-  /* No dladdr: Yosys keeps looking next to the executable, or in
-   * OPENFPGA_YOSYS_DIR */
+  /* No dladdr: Yosys keeps looking next to the executable */
   return std::string();
 #endif
 }
 
 /* Where Yosys finds what it needs when it is not in an executable of its own:
  * share/ and yosys-abc in the folder of this code (OpenFPGA's build links them
- * there), or in the folder that OPENFPGA_YOSYS_DIR names. What Yosys found by
- * itself (the environment variable ABC, its own folders) is kept */
-void locate_yosys_files() {
-  std::string folder;
-  if (const char* given = std::getenv("OPENFPGA_YOSYS_DIR")) {
-    folder = given;
-  } else {
-    folder = folder_of_this_code();
-  }
+ * there). What Yosys found by itself (the environment variable ABC, its own
+ * folders) is kept */
+static void locate_yosys_files() {
+  namespace fs = std::filesystem;
+  std::string folder = folder_of_this_code();
   if (folder.empty()) {
     return;
   }
-  if (!is_directory(Yosys::yosys_share_dirname) &&
-      is_directory(folder + "/share")) {
+  std::error_code ec;
+  if (!fs::is_directory(Yosys::yosys_share_dirname, ec) &&
+      fs::is_directory(fs::path(folder) / "share", ec)) {
     Yosys::yosys_share_dirname = folder + "/share/";
   }
-  if (!is_file(Yosys::yosys_abc_executable) && is_file(folder + "/yosys-abc")) {
+  if (!fs::is_regular_file(Yosys::yosys_abc_executable, ec) &&
+      fs::is_regular_file(fs::path(folder) / "yosys-abc", ec)) {
     Yosys::yosys_abc_executable = folder + "/yosys-abc";
   }
 }
 
-void throw_yosys_failure() { throw YosysFailure(Yosys::log_last_error); }
+static void throw_yosys_failure() { throw YosysFailure(Yosys::log_last_error); }
 
 /* Yosys is set up once for the life of the process. It cannot be set up
  * again after yosys_shutdown(): its passes are not registered a second time.
  * The process ends and Yosys goes with it */
-void start_yosys_once() {
+static void start_yosys_once() {
   static bool started = false;
   if (started) {
     return;
@@ -100,8 +83,6 @@ void start_yosys_once() {
   Yosys::log_error_atexit = throw_yosys_failure;
   started = true;
 }
-
-}  // namespace
 
 int yosys_script_mode_wrapper(const std::string& script_path) {
   start_yosys_once();
