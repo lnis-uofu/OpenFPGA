@@ -8,6 +8,7 @@ and a number of files; two files of that name are an error that lists them, neve
 """
 
 import difflib
+import json
 import os
 import re
 from pathlib import Path
@@ -27,6 +28,7 @@ def _inside(path: Path, base: Path) -> bool:
 
 DESIGN_DEPTH = 6  # the folders under a designs folder that are looked into
 DESIGN_MAX_FILES = 20000  # the files that are looked at in all of them
+MANIFEST_MAX_BYTES = 256 * 1024
 UPLOADS = "uploads"
 CREATED = "created"  # the files that the model wrote in the session
 
@@ -56,6 +58,66 @@ def design_files(config: Config):
                         return
                     path = Path(entry.path)
                     yield path, path.relative_to(base).as_posix()
+
+
+def design_directories(config: Config) -> List[dict]:
+    """The design directories under the designs folders: the folders that have a manifest
+    design.json (docs/spec_design_directory.md). Each is {name, folder, relative, top, rtl}: the
+    name from the manifest (the folder name when it has none), the folder as a path and relative to
+    its designs folder, the top module, and the names of the rtl files. A manifest that is not a
+    JSON object, or is larger than MANIFEST_MAX_BYTES, is skipped: it is not a design directory"""
+    found = []
+    for path, relative in design_files(config):
+        if path.name != "design.json":
+            continue
+        try:
+            if path.stat().st_size > MANIFEST_MAX_BYTES:
+                continue
+            data = json.loads(path.read_text(errors="replace"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        entries = data.get("files") if isinstance(data.get("files"), list) else []
+        rtl = [
+            Path(e["path"]).name
+            for e in entries
+            if isinstance(e, dict) and e.get("role") == "rtl" and isinstance(e.get("path"), str)
+        ]
+        folder = path.parent
+        name = data.get("name") if isinstance(data.get("name"), str) and data["name"] else folder.name
+        top = data.get("top") if isinstance(data.get("top"), str) else None
+        found.append(
+            {
+                "name": name,
+                "folder": folder,
+                "relative": Path(relative).parent.as_posix(),
+                "top": top,
+                "rtl": rtl,
+                "manifest": data,
+            }
+        )
+    return sorted(found, key=lambda d: d["relative"])
+
+
+def find_design(config: Config, name: str) -> dict:
+    """The design directory of that name (its manifest name, its folder name, or its path under
+    a designs folder). Two of the same name are an error that lists them, never a choice"""
+    if not isinstance(name, str) or not name.strip():
+        raise InvalidArgument("design is the name of a design directory")
+    designs = design_directories(config)
+    found = [d for d in designs if name in (d["name"], d["relative"], d["folder"].name)]
+    if len(found) == 1:
+        return found[0]
+    if found:
+        raise AmbiguousFile(
+            "There are %d design directories named '%s': %s; give the path"
+            % (len(found), name, ", ".join(d["relative"] for d in found))
+        )
+    raise FileNotInWorkspace(
+        "There is no design directory '%s' (a folder with a design.json) in the designs folders%s"
+        % (name, ": " + ", ".join(d["name"] for d in designs[:30]) if designs else "")
+    )
 
 
 def resolve_file(config: Config, session_dir: str, name: str, workspace_only: bool = False) -> str:
@@ -110,6 +172,15 @@ def resolve_file(config: Config, session_dir: str, name: str, workspace_only: bo
         "There is no file '%s' in the workspace%s"
         % (name, "" if workspace_only else " or in the designs folders"),
     )
+    if not workspace_only and any(
+        name in (d["name"], d["relative"]) for d in design_directories(config)
+    ):
+        # A design directory is not a file: say what to do with it, in the words of the tool
+        error = FileNotInWorkspace(
+            "'%s' is a design directory, not a file: use synthesize with design='%s'" % (name, name)
+        )
+        error.hint = "Verilog is synthesized (use_device_package first); only a BLIF is read"
+        raise error
     close, more = _close_names(config, name, bases, not workspace_only)
     if close:
         error.hint = "Did you mean: %s%s?" % (

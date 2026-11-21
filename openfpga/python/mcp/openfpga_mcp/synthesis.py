@@ -147,6 +147,9 @@ def make_plan(
     folder: Path,
     package: Optional[DevicePackage],
     lut_size: Optional[int],
+    include_dirs: Optional[List[Path]] = None,
+    defines: Optional[Dict[str, str]] = None,
+    read_options: Optional[List[str]] = None,
 ) -> Plan:
     """The script for a design, written for the folder `folder` of the session. The LUT size is the
     one of the package, or the one given when there is none"""
@@ -183,8 +186,29 @@ def make_plan(
     for value in names + [str(blif)] + [v for k, v in values.items() if k.startswith("YOSYS_") and "PARAMETERS" not in k]:
         if not _PATH.match(value):
             raise InvalidArgument("The path '%s' has characters that a Yosys script does not take" % value)
+    extra: List[str] = [str(o) for o in (read_options or [])]
+    if not all(_OPTION.match(o) for o in extra):
+        raise InvalidArgument("read_options of the design are options like -nolatches")
+    for name, value in (defines or {}).items():
+        if not (isinstance(name, str) and isinstance(value, str)):
+            raise InvalidArgument("defines of the design are NAME: value pairs of text")
+        option = "-D %s=%s" % (name, value)
+        if not _DEFINE.match(option):
+            raise InvalidArgument(
+                "The define '%s' of the design has characters that a Yosys script does not take"
+                % name
+            )
+        extra.append(option)
+    for folder_path in include_dirs or []:
+        if not _PATH.match(str(folder_path)):
+            raise InvalidArgument(
+                "The include folder '%s' has characters that a Yosys script does not take"
+                % folder_path
+            )
+        extra.append("-I%s" % folder_path)
     if any(p.suffix.lower() == ".sv" for p in files):
-        values["READ_VERILOG_OPTIONS"] = (values["READ_VERILOG_OPTIONS"] + " -sv").strip()
+        extra.append("-sv")
+    values["READ_VERILOG_OPTIONS"] = (values["READ_VERILOG_OPTIONS"] + " " + " ".join(extra)).strip()
     values.update(
         {
             "TOP_MODULE": top,

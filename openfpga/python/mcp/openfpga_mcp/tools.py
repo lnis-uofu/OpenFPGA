@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union
 from . import answers, budget, device_packages, filenames, synthesis
 from .config import Config
 from .errors import FileExists, InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
-from .paths import CREATED, check_kind, resolve_file
+from .paths import CREATED, check_kind, find_design, resolve_file
 from .registry import Entry, SessionRegistry
 
 _WRITE_MAX_BYTES = 256 * 1024  # the text that a model may write in one file
@@ -261,30 +261,54 @@ def register(
 
     @tool()
     async def synthesize(
-        session: str, top: str, files: str, read: bool = True, lut_size: Optional[int] = None
+        session: str,
+        top: Optional[str] = None,
+        files: Optional[str] = None,
+        read: bool = True,
+        lut_size: Optional[int] = None,
+        design: Optional[str] = None,
     ):
-        """Synthesize Verilog into a netlist of the LUTs of the device, with Yosys. top is the
-        name of the top module and files the Verilog files (.v, .sv, .vh) separated by commas,
-        as names of files of the session (uploaded, or written with write_file) or of a designs
-        folder. The device is the one of use_device_package: its LUT size and its synthesis
-        script. With no device package give lut_size. The netlist is written as
-        synth/<top>.blif in the session (and the one script of the session, synth/synth.ys); with read true it is also read as the circuit when the
-        architectures are read, and run_stage can follow. Returns the netlist (LUTs, flip-flops,
-        the widest LUT, ports) and the end of the log. Fails with yosys_error and the file and
-        line of the error: fix the Verilog (write_file) and call again."""
+        """Synthesize Verilog into a netlist of the LUTs of the device, with Yosys. Give design,
+        the name of a design directory (a folder with a design.json: its top, files, defines and
+        include folders come from the manifest), or give top (the top module) and files (.v, .sv,
+        separated by commas; names of files of the session or of a designs folder). The device
+        is the one of use_device_package (its LUT size and script); with none give lut_size. The
+        netlist is synth/<top>.blif; with read true it is read as the circuit, and run_stage
+        can follow. Returns LUTs, flip-flops, the widest LUT, ports and the end of the log. Fails
+        with yosys_error and the file and line: fix the Verilog (write_file) and call again."""
 
         def work():
             entry = session_of(session)
             handle = entry.session
-            names = [n.strip() for n in str(files).split(",") if n.strip()]
-            paths = [Path(resolve_file(config, entry.directory, n)) for n in names]
+            nonlocal top
+            include_dirs: List[Path] = []
+            options: Dict[str, Any] = {}
+            if design is not None:
+                if top is not None or files is not None:
+                    raise InvalidArgument("give design, or top and files, not both")
+                found = find_design(config, design)
+                names, paths, top, include_dirs, options = _design_inputs(found)
+            else:
+                if top is None or files is None:
+                    raise InvalidArgument("give design, or top and files")
+                names = [n.strip() for n in str(files).split(",") if n.strip()]
+                paths = [Path(resolve_file(config, entry.directory, n)) for n in names]
             package = None
             package_name = registry.read_meta(entry.directory).get("package_name")
             if package_name:
                 package = device_packages.find(config, package_name)
             check_room(entry)
             folder = config.root / entry.directory / "synth"
-            plan = synthesis.make_plan(top, paths, folder, package, lut_size)
+            plan = synthesis.make_plan(
+                top,
+                paths,
+                folder,
+                package,
+                lut_size,
+                include_dirs=include_dirs,
+                defines=options.get("defines"),
+                read_options=options.get("read_options"),
+            )
             folder.mkdir(parents=True, exist_ok=True)
             for old in folder.glob("*.ys"):  # one script: not one for each top module
                 if old != plan.script_file:
@@ -330,6 +354,54 @@ def register(
             return reply(result)
 
         return await run(work)
+
+    def _design_inputs(found: Dict[str, Any]):
+        """The names, whole paths, top, include folders and options of a design directory: the
+        files of its manifest, each inside the folder (the manifest is read as data, never as
+        paths to trust)"""
+        manifest = found["manifest"]
+        folder = found["folder"].resolve()
+
+        def inside(relative: Any, what: str) -> Path:
+            if not isinstance(relative, str) or os.path.isabs(relative) or ".." in Path(relative).parts:
+                raise InvalidArgument(
+                    "The manifest of '%s' has the %s '%s', which is not inside the design"
+                    % (found["name"], what, relative)
+                )
+            path = (folder / relative).resolve()
+            if folder not in path.parents:
+                raise InvalidArgument(
+                    "The %s '%s' of '%s' leads outside the design" % (what, relative, found["name"])
+                )
+            return path
+
+        entries = [e for e in manifest.get("files", []) if isinstance(e, dict)]
+        rtl = [e for e in entries if e.get("role") == "rtl"]
+        if not rtl:
+            raise InvalidArgument(
+                "The design '%s' has no RTL to synthesize%s"
+                % (found["name"], "; it has a netlist: read it with read_inputs" if any(
+                    e.get("role") == "netlist" for e in entries) else "")
+            )
+        paths = [inside(e.get("path"), "file") for e in rtl]
+        for path, entry in zip(paths, rtl):
+            if path.suffix.lower() not in synthesis.SOURCE_SUFFIXES:
+                raise InvalidArgument(
+                    "The design '%s' has the file '%s', which is not Verilog or SystemVerilog "
+                    "(this tool synthesizes those)" % (found["name"], entry.get("path"))
+                )
+            if not path.is_file():
+                raise InvalidArgument("The file '%s' of '%s' does not exist" % (entry.get("path"), found["name"]))
+        rtl_block = manifest.get("rtl") if isinstance(manifest.get("rtl"), dict) else {}
+        dirs = [inside(d, "include folder") for d in rtl_block.get("include_dirs", [])]
+        top = manifest.get("top")
+        if not isinstance(top, str):
+            raise InvalidArgument("The manifest of '%s' has no top" % found["name"])
+        options = {
+            "defines": rtl_block.get("defines") or {},
+            "read_options": rtl_block.get("read_options") or [],
+        }
+        return [p.name for p in paths], paths, top, dirs, options
 
     def _circuit_not_read(plan, result: Dict[str, Any], error: BaseException):
         """The netlist was made and the flow cannot read it: not a success, because the stages
