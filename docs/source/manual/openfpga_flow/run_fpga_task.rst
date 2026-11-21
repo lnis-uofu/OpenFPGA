@@ -141,6 +141,19 @@ OpenFPGA_SHELL Sections
 
     User can specify OpenFPGA_SHELL options in this section.
 
+.. option:: openfpga_shell_template=<script_path>
+
+    The script that runs the OpenFPGA flow. A script that ends with ``.openfpga`` is run by the OpenFPGA shell,
+    after the variables it uses, e.g., ``${VPR_ARCH_FILE}``, have been replaced.
+
+    A script that ends with ``.py`` is run by Python, with the Python module of OpenFPGA.
+    The module is looked up in ``${OPENFPGA_PYTHON_PATH}``, which defaults to ``${OPENFPGA_PATH}/build/openfpga``, so OpenFPGA
+    must be built with ``-DOPENFPGA_SWIG_PYTHON=ON``. The variables are not replaced: they are environment variables, e.g.,
+    ``VPR_ARCH_FILE``, ``OPENFPGA_ARCH_FILE``, ``VPR_TESTBENCH_BLIF`` and every ``openfpga_*`` option of this section in upper
+    case (``OPENFPGA_VPR_DEVICE_LAYOUT``). The script is plain Python, which can be run by hand in the directory of the run with
+    the same variables set. What it prints is the log of the shell, from which the results of VPR are read, so a script prints
+    the log of every command. Examples are in ``openfpga_flow/openfpga_python_scripts`` and the tasks ``basic_tests/python_shell``.
+
 
 Architectures Sections
 ^^^^^^^^^^^^^^^^^^^^^^
