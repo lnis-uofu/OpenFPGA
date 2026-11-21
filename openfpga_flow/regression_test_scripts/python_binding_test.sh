@@ -19,9 +19,12 @@ fi
 
 # Older environment images do not ship pytest
 ${PYTHON_EXEC} -m pytest --version > /dev/null 2>&1 || ${PYTHON_EXEC} -m pip install pytest
+# The answers of the queries are validated against their JSON schemas
+${PYTHON_EXEC} -c "import jsonschema" > /dev/null 2>&1 || ${PYTHON_EXEC} -m pip install jsonschema
 
 ${PYTHON_EXEC} -m pytest ${OPENFPGA_PATH}/openfpga_flow/tasks/python_binding_tests -v
 
 echo -e "Regression tests for the tasks that run the flow with Python scripts";
 run-task basic_tests/python_shell/monolithic $@
 run-task basic_tests/python_shell/stage_by_stage $@
+run-task basic_tests/python_shell/seed_sweep $@

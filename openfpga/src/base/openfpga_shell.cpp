@@ -19,6 +19,7 @@
 #ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
 #include "openfpga_yosys_command.h"
 #endif
+#include "query_commands.h"
 #include "stage_commands.h"
 #include "vpr_command.h"
 #include "vtr_log.h"
@@ -55,6 +56,7 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
+  openfpga::add_query_commands(shell_);
 
   /* Add basic commands: exit, help, etc.
    * Note:
@@ -97,6 +99,7 @@ int OpenfpgaShell::execute_guarded(const char* cmd_line, std::string& error) {
 
 int OpenfpgaShell::run_command(const char* cmd_line) {
   std::string error;
+  openfpga_ctx_.clear_query_result();
   return execute_guarded(cmd_line, error);
 }
 
@@ -112,8 +115,14 @@ CommandResult OpenfpgaShell::execute(const char* cmd_line) {
   }
 
   openfpga::OutputCapture capture;
+  /* An answer is the one of this command only */
+  openfpga_ctx_.clear_query_result();
   result.status = execute_guarded(cmd_line, result.error);
   result.log = capture.stop();
+  if (0 == result.status) {
+    result.data = openfpga_ctx_.query_result();
+  }
+  openfpga_ctx_.clear_query_result();
   return result;
 }
 

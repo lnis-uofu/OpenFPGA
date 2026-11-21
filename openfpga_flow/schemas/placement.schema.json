@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "placement",
+  "description": "Where the blocks of the placed design are, answer of 'placement'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "placement"
+    },
+    "stage": {
+      "const": "PLACED"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "grid",
+        "filter",
+        "total",
+        "returned",
+        "truncated",
+        "blocks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "grid": {
+          "type": "object",
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "filter": {
+          "type": "object",
+          "required": [
+            "type",
+            "prefix"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "prefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "type",
+              "x",
+              "y",
+              "sub_tile",
+              "layer"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "x": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sub_tile": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "layer": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

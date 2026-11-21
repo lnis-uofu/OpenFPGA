@@ -91,9 +91,44 @@ report_app_option
 
     Name of the option to report. All the options are reported when it is not set
 
+  .. option:: --changed
+
+    Report only the options that do not have their default value. With ``--name``, nothing is reported if that option has its default value
+
+  .. option:: --json
+
+    Report as a JSON answer instead of lines of text, see :ref:`query_answers`. The answer is of the kind ``app_options``, and its data is ``{"options": [...]}``, with one entry per option: ``name``, ``type`` (``string``, ``int``, ``float``, ``bool`` or ``selection``), ``value`` and ``default`` (typed after the type), ``is_default``, ``help``, ``choices`` (empty unless the option is a selection) and ``stage`` (the stage that the option tunes). Its schema is ``openfpga_flow/schemas/app_options.schema.json``.
+
   .. code-block::
 
     report_app_option --name place.seed
+    report_app_option --changed
+    report_app_option --json
+
+.. _query_answers:
+
+Answers of queries
+~~~~~~~~~~~~~~~~~~
+
+  A command that answers a query, e.g., ``report_app_option --json``, prints its answer as JSON, and gives it to the program that ran the command. In Python, it is the ``data`` of the result, already parsed (``raw_data`` is the text)::
+
+    result = shell.report_app_option(json=True)
+    result.data["data"]["options"][0]["name"]
+
+  ``data`` is ``None`` for a command that gives no answer, and for one that failed. The queries about the design are in :ref:`openfpga_query_commands`.
+
+  Every answer has the same envelope:
+
+  .. code-block:: text
+
+    {"schema_version": 1, "kind": "app_options", "stage": null, "data": {...}}
+
+  - ``kind`` names the answer. Its schema is ``openfpga_flow/schemas/<kind>.schema.json``
+  - ``schema_version`` is the version of the schema of that kind, and each kind has its own. Adding a field keeps the version. Removing or renaming a field, or changing what a field means, increases it
+  - ``stage`` is the stage of the flow that the answer was read from, e.g., ``ROUTED``, and ``null`` for an answer that is not read from a stage, e.g., the application options
+  - ``data`` is the answer
+
+  The text is compact and the keys always come in the same order, so the same answer is always the same text. A number that is not finite is ``null``, and what is not valid UTF-8 in a name is replaced by U+FFFD.
 
 exit
 ~~~~

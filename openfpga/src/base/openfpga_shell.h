@@ -13,11 +13,15 @@
  * - log: everything the command printed on stdout and stderr
  * - error: message of the exception that stopped the command, if any.
  *   Empty when the command ended without throwing
+ * - data: the answer of a command that answers a query, as JSON text, see
+ *   json_response.h. Empty if the command gives none, or if it failed. The
+ *   command also prints it, so that it is in the log of the shell as well
  *******************************************************************/
 struct CommandResult {
   int status = 0;
   std::string log;
   std::string error;
+  std::string data;
 };
 
 /********************************************************************
