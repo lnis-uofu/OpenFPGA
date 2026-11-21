@@ -201,6 +201,48 @@ def _plan_device_package(design: Design) -> List[ModelTurn]:
     )
 
 
+TOGGLE_V = """module toggle(input clk, input rst, output reg q);
+  always @(posedge clk) begin
+    if (rst) q <= 1'b0; else q <= ~q;
+  end
+endmodule
+"""
+
+BROKEN_V = """module broken(input a, output y);
+  assign y = a &;
+endmodule
+"""
+
+
+def _plan_write_and_synthesize(design: Design) -> List[ModelTurn]:
+    return (
+        [say("", call("session_open", name="toggle"))]
+        + [say("", call("use_device_package", name=PACKAGE))]
+        + [say("", call("write_file", name="toggle.v", content=TOGGLE_V))]
+        + [say("", call("synthesize", top="toggle", files="toggle.v"))]
+        + [say("", call("set_constraint", kind="chan_width", width=design.chan_width))]
+        + _stages("pack", "place", "route", "analysis")
+        + [say("", call("get_timing", paths=1))]
+        + [lambda messages: say("The Fmax is %.2f MHz." % _fmax_in(messages))]
+    )
+
+
+def _prepare_broken(inputs: Path, design: Design) -> None:
+    (inputs / "broken.v").write_text(BROKEN_V)
+
+
+def _plan_synth_error(design: Design) -> List[ModelTurn]:
+    return [
+        say("", call("session_open", name="broken")),
+        say("", call("use_device_package", name=PACKAGE)),
+        say("", call("synthesize", top="broken", files="broken.v")),
+        say(
+            "The synthesis failed: broken.v line 2 has a syntax error (unexpected ';'). "
+            "Nothing was run after it."
+        ),
+    ]
+
+
 def _plan_set_width(design: Design) -> List[ModelTurn]:
     return (
         [say("", call("session_open", name=design.name))]
@@ -304,6 +346,41 @@ def _check_synthesis(outcome: Outcome, design: Design) -> List[str]:
     return problems + _check_flow_fmax(outcome, design)
 
 
+def _check_write_and_synthesize(outcome: Outcome, design: Design) -> List[str]:
+    problems = []
+    wrote = [
+        c for c in outcome.ok_calls("write_file") if "module toggle" in str(c.arguments.get("content", ""))
+    ]
+    if not wrote:
+        problems.append("toggle.v was not written with a module toggle")
+    made = [c for c in outcome.ok_calls("synthesize") if c.arguments.get("top") == "toggle"]
+    if not made:
+        problems.append("toggle was not synthesized")
+    else:
+        data = made[-1].answer.get("data", {})
+        if not data.get("flip_flops"):
+            problems.append("the netlist has no flip-flop: the toggle was not described")
+        if not data.get("circuit_read"):
+            problems.append("the netlist was not read as the circuit")
+    return problems + _check_flow_fmax(outcome, design)
+
+
+def _check_synth_error(outcome: Outcome, design: Design) -> List[str]:
+    problems = []
+    failed = [c for c in outcome.calls if c.tool == "synthesize" and not c.ok]
+    if not failed:
+        problems.append("synthesize was not called, or it did not fail")
+    if outcome.reached():
+        problems.append("a stage was reached after a synthesis that failed")
+    if [c for c in outcome.calls if c.tool == "write_file"]:
+        problems.append("a file was written: the person asked only for the synthesis")
+    if not _said(outcome, "broken.v"):
+        problems.append("the answer does not name the file")
+    if 2.0 not in outcome.numbers():
+        problems.append("the answer does not say the line of the error (2)")
+    return problems
+
+
 def _check_set_width(outcome: Outcome, design: Design) -> List[str]:
     problems = []
     if "ROUTED" not in outcome.reached():
@@ -368,6 +445,25 @@ SCENARIOS: Dict[str, Scenario] = {
             _plan_synthesis,
             _check_synthesis,
             prepare=_prepare_synthesis,
+        ),
+        Scenario(
+            "write_and_synthesize",
+            "The model writes the Verilog, synthesizes it and runs the flow",
+            lambda d: "Use the device package %s. Write a Verilog file toggle.v with a module toggle "
+            "(inputs clk and rst, output q): q is 0 after rst and flips at every rising edge of clk "
+            "otherwise. Synthesize it (the top module is toggle) and run the whole flow at a channel "
+            "width of %d. Tell me the Fmax." % (PACKAGE, d.chan_width),
+            _plan_write_and_synthesize,
+            _check_write_and_synthesize,
+        ),
+        Scenario(
+            "synth_syntax_error",
+            "A Verilog file with a syntax error: say the file and the line, run nothing, change nothing",
+            lambda d: "Use the device package %s and synthesize broken.v (the top module is broken). "
+            "Tell me the result." % PACKAGE,
+            _plan_synth_error,
+            _check_synth_error,
+            prepare=_prepare_broken,
         ),
         Scenario(
             "set_width",

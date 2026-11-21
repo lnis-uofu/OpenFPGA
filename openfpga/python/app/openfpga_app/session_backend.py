@@ -355,6 +355,11 @@ class SessionBackend:
             }
         if name == "session_open" and answer.get("ok"):
             self.sid = answer["data"]["session"]
+        if name == "replay" and answer.get("ok"):
+            self.sid = answer["data"]["session"]  # the page follows the new session
+            meta = self.registry.read_meta(self.registry.get(self.sid).directory)
+            if meta.get("device_package"):
+                self._packages[self.sid] = meta["device_package"]
         if name == "use_device_package" and answer.get("ok"):
             self._set_package(arguments["session"], answer["data"]["device_package"])
         if name == "session_close" and answer.get("ok") and arguments.get("session") == self.sid:

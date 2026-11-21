@@ -66,6 +66,13 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--max-sessions", type=int, default=4)
     parser.add_argument("--call-timeout", type=float, default=600.0, metavar="S")
+    parser.add_argument(
+        "--worker-memory-mb",
+        type=int,
+        default=0,
+        metavar="MB",
+        help="the address space of the worker of a session (0: no limit; below about 2000 it does not start)",
+    )
     parser.add_argument("--open", action="store_true", help="open the browser")
     args = parser.parse_args(argv)
     try:
@@ -119,6 +126,7 @@ def main(argv=None) -> int:
                     package_dirs=_package_dirs(args.device_packages),
                     max_sessions=args.max_sessions,
                     call_timeout_s=args.call_timeout,
+                    worker_memory_mb=args.worker_memory_mb,
                 ),
                 model=model,
                 agent_config=agent_config,

@@ -49,7 +49,7 @@ calls of the endpoint, `json` makes the model answer with a JSON object that the
 constrains to the tools (a smaller prompt, and a different way to go wrong). `--record-dir`
 writes each conversation as lines of JSON (what the model said, each call and its answer, the
 tokens and the seconds). What the person does meanwhile (console, buttons, `/` lines) is told to
-the model at its next message. All 25 tools are shown to the model; the files it can read are
+the model at its next message. All 27 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
 ## The first screen

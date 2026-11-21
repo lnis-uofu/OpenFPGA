@@ -132,3 +132,14 @@ def test_the_demo_has_no_synthesis_either():
     assert view["synthesis"]["status"] == "not_reached"
     demo._set_stages(["DEVICE"])  # the demo reads a netlist: there is nothing to synthesize
     assert asyncio.run(demo.view())["synthesis"]["status"] == "skipped"
+
+
+def test_the_page_follows_the_session_of_a_replay(backend):
+    first = opened(backend)
+    write(backend, "and2.v", AND2)
+    assert call(backend, "synthesize", top="and2", files="and2.v")["ok"]
+    assert call(backend, "run_stage", stage="pack")["ok"]
+    data = call(backend, "replay", journal=first)["data"]
+    assert data["session"] != first and backend.sid == data["session"]
+    shown = asyncio.run(backend.view())["session"]
+    assert shown["id"] == data["session"] and shown["device_package"]["name"] == LOGIC
