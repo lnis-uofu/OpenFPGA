@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import { Markdown } from "../markdown";
 import { resultMarkdown } from "../resultMarkdown";
-import { CHAT, activeTab, calls, closeTab, pinTab, split, tabs } from "../store";
+import { CHAT, activeTab, calls, closeTab, pinTab, reportUrl, split, tabs, view } from "../store";
 import { Chat } from "./Chat";
 import { Drawing, kindOf } from "./Drawings";
 import { FileView } from "./FileView";
@@ -43,7 +43,35 @@ export function ResultView(props: { callId: string }) {
   );
 }
 
-function TabContent(props: { tab: { id: string; file?: string } }) {
+/** The HTML report of a stage, in a frame. The frame is sandboxed with nothing allowed: the report
+ * runs no script and cannot reach the page. It loads again when the session changes (a new run) */
+export function ReportView(props: { stage: string; title: string }) {
+  const v = view.value;
+  const has = (v.reports ?? []).includes(props.stage);
+  const version = `${v.session?.id ?? ""}|${v.latest.text}`;
+  const src = reportUrl(props.stage, version);
+  return (
+    <section class="report-view" aria-label={props.title}>
+      <div class="result-head">
+        <strong>{props.title}</strong>
+        <span class="spacer" />
+        {has && (
+          <a class="button-link" href={src} target="_blank" rel="noopener" title="Open the report in a tab of the browser">
+            Open in browser ↗
+          </a>
+        )}
+      </div>
+      {has ? (
+        <iframe class="report-frame" title={props.title} src={src} sandbox="" referrerpolicy="no-referrer" />
+      ) : (
+        <p class="muted">This session has no report of this stage (yet): it is written when the stage runs.</p>
+      )}
+    </section>
+  );
+}
+
+function TabContent(props: { tab: { id: string; file?: string; report?: string; title: string } }) {
+  if (props.tab.report) return <ReportView stage={props.tab.report} title={props.tab.title} />;
   return props.tab.file ? <FileView name={props.tab.file} /> : <ResultView callId={props.tab.id} />;
 }
 

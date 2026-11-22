@@ -48,6 +48,7 @@ export interface ToolCall {
 export interface ResultTab {
   id: string; // the call that it shows, or "file:NAME" for a file
   file?: string; // the name of the file, for a tab of the viewer
+  report?: string; // the stage whose HTML report it shows (device, synthesis, pack, place, route, analysis)
   title: string;
   pinned: boolean;
   unread: boolean;
@@ -492,6 +493,29 @@ export function closeTab(id: string) {
 }
 
 export const fileTabId = (name: string) => `file:${name}`;
+
+/** The title of the tab of the report of a stage */
+export const REPORT_TITLES: Record<string, string> = {
+  device: "Device report",
+  synthesis: "Synthesis report",
+  pack: "Packing report",
+  place: "Placement report",
+  route: "Routing report",
+  analysis: "Timing report",
+};
+
+/** The HTML report of a stage, in a tab of its own (one tab for each stage) */
+export function openReport(stage: string) {
+  const id = `report:${stage}`;
+  if (!tabs.value.some((t) => t.id === id)) {
+    tabs.value = [...tabs.value, { id, title: REPORT_TITLES[stage] ?? `${stage} report`, pinned: false, unread: false, report: stage }];
+  }
+  activeTab.value = id;
+}
+
+/** Where the report of a stage is: the version changes after each run, so the frame loads it again */
+export const reportUrl = (stage: string, version = "") =>
+  `/api/report?stage=${encodeURIComponent(stage)}${version ? `&v=${encodeURIComponent(version)}` : ""}`;
 
 /** Open a file in a tab of the viewer (or go to it), and read it again: a result may have changed */
 export async function openFile(name: string) {

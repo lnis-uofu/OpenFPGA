@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse, Response, StreamingResponse
+from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
@@ -121,6 +121,21 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "ambiguous_file": 409}.get(kind, 400)
         return JSONResponse(answer, status)
 
+    async def report(request: Request) -> Response:
+        """The HTML report of a stage, as a page of its own. It is the server's own page, with every
+        value escaped; the policy also forbids scripts and any load from elsewhere"""
+        text = await backend.read_report(request.query_params.get("stage", ""))
+        if text is None:
+            return Response("No report of that stage in this session", status_code=404, media_type="text/plain")
+        return HTMLResponse(
+            text,
+            headers={
+                "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'",
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "no-store",
+            },
+        )
+
     async def save_file(request: Request) -> Response:
         name = request.query_params.get("name", "")
         data = bytearray()
@@ -210,6 +225,7 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/console", console, methods=["POST"]),
         Route("/api/device-packages", device_packages),
         Route("/api/file", file),
+        Route("/api/report", report),
         Route("/api/file", save_file, methods=["PUT"]),
         Route("/api/file/copy", copy_file, methods=["POST"]),
         Route("/api/sessions", sessions),

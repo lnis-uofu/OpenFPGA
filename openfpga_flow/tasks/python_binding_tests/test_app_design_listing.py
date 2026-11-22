@@ -81,5 +81,5 @@ def test_the_view_has_the_design_directories_with_no_session(openfpga_module, tm
         backend.close()
     assert view["session"] is None
     assert view["designs"] == [
-        {"name": "alpha", "top": "alpha_top", "path": "group/alpha", "files": ["a.v", "b.v"], "description": None}
+        {"name": "alpha", "top": "alpha_top", "path": "group/alpha", "files": ["a.v", "b.v"], "netlists": [], "description": None}
     ]

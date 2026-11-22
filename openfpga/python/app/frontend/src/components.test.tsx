@@ -18,6 +18,7 @@ import {
   consoleOpen,
   emptyView,
   messages,
+  openReport,
   openResult,
   resetStore,
   settingsOpen,
@@ -140,7 +141,7 @@ describe("the sidebar", () => {
     expect(stages[1]).toContain("SYNTHESIS");
     expect(stages[3]).toContain("2.1 s");
     expect(stages[4]).toContain("○");
-    expect(screen.getByText("layout 2x2")).toBeTruthy();
+    expect(screen.getByLabelText("Open the architecture files")).toBeTruthy();
     expect(screen.queryByText(/k6_frac_N10_tileable_40nm_with_a_long_name/)).toBeNull(); // the architecture is a button
     expect(screen.getByText("chan width 24")).toBeTruthy();
     expect(screen.getByText("routing_test.net")).toBeTruthy();
@@ -397,7 +398,7 @@ describe("uploading files to the session", () => {
   const taken = { ok: false, diagnostics: [{ kind: "file_exists", message: "There is already a file 'a.blif'" }] };
   const pick = (file: File) => fireEvent.change(screen.getByLabelText("Upload files"), { target: { files: [file] } });
 
-  it("lists what was uploaded, with what it is and its size", () => {
+  it("lists what was uploaded with its size and no label", () => {
     const v = filled();
     v.files.uploads = [
       { name: "mine.blif", kind: "circuit", bytes: 900 },
@@ -406,21 +407,18 @@ describe("uploading files to the session", () => {
     view.value = v;
     render(<Sidebar />);
     expect(screen.getByText("mine.blif")).toBeTruthy();
-    expect(screen.getAllByText("circuit")).toHaveLength(2); // the input of that name, and the chip
     expect(screen.getByText("900 B")).toBeTruthy();
-    expect(screen.getByText("OpenFPGA arch")).toBeTruthy();
     expect(screen.getByText("20 kB")).toBeTruthy();
+    expect(document.querySelector(".design-files .chip")).toBeNull(); // no kind, origin or loaded label
   });
 
-  it("lists the files that the model wrote with the others, marked by their origin, with no remove button", () => {
+  it("lists the files that the model wrote with the others, with no remove button", () => {
     const v = filled();
     v.files.created = [{ name: "my_arch.xml", kind: "vpr_arch", bytes: 2048 }];
     view.value = v;
     render(<Sidebar />);
     expect(screen.queryByText("Written by the model")).toBeNull(); // one list, not one for each origin
     expect(screen.getByText("my_arch.xml")).toBeTruthy();
-    expect(screen.getByText("VPR arch")).toBeTruthy();
-    expect(screen.getByText("by the model")).toBeTruthy();
     expect(screen.queryByLabelText("Remove my_arch.xml")).toBeNull();
   });
 
@@ -438,17 +436,33 @@ describe("uploading files to the session", () => {
     render(<Sidebar />);
     expect(screen.queryByText("Synthesis", { selector: "h3" })).toBeNull();
     expect(screen.getByText("synth/and2.blif")).toBeTruthy();
-    expect(screen.getAllByText("synthesis")).toHaveLength(2); // the origin of both files
-    expect(screen.getAllByText("loaded")).toHaveLength(1);
+    expect(screen.getByText("synth/synth.ys")).toBeTruthy();
+    expect(document.querySelectorAll(".design-files .upload-row.loaded")).toHaveLength(1);
+    expect(document.querySelector(".design-files .upload-row.loaded")?.textContent).toContain("synth/and2.blif");
     expect(screen.queryByText("s1/synth/and2.blif")).toBeNull(); // the circuit input is not listed twice
+  });
+
+  it("lists the copy of a design directory first", () => {
+    const v = filled();
+    v.files.design = [
+      { name: "design/chip/design.json", kind: "other", bytes: 400 },
+      { name: "design/chip/rtl/chip.v", kind: "other", bytes: 120 },
+    ];
+    v.files.synthesis = [{ name: "synth/chip.blif", kind: "circuit", bytes: 300 }];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getByText("design/chip/rtl/chip.v")).toBeTruthy();
+    const rows = [...document.querySelectorAll(".design-files .upload-row")].map((e) => e.textContent ?? "");
+    const at = (name: string) => rows.findIndex((r) => r.startsWith(name));
+    expect(at("design/chip/rtl/chip.v")).toBeGreaterThanOrEqual(0);
+    expect(at("design/chip/rtl/chip.v")).toBeLessThan(at("synth/chip.blif"));
   });
 
   it("lists only the circuit that was read when there is nothing else", () => {
     view.value = filled();
     render(<Sidebar />);
     expect(screen.getByText("routing_test.blif")).toBeTruthy(); // the circuit from a designs folder
-    expect(screen.getByText("design folder")).toBeTruthy();
-    expect(screen.getByText("loaded")).toBeTruthy();
+    expect(document.querySelector(".design-files .upload-row.loaded")?.textContent).toContain("routing_test.blif");
   });
 
   it("removes a file after the person confirms, and reads the session again", async () => {
@@ -921,19 +935,21 @@ describe("the page", () => {
   });
 });
 
-describe("the architecture of the sidebar", () => {
+describe("the device stage of the sidebar", () => {
   const real = () => {
     config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
   };
+  const pkg = { name: "k6_frac_n10_2x2", version: "0.1.0", description: "d", layout: "2x2", lut_size: 6, tags: [] };
+  const device = () => screen.getAllByRole("listitem")[0];
 
-  it("has a label and a button instead of the two architecture files, and the button opens both", async () => {
+  it("has a button instead of the two architecture files, and the button opens both", async () => {
     real();
     vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(JSON.stringify({ ok: true, data: { name: "x", text: "<a/>", bytes: 4, truncated: false } })))));
     view.value = filled();
     render(<Sidebar />);
-    expect(screen.getByText("Architecture")).toBeTruthy();
     expect(screen.queryByText("k6_frac_N10_40nm_openfpga.xml")).toBeNull();
-    fireEvent.click(screen.getByText("Show architecture"));
+    expect(screen.queryByText("Architecture")).toBeNull(); // not in the design files any more
+    fireEvent.click(screen.getByLabelText("Open the architecture files"));
     await waitFor(() =>
       expect(tabs.value.map((t) => t.id)).toEqual([
         "file:k6_frac_N10_tileable_40nm_with_a_long_name.xml",
@@ -942,23 +958,147 @@ describe("the architecture of the sidebar", () => {
     );
   });
 
-  it("says that it is not read, and has no button, before the architectures are read", () => {
+  it("has no button before the architectures are read", () => {
     real();
     const v = filled();
     v.files.inputs = [];
     view.value = v;
     render(<Sidebar />);
-    expect(screen.getByText("(not read)")).toBeTruthy();
-    expect(screen.queryByText("Show architecture")).toBeNull();
+    expect(screen.queryByLabelText("Open the architecture files")).toBeNull();
   });
 
-  it("names the device package next to it", () => {
+  it("names the device package next to DEVICE", () => {
     real();
     const v = filled();
-    v.session = { ...v.session!, device_package: { name: "k6_frac_n10_2x2", version: "0.1.0", description: "d", layout: "2x2", lut_size: 6, tags: [] } };
+    v.session = { ...v.session!, device_package: pkg };
     view.value = v;
     render(<Sidebar />);
-    expect(screen.getAllByText("k6_frac_n10_2x2").length).toBeGreaterThan(0);
+    expect(device().textContent).toContain("DEVICE k6_frac_n10_2x2");
+  });
+
+  it("is reached as soon as the device package is loaded, before the circuit", () => {
+    real();
+    const v = filled();
+    v.session = { ...v.session!, device_package: pkg };
+    v.stages = v.stages.map((st) => ({ ...st, status: "not_reached" as const, seconds: null }));
+    v.files.inputs = v.files.inputs.filter((f) => f.label !== "circuit");
+    view.value = v;
+    render(<Sidebar />);
+    expect(device().className).toContain("stage-reached");
+    expect(screen.getAllByRole("listitem")[2].className).toContain("stage-not_reached"); // PACKED
+  });
+
+  it("is not reached in a session with no architecture", () => {
+    real();
+    const v = filled();
+    v.stages = v.stages.map((st) => ({ ...st, status: "not_reached" as const, seconds: null }));
+    v.files.inputs = [];
+    view.value = v;
+    render(<Sidebar />);
+    expect(device().className).toContain("stage-not_reached");
+  });
+});
+
+describe("the reports of the stages", () => {
+  it("has a report button on each stage that has one, which opens the report in a tab", () => {
+    const v = filled();
+    v.reports = ["device", "pack"];
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.queryByLabelText("Open the report of placed")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Open the report of packed"));
+    expect(tabs.value.map((t) => [t.id, t.title, t.report])).toEqual([["report:pack", "Packing report", "pack"]]);
+    expect(activeTab.value).toBe("report:pack");
+    fireEvent.click(screen.getByLabelText("Open the report of packed")); // the same tab, not a second one
+    fireEvent.click(screen.getByLabelText("Open the report of device"));
+    expect(tabs.value.map((t) => t.id)).toEqual(["report:pack", "report:device"]);
+  });
+
+  it("shows the report in a sandboxed frame, loaded again after a new run", async () => {
+    const v = filled();
+    v.reports = ["pack"];
+    view.value = v;
+    openReport("pack");
+    render(<Workspace />);
+    const frame = screen.getByTitle("Packing report") as HTMLIFrameElement;
+    expect(frame.tagName).toBe("IFRAME");
+    expect(frame.getAttribute("sandbox")).toBe("");
+    const first = frame.getAttribute("src") ?? "";
+    expect(first.startsWith("/api/report?stage=pack&v=")).toBe(true);
+    expect((screen.getByText(/Open in browser/) as HTMLAnchorElement).target).toBe("_blank");
+    view.value = { ...v, latest: { status: "reached", text: "s1 · PACKED ✔ 0.3 s" } };
+    await waitFor(() =>
+      expect((screen.getByTitle("Packing report") as HTMLIFrameElement).getAttribute("src")).not.toBe(first),
+    );
+  });
+
+  it("says so when the session has no report of the stage", () => {
+    view.value = filled();
+    openReport("route");
+    render(<Workspace />);
+    expect(screen.getByText(/no report of this stage/)).toBeTruthy();
+    expect(document.querySelector("iframe")).toBeNull();
+  });
+});
+
+describe("the run buttons of the stages", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const chat = () => {
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(url === "/api/session" ? JSON.stringify(emptyView()) : "")),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return () => JSON.parse(String(fetchMock.mock.calls.find((c) => c[0] === "/api/chat")?.[1]?.body ?? "null"));
+  };
+
+  it("are next to synthesis, pack, place and route only", () => {
+    real();
+    view.value = filled();
+    render(<Sidebar />);
+    for (const name of ["synthesis", "packed", "placed", "routed"]) expect(screen.getByLabelText(`Run ${name}`)).toBeTruthy();
+    expect(screen.queryByLabelText("Run device")).toBeNull();
+    expect(screen.queryByLabelText("Run analyzed")).toBeNull();
+  });
+
+  it("run a stage as the slash line of run_stage", async () => {
+    real();
+    const sent = chat();
+    view.value = filled();
+    render(<Sidebar />);
+    fireEvent.click(screen.getByLabelText("Run routed"));
+    await waitFor(() => expect(sent()).toEqual({ message: "/run_stage stage=route" }));
+  });
+
+  it("synthesize again the design that the session added last", async () => {
+    real();
+    const sent = chat();
+    const v = filled();
+    v.synthesis = { stage: "SYNTHESIS", status: "reached", seconds: 1.2, message: null, design: "chip" };
+    view.value = v;
+    render(<Sidebar />);
+    fireEvent.click(screen.getByLabelText("Run synthesis"));
+    await waitFor(() => expect(sent()).toEqual({ message: "/synthesize design=chip" }));
+  });
+
+  it("cannot synthesize before a design is added, nor run in the demo or with no worker", () => {
+    real();
+    view.value = filled();
+    const { unmount } = render(<Sidebar />);
+    expect((screen.getByLabelText("Run synthesis") as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByLabelText("Run packed") as HTMLButtonElement).disabled).toBe(false);
+    unmount();
+    const ended = filled();
+    ended.session = { ...ended.session!, worker: "ended" };
+    view.value = ended;
+    const second = render(<Sidebar />);
+    expect((screen.getByLabelText("Run packed") as HTMLButtonElement).disabled).toBe(true);
+    second.unmount();
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    view.value = filled();
+    render(<Sidebar />);
+    expect((screen.getByLabelText("Run packed") as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
@@ -1074,6 +1214,15 @@ describe("the designs of the sidebar", () => {
     expect(screen.getByText("top rtcclock · 2 files")).toBeTruthy();
   });
 
+  it("says when a design has only a netlist, which Add reads instead of synthesizing", () => {
+    real();
+    const only = { name: "gates", top: "gates", path: "x/gates", files: [], netlists: ["gates.blif"], description: null };
+    view.value = { ...filled(), designs: [only] };
+    render(<Sidebar />);
+    expect(screen.getByText("top gates · netlist only")).toBeTruthy();
+    expect(screen.getByText("Add").title).toContain("read its netlist");
+  });
+
   it("says what a design directory is when there is none", () => {
     real();
     view.value = { ...filled(), designs: [] };
@@ -1081,7 +1230,7 @@ describe("the designs of the sidebar", () => {
     expect(screen.getByText(/no design directory/)).toBeTruthy();
   });
 
-  it("synthesizes a design by its name, from the button, as the slash line of the tool", async () => {
+  it("adds a design by its name, from the button, as the slash line of synthesize", async () => {
     real();
     const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
       Promise.resolve(new Response(url === "/api/session" ? JSON.stringify(emptyView()) : "")),
@@ -1089,7 +1238,7 @@ describe("the designs of the sidebar", () => {
     vi.stubGlobal("fetch", fetchMock);
     view.value = { ...filled(), designs };
     render(<Sidebar />);
-    fireEvent.click(screen.getAllByText("Synthesize")[0]);
+    fireEvent.click(screen.getAllByText("Add")[0]);
     await waitFor(() => {
       const call = fetchMock.mock.calls.find((c) => c[0] === "/api/chat");
       expect(JSON.parse(String(call?.[1]?.body))).toEqual({ message: "/synthesize design=opencores_gpio" });
@@ -1100,11 +1249,11 @@ describe("the designs of the sidebar", () => {
     real();
     view.value = { ...emptyView(), designs };
     const { unmount } = render(<Sidebar />);
-    expect((screen.getAllByText("Synthesize")[0] as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getAllByText("Add")[0] as HTMLButtonElement).disabled).toBe(true);
     unmount();
     config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
     view.value = { ...filled(), designs };
     render(<Sidebar />);
-    expect((screen.getAllByText("Synthesize")[0] as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getAllByText("Add")[0] as HTMLButtonElement).disabled).toBe(true);
   });
 });

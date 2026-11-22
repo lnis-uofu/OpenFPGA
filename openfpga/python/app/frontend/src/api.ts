@@ -8,6 +8,8 @@ export interface StageView {
   status: StageStatus;
   seconds: number | null;
   message: string | null;
+  /** Of synthesis: the design directory that the session copied last, which its run button synthesizes */
+  design?: string | null;
 }
 
 export interface InputFile {
@@ -30,9 +32,11 @@ export interface SessionView {
   /** Synthesis, before the stages: skipped when the design is a netlist */
   synthesis?: StageView;
   stages: StageView[];
-  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[]; created?: UploadedFile[]; synthesis?: UploadedFile[] };
+  files: { inputs: InputFile[]; constraints: string[]; results: string[]; uploads?: UploadedFile[]; created?: UploadedFile[]; synthesis?: UploadedFile[]; design?: UploadedFile[] };
   options_changed: { name: string; value: unknown }[];
   checkpoints: { name: string; kind: string; stages: string[] }[];
+  /** The stages that have an HTML report: device, synthesis, pack, place, route, analysis */
+  reports?: string[];
   /** The design directories of the designs folders (a folder with a design.json) */
   designs?: DesignView[];
 }
@@ -43,6 +47,8 @@ export interface DesignView {
   top: string | null;
   path: string;
   files: string[];
+  /** The netlists of the manifest: read only when the design has no RTL */
+  netlists?: string[];
   description: string | null;
 }
 

@@ -8,6 +8,7 @@ import {
   endSession,
   makeSession,
   openFile,
+  openReport,
   packagesOpen,
   removeUpload,
   restore,
@@ -59,43 +60,55 @@ function Name(props: { name: string }) {
   );
 }
 
-const KIND = { vpr_arch: "VPR arch", openfpga_arch: "OpenFPGA arch", circuit: "circuit", other: "file" } as const;
-
 function size(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} kB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-const ORIGIN = { input: "design folder", upload: "uploaded", model: "by the model", synthesis: "synthesis" } as const;
+type Origin = "input" | "design" | "upload" | "model" | "synthesis";
 
 interface DesignRow {
   name: string;
-  kind: keyof typeof KIND;
   bytes?: number;
-  origin: keyof typeof ORIGIN;
+  origin: Origin;
   loaded: boolean;
 }
 
-/** Every design file in one list: what the person uploaded, what the model wrote, what a synthesis
- * made, and the circuit that was read from a designs folder. The architectures are not in it (the
- * button of the architecture opens them). The circuit that the session has read is marked */
+/** Every design file in one list: the copy of a design directory that was synthesized, what the
+ * person uploaded, what the model wrote, what a synthesis made, and the circuit that was read from
+ * a designs folder. The architectures are not in it (the button of the device stage opens them).
+ * The circuit that the session has read is marked */
 function designFiles(files: SessionView["files"]): DesignRow[] {
   const circuit = files.inputs.find((f) => f.label === "circuit");
   const is = (name: string) => !!circuit && (circuit.name === name || circuit.name.endsWith("/" + name));
   const rows: DesignRow[] = [];
   for (const [list, origin] of [
+    [files.design ?? [], "design"],
     [files.uploads ?? [], "upload"],
     [files.created ?? [], "model"],
     [files.synthesis ?? [], "synthesis"],
   ] as const) {
-    for (const f of list) rows.push({ name: f.name, kind: f.kind, bytes: f.bytes, origin, loaded: is(f.name) });
+    for (const f of list) rows.push({ name: f.name, bytes: f.bytes, origin, loaded: is(f.name) });
   }
   if (circuit && !rows.some((r) => r.loaded)) {
-    rows.unshift({ name: circuit.name, kind: "circuit", origin: "input", loaded: true });
+    rows.unshift({ name: circuit.name, origin: "input", loaded: true });
   }
   return rows;
 }
+
+/** The name of the report of a stage (reports/<name>.html of the session) */
+const REPORT: Record<string, string> = {
+  DEVICE: "device",
+  SYNTHESIS: "synthesis",
+  PACKED: "pack",
+  PLACED: "place",
+  ROUTED: "route",
+  ANALYZED: "analysis",
+};
+
+/** The command of the run button of a stage (none for the stages that have no button) */
+const RUN: Record<string, string> = { PACKED: "pack", PLACED: "place", ROUTED: "route" };
 
 /** The left sidebar: the session, its stages, the design files and the checkpoints */
 export function Sidebar() {
@@ -110,13 +123,21 @@ export function Sidebar() {
   // Synthesis follows the device (its LUT size and script come from the device); a skipped one
   // (the design is a netlist) is not counted
   const device = v.stages.findIndex((s) => s.stage === "DEVICE");
-  const stages = [...v.stages];
+  const vpr = files.inputs.find((f) => f.label === "vpr arch");
+  const oarch = files.inputs.find((f) => f.label === "openfpga arch");
+  // The device is known once its architectures are read (VPR makes its grid with the circuit)
+  const stages = v.stages.map((s) =>
+    s.stage === "DEVICE" && s.status === "not_reached" && vpr && oarch ? { ...s, status: "reached" as const } : s,
+  );
   if (v.synthesis) stages.splice(device + 1, 0, { ...v.synthesis, stage: "SYNTHESIS" });
   const counted = stages.filter((s) => s.status !== "skipped");
   const reached = counted.filter((s) => s.status === "reached").length;
   const rows = designFiles(files);
-  const vpr = files.inputs.find((f) => f.label === "vpr arch");
-  const oarch = files.inputs.find((f) => f.label === "openfpga arch");
+  const canRun = real && !busy.value && !!session && session.worker === "running";
+  const run = (stage: string): string | null => {
+    if (stage === "SYNTHESIS") return v.synthesis?.design ? `/synthesize design=${v.synthesis.design}` : null;
+    return RUN[stage] ? `/run_stage stage=${RUN[stage]}` : null;
+  };
   return (
     <aside class={`sidebar ${sidebarOpen.value ? "" : "closed"}`} aria-label="Session and design files">
       <Section title="Session">
@@ -212,8 +233,61 @@ export function Sidebar() {
                 {SYMBOL[s.status]}
               </span>
               <span class="sr-only">{s.status.replace("_", " ")}</span>
-              <span class="stage-name">{s.stage}</span>
-              {s.seconds != null && <span class="stage-time muted">{s.seconds.toFixed(1)} s</span>}
+              <span class="stage-name">
+                {s.stage}
+                {s.stage === "DEVICE" && session?.device_package && (
+                  <span class="stage-device muted"> {session.device_package.name}</span>
+                )}
+              </span>
+              <span class="stage-tools">
+                {s.seconds != null && <span class="stage-time muted">{s.seconds.toFixed(1)} s</span>}
+                {(v.reports ?? []).includes(REPORT[s.stage]) && (
+                  <button
+                    class="stage-button stage-report"
+                    aria-label={`Open the report of ${s.stage.toLowerCase()}`}
+                    title="Open the HTML report of this stage: summary, warnings and errors"
+                    onClick={() => openReport(REPORT[s.stage])}
+                  >
+                    ⎙
+                  </button>
+                )}
+                {s.stage === "DEVICE" && (vpr || oarch) && (
+                  <button
+                    class="stage-button"
+                    aria-label="Open the architecture files"
+                    disabled={!real}
+                    title={real ? `Open the VPR and the OpenFPGA architecture files${vpr?.extra ? ` (${vpr.extra})` : ""}` : "Not in the demo"}
+                    onClick={() => {
+                      if (vpr) void openFile(vpr.name);
+                      if (oarch) void openFile(oarch.name);
+                    }}
+                  >
+                    ≣
+                  </button>
+                )}
+                {(s.stage === "SYNTHESIS" || RUN[s.stage]) && (
+                  <button
+                    class="stage-button"
+                    aria-label={`Run ${s.stage.toLowerCase()}`}
+                    disabled={!canRun || !run(s.stage)}
+                    title={
+                      !real
+                        ? "Not in the demo"
+                        : s.stage === "SYNTHESIS" && !v.synthesis?.design
+                          ? "Add a design first (Designs)"
+                          : s.stage === "SYNTHESIS"
+                            ? `Synthesize ${v.synthesis?.design} again`
+                            : `Run ${RUN[s.stage]} (and the stages before it that are not reached)`
+                    }
+                    onClick={() => {
+                      const command = run(s.stage);
+                      if (command) void sendMessage(command);
+                    }}
+                  >
+                    ▶
+                  </button>
+                )}
+              </span>
               {s.status === "failed" && s.message && <div class="stage-message">{s.message}</div>}
             </li>
           ))}
@@ -232,16 +306,22 @@ export function Sidebar() {
                     !real
                       ? "Not in the demo"
                       : session
-                        ? "Synthesize this design for the device of the session"
+                        ? d.files.length || !d.netlists?.length
+                          ? "Copy this design into the session and synthesize its RTL for the device of the session"
+                          : "Copy this design into the session and read its netlist (it has no RTL)"
                         : "Open a session first"
                   }
                   onClick={() => void sendMessage(`/synthesize design=${d.name}`)}
                 >
-                  Synthesize
+                  Add
                 </button>
                 <span class="design-detail muted">
                   {d.top ? `top ${d.top} · ` : ""}
-                  {d.files.length} {d.files.length === 1 ? "file" : "files"}
+                  {d.files.length
+                    ? `${d.files.length} ${d.files.length === 1 ? "file" : "files"}`
+                    : d.netlists?.length
+                      ? "netlist only"
+                      : "no RTL"}
                 </span>
               </div>
             ))}
@@ -251,36 +331,11 @@ export function Sidebar() {
         )}
       </Section>
       <Section title="Design files">
-        <div class="architecture-row">
-          <span class="file-label">Architecture</span>
-          {vpr || oarch ? (
-            <>
-              {session?.device_package && <span class="chip">{session.device_package.name}</span>}
-              {vpr?.extra && <span class="chip">{vpr.extra}</span>}
-              <button
-                class="show-architecture"
-                disabled={!real}
-                title={real ? "Open the VPR and the OpenFPGA architecture files" : "Not in the demo"}
-                onClick={() => {
-                  if (vpr) void openFile(vpr.name);
-                  if (oarch) void openFile(oarch.name);
-                }}
-              >
-                Show architecture
-              </button>
-            </>
-          ) : (
-            <span class="muted">(not read)</span>
-          )}
-        </div>
         {rows.length ? (
           <div class="uploads design-files">
             {rows.map((f) => (
-              <div key={f.name} class={`upload-row ${f.loaded ? "loaded" : ""}`}>
+              <div key={f.name} class={`upload-row ${f.loaded ? "loaded" : ""}`} title={f.loaded ? "The circuit of the session" : undefined}>
                 <Name name={f.name} />
-                <span class="chip">{KIND[f.kind]}</span>
-                {f.loaded && <span class="chip chip-loaded">loaded</span>}
-                <span class="chip chip-origin">{ORIGIN[f.origin]}</span>
                 {f.bytes != null && <span class="muted upload-size">{size(f.bytes)}</span>}
                 {f.origin === "upload" && (
                   <button

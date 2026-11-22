@@ -82,6 +82,25 @@ def listing(root: Path, session_dir: str, name: str = UPLOADS) -> List[Dict[str,
     return items
 
 
+def tree_listing(root: Path, session_dir: str, name: str, limit: int = 200) -> List[Dict[str, Any]]:
+    """The files under a folder of the session and its folders (the copies of design directories),
+    named from the session, at most limit of them"""
+    base = root / session_dir
+    items: List[Dict[str, Any]] = []
+    for folder, folders, names in os.walk(base / name):
+        folders[:] = sorted(f for f in folders if not f.startswith(".") and not os.path.islink(os.path.join(folder, f)))
+        for file_name in sorted(names):
+            path = Path(folder) / file_name
+            if file_name.startswith(".") or path.is_symlink() or not path.is_file():
+                continue
+            items.append(
+                {"name": path.relative_to(base).as_posix(), "kind": kind_of(path), "bytes": path.stat().st_size}
+            )
+            if len(items) >= limit:
+                return items
+    return items
+
+
 def remove(root: Path, session_dir: str, name: str) -> Dict[str, Any]:
     """Delete one uploaded file of the session (and only a file that is in its uploads)"""
     check_name(name)

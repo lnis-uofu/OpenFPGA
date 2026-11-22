@@ -101,6 +101,11 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .stage-running .stage-mark { border-color: var(--accent); }
 .stage-name { font-size: 13px; letter-spacing: 0.02em; }
 .stage-time { font-size: 12px; font-variant-numeric: tabular-nums; }
+.stage-tools { display: inline-flex; align-items: center; gap: 4px; }
+.stage-device { font-size: 12px; letter-spacing: 0; }
+.stage-button { background: none; border: 1px solid transparent; border-radius: 4px; padding: 0 5px; font-size: 11px; line-height: 18px; color: var(--muted); cursor: pointer; }
+.stage-button:hover:not(:disabled) { color: var(--accent); border-color: var(--line); }
+.stage-button:disabled { opacity: 0.35; cursor: default; }
 .stage-message { grid-column: 2 / -1; font-size: 12px; color: var(--bad); margin: 2px 0 4px; word-break: break-word; }
 .stage-reached { color: var(--text); }
 .stage-failed { color: var(--bad); }
@@ -304,12 +309,8 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .sessions .session-entry { min-width: 0; }
 
 /* The architecture row, one list of the design files, and a stage that is not needed */
-.architecture-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 2px 0 8px; }
-.show-architecture { font-size: 12px; padding: 2px 8px; }
 .design-files .upload-row { flex-wrap: wrap; row-gap: 2px; }
 .upload-row.loaded .file { font-weight: 600; }
-.chip-loaded { background: color-mix(in srgb, var(--ok) 14%, transparent); border-color: var(--ok); color: var(--ok); }
-.chip-origin { opacity: 0.75; }
 .stage-skipped { opacity: 0.45; }
 .stage-skipped .stage-name { text-decoration: line-through; text-decoration-thickness: 1px; }
 
@@ -332,3 +333,9 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .bar-value { font-variant-numeric: tabular-nums; font-size: 0.85em; }
 .legend { margin-left: 8px; display: inline-flex; gap: 8px; flex-wrap: wrap; }
 .legend-item i { display: inline-block; width: 10px; height: 10px; margin-right: 3px; }
+
+/* The HTML report of a stage, in a tab */
+.report-view { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; padding: 8px 16px; }
+.report-frame { flex: 1; width: 100%; min-height: 480px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.button-link { font-size: 12px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; color: inherit; text-decoration: none; }
+.button-link:hover { border-color: var(--accent); color: var(--accent); }

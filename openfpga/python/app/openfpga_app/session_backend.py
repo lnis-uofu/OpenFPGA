@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import anyio.to_thread
-from openfpga_mcp import answers, device_packages, session_tools, tools
+from openfpga_mcp import answers, device_packages, reports, session_tools, tools
 from openfpga_mcp.errors import InvalidArgument, RegistryError
 from openfpga_mcp.config import Config
 from openfpga_mcp.registry import SessionRegistry
@@ -237,6 +237,7 @@ class SessionBackend:
                     "top": d["top"],
                     "path": d["relative"],
                     "files": d["rtl"],
+                    "netlists": [Path(n).name for n in d["netlists"]],
                     "description": d["manifest"].get("description")
                     if isinstance(d["manifest"].get("description"), str)
                     else None,
@@ -263,6 +264,8 @@ class SessionBackend:
             {**item, "name": "synth/" + item["name"]}  # a name that the viewer resolves in the session
             for item in uploads.listing(self.config.root, entry.directory, "synth")
         ]
+        view["files"]["design"] = uploads.tree_listing(self.config.root, entry.directory, "design")
+        view["reports"] = self._reports(entry.directory)
         info = next((i for i in self.registry.list() if i.id == entry.id), None)
         running = bool(info and info.running)
         view["session"] = {
@@ -286,13 +289,14 @@ class SessionBackend:
             # it. What was known stays, and the latest state says what is going on
             previous = self._last
             if previous["session"] and previous["session"]["id"] == entry.id:
-                for key in ("stages", "options_changed", "synthesis"):
+                for key in ("stages", "options_changed", "synthesis", "reports"):
                     view[key] = previous[key]
                 view["files"] = {
                     **previous["files"],
                     "uploads": view["files"]["uploads"],
                     "created": view["files"]["created"],
                     "synthesis": view["files"]["synthesis"],
+                    "design": view["files"]["design"],
                 }
             what = "a command" if self._running in (None, "console") else self._running
             view["latest"] = {"status": "running", "text": "%s · %s running" % (entry.id, what)}
@@ -320,6 +324,7 @@ class SessionBackend:
                     item["message"] = state.failed.message
         inputs = state.inputs
         view["synthesis"] = self._synthesis_stage(entry, inputs.circuit)
+        view["synthesis"]["design"] = self._last_design(entry)
         files = view["files"]
         if inputs.vpr_arch:
             files["inputs"].append(
@@ -487,6 +492,34 @@ class SessionBackend:
         except Exception as error:  # noqa: BLE001 - a file that is gone, a disk that fails
             return answers.from_exception(error)
         return {"ok": True, "data": data, "truncated": False, "more": None}
+
+    def _reports(self, directory: str) -> List[str]:
+        """The stages that have a report, in the order of the flow"""
+        folder = self.config.root / directory / reports.FOLDER
+        return [s for s in reports.TITLES if (folder / ("%s.html" % s)).is_file()]
+
+    async def read_report(self, stage: str) -> Optional[str]:
+        """The HTML of the report of a stage of the current session (None when there is none)"""
+        if stage not in reports.TITLES or self.sid is None:
+            return None
+        try:
+            directory = self.registry.get(self.sid).directory
+        except RegistryError:
+            return None
+        path = self.config.root / directory / reports.FOLDER / ("%s.html" % stage)
+        if path.is_symlink() or not path.is_file():
+            return None
+        return await anyio.to_thread.run_sync(lambda: path.read_text(encoding="utf-8", errors="replace"))
+
+    def _last_design(self, entry) -> Optional[str]:
+        """The design directory that the session copied last (synthesize with design copies it into
+        the folder design of the session): the one that the run button of synthesis synthesizes"""
+        folder = self.config.root / entry.directory / "design"
+        try:
+            copies = [p for p in folder.iterdir() if p.is_dir() and not p.is_symlink() and not p.name.startswith(".")]
+        except OSError:
+            return None
+        return max(copies, key=lambda p: p.stat().st_mtime).name if copies else None
 
     def _synthesis_stage(self, entry, circuit) -> Dict[str, Any]:
         """The stage of synthesis for the sidebar. It is reached when the circuit is the netlist of a

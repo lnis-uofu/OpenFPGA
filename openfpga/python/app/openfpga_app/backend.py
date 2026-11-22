@@ -37,6 +37,8 @@ class Backend(Protocol):
 
     async def read_file(self, name: str) -> Dict[str, Any]: ...
 
+    async def read_report(self, stage: str) -> Optional[str]: ...
+
     async def write_file(self, name: str, text: str) -> Dict[str, Any]: ...
 
     async def copy_file(self, name: str) -> Dict[str, Any]: ...
@@ -68,9 +70,12 @@ def empty_view() -> Dict[str, Any]:
         "stages": [
             {"stage": s, "status": "not_reached", "seconds": None, "message": None} for s in STAGES
         ],
-        "files": {"inputs": [], "constraints": [], "results": [], "uploads": [], "created": [], "synthesis": []},
+        "files": {"inputs": [], "constraints": [], "results": [], "uploads": [], "created": [], "synthesis": [], "design": []},
         "options_changed": [],
         "checkpoints": [],
+        # The stages that have an HTML report (reports/<stage>.html of the session): device,
+        # synthesis, pack, place, route, analysis
+        "reports": [],
         # The design directories of the designs folders (a folder with a design.json): name, top
         # module and rtl files; not part of a session
         "designs": [],
@@ -143,6 +148,9 @@ class DemoBackend:
 
     new_session = apply_device_package = close_session = restore_session = upload = remove_upload = read_file = write_file = copy_file = _unavailable
     open_session = _unavailable
+
+    async def read_report(self, stage: str) -> Optional[str]:
+        return None  # the recorded demo ran no stage
 
     async def list_sessions(self) -> Dict[str, Any]:
         return {"ok": True, "data": {"live": [], "saved": []}, "truncated": False, "more": None}

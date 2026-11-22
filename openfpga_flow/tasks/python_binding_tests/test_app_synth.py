@@ -2,6 +2,7 @@
 session keeps for it. The synthesize tool itself is tested in test_mcp_synth.py"""
 
 import asyncio
+import json
 
 import pytest
 
@@ -85,7 +86,7 @@ def test_synthesis_is_the_first_stage_of_the_view_and_follows_what_the_session_d
     assert failed["status"] == "failed" and "syntax error" in failed["message"]
     assert call(backend, "synthesize", top="and2", files="and2.v")["ok"]
     done = synthesis_stage(backend)
-    assert done == {"status": "reached", "seconds": done["seconds"], "message": None}
+    assert done == {"status": "reached", "seconds": done["seconds"], "message": None, "design": None}
     assert done["seconds"] is not None and done["seconds"] >= 0
     # The flow stages are as they were: synthesis is not one of them
     assert [s["stage"] for s in asyncio.run(backend.view())["stages"]] == [
@@ -143,3 +144,31 @@ def test_the_page_follows_the_session_of_a_replay(backend):
     assert data["session"] != first and backend.sid == data["session"]
     shown = asyncio.run(backend.view())["session"]
     assert shown["id"] == data["session"] and shown["device_package"]["name"] == LOGIC
+
+
+def test_the_page_lists_the_copy_of_a_design_and_opens_its_files(openfpga_module, tmp_path, golden):
+    from openfpga_app.session_backend import SessionBackend
+    from openfpga_mcp.config import Config
+    from test_app_device_package import PACKAGES
+    from test_mcp_design_synth import make_design
+
+    designs = tmp_path / "designs"
+    make_design(designs / "chip")
+    backend = SessionBackend(
+        Config(root=tmp_path / "workspace", design_dirs=(designs,), package_dirs=(PACKAGES,), call_timeout_s=120)
+    )
+    try:
+        opened(backend)
+        assert call(backend, "synthesize", design="chip")["ok"]
+        shown = asyncio.run(backend.view())["files"]["design"]
+        assert [f["name"] for f in shown] == [
+            "design/chip/design.json",
+            "design/chip/rtl/chip.v",
+            "design/chip/rtl/include/defs.vh",
+        ]
+        text = asyncio.run(backend.read_file("design/chip/rtl/chip.v"))
+        assert text["ok"] and "module chip" in json.dumps(text)
+        # The run button of synthesis synthesizes the design that was added last
+        assert asyncio.run(backend.view())["synthesis"]["design"] == "chip"
+    finally:
+        backend.close()
