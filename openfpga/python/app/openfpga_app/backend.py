@@ -47,6 +47,10 @@ class Backend(Protocol):
 
     async def restore_session(self, checkpoint: Optional[str] = None) -> Dict[str, Any]: ...
 
+    async def save_checkpoint(self, name: Optional[str] = None) -> Dict[str, Any]: ...
+
+    async def add_design(self, design: str) -> Dict[str, Any]: ...
+
     async def upload(self, name: str, data: bytes, overwrite: bool) -> Dict[str, Any]: ...
 
     async def remove_upload(self, name: str) -> Dict[str, Any]: ...
@@ -79,6 +83,8 @@ def empty_view() -> Dict[str, Any]:
         # The design directories of the designs folders (a folder with a design.json): name, top
         # module and rtl files; not part of a session
         "designs": [],
+        # The open sessions (id, name, running): the tabs of the sidebar
+        "sessions": [],
     }
 
 
@@ -147,7 +153,7 @@ class DemoBackend:
         return {"ok": True, "data": {"packages": [], "problems": []}}
 
     new_session = apply_device_package = close_session = restore_session = upload = remove_upload = read_file = write_file = copy_file = _unavailable
-    open_session = _unavailable
+    open_session = save_checkpoint = add_design = _unavailable
 
     async def read_report(self, stage: str) -> Optional[str]:
         return None  # the recorded demo ran no stage

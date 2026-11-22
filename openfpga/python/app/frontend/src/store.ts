@@ -27,6 +27,8 @@ import {
   copyFileToSession,
   removeUploadedFile,
   uploadFile,
+  saveCheckpoint,
+  addDesignToSession,
 } from "./api";
 
 export type Part = { kind: "text"; text: string } | { kind: "call"; callId: string };
@@ -49,6 +51,7 @@ export interface ResultTab {
   id: string; // the call that it shows, or "file:NAME" for a file
   file?: string; // the name of the file, for a tab of the viewer
   report?: string; // the stage whose HTML report it shows (device, synthesis, pack, place, route, analysis)
+  panel?: Panel; // a list to choose from: the device packages or the design directories
   title: string;
   pinned: boolean;
   unread: boolean;
@@ -59,6 +62,8 @@ export interface ConsoleLine {
 }
 
 export const CHAT = "chat";
+/** The lists that open in a tab from the menu of the sidebar */
+export type Panel = "devices" | "designs";
 // The calls that change the flow: the console shows them as the lines of the journal
 const CHANGING = new Set(["session_open", "session_close", "read_inputs", "run_stage", "set_option", "set_constraint", "checkpoint"]);
 
@@ -121,6 +126,30 @@ export function setConsoleHeight(px: number) {
     /* not kept */
   }
 }
+export const SIDEBAR_WIDTH_DEFAULT = 280;
+export const SIDEBAR_WIDTH_MIN = 200;
+const SIDEBAR_WIDTH_KEY = "openfpga-sidebar-width";
+
+function storedWidth(): number {
+  try {
+    const n = Number(window.localStorage.getItem(SIDEBAR_WIDTH_KEY));
+    return Number.isFinite(n) && n >= SIDEBAR_WIDTH_MIN ? n : SIDEBAR_WIDTH_DEFAULT;
+  } catch {
+    return SIDEBAR_WIDTH_DEFAULT;
+  }
+}
+/** The width of the sidebar in px: dragged by the person and kept in this browser */
+export const sidebarWidth = signal(storedWidth());
+
+export function setSidebarWidth(px: number) {
+  const most = Math.max(SIDEBAR_WIDTH_MIN + 40, Math.floor(window.innerWidth * 0.6));
+  sidebarWidth.value = Math.round(Math.min(most, Math.max(SIDEBAR_WIDTH_MIN, px)));
+  try {
+    window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth.value));
+  } catch {
+    /* not kept */
+  }
+}
 export const busy = signal(false);
 export const banner = signal<{ kind: string; message: string; hint?: string | null } | null>(null);
 export const consoleOpen = signal(false);
@@ -147,6 +176,8 @@ export function resetStore() {
   sessionsOpen.value = false;
   sessionList.value = null;
   consoleHeight.value = CONSOLE_HEIGHT_DEFAULT;
+  sidebarWidth.value = SIDEBAR_WIDTH_DEFAULT;
+  sessionMenu.value = false;
   activeTab.value = CHAT;
   split.value = false;
   busy.value = false;
@@ -344,9 +375,13 @@ export async function toggleSessions() {
   }
 }
 
+/** The question of the Session item of the menu: a new session, or open one */
+export const sessionMenu = signal(false);
+
 /** Open a session from the list: the full interface shows it */
 export async function openSession(id: string) {
   sessionsOpen.value = false;
+  sessionMenu.value = false;
   await sessionAction(() => openSessionById(id));
 }
 
@@ -369,6 +404,11 @@ export async function endSession() {
 }
 /** Back to the last checkpoint, or to a named one */
 export const restore = (checkpoint?: string) => sessionAction(() => restoreSession(checkpoint));
+/** Save the flow of the session as a checkpoint */
+export const saveSession = (name?: string) => sessionAction(() => saveCheckpoint(name));
+/** Copy a design directory into the session. It is not synthesized: the run button of synthesis
+ * (or the model) does that when asked */
+export const addDesign = (name: string) => sessionAction(() => addDesignToSession(name));
 
 /** Give files to the session (one is opened if there is none). A name that is taken is replaced
  * only if the person says so */
@@ -511,6 +551,28 @@ export function openReport(stage: string) {
     tabs.value = [...tabs.value, { id, title: REPORT_TITLES[stage] ?? `${stage} report`, pinned: false, unread: false, report: stage }];
   }
   activeTab.value = id;
+}
+
+/** The titles of the tabs of the lists */
+export const PANEL_TITLES: Record<Panel, string> = { devices: "Devices", designs: "Designs" };
+
+/** A list in a tab of its own: the device packages (read again each time, a package may have been
+ * added) or the design directories (they come with the view) */
+export function openPanel(panel: Panel) {
+  const id = `panel:${panel}`;
+  if (!tabs.value.some((t) => t.id === id)) {
+    tabs.value = [...tabs.value, { id, title: PANEL_TITLES[panel], pinned: false, unread: false, panel }];
+  }
+  activeTab.value = id;
+  if (panel === "devices") void loadDevicePackages();
+}
+
+export async function loadDevicePackages() {
+  try {
+    devicePackages.value = await fetchDevicePackages();
+  } catch (error) {
+    banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  }
 }
 
 /** Where the report of a stage is: the version changes after each run, so the frame loads it again */

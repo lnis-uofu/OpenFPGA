@@ -17,7 +17,7 @@ from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import anyio.to_thread
 from openfpga_mcp import answers, device_packages, reports, session_tools, tools
-from openfpga_mcp.errors import InvalidArgument, RegistryError
+from openfpga_mcp.errors import InvalidArgument, RegistryError, SessionFull
 from openfpga_mcp.config import Config
 from openfpga_mcp.registry import SessionRegistry
 from openfpga_mcp.resources import _checkpoints
@@ -251,6 +251,9 @@ class SessionBackend:
     def _build_view(self) -> Dict[str, Any]:
         view = empty_view()
         view["designs"] = self._designs()
+        infos = self.registry.list()
+        # The open sessions, for the tabs of the sidebar (a click switches to one)
+        view["sessions"] = [{"id": i.id, "name": i.name, "running": bool(i.running)} for i in infos]
         if self.sid is None:
             return view
         try:
@@ -266,7 +269,7 @@ class SessionBackend:
         ]
         view["files"]["design"] = uploads.tree_listing(self.config.root, entry.directory, "design")
         view["reports"] = self._reports(entry.directory)
-        info = next((i for i in self.registry.list() if i.id == entry.id), None)
+        info = next((i for i in infos if i.id == entry.id), None)
         running = bool(info and info.running)
         view["session"] = {
             "id": entry.id,
@@ -762,6 +765,60 @@ class SessionBackend:
             self._changed_outside("The person closed session %s" % self.sid)
             self.sid = None
         return answer
+
+    async def save_checkpoint(self, name: Optional[str] = None) -> Dict[str, Any]:
+        """Save the flow of the session as a checkpoint (a name is made when none is given)"""
+        if self.sid is None:
+            return answers.failed([answers.diagnostic("no_session", "There is no session")])
+        if self._running is not None:
+            return answers.failed(
+                [answers.diagnostic("busy", "A call is running", hint="Wait for it to end")]
+            )
+        return await self._tool("checkpoint", session=self.sid, name=name)
+
+    async def add_design(self, design: str) -> Dict[str, Any]:
+        """Copy a design directory into the session (design/<folder>) and nothing more: it is not
+        synthesized. The run button of synthesis, or the model, synthesizes it when asked"""
+        from openfpga_mcp.paths import copy_design, find_design
+
+        if self.sid is None:
+            return answers.failed(
+                [answers.diagnostic("no_session", "There is no session", hint="Open a session first")]
+            )
+        if self._running is not None:
+            return answers.failed(
+                [answers.diagnostic("busy", "A call is running", hint="Wait for it to end")]
+            )
+        try:
+            entry = self.registry.get(self.sid)
+
+            def work() -> Dict[str, Any]:
+                found = find_design(self.config, design)
+                used = self.registry.directory_bytes(entry)
+                if used > self.config.session_max_bytes:
+                    raise SessionFull(
+                        "The files of session %s take %d bytes, more than the %d that it may"
+                        % (entry.id, used, self.config.session_max_bytes)
+                    )
+                return copy_design(found, self.config.root / entry.directory)
+
+            copied = await anyio.to_thread.run_sync(work)
+        except Exception as error:  # noqa: BLE001 - not found, two of the name, too large, full
+            return answers.from_exception(error)
+        folder = "design/%s" % copied["folder"].name
+        self._changed_outside(
+            "The person added the design directory %s to session %s: it is copied to %s and not "
+            "synthesized. Synthesize it with synthesize and design='%s' when asked"
+            % (copied["name"], self.sid, folder, copied["name"])
+        )
+        data = {
+            "session": self.sid,
+            "design": copied["name"],
+            "folder": folder,
+            "files": copied["copied"],
+            "rtl": list(copied["rtl"]),
+        }
+        return {"ok": True, "data": data, "truncated": False, "more": None}
 
     async def restore_session(self, checkpoint: Optional[str] = None) -> Dict[str, Any]:
         if self.sid is None:

@@ -82,7 +82,7 @@ try {
   await page.keyboard.press("Enter");
   await page.waitForSelector("text=worker running", { timeout: 30000 });
   assert.equal(await page.locator('[aria-label="Start"]').count(), 0, "the welcome screen is gone");
-  assert.ok(await page.isVisible("strong:has-text('s1')"));
+  assert.ok(await page.isVisible(".session-tab[aria-selected=true]:has-text('s1')"));
 
   // A file from the person's own disk goes into the session, and the tools read it by its name
   await page.setInputFiles('[aria-label="Upload files"]', {
@@ -90,7 +90,7 @@ try {
     mimeType: "application/octet-stream",
     buffer: readFileSync(path.join(inputs[2], files.circuit)),
   });
-  await page.waitForSelector(".upload-row:has-text('mine.blif'):has-text('circuit')");
+  await page.waitForSelector(".upload-row:has-text('mine.blif')");
   assert.ok(existsSync(path.join(root, "s1", "uploads", "mine.blif")), "written in the session directory");
   // The file opens in a tab, in Monaco
   await page.click(".upload-row .file:has-text('mine.blif')");
@@ -120,7 +120,7 @@ try {
   // The design is a netlist: synthesis is not needed, and is greyed out; the architecture is a button
   await page.waitForSelector(".stage-skipped:has-text('SYNTHESIS')");
   assert.equal(await page.locator(".file-row .file-label:has-text('vpr arch')").count(), 0, "the architecture files are not listed");
-  assert.ok(await page.isVisible("button:has-text('Show architecture')"));
+  assert.ok(await page.isVisible('[aria-label="Open the architecture files"]'));
   if (process.env.SHOT_SIDEBAR_BLIF) await page.screenshot({ path: process.env.SHOT_SIDEBAR_BLIF });
 
   // A file that is taken out of the session
@@ -139,7 +139,7 @@ try {
   await say("/set_option name=general.clock_modeling value=route");
   await say("/set_option name=router.route_chan_width value=20");
   await say(`/read_inputs vpr_arch=${files.vpr} layout=2x2 openfpga_arch=${files.arch} circuit=${files.circuit}`);
-  await page.waitForSelector("text=layout 2x2", { timeout: 30000 });
+  await page.waitForSelector(".stage-reached:has-text('DEVICE')", { timeout: 30000 });
 
   for (const stage of ["pack", "place", "route", "analysis"]) await say(`/run_stage stage=${stage}`);
   await page.waitForSelector("text=ANALYZED ✔", { timeout: 30000 });
@@ -183,9 +183,10 @@ try {
 
   // The seed dropped the stages after the packing; the last checkpoint has them all
   assert.ok(await page.isVisible("header >> text=PACKED ✔"));
+  await page.click(".checkpoint-status"); // the checkpoints are folded
   await page.click("text=restore");
   await page.waitForSelector("header >> text=ANALYZED ✔");
-  await page.click("text=close");
+  await page.click(".session-action:text-is('Close')");
   await page.waitForSelector("text=Create session from device package…"); // back at the welcome screen
 
   // The closed session is saved: it opens again from its last checkpoint, with its stages
@@ -193,7 +194,7 @@ try {
   await page.waitForSelector(".session-entry:has-text('saved')", { timeout: 15000 });
   await page.click(".session-entry button:has-text('Open')");
   await page.waitForSelector("header >> text=ANALYZED ✔", { timeout: 60000 });
-  await page.click("text=close");
+  await page.click(".session-action:text-is('Close')");
   await page.waitForSelector("text=Create session from device package…");
 
   // A session from a device package: the architectures are read, and it waits for the circuit
@@ -202,8 +203,8 @@ try {
   if (process.env.SHOT_PICKER) await page.screenshot({ path: process.env.SHOT_PICKER });
   await page.click(".package:has-text('k6_frac_n10_2x2') >> text=Create session");
   await page.waitForSelector("text=Waiting for a circuit");
-  assert.ok(await page.isVisible("text=device k6_frac_n10_2x2 · 2x2 · K6"));
-  await page.waitForSelector("text=layout 2x2", { timeout: 30000 });
+  assert.ok(await page.isVisible(".stage-device:has-text('k6_frac_n10_2x2')"));
+  await page.waitForSelector(".stage-reached:has-text('DEVICE')", { timeout: 30000 });
 
   await page.click('[role=tab]:has-text("Chat")');
   assert.equal(await page.locator(".upload-row.loaded").count(), 0, "no circuit yet");
@@ -222,7 +223,7 @@ try {
   // A result of the flow and a file of the package open in the viewer
   await page.click(".results .file:has-text('.net')");
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("block"), null, { timeout: 30000 });
-  await page.click("button:has-text('Show architecture')"); // opens the two architecture files in tabs
+  await page.click('[aria-label="Open the architecture files"]'); // opens the two architecture files in tabs
   await page.waitForSelector('[role=tab]:has-text("vpr_arch.xml")');
   await page.click('[role=tab]:has-text("vpr_arch.xml")');
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("architecture"), null, { timeout: 30000 });
@@ -237,6 +238,26 @@ try {
   if (process.env.SHOT_SIDEBAR) await page.screenshot({ path: process.env.SHOT_SIDEBAR });
   await page.click(".upload-row .file:has-text('synth/inv.blif')");
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("inv"), null, { timeout: 30000 });
+
+  // The menu opens the device packages and the designs in tabs, each with a search
+  await page.click(".menu-item:has-text('Devices')");
+  await page.waitForSelector(".panel-item:has-text('k6_frac_n10_2x2') >> text=this session");
+  await page.fill('[aria-label="Search the device packages"]', "no such device");
+  await page.waitForSelector("text=No device package matches");
+  await page.click(".menu-item:has-text('Designs')");
+  await page.waitForSelector('[aria-label="Design directories"]');
+  assert.ok(await page.isVisible('[role=tab]:has-text("Devices")'), "both tabs stay");
+  // The sidebar is made wider by dragging its edge, and keeps the width
+  const narrow = (await page.locator(".sidebar").boundingBox()).width;
+  const edge2 = await page.locator(".sidebar-resize").boundingBox();
+  await page.mouse.move(edge2.x + edge2.width / 2, edge2.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(edge2.x + 120, edge2.y + 200, { steps: 6 });
+  await page.mouse.up();
+  const wide = (await page.locator(".sidebar").boundingBox()).width;
+  assert.ok(wide > narrow + 80, `the sidebar is wider: ${narrow} -> ${wide}`);
+  assert.equal(await page.evaluate(() => localStorage.getItem("openfpga-sidebar-width")), String(Math.round(wide)));
+  await page.dblclick(".sidebar-resize");
 
   assert.deepEqual(errors, []);
   if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });

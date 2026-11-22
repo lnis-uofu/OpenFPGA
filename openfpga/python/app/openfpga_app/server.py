@@ -181,6 +181,18 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
             return JSONResponse({"error": "checkpoint is text"}, 400)
         return JSONResponse(await backend.restore_session(checkpoint))
 
+    async def save_checkpoint(request: Request) -> Response:
+        name = (await body(request)).get("name")
+        if name is not None and (not isinstance(name, str) or len(name) > 64):
+            return JSONResponse({"error": "name is text of at most 64 characters"}, 400)
+        return _file_answer(await backend.save_checkpoint(name))
+
+    async def add_design(request: Request) -> Response:
+        design = (await body(request)).get("design")
+        if not isinstance(design, str) or not design or len(design) > 512:
+            return JSONResponse({"error": "design is the name of a design directory"}, 400)
+        return _file_answer(await backend.add_design(design))
+
     async def upload(request: Request) -> Response:
         name = request.query_params.get("name", "")
         overwrite = request.query_params.get("overwrite") == "1"
@@ -234,6 +246,8 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/session/device", apply_package, methods=["POST"]),
         Route("/api/session/close", close_session, methods=["POST"]),
         Route("/api/session/restore", restore_session, methods=["POST"]),
+        Route("/api/session/checkpoint", save_checkpoint, methods=["POST"]),
+        Route("/api/design/add", add_design, methods=["POST"]),
         Route("/api/upload", upload, methods=["POST"]),
         Route("/api/upload", remove_upload, methods=["DELETE"]),
     ]

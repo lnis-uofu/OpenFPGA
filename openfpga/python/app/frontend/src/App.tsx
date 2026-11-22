@@ -2,7 +2,7 @@ import { useEffect } from "preact/hooks";
 import { chatInput } from "./components/Chat";
 import { Console } from "./components/Console";
 import { Settings } from "./components/Settings";
-import { Sidebar } from "./components/Sidebar";
+import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { Welcome } from "./components/Welcome";
 import { Workspace } from "./components/Workspace";
@@ -63,6 +63,7 @@ export function App() {
         <>
           <div class="body">
             <Sidebar />
+            <SidebarResize />
             <Workspace />
           </div>
           <Console />

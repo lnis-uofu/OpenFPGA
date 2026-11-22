@@ -42,7 +42,7 @@ try {
   assert.equal(new URL(page.url()).search, "");
   // A new session has every section and nothing in it; no tab bar, no results area
   assert.ok(await page.isVisible("text=No session"));
-  assert.equal(await page.locator("[role=tablist]").count(), 0);
+  assert.equal(await page.locator(".centre [role=tablist]").count(), 0);
 
   await page.fill("textarea", "Run the flow on routing_test and tell me the Fmax.");
   await page.keyboard.press("Enter");
@@ -50,7 +50,7 @@ try {
   if (process.env.SHOT_CHAT) await page.screenshot({ path: process.env.SHOT_CHAT });
   // The sidebar followed the conversation
   assert.ok(await page.isVisible("text=chan width 24"));
-  assert.ok(await page.isVisible("text=layout 2x2"));
+  assert.ok(await page.isVisible(".stage-reached:has-text('DEVICE')"));
   // Calls in a row fold; the failed one is a card of its own
   assert.ok(await page.isVisible("text=5 calls"));
   assert.ok(await page.isVisible("div.card-failed"));
@@ -64,7 +64,7 @@ try {
   await page.click("text=⫴ split");
   assert.ok(await page.isVisible('[aria-label="Result of get_timing"]'));
   await page.click('[aria-label="Close get_timing"]');
-  assert.equal(await page.locator("[role=tablist]").count(), 0);
+  assert.equal(await page.locator(".centre [role=tablist]").count(), 0);
 
   // The console runs a command
   await page.click("text=▸ Console");

@@ -242,7 +242,7 @@ describe("the welcome screen", () => {
     chat.send({ type: "state_changed", id: "m1", reason: "session_open" });
     chat.end();
     await waitFor(() => expect(sidebar()).toBeTruthy());
-    fireEvent.click(screen.getByText("close"));
+    fireEvent.click(screen.getByText("Close"));
     await screen.findByText("Create session from device package…");
     expect(sidebar()).toBeNull();
   });
@@ -260,7 +260,7 @@ describe("the welcome screen", () => {
     render(<App />);
     fireEvent.click(await screen.findByText("Create session"));
     await waitFor(() => expect(sidebar()).toBeTruthy());
-    fireEvent.click(screen.getByText("close"));
+    fireEvent.click(screen.getByText("Close"));
     await screen.findByText("Create session");
     expect(sidebar()).toBeNull();
   });

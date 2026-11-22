@@ -9,6 +9,7 @@ const SYMBOL = { none: "○", running: "░", reached: "✔", failed: "⚠" } as
 export function TopBar() {
   const latest = view.value.latest;
   const model = config.value?.model;
+  const session = view.value.session;
   return (
     <header class="topbar">
       <button class="icon only-narrow" aria-label="Show or hide the sidebar" onClick={() => (sidebarOpen.value = !sidebarOpen.value)}>
@@ -25,6 +26,15 @@ export function TopBar() {
           title={`Step ${usage.value.step}: the context of the model is ${usage.value.used} of ${usage.value.limit} tokens`}
         >
           ctx {usage.value.used.toLocaleString()}/{usage.value.limit.toLocaleString()}
+        </span>
+      )}
+      {session && (
+        <span
+          class={`worker worker-${session.worker}`}
+          title={session.worker === "running" ? `The worker of session ${session.id} is running` : session.ended ?? "The worker has ended"}
+        >
+          <span class={`status-dot ${session.worker === "running" ? "on" : "off"}`} aria-hidden="true" />{" "}
+          {session.worker === "running" ? "worker running" : session.worker === "none" ? "closed" : "⚠ worker ended"}
         </span>
       )}
       <span class="model" title={model?.endpoint ?? "recorded demo"}>

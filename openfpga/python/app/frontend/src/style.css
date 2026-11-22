@@ -254,6 +254,7 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
   .only-narrow { display: inline-block; }
   .sidebar { position: fixed; z-index: 2; top: 40px; bottom: 0; left: 0; box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25); }
   .sidebar.closed { display: none; }
+  .sidebar-resize { display: none; }
   .centre.split { flex-direction: column; }
 }
 @media (min-width: 901px) {
@@ -314,13 +315,6 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .stage-skipped { opacity: 0.45; }
 .stage-skipped .stage-name { text-decoration: line-through; text-decoration-thickness: 1px; }
 
-/* Designs in the sidebar: a line for the name and the button, a small line for the top and the files */
-.designs { display: flex; flex-direction: column; max-height: 240px; overflow-y: auto; }
-.design-row { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--border, #8884); }
-.design-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.design-detail { grid-column: 1 / -1; font-size: 0.8em; }
-.design-synthesize { padding: 1px 6px; font-size: 0.85em; }
-
 /* Drawings of the results */
 .drawing { margin: 8px 0; }
 .drawing svg { max-width: 100%; height: auto; display: block; }
@@ -339,3 +333,50 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .report-frame { flex: 1; width: 100%; min-height: 480px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 .button-link { font-size: 12px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; color: inherit; text-decoration: none; }
 .button-link:hover { border-color: var(--accent); color: var(--accent); }
+
+/* The worker of the session, in the top bar next to the model */
+.worker { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.worker-ended { color: var(--warn); }
+
+/* The edge of the sidebar that resizes it */
+.sidebar-resize { flex: none; width: 6px; margin-left: -3px; margin-right: -3px; cursor: ew-resize; z-index: 3; touch-action: none; position: relative; }
+.sidebar-resize:hover, .sidebar-resize:focus-visible, .sidebar-resize:active { background: var(--accent); opacity: 0.45; outline: none; }
+
+/* The open sessions as tabs, and the panel of the current one */
+.session-panel { padding-bottom: 10px; }
+.session-tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.session-tab { flex: 0 1 auto; min-width: 48px; max-width: 180px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; background: none; padding: 3px 9px; font-size: 12.5px; white-space: nowrap; color: var(--muted); margin-bottom: -1px; }
+.session-tab-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.session-tab.selected { background: var(--bg); border-color: var(--line); color: var(--text); font-weight: 600; }
+.session-tab:hover:not(:disabled):not(.selected) { color: var(--text); border-color: transparent; background: color-mix(in srgb, var(--bg) 50%, transparent); }
+.session-none { font-size: 12px; padding: 3px 0 5px; }
+.session-bar { display: flex; align-items: center; gap: 4px; margin-top: 8px; }
+.checkpoint-status { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.session-action { font-size: 12px; padding: 2px 8px; }
+.checkpoints { margin: 6px 0 0 14px; font-size: 12.5px; }
+
+/* The menu under the sessions */
+.side-menu { padding-bottom: 8px; }
+.menu-item { display: grid; grid-template-columns: 20px auto 1fr; align-items: baseline; gap: 6px; width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; }
+.menu-item:hover:not(:disabled) { background: var(--bg); border-color: var(--line); }
+.menu-item[aria-expanded="true"] { background: var(--bg); }
+.menu-icon { text-align: center; color: var(--muted); }
+.menu-label { font-weight: 600; }
+.menu-detail { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+.menu-choice { display: flex; gap: 6px; margin: 2px 0 4px 32px; }
+.menu-choice button { font-size: 12px; padding: 2px 10px; }
+.side-menu .packages { margin: 4px 0 6px; }
+
+/* The lists of the devices and the designs, in a tab */
+.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 16px; gap: 10px; overflow: hidden; }
+.panel-search { display: flex; align-items: center; gap: 10px; }
+.panel-search input { flex: 1; max-width: 520px; font: inherit; padding: 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); }
+.panel-count { font-size: 12px; font-variant-numeric: tabular-nums; }
+.panel-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+.panel-item { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); }
+.panel-item.current { border-color: color-mix(in srgb, var(--ok) 60%, var(--line)); }
+.panel-item-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+.panel-item-head button { font-size: 12px; padding: 3px 10px; }
+.panel-item-text { font-size: 12.5px; margin-top: 3px; }
+.panel-path { font-family: var(--mono); font-size: 11.5px; }
+.chip-current { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); }

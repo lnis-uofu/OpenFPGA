@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App, handleKey } from "./App";
 import { AppEvent, SessionView } from "./api";
 import { Console } from "./components/Console";
-import { Sidebar } from "./components/Sidebar";
+import { DesignsPanel, matches } from "./components/Panels";
+import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { CallGroup, ToolCard } from "./components/ToolCard";
 import { TopBar } from "./components/TopBar";
 import { Workspace } from "./components/Workspace";
@@ -23,6 +24,7 @@ import {
   resetStore,
   settingsOpen,
   sidebarOpen,
+  sidebarWidth,
   split,
   tabs,
   view,
@@ -72,6 +74,9 @@ const filled = (): SessionView => ({
   checkpoints: [{ name: "last", kind: "after the last stage", stages: ["DEVICE", "PACKED", "PLACED"] }],
 });
 
+/** An item of the menu of the sidebar, by its label */
+const menuItem = (label: string) => screen.getByText(label, { selector: ".menu-label" }).closest("button") as HTMLButtonElement;
+
 beforeEach(() => {
   resetStore();
   vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("no server"))));
@@ -85,6 +90,22 @@ describe("the top bar", () => {
     expect(screen.getByRole("status").textContent).toContain("s1 · PLACED ✔ 2.1 s");
     expect(screen.getByText(/llama3.1/)).toBeTruthy();
     expect(screen.queryByText("ANALYZED")).toBeNull();
+  });
+
+  it("shows the worker of the session next to the model, and why it ended", () => {
+    view.value = filled();
+    const { unmount } = render(<TopBar />);
+    expect(screen.getByText(/worker running/)).toBeTruthy();
+    unmount();
+    view.value = { ...filled(), session: { id: "s1", name: "s1", worker: "ended", ended: "killed", idle_s: 0 } };
+    render(<TopBar />);
+    const worker = screen.getByText(/⚠ worker ended/);
+    expect(worker.closest(".worker")!.getAttribute("title")).toBe("killed");
+  });
+
+  it("shows no worker before there is a session", () => {
+    render(<TopBar />);
+    expect(screen.queryByText(/worker/)).toBeNull();
   });
 
   it("says demo when there is no model", () => {
@@ -126,16 +147,17 @@ describe("what the model costs", () => {
 describe("the sidebar", () => {
   it("has every section, with nothing in it, before there is a session", () => {
     render(<Sidebar />);
-    for (const title of ["Session", "Stages", "Design files", "Constraints and results", "Checkpoints"]) expect(screen.getByText(title)).toBeTruthy();
+    for (const title of ["Stages", "Design files", "Constraints and results"]) expect(screen.getByText(title)).toBeTruthy();
+    for (const item of ["New", "Session", "Devices", "Designs"]) expect(menuItem(item)).toBeTruthy();
     expect(screen.getByText("(no session)")).toBeTruthy();
-    expect(screen.getAllByText("(none)").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByText("(none)").length).toBeGreaterThanOrEqual(3);
     expect(screen.getAllByRole("listitem")).toHaveLength(6); // synthesis, then the five stages of the flow
   });
 
   it("shows the stages, the files and the checkpoints of a session", () => {
     view.value = filled();
     render(<Sidebar />);
-    expect(screen.getByText("worker running")).toBeTruthy();
+    expect(screen.queryByText(/worker running/)).toBeNull(); // in the top bar
     const stages = screen.getAllByRole("listitem").map((li) => li.textContent ?? "");
     expect(stages[0]).toContain("✔"); // DEVICE
     expect(stages[1]).toContain("SYNTHESIS");
@@ -145,7 +167,7 @@ describe("the sidebar", () => {
     expect(screen.queryByText(/k6_frac_N10_tileable_40nm_with_a_long_name/)).toBeNull(); // the architecture is a button
     expect(screen.getByText("chan width 24")).toBeTruthy();
     expect(screen.getByText("routing_test.net")).toBeTruthy();
-    expect(screen.getByText(/last/)).toBeTruthy();
+    expect(screen.getByText(/checkpoint · PLACED/)).toBeTruthy();
   });
 
   it("draws how far the flow went, and what a failed stage said", () => {
@@ -189,10 +211,10 @@ describe("the sidebar", () => {
     expect(screen.getByText("place.seed = 3")).toBeTruthy();
   });
 
-  it("says that a worker ended, and why", () => {
+  it("offers to restore a worker that ended", () => {
     view.value = { ...filled(), session: { id: "s1", name: "s1", worker: "ended", ended: "killed", idle_s: 0 } };
     render(<Sidebar />);
-    expect(screen.getByText(/worker ended: killed/)).toBeTruthy();
+    expect(screen.getByText("Restore")).toBeTruthy();
   });
 });
 
@@ -219,9 +241,65 @@ describe("the sessions of the sidebar", () => {
   it("are not there in the demo", () => {
     view.value = filled();
     render(<Sidebar />);
-    expect((screen.getByText("+ new") as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByText("close") as HTMLButtonElement).disabled).toBe(true);
+    expect(menuItem("New").disabled).toBe(true);
+    expect(menuItem("Session").disabled).toBe(true);
+    expect((screen.getByText("Close") as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByText("Save") as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByText(/checkpoint ·/));
     expect(screen.queryByText("restore")).toBeNull();
+  });
+
+  it("show the open sessions as tabs, the current one selected, and switch on a click", async () => {
+    real();
+    const fetchMock = answers();
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = {
+      ...filled(),
+      sessions: [
+        { id: "s1", name: "run1", running: true },
+        { id: "s2", name: "other", running: false },
+      ],
+    };
+    render(<Sidebar />);
+    const tabs = within(screen.getByRole("tablist", { name: "Open sessions" })).getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent?.trim())).toEqual(["run1", "other"]);
+    expect(tabs[0].getAttribute("aria-selected")).toBe("true");
+    expect(tabs[1].title).toContain("worker ended");
+    fireEvent.click(tabs[0]); // the current one: nothing to do
+    fireEvent.click(tabs[1]);
+    await waitFor(() => {
+      const calls = fetchMock.mock.calls.filter((c) => c[0] === "/api/session/open");
+      expect(calls).toHaveLength(1);
+      expect(JSON.parse(String(calls[0][1]?.body))).toEqual({ session: "s2" });
+    });
+  });
+
+  it("save a checkpoint from the panel of the session", async () => {
+    real();
+    const fetchMock = answers();
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = filled();
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("Save"));
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/checkpoint"));
+    const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/checkpoint")!;
+    expect(JSON.parse(String(sent[1]?.body))).toEqual({});
+  });
+
+  it("say how many checkpoints were saved, folded until asked", () => {
+    view.value = {
+      ...filled(),
+      checkpoints: [
+        { name: "last", kind: "after the last stage", stages: ["DEVICE", "PACKED"] },
+        { name: "mine", kind: "named", stages: ["DEVICE"] },
+      ],
+    };
+    render(<Sidebar />);
+    const fold = screen.getByText(/checkpoint · PACKED · \+1 saved/);
+    expect(fold.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText("mine")).toBeNull();
+    fireEvent.click(fold);
+    expect(screen.getByText("mine")).toBeTruthy();
   });
 
   it("open a session from the page, also when there is none", async () => {
@@ -229,7 +307,7 @@ describe("the sessions of the sidebar", () => {
     const fetchMock = answers();
     vi.stubGlobal("fetch", fetchMock);
     render(<Sidebar />);
-    fireEvent.click(screen.getByText("+ new"));
+    fireEvent.click(menuItem("New"));
     await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/new"));
     await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session"));
   });
@@ -242,7 +320,7 @@ describe("the sessions of the sidebar", () => {
     render(<Sidebar />);
     fireEvent.click(screen.getByText("Restore"));
     await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/restore"));
-    fireEvent.click(screen.getByText("close"));
+    fireEvent.click(screen.getByText("Close"));
     await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/close"));
   });
 
@@ -258,6 +336,7 @@ describe("the sessions of the sidebar", () => {
       ],
     };
     render(<Sidebar />);
+    fireEvent.click(screen.getByText(/checkpoint ·/));
     const [last, placed] = screen.getAllByText("restore");
     fireEvent.click(placed);
     await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(0));
@@ -273,14 +352,14 @@ describe("the sessions of the sidebar", () => {
     real();
     vi.stubGlobal("fetch", answers(false));
     render(<Sidebar />);
-    fireEvent.click(screen.getByText("+ new"));
+    fireEvent.click(menuItem("New"));
     const { banner } = await import("./store");
     await waitFor(() => expect(banner.value?.kind).toBe("too_many_sessions"));
     expect(banner.value?.hint).toBe("close one");
   });
 });
 
-describe("creating a session from a device package", () => {
+describe("the devices tab", () => {
   const real = () => {
     config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
   };
@@ -295,33 +374,69 @@ describe("creating a session from a device package", () => {
       problems: [{ name: "broken", message: "The device package 'broken' cannot be used: the file 'a.xml' was changed (checksum)" }],
     },
   };
+  /** The sidebar and the centre: Devices of the menu opens the list in a tab */
+  const page = () => {
+    render(
+      <>
+        <Sidebar />
+        <Workspace />
+      </>,
+    );
+    fireEvent.click(menuItem("Devices"));
+  };
 
-  it("is not there in the demo", () => {
-    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
-    render(<Sidebar />);
-    expect((screen.getByText("from device…") as HTMLButtonElement).disabled).toBe(true);
+  it("opens from the menu in a tab of its own, once", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
+    page();
+    await screen.findByText("k6_frac_n10_2x2");
+    fireEvent.click(menuItem("Devices"));
+    expect(tabs.value.filter((t) => t.panel === "devices")).toHaveLength(1);
+    expect(activeTab.value).toBe("panel:devices");
+    expect(screen.getByRole("tab", { name: "Devices" })).toBeTruthy();
   });
 
   it("lists the packages, with a damaged one shown as such", async () => {
     real();
     vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
-    render(<Sidebar />);
-    fireEvent.click(screen.getByText("from device…"));
+    page();
     await screen.findByText("k6_frac_n10_2x2");
     expect(screen.getByText("K6 logic only")).toBeTruthy();
     expect(screen.getByText("3x4")).toBeTruthy();
     expect(screen.getByText("K4")).toBeTruthy();
     expect(screen.getByText(/cannot be used: the file 'a.xml' was changed/)).toBeTruthy();
-    fireEvent.click(screen.getByText("from device…")); // a second click closes it
+  });
+
+  it("finds a package by its name, its description, its layout or its LUT size", async () => {
+    real();
+    vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
+    page();
+    await screen.findByText("k6_frac_n10_2x2");
+    const search = screen.getByRole("searchbox", { name: "Search the device packages" });
+    fireEvent.input(search, { target: { value: "multiplier" } });
     expect(screen.queryByText("k6_frac_n10_2x2")).toBeNull();
+    expect(screen.getByText("k4_n4_dsp16_3x4")).toBeTruthy();
+    expect(screen.getByText("1 of 2")).toBeTruthy();
+    fireEvent.input(search, { target: { value: "k6 2X2" } });
+    expect(screen.getByText("k6_frac_n10_2x2")).toBeTruthy();
+    expect(screen.queryByText("k4_n4_dsp16_3x4")).toBeNull();
+    fireEvent.input(search, { target: { value: "nothing like it" } });
+    expect(screen.getByText(/No device package matches/)).toBeTruthy();
   });
 
   it("says how to get packages when there are none", async () => {
     real();
     vi.stubGlobal("fetch", vi.fn(() => reply({ ok: true, data: { packages: [], problems: [] } })));
-    render(<Sidebar />);
-    fireEvent.click(screen.getByText("from device…"));
+    page();
     await screen.findByText(/--device-packages/);
+  });
+
+  it("cannot create a session in the demo", async () => {
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
+    page();
+    await screen.findByText("k6_frac_n10_2x2");
+    expect((screen.getAllByText("Create session")[0] as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("creates the session of the package that is chosen, and reads the session again", async () => {
@@ -330,14 +445,12 @@ describe("creating a session from a device package", () => {
       reply(url === "/api/device-packages" ? listing : url === "/api/session" ? emptyView() : { ok: true, data: {} }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    render(<Sidebar />);
-    fireEvent.click(screen.getByText("from device…"));
+    page();
     await screen.findByText("k6_frac_n10_2x2");
     fireEvent.click(screen.getAllByText("Create session")[0]);
     await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
     const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/new")!;
     expect(JSON.parse(String(sent[1]?.body))).toEqual({ device_package: "k6_frac_n10_2x2" });
-    expect(screen.queryByText("Create session")).toBeNull(); // the picker closed
   });
 
   it("offers to load a package into an open session that is empty, and only then", async () => {
@@ -349,8 +462,7 @@ describe("creating a session from a device package", () => {
     const v = filled();
     v.files.inputs = [];
     view.value = v;
-    render(<Sidebar />);
-    fireEvent.click(screen.getByText("from device…"));
+    page();
     await screen.findByText("k6_frac_n10_2x2");
     fireEvent.click(screen.getAllByText("Load into this session")[0]);
     await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session/device")).toBe(true));
@@ -358,17 +470,19 @@ describe("creating a session from a device package", () => {
     expect(JSON.parse(String(sent[1]?.body))).toEqual({ device_package: "k6_frac_n10_2x2" });
   });
 
-  it("does not offer it when the session has files", async () => {
+  it("does not offer it when the session has files, and marks the package of the session", async () => {
     real();
     vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
-    view.value = filled(); // has inputs
-    render(<Sidebar />);
-    fireEvent.click(screen.getByText("from device…"));
-    await screen.findByText("k6_frac_n10_2x2");
+    const v = filled(); // has inputs
+    v.session = { ...v.session!, device_package: listing.data.packages[0] };
+    view.value = v;
+    page();
+    await screen.findByText("K6 logic only"); // the name is also on the device stage of the sidebar
     expect(screen.queryByText("Load into this session")).toBeNull();
+    expect(screen.getByText("this session")).toBeTruthy();
   });
 
-  it("shows the device of the session and waits for the circuit", async () => {
+  it("waits for the circuit in a session made from a package", async () => {
     real();
     const v = filled();
     v.session = {
@@ -381,7 +495,6 @@ describe("creating a session from a device package", () => {
     ];
     view.value = v;
     render(<Sidebar />);
-    expect(screen.getByText(/device k6_frac_n10_2x2 · 2x2 · K6/)).toBeTruthy();
     expect(screen.getByText(/Waiting for a circuit/)).toBeTruthy();
     v.files.inputs = [...v.files.inputs, { label: "circuit", name: "mine.blif", extra: null }];
     view.value = { ...v };
@@ -451,11 +564,12 @@ describe("uploading files to the session", () => {
     v.files.synthesis = [{ name: "synth/chip.blif", kind: "circuit", bytes: 300 }];
     view.value = v;
     render(<Sidebar />);
-    expect(screen.getByText("design/chip/rtl/chip.v")).toBeTruthy();
+    // A file of the copy is shown by its path in the design; the title has the whole name
+    expect(screen.getByText("rtl/chip.v").title).toBe("design/chip/rtl/chip.v");
     const rows = [...document.querySelectorAll(".design-files .upload-row")].map((e) => e.textContent ?? "");
     const at = (name: string) => rows.findIndex((r) => r.startsWith(name));
-    expect(at("design/chip/rtl/chip.v")).toBeGreaterThanOrEqual(0);
-    expect(at("design/chip/rtl/chip.v")).toBeLessThan(at("synth/chip.blif"));
+    expect(at("rtl/chip.v")).toBeGreaterThanOrEqual(0);
+    expect(at("rtl/chip.v")).toBeLessThan(at("synth/chip.blif"));
   });
 
   it("lists only the circuit that was read when there is nothing else", () => {
@@ -1143,7 +1257,7 @@ describe("synthesis as a stage", () => {
   });
 });
 
-describe("the sessions list of the sidebar", () => {
+describe("the session item of the menu", () => {
   const real = () => {
     config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
   };
@@ -1158,17 +1272,34 @@ describe("the sessions list of the sidebar", () => {
     },
   };
 
-  it("opens a list of the sessions from the button, with the current one marked, and closes it again", async () => {
+  it("asks what to do: a new session, or open one", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify(url === "/api/session" ? emptyView() : { ok: true, data: {} }))),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Sidebar />);
+    expect(screen.queryByText("Open…")).toBeNull();
+    fireEvent.click(menuItem("Session"));
+    expect(menuItem("Session").getAttribute("aria-expanded")).toBe("true");
+    const choice = screen.getByRole("group", { name: "Session" });
+    fireEvent.click(within(choice).getByText("New"));
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain("/api/session/new"));
+    expect(screen.queryByText("Open…")).toBeNull(); // the question closed
+  });
+
+  it("opens a list of the sessions, with the current one marked, and closes it again", async () => {
     real();
     vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(JSON.stringify(found)))));
     view.value = filled();
     render(<Sidebar />);
-    fireEvent.click(screen.getByText("sessions…"));
+    fireEvent.click(menuItem("Session"));
+    fireEvent.click(screen.getByText("Open…"));
     await screen.findByText("second");
     expect(screen.getByText("Current")).toBeTruthy();
     expect(screen.getByText("old")).toBeTruthy();
     expect(screen.getAllByText("Open")).toHaveLength(2); // the other live one, and the saved one
-    fireEvent.click(screen.getByText("sessions…"));
+    fireEvent.click(screen.getByText("Open…"));
     expect(screen.queryByText("second")).toBeNull();
   });
 
@@ -1180,23 +1311,19 @@ describe("the sessions list of the sidebar", () => {
     vi.stubGlobal("fetch", fetchMock);
     view.value = filled();
     render(<Sidebar />);
-    fireEvent.click(screen.getByText("sessions…"));
+    fireEvent.click(menuItem("Session"));
+    fireEvent.click(screen.getByText("Open…"));
     await screen.findByText("second");
     fireEvent.click(screen.getAllByText("Open")[0]);
     await waitFor(() => {
       const call = fetchMock.mock.calls.find((c) => c[0] === "/api/session/open");
       expect(JSON.parse(String(call?.[1]?.body))).toEqual({ session: "s2" });
     });
-  });
-
-  it("is not there in the demo", () => {
-    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
-    render(<Sidebar />);
-    expect((screen.getByText("sessions…") as HTMLButtonElement).disabled).toBe(true);
+    await waitFor(() => expect(screen.queryByText("Open…")).toBeNull());
   });
 });
 
-describe("the designs of the sidebar", () => {
+describe("the designs tab", () => {
   const real = () => {
     config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
   };
@@ -1205,55 +1332,140 @@ describe("the designs of the sidebar", () => {
     { name: "rtcclock", top: "rtcclock", path: "interface/rtcclock", files: ["a.v", "b.v"], description: null },
   ];
 
+  it("opens from the menu in a tab of its own", () => {
+    real();
+    view.value = { ...filled(), designs };
+    render(
+      <>
+        <Sidebar />
+        <Workspace />
+      </>,
+    );
+    fireEvent.click(menuItem("Designs"));
+    expect(activeTab.value).toBe("panel:designs");
+    expect(screen.getByRole("region", { name: "Design directories" })).toBeTruthy();
+    expect(screen.queryByText("Add")).toBeNull(); // no longer a section of the sidebar
+  });
+
   it("lists the design directories with their top module and the number of files", () => {
     real();
     view.value = { ...filled(), designs };
-    render(<Sidebar />);
+    render(<DesignsPanel />);
     expect(screen.getByText("opencores_gpio")).toBeTruthy();
-    expect(screen.getByText("top gpio_top · 1 file")).toBeTruthy();
-    expect(screen.getByText("top rtcclock · 2 files")).toBeTruthy();
+    expect(screen.getByText("top gpio_top")).toBeTruthy();
+    expect(screen.getByText("1 RTL file")).toBeTruthy();
+    expect(screen.getByText("2 RTL files")).toBeTruthy();
+    expect(screen.getByText("interface/rtcclock")).toBeTruthy();
   });
 
-  it("says when a design has only a netlist, which Add reads instead of synthesizing", () => {
+  it("says when a design has only a netlist", () => {
     real();
     const only = { name: "gates", top: "gates", path: "x/gates", files: [], netlists: ["gates.blif"], description: null };
     view.value = { ...filled(), designs: [only] };
-    render(<Sidebar />);
-    expect(screen.getByText("top gates · netlist only")).toBeTruthy();
-    expect(screen.getByText("Add").title).toContain("read its netlist");
+    render(<DesignsPanel />);
+    expect(screen.getByText("netlist only")).toBeTruthy();
+  });
+
+  it("finds a design by its name, its top, its description or a file", () => {
+    real();
+    view.value = { ...filled(), designs };
+    render(<DesignsPanel />);
+    const search = screen.getByRole("searchbox", { name: "Search the designs" });
+    fireEvent.input(search, { target: { value: "b.v" } });
+    expect(screen.queryByText("opencores_gpio")).toBeNull();
+    expect(screen.getByText("rtcclock")).toBeTruthy();
+    expect(screen.getByText("1 of 2")).toBeTruthy();
+    fireEvent.input(search, { target: { value: "gpio" } });
+    expect(screen.getByText("opencores_gpio")).toBeTruthy();
+    fireEvent.input(search, { target: { value: "zzz" } });
+    expect(screen.getByText(/No design matches/)).toBeTruthy();
   });
 
   it("says what a design directory is when there is none", () => {
     real();
     view.value = { ...filled(), designs: [] };
-    render(<Sidebar />);
-    expect(screen.getByText(/no design directory/)).toBeTruthy();
+    render(<DesignsPanel />);
+    expect(screen.getByText(/No design directory/)).toBeTruthy();
   });
 
-  it("adds a design by its name, from the button, as the slash line of synthesize", async () => {
+  it("adds a design to the session by its name, and does not synthesize it", async () => {
     real();
     const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
-      Promise.resolve(new Response(url === "/api/session" ? JSON.stringify(emptyView()) : "")),
+      Promise.resolve(new Response(JSON.stringify(url === "/api/session" ? emptyView() : { ok: true, data: {} }))),
     );
     vi.stubGlobal("fetch", fetchMock);
     view.value = { ...filled(), designs };
-    render(<Sidebar />);
-    fireEvent.click(screen.getAllByText("Add")[0]);
+    render(<DesignsPanel />);
+    fireEvent.click(screen.getAllByText("Add to session")[0]);
     await waitFor(() => {
-      const call = fetchMock.mock.calls.find((c) => c[0] === "/api/chat");
-      expect(JSON.parse(String(call?.[1]?.body))).toEqual({ message: "/synthesize design=opencores_gpio" });
+      const call = fetchMock.mock.calls.find((c) => c[0] === "/api/design/add");
+      expect(JSON.parse(String(call?.[1]?.body))).toEqual({ design: "opencores_gpio" });
     });
+    expect(fetchMock.mock.calls.some((c) => c[0] === "/api/chat")).toBe(false);
+  });
+
+  it("marks a design that the session has, and asks before it is copied again", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify(url === "/api/session" ? emptyView() : { ok: true, data: {} }))),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirm);
+    const v = { ...filled(), designs };
+    v.files = { ...v.files, design: [{ name: "design/opencores_gpio/gpio_top.v", kind: "other" as const, bytes: 10 }] };
+    view.value = v;
+    render(<DesignsPanel />);
+    expect(screen.getByText("in this session")).toBeTruthy();
+    fireEvent.click(screen.getByText("Add again"));
+    expect(confirm).toHaveBeenCalled();
+    expect(fetchMock.mock.calls.some((c) => c[0] === "/api/design/add")).toBe(false);
   });
 
   it("needs a session, and is not there in the demo", () => {
     real();
     view.value = { ...emptyView(), designs };
-    const { unmount } = render(<Sidebar />);
-    expect((screen.getAllByText("Add")[0] as HTMLButtonElement).disabled).toBe(true);
+    const { unmount } = render(<DesignsPanel />);
+    expect((screen.getAllByText("Add to session")[0] as HTMLButtonElement).disabled).toBe(true);
     unmount();
     config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
     view.value = { ...filled(), designs };
-    render(<Sidebar />);
-    expect((screen.getAllByText("Add")[0] as HTMLButtonElement).disabled).toBe(true);
+    render(<DesignsPanel />);
+    expect((screen.getAllByText("Add to session")[0] as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe("a search of the lists", () => {
+  it("needs every word, in any case", () => {
+    expect(matches("", "x")).toBe(true);
+    expect(matches("K6 tile", "k6_frac", "tileable")).toBe(true);
+    expect(matches("k6 dsp", "k6_frac", "tileable")).toBe(false);
+    expect(matches("x", null, undefined)).toBe(false);
+  });
+});
+
+describe("the edge of the sidebar", () => {
+  it("makes the sidebar wider and narrower with the keys, within bounds, and back on a double click", () => {
+    render(
+      <>
+        <Sidebar />
+        <SidebarResize />
+      </>,
+    );
+    const edge = screen.getByRole("separator", { name: "Resize the sidebar" });
+    fireEvent.keyDown(edge, { key: "ArrowRight" });
+    expect(sidebarWidth.value).toBe(304);
+    expect(window.localStorage.getItem("openfpga-sidebar-width")).toBe("304");
+    expect((document.querySelector(".sidebar") as HTMLElement).style.getPropertyValue("--sidebar-w")).toBe("304px");
+    for (let i = 0; i < 20; i++) fireEvent.keyDown(edge, { key: "ArrowLeft" });
+    expect(sidebarWidth.value).toBe(200);
+    fireEvent.dblClick(edge);
+    expect(sidebarWidth.value).toBe(280);
+  });
+
+  it("is not there when the sidebar is hidden", () => {
+    sidebarOpen.value = false;
+    render(<SidebarResize />);
+    expect(screen.queryByRole("separator")).toBeNull();
   });
 });

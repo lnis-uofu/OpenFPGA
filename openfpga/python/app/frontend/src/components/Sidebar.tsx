@@ -1,6 +1,5 @@
 import { useRef, useState } from "preact/hooks";
 import { UPLOAD_EXTENSIONS, type SessionView } from "../api";
-import { PackagePicker } from "./PackagePicker";
 import { SessionPicker } from "./SessionPicker";
 import {
   busy,
@@ -8,14 +7,19 @@ import {
   endSession,
   makeSession,
   openFile,
+  openPanel,
   openReport,
-  packagesOpen,
+  openSession,
   removeUpload,
   restore,
+  saveSession,
   sendMessage,
+  sessionMenu,
   sessionsOpen,
+  setSidebarWidth,
   sidebarOpen,
-  togglePackages,
+  sidebarWidth,
+  SIDEBAR_WIDTH_DEFAULT,
   toggleSessions,
   uploadFiles,
   uploading,
@@ -33,13 +37,17 @@ function Section(props: { title: string; children: preact.ComponentChildren }) {
   );
 }
 
-function Name(props: { name: string }) {
-  // A long name is cut in the middle: the whole name is in the title. A click opens the file in a
-  // tab (in the recorded demo there is no file: it copies the name); the small button copies it
+function Name(props: { name: string; label?: string }) {
+  // A long name is cut in the middle, as much as the width of the sidebar needs: the whole name is
+  // in the title. A click opens the file in a tab (in the recorded demo there is no file: it copies
+  // the name); the small button copies it
   const { name } = props;
+  const label = props.label ?? name;
   const [copied, setCopied] = useState(false);
   const real = config.value?.backend === "session";
-  const shown = name.length > 26 ? `${name.slice(0, 14)}…${name.slice(-10)}` : name;
+  const room = Math.max(26, Math.floor((sidebarWidth.value - 100) / 7.4));
+  const tail = Math.max(10, Math.floor(room * 0.45));
+  const shown = label.length > room ? `${label.slice(0, room - tail - 1)}…${label.slice(-tail)}` : label;
   const copy = () => {
     void navigator.clipboard?.writeText(name);
     setCopied(true);
@@ -70,6 +78,7 @@ type Origin = "input" | "design" | "upload" | "model" | "synthesis";
 
 interface DesignRow {
   name: string;
+  label?: string; // a file of the copy of a design: its path in the design, after design/<folder>/
   bytes?: number;
   origin: Origin;
   loaded: boolean;
@@ -89,7 +98,10 @@ function designFiles(files: SessionView["files"]): DesignRow[] {
     [files.created ?? [], "model"],
     [files.synthesis ?? [], "synthesis"],
   ] as const) {
-    for (const f of list) rows.push({ name: f.name, bytes: f.bytes, origin, loaded: is(f.name) });
+    for (const f of list) {
+      const label = origin === "design" ? f.name.split("/").slice(2).join("/") || f.name : undefined;
+      rows.push({ name: f.name, label, bytes: f.bytes, origin, loaded: is(f.name) });
+    }
   }
   if (circuit && !rows.some((r) => r.loaded)) {
     rows.unshift({ name: circuit.name, origin: "input", loaded: true });
@@ -110,7 +122,206 @@ const REPORT: Record<string, string> = {
 /** The command of the run button of a stage (none for the stages that have no button) */
 const RUN: Record<string, string> = { PACKED: "pack", PLACED: "place", ROUTED: "route" };
 
-/** The left sidebar: the session, its stages, the design files and the checkpoints */
+/** The open sessions as tabs (a click switches to one), and the panel of the current one: its
+ * checkpoints (folded), save and close */
+function SessionPanel(props: { real: boolean }) {
+  const { real } = props;
+  const [checkpointsOpen, setCheckpointsOpen] = useState(false);
+  const v = view.value;
+  const session = v.session;
+  const open = v.sessions ?? (session ? [{ id: session.id, name: session.name, running: session.worker === "running" }] : []);
+  const last = v.checkpoints.find((c) => c.name === "last");
+  const named = v.checkpoints.filter((c) => c.name !== "last").length;
+  const status = last
+    ? `checkpoint · ${last.stages[last.stages.length - 1] ?? "no stage"}${named ? ` · +${named} saved` : ""}`
+    : named
+      ? `${named} saved checkpoint${named === 1 ? "" : "s"}`
+      : "no checkpoint";
+  return (
+    <section class="side-section session-panel" aria-label="Sessions">
+      <div class="session-tabs" role="tablist" aria-label="Open sessions">
+        {open.length ? (
+          open.map((s) => {
+            const current = s.id === session?.id;
+            return (
+              <button
+                key={s.id}
+                role="tab"
+                aria-selected={current}
+                class={`session-tab ${current ? "selected" : ""}`}
+                disabled={!real || (busy.value && !current)}
+                title={`${s.name} (${s.id})${s.running ? "" : " · worker ended"}${current ? "" : ": switch to it"}`}
+                onClick={() => {
+                  if (!current) void openSession(s.id);
+                }}
+              >
+                <span class={`status-dot ${s.running ? "on" : "off"}`} aria-hidden="true" />
+                <span class="session-tab-name">{s.name}</span>
+              </button>
+            );
+          })
+        ) : (
+          <span class="muted session-none">(no session)</span>
+        )}
+      </div>
+      {session && (
+        <>
+          <div class="session-bar">
+            <button
+              class="fold checkpoint-status"
+              aria-expanded={checkpointsOpen}
+              title="The checkpoints of the session: restore one"
+              onClick={() => setCheckpointsOpen(!checkpointsOpen)}
+            >
+              {checkpointsOpen ? "▾" : "▸"} {status}
+            </button>
+            <span class="spacer" />
+            <button
+              class="session-action"
+              disabled={!real || busy.value || session.worker !== "running"}
+              title={real ? "Save the flow as a checkpoint, to come back to" : "Not in the demo"}
+              onClick={() => void saveSession()}
+            >
+              Save
+            </button>
+            <button
+              class="session-action"
+              disabled={!real || busy.value}
+              title={real ? "End the worker; the files stay" : "Not in the demo"}
+              onClick={() => void endSession()}
+            >
+              Close
+            </button>
+            {session.worker === "ended" && (
+              <button class="session-action" disabled={!real} onClick={() => void restore()}>
+                Restore
+              </button>
+            )}
+          </div>
+          {checkpointsOpen && (
+            <div class="checkpoints">
+              {v.checkpoints.length ? (
+                v.checkpoints.map((c) => (
+                  <div key={c.name} class="checkpoint">
+                    <span class="checkpoint-name">
+                      {c.name} <span class="muted">· {c.stages[c.stages.length - 1] ?? ""}</span>
+                    </span>
+                    {real && (
+                      <button class="link" title="Go back to this checkpoint" onClick={() => void restore(c.name === "last" ? undefined : c.name)}>
+                        restore
+                      </button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div class="muted">(none: one is saved after each stage, or with Save)</div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+/** The menu under the sessions: a new session, the question of Session (new or open), and the
+ * lists of the devices and the designs, each in a tab */
+function Menu(props: { real: boolean }) {
+  const { real } = props;
+  const item = (icon: string, label: string, detail: string, onClick: () => void, opts: { disabled?: boolean; expanded?: boolean } = {}) => (
+    <button
+      class="menu-item"
+      role="menuitem"
+      disabled={opts.disabled}
+      aria-expanded={opts.expanded}
+      onClick={onClick}
+      title={detail}
+    >
+      <span class="menu-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span class="menu-label">{label}</span>
+      <span class="menu-detail muted">{detail}</span>
+    </button>
+  );
+  return (
+    <nav class="side-section side-menu" aria-label="Menu">
+      <div role="menu" aria-label="Menu">
+        {item("＋", "New", real ? "A new session" : "Not in the demo", () => void makeSession(), { disabled: !real || busy.value })}
+        {item(
+          "◫",
+          "Session",
+          real ? "New, or open a session" : "Not in the demo",
+          () => {
+            sessionMenu.value = !sessionMenu.value;
+            if (!sessionMenu.value) sessionsOpen.value = false;
+          },
+          { disabled: !real, expanded: sessionMenu.value },
+        )}
+        {real && sessionMenu.value && (
+          <div class="menu-choice" role="group" aria-label="Session">
+            <button
+              disabled={busy.value}
+              onClick={() => {
+                sessionMenu.value = false;
+                sessionsOpen.value = false;
+                void makeSession();
+              }}
+            >
+              New
+            </button>
+            <button disabled={busy.value} aria-expanded={sessionsOpen.value} onClick={() => void toggleSessions()}>
+              Open…
+            </button>
+          </div>
+        )}
+        {real && sessionMenu.value && sessionsOpen.value && <SessionPicker />}
+        {item("▦", "Devices", "The device packages", () => openPanel("devices"))}
+        {item("▤", "Designs", "The design directories", () => openPanel("designs"))}
+      </div>
+    </nav>
+  );
+}
+
+/** The edge of the sidebar: dragged (or the arrow keys) to make it wider or narrower */
+export function SidebarResize() {
+  const drag = (e: PointerEvent) => {
+    const handle = e.currentTarget as HTMLElement;
+    const startX = e.clientX;
+    const start = sidebarWidth.value;
+    handle.setPointerCapture?.(e.pointerId);
+    const move = (m: PointerEvent) => setSidebarWidth(start + (m.clientX - startX));
+    const stopDrag = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stopDrag);
+      handle.removeEventListener("pointercancel", stopDrag);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", stopDrag);
+    handle.addEventListener("pointercancel", stopDrag);
+    e.preventDefault();
+  };
+  if (!sidebarOpen.value) return null;
+  return (
+    <div
+      class="sidebar-resize"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the sidebar"
+      aria-valuenow={sidebarWidth.value}
+      tabIndex={0}
+      title="Drag to resize (arrow keys too; double click for the usual width)"
+      onPointerDown={drag}
+      onDblClick={() => setSidebarWidth(SIDEBAR_WIDTH_DEFAULT)}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight") (e.preventDefault(), setSidebarWidth(sidebarWidth.value + 24));
+        else if (e.key === "ArrowLeft") (e.preventDefault(), setSidebarWidth(sidebarWidth.value - 24));
+      }}
+    />
+  );
+}
+
+/** The left sidebar: the sessions, the menu, the stages, the design files, constraints and results */
 export function Sidebar() {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
@@ -119,7 +330,6 @@ export function Sidebar() {
   // The buttons of the sessions work on real sessions, not on the recorded demo
   const real = config.value?.backend === "session";
   const files = v.files;
-  const designs = v.designs ?? [];
   // Synthesis follows the device (its LUT size and script come from the device); a skipped one
   // (the design is a netlist) is not counted
   const device = v.stages.findIndex((s) => s.stage === "DEVICE");
@@ -139,82 +349,13 @@ export function Sidebar() {
     return RUN[stage] ? `/run_stage stage=${RUN[stage]}` : null;
   };
   return (
-    <aside class={`sidebar ${sidebarOpen.value ? "" : "closed"}`} aria-label="Session and design files">
-      <Section title="Session">
-        {session ? (
-          <>
-            <div class="session-row">
-              <span class={`status-dot ${session.worker === "running" ? "on" : "off"}`} aria-hidden="true" />
-              <strong>{session.id}</strong> <span class="muted">{session.name !== session.id ? session.name : ""}</span>
-            </div>
-            {session.device_package && (
-              <div class="muted device-line" title={session.device_package.description}>
-                device {session.device_package.name} · {session.device_package.layout}
-                {session.device_package.lut_size != null ? ` · K${session.device_package.lut_size}` : ""}
-              </div>
-            )}
-            <div class={`session-state ${session.worker === "running" ? "muted" : "warn"}`}>
-              {session.worker === "running" ? "worker running" : session.worker === "none" ? "closed" : `⚠ worker ended${session.ended ? `: ${session.ended}` : ""}`}
-            </div>
-            <div class="buttons">
-              <button disabled={!real || busy.value} onClick={() => void makeSession()} title={real ? "Open another session" : "Not in the demo"}>
-                + new
-              </button>
-              <button
-                disabled={!real || busy.value}
-                aria-expanded={packagesOpen.value}
-                onClick={() => void togglePackages()}
-                title={real ? "Create a session from a device package: its architectures are read" : "Not in the demo"}
-              >
-                from device…
-              </button>
-              <button
-                disabled={!real || busy.value}
-                aria-expanded={sessionsOpen.value}
-                onClick={() => void toggleSessions()}
-                title={real ? "Switch to another session, or open a saved one" : "Not in the demo"}
-              >
-                sessions…
-              </button>
-              <button disabled={!real || busy.value} onClick={() => void endSession()} title={real ? "End the worker; the files stay" : "Not in the demo"}>
-                close
-              </button>
-              {session.worker === "ended" && (
-                <button disabled={!real} onClick={() => void restore()}>
-                  Restore
-                </button>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div class="muted">(no session)</div>
-            <div class="buttons">
-              <button disabled={!real} onClick={() => void makeSession()} title={real ? "Open a session" : "Not in the demo"}>
-                + new
-              </button>
-              <button
-                disabled={!real || busy.value}
-                aria-expanded={packagesOpen.value}
-                onClick={() => void togglePackages()}
-                title={real ? "Create a session from a device package: its architectures are read" : "Not in the demo"}
-              >
-                from device…
-              </button>
-              <button
-                disabled={!real || busy.value}
-                aria-expanded={sessionsOpen.value}
-                onClick={() => void toggleSessions()}
-                title={real ? "Switch to another session, or open a saved one" : "Not in the demo"}
-              >
-                sessions…
-              </button>
-            </div>
-          </>
-        )}
-        {real && packagesOpen.value && <PackagePicker />}
-        {real && sessionsOpen.value && <SessionPicker />}
-      </Section>
+    <aside
+      class={`sidebar ${sidebarOpen.value ? "" : "closed"}`}
+      aria-label="Session and design files"
+      style={{ "--sidebar-w": `${sidebarWidth.value}px` }}
+    >
+      <SessionPanel real={real} />
+      <Menu real={real} />
       <Section title="Stages">
         <div
           class="progress"
@@ -293,49 +434,12 @@ export function Sidebar() {
           ))}
         </ol>
       </Section>
-      <Section title="Designs">
-        {designs.length ? (
-          <div class="designs">
-            {designs.map((d) => (
-              <div key={d.path} class="design-row" title={d.description ?? undefined}>
-                <strong class="design-name">{d.name}</strong>
-                <button
-                  class="design-synthesize"
-                  disabled={!real || busy.value || !session}
-                  title={
-                    !real
-                      ? "Not in the demo"
-                      : session
-                        ? d.files.length || !d.netlists?.length
-                          ? "Copy this design into the session and synthesize its RTL for the device of the session"
-                          : "Copy this design into the session and read its netlist (it has no RTL)"
-                        : "Open a session first"
-                  }
-                  onClick={() => void sendMessage(`/synthesize design=${d.name}`)}
-                >
-                  Add
-                </button>
-                <span class="design-detail muted">
-                  {d.top ? `top ${d.top} · ` : ""}
-                  {d.files.length
-                    ? `${d.files.length} ${d.files.length === 1 ? "file" : "files"}`
-                    : d.netlists?.length
-                      ? "netlist only"
-                      : "no RTL"}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div class="muted">(no design directory: a folder with a design.json in a designs folder)</div>
-        )}
-      </Section>
       <Section title="Design files">
         {rows.length ? (
           <div class="uploads design-files">
             {rows.map((f) => (
               <div key={f.name} class={`upload-row ${f.loaded ? "loaded" : ""}`} title={f.loaded ? "The circuit of the session" : undefined}>
-                <Name name={f.name} />
+                <Name name={f.name} label={f.label} />
                 {f.bytes != null && <span class="muted upload-size">{size(f.bytes)}</span>}
                 {f.origin === "upload" && (
                   <button
@@ -356,7 +460,11 @@ export function Sidebar() {
           <div class="muted">(none)</div>
         )}
         {session?.device_package && !files.inputs.some((f) => f.label === "circuit") && (
-          <div class="waiting">Waiting for a circuit: upload one below, then say which to read.</div>
+          <div class="waiting">
+            {v.synthesis?.design
+              ? `Design ${v.synthesis.design} added: synthesize it (▶ of SYNTHESIS) to make the circuit.`
+              : "Waiting for a circuit: add a design (Designs), or upload one below and say which to read."}
+          </div>
         )}
         <input
           ref={picker}
@@ -418,24 +526,6 @@ export function Sidebar() {
           ) : (
             <div class="muted">(none)</div>
           ))}
-      </Section>
-      <Section title="Checkpoints">
-        {v.checkpoints.length ? (
-          v.checkpoints.map((c) => (
-            <div key={c.name} class="checkpoint">
-              <span class="checkpoint-name">
-                {c.name} <span class="muted">· {c.stages[c.stages.length - 1] ?? ""}</span>
-              </span>
-              {real && (
-                <button class="link" title="Go back to this checkpoint" onClick={() => void restore(c.name === "last" ? undefined : c.name)}>
-                  restore
-                </button>
-              )}
-            </div>
-          ))
-        ) : (
-          <div class="muted">(none)</div>
-        )}
       </Section>
     </aside>
   );

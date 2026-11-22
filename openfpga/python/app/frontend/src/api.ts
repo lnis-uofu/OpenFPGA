@@ -39,6 +39,8 @@ export interface SessionView {
   reports?: string[];
   /** The design directories of the designs folders (a folder with a design.json) */
   designs?: DesignView[];
+  /** The open sessions: the tabs of the sidebar */
+  sessions?: { id: string; name: string; running: boolean }[];
 }
 
 /** A design directory: what the sidebar shows of it; the files are the ones of the manifest */
@@ -235,6 +237,14 @@ export const openSessionById = async (session: string): Promise<Answer> =>
 export const closeSession = (): Promise<Answer> => post("/api/session/close", {});
 export const restoreSession = (checkpoint?: string): Promise<Answer> =>
   post("/api/session/restore", checkpoint ? { checkpoint } : {});
+
+/** Save the flow of the session as a checkpoint (the server names it when no name is given) */
+export const saveCheckpoint = async (name?: string): Promise<Answer> =>
+  answerOf(await fetch("/api/session/checkpoint", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(name ? { name } : {}) }));
+
+/** Copy a design directory into the session; it is not synthesized */
+export const addDesignToSession = async (design: string): Promise<Answer> =>
+  answerOf(await fetch("/api/design/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ design }) }));
 
 export async function runConsole(command: string): Promise<ConsoleAnswer> {
   const response = await fetch("/api/console", {
