@@ -11,6 +11,7 @@ import difflib
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 from typing import List, Optional
 
@@ -31,6 +32,9 @@ DESIGN_MAX_FILES = 20000  # the files that are looked at in all of them
 MANIFEST_MAX_BYTES = 256 * 1024
 UPLOADS = "uploads"
 CREATED = "created"  # the files that the model wrote in the session
+DESIGN = "design"  # the copies of the design directories that the session synthesized
+DESIGN_COPY_MAX_FILES = 500  # the files of one design directory that are copied into a session
+DESIGN_COPY_MAX_BYTES = 64 * 1024 * 1024
 
 
 def design_files(config: Config):
@@ -62,9 +66,10 @@ def design_files(config: Config):
 
 def design_directories(config: Config) -> List[dict]:
     """The design directories under the designs folders: the folders that have a manifest
-    design.json (docs/spec_design_directory.md). Each is {name, folder, relative, top, rtl}: the
-    name from the manifest (the folder name when it has none), the folder as a path and relative to
-    its designs folder, the top module, and the names of the rtl files. A manifest that is not a
+    design.json (docs/spec_design_directory.md). Each is {name, folder, relative, top, rtl,
+    netlists}: the name from the manifest (the folder name when it has none), the folder as a path
+    and relative to its designs folder, the top module, the names of the rtl files and the paths of
+    the netlists. A manifest that is not a
     JSON object, or is larger than MANIFEST_MAX_BYTES, is skipped: it is not a design directory"""
     found = []
     for path, relative in design_files(config):
@@ -84,6 +89,11 @@ def design_directories(config: Config) -> List[dict]:
             for e in entries
             if isinstance(e, dict) and e.get("role") == "rtl" and isinstance(e.get("path"), str)
         ]
+        netlists = [
+            e["path"]
+            for e in entries
+            if isinstance(e, dict) and e.get("role") == "netlist" and isinstance(e.get("path"), str)
+        ]
         folder = path.parent
         name = data.get("name") if isinstance(data.get("name"), str) and data["name"] else folder.name
         top = data.get("top") if isinstance(data.get("top"), str) else None
@@ -94,10 +104,88 @@ def design_directories(config: Config) -> List[dict]:
                 "relative": Path(relative).parent.as_posix(),
                 "top": top,
                 "rtl": rtl,
+                "netlists": netlists,
                 "manifest": data,
             }
         )
     return sorted(found, key=lambda d: d["relative"])
+
+
+def copy_design(found: dict, session_folder: Path) -> dict:
+    """Copy a design directory into the folder 'design' of a session, under the name of its folder,
+    in place of an earlier copy, and give it as find_design does with the copy as its folder. The
+    files are copied as they are (links and names that start with a dot are left out) and the copy
+    is bounded: the session synthesizes its own copy, which a change of the designs folder does not
+    touch"""
+    source = found["folder"].resolve()
+    name = found["folder"].name
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.+-]{0,127}", name):
+        raise InvalidArgument("The design directory '%s' has a name that cannot be a folder of a session" % name)
+    files, total = [], 0
+    for folder, folders, names in os.walk(source):
+        folders[:] = sorted(
+            f for f in folders if not f.startswith(".") and not os.path.islink(os.path.join(folder, f))
+        )
+        for file_name in sorted(names):
+            path = Path(folder) / file_name
+            if file_name.startswith(".") or path.is_symlink() or not path.is_file():
+                continue
+            files.append(path)
+            total += path.stat().st_size
+            if len(files) > DESIGN_COPY_MAX_FILES or total > DESIGN_COPY_MAX_BYTES:
+                raise InvalidArgument(
+                    "The design directory '%s' has more than %d files or %d bytes: it is not copied "
+                    "into the session" % (found["name"], DESIGN_COPY_MAX_FILES, DESIGN_COPY_MAX_BYTES)
+                )
+    base = session_folder / DESIGN
+    base.mkdir(parents=True, exist_ok=True)
+    temporary = base / (".%s.part" % name)
+    shutil.rmtree(temporary, ignore_errors=True)
+    for path in files:
+        target = temporary / path.relative_to(source)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, target)
+    target = base / name
+    if target.is_symlink() or target.is_file():
+        target.unlink()
+    shutil.rmtree(target, ignore_errors=True)
+    os.replace(temporary, target)  # a half copy is never seen under the name
+    return {**found, "folder": target, "source": found["folder"], "copied": len(files)}
+
+
+def _has_rtl(manifest_path: Path) -> Optional[str]:
+    """The name of the design of a manifest that has RTL (None when it has none, or is not one)"""
+    try:
+        if manifest_path.stat().st_size > MANIFEST_MAX_BYTES:
+            return None
+        data = json.loads(manifest_path.read_text(errors="replace"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or not isinstance(data.get("files"), list):
+        return None
+    if not any(isinstance(e, dict) and e.get("role") == "rtl" for e in data["files"]):
+        return None
+    name = data.get("name")
+    return name if isinstance(name, str) and name else manifest_path.parent.name
+
+
+def rtl_design_of(config: Config, session_dir: str, path: str) -> Optional[str]:
+    """The name of the design directory that a file is inside when that design has RTL: in a
+    designs folder, or a copy of one in the session. The RTL of a design is what is used, never a
+    netlist that it has too (only a design with no RTL is read as its netlist)"""
+    target = Path(path).resolve()
+    bases = [Path(b).resolve() for b in config.design_dirs]
+    bases.append((config.root / session_dir / DESIGN).resolve())
+    for base in bases:
+        if not _inside(target, base):
+            continue
+        folder = target.parent
+        while folder != base and _inside(folder, base):
+            manifest = folder / "design.json"
+            if manifest.is_file() and not manifest.is_symlink():
+                return _has_rtl(manifest)  # the nearest manifest is the design of the file
+            folder = folder.parent
+    return None
 
 
 def find_design(config: Config, name: str) -> dict:

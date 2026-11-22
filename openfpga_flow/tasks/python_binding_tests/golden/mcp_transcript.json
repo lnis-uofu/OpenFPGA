@@ -178,6 +178,7 @@
      "DEVICE",
      "PACKED"
     ],
+    "report": "s1/reports/pack.html",
     "seconds": 0.0,
     "stage": "pack"
    },
@@ -199,6 +200,7 @@
      "PACKED",
      "PLACED"
     ],
+    "report": "s1/reports/place.html",
     "seconds": 0.0,
     "stage": "place"
    },
@@ -221,6 +223,7 @@
      "PLACED",
      "ROUTED"
     ],
+    "report": "s1/reports/route.html",
     "seconds": 0.0,
     "stage": "route"
    },
@@ -244,6 +247,7 @@
      "ROUTED",
      "ANALYZED"
     ],
+    "report": "s1/reports/analysis.html",
     "seconds": 0.0,
     "stage": "analysis"
    },
@@ -1057,6 +1061,7 @@
      "PLACED",
      "ROUTED"
     ],
+    "report": "s1/reports/route.html",
     "seconds": 0.0,
     "stage": "route"
    },

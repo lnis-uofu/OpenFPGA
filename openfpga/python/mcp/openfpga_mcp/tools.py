@@ -8,14 +8,15 @@ import dataclasses
 import os
 import re
 import shutil
+import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
-from . import answers, budget, device_packages, filenames, synthesis
+from . import answers, budget, device_packages, filenames, reports, synthesis
 from .config import Config
 from .errors import FileExists, InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
-from .paths import CREATED, check_kind, find_design, resolve_file
+from .paths import CREATED, check_kind, copy_design, find_design, resolve_file, rtl_design_of
 from .registry import Entry, SessionRegistry
 
 _WRITE_MAX_BYTES = 256 * 1024  # the text that a model may write in one file
@@ -113,6 +114,164 @@ def register(
     def keep_log(entry: Entry, stage: str, log: str):
         entry.logs[stage] = log[-_LOG_KEEP:]
 
+    # The reports of the stages -----------------------------------------------------------
+
+    def short(path: Optional[str]) -> str:
+        """A file as a report names it: from the workspace, else its name"""
+        if not path:
+            return "–"
+        try:
+            return Path(path).resolve().relative_to(config.root.resolve()).as_posix()
+        except ValueError:
+            return Path(path).name
+
+    def stage_figures(handle, stage: str):
+        """The sections and the cards of what a stage that ran made, from the queries of the
+        session. A query that does not answer leaves its part out"""
+        sections: List[reports.Section] = []
+        cards: List[Any] = []
+        number = reports.number
+        if stage == "device":
+            d = handle.device()
+            part = reports.Section("Device")
+            part.row("Grid", "%d × %d tiles" % (d.grid.width, d.grid.height)).row("Layers", d.grid.layers)
+            part.row("Layout", d.grid.layout)
+            if d.channel_width is not None:
+                part.row(
+                    "Channel width",
+                    "%d × %d%s" % (d.channel_width.x, d.channel_width.y, " (fixed)" if d.channel_width.fixed else ""),
+                )
+            part.table(
+                "Tile types",
+                ["Type", "Tiles", "Capacity", "Slots", "I/O", "Inputs", "Outputs"],
+                [(t.name, t.count, t.capacity, t.slots, "yes" if t.is_io else "", t.input_pins, t.output_pins)
+                 for t in d.tile_types],
+            )
+            sections.append(part)
+            cards += [("Grid", "%d × %d" % (d.grid.width, d.grid.height)), ("Tile types", len(d.tile_types)),
+                      ("I/O slots", sum(t.slots for t in d.tile_types if t.is_io))]
+        elif stage == "pack":
+            packing = handle.run_report().packing
+            if packing is not None:
+                part = reports.Section("Packing")
+                part.row("Clusters", packing.clusters).row("Atoms", packing.atoms).row("Nets", packing.nets)
+                part.table("Clusters by type", ["Type", "Count"], [(b.type, b.count) for b in packing.blocks])
+                sections.append(part)
+                cards += [("Clusters", packing.clusters), ("Atoms", packing.atoms), ("Nets", packing.nets)]
+            use = handle.utilization()
+            part = reports.Section("Utilization")
+            part.row("Device utilization", number(use.device_utilization * 100, "%", 1))
+            part.row("Limiting resources", ", ".join(use.limiting_resources) or "none")
+            part.table(
+                "By block type",
+                ["Block type", "Used", "Available", "Utilization %"],
+                [(b.name, b.used, b.available, round(b.utilization * 100, 1)) for b in use.block_types],
+            )
+            sections.append(part)
+            cards.append(("Device use", number(use.device_utilization * 100, "%", 1)))
+        elif stage == "place":
+            placement = handle.run_report().placement
+            if placement is not None:
+                part = reports.Section("Placement")
+                part.row("Wirelength (half perimeter)", placement.half_perimeter)
+                part.row("Cost", placement.cost).row("Bounding box cost", placement.bb_cost)
+                part.row("Timing cost", placement.td_cost)
+                part.row("Estimated critical path", placement.estimated_critical_path_delay_ns, "ns")
+                part.row("Estimated Fmax", placement.estimated_fmax_mhz, "MHz")
+                part.row("Temperatures", placement.num_temperatures).row("Swap attempts", placement.swap_attempts)
+                sections.append(part)
+                cards += [("Half perimeter", placement.half_perimeter),
+                          ("Est. critical path", number(placement.estimated_critical_path_delay_ns, "ns")),
+                          ("Est. Fmax", number(placement.estimated_fmax_mhz, "MHz", 1))]
+        elif stage == "route":
+            routing = handle.run_report().routing
+            if routing is not None:
+                part = reports.Section("Routing")
+                part.row("Channel width", routing.channel_width).row("Wirelength", routing.wirelength, "tiles")
+                part.row("Wires", routing.wires).row("Router iterations", routing.iterations)
+                part.row("Critical path", routing.critical_path_delay_ns, "ns")
+                sections.append(part)
+                cards += [("Channel width", routing.channel_width), ("Wirelength", routing.wirelength),
+                          ("Iterations", routing.iterations)]
+        elif stage == "analysis":
+            timing = handle.timing_summary()
+            part = reports.Section("Timing")
+            part.row("Critical path", timing.setup.critical_path_delay_ns, "ns")
+            part.row("Fmax", timing.setup.fmax_mhz, "MHz")
+            part.row("Setup worst negative slack", timing.setup.worst_negative_slack_ns, "ns")
+            part.row("Setup total negative slack", timing.setup.total_negative_slack_ns, "ns")
+            part.row("Hold worst negative slack", timing.hold.worst_negative_slack_ns, "ns")
+            part.row("Hold total negative slack", timing.hold.total_negative_slack_ns, "ns")
+            part.table(
+                "Clock domains",
+                ["Launch", "Capture", "Critical path (ns)", "Worst slack (ns)", "Fmax (MHz)"],
+                [(c.launch_clock, c.capture_clock, c.critical_path_delay_ns, c.worst_slack_ns, c.fmax_mhz)
+                 for c in timing.clock_domains],
+            )
+            sections.append(part)
+            cards += [("Critical path", number(timing.setup.critical_path_delay_ns, "ns")),
+                      ("Fmax", number(timing.setup.fmax_mhz, "MHz", 1)),
+                      ("Setup WNS", number(timing.setup.worst_negative_slack_ns, "ns"))]
+        return sections, cards
+
+    def write_report(
+        entry: Entry,
+        stage: str,
+        status: str,
+        log: Optional[str] = None,
+        seconds: Optional[float] = None,
+        errors: List[str] = (),
+        sections: List[Any] = (),
+        cards: List[Any] = (),
+        extra: List[Any] = (),
+    ) -> Optional[str]:
+        """Write reports/<stage>.html of the session and give its name from the workspace. A report
+        that cannot be made never fails the stage: the answer then has no report"""
+        try:
+            handle = entry.session
+            state = None
+            try:
+                state = handle.state()
+            except Exception:  # noqa: BLE001 - a worker that ended: the report says what is known
+                pass
+            meta = registry.read_meta(entry.directory)
+            inputs = state.inputs if state is not None else None
+            summary: List[Any] = [
+                ("Stage", reports.TITLES.get(stage, stage)),
+                ("Status", status),
+                ("Time", reports.number(round(seconds, 2), "s") if seconds is not None else "–"),
+                ("Session", entry.id),
+                ("Circuit", short(inputs.circuit.file) if inputs and inputs.circuit else "–"),
+                ("Device package", meta.get("package_name") or "–"),
+                ("Layout", inputs.vpr_arch.layout if inputs and inputs.vpr_arch else "–"),
+            ]
+            summary += list(extra)
+            summary.append(("Stages reached", ", ".join(state.reached) if state is not None and state.reached else "none"))
+            all_sections, all_cards = list(sections), list(cards)
+            if status == "passed" and stage in reports.TITLES and stage != "synthesis":
+                try:
+                    more_sections, more_cards = stage_figures(handle, stage)
+                    all_sections += more_sections
+                    all_cards += more_cards
+                except Exception:  # noqa: BLE001 - a query that does not answer leaves its part out
+                    pass
+            if seconds is not None:
+                all_cards.insert(0, ("Time", reports.number(round(seconds, 2), "s")))
+            text = reports.render(
+                stage, status, entry.id, summary, all_sections, all_cards, log, list(errors)
+            )
+            path = reports.write(config.root / entry.directory, stage, text)
+            return path.relative_to(config.root).as_posix()
+        except Exception:  # noqa: BLE001 - see above
+            return None
+
+    def failure_text(error: BaseException) -> str:
+        found = getattr(error, "diagnostics", None)
+        if found:
+            first = found[0]
+            return str(getattr(first, "message", None) or (first.get("message") if isinstance(first, dict) else first))
+        return str(error)
+
     # The flow ----------------------------------------------------------------------------
 
     @tool()
@@ -147,6 +306,14 @@ def register(
             ]
             for argument, name, path in given:
                 check_kind(argument, name, path)
+                owner = rtl_design_of(config, where, path) if argument == "circuit" else None
+                if owner:
+                    error = InvalidArgument(
+                        "'%s' is a netlist of the design directory '%s', which has RTL: the RTL is "
+                        "used, not the netlist" % (name, owner)
+                    )
+                    error.hint = "synthesize with design='%s' (use_device_package first)" % owner
+                    raise error
             if vpr_arch is None and layout is not None:
                 raise InvalidArgument("layout goes with vpr_arch: give both, or neither")
             if vpr_arch is not None and layout is None:
@@ -162,11 +329,21 @@ def register(
                         "(a session created from a device package has them)" % argument
                     )
             paths = {argument: path for argument, _name, path in given}
-            if "vpr_arch" in paths:
-                handle.read_vpr_arch(paths["vpr_arch"], layout=layout)
-            if "openfpga_arch" in paths:
-                handle.read_openfpga_arch(paths["openfpga_arch"])
-            handle.read_circuit(paths["circuit"])
+            logs: List[str] = []
+            started = time.monotonic()
+            try:
+                if "vpr_arch" in paths:
+                    logs.append(handle.read_vpr_arch(paths["vpr_arch"], layout=layout).log)
+                if "openfpga_arch" in paths:
+                    logs.append(handle.read_openfpga_arch(paths["openfpga_arch"]).log)
+                logs.append(handle.read_circuit(paths["circuit"]).log)
+            except Exception as error:
+                log = getattr(error, "log", None)
+                if log is not None:
+                    write_report(entry, "device", "failed", "\n".join(logs + [log]),
+                                 time.monotonic() - started, [failure_text(error)])
+                raise
+            write_report(entry, "device", "passed", "\n".join(logs), time.monotonic() - started)
             return reply(_plain("session", handle.state()))
 
         return await run(work)
@@ -270,8 +447,9 @@ def register(
     ):
         """Synthesize Verilog into a netlist of the LUTs of the device, with Yosys. Give design,
         the name of a design directory (a folder with a design.json: its top, files, defines and
-        include folders come from the manifest), or give top (the top module) and files (.v, .sv,
-        separated by commas; names of files of the session or of a designs folder). The device
+        include folders come from the manifest; it is copied into the session and the copy is
+        synthesized; one with only a netlist has that read), or give top (the top module) and
+        files (.v, .sv, separated by commas; names of files of the session or of a designs folder). The device
         is the one of use_device_package (its LUT size and script); with none give lut_size. The
         netlist is synth/<top>.blif; with read true it is read as the circuit, and run_stage
         can follow. Returns LUTs, flip-flops, the widest LUT, ports and the end of the log. Fails
@@ -287,6 +465,13 @@ def register(
                 if top is not None or files is not None:
                     raise InvalidArgument("give design, or top and files, not both")
                 found = find_design(config, design)
+                netlist = _design_netlist(found)  # only for a design that has no RTL
+                if netlist is None:
+                    _design_inputs(found)  # what is wrong with the design is said before it is copied
+                check_room(entry)
+                found = copy_design(found, config.root / entry.directory)
+                if netlist is not None:
+                    return _read_design_netlist(entry, found, netlist, read)
                 names, paths, top, include_dirs, options = _design_inputs(found)
             else:
                 if top is None or files is None:
@@ -315,15 +500,17 @@ def register(
                     old.unlink()
             plan.script_file.write_text(plan.script)
             plan.blif.unlink(missing_ok=True)
+            started = time.monotonic()
             try:
                 log = handle.command("yosys", file=str(plan.script_file)).log
             except Exception as error:  # noqa: BLE001 - the command failed, or the worker did
                 log = getattr(error, "log", None)
                 if log is None:
                     raise
-                return _synthesis_failure(plan, log, names, paths)
+                return _synthesis_failure(entry, plan, log, names, paths, time.monotonic() - started)
             if not plan.blif.is_file():
-                return _synthesis_failure(plan, log, names, paths)
+                return _synthesis_failure(entry, plan, log, names, paths, time.monotonic() - started)
+            took = time.monotonic() - started
             result: Dict[str, Any] = {
                 "top": plan.top,
                 "netlist": str(plan.blif),
@@ -334,18 +521,42 @@ def register(
                 "circuit_read": False,
                 "log_tail": synthesis.last_lines(log),
             }
+            if design is not None:
+                result["design_copy"] = str(found["folder"])
+                result["files"] = [str(p) for p in paths]
             if result["widest_lut"] > plan.lut_size:
                 result["warning"] = "a LUT has %d inputs; the device has LUTs of %d" % (
                     result["widest_lut"],
                     plan.lut_size,
                 )
+            figures = reports.Section("Netlist")
+            for key, label in (("luts", "LUTs"), ("flip_flops", "Flip-flops"), ("widest_lut", "Widest LUT"),
+                               ("inputs", "Inputs"), ("outputs", "Outputs"), ("constants", "Constants")):
+                figures.row(label, result.get(key))
+            figures.row("LUT size of the device", plan.lut_size)
+            figures.table("Cells that are not LUTs", ["Cell", "Count"], sorted((result.get("subckts") or {}).items()))
+            report = write_report(
+                entry, "synthesis", "passed", log, took,
+                errors=[result["warning"]] if result.get("warning") else [],
+                sections=[figures],
+                cards=[("LUTs", result.get("luts")), ("Flip-flops", result.get("flip_flops")),
+                       ("Widest LUT", result.get("widest_lut"))],
+                extra=[("Top module", plan.top), ("Sources", ", ".join(short(str(p)) for p in paths)),
+                       ("Netlist", short(str(plan.blif)))],
+            )
+            if report:
+                result["report"] = report
             have = handle.state().inputs
             if read and have.vpr_arch and have.openfpga_arch:
+                started = time.monotonic()
                 try:
-                    handle.read_circuit(str(plan.blif))
+                    step = handle.read_circuit(str(plan.blif))
                     result["circuit_read"] = True
                 except Exception as error:  # noqa: BLE001 - a netlist that the flow refuses
+                    write_report(entry, "device", "failed", getattr(error, "log", None),
+                                 time.monotonic() - started, [failure_text(error)])
                     return _circuit_not_read(plan, result, error)
+                write_report(entry, "device", "passed", step.log, step.elapsed_s)
             elif read:
                 result["note"] = (
                     "The architectures are not read: use_device_package, then read_inputs with "
@@ -354,6 +565,62 @@ def register(
             return reply(result)
 
         return await run(work)
+
+    def _design_netlist(found: Dict[str, Any]) -> Optional[str]:
+        """The netlist of a design directory that has no RTL (its path in the directory), or None
+        when the design has RTL, which is what is synthesized even when it has a netlist too"""
+        entries = [e for e in found["manifest"].get("files", []) if isinstance(e, dict)]
+        if any(e.get("role") == "rtl" for e in entries):
+            return None
+        netlists = [e.get("path") for e in entries if e.get("role") == "netlist"]
+        if not netlists:
+            return None  # no RTL and no netlist: _design_inputs says so
+        relative = netlists[0]
+        if not isinstance(relative, str) or os.path.isabs(relative) or ".." in Path(relative).parts:
+            raise InvalidArgument(
+                "The manifest of '%s' has the netlist '%s', which is not inside the design" % (found["name"], relative)
+            )
+        if Path(relative).suffix.lower() not in (".blif", ".eblif"):
+            raise InvalidArgument(
+                "The design '%s' has only the netlist '%s', which the flow does not read (it reads "
+                "BLIF and extended BLIF)" % (found["name"], relative)
+            )
+        path = (found["folder"] / relative).resolve()
+        if found["folder"].resolve() not in path.parents or not path.is_file():
+            raise InvalidArgument("The netlist '%s' of '%s' does not exist" % (relative, found["name"]))
+        return relative
+
+    def _read_design_netlist(entry: Entry, found: Dict[str, Any], relative: str, read: bool):
+        """The copy of a design that has only a netlist: the netlist is read as the circuit"""
+        path = found["folder"] / relative
+        check_kind("circuit", relative, str(path))
+        result: Dict[str, Any] = {
+            "design": found["name"],
+            "design_copy": str(found["folder"]),
+            "netlist": str(path),
+            "synthesized": False,
+            "circuit_read": False,
+            "note": "The design has no RTL, only a netlist: nothing was synthesized",
+        }
+        have = entry.session.state().inputs
+        if read and have.vpr_arch and have.openfpga_arch:
+            started = time.monotonic()
+            try:
+                step = entry.session.read_circuit(str(path))
+            except Exception as error:
+                write_report(entry, "device", "failed", getattr(error, "log", None),
+                             time.monotonic() - started, [failure_text(error)])
+                raise
+            result["circuit_read"] = True
+            report = write_report(entry, "device", "passed", step.log, step.elapsed_s)
+            if report:
+                result["report"] = report
+        elif read:
+            result["note"] += (
+                "; the architectures are not read: use_device_package, then read_inputs with "
+                "circuit=%s" % path.relative_to(config.root / entry.directory)
+            )
+        return reply(result)
 
     def _design_inputs(found: Dict[str, Any]):
         """The names, whole paths, top, include folders and options of a design directory: the
@@ -427,7 +694,18 @@ def register(
         )
         return answers.failed([item])
 
-    def _synthesis_failure(plan, log: str, names: List[str], paths: List[Path]):
+    def _synthesis_failure(entry: Entry, plan, log: str, names: List[str], paths: List[Path], took: float):
+        answer = _synthesis_failure_answer(plan, log, names, paths)
+        message = answer["diagnostics"][0]["message"] if answer.get("diagnostics") else "Synthesis failed"
+        report = write_report(
+            entry, "synthesis", "failed", log, took, errors=[message],
+            extra=[("Top module", plan.top), ("Sources", ", ".join(short(str(p)) for p in paths))],
+        )
+        if report:
+            answer["report"] = report
+        return answer
+
+    def _synthesis_failure_answer(plan, log: str, names: List[str], paths: List[Path]):
         if "std::bad_alloc" in log:
             return answers.failed(
                 [
@@ -480,6 +758,8 @@ def register(
             _choice("stage", stage, _ORDER)
             ran: List[str] = []
             seconds = 0.0
+            current = stage
+            started = time.monotonic()
             try:
                 if from_file is not None:
                     if stage not in _READS:
@@ -489,16 +769,23 @@ def register(
                 else:
                     for earlier in _ORDER[: _ORDER.index(stage)]:
                         if _STAGE_NAMES[earlier] not in handle.state().reached:
+                            current, started = earlier, time.monotonic()
                             step = getattr(handle, earlier)()
                             keep_log(entry, earlier, step.log)
+                            write_report(entry, earlier, "passed", step.log, step.elapsed_s)
                             seconds += step.elapsed_s
                             ran.append(earlier)
+                    current, started = stage, time.monotonic()
                     step = getattr(handle, stage)()
             except Exception as error:
                 log = getattr(error, "log", None)
                 if log is not None:
-                    keep_log(entry, stage, log)
+                    keep_log(entry, current, log)
                     failure = answers.from_exception(error)
+                    report = write_report(entry, current, "failed", log, time.monotonic() - started,
+                                          [failure_text(error)])
+                    if report:
+                        failure["report"] = report
                     state = handle.state()
                     failure["reached"] = list(state.reached)
                     if ran:
@@ -508,6 +795,7 @@ def register(
                     return failure
                 raise
             keep_log(entry, stage, step.log)
+            report = write_report(entry, stage, "passed", step.log, step.elapsed_s)
             state = handle.state()
             return reply(
                 {
@@ -515,6 +803,7 @@ def register(
                     "seconds": round(seconds + step.elapsed_s, 2),
                     "reached": list(state.reached),
                     **({"ran": ran + [stage]} if ran else {}),
+                    **({"report": report} if report else {}),
                 }
             )
 

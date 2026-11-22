@@ -251,14 +251,20 @@ class SessionRegistry:
             self._end(entry, False)
 
     def directory_bytes(self, entry: Entry) -> int:
-        """What the files of a session take. Links are not followed"""
+        """What the files of a session take. Links are not followed. The reports of the stages
+        are not counted: there is one for each stage, of a bounded size, and a full session still
+        says what its last stage did"""
         total = 0
-        stack = [str(self.config.root / entry.directory)]
+        top = str(self.config.root / entry.directory)
+        stack = [top]
         while stack:
             try:
-                with os.scandir(stack.pop()) as items:
+                folder = stack.pop()
+                with os.scandir(folder) as items:
                     for item in items:
                         if item.is_symlink():
+                            continue
+                        if folder == top and item.name == "reports" and item.is_dir(follow_symlinks=False):
                             continue
                         if item.is_dir(follow_symlinks=False):
                             stack.append(item.path)

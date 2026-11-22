@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="openfpga_mcp stage report">
+<title>$title</title>
+<style>
+  :root { --bg: #ffffff; --text: #1f2328; --muted: #656d76; --line: #d0d7de; --panel: #f6f8fa;
+          --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1117; --text: #e6edf3; --muted: #8d96a0; --line: #30363d; --panel: #161b22;
+            --ok: #3fb950; --warn: #d29922; --bad: #f85149; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 48px; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+           border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 16px; margin: 28px 0 8px; }
+  h3 { font-size: 14px; margin: 16px 0 6px; color: var(--muted); }
+  .status { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+            padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; }
+  .status-passed { color: var(--ok); }
+  .status-failed { color: var(--bad); }
+  .status-warnings { color: var(--warn); }
+  .generated { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .card .label { color: var(--muted); font-size: 12px; }
+  .card .value { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .card.warn .value { color: var(--warn); }
+  .card.bad .value { color: var(--bad); }
+  table { border-collapse: collapse; width: 100%; margin: 4px 0 8px; }
+  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.keys th { width: 34%; font-size: 13px; }
+  .messages { list-style: none; padding: 0; margin: 0; }
+  .messages li { padding: 6px 10px; border-left: 3px solid var(--line); background: var(--panel);
+                 margin-bottom: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                 font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+  .messages.warnings li { border-left-color: var(--warn); }
+  .messages.errors li { border-left-color: var(--bad); }
+  .count { color: var(--muted); font-family: system-ui, sans-serif; margin-left: 6px; }
+  .none { color: var(--muted); }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--muted); }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px;
+        overflow-x: auto; font-size: 12px; line-height: 1.4; }
+  footer { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>$heading</h1>
+  <span class="status status-$status_class">$status</span>
+  <span class="generated">$generated</span>
+</header>
+
+<section class="cards" aria-label="At a glance">
+$cards
+</section>
+
+<h2>Summary</h2>
+<table class="keys">
+$summary
+</table>
+
+$details
+
+<h2 id="errors">Errors <span class="count">$error_count</span></h2>
+$errors
+
+<h2 id="warnings">Warnings <span class="count">$warning_count</span></h2>
+$warnings
+
+<h2>Log</h2>
+<details>
+  <summary>The last $log_lines lines of the log of the stage</summary>
+  <pre>$log</pre>
+</details>
+
+<footer>Session $session · $stage · written by the OpenFPGA MCP server after the stage ran</footer>
+</main>
+</body>
+</html>
