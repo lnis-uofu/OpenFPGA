@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/pre
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App, handleKey } from "./App";
 import { AppEvent, SessionView } from "./api";
-import { Console } from "./components/Console";
+import { Console, tclComplete } from "./components/Console";
 import { DesignsPanel, matches } from "./components/Panels";
 import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { CallGroup, ToolCard } from "./components/ToolCard";
@@ -16,6 +16,7 @@ import {
   activeTab,
   applyEvent,
   config,
+  consoleMode,
   consoleOpen,
   emptyView,
   messages,
@@ -985,6 +986,49 @@ describe("the console", () => {
     fireEvent.keyDown(screen.getByLabelText("Command"), { key: "Enter" });
     const line = await screen.findByText("Error: nope");
     expect(line.className).toContain("line-error");
+  });
+
+  it("runs a Tcl script of several lines and shows its output and its result", async () => {
+    config.value = { schema_version: 1, console: true, backend: "session", model: { endpoint: null, name: null } };
+    consoleOpen.value = true;
+    const fetchMock = vi.fn((_url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify({ ok: true, output: "seed 1\nseed 2", result: "42", state_changed: false }), { status: 200 })),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Console />);
+    const tcl = screen.getByRole("button", { name: "Tcl" });
+    expect(tcl.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(tcl);
+    expect(consoleMode.value).toBe("tcl");
+    expect(window.localStorage.getItem("openfpga-console-mode")).toBe("tcl");
+    const area = screen.getByLabelText("Tcl script") as HTMLTextAreaElement;
+    // A brace that is open: Enter is a new line, not a run
+    fireEvent.input(area, { target: { value: "foreach s {1 2} {" } });
+    fireEvent.keyDown(area, { key: "Enter" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    fireEvent.input(area, { target: { value: "foreach s {1 2} {\n  puts \"seed $s\"\n}\nexpr 6*7" } });
+    fireEvent.keyDown(area, { key: "Enter", shiftKey: true });
+    expect(fetchMock).not.toHaveBeenCalled();
+    fireEvent.keyDown(area, { key: "Enter" });
+    await waitFor(() => expect(screen.getByText("42")).toBeTruthy());
+    const sent = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    expect(sent).toEqual({ command: 'foreach s {1 2} {\n  puts "seed $s"\n}\nexpr 6*7', mode: "tcl" });
+    expect(screen.getByText(/seed 1/)).toBeTruthy();
+    expect(screen.getByText(/tcl% foreach/)).toBeTruthy();
+    // Back to the shell: a line again
+    fireEvent.click(screen.getByRole("button", { name: "Shell" }));
+    expect(screen.getByLabelText("Command")).toBeTruthy();
+  });
+
+  it("knows when a Tcl script is whole", () => {
+    expect(tclComplete("pack")).toBe(true);
+    expect(tclComplete("foreach s {1 2} {")).toBe(false);
+    expect(tclComplete('puts "a')).toBe(false);
+    expect(tclComplete("puts [version")).toBe(false);
+    expect(tclComplete('puts {a "b}')).toBe(true);
+    expect(tclComplete("puts \\{")).toBe(true);
+    expect(tclComplete("set a 1 \\")).toBe(false);
+    expect(tclComplete("if {1} {\n puts [list a]\n}")).toBe(true);
   });
 });
 

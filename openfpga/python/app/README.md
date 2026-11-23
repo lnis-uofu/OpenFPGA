@@ -27,7 +27,7 @@ the CI job builds them first. Without them the app says how to build the page.
 
     # real sessions, no model (the module `openfpga` and the folders of designs to read from):
     openfpga-app --root ~/workspace --designs-dir DESIGNS [--designs-dir DIR ...] \
-        [--device-packages DIR] [--console] [--port N] [--open]
+        [--device-packages DIR] [--console] [--tcl-tool] [--port N] [--open]
     # the recorded conversation:
     openfpga-app --demo
     # from the source tree: PYTHONPATH=openfpga/python/app:openfpga/python/mcp python -m openfpga_app ...
@@ -168,8 +168,34 @@ sessions, and each checkpoint has a restore.
 
 `--console` turns on the console. It runs any command of the OpenFPGA shell, so it is the user's
 own shell and not a sandbox; with `--root` it runs in the current session (what it prints is the output); the demo console
-knows only `help` and `report_session`. A command typed there is not in a journal yet (workers
-have none, G2), so it cannot be replayed.
+knows only `help` and `report_session`. The commands that change the flow are in the journal of the
+session, as those of the tools are.
+
+## Tcl
+
+The console has two modes, **Shell** and **Tcl** (kept in the browser). In the mode Tcl it runs
+Tcl scripts in the Tcl interpreter of the session (`Session.tcl`, in its worker): every command of
+the shell is a Tcl command, a query returns its answer as a dict, and a command that fails is an
+error that `catch` takes. Enter runs a script whose braces, brackets and quotes are closed, and
+goes to a new line otherwise; Shift+Enter is always a new line. The variables and procedures stay
+until the worker ends. `exit` and `cd` are not available; `source` is the one of Tcl and
+`openfpga::source` the one of the shell.
+
+The same interpreter is reached from a terminal:
+
+    openfpga-app tcl --root ~/workspace            # the app that runs on ~/workspace (--console)
+    openfpga-app tcl --root ~/workspace flow.tcl   # run a script and end (-c SCRIPT for a line)
+    openfpga-app tcl --url 'http://localhost:8770/?token=…' --session s2
+    openfpga-app tcl --local run1 [flow.tcl]       # no app: a session of its own, in run1
+
+An app started with `--console` writes its address and token in `.openfpga-app.json` of the
+workspace (readable by its owner only, removed when it stops), which `--root` reads. What a script
+does is on the page, in the journal, and told to the model, as for the console of the page. With
+`--local` the session is a worker of the command, with its journal and checkpoints in the folder;
+Ctrl+C stops a script and starts the worker again from the last checkpoint.
+
+`--tcl-tool` gives the model the tool `run_tcl`: the same commands in a safe interpreter (no files,
+no programs, paths only in the session), see the README of `openfpga_mcp`.
 
 ## Layout of the code
 
@@ -180,6 +206,7 @@ have none, G2), so it cannot be replayed.
 | `openfpga_app/agent/` | the loop (`loop.py`), the model adapters (`openai_compat.py`, `scripted.py`), the definitions of the tools (`schema.py`), the context (`context.py`), the JSON mode (`jsonmode.py`) |
 | `openfpga_app/session_backend.py` | the backend over real sessions: the tools of `openfpga_mcp`, the view, the console |
 | `openfpga_app/security.py`, `server.py`, `cli.py` | the checks of every request, the API, the command |
+| `openfpga_app/tcl_cli.py` | `openfpga-app tcl`: Tcl in a terminal, over a running app or a session of its own |
 | `frontend/src` | the page (Preact and TypeScript): `store.ts` has the state and the events |
 
 ## Tests

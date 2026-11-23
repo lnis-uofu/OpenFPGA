@@ -241,6 +241,11 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .line-error { color: var(--bad); }
 .console-input { display: flex; gap: 4px; padding: 4px 12px 8px; font-family: var(--mono); }
 .console-input input { flex: 1; border: none; background: none; }
+.console-input textarea { flex: 1; border: none; background: none; resize: none; font: inherit; color: inherit; padding: 0; }
+.console-input span { white-space: pre; }
+.console-mode { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.console-mode button { border: none; border-radius: 0; padding: 1px 8px; background: none; font-size: 12px; }
+.console-mode button.on { background: var(--accent, #3b6fd4); color: #fff; }
 .pad { padding: 8px 12px; margin: 0; }
 
 /* The settings */

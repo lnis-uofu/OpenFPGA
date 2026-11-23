@@ -5,6 +5,7 @@ import {
   Answer,
   AppConfig,
   AppEvent,
+  type ConsoleMode,
   DevicePackageInfo,
   MAX_UPLOAD_BYTES,
   SessionView,
@@ -59,6 +60,8 @@ export interface ResultTab {
 export interface ConsoleLine {
   kind: "input" | "output" | "error" | "model";
   text: string;
+  /** Of an input: the mode it was run in, for its prompt */
+  mode?: ConsoleMode;
 }
 
 export const CHAT = "chat";
@@ -155,6 +158,26 @@ export const banner = signal<{ kind: string; message: string; hint?: string | nu
 export const consoleOpen = signal(false);
 export const consoleLines = signal<ConsoleLine[]>([]);
 export const consoleBusy = signal(false);
+const CONSOLE_MODE_KEY = "openfpga-console-mode";
+
+function storedMode(): ConsoleMode {
+  try {
+    return window.localStorage.getItem(CONSOLE_MODE_KEY) === "tcl" ? "tcl" : "shell";
+  } catch {
+    return "shell";
+  }
+}
+/** What the console runs: commands of the shell, or Tcl scripts; kept in this browser */
+export const consoleMode = signal<ConsoleMode>(storedMode());
+
+export function setConsoleMode(mode: ConsoleMode) {
+  consoleMode.value = mode;
+  try {
+    window.localStorage.setItem(CONSOLE_MODE_KEY, mode);
+  } catch {
+    /* not kept */
+  }
+}
 const wide = () => typeof window === "undefined" || window.innerWidth > 900;
 export const sidebarOpen = signal(wide());
 export const settingsOpen = signal(false);
@@ -185,6 +208,7 @@ export function resetStore() {
   consoleOpen.value = false;
   consoleLines.value = [];
   consoleBusy.value = false;
+  consoleMode.value = "shell";
   sidebarOpen.value = wide();
   settingsOpen.value = false;
   uploading.value = false;
@@ -660,14 +684,19 @@ export function nextTab(step: 1 | -1) {
 // The console ---------------------------------------------------------------------------------------
 
 export async function consoleRun(command: string) {
-  const text = command.trim();
-  if (!text || consoleBusy.value) return;
-  consoleLines.value = [...consoleLines.value, { kind: "input", text }];
+  const mode = consoleMode.value;
+  // A Tcl script keeps its lines
+  const text = mode === "tcl" ? command.replace(/^\s*\n|\s+$/g, "") : command.trim();
+  if (!text.trim() || consoleBusy.value) return;
+  consoleLines.value = [...consoleLines.value, { kind: "input", text, mode }];
   consoleBusy.value = true;
   try {
-    const answer = await runConsole(text);
+    const answer = await runConsole(text, mode);
     if (answer.output) {
       consoleLines.value = [...consoleLines.value, { kind: answer.ok ? "output" : "error", text: answer.output }];
+    }
+    if (answer.ok && answer.result) {
+      consoleLines.value = [...consoleLines.value, { kind: "output", text: answer.result }];
     }
     if (answer.state_changed) {
       await refreshView();

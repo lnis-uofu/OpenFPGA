@@ -127,7 +127,18 @@ Changing an option or a constraint drops the stages after it; they must be run a
 Other kinds exist in the shell (`report_run`, `report_session`, `report_cluster`); the model reaches
 their content through `get_state`.
 
-### 4.5 What the server also offers (MCP only)
+### 4.5 Optional: Tcl scripts
+
+With `--tcl-tool` (MCP server or app) the model has a 28th tool, `run_tcl(script)`: a Tcl script in a
+safe interpreter of the session, for a loop or a sweep that would take many calls. Every command of
+the shell is a Tcl command, a query returns a dict, and a failed command is an error that `catch`
+takes. No files, no programs (`ext_exec`, `source` and `yosys` are refused, `tcl_refused`), and a
+path must be in the session. The answer has the result, what `puts` printed, the last commands run
+and the stages reached; a failure has `tcl_error` with the line of the script, then the diagnostics
+of the command that failed. It is off by default: its description costs context, and a small model
+does better with the tools above.
+
+### 4.6 What the server also offers (MCP only)
 
 The web app does not use these; an MCP client does. Resources: `checkpoints`, `stages` (the stage
 graph), `options` (the catalogue), `stage_options`. Prompts: `what_is_the_state`,

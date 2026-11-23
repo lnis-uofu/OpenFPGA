@@ -59,7 +59,7 @@ class Backend(Protocol):
 
     def cancel(self) -> None: ...
 
-    async def console(self, command: str) -> Dict[str, Any]: ...
+    async def console(self, command: str, mode: str = "shell") -> Dict[str, Any]: ...
 
 
 def empty_view() -> Dict[str, Any]:
@@ -335,9 +335,15 @@ class DemoBackend:
 
     # The console -------------------------------------------------------------------------------
 
-    async def console(self, command: str) -> Dict[str, Any]:
+    async def console(self, command: str, mode: str = "shell") -> Dict[str, Any]:
         """A few commands of the shell, enough to try the console. The real console runs any
         command in the session"""
+        if mode == "tcl":
+            return {
+                "ok": False,
+                "output": "Tcl is not in the demo: start the app with --root and --console",
+                "state_changed": False,
+            }
         words = command.split()
         if not words:
             return {"ok": True, "output": "", "state_changed": False}

@@ -119,8 +119,12 @@ export type AppEvent =
 export interface ConsoleAnswer {
   ok: boolean;
   output: string;
+  /** The result of a Tcl script: the value of its last command */
+  result?: string;
   state_changed: boolean;
 }
+/** What the console runs: a command of the shell, or a Tcl script over the commands of the shell */
+export type ConsoleMode = "shell" | "tcl";
 
 async function json<T>(response: Response): Promise<T> {
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
@@ -246,11 +250,11 @@ export const saveCheckpoint = async (name?: string): Promise<Answer> =>
 export const addDesignToSession = async (design: string): Promise<Answer> =>
   answerOf(await fetch("/api/design/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ design }) }));
 
-export async function runConsole(command: string): Promise<ConsoleAnswer> {
+export async function runConsole(command: string, mode: ConsoleMode = "shell"): Promise<ConsoleAnswer> {
   const response = await fetch("/api/console", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ command }),
+    body: JSON.stringify({ command, mode }),
   });
   return json<ConsoleAnswer>(response);
 }

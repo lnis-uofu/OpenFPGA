@@ -18,6 +18,7 @@ from .security import SecurityMiddleware
 STATIC = Path(__file__).with_name("static")
 # The most that the page may send as a message or a command
 _MAX_TEXT = 8000
+_MAX_SCRIPT = 64000  # characters of a Tcl script of the console
 _NO_BUILD = """<!doctype html><meta charset="utf-8"><title>OpenFPGA</title>
 <body style="font-family:sans-serif;max-width:36em;margin:4em auto">
 <h1>OpenFPGA</h1><p>The front end is not built. In
@@ -93,10 +94,19 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
     async def console(request: Request) -> Response:
         if not config.console:
             return JSONResponse({"error": "The console is off: start with --console"}, 404)
-        command = (await body(request)).get("command")
-        if not isinstance(command, str) or len(command) > _MAX_TEXT or "\n" in command:
+        given = await body(request)
+        command, mode = given.get("command"), given.get("mode", "shell")
+        if mode not in ("shell", "tcl"):
+            return JSONResponse({"error": "mode is shell or tcl"}, 400)
+        if mode == "tcl":
+            # A script: lines, and more of them than a command
+            if not isinstance(command, str) or len(command) > _MAX_SCRIPT:
+                return JSONResponse(
+                    {"error": "command is a Tcl script of at most %d characters" % _MAX_SCRIPT}, 400
+                )
+        elif not isinstance(command, str) or len(command) > _MAX_TEXT or "\n" in command:
             return JSONResponse({"error": "command is one line of text"}, 400)
-        return JSONResponse(await backend.console(command))
+        return JSONResponse(await backend.console(command, mode))
 
     async def new_session(request: Request) -> Response:
         name = (await body(request)).get("name")

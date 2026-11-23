@@ -181,6 +181,16 @@ try {
   await page.dblclick(".console-resize");
   assert.equal(Math.round(await page.locator(".console-lines").evaluate((e) => e.getBoundingClientRect().height)), 180);
 
+  // The mode Tcl: a script of lines in the interpreter of the session; a query is a dict
+  await page.click('.console-mode button:text-is("Tcl")');
+  await page.fill('[aria-label="Tcl script"]', 'set seed [dict get [lindex [dict get [report_app_option --name place.seed --json] options] 0] value]\nputs "seed is $seed"\nexpr {$seed * 14}');
+  await page.keyboard.press("Enter");
+  await page.waitForSelector(".line-output:text-is('42')", { timeout: 30000 });
+  await page.waitForSelector("text=seed is 3");
+  assert.ok(await page.isVisible("text=tcl% set seed"), "the script is shown with the prompt of Tcl");
+  await page.click('.console-mode button:text-is("Shell")');
+  await page.waitForSelector('[aria-label="Command"]');
+
   // The seed dropped the stages after the packing; the last checkpoint has them all
   assert.ok(await page.isVisible("header >> text=PACKED ✔"));
   await page.click(".checkpoint-status"); // the checkpoints are folded

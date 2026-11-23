@@ -178,6 +178,14 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
   current session. Its height is set by dragging and kept in the browser.
 - **UI-51** (done) What the person does in the console, with a button or with a `/` line is told
   to the model at its next message.
+- **UI-52** (done) The console has a mode Tcl beside the mode Shell: Tcl scripts in the Tcl
+  interpreter of the session, whose commands are those of the shell (a query answers as a dict, a
+  failed command is an error that `catch` takes). Enter runs a whole script; an open brace goes
+  to a new line. The variables stay until the worker ends; `exit` and `cd` are not available.
+- **UI-53** (done) `openfpga-app tcl` runs the same Tcl from a terminal: attached to the app of a
+  workspace (`--root`, through a file with its address and token that only its owner reads) or of
+  an address (`--url`), in its current session or another (`--session`); or with `--local DIR`, a
+  session of its own with no app. A line, a file of script, or lines typed at a prompt.
 
 ### 5.7 Feedback and errors
 
@@ -294,6 +302,9 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
 - **FEA-32** (done) The model writes only in the session directory, only text files of kinds that
   a flow reads. Verilog that names a file outside the session is refused before Yosys runs.
 - **FEA-33** (done) The console is the person's own shell and is off unless `--console` is given.
+- **FEA-34** (done) The Tcl of the console and of the terminal is the person's own too (it has
+  `exec` and `open`), behind `--console`. The model gets Tcl only with `--tcl-tool`, in a safe
+  interpreter: no files, no programs, paths only in the session.
 
 ## 8. Tests
 
@@ -368,8 +379,8 @@ most useful first in each group. None is built.
 - **X-41** Panes that dock and a layout that is saved; several tabs side by side, and a tab that
   can be moved to its own window.
 - **X-42** A log tab that follows a running stage, with filters by severity and a search.
-- **X-43** A scripting console in Python or Tcl beside the shell console, with the session as an
-  object; the journal exported as a script that runs with no app.
+- **X-43** A scripting console in Python beside the shell console, with the session as an
+  object (Tcl is done: UI-52, UI-53); the journal exported as a script that runs with no app.
 - **X-44** Notifications when a long stage ends, and an estimate of the time from earlier runs.
 - **X-45** Editing the copy of a design in place, with "synthesize what I edited" and a diff
   against the source folder.

@@ -944,9 +944,13 @@ class SessionBackend:
 
     # The console -----------------------------------------------------------------------------------
 
-    async def console(self, command: str) -> Dict[str, Any]:
+    async def console(self, command: str, mode: str = "shell") -> Dict[str, Any]:
         """A command of the OpenFPGA shell, in the current session. Any command: it is the user's
-        own shell. What it prints is the output"""
+        own shell. What it prints is the output. In the mode tcl the command is a Tcl script, run
+        by the Tcl interpreter of the session (Session.tcl), whose commands are those of the
+        shell"""
+        if mode == "tcl":
+            return await self._console_tcl(command)
         words = shlex.split(command) if command.strip() else []
         if not words:
             return {"ok": True, "output": "", "state_changed": False}
@@ -991,6 +995,62 @@ class SessionBackend:
             if changed and self.agent is not None:
                 self._changed_outside("The person ran the console command: %s" % command[:100])
             return {"ok": ok, "output": output, "state_changed": changed}
+
+        try:
+            answer = await anyio.to_thread.run_sync(work)
+        except Exception as error:  # noqa: BLE001 - a worker that ended, a closed session
+            answer = {"ok": False, "output": str(error), "state_changed": True}
+        finally:
+            self._running = None
+        return answer
+
+    async def _console_tcl(self, script: str) -> Dict[str, Any]:
+        """A Tcl script of the console: the output is what it printed and the logs of the commands
+        of the shell that it ran, then its result, as tclsh shows it"""
+        if not script.strip():
+            return {"ok": True, "output": "", "result": "", "state_changed": False}
+        if self.sid is None:
+            return {
+                "ok": False,
+                "output": "No session: open one with the + new button, or /session_open in the "
+                "chat.",
+                "state_changed": False,
+            }
+        if self._running is not None:
+            return {
+                "ok": False,
+                "output": "busy: %s is running" % self._running,
+                "state_changed": False,
+            }
+        sid = self.sid
+        self._running = "console"
+
+        def work() -> Dict[str, Any]:
+            entry = self.registry.get(sid)
+            before = list(entry.session.state().reached)
+            result = ""
+            try:
+                done = entry.session.tcl(script)
+                output, result, ok, commands = done.output, done.result, True, done.commands
+            except Exception as error:  # noqa: BLE001 - what Tcl says is the answer
+                commands = list(getattr(error, "commands", None) or [])
+                if getattr(error, "error_info", None) is not None:
+                    output = (error.output or "") + (error.error_info or str(error))
+                else:
+                    output = "%s: %s" % (type(error).__name__, error)
+                ok = False
+            output = output.rstrip()
+            if len(output) > _CONSOLE_MAX:
+                output = "…" + output[-_CONSOLE_MAX:]
+            changed = any(not line.startswith(_READS) for line in commands if line)
+            try:
+                changed = changed or list(entry.session.state().reached) != before
+            except Exception:  # noqa: BLE001 - the worker may have ended
+                changed = True
+            if changed and self.agent is not None:
+                ran = "; ".join(line.split()[0] for line in commands[:8]) or "nothing"
+                self._changed_outside("The person ran a Tcl script in the console (%s)" % ran)
+            return {"ok": ok, "output": output, "result": result, "state_changed": changed}
 
         try:
             answer = await anyio.to_thread.run_sync(work)

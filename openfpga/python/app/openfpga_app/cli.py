@@ -18,9 +18,15 @@ def _package_dirs(given):
 
 
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv and argv[0] == "tcl":
+        from .tcl_cli import main as tcl_main
+
+        return tcl_main(argv[1:])
     parser = argparse.ArgumentParser(
         prog="openfpga-app",
-        description="The local web app: a chat, the state of a session, a console",
+        description="The local web app: a chat, the state of a session, a console. "
+        "'openfpga-app tcl --help' is Tcl in a terminal, over a session of the app",
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8770)
@@ -63,6 +69,11 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--record-dir", type=Path, help="a record of each conversation is written here"
+    )
+    parser.add_argument(
+        "--tcl-tool",
+        action="store_true",
+        help="give the model the tool run_tcl: Tcl scripts in a safe interpreter of the session",
     )
     parser.add_argument("--max-sessions", type=int, default=4)
     parser.add_argument("--call-timeout", type=float, default=600.0, metavar="S")
@@ -127,6 +138,7 @@ def main(argv=None) -> int:
                     max_sessions=args.max_sessions,
                     call_timeout_s=args.call_timeout,
                     worker_memory_mb=args.worker_memory_mb,
+                    tcl_tool=args.tcl_tool,
                 ),
                 model=model,
                 agent_config=agent_config,
@@ -145,6 +157,12 @@ def main(argv=None) -> int:
         config.token,
     )
     print("OpenFPGA app: %s" % address, flush=True)
+    found = None
+    if not args.demo and config.console:
+        # Where 'openfpga-app tcl --root' finds this app
+        from .tcl_cli import remove_address, write_address
+
+        found = write_address(args.root, address.split("/?")[0], config.token)
     if args.open:
         import webbrowser
 
@@ -155,6 +173,8 @@ def main(argv=None) -> int:
             create_app(config, backend), host=config.host, port=config.port, log_level="warning"
         )
     finally:
+        if found is not None:
+            remove_address(found)
         close = getattr(backend, "close", None)
         if close:
             close()
