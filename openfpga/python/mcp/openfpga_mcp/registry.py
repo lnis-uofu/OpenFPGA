@@ -143,8 +143,10 @@ class SessionRegistry:
             pass
 
     def saved(self) -> List[Dict]:
-        """The sessions of the workspace that no worker holds and that have a checkpoint: the
-        ones that an earlier server made, and the ones that were closed. Newest first"""
+        """The sessions of the workspace that no worker holds: the ones that an earlier server
+        made, and the ones that were closed. One with a checkpoint opens at its last stage; one
+        with none (no stage ran: it only copied or synthesized a design) opens with its files and
+        an empty flow. Newest first"""
         with self._lock:
             live = {e.directory for e in self._entries.values()}
         found = []
@@ -153,36 +155,52 @@ class SessionRegistry:
         except OSError:
             return []
         for path in children:
-            if path.name in live or path.is_symlink():
+            if path.name in live or path.is_symlink() or not path.is_dir():
                 continue
+            checkpoint = path / "checkpoints" / "checkpoint.json"
             try:
-                manifest = json.loads((path / "checkpoints" / "checkpoint.json").read_text())
-                modified = (path / "checkpoints" / "checkpoint.json").stat().st_mtime
+                manifest = json.loads(checkpoint.read_text())
+                modified = checkpoint.stat().st_mtime
             except (OSError, ValueError):
-                continue
+                manifest = None
+                try:
+                    modified = max(
+                        p.stat().st_mtime for p in [path, *path.iterdir()] if not p.is_symlink()
+                    )
+                except (OSError, ValueError):
+                    continue
+            if manifest is None and not (path / META).is_file():
+                continue  # not a session of this workspace
             meta = self.read_meta(path.name)
             found.append(
                 {
                     "id": path.name,
                     "name": meta.get("name") or path.name,
-                    "stages": manifest.get("stages", []),
+                    "stages": (manifest or {}).get("stages", []),
                     "device_package": meta.get("device_package"),
                     "modified": modified,
+                    "checkpoint": manifest is not None,
                 }
             )
         return sorted(found, key=lambda s: -s["modified"])
 
     def adopt(self, directory: str) -> Entry:
-        """Start a worker for a session of an earlier server (or one that was closed), restored
-        from its last checkpoint, and hold it under the id of its directory"""
+        """Start a worker for a session of an earlier server (or one that was closed) and hold it
+        under the id of its directory. It is restored from its last checkpoint; a session with
+        none starts with an empty flow, in its directory with its files"""
         import openfpga
 
         if not _DIRECTORY.fullmatch(directory or ""):
             raise UnknownSession("'%s' is not a session of this workspace" % directory)
         path = self.config.root / directory
         checkpoint = path / "checkpoints"
-        if path.is_symlink() or not (checkpoint / "checkpoint.json").is_file():
-            raise UnknownSession("Session %s has no checkpoint to open it from" % directory)
+        restorable = (checkpoint / "checkpoint.json").is_file()
+        if (
+            path.is_symlink()
+            or not path.is_dir()
+            or not (restorable or (path / META).is_file())
+        ):
+            raise UnknownSession("There is no session %s in the workspace" % directory)
         with self._lock:
             self._reap()
             if any(e.directory == directory for e in self._entries.values()):
@@ -191,16 +209,17 @@ class SessionRegistry:
                 raise SessionLimit(
                     "%d sessions are open, which is the limit" % self.config.max_sessions
                 )
-            session = self.spawn(
-                lambda: openfpga.RemoteSession.restore(
-                    checkpoint,
-                    cwd=path,
-                    checkpoint_dir=checkpoint,
-                    timeout_s=self.config.call_timeout_s,
-                    journal=path / JOURNAL,
-                    memory_limit_mb=self.config.worker_memory_mb,
-                )
+            options = dict(
+                cwd=path,
+                checkpoint_dir=checkpoint,
+                timeout_s=self.config.call_timeout_s,
+                journal=path / JOURNAL,
+                memory_limit_mb=self.config.worker_memory_mb,
             )
+            if restorable:
+                session = self.spawn(lambda: openfpga.RemoteSession.restore(checkpoint, **options))
+            else:
+                session = self.spawn(lambda: openfpga.RemoteSession(**options))
             now = self._clock()
             meta = self.read_meta(directory)
             entry = Entry(directory, meta.get("name") or directory, session, directory, now, now)
