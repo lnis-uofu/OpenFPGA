@@ -28,7 +28,7 @@ way to run a command of the OpenFPGA shell: those belong to the person (the cons
 | Say why a stage failed (for example an unroutable design) | yes | from the diagnostics, the congestion hot spots and the log tail |
 | Look at the device, the utilization, a block, a net, the placement, the congestion, the timing paths | yes | each answer is cut to a size limit and says how to get more |
 | Go back to an earlier point after a crash or a bad change | yes | checkpoints |
-| Find the smallest channel width that routes | no | out of scope (owner, 2026-11-19): the model runs the width it is given and does not search for one |
+| Find the smallest channel width that routes | no | out of scope (owner, 2026-11-19): the model runs the width it is given and does not search for one. The tools enforce it: `route` fails with `chan_width_required` while no width is set, and the one-shot `vpr` command is refused in `run_tcl` |
 | Improve Fmax with seeds and options | partly | needed; the tools exist, no strategy library (planned, M11). The options to try will come from the owner |
 | Write an architecture, a constraints file, a circuit or a pin file | yes | `write_file`, in the directory of the session only; read back by name with `read_inputs` or `set_constraint`. Not outside the session, not a result of the flow |
 | Answer questions about the OpenFPGA documentation | no | planned (M10) |
@@ -107,7 +107,7 @@ tool needs one and none is open (the answer carries a note).
 | `list_options` | `stage?`, `query?`, `changed?`, `limit?` | the options of a stage (or those that match a pattern such as `place.*`, or those not at their default) with value, default, choices and the stages that a change drops |
 | `describe_option` | `name` | one option: type, value, default, help, choices, the stage it changes, the stages it drops |
 | `set_option` | `name`, `value` | sets an option; the answer says which stages were dropped and must run again. An option that names a file is refused (`option_not_allowed`): use `set_constraint` or `read_inputs` |
-| `set_constraint` | `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | sets or takes away an input that changes the whole flow; `chan_width` routes with a fixed number of tracks, `clear` goes back to the search for the smallest width |
+| `set_constraint` | `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | sets or takes away an input that changes the whole flow; `chan_width` routes with a fixed number of tracks, which can be changed but not cleared (`chan_width_required`); `clear` takes a constraints file away |
 
 Changing an option or a constraint drops the stages after it; they must be run again.
 
@@ -160,6 +160,7 @@ kept and `failed` says which one and why.
 | `stage_not_reached` | a query or stage needs an earlier stage | run the stage named in the hint |
 | `stage_failed`, `route_failed` | a stage ended with an error | read the diagnostics after it; `read_log` for the router lines |
 | `route_unroutable` | the router found no legal routing at this channel width (the data has the width) | raise `router.route_chan_width`, or change the placement; report it as the reason |
+| `chan_width_required` | `run_stage` route or analysis with no channel width set, or a width that is cleared or not above 0 | set it with `set_constraint kind=chan_width`; a device package sets its own |
 | `file_not_found`, `layout_not_found`, `load_error` | a file or a layout name does not exist or cannot be read | say so; do not guess another name |
 | `wrong_file_kind` | a file is given for an input that it is not (for example an OpenFPGA architecture as the VPR one) | say what it is; the hint says where it belongs |
 | `path_refused` | a path outside the workspace and the designs folders, an absolute path, or `..` | give a name only |

@@ -169,7 +169,11 @@ sessions, and each checkpoint has a restore.
 
 `--console` turns on the console. It runs any command of the OpenFPGA shell, so it is the user's
 own shell and not a sandbox; with `--root` it runs in the current session (what it prints is the output); the demo console
-knows only `help` and `report_session`. The commands that change the flow are in the journal of the
+knows only `help` and `report_session`. Two things are left out, as everywhere in the app, whose flow runs
+the stages one by one at a fixed channel width: `vpr`, which runs the whole flow in one command, and `route`
+while `router.route_chan_width` is not set (VPR would search for the smallest width). A device package sets
+its own width; the model sets one with `set_constraint kind=chan_width`. The Tcl of the console, of
+`openfpga-app tcl` and of the model refuses the same (`Session.fixed_width_refusal`). The commands that change the flow are in the journal of the
 session, as those of the tools are.
 
 ## Tcl

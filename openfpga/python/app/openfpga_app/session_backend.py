@@ -496,8 +496,7 @@ class SessionBackend:
 
     @staticmethod
     def _read_package(session, package) -> None:
-        session.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
-        session.read_openfpga_arch(str(package.openfpga_arch))
+        device_packages.read_into(session, package)  # with its channel width
 
     async def read_file(self, name: str) -> Dict[str, Any]:
         """The text of a file that the sidebar names, for the viewer of the page"""
@@ -970,9 +969,10 @@ class SessionBackend:
 
     async def console(self, command: str, mode: str = "shell") -> Dict[str, Any]:
         """A command of the OpenFPGA shell, in the current session. Any command: it is the user's
-        own shell. What it prints is the output. In the mode tcl the command is a Tcl script, run
-        by the Tcl interpreter of the session (Session.tcl), whose commands are those of the
-        shell"""
+        own shell, except what the flow of the app does not do (Session.fixed_width_refusal):
+        vpr, which runs the whole flow at once, and a route with no channel width set. What it
+        prints is the output. In the mode tcl the command is a Tcl script, run by the Tcl
+        interpreter of the session (Session.tcl), whose commands are those of the shell"""
         if mode == "tcl":
             return await self._console_tcl(command)
         words = shlex.split(command) if command.strip() else []
@@ -995,6 +995,9 @@ class SessionBackend:
 
         def work() -> Dict[str, Any]:
             entry = self.registry.get(sid)
+            refusal = entry.session.fixed_width_refusal(words[0])
+            if refusal:
+                return {"ok": False, "output": refusal, "state_changed": False}
             before = list(entry.session.state().reached)
             try:
                 result = entry.session.command(words[0], *words[1:])
@@ -1054,7 +1057,7 @@ class SessionBackend:
             before = list(entry.session.state().reached)
             result = ""
             try:
-                done = entry.session.tcl(script)
+                done = entry.session.tcl(script, fixed_width=True)
                 output, result, ok, commands = done.output, done.result, True, done.commands
             except Exception as error:  # noqa: BLE001 - what Tcl says is the answer
                 commands = list(getattr(error, "commands", None) or [])

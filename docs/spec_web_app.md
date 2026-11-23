@@ -175,7 +175,8 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
 ### 5.6 Console
 
 - **UI-50** (done) With `--console`, a console runs any command of the OpenFPGA shell in the
-  current session. Its height is set by dragging and kept in the browser.
+  current session, except `vpr` (the whole flow in one command) and a route with no channel width
+  set: the app routes only at a fixed width, and does not search for the smallest (FEA-35). Its height is set by dragging and kept in the browser.
 - **UI-51** (done) What the person does in the console, with a button or with a `/` line is told
   to the model at its next message.
 - **UI-52** (done) The console has a mode Tcl beside the mode Shell: Tcl scripts in the Tcl
@@ -306,6 +307,11 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
 - **FEA-34** (done) The Tcl of the console and of the terminal is the person's own too (it has
   `exec` and `open`), behind `--console`. The model gets Tcl only with `--tcl-tool`, in a safe
   interpreter: no files, no programs, paths only in the session.
+- **FEA-35** (done) The flow of the app runs the stages one by one at a fixed channel width. The
+  search for the smallest width and the one-shot `vpr` command are not supported: the tools, the
+  console, the Tcl of the console, of the terminal and of the model refuse `vpr`, and refuse
+  `route` while no width is set (`chan_width_required` for the tools). The width cannot be
+  cleared, only changed, and a device package sets its own.
 
 ## 8. Tests
 

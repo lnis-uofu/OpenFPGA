@@ -134,7 +134,7 @@ class _Local:
 
     def run(self, script: str) -> Outcome:
         try:
-            done = self.session.tcl(script)
+            done = self.session.tcl(script, fixed_width=True)  # the flow of the app
         except self.openfpga.TclError as error:
             return False, (error.output or "") + (error.error_info or str(error)), ""
         except self.openfpga.WorkerError as error:
