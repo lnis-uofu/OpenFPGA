@@ -30,6 +30,9 @@ class Config:
     design_dirs: Tuple[Path, ...] = ()
     # Folders that hold device packages (one folder for each package, see docs/spec_device_package.md)
     package_dirs: Tuple[Path, ...] = ()
+    # The tool run_tcl: Tcl scripts in a safe interpreter of the session (off: every tool is in
+    # the prompt of a model, and this one is for those that write Tcl well)
+    tcl_tool: bool = False
 
     def folders(self) -> Tuple[str, ...]:
         """The workspace and the designs folders, as they are written and as they resolve

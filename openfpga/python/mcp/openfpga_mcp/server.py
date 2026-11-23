@@ -69,6 +69,12 @@ def main(argv=None) -> int:
         metavar="MB",
         help="the address space of the worker of a session (0: no limit; below about 2000 it does not start)",
     )
+    parser.add_argument(
+        "--tcl-tool",
+        action="store_true",
+        help="add the tool run_tcl: Tcl scripts over the commands of the shell, in a safe "
+        "interpreter",
+    )
     parser.add_argument("--transport", choices=("stdio", "http"), default="stdio")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
@@ -88,6 +94,7 @@ def main(argv=None) -> int:
         answer_chars=args.answer_chars,
         session_max_bytes=args.session_max_mb * 1024 * 1024,
         worker_memory_mb=args.worker_memory_mb,
+        tcl_tool=args.tcl_tool,
     )
     server = build_server(config)
     # A termination of the process ends the workers too

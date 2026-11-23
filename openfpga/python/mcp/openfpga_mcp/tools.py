@@ -1107,6 +1107,49 @@ def register(
 
         return await run(work)
 
+    if config.tcl_tool:
+
+        @tool()
+        async def run_tcl(session: str, script: str):
+            """Run a Tcl script in the session, for a loop or a sweep that would take many calls.
+            Every command of the OpenFPGA shell is a Tcl command, written as on its command line
+            (set_app_option --name place.seed --value 3; place); a query returns its answer as a
+            dict (dict get [timing_summary] setup fmax_mhz) and a command that fails is an error
+            that catch takes. The interpreter is a safe one: no files, no programs, paths only in
+            the session. Variables and procedures stay for the next script. Returns the result
+            (the value of the last command), what puts printed (not the logs: read_log has those
+            of the stages), the commands run and the stages reached."""
+
+            def work():
+                if not isinstance(script, str) or not script.strip() or len(script) > _TCL_MAX:
+                    raise InvalidArgument("script is Tcl of 1 to %d characters" % _TCL_MAX)
+                entry = session_of(session)
+                check_room(entry)
+                handle = entry.session
+                try:
+                    done = handle.tcl(script, safe=True)
+                except Exception as error:
+                    if getattr(error, "error_info", None) is None:
+                        raise
+                    failure = answers.from_exception(error)
+                    failure["commands"] = error.commands[-_TCL_COMMANDS:]
+                    if error.printed:
+                        failure["printed"] = _tail(error.printed, _TCL_OUTPUT)
+                    failure["reached"] = list(handle.state().reached)
+                    return failure
+                return reply(
+                    {
+                        "result": done.result,
+                        "printed": _tail(done.printed, _TCL_OUTPUT),
+                        "commands": done.commands[-_TCL_COMMANDS:],
+                        "commands_run": len(done.commands),
+                        "seconds": round(done.elapsed_s, 2),
+                        "reached": list(handle.state().reached),
+                    }
+                )
+
+            return await run(work)
+
     @tool()
     async def checkpoint(session: str, name: Optional[str] = None):
         """Save the flow under a name, to come back to with session_restore. The server also
@@ -1128,6 +1171,15 @@ def register(
             return reply({"checkpoint": label, "stages": list(entry.session.state().reached)})
 
         return await run(work)
+
+
+_TCL_MAX = 16000  # characters of a script
+_TCL_OUTPUT = 2000  # characters of what a script printed: the end of it
+_TCL_COMMANDS = 20  # command lines of the shell that an answer lists: the last ones
+
+
+def _tail(text: str, size: int) -> str:
+    return text if len(text) <= size else "…" + text[-size:]
 
 
 def _named(config: Config, entry: Entry) -> List[str]:
