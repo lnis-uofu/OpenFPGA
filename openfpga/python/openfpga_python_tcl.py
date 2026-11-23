@@ -188,6 +188,7 @@ class _TclHost:
         self._commands = []
         self._causes = []
         self._sandbox = None
+        self._fixed_width = False  # of the script that runs: see Session.fixed_width_refusal
         self.commands = [name for name in session.shell_commands() if name not in _TCL_LEFT_OUT]
         self._tcl.eval("namespace eval ::openfpga {}")
         self._tcl.createcommand("::openfpga::_run", self._run)
@@ -239,11 +240,12 @@ class _TclHost:
         of Tcl that Python makes is not one that Tcl can catch"""
         try:
             args, options = _split_words(words)
-            if safe == "1":
-                refusal = _safe_refusal(name, args, options)
-                if refusal:
-                    self._causes = [Diagnostic("error", TclRefused.kind, refusal)]
-                    return self._answer("error", refusal, TclRefused.kind)
+            refusal = _safe_refusal(name, args, options) if safe == "1" else None
+            if refusal is None and self._fixed_width:
+                refusal = self._session.fixed_width_refusal(name)
+            if refusal:
+                self._causes = [Diagnostic("error", TclRefused.kind, refusal)]
+                return self._answer("error", refusal, TclRefused.kind)
             line = _command_line(name, args, options)
             self._commands.append(line)
             try:
@@ -268,9 +270,10 @@ class _TclHost:
 
     # A script --------------------------------------------------------------------
 
-    def run(self, script, safe):
+    def run(self, script, safe, fixed_width=False):
         if not isinstance(script, str):
             raise TypeError("A Tcl script is text, not %s" % type(script).__name__)
+        self._fixed_width = bool(fixed_width)
         self._output, self._size, self._commands, self._causes = [], 0, [], []
         self._printed, self._printed_size = [], 0
         started = time.monotonic()

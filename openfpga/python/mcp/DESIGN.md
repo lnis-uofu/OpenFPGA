@@ -68,7 +68,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 | `list_options` | `session`, `stage?`, `query?`, `changed?`, `limit?` (default 20) | `report_stage`: for each stage asked for, its options with value, default and choices, and the stages that a change drops |
 | `describe_option` | `session`, `name` | the option: type, value, default, help, choices, stage, and the stages that a change would drop |
 | `set_option` | `session`, `name`, `value` | the `Change`: before, after, and the stages dropped |
-| `set_constraint` | `session`, `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | the `Change`. A file is a name inside the workspace |
+| `set_constraint` | `session`, `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | the `Change`. A file is a name inside the workspace. The channel width is changed, not cleared: the routing runs only at a fixed width, and `run_stage` refuses route without one (`chan_width_required`); `use_device_package` sets the width of the package |
 
 ### Queries (read only)
 

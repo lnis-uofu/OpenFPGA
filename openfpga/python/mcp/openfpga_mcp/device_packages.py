@@ -217,6 +217,15 @@ def find(config: Config, name: str) -> DevicePackage:
     raise _not_found("There is no device package '%s'" % name, config)
 
 
+def read_into(session, package: DevicePackage) -> None:
+    """Make a session target the device of a package: its two architectures, and its channel
+    width (the routing runs at a fixed width)"""
+    session.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
+    session.read_openfpga_arch(str(package.openfpga_arch))
+    if package.channel_width:
+        session.set_route_chan_width(package.channel_width)
+
+
 _README_CHARS = 1200
 
 

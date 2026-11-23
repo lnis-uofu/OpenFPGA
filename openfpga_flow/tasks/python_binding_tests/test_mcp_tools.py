@@ -335,8 +335,11 @@ def test_a_constraint_is_set_and_taken_away(flow, tmp_path):
     assert cleared["data"]["before"] == f"{sid}/ten.sdc" and cleared["data"]["after"] == ""
     width = ask(script, sid, "set_constraint", kind="chan_width", width=24)
     assert (width["data"]["before"], width["data"]["after"]) == (20, 24)
+    # The routing runs at a fixed width: it is changed, not taken away
     back = ask(script, sid, "set_constraint", kind="chan_width", clear=True)
-    assert back["data"]["after"] == -1
+    assert back["diagnostics"][0]["kind"] == "chan_width_required"
+    unset = ask(script, sid, "set_option", name="router.route_chan_width", value=-1)
+    assert unset["diagnostics"][0]["kind"] == "chan_width_required"
     for arguments in (
         {"kind": "sdc"},
         {"kind": "sdc", "file": "ten.sdc", "clear": True},

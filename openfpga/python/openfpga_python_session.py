@@ -1176,7 +1176,28 @@ class Session:
         log = self.shell.run("help").log
         return [line.strip() for line in log.splitlines() if line.startswith("\t") and line.strip()]
 
-    def tcl(self, script, safe=False):
+    def fixed_width_refusal(self, command):
+        """Why a flow at a fixed channel width does not run this command now, or None when it
+        does. Such a flow (the one of the web app and of its model) runs the stages one by one
+        and routes with the width it is given: vpr, which runs the whole flow in one command, is
+        not run, and route is not run while router.route_chan_width is not set, as VPR would
+        then search for the smallest width that routes"""
+        if command == "vpr":
+            return (
+                "vpr runs the whole flow in one command, which this flow does not do: run the "
+                "stages pack, place, route and analysis"
+            )
+        routes = command == "route" or (
+            command == "analysis" and "ROUTED" not in self.state().reached
+        )
+        if routes and self.options["router.route_chan_width"] <= 0:
+            return (
+                "The channel width is not set, and the routing is only run at a fixed width: "
+                "set router.route_chan_width (a device package gives its own)"
+            )
+        return None
+
+    def tcl(self, script, safe=False, fixed_width=False):
         """Run a Tcl script, and return a TclResult: its result, what it
         printed and the command lines of the shell that it ran.
 
@@ -1195,10 +1216,13 @@ class Session:
         command must be in the current directory. A script that fails raises
         TclError, or TclRefused for what a safe interpreter does not do. Tcl
         comes with tkinter: a Python without it raises TclError.
+
+        With fixed_width=True a command that fixed_width_refusal() refuses (vpr,
+        and route while the channel width is not set) raises TclRefused.
         """
         if self._tcl_host is None:
             self._tcl_host = _TclHost(self)
-        return self._tcl_host.run(script, safe)
+        return self._tcl_host.run(script, safe, fixed_width)
 
     def _write_journal(self, name, args, options, error=None):
         if self._journal is not None and name not in _QUERY_COMMANDS:

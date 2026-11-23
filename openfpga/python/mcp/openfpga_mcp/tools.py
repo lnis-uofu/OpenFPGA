@@ -15,7 +15,14 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from . import answers, budget, device_packages, filenames, reports, synthesis
 from .config import Config
-from .errors import FileExists, InvalidArgument, OptionNotAllowed, SessionFull, SessionNotEmpty
+from .errors import (
+    FileExists,
+    FixedWidthOnly,
+    InvalidArgument,
+    OptionNotAllowed,
+    SessionFull,
+    SessionNotEmpty,
+)
 from .paths import CREATED, check_kind, copy_design, find_design, resolve_file, rtl_design_of
 from .registry import Entry, SessionRegistry
 
@@ -353,9 +360,9 @@ def register(
         """Read a device package into a session: its VPR architecture (with the layout of its
         grid) and its OpenFPGA architecture, so that the session targets that device. Give the
         name of a package from list_device_packages. Only a session with nothing read yet takes a
-        package (fails with session_not_empty otherwise). It stops there: read_inputs with only
-        the circuit is the next call, and the architectures are not given again. Returns the
-        package and the state of the session."""
+        package (fails with session_not_empty otherwise), and its channel width is set. It stops
+        there: read_inputs with only the circuit is the next call, and the architectures are not
+        given again. Returns the package and the state of the session."""
 
         def work():
             entry = session_of(session)
@@ -367,8 +374,7 @@ def register(
                     "Session %s has already read files, and a device package would replace them"
                     % session
                 )
-            handle.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
-            handle.read_openfpga_arch(str(package.openfpga_arch))
+            device_packages.read_into(handle, package)
             registry.update_meta(entry, package_name=package.name)  # for synthesize
             return reply(
                 {"device_package": package.summary(), "state": _plain("session", handle.state())}
@@ -749,13 +755,18 @@ def register(
         routing); the data of the stage is kept, so get_congestion and the queries of the earlier
         stages still answer, and the next run of a stage starts again. With from_file (a file of
         the workspace: the packing, the placement or the routing that an earlier flow wrote) the
-        results are read instead of computed; there is none for analysis."""
+        results are read instead of computed; there is none for analysis. route needs a channel
+        width (set_constraint)."""
 
         def work():
             entry = session_of(session)
             handle = entry.session
             check_room(entry)
             _choice("stage", stage, _ORDER)
+            if from_file is None:
+                refusal = handle.fixed_width_refusal(stage)
+                if refusal:
+                    raise FixedWidthOnly(refusal)
             ran: List[str] = []
             seconds = 0.0
             current = stage
@@ -887,6 +898,13 @@ def register(
             if isinstance(value, str):
                 _text("value", value, True)
             _check_option(name, handle.options.get(name).type)
+            if name == "router.route_chan_width" and not (
+                isinstance(value, int) and not isinstance(value, bool) and value > 0
+            ):
+                raise FixedWidthOnly(
+                    "The routing runs at a fixed channel width: router.route_chan_width takes a "
+                    "number of tracks above 0"
+                )
             return reply(dataclasses.asdict(handle.set_option(name, value)))
 
         return await run(work)
@@ -902,19 +920,23 @@ def register(
         """Set or take away an input that changes the whole flow, and say what it dropped.
         kind vpr_constraints: the floorplan constraints of VPR (an XML file of the workspace).
         kind sdc: the timing constraints (an SDC file). kind chan_width: route with a channel of
-        this many tracks (width). clear takes the constraint away (the channel width goes back
-        to the search for the smallest)."""
+        this many tracks (width), which can be changed but not cleared. clear takes a file away."""
 
         def work():
             entry = session_of(session)
             handle = entry.session
             _choice("kind", kind, ("vpr_constraints", "sdc", "chan_width"))
             if kind == "chan_width":
-                if (width is None) == (not clear) or file is not None:
-                    error = InvalidArgument("chan_width takes a width, or clear, and no file")
+                if clear:
+                    raise FixedWidthOnly(
+                        "The routing runs at a fixed channel width, which cannot be taken away: "
+                        "give another width"
+                    )
+                if width is None or file is not None:
+                    error = InvalidArgument("chan_width takes a width, and no file")
                     error.hint = "For a channel width: kind=chan_width and width=N"
                     raise error
-                value = -1 if clear else _number("width", width, 0, 1, 10000)
+                value = _number("width", width, 0, 1, 10000)
                 return reply(dataclasses.asdict(handle.set_route_chan_width(value)))
             if (file is None) == (not clear) or width is not None:
                 error = InvalidArgument("%s takes a file, or clear, and no width" % kind)
@@ -1116,7 +1138,9 @@ def register(
             (set_app_option --name place.seed --value 3; place); a query returns its answer as a
             dict (dict get [timing_summary] setup fmax_mhz) and a command that fails is an error
             that catch takes. The interpreter is a safe one: no files, no programs, paths only in
-            the session. Variables and procedures stay for the next script. Returns the result
+            the session. As in run_stage, route needs the channel width to be set, and vpr (the
+            whole flow in one command) is refused. Variables and procedures stay for the next
+            script. Returns the result
             (the value of the last command), what puts printed (not the logs: read_log has those
             of the stages), the commands run and the stages reached."""
 
@@ -1127,7 +1151,7 @@ def register(
                 check_room(entry)
                 handle = entry.session
                 try:
-                    done = handle.tcl(script, safe=True)
+                    done = handle.tcl(script, safe=True, fixed_width=True)
                 except Exception as error:
                     if getattr(error, "error_info", None) is None:
                         raise

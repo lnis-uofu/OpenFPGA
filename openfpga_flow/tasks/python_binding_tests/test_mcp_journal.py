@@ -25,9 +25,16 @@ def test_the_journal_has_the_commands_that_changed_the_flow(server):
     data = answer["data"]
     assert data["format"] == "openfpga" and data["journal"] == sid + "/journal"
     commands = [l.split()[0] for l in data["lines"] if not l.startswith("#") and l != "exit"]
-    # The package's architectures, the synthesis, the circuit that it read, the stage
-    assert commands == ["read_vpr_arch", "read_openfpga_arch", "yosys", "read_circuit", "pack"]
-    assert data["commands"] == 5
+    # The package's architectures and channel width, the synthesis, the circuit, the stage
+    assert commands == [
+        "read_vpr_arch",
+        "read_openfpga_arch",
+        "set_app_option",
+        "yosys",
+        "read_circuit",
+        "pack",
+    ]
+    assert data["commands"] == 6
     assert str(server.config.root) not in json.dumps(data)  # names that can be given back
     yosys = next(l for l in data["lines"] if l.startswith("yosys"))
     assert "journal/scripts/001.ys" in yosys  # the script that was run, not the live one
@@ -53,7 +60,7 @@ def test_a_replay_makes_a_new_session_that_is_at_the_same_point(server):
     answer = call(server, "replay", journal=first)
     assert answer["ok"], answer
     data = answer["data"]
-    assert data["session"] != first and data["replayed"] == 5
+    assert data["session"] != first and data["replayed"] == 6
     state = call(server, "get_state")["data"]["state"]
     assert state["reached"] == ["DEVICE", "PACKED"]
     assert state["inputs"]["circuit"]["file"].endswith("synth/and2.blif")
@@ -78,7 +85,7 @@ def test_a_replay_runs_the_synthesis_that_was_run_and_not_the_one_that_came_afte
     answer = call(server, "replay", journal=first)
     assert answer["ok"], answer
     # The journal of the first session has both syntheses; the replay ran both, in order
-    assert answer["data"]["replayed"] == 7
+    assert answer["data"]["replayed"] == 8
     state = call(server, "get_state")["data"]["state"]
     assert state["inputs"]["circuit"]["file"].endswith("synth/counter.blif")
 
@@ -111,12 +118,12 @@ def test_a_file_outside_the_workspace_in_a_journal_is_refused(server):
 
 def test_a_replay_that_fails_stops_and_leaves_the_session_with_what_ran(server):
     sid = flow(server)
-    # The Verilog that the synthesis reads is gone: the architectures were read, the rest did not run
+    # The Verilog that the synthesis reads is gone: the device was read, the rest did not run
     (server.config.root / sid / "created" / "and2.v").unlink()
     answer = call(server, "replay", journal=sid)
     assert answer["ok"] is False
     item = answer["diagnostics"][0]
     assert "Replay stopped at line" in item["message"] and "yosys --file" in item["message"]
-    assert item["data"]["ran"] == 2 and item["data"]["session"] in item["hint"]
+    assert item["data"]["ran"] == 3 and item["data"]["session"] in item["hint"]
     new = call(server, "get_state", session=item["data"]["session"])["data"]["state"]
     assert new["reached"] == [] and new["inputs"]["vpr_arch"] and new["inputs"]["openfpga_arch"]

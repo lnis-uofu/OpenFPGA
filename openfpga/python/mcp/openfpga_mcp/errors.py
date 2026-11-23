@@ -86,3 +86,14 @@ class PackageInvalid(RegistryError):
 
     kind = "package_invalid"
     hint = "Check the package against docs/spec_device_package.md"
+
+
+class FixedWidthOnly(RegistryError):
+    """The flow routes at a fixed channel width, and runs the stages one by one: a route with no
+    width (VPR would search for the smallest) and the one-shot vpr command are refused"""
+
+    kind = "chan_width_required"
+    hint = (
+        "set_constraint kind=chan_width width=N sets the width (a device package gives its own); "
+        "get_device says the width of the device"
+    )
