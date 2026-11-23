@@ -1,0 +1,4 @@
+!*.place
+!*.route
+!*.net.post_routing
+!*.blif

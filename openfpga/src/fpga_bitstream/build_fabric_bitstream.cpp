@@ -3,6 +3,8 @@
  *******************************************************************/
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <string>
 
 /* Headers from vtrutil library */
@@ -12,15 +14,60 @@
 
 /* Headers from openfpgautil library */
 #include "bitstream_manager_utils.h"
+#include "bitstream_reorder_map.h"
 #include "build_fabric_bitstream.h"
 #include "build_fabric_bitstream_memory_bank.h"
 #include "decoder_library_utils.h"
 #include "openfpga_decode.h"
+#include "openfpga_digest.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+static void write_fabric_bitstream_to_text_file(
+  const BitstreamManager& bitstream_manager,
+  const FabricBitstream& original_fabric_bitstream,
+  const BitstreamReorderMap& bitstream_reorder_map,
+  const std::string& output_file_name) {
+  if (true == output_file_name.empty()) {
+    VTR_LOG_ERROR(
+      "Received empty file name to output bitstream!\n\tPlease specify a valid "
+      "file name.\n");
+  }
+  /* Create parent directories if needed */
+  std::filesystem::path output_path(output_file_name);
+  if (output_path.has_parent_path()) {
+    std::filesystem::create_directories(output_path.parent_path());
+  }
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(output_file_name, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(output_file_name.c_str(), fp);
+
+  size_t num_wls = bitstream_reorder_map.get_wl_address_size();
+  size_t num_bls = bitstream_reorder_map.get_bl_address_size();
+
+  // Allocate a WL×BL grid pre-filled with '0'.
+  // Iterate all valid intersections in tile order via for_each_bit(), filling
+  // in '1'/'0' for positions that carry config bits.
+  // Finally write each WL row as a single line.
+  std::vector<std::string> wl_rows(num_wls, std::string(num_bls, '0'));
+
+  bitstream_reorder_map.for_each_bit(
+    [&](size_t wl, size_t bl, size_t global_cbit_id) {
+      bool val = bitstream_manager.bit_value(
+        original_fabric_bitstream.config_bit(FabricBitId(global_cbit_id)));
+      wl_rows[wl][bl] = val ? '1' : '0';
+    });
+
+  for (const auto& row : wl_rows) {
+    fp << row << '\n';
+  }
+}
 
 /********************************************************************
  * This function aims to build a bitstream for configuration chain-like protocol
@@ -818,6 +865,19 @@ FabricBitstream build_fabric_dependent_bitstream(
            fabric_bitstream.num_bits());
 
   return fabric_bitstream;
+}
+
+void build_fabric_dependent_bitstream_with_reorder(
+  const BitstreamManager& bitstream_manager,
+  const FabricBitstream& original_fabric_bitstream,
+  const BitstreamReorderMap& bitstream_reorder_map,
+  const std::string& output_file_name, const bool& /*verbose*/) {
+  vtr::ScopedStartFinishTimer timer(
+    "\nBuild fabric dependent bitstream with reorder\n");
+
+  write_fabric_bitstream_to_text_file(bitstream_manager,
+                                      original_fabric_bitstream,
+                                      bitstream_reorder_map, output_file_name);
 }
 
 } /* end namespace openfpga */
