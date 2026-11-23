@@ -1,5 +1,6 @@
 """Opening a session from the first screen: the live ones are switched to, and the saved ones of the
-workspace (made by an earlier server, or closed) are started again from their last checkpoint"""
+workspace (made by an earlier server, or closed) are started again from their last checkpoint, or
+with their files and an empty flow when no stage ran"""
 
 import asyncio
 
@@ -96,12 +97,42 @@ def test_a_session_that_is_not_there_is_refused(client, session):
     assert not answer.json().get("ok", False)
 
 
-def test_a_session_with_no_checkpoint_is_not_saved_and_cannot_be_opened(client, backend):
-    sid = client.post("/api/session/new", json={}).json()["data"]["session"]
+def test_a_session_with_no_checkpoint_opens_with_its_files_and_an_empty_flow(client, backend):
+    sid = client.post("/api/session/new", json={"name": "bare"}).json()["data"]["session"]
+    directory = backend.config.root / sid
+    (directory / "design").mkdir()
+    (directory / "design" / "top.v").write_text("module top; endmodule\n")
     assert client.post("/api/session/close", json={}).json()["ok"]
-    assert listing(client)["saved"] == []  # nothing was run: nothing to restore
+    notes = []
+    backend._changed_outside = notes.append  # what the model is told
+    saved = listing(client)["saved"]
+    assert [(s["id"], s["name"], s["stages"], s["checkpoint"]) for s in saved] == [
+        (sid, "bare", [], False)
+    ]
     answer = opened(client, sid)
-    assert answer.status_code == 404 and answer.json()["diagnostics"][0]["kind"] == "unknown_session"
+    assert answer.json()["ok"], answer.json()
+    shown = view(client)
+    assert shown["session"]["id"] == sid and shown["session"]["worker"] == "running"
+    assert (directory / "design" / "top.v").is_file()  # its files are kept
+    assert "no stage had run" in notes[-1]
+
+
+def test_a_session_of_a_device_package_with_no_checkpoint_reads_its_package_again(client, backend):
+    sid = client.post("/api/session/new", json={"device_package": LOGIC}).json()["data"]["session"]
+    assert client.post("/api/session/close", json={}).json()["ok"]
+    notes = []
+    backend._changed_outside = notes.append
+    assert opened(client, sid).json()["ok"]
+    shown = view(client)
+    assert shown["session"]["device_package"]["name"] == LOGIC
+    assert "read again" in notes[-1]
+    assert backend.registry.get(sid).session.state().inputs.vpr_arch is not None
+
+
+def test_a_directory_that_is_not_a_session_is_not_listed(client, backend):
+    (backend.config.root / "s77").mkdir()
+    assert listing(client)["saved"] == []
+    assert opened(client, "s77").status_code == 404
 
 
 def test_the_list_and_open_need_the_token_and_the_demo_has_no_sessions(client):

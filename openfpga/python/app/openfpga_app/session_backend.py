@@ -476,6 +476,24 @@ class SessionBackend:
         )
         return {"ok": True, "data": {"session": self.sid, "device_package": package.name}, "truncated": False, "more": None}
 
+    async def _read_package_again(self, entry, name: Optional[str]) -> str:
+        """A session of a device package that is opened with no checkpoint reads the architectures
+        of its package again, as when it was created. Says what happened, for the model"""
+        if not name:
+            return ""
+        try:
+            package = await anyio.to_thread.run_sync(device_packages.find, self.config, name)
+            await anyio.to_thread.run_sync(self._read_package, entry.session, package)
+        except Exception as error:  # noqa: BLE001 - a package that is gone or that VPR refuses
+            return (
+                " and the architectures of its device package %s could not be read again (%s): "
+                "read them with use_device_package or read_inputs" % (name, error)
+            )
+        return (
+            " and the architectures of its device package %s read again (no circuit is read: "
+            "read it with read_inputs and only circuit=<file>)" % name
+        )
+
     @staticmethod
     def _read_package(session, package) -> None:
         session.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
@@ -586,21 +604,27 @@ class SessionBackend:
             live = {i.id for i in await anyio.to_thread.run_sync(self.registry.list)}
             if session in live:
                 entry = self.registry.get(session)
-                how = "switched to"
+                how = "switched to session %s (%s)." % (entry.id, entry.name)
             else:
                 entry = await anyio.to_thread.run_sync(self.registry.adopt, session)
                 meta = self.registry.read_meta(entry.directory)
                 if meta.get("device_package"):
                     self._packages[entry.id] = meta["device_package"]
-                how = "opened again from its last checkpoint:"
+                manifest = self.config.root / entry.directory / "checkpoints" / "checkpoint.json"
+                how = "opened session %s (%s) again" % (entry.id, entry.name)
+                if manifest.is_file():
+                    how += ", from its last checkpoint."
+                else:
+                    how += ": no stage had run, so its flow is empty and its files are there"
+                    how += await self._read_package_again(entry, meta.get("package_name")) + "."
         except RegistryError as error:
             return answers.from_exception(error)
         except Exception as error:  # noqa: BLE001 - a worker that does not start, a bad checkpoint
             return answers.from_exception(error)
         self.sid = entry.id
         self._changed_outside(
-            "The person %s session %s (%s). Call get_state before you rely on what you knew of "
-            "another session" % (how, entry.id, entry.name)
+            "The person %s Call get_state before you rely on what you knew of another session"
+            % how
         )
         return {"ok": True, "data": {"session": entry.id, "name": entry.name}, "truncated": False, "more": None}
 

@@ -28,7 +28,7 @@ export function SessionPicker() {
       ) : (
         <>
           {found.live.length + found.saved.length === 0 && (
-            <div class="muted">No session to open. A session that ran a stage is saved and shows here.</div>
+            <div class="muted">No session to open. The sessions of the workspace show here.</div>
           )}
           {found.live.map((s) => (
             <div key={s.id} class="package session-entry">
@@ -57,7 +57,15 @@ export function SessionPicker() {
                 {s.device_package ? `${s.device_package.name} · ` : ""}
                 {reached(s.stages)} · {ago(s.modified)}
               </div>
-              <button disabled={busy.value} onClick={() => void openSession(s.id)} title="Start it again from its last checkpoint">
+              <button
+                disabled={busy.value}
+                onClick={() => void openSession(s.id)}
+                title={
+                  s.checkpoint === false
+                    ? "Start it again with its files: no stage had run, so the flow starts empty"
+                    : "Start it again from its last checkpoint"
+                }
+              >
                 Open
               </button>
             </div>

@@ -120,10 +120,11 @@ Not in the demo, which has no files.
 
 **Opening a session.** The first screen has "Open session…": a list of the sessions that can be opened.
 A live one (a worker holds it) is switched to; a saved one is a directory `sN` of the workspace that no
-worker holds and that has a checkpoint (it was closed, or an earlier run of the server made it): a worker is
-started from the last checkpoint, under the same id, with its stages, options and device package (the name and
-the package are kept in `session.json` in its directory). A session that ran no stage has no checkpoint and
-is not listed. The model is told that the session changed. `GET /api/sessions` lists, `POST /api/session/open`
+worker holds (it was closed, or an earlier run of the server made it): a worker is started under the same id,
+from the last checkpoint, with its stages, options and device package (the name and the package are kept in
+`session.json` in its directory). A session that ran no stage has no checkpoint (it only copied or synthesized
+a design): it opens with its files and an empty flow, and a session of a device package reads the
+architectures of its package again. The model is told that the session changed. `GET /api/sessions` lists, `POST /api/session/open`
 (`{session}`) opens; the sidebar has no list yet.
 
 **Editing.** The files of the session's `uploads` (what the person gave) and of `created` (what the model

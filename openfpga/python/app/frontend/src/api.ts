@@ -226,7 +226,8 @@ export interface SessionEntry {
   running?: boolean;
   idle_s?: number;
   current?: boolean;
-  modified?: number; // seconds since 1970, of the last checkpoint of a saved session
+  modified?: number; // seconds since 1970, of the last checkpoint (or the last file) of a saved session
+  checkpoint?: boolean; // a saved session: it opens at its last stage (else with an empty flow)
 }
 
 export async function fetchSessions(): Promise<{ live: SessionEntry[]; saved: SessionEntry[] }> {

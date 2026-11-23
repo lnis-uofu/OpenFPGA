@@ -278,8 +278,9 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
 - **FEA-10** (done) Several sessions, each with its own worker; an idle one is closed after a time.
 - **FEA-11** (done) Checkpoints after each stage and by name; a session is restored to one after a
   crash, a timeout or a bad change.
-- **FEA-12** (done) A saved session (a directory with a checkpoint) is opened again after the
-  server restarted, with its stages, options and device package.
+- **FEA-12** (done) A saved session (a directory of the workspace) is opened again after the
+  server restarted, with its stages, options and device package. One that ran no stage has no
+  checkpoint: it opens with its files and an empty flow, and reads its device package again.
 - **FEA-13** (done) A journal of the commands that changed the flow, as OpenFPGA commands or as
   Python; `replay` makes a new session that runs a journal again.
 - **FEA-14** (done) Limits: a time for each call, a memory limit for a worker, a size for a session.
