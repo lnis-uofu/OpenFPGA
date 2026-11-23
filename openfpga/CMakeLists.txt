@@ -32,6 +32,7 @@ if (OPENFPGA_WITH_SWIG)
                           ${CMAKE_CURRENT_SOURCE_DIR}/python
             SWIG_DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/python/openfpga_python_diagnostics.py
                           ${CMAKE_CURRENT_SOURCE_DIR}/python/openfpga_python_session.py
+                          ${CMAKE_CURRENT_SOURCE_DIR}/python/openfpga_python_tcl.py
                           ${CMAKE_CURRENT_SOURCE_DIR}/python/openfpga_python_worker.py)
     target_include_directories(openfpga_python PUBLIC ${LIB_INCLUDE_DIRS})
     target_link_libraries(openfpga_python

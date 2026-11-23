@@ -94,6 +94,8 @@ A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come f
     - The routing failed; for ``route_unroutable``, ``channel_width`` is the width that did not route
   * - ``worker_crashed``, ``worker_timeout``, ``worker_cancelled``, ``worker_not_running``
     - Failures of a ``RemoteSession`` worker (``WorkerError.diagnostics``); ``worker_crashed`` has the ``exitcode`` and the ``signal``, and its diagnostics go on with what the worker wrote before it ended
+  * - ``tcl_error``, ``tcl_refused``
+    - A Tcl script failed (``TclError.diagnostics``, see :ref:`session_tcl`); ``where`` is the line of the script. When a command of the shell failed, its own diagnostics follow
   * - ``vpr_<type>``
     - An error that VPR gave a type, e.g., ``vpr_architecture_file``, that no rule knows
   * - ``error``, ``warning``
@@ -211,6 +213,37 @@ The queries of :ref:`openfpga_query_commands` are methods that return objects (i
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped.
 
 A query raises ``OpenfpgaError`` when the stage it reads is not valid, e.g., after an option that was set since, and names the command to run first.
+
+.. _session_tcl:
+
+Tcl scripts
+~~~~~~~~~~~
+
+``tcl(script)`` runs a Tcl script in an interpreter that the session keeps, and returns a ``TclResult``: the ``result`` (the value of its last command), the ``output`` (what ``puts`` printed and the logs of the commands of the shell, in their order), ``printed`` (``puts`` alone), the ``commands`` of the shell that it ran, and ``elapsed_s``. Every command of the shell is a Tcl command, written as on its command line, so a loop or a sweep is one call:
+
+.. code-block:: python
+
+    session.tcl("""
+    read_vpr_arch --file arch.xml --layout 2x2
+    read_openfpga_arch --file openfpga_arch.xml
+    read_circuit --file design.blif
+    foreach seed {1 2 3} {
+        set_app_option --name place.seed --value $seed
+        place
+        route
+        puts "$seed [dict get [timing_summary] setup cpd_ns]"
+    }
+    """)
+
+- The commands run through ``command()``, so the journal has those that change the flow, as if they had been run from Python. The Tcl around them (loops, procedures) is not in the journal.
+- A query returns its answer as a Tcl dict: an object is a dict, a list is a list, ``true`` and ``false`` are ``1`` and ``0``, and ``null`` is the empty string. The JSON that the query prints is not in the output. Like in the shell, ``report_app_option`` answers as data only with ``--json``.
+- A command that fails is an error of Tcl, which ``catch`` takes, with the message of the first error and ``-errorcode {OPENFPGA <kind>}``. A script that fails raises ``TclError``, with the ``output`` so far, the trace of Tcl (``error_info``), the ``commands`` and, when a command failed, its diagnostics.
+- A command whose name is one of Tcl keeps it: ``source`` is the one of Tcl, and the one of the shell is ``openfpga::source``. Every command is also in the namespace ``openfpga``. ``exit`` and ``cd`` are not available, as the process and its directory are those of the session.
+- The variables and the procedures stay for the next script, until the process ends: a worker that starts again (``restart()``) has a new interpreter.
+
+``tcl(script, safe=True)`` runs the script in a safe interpreter (``interp create -safe``), kept apart from the other one: no files, no programs, no ``exit``. It has the commands of the shell but those that run another program or script (``ext_exec``, ``source``, ``yosys``), and an argument of a command that is a path must be in the current directory, links followed. What it refuses raises ``TclRefused``, before the command runs. This is the interpreter that the MCP server gives to a model (``run_tcl``).
+
+Tcl comes with ``tkinter``, which is part of most Python installations: a Python without it raises ``TclError``. In a ``RemoteSession`` the script runs in the worker, so that the timeout of the call and ``cancel()`` stop a script that does not end.
 
 Worker processes
 ~~~~~~~~~~~~~~~~

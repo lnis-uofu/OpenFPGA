@@ -56,6 +56,8 @@ DIAGNOSTIC_KINDS = (
     "worker_timeout",
     "worker_cancelled",
     "worker_not_running",
+    "tcl_error",
+    "tcl_refused",
     "warning",
     "error",
 )

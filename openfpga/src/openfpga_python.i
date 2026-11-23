@@ -217,5 +217,8 @@ OpenfpgaShell.__getattr__ = _shell_getattr
 /* The Session of the flow, in pure Python */
 %pythoncode "openfpga_python_session.py"
 
+/* Tcl scripts over a Session */
+%pythoncode "openfpga_python_tcl.py"
+
 /* The Session in a process of its own */
 %pythoncode "openfpga_python_worker.py"
