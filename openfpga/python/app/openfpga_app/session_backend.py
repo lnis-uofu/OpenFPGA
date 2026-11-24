@@ -467,12 +467,22 @@ class SessionBackend:
         if not answer.get("ok"):
             return answer
         self._set_package(self.sid, answer["data"]["device_package"])
+        options = answer["data"].get("options_set") or {}
         self._changed_outside(
             "The person loaded the device package %s (%s) into session %s: its VPR architecture "
-            "(layout %s) and its OpenFPGA architecture are read, and there is no circuit yet. "
+            "(layout %s) and its OpenFPGA architecture are read%s, and there is no circuit yet. "
             "When the person names a circuit, read it with read_inputs and only circuit=<file>, "
             "and do not give the architectures again"
-            % (package.name, package.description or "no description", self.sid, package.layout)
+            % (
+                package.name,
+                package.description or "no description",
+                self.sid,
+                package.layout,
+                ", with the options of its flow (%s)"
+                % ", ".join("%s=%s" % item for item in sorted(options.items()))
+                if options
+                else "",
+            )
         )
         return {"ok": True, "data": {"session": self.sid, "device_package": package.name}, "truncated": False, "more": None}
 
@@ -496,7 +506,7 @@ class SessionBackend:
 
     @staticmethod
     def _read_package(session, package) -> None:
-        device_packages.read_into(session, package)  # with its channel width
+        device_packages.read_into(session, package)  # with its channel width and options
 
     async def read_file(self, name: str) -> Dict[str, Any]:
         """The text of a file that the sidebar names, for the viewer of the page"""
