@@ -112,6 +112,23 @@ Status: done (test_analytical_placement.py, 18 tests).
    sets the buttons of the stages.
 4. Docs: spec_model_capabilities.md, spec_web_app.md, python_session.rst.
 
+Status: done.
+
+- `run_stage` (tools.py) does not run AP twice: when the stages it ran
+  first made the asked stage, it stops, and "ran" says what ran. With the
+  analytical placer, pack and place write both reports. The report of place
+  says the placer and the estimates of the global placement. The description
+  of `run_stage` says it, within the budget of the tool descriptions.
+- The app: PLACED shows the placer of the session after its name, greyed
+  out (UI-26a). It is set with `set_app_option --name place.placer --value
+  analytical`, not in the sidebar. The run buttons of PACKED and PLACED say
+  that they run the analytical placer.
+- Docs: spec_model_capabilities.md, DESIGN.md, spec_web_app.md (UI-26a,
+  FEA-37), python_session.rst.
+- Tests: test_analytical_placement.py (the model runs AP once, both
+  reports), test_app_placer.py (the option set in the console, then the buttons), the
+  tests of the sidebar in components.test.tsx.
+
 ## Phase 3: devices
 
 Run AP to the bitstream on the three device packages. If one does not work

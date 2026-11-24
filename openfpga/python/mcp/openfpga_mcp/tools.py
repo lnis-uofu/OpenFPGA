@@ -122,6 +122,13 @@ def register(
     def keep_log(entry: Entry, stage: str, log: str):
         entry.logs[stage] = log[-_LOG_KEEP:]
 
+    def placed_with(handle, stage: str) -> List[str]:
+        """The stages that running a stage made: pack and place together with the analytical
+        placer (option place.placer), else the stage alone"""
+        if stage in ("pack", "place") and handle.options["place.placer"] == "analytical":
+            return ["pack", "place"]
+        return [stage]
+
     def flat_routing_allowed(entry: Entry) -> bool:
         """Whether the device of the session supports flat routing (its device package says)"""
         return device_packages.flat_routing_allowed(config, registry.read_meta(entry.directory))
@@ -191,6 +198,14 @@ def register(
                 part.row("Estimated critical path", placement.estimated_critical_path_delay_ns, "ns")
                 part.row("Estimated Fmax", placement.estimated_fmax_mhz, "MHz")
                 part.row("Temperatures", placement.num_temperatures).row("Swap attempts", placement.swap_attempts)
+                if placement.placer == "analytical":
+                    part.row("Placer", "analytical: packed and placed at once; the figures above are "
+                             "those of its detailed placer")
+                    estimates = placement.global_placement
+                    if estimates is not None:
+                        part.row("Global placement: estimated wirelength", estimates.estimated_wirelength)
+                        part.row("Global placement: estimated critical path",
+                                 estimates.estimated_critical_path_delay_ns, "ns")
                 sections.append(part)
                 cards += [("Half perimeter", placement.half_perimeter),
                           ("Est. critical path", number(placement.estimated_critical_path_delay_ns, "ns")),
@@ -757,11 +772,11 @@ def register(
     @tool()
     async def run_stage(session: str, stage: Stage, from_file: Optional[str] = None):
         """Run a stage of the flow: pack, place, route or analysis, in this order. The stages
-        before it that were not run yet are run first (route runs pack and place when needed),
-        and "ran" lists what was run. Returns the seconds and the stages reached. When it fails the
-        answer has the diagnostics and what failed (for example the router finds no legal
-        routing); the data of the stage is kept, so get_congestion and the queries of the earlier
-        stages still answer, and the next run of a stage starts again. With from_file (a file of
+        before it that were not run yet are run first, and "ran" lists what was run (with
+        place.placer analytical, pack places too). Returns the seconds and the stages reached.
+        When it fails the answer has the diagnostics and what failed (e.g. no legal routing);
+        the data of the stage is kept, so get_congestion and the earlier queries still answer,
+        and the next run of a stage starts again. With from_file (a file of
         the workspace: the packing, the placement or the routing that an earlier flow wrote) the
         results are read instead of computed; there is none for analysis. route needs a channel
         width (set_constraint)."""
@@ -779,6 +794,7 @@ def register(
                 if refusal:
                     raise FlatRoutingUnsupported(refusal)
             ran: List[str] = []
+            written: Dict[str, Optional[str]] = {}
             seconds = 0.0
             current = stage
             started = time.monotonic()
@@ -793,11 +809,21 @@ def register(
                         if _STAGE_NAMES[earlier] not in handle.state().reached:
                             current, started = earlier, time.monotonic()
                             step = getattr(handle, earlier)()
-                            keep_log(entry, earlier, step.log)
-                            write_report(entry, earlier, "passed", step.log, step.elapsed_s)
+                            for done in placed_with(handle, earlier):
+                                keep_log(entry, done, step.log)
+                                written[done] = write_report(
+                                    entry, done, "passed", step.log, step.elapsed_s
+                                )
                             seconds += step.elapsed_s
                             ran.append(earlier)
                     current, started = stage, time.monotonic()
+                    if ran and stage in placed_with(handle, ran[-1]):
+                        # The analytical placer made it with the stage before: not twice
+                        state = handle.state()
+                        report = written.get(stage)
+                        return reply({"stage": stage, "seconds": round(seconds, 2),
+                                      "reached": list(state.reached), "ran": ran,
+                                      **({"report": report} if report else {})})
                     step = getattr(handle, stage)()
             except Exception as error:
                 log = getattr(error, "log", None)
@@ -816,8 +842,11 @@ def register(
                         failure["failed"] = dataclasses.asdict(state.failed)
                     return failure
                 raise
-            keep_log(entry, stage, step.log)
-            report = write_report(entry, stage, "passed", step.log, step.elapsed_s)
+            report = None
+            for done in placed_with(handle, stage) if from_file is None else [stage]:
+                keep_log(entry, done, step.log)
+                path = write_report(entry, done, "passed", step.log, step.elapsed_s)
+                report = path if done == stage else report
             state = handle.state()
             return reply(
                 {

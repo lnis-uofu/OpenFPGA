@@ -205,3 +205,42 @@ def test_a_failure_of_the_analytical_placer_is_told(openfpga_module, tmp_path, m
     assert state.reached == ["DEVICE"]
     assert state.failed.stage == "PACKED"
     assert "Analytical placement failed" in state.failed.message
+
+
+def test_the_model_runs_the_analytical_placer_once(openfpga_module, tmp_path, golden):
+    pytest.importorskip("mcp")
+    from openfpga_mcp import build_server
+    from test_mcp_tools import Script, make_config, read_inputs
+
+    script = Script(build_server(make_config(tmp_path, golden)))
+    try:
+
+        async def steps(call):
+            sid = (await call("session_open"))["data"]["session"]
+            for name, value in (
+                ("general.clock_modeling", "route"),
+                ("router.route_chan_width", golden.chan_width),
+                ("place.placer", "analytical"),
+            ):
+                assert (await call("set_option", session=sid, name=name, value=value))["ok"]
+            assert (await read_inputs(call, golden, sid))["ok"]
+            place = await call("run_stage", session=sid, stage="place")
+            route = await call("run_stage", session=sid, stage="route")
+            state = await call("get_state", session=sid)
+            return sid, place, route, state
+
+        sid, place, route, state = script.run(steps)
+    finally:
+        script.close()
+    assert place["ok"], place
+    # pack ran the analytical placer, which placed too: place is not run again
+    assert place["data"]["ran"] == ["pack"]
+    assert place["data"]["reached"] == REACHED
+    assert place["data"]["report"].endswith("reports/place.html")
+    assert "ran" not in route["data"]
+    placement = state["data"]["run"]["placement"]
+    assert placement["placer"] == "analytical"
+    assert placement["global_placement"]["estimated_wirelength"] > 0
+    reports = tmp_path / "workspace" / sid / "reports"
+    assert (reports / "pack.html").is_file()
+    assert "Global placement" in (reports / "place.html").read_text()
