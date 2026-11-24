@@ -137,6 +137,11 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
   that was given.
 - **UI-25** (done) A failed stage shows its message under its name.
 - **UI-26** (done) A stage that has a report has a button that opens it in a tab (section 6).
+- **UI-26a** (done) PLACED shows the placer of the session after its name, greyed out:
+  `classic` (pack, then place) or `analytical` (the analytical placer of VPR packs and places at
+  once), from the option `place.placer`. The sidebar does not set it: it is set with
+  `set_app_option --name place.placer --value analytical` (the console), or by the model.
+  ROUTED shows the routing the same way: `classic`, or `flat` when `router.flat_routing` is on.
 - **UI-27** (planned) ANALYZED has a run button; a stage that runs shows a live progress line.
 
 ### 5.4 Designs and design files
@@ -316,6 +321,11 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
   stage (docs/plan_flat_routing.md). On a device package it runs only if the manifest says
   `device.flat_routing: true`: the tools (`flat_routing_unsupported`), the console and the Tcl
   refuse `route` otherwise. The drawing of the congestion says that the channels only are counted.
+- **FEA-37** (done) The analytical placer of VPR runs in the flow of the app
+  (docs/plan_analytical_placement.md), chosen with `set_app_option` or by the model, and shown
+  next to PLACED (UI-26a). The run
+  buttons of PACKED and PLACED both run it, once, and the reports of both stages are written. The
+  report of the placement has the estimates of its global placement.
 
 ## 8. Tests
 

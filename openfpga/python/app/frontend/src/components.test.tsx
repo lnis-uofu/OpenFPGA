@@ -275,6 +275,32 @@ describe("the sessions of the sidebar", () => {
     });
   });
 
+  it("shows the routing next to ROUTED, classic unless flat routing is on", () => {
+    real();
+    view.value = filled();
+    const { unmount } = render(<Sidebar />);
+    const routed = () => screen.getAllByRole("listitem").find((li) => li.textContent?.includes("ROUTED"))!;
+    expect(routed().querySelector(".stage-mode")?.textContent?.trim()).toBe("classic");
+    unmount();
+    view.value = { ...filled(), options_changed: [{ name: "router.flat_routing", value: true }] };
+    render(<Sidebar />);
+    expect(routed().querySelector(".stage-mode")?.textContent?.trim()).toBe("flat");
+  });
+
+  it("shows the placer next to PLACED, classic unless the option says analytical", () => {
+    real();
+    view.value = filled();
+    const { unmount } = render(<Sidebar />);
+    const placed = () => screen.getAllByRole("listitem").find((li) => li.textContent?.includes("PLACED"))!;
+    expect(placed().querySelector(".stage-mode")?.textContent?.trim()).toBe("classic");
+    expect(screen.queryByRole("combobox")).toBeNull(); // the option is set with set_app_option
+    unmount();
+    view.value = { ...filled(), options_changed: [{ name: "place.placer", value: "analytical" }] };
+    render(<Sidebar />);
+    expect(placed().querySelector(".stage-mode")?.textContent?.trim()).toBe("analytical");
+    expect(screen.getByLabelText("Run packed").getAttribute("title")).toBe("Run the analytical placer: pack and place at once");
+  });
+
   it("save a checkpoint from the panel of the session", async () => {
     real();
     const fetchMock = answers();

@@ -344,6 +344,12 @@ export function Sidebar() {
   const reached = counted.filter((s) => s.status === "reached").length;
   const rows = designFiles(files);
   const canRun = real && !busy.value && !!session && session.worker === "running";
+  // The placer of the flow (option place.placer): classic, or the analytical placer of VPR,
+  // which packs and places at once
+  const placer = String(v.options_changed.find((o) => o.name === "place.placer")?.value ?? "classic");
+  // The routing (option router.flat_routing): classic, or flat, inside the clusters too
+  const flat = v.options_changed.find((o) => o.name === "router.flat_routing")?.value;
+  const routing = flat === true || flat === "true" ? "flat" : "classic";
   const run = (stage: string): string | null => {
     if (stage === "SYNTHESIS") return v.synthesis?.design ? `/synthesize design=${v.synthesis.design}` : null;
     return RUN[stage] ? `/run_stage stage=${RUN[stage]}` : null;
@@ -378,6 +384,24 @@ export function Sidebar() {
                 {s.stage}
                 {s.stage === "DEVICE" && session?.device_package && (
                   <span class="stage-device muted"> {session.device_package.name}</span>
+                )}
+                {s.stage === "PLACED" && session && (
+                  <span
+                    class="stage-mode muted"
+                    title="The placer (option place.placer, set with set_app_option). analytical: the analytical placer of VPR packs and places at once"
+                  >
+                    {" "}
+                    {placer}
+                  </span>
+                )}
+                {s.stage === "ROUTED" && session && (
+                  <span
+                    class="stage-mode muted"
+                    title="The routing (option router.flat_routing, set with set_app_option). flat: the router goes inside the clusters as well as between them"
+                  >
+                    {" "}
+                    {routing}
+                  </span>
                 )}
               </span>
               <span class="stage-tools">
@@ -418,7 +442,9 @@ export function Sidebar() {
                           ? "Add a design first (Designs)"
                           : s.stage === "SYNTHESIS"
                             ? `Synthesize ${v.synthesis?.design} again`
-                            : `Run ${RUN[s.stage]} (and the stages before it that are not reached)`
+                            : placer === "analytical" && (s.stage === "PACKED" || s.stage === "PLACED")
+                              ? "Run the analytical placer: pack and place at once"
+                              : `Run ${RUN[s.stage]} (and the stages before it that are not reached)`
                     }
                     onClick={() => {
                       const command = run(s.stage);

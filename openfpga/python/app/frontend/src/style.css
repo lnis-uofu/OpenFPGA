@@ -102,7 +102,7 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .stage-name { font-size: 13px; letter-spacing: 0.02em; }
 .stage-time { font-size: 12px; font-variant-numeric: tabular-nums; }
 .stage-tools { display: inline-flex; align-items: center; gap: 4px; }
-.stage-device { font-size: 12px; letter-spacing: 0; }
+.stage-device, .stage-mode { font-size: 12px; letter-spacing: 0; }
 .stage-button { background: none; border: 1px solid transparent; border-radius: 4px; padding: 0 5px; font-size: 11px; line-height: 18px; color: var(--muted); cursor: pointer; }
 .stage-button:hover:not(:disabled) { color: var(--accent); border-color: var(--line); }
 .stage-button:disabled { opacity: 0.35; cursor: default; }
