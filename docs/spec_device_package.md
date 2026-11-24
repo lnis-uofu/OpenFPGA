@@ -189,7 +189,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 
 ### Integrity and compatibility
 
-- **R-30** `CHECKSUMS.sha256` lists every file. `check` fails when a file is missing, extra or changed. Comment lines that hold a date (`//` in bitstream files) are ignored in the hash, as in `golden_baselines.py`.
+- **R-30** `CHECKSUMS.sha256` lists every file. `check` fails when a file is missing, extra or changed. Comment lines that hold a date (`//` lines in bitstream files) are ignored in the hash.
 - **R-31** `check` fails when the installed OpenFPGA or VTR version is outside the range in the manifest.
 - **R-32** A package never writes into itself. A run takes an output directory, and all generated files go there.
 
@@ -198,7 +198,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-40** `openfpga-package check <pkg>` validates the manifest against the schema, applies R-2 to R-6, R-10 to R-14, R-30 and R-31, and exits non-zero with one line per problem.
 - **R-41** `openfpga-package create <name> --from-task <task>` collects the files a task uses into a new package, rewrites the paths, and writes the manifest and checksums. It does not guess: a file it cannot classify is reported and left out.
 - **R-42** `openfpga-package pack <dir>` and `unpack <archive>` convert between the directory and the archive. Packing is deterministic: the same directory gives the same archive bytes (sorted entries, fixed times, fixed owner).
-- **R-43** `openfpga-package test <pkg>` runs the reference design in `reference/` through the flow and compares the results with those recorded in the manifest (QoR numbers and bitstream hashes, using the rules of `golden_baselines.py`).
+- **R-43** `openfpga-package test <pkg>` runs the reference design in `reference/` through the flow and compares the results with those recorded in the manifest: the critical path delay, the Fmax, the wirelength, the channel width and the blocks of each type, as VPR logs them, and the SHA-256 of each bitstream file without its `//` comment lines, which hold the date of the run.
 - **R-44** Task files accept `device_package = <path>` in place of the separate architecture variables. The variables that a package defines (`vpr_arch`, `openfpga_arch`, `bitstream_setting`, ...) are filled in from the manifest; a value given in the task file wins and is logged.
 - **R-45** The Python `Session` takes `Session(device_package=<path>, corner=<name>)`, which reads the VPR architecture and the OpenFPGA architecture from the package, and gives the other files through `session.device_package.path(role)`. `corner` defaults to `corners.default` (R-18).
 - **R-46** The shell has `read_device_package --file <dir> [--corner <name>]` which does what R-45 does for a shell script. It is refused when `check` would fail, or when the corner is not in the package.
@@ -214,7 +214,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - A role table, not a fixed file name per role, so that two devices may name their files differently and one device may have several `yosys_map` files.
 - Checksums in a separate file so that a person can regenerate them with `sha256sum` and no tool.
 - Code location: the C++ part is only the `read_device_package` command. The `openfpga-package` tool is Python, in `openfpga_flow/scripts/`, next to `run_fpga_task.py`.
-- Existing devices: a first set of packages is made with `create` from existing tasks, one with logic only, one with BRAM and one with DSP, the same as the tasks of `golden_baselines.py`.
+- Existing devices: a first set of packages is made with `create` from existing tasks, one with logic only, one with BRAM and one with DSP (`basic_tests/generate_fabric`, `fpga_verilog/bram/dpram1k` and `fpga_bitstream/extract_dsp_mode_bit`).
 
 ## Test plan
 
