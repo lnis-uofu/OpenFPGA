@@ -4,6 +4,7 @@
 #include "json_response.h"
 #include "json_writer.h"
 #include "openfpga_session.h"
+#include "vpr_option_table.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -30,6 +31,20 @@ void write_value(JsonWriter& json, const AppOptionValue& option) {
   }
 }
 
+/* The flag of VPR of an option of VPR, e.g., --device for
+ * general.device_layout. Null for an option of OpenFPGA */
+const char* vpr_flag(const std::string& name) {
+  static const std::map<std::string, const char*> flags = [] {
+    std::map<std::string, const char*> table;
+    for (const VprOptionSpec& spec : vpr_option_specs()) {
+      table[std::string(spec.group) + "." + spec.name] = spec.flag;
+    }
+    return table;
+  }();
+  const auto found = flags.find(name);
+  return flags.end() == found ? nullptr : found->second;
+}
+
 }  // End anonymous namespace
 
 void write_app_option_json(JsonWriter& json, const AppOptions& options,
@@ -52,6 +67,12 @@ void write_app_option_json(JsonWriter& json, const AppOptions& options,
   OpenFpgaStage stage = OpenFpgaStage::DEVICE;
   app_option_stage(name, stage);
   json.key("stage").value(to_string(stage));
+  json.key("vpr_flag");
+  if (const char* flag = vpr_flag(name)) {
+    json.value(flag);
+  } else {
+    json.null();
+  }
   json.end_object();
 }
 

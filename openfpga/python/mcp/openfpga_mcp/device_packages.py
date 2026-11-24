@@ -37,6 +37,9 @@ class DevicePackage:
     channel_width: Optional[int]
     tags: List[str] = field(default_factory=list)
     flat_routing: bool = False  # the flow was checked with router.flat_routing on this device
+    # The options of VPR that the flow of the device takes (flow_defaults.vpr_options), by the
+    # flag of VPR without its dashes, e.g. {"constant_net_method": "route"}
+    vpr_options: Dict[str, Any] = field(default_factory=dict)
     license: str = ""
     files: List[Dict[str, str]] = field(default_factory=list)  # role and path inside the package
     reference: Dict[str, Any] = field(default_factory=dict)
@@ -125,6 +128,11 @@ def load(directory: Path, verify_checksums: bool = True) -> DevicePackage:
         layout = "%dx%d" % (int(grid["width"]), int(grid["height"]))
     except (KeyError, TypeError, ValueError):
         raise _invalid(name, "device.grid needs a width and a height")
+    vpr_options = (manifest.get("flow_defaults") or {}).get("vpr_options") or {}
+    if not isinstance(vpr_options, dict) or not all(
+        isinstance(k, str) and isinstance(v, (str, int, float, bool)) for k, v in vpr_options.items()
+    ):
+        raise _invalid(name, "flow_defaults.vpr_options maps the flags of VPR to values")
     flat_routing = device.get("flat_routing", False)
     if not isinstance(flat_routing, bool):
         raise _invalid(name, "device.flat_routing is true or false")
@@ -145,6 +153,7 @@ def load(directory: Path, verify_checksums: bool = True) -> DevicePackage:
         channel_width=device.get("channel_width"),
         tags=[str(t) for t in device.get("tags", [])],
         flat_routing=flat_routing,
+        vpr_options=dict(vpr_options),
         license=str(manifest["license"]),
         files=listing,
         reference=manifest.get("reference") if isinstance(manifest.get("reference"), dict) else {},
@@ -223,13 +232,57 @@ def find(config: Config, name: str) -> DevicePackage:
     raise _not_found("There is no device package '%s'" % name, config)
 
 
-def read_into(session, package: DevicePackage) -> None:
-    """Make a session target the device of a package: its two architectures, and its channel
-    width (the routing runs at a fixed width)"""
+def _given_otherwise(package: DevicePackage, key: str, value: Any) -> Optional[str]:
+    """Why an option of the manifest is not set as an option: the package gives it otherwise (its
+    grid is the layout, device.channel_width the width, and synthesize writes the netlist in the
+    format that the flow reads from its extension). None for an option that is set. An entry that
+    says the same as the package is not told"""
+    if key == "device":
+        return None if value == package.layout else "the layout is the grid of the package, %s" % (
+            package.layout
+        )
+    if key == "route_chan_width":
+        return (
+            None
+            if value == package.channel_width
+            else "the channel width is device.channel_width of the package, %s" % package.channel_width
+        )
+    if key == "circuit_format":
+        return None
+    return ""
+
+
+def read_into(session, package: DevicePackage) -> Dict[str, Any]:
+    """Make a session target the device of a package: the options of VPR of its flow
+    (flow_defaults.vpr_options), its two architectures, and its channel width (the routing runs
+    at a fixed width). Returns the options that were set, by name, and the entries of the
+    manifest that were not, with the reason. An option that the flow refuses raises
+    PackageInvalid before the architectures are read"""
+    by_flag = {o.vpr_flag: o.name for o in session.options.list() if o.vpr_flag}
+    options: Dict[str, Any] = {}
+    ignored: Dict[str, str] = {}
+    for key, value in sorted(package.vpr_options.items()):
+        reason = _given_otherwise(package, key, value)
+        if reason:
+            ignored[key] = reason
+        elif reason is None:
+            continue
+        elif "--" + key not in by_flag:
+            ignored[key] = "not an option of VPR that the flow knows"
+        else:
+            options[by_flag["--" + key]] = value
+    for name, value in options.items():
+        try:
+            session.options[name] = value
+        except Exception as error:  # noqa: BLE001 - the flow says why it refuses the value
+            raise _invalid(
+                package.name, "flow_defaults.vpr_options sets %s to %r: %s" % (name, value, error)
+            )
     session.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
     session.read_openfpga_arch(str(package.openfpga_arch))
     if package.channel_width:
         session.set_route_chan_width(package.channel_width)
+    return {"options": options, "ignored": ignored}
 
 
 def flat_routing_allowed(config: Config, meta: Dict[str, Any]) -> bool:
@@ -264,6 +317,7 @@ def describe(package: DevicePackage) -> Dict[str, Any]:
         **package.summary(),
         "license": package.license,
         "channel_width": package.channel_width,
+        "vpr_options": dict(package.vpr_options),
         "vpr_arch": str(package.vpr_arch.relative_to(package.path)),
         "openfpga_arch": str(package.openfpga_arch.relative_to(package.path)),
         "files": files,

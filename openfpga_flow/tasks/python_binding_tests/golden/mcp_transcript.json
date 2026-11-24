@@ -957,7 +957,8 @@
     "name": "place.seed",
     "stage": "PLACED",
     "type": "int",
-    "value": 1
+    "value": 1,
+    "vpr_flag": "--seed"
    },
    "more": null,
    "ok": true,

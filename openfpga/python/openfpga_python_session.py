@@ -697,6 +697,9 @@ class AppOption:
     help: str
     choices: List[str]
     stage: str
+    # The flag of the option on the command line of VPR, e.g. --device for
+    # general.device_layout; None for an option of OpenFPGA
+    vpr_flag: Optional[str] = None
 
 
 @dataclasses.dataclass(frozen=True)

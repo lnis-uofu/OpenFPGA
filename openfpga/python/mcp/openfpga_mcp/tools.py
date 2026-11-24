@@ -383,7 +383,7 @@ def register(
         """Read a device package into a session: its VPR architecture (with the layout of its
         grid) and its OpenFPGA architecture, so that the session targets that device. Give the
         name of a package from list_device_packages. Only a session with nothing read yet takes a
-        package (fails with session_not_empty otherwise), and its channel width is set. It stops
+        package (fails with session_not_empty otherwise); its channel width and options are set. It stops
         there: read_inputs with only the circuit is the next call, and the architectures are not
         given again. Returns the package and the state of the session."""
 
@@ -397,10 +397,16 @@ def register(
                     "Session %s has already read files, and a device package would replace them"
                     % session
                 )
-            device_packages.read_into(handle, package)
+            applied = device_packages.read_into(handle, package)
             registry.update_meta(entry, package_name=package.name)  # for synthesize
             return reply(
-                {"device_package": package.summary(), "state": _plain("session", handle.state())}
+                {
+                    "device_package": package.summary(),
+                    # The options of the flow of the package (flow_defaults.vpr_options)
+                    "options_set": applied["options"],
+                    **({"options_not_set": applied["ignored"]} if applied["ignored"] else {}),
+                    "state": _plain("session", handle.state()),
+                }
             )
 
         return await run(work)

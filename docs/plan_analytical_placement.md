@@ -150,8 +150,9 @@ Status: done; no package needs a flag.
 - test_analytical_placement.py checks the 3 packages of the repository.
 - Seen on the way, not about AP: a package's `flow_defaults.vpr_options`
   (for example `constant_net_method route`, or `clock_modeling` left at
-  the default of VPR for the memory package) are not set by
-  `use_device_package`. The test sets them. The memory package does not
+  the default of VPR for the memory package) were not set by
+  `use_device_package`. They are now (R-14b of spec_device_package.md).
+  The memory package does not
   route at its channel width with `--clock_modeling route`, with either
   placer.
 

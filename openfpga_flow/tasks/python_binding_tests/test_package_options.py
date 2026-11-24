@@ -1,0 +1,141 @@
+"""The options of the flow of a device package (flow_defaults.vpr_options of its manifest): a
+session that reads the package sets them, as the reference flow of the package gives them to
+VPR. They are found by the flag of VPR of each option (AppOption.vpr_flag)."""
+
+import hashlib
+import json
+import re
+import shutil
+from pathlib import Path
+
+import pytest
+
+pytest.importorskip("mcp")
+
+from openfpga_mcp import device_packages  # noqa: E402
+from openfpga_mcp.errors import PackageInvalid  # noqa: E402
+
+PACKAGES = Path(__file__).resolve().parents[2] / "device-packages"
+SCHEMAS = Path(__file__).resolve().parents[3] / "openfpga_flow" / "schemas"
+
+# What the manifests of the repository say, as options of the flow
+EXPECTED = {
+    "k4_n4_dsp16_3x4": {"general.clock_modeling": "route"},
+    "k6_frac_n10_2x2": {"general.clock_modeling": "route"},
+    "k6_frac_n10_mem1k_3x2": {"general.constant_net_method": "route"},
+}
+
+
+@pytest.fixture
+def session(openfpga_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    return openfpga_module.Session()
+
+
+def changed_copy(tmp_path, name, change):
+    """A copy of a package whose manifest is changed by change(manifest), with its checksum"""
+    copy = tmp_path / "packages" / name
+    shutil.copytree(PACKAGES / name, copy)
+    path = copy / "device_package.json"
+    manifest = json.loads(path.read_text())
+    change(manifest)
+    path.write_text(json.dumps(manifest, indent=2))
+    sums = copy / "CHECKSUMS.sha256"
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    sums.write_text(
+        re.sub(
+            r"^\w+  device_package.json$",
+            digest + "  device_package.json",
+            sums.read_text(),
+            flags=re.M,
+        )
+    )
+    return device_packages.load(copy)
+
+
+def test_an_option_knows_its_flag_of_vpr(openfpga_module, session):
+    jsonschema = pytest.importorskip("jsonschema")
+    assert session.options.get("general.device_layout").vpr_flag == "--device"
+    assert session.options.get("router.route_chan_width").vpr_flag == "--route_chan_width"
+    assert session.options.get("place.placer").vpr_flag is None  # an option of OpenFPGA
+    raw = session.shell.run("report_app_option --json").data
+    schema = json.loads((SCHEMAS / "app_options.schema.json").read_text())
+    jsonschema.validate(raw, schema, cls=jsonschema.Draft202012Validator)
+
+
+@pytest.mark.parametrize("name", sorted(EXPECTED))
+def test_a_package_sets_the_options_of_its_flow(session, name):
+    package = device_packages.load(PACKAGES / name)
+    applied = device_packages.read_into(session, package)
+    # The layout, the channel width and the circuit format are given by the package otherwise,
+    # and agree with it: they are not told
+    assert applied == {"options": EXPECTED[name], "ignored": {}}
+    for option, value in EXPECTED[name].items():
+        assert session.options[option] == value
+    assert session.options["router.route_chan_width"] == package.channel_width
+    assert session.state().inputs.vpr_arch.layout == package.layout
+
+
+def test_what_is_not_set_is_told_with_the_reason(session, tmp_path):
+    def change(manifest):
+        manifest["flow_defaults"]["vpr_options"].update(
+            device="9x9", route_chan_width=99, no_such_flag="x"
+        )
+
+    package = changed_copy(tmp_path, "k6_frac_n10_2x2", change)
+    applied = device_packages.read_into(session, package)
+    assert applied["options"] == {"general.clock_modeling": "route"}
+    ignored = applied["ignored"]
+    assert set(ignored) == {"device", "route_chan_width", "no_such_flag"}
+    assert "2x2" in ignored["device"] and "20" in ignored["route_chan_width"]
+    assert session.options["router.route_chan_width"] == 20
+
+
+def test_a_value_that_the_flow_refuses_stops_before_the_architectures(session, tmp_path):
+    def change(manifest):
+        manifest["flow_defaults"]["vpr_options"]["constant_net_method"] = "nonsense"
+
+    package = changed_copy(tmp_path, "k6_frac_n10_mem1k_3x2", change)
+    with pytest.raises(PackageInvalid) as error:
+        device_packages.read_into(session, package)
+    assert "general.constant_net_method" in str(error.value)
+    assert session.state().inputs.vpr_arch is None
+
+
+def test_a_manifest_whose_options_are_not_values_does_not_load(tmp_path):
+    def change(manifest):
+        manifest["flow_defaults"]["vpr_options"]["clock_modeling"] = ["route"]
+
+    with pytest.raises(PackageInvalid, match="vpr_options"):
+        changed_copy(tmp_path, "k6_frac_n10_2x2", change)
+
+
+def test_the_model_is_told_the_options_and_the_memory_reference_runs(openfpga_module, tmp_path):
+    """The memory package runs its reference design with the options of its flow, through the
+    tools of the model"""
+    from openfpga_mcp import Config, build_server
+    from test_mcp_tools import Script
+
+    name = "k6_frac_n10_mem1k_3x2"
+    manifest = json.loads((PACKAGES / name / "device_package.json").read_text())
+    source = PACKAGES / name / manifest["reference"]["design"]
+    script = Script(build_server(Config(root=tmp_path / "workspace", package_dirs=(PACKAGES,))))
+    try:
+
+        async def steps(call):
+            sid = (await call("session_open"))["data"]["session"]
+            used = await call("use_device_package", session=sid, name=name)
+            await call("write_file", session=sid, name=source.name, content=source.read_text())
+            top = manifest["reference"]["top"]
+            synthesized = await call("synthesize", session=sid, top=top, files=source.name)
+            analysis = await call("run_stage", session=sid, stage="analysis")
+            return used, synthesized, analysis
+
+        used, synthesized, analysis = script.run(steps)
+    finally:
+        script.close()
+    assert used["data"]["options_set"] == EXPECTED[name]
+    assert "options_not_set" not in used["data"]
+    assert synthesized.get("ok"), synthesized
+    assert analysis.get("ok"), analysis
+    assert analysis["data"]["reached"][-1] == "ANALYZED"
