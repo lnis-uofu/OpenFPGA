@@ -135,6 +135,26 @@ Run AP to the bitstream on the three device packages. If one does not work
 (for example the DSP tiles that are several rows high), the manifest says it,
 as `device.flat_routing` does.
 
+Status: done; no package needs a flag.
+
+- The reference design of each package (logic only: and2; DSP: mult8;
+  memory: dual_port_ram_1k) was synthesized with the package's script by
+  the model's tools. Then it went through pack, route and analysis with the
+  analytical placer, and on to the bitstream with the commands of the
+  package's reference flow. The files, the results and the bitstream are
+  those of `vpr --analytical_place --route --analysis` with the same options.
+- This was done on the 3 packages of the repository, and on the 32x32
+  packages of the same architectures in the work folder of the web app. On
+  32x32, a package took 1.5 to 2.5 minutes for the synthesis and three flows
+  (analytical, classic, and the one-shot command), and less than 0.9 GB.
+- test_analytical_placement.py checks the 3 packages of the repository.
+- Seen on the way, not about AP: a package's `flow_defaults.vpr_options`
+  (for example `constant_net_method route`, or `clock_modeling` left at
+  the default of VPR for the memory package) are not set by
+  `use_device_package`. The test sets them. The memory package does not
+  route at its channel width with `--clock_modeling route`, with either
+  placer.
+
 ## Out of scope
 
 Stopping after global placement (`--global_place`), and reading or writing

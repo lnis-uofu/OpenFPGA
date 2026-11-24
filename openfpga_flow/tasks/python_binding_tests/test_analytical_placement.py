@@ -244,3 +244,113 @@ def test_the_model_runs_the_analytical_placer_once(openfpga_module, tmp_path, go
     reports = tmp_path / "workspace" / sid / "reports"
     assert (reports / "pack.html").is_file()
     assert "Global placement" in (reports / "place.html").read_text()
+
+
+# The device packages ---------------------------------------------------------------------------
+
+PACKAGES = Path(__file__).resolve().parents[2] / "device-packages"
+
+
+def synthesized_reference(tmp_path, name):
+    """The reference design of a package, synthesized with its script by the model's tools"""
+    from openfpga_mcp import Config, build_server
+    from test_mcp_tools import Script
+
+    manifest = json.loads((PACKAGES / name / "device_package.json").read_text())
+    source = PACKAGES / name / manifest["reference"]["design"]
+    workspace = tmp_path / "workspace"
+    script = Script(build_server(Config(root=workspace, package_dirs=(PACKAGES,))))
+    try:
+
+        async def steps(call):
+            sid = (await call("session_open"))["data"]["session"]
+            assert (await call("use_device_package", session=sid, name=name))["ok"]
+            written = await call(
+                "write_file", session=sid, name=source.name, content=source.read_text()
+            )
+            assert written.get("ok"), written
+            top = manifest["reference"]["top"]
+            done = await call("synthesize", session=sid, top=top, files=source.name, read=False)
+            assert done.get("ok"), done
+            return sid
+
+        sid = script.run(steps)
+    finally:
+        script.close()
+    (netlist,) = (workspace / sid / "synth").glob(manifest["reference"]["top"] + ".*blif")
+    return manifest, netlist
+
+
+@pytest.mark.parametrize("name", ["k4_n4_dsp16_3x4", "k6_frac_n10_2x2", "k6_frac_n10_mem1k_3x2"])
+def test_the_analytical_placer_on_a_device_package_equals_vpr(
+    openfpga_module, tmp_path, two_shells, name
+):
+    """The reference design of the package (a DSP, a memory, logic only), through the stages with
+    the analytical placer and on to the bitstream, gives what 'vpr --analytical_place' gives"""
+    pytest.importorskip("mcp")
+    from openfpga_mcp import device_packages
+
+    package = device_packages.load(PACKAGES / name)
+    manifest, netlist = synthesized_reference(tmp_path, name)
+    files = {e["role"]: PACKAGES / name / e["path"] for e in manifest["files"]}
+    vpr_options = manifest.get("flow_defaults", {}).get("vpr_options", {})
+    (staged, monolithic), (staged_dir, monolithic_dir) = two_shells
+
+    def bitstream(shell):
+        shell.run(f"read_openfpga_simulation_setting -f {files['simulation_setting']}")
+        if "bitstream_setting" in files:
+            shell.run(f"read_openfpga_bitstream_setting -f {files['bitstream_setting']}")
+        activity = files.get("x_reference_activity")
+        shell.run(
+            "link_openfpga_arch --sort_gsb_chan_node_in_edges"
+            + (f" --activity_file {activity}" if activity else "")
+        )
+        for command in (
+            "check_netlist_naming_conflict --fix --report netlist_renaming.xml",
+            "lut_truth_table_fixup",
+            "build_fabric --compress_routing",
+            "repack",
+            "build_architecture_bitstream",
+            "build_fabric_bitstream",
+            "write_fabric_bitstream --file fabric.bit --format plain_text --no_time_stamp",
+        ):
+            shell.run(command)
+        return Path("fabric.bit").read_bytes()
+
+    def results():
+        return {p.name: p.read_bytes() for p in Path.cwd().glob(f"{netlist.stem}.*")}
+
+    def staged_flow():
+        options = {"router.route_chan_width": package.channel_width, "place.placer": "analytical"}
+        if "clock_modeling" in vpr_options:
+            options["general.clock_modeling"] = vpr_options["clock_modeling"]
+        if "constant_net_method" in vpr_options:
+            options["general.constant_net_method"] = vpr_options["constant_net_method"]
+        for option, value in options.items():
+            staged.run(f"set_app_option -n {option} -v {value}")
+        staged.run(f"read_vpr_arch -f {package.vpr_arch} -l {package.layout}")
+        staged.run(f"read_openfpga_arch -f {package.openfpga_arch}")
+        staged.run(f"read_circuit -f {netlist}")
+        log = "".join(staged.run(stage).log for stage in ("pack", "route", "analysis"))
+        return log, results(), bitstream(staged)
+
+    def vpr_flow():
+        extra = "".join(
+            f" --{key} {value}"
+            for key, value in vpr_options.items()
+            if key in ("clock_modeling", "constant_net_method", "circuit_format")
+        )
+        log = monolithic.run(
+            f"vpr {package.vpr_arch} {netlist} --device {package.layout} --route_chan_width "
+            f"{package.channel_width}{extra} --analytical_place --route --analysis"
+        ).log
+        monolithic.run(f"read_openfpga_arch -f {package.openfpga_arch}")
+        return log, results(), bitstream(monolithic)
+
+    staged_log, staged_files, staged_bits = in_dir(staged_dir, staged_flow)
+    vpr_log, vpr_files, vpr_bits = in_dir(monolithic_dir, vpr_flow)
+    assert "AP Global Placer" in staged_log
+    assert {f"{netlist.stem}.{suffix}" for suffix in ("net", "place", "route")} <= set(staged_files)
+    assert staged_files == vpr_files
+    assert qor(staged_log) == qor(vpr_log)
+    assert staged_bits == vpr_bits and len(staged_bits) > 0
