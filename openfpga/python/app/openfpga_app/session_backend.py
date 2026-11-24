@@ -967,10 +967,17 @@ class SessionBackend:
 
     # The console -----------------------------------------------------------------------------------
 
+    def _flat_routing_allowed(self, entry) -> bool:
+        """Whether the device of a session supports flat routing (its device package says)"""
+        return device_packages.flat_routing_allowed(
+            self.config, self.registry.read_meta(entry.directory)
+        )
+
     async def console(self, command: str, mode: str = "shell") -> Dict[str, Any]:
         """A command of the OpenFPGA shell, in the current session. Any command: it is the user's
         own shell, except what the flow of the app does not do (Session.fixed_width_refusal):
-        vpr, which runs the whole flow at once, and a route with no channel width set. What it
+        vpr, which runs the whole flow at once, a route with no channel width set, and a flat
+        route on a device package that does not support flat routing. What it
         prints is the output. In the mode tcl the command is a Tcl script, run by the Tcl
         interpreter of the session (Session.tcl), whose commands are those of the shell"""
         if mode == "tcl":
@@ -995,7 +1002,7 @@ class SessionBackend:
 
         def work() -> Dict[str, Any]:
             entry = self.registry.get(sid)
-            refusal = entry.session.fixed_width_refusal(words[0])
+            refusal = entry.session.fixed_width_refusal(words[0], self._flat_routing_allowed(entry))
             if refusal:
                 return {"ok": False, "output": refusal, "state_changed": False}
             before = list(entry.session.state().reached)
@@ -1057,7 +1064,9 @@ class SessionBackend:
             before = list(entry.session.state().reached)
             result = ""
             try:
-                done = entry.session.tcl(script, fixed_width=True)
+                done = entry.session.tcl(
+                    script, fixed_width=True, flat_routing=self._flat_routing_allowed(entry)
+                )
                 output, result, ok, commands = done.output, done.result, True, done.commands
             except Exception as error:  # noqa: BLE001 - what Tcl says is the answer
                 commands = list(getattr(error, "commands", None) or [])

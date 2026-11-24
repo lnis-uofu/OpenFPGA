@@ -142,6 +142,7 @@ export function CongestionDrawing(props: { data: Record<string, unknown> }) {
       <figcaption class="muted">
         {regions.length} regions · fullest {percent(worst)} · overused nodes {summary?.overused_nodes ?? 0}
         {props.data.routed === false ? " · not routed" : ""}
+        {props.data.flat_routing === true ? " · flat routing: the channels only, not the routing inside the clusters" : ""}
       </figcaption>
     </figure>
   );

@@ -131,3 +131,43 @@ def test_the_console_of_the_app_refuses_them_in_both_modes(openfpga_module, tmp_
             assert console("version", "shell")["ok"]  # the rest of the shell is there
     finally:
         backend.close()
+
+
+def test_the_console_refuses_a_flat_route_that_the_package_does_not_support(
+    openfpga_module, tmp_path, golden
+):
+    pytest.importorskip("starlette")
+    pytest.importorskip("_tkinter")
+    from openfpga_app.config import AppConfig
+    from openfpga_app.server import create_app
+    from openfpga_app.session_backend import SessionBackend
+    from starlette.testclient import TestClient
+    from test_app_session import HOST
+    from test_flat_routing import package_without_flat_routing
+
+    folders = (PACKAGES, package_without_flat_routing(tmp_path))
+    backend = SessionBackend(make_config(tmp_path, golden, package_dirs=folders))
+    (tmp_path / "static").mkdir()
+    (tmp_path / "static" / "index.html").write_text("<title>app</title>")
+    try:
+        app = create_app(
+            AppConfig(port=8770, token="t", console=True), backend, tmp_path / "static"
+        )
+        with TestClient(app, base_url="http://" + HOST) as page:
+            page.headers["Authorization"] = "Bearer t"
+
+            def console(command, mode):
+                return page.post("/api/console", json={"command": command, "mode": mode}).json()
+
+            for package, refused in (("k6_no_flat", True), ("k6_frac_n10_2x2", False)):
+                answer = page.post("/api/session/new", json={"device_package": package}).json()
+                assert answer["ok"], answer
+                assert console("set_app_option --name router.flat_routing --value true", "shell")[
+                    "ok"
+                ]
+                for mode in ("shell", "tcl"):
+                    route = console("route", mode)
+                    said = "does not support it" in route["output"]
+                    assert said == refused, (package, mode, route)
+    finally:
+        backend.close()

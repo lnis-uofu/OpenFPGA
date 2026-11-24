@@ -119,6 +119,12 @@ describe("the drawings of the results", () => {
     expect(screen.getByText(/4 regions · fullest 120% · overused nodes 2/)).toBeTruthy();
   });
 
+  it("says when the routing is flat that the channels only are counted", () => {
+    const flat = { ...(congestion as { data: Record<string, unknown> }).data, flat_routing: true };
+    render(<Drawing result={ok(flat)} />);
+    expect(screen.getByText(/flat routing: the channels only/)).toBeTruthy();
+  });
+
   it("takes the larger of the two channels of a region", () => {
     expect(regionOccupancy({ x_low: 0, y_low: 0, x_high: 0, y_high: 0, chanx: usage(0.2), chany: usage(0.7) })).toBe(0.7);
   });

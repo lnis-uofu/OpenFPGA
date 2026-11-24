@@ -312,6 +312,10 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
   console, the Tcl of the console, of the terminal and of the model refuse `vpr`, and refuse
   `route` while no width is set (`chan_width_required` for the tools). The width cannot be
   cleared, only changed, and a device package sets its own.
+- **FEA-36** (done) Flat routing (`router.flat_routing`) runs in the flow of the app, stage by
+  stage (docs/plan_flat_routing.md). On a device package it runs only if the manifest says
+  `device.flat_routing: true`: the tools (`flat_routing_unsupported`), the console and the Tcl
+  refuse `route` otherwise. The drawing of the congestion says that the channels only are counted.
 
 ## 8. Tests
 
