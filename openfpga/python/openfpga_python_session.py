@@ -284,6 +284,8 @@ class NetRoute:
     net: str
     num_sinks: int
     nodes: List[RouteNode]
+    # True when the routing is flat: the tree goes inside the clusters
+    flat_routing: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -343,6 +345,9 @@ class Congestion:
     summary: CongestionSummary
     regions: List[CongestionRegion]
     hotspots: Optional[List[Hotspot]] = None
+    # True when the routing is flat: the channels are counted, not the routing inside the
+    # clusters
+    flat_routing: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -637,7 +642,8 @@ class PlacementReport:
 
 @dataclasses.dataclass(frozen=True)
 class RoutingReport:
-    """wirelength is the tiles that the wires span, as VPR adds it up. iterations
+    """wirelength is the tiles that the wires span, as VPR adds it up (the channels only, also
+    when the routing is flat). iterations
     and critical_path_delay_ns are from the log of the routing, and None if the
     stage was not run by a command of this session"""
 
@@ -646,6 +652,8 @@ class RoutingReport:
     wires: int
     iterations: Optional[int]
     critical_path_delay_ns: Optional[float]
+    # True when the routing is flat: wires and wirelength are those of the channels
+    flat_routing: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1176,12 +1184,15 @@ class Session:
         log = self.shell.run("help").log
         return [line.strip() for line in log.splitlines() if line.startswith("\t") and line.strip()]
 
-    def fixed_width_refusal(self, command):
+    def fixed_width_refusal(self, command, flat_routing=True):
         """Why a flow at a fixed channel width does not run this command now, or None when it
         does. Such a flow (the one of the web app and of its model) runs the stages one by one
         and routes with the width it is given: vpr, which runs the whole flow in one command, is
         not run, and route is not run while router.route_chan_width is not set, as VPR would
-        then search for the smallest width that routes"""
+        then search for the smallest width that routes.
+
+        flat_routing=False says that the device does not support flat routing (its device
+        package does not say it does): route is not run while router.flat_routing is set"""
         if command == "vpr":
             return (
                 "vpr runs the whole flow in one command, which this flow does not do: run the "
@@ -1195,9 +1206,14 @@ class Session:
                 "The channel width is not set, and the routing is only run at a fixed width: "
                 "set router.route_chan_width (a device package gives its own)"
             )
+        if routes and not flat_routing and self.options["router.flat_routing"]:
+            return (
+                "Flat routing is set (router.flat_routing), and the device package of the "
+                "session does not support it: set router.flat_routing to false"
+            )
         return None
 
-    def tcl(self, script, safe=False, fixed_width=False):
+    def tcl(self, script, safe=False, fixed_width=False, flat_routing=True):
         """Run a Tcl script, and return a TclResult: its result, what it
         printed and the command lines of the shell that it ran.
 
@@ -1219,10 +1235,12 @@ class Session:
 
         With fixed_width=True a command that fixed_width_refusal() refuses (vpr,
         and route while the channel width is not set) raises TclRefused.
+        flat_routing=False is passed to it: the device does not support flat
+        routing.
         """
         if self._tcl_host is None:
             self._tcl_host = _TclHost(self)
-        return self._tcl_host.run(script, safe, fixed_width)
+        return self._tcl_host.run(script, safe, fixed_width, flat_routing)
 
     def _write_journal(self, name, args, options, error=None):
         if self._journal is not None and name not in _QUERY_COMMANDS:

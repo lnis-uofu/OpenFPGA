@@ -199,6 +199,10 @@
               "type": "integer",
               "minimum": 0
             },
+            "flat_routing": {
+              "type": "boolean",
+              "description": "True when the routing is flat (router.flat_routing): wires and wirelength count the channels between the clusters, not the routing inside them."
+            },
             "iterations": {
               "type": [
                 "integer",

@@ -36,6 +36,7 @@ class DevicePackage:
     lut_size: Optional[int]
     channel_width: Optional[int]
     tags: List[str] = field(default_factory=list)
+    flat_routing: bool = False  # the flow was checked with router.flat_routing on this device
     license: str = ""
     files: List[Dict[str, str]] = field(default_factory=list)  # role and path inside the package
     reference: Dict[str, Any] = field(default_factory=dict)
@@ -49,6 +50,7 @@ class DevicePackage:
             "layout": self.layout,
             "lut_size": self.lut_size,
             "tags": list(self.tags),
+            "flat_routing": self.flat_routing,
         }
 
 
@@ -123,6 +125,9 @@ def load(directory: Path, verify_checksums: bool = True) -> DevicePackage:
         layout = "%dx%d" % (int(grid["width"]), int(grid["height"]))
     except (KeyError, TypeError, ValueError):
         raise _invalid(name, "device.grid needs a width and a height")
+    flat_routing = device.get("flat_routing", False)
+    if not isinstance(flat_routing, bool):
+        raise _invalid(name, "device.flat_routing is true or false")
     vpr_arch = roles["vpr_arch"][0]
     if layout not in _layouts(vpr_arch):
         raise _invalid(
@@ -139,6 +144,7 @@ def load(directory: Path, verify_checksums: bool = True) -> DevicePackage:
         lut_size=device.get("lut_size"),
         channel_width=device.get("channel_width"),
         tags=[str(t) for t in device.get("tags", [])],
+        flat_routing=flat_routing,
         license=str(manifest["license"]),
         files=listing,
         reference=manifest.get("reference") if isinstance(manifest.get("reference"), dict) else {},
@@ -224,6 +230,20 @@ def read_into(session, package: DevicePackage) -> None:
     session.read_openfpga_arch(str(package.openfpga_arch))
     if package.channel_width:
         session.set_route_chan_width(package.channel_width)
+
+
+def flat_routing_allowed(config: Config, meta: Dict[str, Any]) -> bool:
+    """Whether the device of a session supports flat routing, from what the registry keeps of
+    the session (meta): a session of a device package only if its package says so, any other
+    session (architectures that the person gave) yes. A package that is gone is not known to
+    refuse it"""
+    name = meta.get("package_name") if meta else None
+    if not name:
+        return True
+    try:
+        return find(config, name).flat_routing
+    except (PackageInvalid, PackageNotFound):
+        return True
 
 
 _README_CHARS = 1200

@@ -204,6 +204,9 @@ bool run_report_json(const OpenFpgaSession& session, const bool in_flow,
         std::max(device_ctx.chan_width.x_max, device_ctx.chan_width.y_max));
     json.key("wirelength").value(wirelength);
     json.key("wires").value(wires);
+    /* The wires are those of the channels: with flat routing, the routing
+     * inside the clusters is not counted */
+    json.key("flat_routing").value(route_ctx.is_flat);
     write_optional_count(
       json, "iterations",
       log_number(log, std::regex("Successfully routed after (\\d+) routing "

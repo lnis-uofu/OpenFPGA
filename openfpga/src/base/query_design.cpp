@@ -44,6 +44,29 @@ double ratio(const size_t used, const size_t total) {
   return total > 0 ? static_cast<double>(used) / total : 0.;
 }
 
+/* The routing of a net, by the index of the netlist that was routed, or null
+ * if it has none */
+const RouteTree* routed_net(const ParentNetId id) {
+  const auto& route_trees = g_vpr_ctx.routing().route_trees;
+  if (!id.is_valid() || size_t(id) >= route_trees.size() ||
+      !route_trees[id]) {
+    return nullptr;
+  }
+  return &(*route_trees[id]);
+}
+
+/* The routing of a net of the clusters, or null if it has none. When the
+ * routing is flat, the atom nets were routed: the net is found through its
+ * atom net */
+const RouteTree* cluster_net_route(const ClusterNetId net) {
+  if (!g_vpr_ctx.routing().is_flat) {
+    return routed_net(ParentNetId(size_t(net)));
+  }
+  const AtomNetId atom_net = g_vpr_ctx.atom().lookup().atom_net(net);
+  return atom_net.is_valid() ? routed_net(ParentNetId(size_t(atom_net)))
+                             : nullptr;
+}
+
 }  // End anonymous namespace
 
 bool device_json(const bool fixed_channel_width, const std::string& type,
@@ -575,7 +598,20 @@ bool net_info_json(const vpr::VprRun& run, const std::string& net_name,
     VTR_LOG_ERROR("The design has no packing: run the stage PACKED first\n");
     return false;
   }
-  const ClusterNetId net = clb_nlist.find_net(net_name);
+  ClusterNetId net = clb_nlist.find_net(net_name);
+  if (!net.is_valid() && g_vpr_ctx.routing().is_flat) {
+    /* The analysis of a flat routing makes the nets of the clusters again
+     * from the routing, with names of their own ('<atom net>_<n>', one per
+     * output pin of a tile): the net is also found by the name of its atom
+     * net, as the first of the nets of the clusters it has */
+    const AtomNetId atom_net = g_vpr_ctx.atom().netlist().find_net(net_name);
+    if (atom_net.is_valid()) {
+      const auto clb_nets = g_vpr_ctx.atom().lookup().clb_nets(atom_net);
+      if (clb_nets && !clb_nets->empty()) {
+        net = clb_nets->front();
+      }
+    }
+  }
   if (!net.is_valid()) {
     VTR_LOG_ERROR("The net '%s' does not exist\n", net_name.c_str());
     return false;
@@ -635,12 +671,13 @@ bool net_info_json(const vpr::VprRun& run, const std::string& net_name,
   /* The size of the routing, once routed */
   json.key("routing");
   const auto& route_ctx = g_vpr_ctx.routing();
-  const bool routed = has_routing && !route_ctx.route_trees.empty() &&
-                      route_ctx.route_trees[ParentNetId(size_t(net))];
+  const RouteTree* tree =
+    has_routing && !route_ctx.route_trees.empty() ? cluster_net_route(net)
+                                                  : nullptr;
+  const bool routed = nullptr != tree;
   if (routed) {
     int64_t nodes = 0, wires = 0, wirelength = 0;
-    for (const RouteTreeNode& node :
-         route_ctx.route_trees[ParentNetId(size_t(net))]->all_nodes()) {
+    for (const RouteTreeNode& node : tree->all_nodes()) {
       ++nodes;
       const e_rr_type type = rr_graph.node_type(node.inode);
       if (type == e_rr_type::CHANX || type == e_rr_type::CHANY) {
@@ -685,13 +722,22 @@ bool net_route_json(const std::string& net, std::string& json_text) {
     VTR_LOG_ERROR("The design has no routing: run the stage ROUTED first\n");
     return false;
   }
+  /* When the routing is flat, the nets inside the clusters are routed too:
+   * a net is found by its name in the atom netlist, or by the name of a net of
+   * the clusters (which the analysis of a flat routing names
+   * '<atom net>_<n>') */
+  const AtomNetId atom_net = route_ctx.is_flat
+                               ? g_vpr_ctx.atom().netlist().find_net(net)
+                               : AtomNetId::INVALID();
   const ClusterNetId net_id = clb_nlist.find_net(net);
-  if (!net_id.is_valid()) {
+  if (!atom_net.is_valid() && !net_id.is_valid()) {
     VTR_LOG_ERROR("The net '%s' does not exist\n", net.c_str());
     return false;
   }
-  const auto& tree = route_ctx.route_trees[ParentNetId(size_t(net_id))];
-  if (!tree) {
+  const RouteTree* tree = atom_net.is_valid()
+                            ? routed_net(ParentNetId(size_t(atom_net)))
+                            : cluster_net_route(net_id);
+  if (nullptr == tree) {
     VTR_LOG_ERROR(
       "The net '%s' has no routing: it is not routed by VPR, e.g., a clock\n",
       net.c_str());
@@ -702,7 +748,16 @@ bool net_route_json(const std::string& net, std::string& json_text) {
   begin_response(json, "net_route", NET_ROUTE_SCHEMA_VERSION, "ROUTED");
   json.begin_object();
   json.key("net").value(net);
-  json.key("num_sinks").value(static_cast<int64_t>(tree->num_sinks()));
+  /* The sinks are counted in the tree: a tree read from a file of routing
+   * does not know their number (VPR leaves it unset) */
+  int64_t num_sinks = 0;
+  for (const RouteTreeNode& node : tree->all_nodes()) {
+    num_sinks += node.net_pin_index > 0 ? 1 : 0;
+  }
+  json.key("num_sinks").value(num_sinks);
+  /* With flat routing, the tree goes inside the clusters to the pins of the
+   * atoms */
+  json.key("flat_routing").value(route_ctx.is_flat);
   json.key("nodes").begin_array();
   std::map<const RouteTreeNode*, int> index;
   for (const RouteTreeNode& node : tree->all_nodes()) {
@@ -896,8 +951,8 @@ bool congestion_json(const int region_size, const size_t hotspots,
       kept[std::make_tuple(spots[i].horizontal, spots[i].x, spots[i].y)] = i;
     }
     for (const ClusterNetId net : g_vpr_ctx.clustering().clb_nlist.nets()) {
-      const auto& tree = route_ctx.route_trees[ParentNetId(size_t(net))];
-      if (!tree) {
+      const RouteTree* tree = cluster_net_route(net);
+      if (nullptr == tree) {
         continue;
       }
       std::set<size_t> crossed;
@@ -933,6 +988,9 @@ bool congestion_json(const int region_size, const size_t hotspots,
   json.key("y").value(chan_width.y_max);
   json.end_object();
   json.key("routed").value(routed);
+  /* The channels are counted, not the routing inside the clusters that flat
+   * routing also uses */
+  json.key("flat_routing").value(route_ctx.is_flat);
   json.key("region_size").value(region_size);
   json.key("summary").begin_object();
   write_usage(json, "chanx", total.used_x, total.cap_x);

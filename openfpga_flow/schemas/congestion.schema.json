@@ -71,6 +71,10 @@
         "routed": {
           "type": "boolean"
         },
+        "flat_routing": {
+          "type": "boolean",
+          "description": "True when the routing is flat (router.flat_routing): the counts are those of the channels between the clusters, and do not include the routing inside the clusters."
+        },
         "region_size": {
           "type": "integer",
           "minimum": 1

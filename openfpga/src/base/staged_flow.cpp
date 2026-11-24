@@ -306,14 +306,39 @@ bool do_place(OpenFpgaSession& session, VprRun& run,
   return true;
 }
 
+/* The netlist that the router works on: the atoms when the routing is flat,
+ * the clusters otherwise */
+const Netlist<>& router_net_list(const VprRun& run) {
+  if (run.setup.RouterOpts.flat_routing) {
+    return (const Netlist<>&)g_vpr_ctx.atom().netlist();
+  }
+  return (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+}
+
+/* Port equivalence does not hold when the routing goes inside the clusters:
+ * turn it off in the device, as VPR does before a flat routing. The device is
+ * that of a fresh run, which is made again for each routing */
+void unset_port_equivalences() {
+  DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
+  for (auto& physical_type : device_ctx.physical_tile_types) {
+    for (auto& sub_tile : physical_type.sub_tiles) {
+      for (auto& port : sub_tile.ports) {
+        port.equivalent = PortEquivalence::NONE;
+      }
+    }
+  }
+  for (auto& logical_type : device_ctx.logical_block_types) {
+    if (!logical_type.pb_type) {
+      continue;
+    }
+    for (int i = 0; i < logical_type.pb_type->num_ports; i++) {
+      logical_type.pb_type->ports[i].equivalent = PortEquivalence::NONE;
+    }
+  }
+}
+
 bool do_route(OpenFpgaSession& session, VprRun& run,
               const std::string& file = std::string()) {
-  if (run.setup.RouterOpts.flat_routing) {
-    VTR_LOG_ERROR(
-      "Flat routing is not supported by the stage-by-stage flow yet\n");
-    drop_run(session);
-    return false;
-  }
   if (!file.empty()) {
     if (NO_FIXED_CHANNEL_WIDTH == run.setup.RouterOpts.fixed_channel_width) {
       VTR_LOG_ERROR(
@@ -325,10 +350,16 @@ bool do_route(OpenFpgaSession& session, VprRun& run,
     run.setup.FileNameOpts.RouteFile = file;
     run.setup.RouterOpts.doRouting = e_stage_action::LOAD;
   }
-  const bool ok = guarded([&run]() {
-    const Netlist<>& net_list =
-      (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
-    run.route_status = vpr_route_flow(net_list, run.setup, run.arch, false);
+  const bool flat = run.setup.RouterOpts.flat_routing;
+  const bool ok = guarded([&run, flat]() {
+    if (flat) {
+      VTR_LOG_WARN(
+        "Disabling port equivalence in the architecture since flat routing "
+        "is enabled.\n");
+      unset_port_equivalences();
+    }
+    run.route_status =
+      vpr_route_flow(router_net_list(run), run.setup, run.arch, flat);
   });
   run.setup.RouterOpts.doRouting = e_stage_action::DO;
   if (!ok || !run.route_status.success()) {
@@ -341,15 +372,15 @@ bool do_route(OpenFpgaSession& session, VprRun& run,
 }
 
 /* Analysis changes the data of VPR: it synchronizes the packing with the
- * routing results. It is run on the data of the routing, as VPR cannot run it
- * twice on the same data */
+ * routing results (with the routing inside the clusters, when it is flat).
+ * It is run on the data of the routing, as VPR cannot run it twice on the
+ * same data */
 bool do_analysis(OpenFpgaSession& session, VprRun& run) {
   bool analyzed = false;
   const bool ok = guarded([&run, &analyzed]() {
-    const Netlist<>& net_list =
-      (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
     analyzed =
-      vpr_analysis_flow(net_list, run.setup, run.arch, run.route_status, false);
+      vpr_analysis_flow(router_net_list(run), run.setup, run.arch,
+                        run.route_status, run.setup.RouterOpts.flat_routing);
   });
   if (!ok || !analyzed) {
     VTR_LOG_ERROR("Analysis failed\n");

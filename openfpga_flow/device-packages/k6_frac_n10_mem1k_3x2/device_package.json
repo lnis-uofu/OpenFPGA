@@ -15,6 +15,7 @@
     },
     "lut_size": 6,
     "channel_width": 50,
+    "flat_routing": true,
     "tags": [
       "tileable",
       "frac_lut",

@@ -94,6 +94,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
     "grid": { "width": 2, "height": 2 },
     "lut_size": 4,
     "channel_width": 20,
+    "flat_routing": true,
     "tags": ["tileable", "bram", "dsp"]
   },
   "corners": {
@@ -140,6 +141,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-12** A package for a device with bitstream support lists the files needed by `build_architecture_bitstream`, `build_fabric_bitstream` and the fabric writers. These include `fabric_key`, `tile_config`, `repack_constraints`, and `pin_constraints` when the architecture needs them.
 - **R-13** Files in `arch/cell_library/` that the OpenFPGA architecture refers to are found through the package, not through `OPENFPGA_PATH`.
 - **R-14** `device.grid`, `device.lut_size` and `device.channel_width` are facts about the files. `check` (R-40) compares them with the VPR architecture and reports a mismatch. It reads the architecture with the variables replaced by the values of the default corner.
+- **R-14a** `device.flat_routing` (true or false, false when it is missing) says that the flow, up to the bitstream, was checked with flat routing (`router.flat_routing`, VPR's `--flat_routing on`) on this device. The flow of the web app routes flat on a package only when it is true.
 - **R-15** A reference bitstream, when present, is for the reference design in `reference/` and the manifest records the design and the SHA-256 of the files, so the package can be tested (R-43).
 
 ### Corners

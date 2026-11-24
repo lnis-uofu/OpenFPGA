@@ -18,6 +18,7 @@ from .config import Config
 from .errors import (
     FileExists,
     FixedWidthOnly,
+    FlatRoutingUnsupported,
     InvalidArgument,
     OptionNotAllowed,
     SessionFull,
@@ -121,6 +122,10 @@ def register(
     def keep_log(entry: Entry, stage: str, log: str):
         entry.logs[stage] = log[-_LOG_KEEP:]
 
+    def flat_routing_allowed(entry: Entry) -> bool:
+        """Whether the device of the session supports flat routing (its device package says)"""
+        return device_packages.flat_routing_allowed(config, registry.read_meta(entry.directory))
+
     # The reports of the stages -----------------------------------------------------------
 
     def short(path: Optional[str]) -> str:
@@ -197,6 +202,9 @@ def register(
                 part.row("Channel width", routing.channel_width).row("Wirelength", routing.wirelength, "tiles")
                 part.row("Wires", routing.wires).row("Router iterations", routing.iterations)
                 part.row("Critical path", routing.critical_path_delay_ns, "ns")
+                if routing.flat_routing:
+                    part.row("Flat routing", "yes: the wires and the wirelength are those of "
+                             "the channels, not the routing inside the clusters")
                 sections.append(part)
                 cards += [("Channel width", routing.channel_width), ("Wirelength", routing.wirelength),
                           ("Iterations", routing.iterations)]
@@ -767,6 +775,9 @@ def register(
                 refusal = handle.fixed_width_refusal(stage)
                 if refusal:
                     raise FixedWidthOnly(refusal)
+                refusal = handle.fixed_width_refusal(stage, flat_routing_allowed(entry))
+                if refusal:
+                    raise FlatRoutingUnsupported(refusal)
             ran: List[str] = []
             seconds = 0.0
             current = stage
@@ -904,6 +915,12 @@ def register(
                 raise FixedWidthOnly(
                     "The routing runs at a fixed channel width: router.route_chan_width takes a "
                     "number of tracks above 0"
+                )
+            if name == "router.flat_routing" and value is True and not flat_routing_allowed(
+                session_of(session)
+            ):
+                raise FlatRoutingUnsupported(
+                    "The device package of the session does not support flat routing"
                 )
             return reply(dataclasses.asdict(handle.set_option(name, value)))
 
@@ -1151,7 +1168,12 @@ def register(
                 check_room(entry)
                 handle = entry.session
                 try:
-                    done = handle.tcl(script, safe=True, fixed_width=True)
+                    done = handle.tcl(
+                        script,
+                        safe=True,
+                        fixed_width=True,
+                        flat_routing=flat_routing_allowed(entry),
+                    )
                 except Exception as error:
                     if getattr(error, "error_info", None) is None:
                         raise

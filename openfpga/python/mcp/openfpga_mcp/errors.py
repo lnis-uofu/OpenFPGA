@@ -97,3 +97,14 @@ class FixedWidthOnly(RegistryError):
         "set_constraint kind=chan_width width=N sets the width (a device package gives its own); "
         "get_device says the width of the device"
     )
+
+
+class FlatRoutingUnsupported(RegistryError):
+    """Flat routing (router.flat_routing) is asked of a device whose package does not say that
+    it supports it"""
+
+    kind = "flat_routing_unsupported"
+    hint = (
+        "set_option name=router.flat_routing value=false; list_device_packages says which "
+        "packages support flat routing"
+    )

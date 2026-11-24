@@ -36,6 +36,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "flat_routing": {
+          "type": "boolean",
+          "description": "True when the routing is flat (router.flat_routing): the tree goes inside the clusters, to the pins of the atoms, and its nodes there are in the tile of the cluster."
+        },
         "nodes": {
           "type": "array",
           "minItems": 1,

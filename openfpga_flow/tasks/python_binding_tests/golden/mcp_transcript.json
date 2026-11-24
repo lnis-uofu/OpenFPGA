@@ -295,6 +295,7 @@
      "routing": {
       "channel_width": 20,
       "critical_path_delay_ns": 1.42,
+      "flat_routing": false,
       "iterations": 4,
       "wirelength": 44,
       "wires": 30
@@ -754,6 +755,7 @@
      "x": 20,
      "y": 20
     },
+    "flat_routing": false,
     "grid": {
      "height": 4,
      "width": 4

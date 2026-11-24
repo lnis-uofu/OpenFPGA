@@ -51,7 +51,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 | `synthesize` | `session`, `design?` (a design directory: top, files, defines and include folders from its `design.json`) or `top`, `files`; `read?`, `lut_size?` | runs Yosys in the worker (the `yosys` command of the shell) on Verilog files of the session or of a designs folder, with the script of the device package of the session (or a generic one with `lut_size`), and writes `synth/<top>.blif` and the one script `synth/synth.ys` (`.eblif` when the manifest says `circuit_format: eblif`); with `read` it is read as the circuit when the architectures are read, and a netlist that the flow cannot read is a failure (`circuit_not_read`), not a success. Gives the LUTs, flip-flops, widest LUT and ports; fails with `yosys_error` with the file and line. The model never gives a script: the values that go into the template are checked (plain paths, the top module, options of the manifest), and a source that names a file outside the session (`include, $readmem) is refused. Added after the design |
 | `write_file` | `session`, `name`, `content`, `overwrite?` | writes a text file in `<session>/created/` only (plain name, an extension of a file that a flow reads, 256 KB, 50 files); `read_inputs` and `set_constraint` find it by name. Added after the design (owner, 2026-11-19) |
 | `use_device_package` | `session`, `name` | reads the architectures of a package into a session that has read nothing (`session_not_empty` otherwise) and stops there: the circuit is next. Added after the design |
-| `list_device_packages` | `name?` | the usable device packages with their device (layout, LUT size, channel width, tags), or with a name one package: files (role, path in the package, size), architectures, reference design, start of its README. Added after the design; the server needs `--device-packages FOLDER` |
+| `list_device_packages` | `name?` | the usable device packages with their device (layout, LUT size, channel width, tags, flat routing), or with a name one package: files (role, path in the package, size), architectures, reference design, start of its README. Added after the design; the server needs `--device-packages FOLDER` |
 
 ### Flow
 
@@ -67,7 +67,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 |------|-----------|-------|
 | `list_options` | `session`, `stage?`, `query?`, `changed?`, `limit?` (default 20) | `report_stage`: for each stage asked for, its options with value, default and choices, and the stages that a change drops |
 | `describe_option` | `session`, `name` | the option: type, value, default, help, choices, stage, and the stages that a change would drop |
-| `set_option` | `session`, `name`, `value` | the `Change`: before, after, and the stages dropped |
+| `set_option` | `session`, `name`, `value` | the `Change`: before, after, and the stages dropped. `router.flat_routing` true is refused on a device package that does not support flat routing (`flat_routing_unsupported`), and so is `run_stage` route with it set |
 | `set_constraint` | `session`, `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | the `Change`. A file is a name inside the workspace. The channel width is changed, not cleared: the routing runs only at a fixed width, and `run_stage` refuses route without one (`chan_width_required`); `use_device_package` sets the width of the package |
 
 ### Queries (read only)

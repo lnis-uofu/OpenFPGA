@@ -39,23 +39,23 @@ std::unique_ptr<RoutedTiming> analyze_routed_timing(const vpr::VprRun& run) {
       "and run the flow again\n");
     return nullptr;
   }
-  if (run.setup.RouterOpts.flat_routing) {
-    VTR_LOG_ERROR("The timing queries do not support flat routing yet\n");
-    return nullptr;
-  }
   const auto& atom_ctx = g_vpr_ctx.atom();
-  const Netlist<>& clb_nlist =
-    (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+  /* The delays are those of the nets that were routed: the atoms when the
+   * routing is flat */
+  const bool flat = g_vpr_ctx.routing().is_flat;
+  const Netlist<>& net_list =
+    flat ? (const Netlist<>&)atom_ctx.netlist()
+         : (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
   if (g_vpr_ctx.routing().route_trees.empty()) {
     VTR_LOG_ERROR("The design has no routing: run the stage ROUTED first\n");
     return nullptr;
   }
 
   auto timing = std::make_unique<RoutedTiming>();
-  timing->net_delay = make_net_pins_matrix<float>(clb_nlist);
-  load_net_delay_from_routing(clb_nlist, timing->net_delay);
+  timing->net_delay = make_net_pins_matrix<float>(net_list);
+  load_net_delay_from_routing(net_list, timing->net_delay);
   timing->delay_calc = std::make_shared<AnalysisDelayCalculator>(
-    atom_ctx.netlist(), atom_ctx.lookup(), timing->net_delay, false);
+    atom_ctx.netlist(), atom_ctx.lookup(), timing->net_delay, flat);
   timing->info = make_setup_hold_timing_info(
     timing->delay_calc, run.setup.AnalysisOpts.timing_update_type);
   timing->info->update();
@@ -123,8 +123,7 @@ double write_points(JsonWriter& json, const tatum::TimingSubPath& sub_path,
 
 bool net_timing(const vpr::VprRun& run, const ClusterNetId net,
                 double& criticality, double& slack_ns) {
-  if (!run.setup.TimingEnabled || run.setup.RouterOpts.flat_routing ||
-      g_vpr_ctx.routing().route_trees.empty()) {
+  if (!run.setup.TimingEnabled || g_vpr_ctx.routing().route_trees.empty()) {
     return false;
   }
   const auto& atom_ctx = g_vpr_ctx.atom();
