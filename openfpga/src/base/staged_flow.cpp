@@ -7,8 +7,10 @@
 #include <functional>
 #include <vector>
 
+#include "analytical_placement_flow.h"
 #include "draw.h"
 #include "globals.h"
+#include "read_place.h"
 #include "setup_grid.h"
 #include "stats.h"
 #include "tatum/error.hpp"
@@ -306,6 +308,26 @@ bool do_place(OpenFpgaSession& session, VprRun& run,
   return true;
 }
 
+/* Pack and place at once with the analytical placement of VPR, as
+ * 'vpr --analytical_place' does, on the device that is made already */
+bool do_analytical_place(OpenFpgaSession& session, VprRun& run) {
+  const bool ok = guarded([&run]() {
+    run_analytical_placement_flow(run.setup);
+    const auto& filename_opts = run.setup.FileNameOpts;
+    const auto& cluster_ctx = g_vpr_ctx.clustering();
+    g_vpr_ctx.mutable_placement().placement_id = print_place(
+      filename_opts.NetFile.c_str(), cluster_ctx.clb_nlist.netlist_id().c_str(),
+      filename_opts.PlaceFile.c_str(), g_vpr_ctx.placement().block_locs());
+  });
+  if (!ok) {
+    VTR_LOG_ERROR("Analytical placement failed\n");
+    keep_failed_run(session, run, OpenFpgaStage::PLACED, ok);
+    return false;
+  }
+  run.last_stage = OpenFpgaStage::PLACED;
+  return true;
+}
+
 /* The netlist that the router works on: the atoms when the routing is flat,
  * the clusters otherwise */
 const Netlist<>& router_net_list(const VprRun& run) {
@@ -456,7 +478,27 @@ bool prepare_vpr(OpenFpgaSession& session, const OpenFpgaStage& target) {
   if (OpenFpgaStage::DEVICE == target) {
     return true;
   }
-  if (!do_pack(session, *run, session.imported_file(OpenFpgaStage::PACKED))) {
+  /* The analytical placer made the packing and the placement at once: it
+   * makes them again, unless they were read from files */
+  const std::string packing = session.imported_file(OpenFpgaStage::PACKED);
+  if (session.analytical_placer() && packing.empty()) {
+    if (OpenFpgaStage::PACKED == target) {
+      VTR_LOG_ERROR(
+        "The packing of the analytical placer (option place.placer) is made "
+        "with its placement, and the placement cannot be made again apart: "
+        "use the command 'place' (or 'pack') to make both again\n");
+      return false;
+    }
+    if (!do_analytical_place(session, *run)) {
+      return false;
+    }
+    if (OpenFpgaStage::PLACED == target) {
+      return true;
+    }
+    return do_route(session, *run,
+                    session.imported_file(OpenFpgaStage::ROUTED));
+  }
+  if (!do_pack(session, *run, packing)) {
     return false;
   }
   if (OpenFpgaStage::PACKED == target) {
@@ -549,8 +591,45 @@ void fail_openfpga_arch_input(OpenFpgaSession& session) {
   session.fail_input(OpenFpgaInput::OPENFPGA_ARCH);
 }
 
+namespace {
+
+/* Pack and place at once, with the analytical placer: the command 'pack' or
+ * 'place' when the option place.placer is analytical */
+bool run_analytical_stages(OpenFpgaSession& session) {
+  if (!session.reached(OpenFpgaStage::DEVICE) && !ensure_device(session)) {
+    return false;
+  }
+  vtr::ScopedStartFinishTimer timer("Stages PACKED and PLACED (analytical)");
+  if (!prepare_vpr(session, OpenFpgaStage::DEVICE)) {
+    session.fail(OpenFpgaStage::DEVICE);
+    return false;
+  }
+  VprRun& run = *vpr::current_vpr_run();
+  const auto started = std::chrono::steady_clock::now();
+  if (!do_analytical_place(session, run)) {
+    session.fail(OpenFpgaStage::PACKED,
+                 "Analytical placement failed: the circuit could not be "
+                 "packed and placed on the device");
+    return false;
+  }
+  session.complete(OpenFpgaStage::PACKED);
+  session.complete(OpenFpgaStage::PLACED);
+  /* The time is the one of the placement, which made the packing too */
+  session.set_stage_seconds(
+    OpenFpgaStage::PLACED,
+    std::chrono::duration<double>(std::chrono::steady_clock::now() - started)
+      .count());
+  return true;
+}
+
+}  // End anonymous namespace
+
 bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
   sync_with_vpr(session);
+  if (session.analytical_placer() &&
+      (OpenFpgaStage::PACKED == stage || OpenFpgaStage::PLACED == stage)) {
+    return run_analytical_stages(session);
+  }
   const OpenFpgaStage required = required_stage(stage);
 
   /* The device is made from the inputs: it can be created by the stage */

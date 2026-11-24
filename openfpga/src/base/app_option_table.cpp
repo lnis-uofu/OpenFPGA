@@ -79,6 +79,12 @@ const std::map<std::string, AppOptionValue>& app_option_defaults() {
     }
 
     /* The options of OpenFPGA, which VPR does not have */
+    table["place.placer"] = AppOptionValue::make_selection(
+      "classic", {{"classic", 0}, {"analytical", 1}},
+      "The placer of the flow that is run stage by stage. classic: pack, then "
+      "place. analytical: the analytical placement of VPR, which packs and "
+      "places at once ('vpr --analytical_place'): pack and place both run it, "
+      "and reach PACKED and PLACED together. The options aplace.* tune it");
     table["build_fabric.reorder_incoming_edges"] = AppOptionValue::make_boolean(
       true, "Reorder the incoming edges of the routing nodes");
     table["build_fabric.sort_gsb_chan_node_in_edges"] =

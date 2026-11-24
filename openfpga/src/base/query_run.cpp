@@ -173,6 +173,28 @@ bool run_report_json(const OpenFpgaSession& session, const bool in_flow,
       json, "swap_attempts",
       log_number(log,
                  std::regex("Placement total # of swap attempts: (\\d+)")));
+    /* The analytical placer (option place.placer) packs and places at once;
+     * the figures above are those of its detailed placer, and its global
+     * placement has estimates of its own */
+    const bool analytical = in_flow && session.analytical_placer();
+    json.key("placer").value(analytical ? "analytical" : "classic");
+    json.key("global_placement");
+    if (analytical) {
+      json.begin_object();
+      write_optional(json, "estimated_wirelength",
+                     log_number(log, std::regex("Placement after Global "
+                                                "Placement:[^]*?Placement "
+                                                "estimated wirelength: " +
+                                                number)));
+      write_optional(
+        json, "estimated_critical_path_delay_ns",
+        log_number(log, std::regex("Placement after Global Placement:[^]*?"
+                                   "Placement estimated CPD: " +
+                                   number + " ns")));
+      json.end_object();
+    } else {
+      json.null();
+    }
     json.end_object();
   } else {
     json.null();

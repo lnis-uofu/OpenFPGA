@@ -206,9 +206,21 @@ bool OpenFpgaSession::complete(const OpenFpgaStage& stage) {
   return true;
 }
 
+bool OpenFpgaSession::analytical_placer() const {
+  const AppOptionValue* placer = app_options_.find("place.placer");
+  return nullptr != placer && "analytical" == placer->string_value;
+}
+
+OpenFpgaStage OpenFpgaSession::dropped_with(const OpenFpgaStage& stage) const {
+  if (OpenFpgaStage::PLACED == stage && analytical_placer()) {
+    return OpenFpgaStage::PACKED;
+  }
+  return stage;
+}
+
 void OpenFpgaSession::fail(const OpenFpgaStage& stage,
                            const std::string& message) {
-  invalidate_stage_and_dependents(stage);
+  invalidate_stage_and_dependents(dropped_with(stage));
   if (!message.empty()) {
     failures_[stage] = message;
   }
@@ -315,7 +327,7 @@ void OpenFpgaSession::invalidate_for_option(const std::string& name) {
     invalidate_all_stages();
     return;
   }
-  invalidate_stage_and_dependents(stage);
+  invalidate_stage_and_dependents(dropped_with(stage));
 }
 
 } /* End namespace openfpga */

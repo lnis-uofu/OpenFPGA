@@ -287,8 +287,10 @@
       "cost": 1,
       "estimated_critical_path_delay_ns": 0.676,
       "estimated_fmax_mhz": 1480.0,
+      "global_placement": null,
       "half_perimeter": 9,
       "num_temperatures": 39,
+      "placer": "classic",
       "swap_attempts": 360,
       "td_cost": 7.07e-10
      },

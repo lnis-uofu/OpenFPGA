@@ -170,6 +170,39 @@
                 "null"
               ],
               "minimum": 0
+            },
+            "placer": {
+              "enum": [
+                "classic",
+                "analytical"
+              ],
+              "description": "The placer of the flow (the option place.placer). analytical: the analytical placement of VPR made the packing and the placement at once; the figures above are those of its detailed placer."
+            },
+            "global_placement": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "The estimates of the global placement of the analytical placer, from its log; null with the classic placer.",
+              "required": [
+                "estimated_wirelength",
+                "estimated_critical_path_delay_ns"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "estimated_wirelength": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "estimated_critical_path_delay_ns": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
             }
           }
         },

@@ -114,6 +114,10 @@ class OpenFpgaSession {
    * read from a file), or was dropped, see set_stage_log() */
   const std::string* stage_log(const OpenFpgaStage& stage) const;
   const double* stage_seconds(const OpenFpgaStage& stage) const;
+  /* Return true if the placer is the analytical placement of VPR (the option
+   * place.placer): it makes the packing and the placement at once, and they
+   * are one result. A change that drops the placement drops the packing */
+  bool analytical_placer() const;
   /* The file that an input was read from, as it was given to read_input().
    * Empty if it is not known, or the input is not read */
   std::string input_file(const OpenFpgaInput& input) const;
@@ -167,6 +171,9 @@ class OpenFpgaSession {
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
   void invalidate_all_stages();
   void invalidate_for_option(const std::string& name);
+  /* The stage that is dropped to drop a stage: the packing with the
+   * placement, when the analytical placer made them */
+  OpenFpgaStage dropped_with(const OpenFpgaStage& stage) const;
 
  private: /* Internal data */
   /* One bit per input and per stage, from the value of their enum */

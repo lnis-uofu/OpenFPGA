@@ -638,6 +638,18 @@ class PlacementReport:
     estimated_fmax_mhz: Optional[float]
     num_temperatures: Optional[int]
     swap_attempts: Optional[int]
+    # The placer (option place.placer): classic, or analytical, whose detailed placer the
+    # figures above are of, and whose global placement estimates are in global_placement
+    placer: str = "classic"
+    global_placement: Optional["GlobalPlacementReport"] = None
+
+
+@dataclasses.dataclass(frozen=True)
+class GlobalPlacementReport:
+    """The estimates of the global placement of the analytical placer, from its log"""
+
+    estimated_wirelength: Optional[float]
+    estimated_critical_path_delay_ns: Optional[float]
 
 
 @dataclasses.dataclass(frozen=True)
