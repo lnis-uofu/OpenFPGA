@@ -4,6 +4,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <exception>
 
 /* Headers from vtrutil library */
 #include "vtr_log.h"
@@ -101,6 +102,69 @@ std::vector<ShellCommandId> Shell<T>::commands_by_class(const ShellCommandClassI
   return commands_by_classes_[cmd_class_id];
 }
 
+template<class T>
+ShellCommandClassId Shell<T>::find_command_class(const std::string& name) const {
+  auto found = command_class2ids_.find(name);
+  return command_class2ids_.end() == found ? ShellCommandClassId::INVALID() : found->second;
+}
+
+template<class T>
+std::string Shell<T>::registrar() const {
+  return registrar_;
+}
+
+template<class T>
+std::string Shell<T>::command_owner(const ShellCommandId& cmd_id) const {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  return command_owners_[cmd_id];
+}
+
+template<class T>
+std::string Shell<T>::command_overrider(const ShellCommandId& cmd_id) const {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  return command_overriders_[cmd_id];
+}
+
+template<class T>
+std::string Shell<T>::command_remover(const ShellCommandId& cmd_id) const {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  return command_removers_[cmd_id];
+}
+
+template<class T>
+bool Shell<T>::command_removed(const ShellCommandId& cmd_id) const {
+  return !command_remover(cmd_id).empty();
+}
+
+template<class T>
+std::vector<std::string> Shell<T>::command_before_hook_owners(const ShellCommandId& cmd_id) const {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  std::vector<std::string> owners;
+  for (const BeforeHook& hook : command_before_hooks_[cmd_id]) {
+    owners.push_back(hook.owner);
+  }
+  return owners;
+}
+
+template<class T>
+std::vector<std::string> Shell<T>::command_after_hook_owners(const ShellCommandId& cmd_id) const {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  std::vector<std::string> owners;
+  for (const AfterHook& hook : command_after_hooks_[cmd_id]) {
+    owners.push_back(hook.owner);
+  }
+  return owners;
+}
+
+template<class T>
+std::vector<std::string> Shell<T>::after_any_hook_owners() const {
+  std::vector<std::string> owners;
+  for (const AfterHook& hook : after_any_hooks_) {
+    owners.push_back(hook.owner);
+  }
+  return owners;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -114,13 +178,42 @@ void Shell<T>::add_title(const char* title) {
   title_ = std::string(title);
 }
 
+template<class T>
+void Shell<T>::set_registrar(const std::string& name) {
+  registrar_ = name;
+}
+
+template<class T>
+std::string Shell<T>::registrar_label(const std::string& owner) const {
+  return owner.empty() ? name_ : "plugin '" + owner + "'";
+}
+
+template<class T>
+ShellCommandId Shell<T>::registered_command(const std::string& name, const char* action) const {
+  ShellCommandId cmd_id = command(name);
+  if (ShellCommandId::INVALID() == cmd_id) {
+    throw ShellRegistrationError(registrar_label(registrar_) + " cannot " + action +
+                                 " the command '" + name + "', which is not defined");
+  }
+  if (command_removed(cmd_id)) {
+    throw ShellRegistrationError(registrar_label(registrar_) + " cannot " + action +
+                                 " the command '" + name + "', which was removed by " +
+                                 registrar_label(command_removers_[cmd_id]));
+  }
+  return cmd_id;
+}
+
 /* Add a command with it description */
 template<class T>
 ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, const bool& hidden) {
   /* Ensure that the name is unique in the command list */
   std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(std::string(cmd.name()));
   if (name_it != command_name2ids_.end()) {
-    return ShellCommandId::INVALID();
+    const ShellCommandId defined = name_it->second;
+    throw ShellRegistrationError(
+      registrar_label(registrar_) + " cannot add the command '" + cmd.name() +
+      "': it is " + (command_removed(defined) ? "a command removed by " + registrar_label(command_removers_[defined])
+                                              : "defined by " + registrar_label(command_owners_[defined])));
   }
 
   /* This is a legal name. we can create a new id */
@@ -143,6 +236,12 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
   command_status_.push_back(CMD_EXEC_NONE); /* By default, the command should be marked as fatal error as it has been never executed */
   command_dependencies_.emplace_back();
   command_alternatives_.emplace_back();
+  command_owners_.push_back(registrar_);
+  command_overriders_.emplace_back();
+  command_removers_.emplace_back();
+  command_protected_.push_back(false);
+  command_before_hooks_.emplace_back();
+  command_after_hooks_.emplace_back();
 
   /* Register the name in the name2id map */
   command_name2ids_[cmd.name()] = shell_cmd;
@@ -152,6 +251,128 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, cons
 
   return shell_cmd;
 } 
+
+template<class T>
+void Shell<T>::protect_command(const ShellCommandId& cmd_id) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_protected_[cmd_id] = true;
+}
+
+template<class T>
+ShellCommandId Shell<T>::override_command(const std::string& name) {
+  const ShellCommandId cmd_id = registered_command(name, "override");
+  if (registrar_.empty()) {
+    throw ShellRegistrationError("Only a plugin overrides a command ('" + name + "')");
+  }
+  if (registrar_ == command_owners_[cmd_id]) {
+    throw ShellRegistrationError(registrar_label(registrar_) + " cannot override its own command '" + name + "'");
+  }
+  if (!command_overriders_[cmd_id].empty()) {
+    throw ShellRegistrationError(registrar_label(registrar_) + " cannot override the command '" + name +
+                                 "', which is overridden by " + registrar_label(command_overriders_[cmd_id]));
+  }
+  command_overriders_[cmd_id] = registrar_;
+  return cmd_id;
+}
+
+/* A plugin changes only its own commands and the ones it overrode; the shell
+ * changes only its own */
+template<class T>
+static void check_may_change(const Shell<T>& shell, const ShellCommandId& cmd_id, const char* action) {
+  VTR_ASSERT(true == shell.valid_command_id(cmd_id));
+  const std::string& name = shell.command(cmd_id).name();
+  if (shell.command_removed(cmd_id)) {
+    throw ShellRegistrationError("Cannot " + std::string(action) + " the command '" + name +
+                                 "', which was removed");
+  }
+  if (shell.registrar() != shell.command_owner(cmd_id) && shell.registrar() != shell.command_overrider(cmd_id)) {
+    throw ShellRegistrationError(
+      (shell.registrar().empty() ? shell.name() : "plugin '" + shell.registrar() + "'") + " cannot " + action +
+      " the command '" + name + "' of " +
+      (shell.command_owner(cmd_id).empty() ? shell.name() : "plugin '" + shell.command_owner(cmd_id) + "'") +
+      " without overriding it");
+  }
+}
+
+template<class T>
+void Shell<T>::extend_command_options(const ShellCommandId& cmd_id, const std::function<void(Command&)>& extend) {
+  check_may_change(*this, cmd_id, "change the options of");
+  struct Option {
+    std::string name;
+    std::string short_name;
+    bool required;
+    bool require_value;
+    e_option_value_type value_type;
+  };
+  std::vector<Option> before;
+  for (const CommandOptionId& opt : commands_[cmd_id].options()) {
+    before.push_back({commands_[cmd_id].option_name(opt), commands_[cmd_id].option_short_name(opt),
+                      commands_[cmd_id].option_required(opt), commands_[cmd_id].option_require_value(opt),
+                      commands_[cmd_id].option_require_value_type(opt)});
+  }
+  Command changed = commands_[cmd_id];
+  extend(changed);
+  if (changed.name() != commands_[cmd_id].name()) {
+    throw ShellRegistrationError("The command '" + commands_[cmd_id].name() + "' cannot be renamed");
+  }
+  for (const Option& option : before) {
+    const CommandOptionId opt = changed.option(option.name);
+    if (CommandOptionId::INVALID() == opt || changed.option_short_name(opt) != option.short_name ||
+        changed.option_required(opt) != option.required || changed.option_require_value(opt) != option.require_value ||
+        changed.option_require_value_type(opt) != option.value_type) {
+      throw ShellRegistrationError("The option '" + option.name + "' of the command '" + commands_[cmd_id].name() +
+                                   "' must stay as it is: options can only be added");
+    }
+  }
+  commands_[cmd_id] = changed;
+  command_contexts_[cmd_id] = CommandContext(commands_[cmd_id]);
+}
+
+template<class T>
+void Shell<T>::deregister_command(const std::string& name) {
+  const ShellCommandId cmd_id = registered_command(name, "remove");
+  if (registrar_.empty()) {
+    throw ShellRegistrationError("Only a plugin removes a command ('" + name + "')");
+  }
+  if (command_protected_[cmd_id]) {
+    throw ShellRegistrationError(registrar_label(registrar_) + " cannot remove the command '" + name +
+                                 "', which the shell needs");
+  }
+  for (const ShellCommandId& other : commands()) {
+    if (other == cmd_id || command_removed(other)) {
+      continue;
+    }
+    const std::vector<ShellCommandId>& deps = command_dependencies_[other];
+    const std::vector<ShellCommandId>& alts = command_alternatives_[other];
+    const bool depends = deps.end() != std::find(deps.begin(), deps.end(), cmd_id);
+    const bool stands_for = alts.end() != std::find(alts.begin(), alts.end(), cmd_id);
+    if (depends || stands_for) {
+      throw ShellRegistrationError(registrar_label(registrar_) + " cannot remove the command '" + name + "': '" +
+                                   commands_[other].name() + "' " +
+                                   (depends ? "depends on it" : "has it as an alternative"));
+    }
+  }
+  command_removers_[cmd_id] = registrar_;
+  commands4autocomplete_.erase(std::remove(commands4autocomplete_.begin(), commands4autocomplete_.end(), name),
+                               commands4autocomplete_.end());
+}
+
+template<class T>
+void Shell<T>::on_before(const std::string& name, const before_hook_type& hook) {
+  const ShellCommandId cmd_id = registered_command(name, "hook");
+  command_before_hooks_[cmd_id].push_back({registrar_, hook});
+}
+
+template<class T>
+void Shell<T>::on_after(const std::string& name, const after_hook_type& hook) {
+  const ShellCommandId cmd_id = registered_command(name, "hook");
+  command_after_hooks_[cmd_id].push_back({registrar_, hook});
+}
+
+template<class T>
+void Shell<T>::on_after_any(const after_hook_type& hook) {
+  after_any_hooks_.push_back({registrar_, hook});
+}
 
 template<class T>
 void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellCommandClassId& cmd_class_id) {
@@ -170,6 +391,7 @@ template<class T>
 void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
                                                   std::function<int(const T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = CONST_STANDARD;
   command_const_execute_functions_[cmd_id] = exec_func;
 }
@@ -178,6 +400,7 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<int(T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = STANDARD;
   command_standard_execute_functions_[cmd_id] = exec_func;
 }
@@ -186,6 +409,7 @@ template<class T>
 void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
                                                   std::function<int(const T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = CONST_SHORT;
   command_short_const_execute_functions_[cmd_id] = exec_func;
 }
@@ -194,6 +418,7 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<int(T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = SHORT;
   command_short_execute_functions_[cmd_id] = exec_func;
 }
@@ -202,6 +427,7 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<void()> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = BUILTIN;
   command_builtin_execute_functions_[cmd_id] = exec_func;
 }
@@ -210,6 +436,7 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<int(int, char**)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = MACRO;
   command_macro_execute_functions_[cmd_id] = exec_func;
 }
@@ -218,6 +445,7 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = PLUGIN;
   command_plugin_execute_functions_[cmd_id] = exec_func;
 }
@@ -226,6 +454,7 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<int(const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set how to run");
   command_execute_function_types_[cmd_id] = FLOATING;
   command_floating_execute_functions_[cmd_id] = exec_func;
 }
@@ -234,9 +463,14 @@ template<class T>
 void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
                                       const std::vector<ShellCommandId>& dependent_cmds) {
   /* Validate the command id as well as each of the command dependency */
-  VTR_ASSERT(true == valid_command_id(cmd_id));
+  check_may_change(*this, cmd_id, "set the dependencies of");
   for (ShellCommandId dependent_cmd : dependent_cmds) {
     VTR_ASSERT(true == valid_command_id(dependent_cmd));
+    if (command_removed(dependent_cmd)) {
+      throw ShellRegistrationError("The command '" + commands_[cmd_id].name() + "' cannot depend on '" +
+                                   commands_[dependent_cmd].name() + "', which was removed by " +
+                                   registrar_label(command_removers_[dependent_cmd]));
+    }
   }
   command_dependencies_[cmd_id] = dependent_cmds;
 }
@@ -245,7 +479,12 @@ template<class T>
 void Shell<T>::add_command_alternative(const ShellCommandId& cmd_id,
                                        const ShellCommandId& alternative_cmd_id) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
-  VTR_ASSERT(true == valid_command_id(alternative_cmd_id));
+  /* The registrar declares that its own command stands for another one */
+  check_may_change(*this, alternative_cmd_id, "make an alternative of");
+  if (command_removed(cmd_id)) {
+    throw ShellRegistrationError("The command '" + commands_[alternative_cmd_id].name() +
+                                 "' cannot stand for '" + commands_[cmd_id].name() + "', which was removed");
+  }
   command_alternatives_[cmd_id].push_back(alternative_cmd_id);
 }
 
@@ -467,7 +706,7 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
     /* If there are only hidden commands inside, do not even need to show the class name here */
     bool hidden_class = true;
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
-      if (!command_hidden_[cmd]) {
+      if (!command_hidden_[cmd] && !command_removed(cmd)) {
         hidden_class = false;
         break;
       }
@@ -480,13 +719,37 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
     VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
 
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
-      if (!show_hidden && command_hidden_[cmd]) {
+      if ((!show_hidden && command_hidden_[cmd]) || command_removed(cmd)) {
         continue;
       }
-      VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
+      /* Where a command comes from, when it is not the shell's own */
+      std::string origin;
+      if (!command_owners_[cmd].empty()) {
+        origin += " (plugin " + command_owners_[cmd] + ")";
+      }
+      if (!command_overriders_[cmd].empty()) {
+        origin += " (overridden by plugin " + command_overriders_[cmd] + ")";
+      }
+      VTR_LOG("\t%s%s\n", commands_[cmd].name().c_str(), origin.c_str());
     }
 
     /* Put a new line in the end as a splitter */
+    VTR_LOG("\n");
+  }
+
+  /* The commands that plugins removed */
+  bool removed_title = false;
+  for (const ShellCommandId& cmd : commands()) {
+    if (!command_removed(cmd) || (!show_hidden && command_hidden_[cmd])) {
+      continue;
+    }
+    if (!removed_title) {
+      VTR_LOG("Removed by plugins:\n");
+      removed_title = true;
+    }
+    VTR_LOG("\t%s (plugin %s)\n", commands_[cmd].name().c_str(), command_removers_[cmd].c_str());
+  }
+  if (removed_title) {
     VTR_LOG("\n");
   }
 
@@ -599,6 +862,12 @@ int Shell<T>::execute_command(const char* cmd_line,
       return CMD_EXEC_FATAL_ERROR;
     }
   }
+  /* A command that a plugin removed */
+  if (command_removed(cmd_id)) {
+    VTR_LOG_ERROR("The command '%s' was removed by plugin '%s'\n",
+                  tokens[0].c_str(), command_removers_[cmd_id].c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   /* Check the dependency graph to see if all the prequistics have been met */
   for (const ShellCommandId& dep_cmd : command_dependencies_[cmd_id]) {
@@ -618,84 +887,125 @@ int Shell<T>::execute_command(const char* cmd_line,
     } 
   }
 
-  /* Find the command! Parse the options 
-   * Note:
-   * Macro command will not be parsed! It will be directly executed
-   */
-  if (MACRO == command_execute_function_types_[cmd_id]) {
-    /* Convert the tokens from string to char */
-    char** argv = (char**)malloc(tokens.size() * sizeof(char*));
-    for (size_t itok = 0; itok < tokens.size(); ++itok) {
-      argv[itok] = (char*)malloc((tokens[itok].length() + 1) * sizeof(char));
-      strcpy(argv[itok], tokens[itok].c_str());
-    }
-    /* Execute the marco function and record the execution status */
-    try {
-      command_status_[cmd_id] = command_macro_execute_functions_[cmd_id](tokens.size(), argv);
-    } catch (...) {
-      /* A command that throws has failed (see the switch below) */
+  /* Parse the options. A macro command has its own parser: its tokens are
+   * given to it as they are */
+  if (MACRO != command_execute_function_types_[cmd_id]) {
+    /* Reset the command parse results to initial status
+     * Avoid conflict when calling the same command in the second time
+     */
+    command_contexts_[cmd_id].reset();
+    if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
+      /* Echo the command */
+      print_command_options(commands_[cmd_id]);
       command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
-      for (size_t itok = 0; itok < tokens.size(); ++itok) {
-        free(argv[itok]);
-      }
-      free(argv);
-      throw;
+      return CMD_EXEC_FATAL_ERROR;
     }
-    /* Free the argv */
-    for (size_t itok = 0; itok < tokens.size(); ++itok) {
-      free(argv[itok]);
-    }
-    free(argv);
 
-    /* Finish for macro command, return */
-    return command_status_[cmd_id];
+    /* Parse succeed. Let user to confirm selected options */
+    print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
   }
- 
-  /* Reset the command parse results to initial status 
-   * Avoid conflict when calling the same command in the second time 
-   */
-  command_contexts_[cmd_id].reset();
-  if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
-    /* Echo the command */
-    print_command_options(commands_[cmd_id]);
-    command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
-    return CMD_EXEC_FATAL_ERROR;
+
+  return run_command(cmd_id, common_context, tokens);
+}
+
+/* What a hook that threw says */
+static inline std::string hook_exception_text() {
+  try {
+    throw;
+  } catch (const std::exception& error) {
+    return error.what();
+  } catch (...) {
+    return "an unknown exception";
   }
- 
-  /* Parse succeed. Let user to confirm selected options */ 
-  print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
+}
+
+template <class T>
+int Shell<T>::run_after_hooks(const ShellCommandId& cmd_id, T& common_context, int status) {
+  std::vector<const AfterHook*> hooks;
+  for (const AfterHook& hook : command_after_hooks_[cmd_id]) {
+    hooks.push_back(&hook);
+  }
+  for (const AfterHook& hook : after_any_hooks_) {
+    hooks.push_back(&hook);
+  }
+  for (const AfterHook* hook : hooks) {
+    try {
+      hook->func(common_context, commands_[cmd_id], command_contexts_[cmd_id], status);
+    } catch (...) {
+      VTR_LOG_ERROR("The hook of %s after the command '%s' failed: %s\n",
+                    registrar_label(hook->owner).c_str(), commands_[cmd_id].name().c_str(),
+                    hook_exception_text().c_str());
+      status = CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  return status;
+}
+
+template <class T>
+int Shell<T>::run_command(const ShellCommandId& cmd_id, T& common_context,
+                          const std::vector<std::string>& tokens) {
+  /* The hooks before the command may refuse it */
+  for (const BeforeHook& hook : command_before_hooks_[cmd_id]) {
+    std::string refusal;
+    try {
+      refusal = hook.func(common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    } catch (...) {
+      refusal = "its hook failed: " + hook_exception_text();
+    }
+    if (!refusal.empty()) {
+      VTR_LOG_ERROR("The command '%s' is refused by %s: %s\n", commands_[cmd_id].name().c_str(),
+                    registrar_label(hook.owner).c_str(), refusal.c_str());
+      command_status_[cmd_id] = run_after_hooks(cmd_id, common_context, CMD_EXEC_FATAL_ERROR);
+      return command_status_[cmd_id];
+    }
+  }
 
   /* Execute the command depending on the type of function !
    * A command that throws has failed: its status is set before the exception
    * goes on to the caller, so that the commands that depend on it are not
-   * run on what it left. Otherwise the status of its previous run would stay
+   * run on what it left. Otherwise the status of its previous run would stay.
+   * The hooks after it see the failure
    */
+  int status = CMD_EXEC_NONE;
   try {
   switch (command_execute_function_types_[cmd_id]) {
+  case MACRO: {
+    /* Convert the tokens from string to char */
+    std::vector<std::vector<char>> args;
+    std::vector<char*> argv;
+    for (const std::string& token : tokens) {
+      args.emplace_back(token.begin(), token.end());
+      args.back().push_back('\0');
+    }
+    for (std::vector<char>& arg : args) {
+      argv.push_back(arg.data());
+    }
+    status = command_macro_execute_functions_[cmd_id](static_cast<int>(argv.size()), argv.data());
+    break;
+  }
   case PLUGIN:
-    command_status_[cmd_id] = command_plugin_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    status = command_plugin_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case CONST_STANDARD:
-    command_status_[cmd_id] = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    status = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case STANDARD:
-    command_status_[cmd_id] = command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    status = command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case FLOATING:
-    command_status_[cmd_id] = command_floating_execute_functions_[cmd_id](commands_[cmd_id], command_contexts_[cmd_id]);
+    status = command_floating_execute_functions_[cmd_id](commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case CONST_SHORT:
-    command_status_[cmd_id] = command_short_const_execute_functions_[cmd_id](common_context);
+    status = command_short_const_execute_functions_[cmd_id](common_context);
     break;
   case SHORT:
-    command_status_[cmd_id] = command_short_execute_functions_[cmd_id](common_context);
+    status = command_short_execute_functions_[cmd_id](common_context);
     break;
   case BUILTIN:
     command_builtin_execute_functions_[cmd_id]();
     /* Built-in execution is always correct */
-    command_status_[cmd_id] = CMD_EXEC_SUCCESS; 
+    status = CMD_EXEC_SUCCESS;
     break;
-  /* MACRO should be executed eariler in this function. It should not appear here */
   default:
     /* This is not allowed! Error out */
     VTR_LOG_ERROR("Invalid type of execute function for command '%s'!\n",
@@ -705,15 +1015,18 @@ int Shell<T>::execute_command(const char* cmd_line,
   }
   } catch (...) {
     command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
+    run_after_hooks(cmd_id, common_context, CMD_EXEC_FATAL_ERROR);
     throw;
   }
 
   /* Forbid users to return the status CMD_EXEC_NONE */
-  if (CMD_EXEC_NONE == command_status_[cmd_id]) {
+  if (CMD_EXEC_NONE == status) {
     VTR_LOG_ERROR("It is illegal to return never-executed status for an executed command!\n");
+    command_status_[cmd_id] = CMD_EXEC_NONE;
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  command_status_[cmd_id] = run_after_hooks(cmd_id, common_context, status);
   return command_status_[cmd_id];
 }
 
