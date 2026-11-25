@@ -725,7 +725,15 @@ void Reader::read_text(const std::string& text, const std::string& file) {
     first = false;
     const auto row = command_table().find(command.name);
     if (command_table().end() == row) {
-      const std::string message = "unknown command '" + command.name + "'";
+      std::vector<Object> names;
+      for (const auto& known : command_table()) {
+        names.push_back({known.first, {}});
+      }
+      const std::vector<std::string> nearest =
+        nearest_names(command.name, names, 1);
+      const std::string message =
+        "unknown command '" + command.name + "'" +
+        (nearest.empty() ? "" : " (the nearest: " + nearest[0] + ")");
       if (options.lenient) {
         warning(file, line.number, message + ": skipped");
       } else {

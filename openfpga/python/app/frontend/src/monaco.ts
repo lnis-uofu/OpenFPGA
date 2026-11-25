@@ -1,7 +1,7 @@
 // Monaco, for the files that a person opens. It is loaded the first time that a file is opened
 // (import() from the viewer), so the page does not carry it before that. Only what a read-only
 // viewer needs: the editor, search, folding, brackets, go to line; the languages of the files of a
-// flow (XML for the architectures and the packing; SystemVerilog; Tcl for the constraints; BLIF for the circuits, defined in blif.ts). There is
+// flow (XML for the architectures and the packing; SystemVerilog; Tcl for the SDC; BLIF for the circuits and ODC for the constraints of a design, defined in blif.ts and odc.ts). There is
 // no worker of a language: the editor worker is enough.
 import * as monaco from "monaco-editor/editor/editor.api.js";
 import "monaco-editor/editor/browser/coreCommands.js";
@@ -20,11 +20,15 @@ import "monaco-editor/languages/definitions/xml/register.js";
 import "monaco-editor/languages/definitions/systemverilog/register.js";
 import "monaco-editor/languages/definitions/tcl/register.js";
 import { BLIF_ID, blifConfiguration, blifTokens } from "./blif";
+import { ODC_ID, odcConfiguration, odcTokens } from "./odc";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 
 monaco.languages.register({ id: BLIF_ID, extensions: [".blif", ".eblif"], aliases: ["BLIF", "blif"] });
 monaco.languages.setLanguageConfiguration(BLIF_ID, blifConfiguration);
 monaco.languages.setMonarchTokensProvider(BLIF_ID, blifTokens as never);
+monaco.languages.register({ id: ODC_ID, extensions: [".odc"], aliases: ["ODC", "odc"] });
+monaco.languages.setLanguageConfiguration(ODC_ID, odcConfiguration);
+monaco.languages.setMonarchTokensProvider(ODC_ID, odcTokens as never);
 
 (self as unknown as { MonacoEnvironment: unknown }).MonacoEnvironment = {
   getWorker: () => new EditorWorker(),

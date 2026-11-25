@@ -41,6 +41,36 @@ export interface SessionView {
   designs?: DesignView[];
   /** The open sessions: the tabs of the sidebar */
   sessions?: { id: string; name: string; running: boolean }[];
+  /** The ODC of the session (read with set_constraint kind=odc), checked on what is read now; null
+   * when the session has none and its device package no I/O map */
+  constraints?: ConstraintsView | null;
+}
+
+/** An error or a warning of the ODC, on a line of a file (a name that the viewer opens) */
+export interface OdcDiagnostic {
+  level: "error" | "warning";
+  file: string;
+  line: number;
+  message: string;
+}
+
+export interface ConstraintsView {
+  file: string | null;
+  /** The default constraints of the device package, read first */
+  defaults: string | null;
+  commands: number;
+  errors: number;
+  warnings: number;
+  /** The first 50 */
+  diagnostics: OdcDiagnostic[];
+  clocks: string[];
+  /** The netlist is known, so the coverage of the timing is */
+  timing_checked: boolean;
+  unconstrained_clocks: string[];
+  inputs_without_delay: number;
+  outputs_without_delay: number;
+  /** The I/O map of the device package: PACKAGE_PIN names its pins */
+  io_map: string | null;
 }
 
 /** A design directory: what the sidebar shows of it; the files are the ones of the manifest */
@@ -72,7 +102,7 @@ export interface UploadedFile {
 
 /** The most that the server takes for one file, and the kinds of file that a flow reads */
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
-export const UPLOAD_EXTENSIONS = [".xml", ".blif", ".eblif", ".v", ".sv", ".vh", ".sdc", ".pcf", ".json", ".csv", ".txt"];
+export const UPLOAD_EXTENSIONS = [".xml", ".blif", ".eblif", ".v", ".sv", ".vh", ".sdc", ".odc", ".pcf", ".json", ".csv", ".txt"];
 
 export interface AppConfig {
   schema_version: number;

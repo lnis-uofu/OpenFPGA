@@ -33,7 +33,7 @@ read_odc
 
   Read the constraints of the design from an ODC file. They replace the ones of the session. The default constraints of the device package (role ``odc_defaults``) are read first, and a command of the file on the same port or cell wins.
 
-  A file with an error is not read, and the session keeps its constraints. A change of the timing, floorplanning, routing or pin commands drops the stages from ``DEVICE``; a change of the synthesis commands drops the circuit. A raw SDC or VPR constraints file and the ODC cannot set the same thing: the read is refused, with the command that takes the other one away.
+  A file with an error is not read, and the session keeps its constraints. An unknown command is reported with the nearest command, and a query that matches nothing with the nearest names. A change of the timing, floorplanning, routing or pin commands drops the stages from ``DEVICE``; a change of the synthesis commands drops the circuit. A raw SDC or VPR constraints file and the ODC cannot set the same thing: the read is refused, with the command that takes the other one away.
 
   .. option:: --file or -f <string>
 

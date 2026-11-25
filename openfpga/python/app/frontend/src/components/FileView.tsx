@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { languageOf } from "../language";
-import { config, editCopy, loadFile, openFiles, saveFile } from "../store";
+import type { OdcDiagnostic } from "../api";
+import { config, editCopy, fileLine, loadFile, openFiles, saveFile, view } from "../store";
 import { theme } from "../theme";
 
 function size(bytes: number): string {
@@ -12,12 +13,36 @@ function size(bytes: number): string {
 const isDark = () =>
   theme.value === "dark" || (theme.value === "auto" && !!window.matchMedia?.("(prefers-color-scheme: dark)").matches);
 
+/** The errors and warnings of the session's ODC on the lines of a file */
+export function odcMarkersOf(name: string, diagnostics: OdcDiagnostic[] | undefined): OdcDiagnostic[] {
+  return (diagnostics ?? []).filter((d) => d.file === name && d.line > 0);
+}
+
+type MonacoEditor = {
+  getValue(): string;
+  setValue(v: string): void;
+  dispose(): void;
+  getModel(): unknown;
+  revealLineInCenter(line: number): void;
+  setPosition(position: { lineNumber: number; column: number }): void;
+  focus(): void;
+};
+
 /** Monaco. It is loaded the first time (the page does not carry it before); if it cannot be loaded
  * the text is shown as it is. A file that may be edited is edited here: onChange gets the text
- * after each change, onSave is called by Ctrl+S (Cmd+S) */
-function Editor(props: { name: string; text: string; editable: boolean; onChange: (text: string) => void; onSave: () => void }) {
+ * after each change, onSave is called by Ctrl+S (Cmd+S). markers are the checks of the ODC on its
+ * lines */
+function Editor(props: {
+  name: string;
+  text: string;
+  editable: boolean;
+  markers: OdcDiagnostic[];
+  onChange: (text: string) => void;
+  onSave: () => void;
+}) {
   const host = useRef<HTMLDivElement>(null);
-  const editor = useRef<{ getValue(): string; setValue(v: string): void; dispose(): void } | null>(null);
+  const editor = useRef<MonacoEditor | null>(null);
+  const [ready, setReady] = useState(0);
   const latest = useRef(props.text);
   const save = useRef(props.onSave);
   const change = useRef(props.onChange);
@@ -46,7 +71,8 @@ function Editor(props: { name: string; text: string; editable: boolean; onChange
           wordWrap: "off",
           ariaLabel: props.name,
         });
-        editor.current = created;
+        editor.current = created as unknown as MonacoEditor;
+        setReady((n) => n + 1);
         if (props.editable) {
           created.onDidChangeModelContent(() => change.current(created.getValue()));
           created.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => save.current());
@@ -68,6 +94,37 @@ function Editor(props: { name: string; text: string; editable: boolean; onChange
     void import("../monaco").then(({ monaco }) => monaco.editor.setTheme(dark ? "vs-dark" : "vs")).catch(() => undefined);
   }, [dark]);
 
+  const wanted = fileLine.value;
+  useEffect(() => {
+    if (!wanted || wanted.name !== props.name || !editor.current || !props.text) return;
+    editor.current.revealLineInCenter(wanted.line);
+    editor.current.setPosition({ lineNumber: wanted.line, column: 1 });
+    editor.current.focus();
+    fileLine.value = null;
+  }, [wanted, ready, props.text]);
+
+  const markerKey = JSON.stringify(props.markers);
+  useEffect(() => {
+    const model = editor.current?.getModel();
+    if (!model) return;
+    void import("../monaco")
+      .then(({ monaco }) =>
+        monaco.editor.setModelMarkers(
+          model as never,
+          "odc",
+          props.markers.map((d) => ({
+            severity: d.level === "error" ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+            message: d.message,
+            startLineNumber: d.line,
+            startColumn: 1,
+            endLineNumber: d.line,
+            endColumn: 1000,
+          })),
+        ),
+      )
+      .catch(() => undefined);
+  }, [markerKey, ready]);
+
   if (plain) return <pre class="file-plain">{props.text}</pre>;
   return <div class="editor-host" ref={host} />;
 }
@@ -84,6 +141,8 @@ export function FileView(props: { name: string }) {
   const [note, setNote] = useState<{ kind: "ok" | "warn" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const dirty = editable && draft !== null && draft !== state?.text;
+  const markers = odcMarkersOf(props.name, view.value.constraints?.diagnostics);
+  const errors = markers.filter((m) => m.level === "error").length;
   useEffect(() => setDraft(null), [state?.text]); // what was read or saved is the text now
 
   const save = async () => {
@@ -119,6 +178,13 @@ export function FileView(props: { name: string }) {
           </span>
         )}
         {state?.status === "loading" && <span class="muted">reading…</span>}
+        {markers.length > 0 && (
+          <span class={`file-note file-note-${errors ? "error" : "warn"}`} title="The checks of the constraints of the session">
+            {errors ? `${errors} error${errors > 1 ? "s" : ""}` : ""}
+            {errors && markers.length > errors ? ", " : ""}
+            {markers.length > errors ? `${markers.length - errors} warning${markers.length - errors > 1 ? "s" : ""}` : ""}
+          </span>
+        )}
         {note && (
           <span class={`file-note file-note-${note.kind}`} role="status">
             {note.text}
@@ -145,7 +211,14 @@ export function FileView(props: { name: string }) {
           {state.message}
         </p>
       ) : state && (state.text || state.status === "ready") ? (
-        <Editor name={props.name} text={state.text} editable={editable} onChange={setDraft} onSave={() => void save()} />
+        <Editor
+          name={props.name}
+          text={state.text}
+          editable={editable}
+          markers={markers}
+          onChange={setDraft}
+          onSave={() => void save()}
+        />
       ) : (
         <p class="muted pad">Reading…</p>
       )}

@@ -177,8 +177,27 @@ class Resolver {
       }
     }
     if ("create_clock" == cmd.name && cmd.objects.empty()) {
-      add_clock(index, {});
+      add_clock(index, bare_targets(cmd));
     }
+  }
+
+  /* The names of a create_clock without a query, as an SDC gives them
+   * (create_clock -period 10 clk): the words that are not an option or its
+   * value */
+  static std::vector<std::string> bare_targets(const Command& cmd) {
+    static const std::set<std::string> valued = {"-period", "-name",
+                                                 "-waveform"};
+    std::vector<std::string> targets;
+    for (size_t i = 1; i < cmd.words.size(); ++i) {
+      const Word& word = cmd.words[i];
+      if (Word::BARE == word.kind && !word.text.empty() &&
+          '-' == word.text[0]) {
+        i += valued.count(word.text);
+      } else if (Word::BARE == word.kind || Word::QUOTED == word.kind) {
+        targets.push_back(word.text);
+      }
+    }
+    return targets;
   }
 
   void add_clock(const size_t index, const std::vector<std::string>& targets) {

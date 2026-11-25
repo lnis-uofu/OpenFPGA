@@ -89,6 +89,9 @@ void test_format() {
   const odc::Diagnostic e = first(c.diagnostics, odc::Diagnostic::ERROR);
   check("t.odc" == e.file && 2 == e.line && has(e.message, "frobnicate"),
         "an unknown command is an error with its file and line");
+  c = read("odc_version 1\ncreate_clok -period 2 [get_ports clk]\n");
+  check(has(c.diagnostics.at(0).message, "the nearest: create_clock"),
+        "an unknown command names the nearest command");
   c = read("odc_version 1\nfrobnicate 1\n", true);
   check(!c.has_errors() && c.commands.empty(),
         "an unknown command is skipped with --lenient");
@@ -361,6 +364,12 @@ void test_resolve() {
           "5" == r.timing.clocks[0].period,
         "the clocks");
   check(r.timing.outputs_without_delay.size() == 2, "outputs without delay");
+  odc::Resolution bare = odc::resolve(
+    read("odc_version 1\ncreate_clock -period 5 -waveform {0 2.5} clk\n"),
+    design);
+  check(1 == bare.timing.clocks.size() && "clk" == bare.timing.clocks[0].name &&
+          bare.timing.unconstrained_clocks.empty(),
+        "a clock named by its bare target, as in an SDC, is the clock of it");
   const std::string xml = odc::write_vpr_constraints(r);
   check(
     has(xml, "<add_atom name_pattern=\"out:q\"/>") && has(xml, "subtile=\"1\""),

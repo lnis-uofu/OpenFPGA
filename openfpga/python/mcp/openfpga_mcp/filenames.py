@@ -11,9 +11,11 @@ from typing import Optional
 
 from .paths import looks_like_blif, root_element
 
-# What an input of a flow can be: architectures and constraints (XML), circuits, timing constraints
+# What an input of a flow can be: architectures and constraints (XML), circuits, timing
+# constraints, the constraints of a design (ODC)
 EXTENSIONS = frozenset(
-    (".xml", ".blif", ".eblif", ".v", ".sv", ".vh", ".sdc", ".pcf", ".json", ".csv", ".txt")
+    (".xml", ".blif", ".eblif", ".v", ".sv", ".vh", ".sdc", ".odc", ".pcf", ".json", ".csv")
+    + (".txt",)
 )
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,99}$")
 _KINDS = {"architecture": "vpr_arch", "openfpga_architecture": "openfpga_arch"}

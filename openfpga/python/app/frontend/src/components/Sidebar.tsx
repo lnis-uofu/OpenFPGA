@@ -68,6 +68,75 @@ function Name(props: { name: string; label?: string }) {
   );
 }
 
+/** The ODC of the session: its file, what it has, its checks (a click opens the line), the timing
+ * that it leaves out, and the I/O map of the device package */
+function Constraints(props: { odc: NonNullable<SessionView["constraints"]> }) {
+  const { odc } = props;
+  const real = config.value?.backend === "session";
+  const [open, setOpen] = useState(odc.errors > 0);
+  const missing =
+    odc.unconstrained_clocks.length + odc.inputs_without_delay + odc.outputs_without_delay > 0;
+  return (
+    <div class="odc" aria-label="Constraints of the design">
+      {odc.file ? (
+        <div class="odc-head">
+          <Name name={odc.file} />
+          <span class="muted">
+            {" "}
+            {odc.commands} command{odc.commands === 1 ? "" : "s"}
+          </span>
+          {odc.errors > 0 && <span class="odc-count odc-error">✖ {odc.errors}</span>}
+          {odc.warnings > 0 && <span class="odc-count odc-warning">⚠ {odc.warnings}</span>}
+        </div>
+      ) : (
+        <div class="muted">No ODC</div>
+      )}
+      {odc.defaults && (
+        <div class="muted odc-line" title="Read first; the ODC wins on the same port or cell">
+          defaults <Name name={odc.defaults} />
+        </div>
+      )}
+      {odc.io_map && (
+        <div class="muted odc-line" title="PACKAGE_PIN names a pin of this map">
+          I/O map <Name name={odc.io_map} />
+        </div>
+      )}
+      {odc.file && odc.timing_checked && (
+        <div class={`odc-line ${missing ? "odc-warning" : "muted"}`}>
+          {odc.clocks.length ? `clocks ${odc.clocks.join(", ")}` : "no clock"}
+          {odc.unconstrained_clocks.length > 0 && ` · no period: ${odc.unconstrained_clocks.join(", ")}`}
+          {odc.inputs_without_delay > 0 && ` · ${odc.inputs_without_delay} inputs without a delay`}
+          {odc.outputs_without_delay > 0 && ` · ${odc.outputs_without_delay} outputs without a delay`}
+        </div>
+      )}
+      {odc.diagnostics.length > 0 && (
+        <>
+          <button class="fold" aria-expanded={open} onClick={() => setOpen(!open)}>
+            {open ? "▾" : "▸"} Checks ({odc.errors + odc.warnings})
+          </button>
+          {open && (
+            <ul class="odc-checks">
+              {odc.diagnostics.map((d, i) => (
+                <li key={i} class={d.level === "error" ? "odc-error" : "odc-warning"}>
+                  <button
+                    class="file"
+                    disabled={!real}
+                    title={`${d.file}:${d.line}`}
+                    onClick={() => void openFile(d.file, d.line)}
+                  >
+                    {d.level === "error" ? "✖" : "⚠"} {d.file.split("/").pop()}:{d.line}
+                  </button>{" "}
+                  {d.message}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function size(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} kB`;
@@ -516,15 +585,16 @@ export function Sidebar() {
       </Section>
       <Section title="Constraints and results">
         <h3>Constraints</h3>
-        {files.constraints.length ? (
+        {v.constraints && <Constraints odc={v.constraints} />}
+        {files.constraints.filter((c) => !c.startsWith("odc ")).length ? (
           <div class="chips">
-            {files.constraints.map((c) => (
+            {files.constraints.filter((c) => !c.startsWith("odc ")).map((c) => (
               <span class="chip" key={c}>
                 {c}
               </span>
             ))}
           </div>
-        ) : (
+        ) : v.constraints ? null : (
           <div class="muted">(none)</div>
         )}
         <h3>Results</h3>

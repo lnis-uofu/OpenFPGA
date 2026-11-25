@@ -21,22 +21,47 @@ import {
 import { languageOf } from "./language";
 
 // Monaco does not run in jsdom: a stand-in that keeps what it was given
-type FakeEditor = { value: string; disposed: boolean; listener?: () => void; commands: { key: number; run: () => void }[]; type(v: string): void };
-const fake = vi.hoisted(() => ({ fail: false, created: [] as { options: Record<string, unknown>; editor: FakeEditor }[] }));
+type FakeEditor = {
+  value: string;
+  disposed: boolean;
+  listener?: () => void;
+  commands: { key: number; run: () => void }[];
+  shown: number[];
+  type(v: string): void;
+};
+type FakeMarker = { severity: number; message: string; startLineNumber: number };
+const fake = vi.hoisted(() => ({
+  fail: false,
+  created: [] as { options: Record<string, unknown>; editor: FakeEditor }[],
+  markers: [] as FakeMarker[][],
+}));
 vi.mock("./monaco", () => ({
   get monaco() {
     if (fake.fail) throw new Error("the editor did not load");
     return {
       KeyMod: { CtrlCmd: 2048 },
       KeyCode: { KeyS: 49 },
+      MarkerSeverity: { Warning: 4, Error: 8 },
       editor: {
         setTheme: () => undefined,
+        setModelMarkers: (_model: unknown, _owner: string, markers: FakeMarker[]) => {
+          fake.markers.push(markers);
+        },
         create: (_host: unknown, options: Record<string, unknown>) => {
           const editor = {
             value: String(options.value),
             disposed: false,
             listener: undefined as (() => void) | undefined,
             commands: [] as { key: number; run: () => void }[],
+            shown: [] as number[],
+            getModel() {
+              return {};
+            },
+            revealLineInCenter(line: number) {
+              this.shown.push(line);
+            },
+            setPosition() {},
+            focus() {},
             type(v: string) {
               this.value = v; // what a person typing leaves, and the event of it
               this.listener?.();
@@ -72,6 +97,7 @@ beforeEach(() => {
   resetStore();
   fake.fail = false;
   fake.created.length = 0;
+  fake.markers.length = 0;
   window.localStorage.clear();
   config.value = { schema_version: 1, console: true, backend: "session", model: { endpoint: null, name: null } };
 });
@@ -83,6 +109,7 @@ describe("the languages of the viewer", () => {
     expect(languageOf("top.V")).toBe("systemverilog");
     expect(languageOf("constraints.sdc")).toBe("tcl");
     expect(languageOf("and2.blif")).toBe("blif");
+    expect(languageOf("design.odc")).toBe("odc");
     expect(languageOf("AND2.EBLIF")).toBe("blif");
     expect(languageOf("design.place")).toBe("plaintext");
     expect(languageOf("README")).toBe("plaintext");
@@ -174,6 +201,64 @@ describe("opening a file in a tab", () => {
     fireEvent.click(screen.getByText("design.net"));
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("Copy design.net")).toBeNull();
+  });
+});
+
+describe("the constraints of the design (ODC)", () => {
+  const odcView = () => {
+    const v = emptyView();
+    v.session = { id: "s1", name: "s1", worker: "running", ended: null, idle_s: 0 };
+    v.files.constraints = ["odc top.odc", "chan width 24"];
+    v.constraints = {
+      file: "top.odc",
+      defaults: null,
+      commands: 4,
+      errors: 1,
+      warnings: 1,
+      diagnostics: [
+        { level: "error", file: "top.odc", line: 3, message: "nothing matches the cell 'OUTO'; the nearest names: OUT0" },
+        { level: "warning", file: "other.odc", line: 1, message: "no header" },
+      ],
+      clocks: ["clk"],
+      timing_checked: true,
+      unconstrained_clocks: [],
+      inputs_without_delay: 2,
+      outputs_without_delay: 0,
+      io_map: "k6/io_map.csv",
+    };
+    return v;
+  };
+
+  it("puts the checks of a file on its lines, and says how many", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => reply(200, file("odc_version 1\n"))));
+    view.value = odcView();
+    render(<Workspace />);
+    await openFile("top.odc");
+    await waitFor(() => expect(fake.created).toHaveLength(1));
+    expect(fake.created[0].options).toMatchObject({ language: "odc" });
+    await waitFor(() => expect(fake.markers.at(-1)).toHaveLength(1)); // not the one of the other file
+    expect(fake.markers.at(-1)?.[0]).toMatchObject({ severity: 8, startLineNumber: 3 });
+    expect(screen.getByText("1 error")).toBeTruthy();
+  });
+
+  it("shows the ODC in the sidebar, and a check opens its file at its line", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => reply(200, file("a\nb\nc\n"))));
+    view.value = odcView();
+    render(
+      <>
+        <Sidebar />
+        <Workspace />
+      </>,
+    );
+    expect(screen.getByText(/4 commands/)).toBeTruthy();
+    expect(screen.getByText(/2 inputs without a delay/)).toBeTruthy();
+    expect(screen.getByTitle("Open k6/io_map.csv")).toBeTruthy();
+    expect(screen.getByText("chan width 24")).toBeTruthy();
+    expect(screen.queryByText("odc top.odc")).toBeNull(); // the ODC has its own line, not a chip
+    expect(screen.getByText(/the nearest names: OUT0/)).toBeTruthy(); // open: there is an error
+    fireEvent.click(screen.getByTitle("top.odc:3"));
+    await waitFor(() => expect(activeTab.value).toBe("file:top.odc"));
+    await waitFor(() => expect(fake.created[0]?.editor.shown).toEqual([3]));
   });
 });
 

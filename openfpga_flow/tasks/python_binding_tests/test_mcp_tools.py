@@ -351,6 +351,52 @@ def test_a_constraint_is_set_and_taken_away(flow, tmp_path):
     assert missing["diagnostics"][0]["kind"] == "file_not_found"
 
 
+def test_an_odc_is_set_checked_and_taken_away(flow):
+    script, sid = flow
+    bad = "odc_version 1\ncreate_clok -period 10 clk\n"
+    assert ask(script, sid, "write_file", name="bad.odc", content=bad)["ok"]
+    refused = ask(script, sid, "set_constraint", kind="odc", file="bad.odc")
+    assert refused["ok"] is False
+    first = refused["diagnostics"][0]
+    assert first["kind"] == "constraints_invalid" and first["line"] == 2
+    assert first["file"] == f"{sid}/created/bad.odc"  # a name in the workspace, not a path
+    assert "the nearest: create_clock" in first["message"]
+    assert ask(script, sid, "get_state")["data"]["state"]["reached"] == FLOW  # nothing changed
+
+    # A name that matches nothing is a warning, with the nearest names
+    good = (
+        "odc_version 1\n"
+        "create_clock -period 10 clk\n"
+        "set_input_delay 0 -clock clk [get_ports {IN0 IN1 INX}]\n"
+        "set_property LOC X1Y1 [get_cells OUT0]\n"
+    )
+    ask(script, sid, "write_file", name="top.odc", content=good)
+    read = ask(script, sid, "set_constraint", kind="odc", file="top.odc")
+    assert read["ok"], read
+    data = read["data"]
+    assert data["dropped"] == FLOW and data["after"] == f"{sid}/created/top.odc"
+    assert data["before"] is None and data["commands"] == 3
+    (warning,) = data["warnings"]
+    assert warning["line"] == 3 and "'INX'" in warning["message"]
+    assert "the nearest names: IN" in warning["message"]
+    assert data["timing"]["outputs_without_delay"] == ["OUT0", "OUT1", "OUT2"]
+    within(read)
+
+    report = ask(script, sid, "check_constraints", limit=1)
+    assert report["ok"] and report["data"]["kind"] == "constraints"
+    loc = report["data"]["commands"][2]
+    assert loc["name"] == "set_property" and loc["line"] == 4
+    assert loc["queries"][0]["matched"] == ["OUT0"]
+    within(report)
+    assert ask(script, sid, "check_constraints", limit=0)["ok"] is False
+
+    cleared = ask(script, sid, "set_constraint", kind="odc", clear=True)
+    assert cleared["data"]["before"] == f"{sid}/created/top.odc"
+    assert cleared["data"]["after"] is None
+    assert ask(script, sid, "check_constraints")["data"]["file"] is None
+    assert ask(script, sid, "set_constraint", kind="odc")["ok"] is False
+
+
 # The files ---------------------------------------------------------------------------------------
 
 

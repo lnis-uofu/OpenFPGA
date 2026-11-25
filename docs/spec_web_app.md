@@ -161,6 +161,11 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
   512 MB a session, a list of accepted extensions). An uploaded file can be removed.
 - **UI-35** (partial) A design copy is read only in the viewer. Editing it needs "Edit a copy",
   and the edited copy is not what Add synthesizes.
+- **UI-36** (done) "Constraints" shows the ODC of the session (read with `set_constraint
+  kind=odc`): its file, the number of commands, errors and warnings, the defaults and the I/O map of
+  the device package, the clocks and the ports without a delay, and the checks, where a click opens
+  the file at the line. The files that the ODC gives VPR are not listed as an SDC or a VPR
+  constraints file. Saving an ODC that the session read says that it must be read again.
 
 ### 5.5 Centre: chat, tabs and viewer
 
@@ -172,10 +177,12 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
   a table of rows); "JSON" shows what the model read.
 - **UI-43** (partial) A result tab draws utilization, placement and congestion. The drawings are a
   first version to be redesigned; timing, paths and clusters have none.
-- **UI-44** (done) A file opens in a tab with an editor (Monaco): colours for XML, Verilog, Tcl and
-  BLIF, search, folding. Uploads and the model's files are edited in place; other files through
+- **UI-44** (done) A file opens in a tab with an editor (Monaco): colours for XML, Verilog, Tcl,
+  BLIF and ODC, search, folding. Uploads and the model's files are edited in place; other files through
   "Edit a copy". Text only, one megabyte at most.
 - **UI-45** (done) A report opens in a tab (REP-20).
+- **UI-46** (done) The errors and warnings of the session's ODC (docs/spec_odc.md R-49) are marked
+  on the lines of the file that is open, and the head of the file says how many.
 
 ### 5.6 Console
 
@@ -385,8 +392,8 @@ most useful first in each group. None is built.
 
 ### 9.4 Constraints and options
 
-- **X-30** A constraints editor: SDC with completion of clock and port names and a check before
-  the run; a pin planner that shows the I/O ring and writes the pin file.
+- **X-30** A constraints editor: ODC with completion of clock, port and cell names (its checks
+  on the lines are UI-46); a pin planner that shows the I/O ring and writes the pin file.
 - **X-31** An options panel: every option with search, its stage, its default, and "changed only";
   a set of options can be saved by name and applied to another session.
 - **X-32** A floorplanning aid: regions drawn on the floorplan become placement constraints.

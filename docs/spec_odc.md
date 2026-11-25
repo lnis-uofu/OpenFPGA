@@ -1,6 +1,6 @@
 # Spec: ODC, the constraints file of OpenFPGA
 
-Status: draft for review. Implemented (phases 3 and 4 of `docs/plan_odc_constraints.md`): `libs/libodc` (the reader, the checks, the writers) and the commands of the plugin `ui`. Not yet: the custom properties of a `pcf_config.xml` (R-35), the objects of the synthesis commands reported from the log of Yosys (R-23), and the share of the endpoints that are constrained (R-41).
+Status: draft for review. Implemented (phases 3 to 5 of `docs/plan_odc_constraints.md`): `libs/libodc` (the reader, the checks, the writers), the commands of the plugin `ui`, the tools of the model (R-48) and the web app (R-49). Not yet: the custom properties of a `pcf_config.xml` (R-35), the objects of the synthesis commands reported from the log of Yosys (R-23), and the share of the endpoints that are constrained (R-41).
 
 ## Overview
 
@@ -198,6 +198,16 @@ Each command has a **stage**, the first stage of the flow whose result it change
 - **R-46** A device package may have an ODC file of role `odc_defaults` (spec_device_package.md). It is read before the file of the user, as if the user's file included it first. A command of the user's file that sets the same thing (the same `LOC`, the same port's pin) wins.
 - **R-47** A design directory may have an ODC file of role `odc` (spec_design_directory.md). `read_design` reads it.
 
+## The model and the web app
+
+- **R-48** The model (docs/spec_model_capabilities.md) writes an ODC with `write_file` and reads it with `set_constraint kind=odc` (`clear` takes it away; an unknown command is an error, so that the model fixes it). The answer says what was dropped, the number of commands, the warnings and the timing that is not constrained. A file with errors is refused with one diagnostic `constraints_invalid` per line, with its file (a name in the workspace) and line; a name that the flow does not know (a command, a port, a cell, a pin of the package) comes with the nearest names, in the error or in a warning. `check_constraints` answers `report_constraints`.
+- **R-49** The web app (docs/spec_web_app.md):
+  - opens an `.odc` with colours of its own: the commands that the reader knows (another word at the start of a line is marked), queries, options, properties, locations;
+  - marks the errors and warnings of the session's ODC on the lines of the files they are in, and says how many in the head of the file;
+  - shows in the sidebar the ODC of the session with its number of commands, errors and warnings, the defaults and the I/O map of the package, the clocks and the ports without a delay, and the list of checks, where a click opens the file at the line;
+  - does not show the files that the ODC gives VPR as a raw SDC or VPR constraints file;
+  - says, when an ODC that the session read is saved, that `set_constraint kind=odc` reads it again.
+
 ## The table of commands
 
 - **R-60** The commands are a table, as the application options are. Each row has:
@@ -266,3 +276,5 @@ set_property PACKAGE_PIN clk[0] [get_ports clk]
 | T-10 | A change of a timing command drops DEVICE and after; a change of a synthesis command drops the circuit; `clear_odc` drops the same. A checkpoint restores the ODC, and a journal replays it. A raw SDC with timing commands in the ODC is refused. | R-43 to R-45 |
 | T-11 | `odc_defaults` of a package is read before the file of the user, and a command of the user wins. | R-46 |
 | T-12 | `include` reads a file relative to the one that includes it, and a loop is an error. | R-37 |
+| T-13 | Through the MCP server: a file with an unknown command is refused with its line and the nearest command, and the session keeps its stages; a list with a name that matches nothing is read with a warning and the nearest names; `check_constraints` lists the matches; `clear` takes the ODC away. | R-48 |
+| T-14 | In the app: the sidebar shows the ODC, its checks and its timing, and not its SDC; the editor marks the lines of the file; a saved ODC that the session read says so; a click on a check opens the line. | R-49 |

@@ -49,7 +49,7 @@ calls of the endpoint, `json` makes the model answer with a JSON object that the
 constrains to the tools (a smaller prompt, and a different way to go wrong). `--record-dir`
 writes each conversation as lines of JSON (what the model said, each call and its answer, the
 tokens and the seconds). What the person does meanwhile (console, buttons, `/` lines) is told to
-the model at its next message. All 27 tools are shown to the model; the files it can read are
+the model at its next message. All 28 tools are shown to the model; the files it can read are
 listed at the start of the prompt (at most 1,500 characters).
 
 ## The first screen
@@ -154,7 +154,7 @@ What a file is (VPR architecture, OpenFPGA architecture, circuit) is read from i
 shown next to it, and the model is told at its next message that the file is there. A name that
 is taken is replaced only if you say so. The ✕ beside a file in the list deletes it from the
 session (after a question), and the model is told. Files are per session; there is no folder
-shared by all of them. Accepted: `.xml .blif .eblif .v .sv .vh .sdc .pcf .json
+shared by all of them. Accepted: `.xml .blif .eblif .v .sv .vh .sdc .odc .pcf .json
 .csv .txt`, a plain name (letters, digits and `. _ + -`, at most 100), 50 MB at most for a file,
 and what a session may hold in all (512 MB). Not in the demo.
 

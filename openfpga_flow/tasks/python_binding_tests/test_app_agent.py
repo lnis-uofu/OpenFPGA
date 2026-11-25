@@ -125,7 +125,7 @@ def test_the_definitions_of_the_tools_of_the_server_say_what_the_server_says(
     try:
         theirs = {t.name: t.input_schema for t in asyncio.run(server.list_tools())}
         ours = {d["function"]["name"]: d["function"] for d in tool_definitions(backend.tools)}
-        assert set(ours) == set(theirs) and len(ours) == 27
+        assert set(ours) == set(theirs) and len(ours) == 28
         for name, function in ours.items():
             properties = function["parameters"]["properties"]
             assert set(properties) == set(theirs[name].get("properties", {})), name

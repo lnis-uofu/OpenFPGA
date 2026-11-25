@@ -413,15 +413,12 @@ def register(
 
     @tool()
     async def write_file(session: str, name: str, content: str, overwrite: bool = False):
-        """Write a text file in the directory of the session: an architecture or a constraints
-        file (XML), a circuit (BLIF or Verilog), a timing constraint (SDC) or a pin constraint
-        (PCF). Only here, never anywhere else: give a plain name (letters, digits and . _ + -)
-        with no folder, and an extension of a file that a flow reads. read_inputs and
-        set_constraint find the file by its name afterwards. A name that was written before is
-        kept unless overwrite is true. Returns the name, what the file is (vpr_arch,
-        openfpga_arch, circuit or other), its size, and what is wrong with it when an XML file is
-        not well formed. Put real line breaks in content, not the two characters backslash and n
-        (a text that has only those is read as one that has line breaks)."""
+        """Write a text file in the directory of the session: an architecture (XML), a circuit
+        (BLIF, Verilog), constraints (XML, SDC, ODC, PCF). A plain name (letters, digits and
+        . _ + -), no folder, the extension of a file that a flow reads; read_inputs and
+        set_constraint find it by that name. An existing name is kept unless overwrite is true.
+        Returns the name, its kind (vpr_arch, openfpga_arch, circuit, other), its size, and why
+        an XML is not well formed. Use real line breaks in content, not backslash n."""
 
         def work():
             entry = session_of(session)
@@ -900,23 +897,80 @@ def register(
 
         return await run(work)
 
+    # A line of an ODC that the shell refused: "<file>:<line>: error: <message>"
+    odc_line = re.compile(
+        r"^(?P<file>.+?):(?P<line>\d+): (?P<level>error|warning): (?P<message>.*)$"
+    )
+
+    def odc_refused(error) -> Dict[str, Any]:
+        """The answer for an ODC that is not read: one diagnostic for each line, with the file
+        relative to the workspace, and what to do"""
+        diagnostics = []
+        for item in getattr(error, "diagnostics", None) or []:
+            text = str(getattr(item, "message", item))
+            found = odc_line.match(text)
+            if not found:
+                continue
+            one = answers.diagnostic(
+                "constraints_invalid",
+                found.group("message"),
+                "Fix the line with write_file and call set_constraint kind=odc again",
+            )
+            one["severity"] = found.group("level")
+            one["file"] = answers.relative(found.group("file"), folders)
+            one["line"] = int(found.group("line"))
+            diagnostics.append(one)
+        if not diagnostics:
+            raise error
+        return answers.failed(diagnostics)
+
+    def read_odc(entry: Entry, file: Optional[str]):
+        """Read an ODC (or take it away): the answer says what it dropped, as the other kinds
+        do, with the warnings and the timing that is not constrained"""
+        import openfpga
+
+        handle = entry.session
+        reached = handle.state().reached
+        before = handle.constraints(limit=1)["file"]
+        if file is None:
+            if before is not None:
+                handle.clear_odc()
+            report = handle.constraints(limit=1)
+        else:
+            path = resolve_file(config, entry.directory, file)
+            try:
+                report = handle.read_odc(path)
+            except openfpga.OpenfpgaError as error:
+                return odc_refused(error)
+        now = handle.state().reached
+        return reply(
+            {
+                "name": "odc",
+                "before": before,
+                "after": report["file"],
+                "dropped": [stage for stage in reached if stage not in now],
+                "commands": len(report["commands"]),
+                "warnings": [d for d in report["diagnostics"] if d["level"] == "warning"],
+                "timing": report["timing"],
+            }
+        )
+
     @tool()
     async def set_constraint(
         session: str,
-        kind: Literal["vpr_constraints", "sdc", "chan_width"],
+        kind: Literal["odc", "vpr_constraints", "sdc", "chan_width"],
         file: Optional[str] = None,
         width: Optional[int] = None,
         clear: bool = False,
     ):
-        """Set or take away an input that changes the whole flow, and say what it dropped.
-        kind vpr_constraints: the floorplan constraints of VPR (an XML file of the workspace).
-        kind sdc: the timing constraints (an SDC file). kind chan_width: route with a channel of
-        this many tracks (width), which can be changed but not cleared. clear takes a file away."""
+        """Set or clear an input that changes the whole flow; says what it dropped. odc: the
+        design's constraints (errors name the line, nearest names). vpr_constraints: VPR's XML.
+        sdc: an SDC. chan_width: width tracks (changed, not cleared)."""
 
         def work():
             entry = session_of(session)
             handle = entry.session
-            _choice("kind", kind, ("vpr_constraints", "sdc", "chan_width"))
+            _choice("kind", kind, ("odc", "vpr_constraints", "sdc", "chan_width"))
             if kind == "chan_width":
                 if clear:
                     raise FixedWidthOnly(
@@ -936,11 +990,31 @@ def register(
                     "%s takes file=NAME (or clear=true)" % kind
                 )
                 raise error
+            if kind == "odc":
+                return read_odc(entry, file)
             path = None if clear else resolve_file(config, entry.directory, file)
             change = (
                 handle.read_vpr_constraints if kind == "vpr_constraints" else handle.read_sdc
             )(path)
             return reply(dataclasses.asdict(change))
+
+        return await run(work)
+
+    @tool()
+    async def check_constraints(session: str, limit: Optional[int] = None):
+        """The ODC checked again: each command's line, matches (limit, default 20) or nearest
+        names; errors, warnings, untimed clocks and ports."""
+
+        def work():
+            count = _number("limit", limit, 20, 1, 200)
+            import openfpga
+
+            report = session_of(session).session.constraints(limit=count)
+            version = getattr(openfpga, "_SCHEMA_VERSIONS", {}).get("constraints", 1)
+            return reply(
+                {"kind": "constraints", "schema_version": version, **report},
+                "call check_constraints again with a lower limit",
+            )
 
         return await run(work)
 

@@ -1,5 +1,7 @@
 """A file that the page opens in its viewer: what may be read, and what is refused"""
 
+import json
+
 import pytest
 
 pytest.importorskip("starlette")
@@ -162,3 +164,37 @@ def test_nothing_is_saved_in_the_demo():
         demo.headers["Authorization"] = "Bearer t"
         assert save(demo, "a.blif", "x").status_code == 404
         assert demo.post("/api/file/copy", params={"name": "a.blif"}).status_code == 404
+
+
+def test_the_odc_of_the_session_is_in_the_sidebar_with_its_checks_on_its_lines(
+    client, golden, tmp_path
+):
+    assert client.post("/api/session/new", json={"device_package": LOGIC}).json()["ok"]
+    assert call(say(client, f"/read_inputs circuit={golden.circuit.name}"))["ok"]
+    assert view(client)["constraints"] is None  # no ODC, and the package has no I/O map
+    odc = (
+        "odc_version 1\n"
+        "create_clock -period 10 clk\n"
+        "set_input_delay 0 -clock clk [get_ports {IN0 INX}]\n"
+    )
+    assert put(client, "top.odc", odc.encode()).status_code == 200
+    assert call(say(client, "/set_constraint kind=odc file=top.odc"))["ok"]
+    v = view(client)
+    shown = v["constraints"]
+    assert shown["file"] == "top.odc" and shown["commands"] == 2
+    assert (shown["errors"], shown["warnings"]) == (0, 1)
+    (check,) = shown["diagnostics"]
+    assert (check["file"], check["line"], check["level"]) == ("top.odc", 3, "warning")
+    assert shown["clocks"] == ["clk"] and shown["timing_checked"] is True
+    assert shown["outputs_without_delay"] == 3
+    # The files that the ODC gives VPR are not constraints of their own
+    assert "odc top.odc" in v["files"]["constraints"]
+    assert not any(c.startswith(("sdc ", "vpr constraints ")) for c in v["files"]["constraints"])
+    assert str(tmp_path) not in json.dumps(v)
+
+    answer = save(client, "top.odc", odc + "set_output_delay 0 -clock clk [all_outputs]\n").json()
+    assert answer["ok"] and answer["data"]["in_use"] is True
+    assert call(say(client, "/set_constraint kind=odc file=top.odc"))["ok"]
+    assert view(client)["constraints"]["outputs_without_delay"] == 0
+    assert call(say(client, "/set_constraint kind=odc clear=true"))["ok"]
+    assert view(client)["constraints"] is None

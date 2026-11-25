@@ -5,5 +5,6 @@ export function languageOf(name: string): string {
   if (["v", "vh", "sv", "svh"].includes(ext)) return "systemverilog";
   if (["blif", "eblif"].includes(ext)) return "blif"; // the circuits
   if (["sdc", "tcl", "xdc"].includes(ext)) return "tcl";
+  if (ext === "odc") return "odc"; // the constraints of a design (odc.ts)
   return "plaintext";
 }

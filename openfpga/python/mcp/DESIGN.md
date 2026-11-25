@@ -1,6 +1,6 @@
 # MCP server for OpenFPGA: tool design note
 
-Status: reviewed. The server in `openfpga_mcp/` follows it, with 27 tools: the 23 of the design, `list_device_packages`, `use_device_package`, `write_file` and `synthesize`. The journal in workers (G2) and the memory limit of a worker (G4) are done. The directory is provisional: it depends on the answer to issue #2879, question 1.
+Status: reviewed. The server in `openfpga_mcp/` follows it, with 28 tools: the 23 of the design, `list_device_packages`, `use_device_package`, `write_file`, `synthesize` and `check_constraints`. The journal in workers (G2) and the memory limit of a worker (G4) are done. The directory is provisional: it depends on the answer to issue #2879, question 1.
 
 This note fixes the tools, their arguments, the size of each answer and the limits, before the server is written. The server is a thin layer: every tool calls one method of `openfpga.RemoteSession` (see `openfpga/python/README.md`), and the facts in an answer are the ones of the queries, not text that the server writes.
 
@@ -68,7 +68,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 | `list_options` | `session`, `stage?`, `query?`, `changed?`, `limit?` (default 20) | `report_stage`: for each stage asked for, its options with value, default and choices, and the stages that a change drops |
 | `describe_option` | `session`, `name` | the option: type, value, default, help, choices, stage, and the stages that a change would drop |
 | `set_option` | `session`, `name`, `value` | the `Change`: before, after, and the stages dropped. `router.flat_routing` true is refused on a device package that does not support flat routing (`flat_routing_unsupported`), and so is `run_stage` route with it set |
-| `set_constraint` | `session`, `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | the `Change`. A file is a name inside the workspace. The channel width is changed, not cleared: the routing runs only at a fixed width, and `run_stage` refuses route without one (`chan_width_required`); `use_device_package` sets the width of the package |
+| `set_constraint` | `session`, `kind` (`odc`, `vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | the `Change`. A file is a name inside the workspace. `odc` runs the shell's `read_odc` (or `clear_odc`): the answer adds the number of commands, the warnings and the timing that is not constrained; a file with errors is refused with one `constraints_invalid` per line (file, line, and the nearest name of what the flow does not know), and the session keeps its constraints. The channel width is changed, not cleared: the routing runs only at a fixed width, and `run_stage` refuses route without one (`chan_width_required`); `use_device_package` sets the width of the package |
 
 ### Queries (read only)
 
@@ -82,6 +82,7 @@ Arguments marked `?` are optional. `session` is the id that `session_open` gave.
 | `get_net` | `net_info`, `net_route` | `session`, `net`, `route?` (default false) | the route tree only when asked, and cut |
 | `get_placement` | `placement` | `session`, `type?`, `prefix?`, `limit?` (default 20) | |
 | `get_congestion` | `congestion` | `session`, `region_size?`, `hotspots?` (default 5) | works after a failed route (`routed: false`) |
+| `check_constraints` | `constraints` | `session`, `limit?` (default 20, at most 200) | the shell's `report_constraints`: each command of the ODC with its line and what its queries matched (or the nearest names), the errors and warnings checked again on what is read now, the coverage of the timing, the files given to the tools. Added after the design |
 
 A query on a stage that is not reached answers `ok: false` with the diagnostic `stage_not_reached` or `stage_failed`, which names the command to run.
 
@@ -95,7 +96,7 @@ A query on a stage that is not reached answers `ok: false` with the diagnostic `
 | `get_journal` | `session`, `format?` (`openfpga` or `python`), `tail?` | the commands that changed the flow (the inputs, the options, the stages, the synthesis); cut from the start if long. The journal is the folder `journal` of the session directory; a worker that starts again goes on with it |
 | `replay` | `journal`, `name?` | a new session that has run the commands of the journal of a session (its id, or `sN/journal`). Only the commands that change the flow run, with files inside the workspace, the designs folders and the packages, and a script of Yosys only from the journal's own `scripts/` (the one that was run, not the file that is written again); the replay stops at the first line that fails and the new session stays with what ran |
 
-That is 23 tools. The server has 27: the 23, `list_device_packages`, `use_device_package`, `write_file` and `synthesize`.
+That is 23 tools. The server has 28: the 23, `list_device_packages`, `use_device_package`, `write_file`, `synthesize` and `check_constraints`.
 
 ## Resources and prompts
 

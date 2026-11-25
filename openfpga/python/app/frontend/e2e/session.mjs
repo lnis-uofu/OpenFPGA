@@ -204,6 +204,26 @@ try {
   await page.waitForSelector(".session-entry:has-text('saved')", { timeout: 15000 });
   await page.click(".session-entry button:has-text('Open')");
   await page.waitForSelector("header >> text=ANALYZED ✔", { timeout: 60000 });
+
+  // The constraints of the design in an ODC: the sidebar shows them, and a check opens its line,
+  // which the editor marks
+  await page.click('[role=tab]:has-text("Chat")');
+  await page.setInputFiles('[aria-label="Upload files"]', {
+    name: "top.odc",
+    mimeType: "text/plain",
+    buffer: Buffer.from("odc_version 1\ncreate_clock -period 10 clk\nset_input_delay 0 -clock clk [get_ports {IN0 INX}]\n"),
+  });
+  await page.waitForSelector(".upload-row:has-text('top.odc')");
+  await say("/set_constraint kind=odc file=top.odc");
+  await page.waitForSelector(".odc-head:has-text('2 commands')", { timeout: 30000 });
+  assert.ok(await page.isVisible(".odc-head .odc-warning:has-text('1')"), "one warning");
+  assert.ok(await page.isVisible(".odc-line:has-text('clocks clk')"));
+  await page.click("button.fold:has-text('Checks (1)')");
+  await page.click(".odc-checks .file:has-text('top.odc:3')");
+  await page.waitForSelector(".file-view .monaco-editor", { timeout: 30000 });
+  await page.waitForSelector(".file-view .squiggly-warning", { timeout: 15000 });
+  await page.waitForSelector(".file-view .file-note-warn:has-text('1 warning')");
+  if (process.env.SHOT_ODC) await page.screenshot({ path: process.env.SHOT_ODC });
   await page.click(".session-action:text-is('Close')");
   await page.waitForSelector("text=Create session from device package…");
 

@@ -103,6 +103,8 @@ export interface FileState {
   copyable?: boolean; // another file: a copy can be made in the session and edited there
 }
 export const openFiles = signal<Record<string, FileState>>({});
+/** A line to show in a file once its editor is there (a check of the ODC that was clicked) */
+export const fileLine = signal<{ name: string; line: number } | null>(null);
 export const CONSOLE_HEIGHT_DEFAULT = 180;
 export const CONSOLE_HEIGHT_MIN = 80;
 const CONSOLE_HEIGHT_KEY = "openfpga-console-height";
@@ -193,6 +195,7 @@ export function resetStore() {
   calls.value = {};
   tabs.value = [];
   openFiles.value = {};
+  fileLine.value = null;
   loaded.value = false;
   welcomeChat.value = false;
   closedSession.value = false;
@@ -603,8 +606,10 @@ export async function loadDevicePackages() {
 export const reportUrl = (stage: string, version = "") =>
   `/api/report?stage=${encodeURIComponent(stage)}${version ? `&v=${encodeURIComponent(version)}` : ""}`;
 
-/** Open a file in a tab of the viewer (or go to it), and read it again: a result may have changed */
-export async function openFile(name: string) {
+/** Open a file in a tab of the viewer (or go to it), and read it again: a result may have changed.
+ * With a line, the editor shows that line */
+export async function openFile(name: string, line?: number) {
+  fileLine.value = line ? { name, line } : null;
   const id = fileTabId(name);
   if (!tabs.value.some((t) => t.id === id)) {
     tabs.value = [...tabs.value, { id, title: name.split("/").pop() || name, pinned: false, unread: false, file: name }];

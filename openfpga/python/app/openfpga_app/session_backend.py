@@ -13,7 +13,7 @@ import os
 import shlex
 import time
 from pathlib import Path
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
 
 import anyio.to_thread
 from openfpga_mcp import answers, device_packages, reports, session_tools, tools
@@ -38,6 +38,8 @@ _CONSOLE_MAX = 20000
 # Options that are the inputs or the constraints of the flow: the sidebar shows them as files
 _INPUT_OPTIONS = ("filename.arch_file", "filename.circuit_file", "general.device_layout")
 _CONSTRAINT_OPTIONS = ("filename.sdc_file", "filename.read_vpr_constraints_file")
+# The errors and warnings of the ODC that the sidebar lists
+_ODC_DIAGNOSTICS = 50
 # Commands that only read: the page does not need to refresh after them
 _READS = ("report_", "help", "version")
 
@@ -90,6 +92,9 @@ class SessionBackend:
         self.sid: Optional[str] = None
         self._packages: Dict[str, Dict[str, Any]] = {}  # the device package of a session, by id
         self._running: Optional[str] = None
+        # The constraints of the current session (report_constraints), read again after a call
+        self._odc_cache: Optional[Tuple[Any, Optional[Dict[str, Any]]]] = None
+        self._calls = 0  # the calls and commands that ended
         self._synthesis_runs: Dict[str, Dict[str, Any]] = {}  # the last synthesis of each session
         self._busy = False
         self._cancelled = False
@@ -269,6 +274,7 @@ class SessionBackend:
         ]
         view["files"]["design"] = uploads.tree_listing(self.config.root, entry.directory, "design")
         view["reports"] = self._reports(entry.directory)
+        view["constraints"] = None
         info = next((i for i in infos if i.id == entry.id), None)
         running = bool(info and info.running)
         view["session"] = {
@@ -292,7 +298,7 @@ class SessionBackend:
             # it. What was known stays, and the latest state says what is going on
             previous = self._last
             if previous["session"] and previous["session"]["id"] == entry.id:
-                for key in ("stages", "options_changed", "synthesis", "reports"):
+                for key in ("stages", "options_changed", "synthesis", "reports", "constraints"):
                     view[key] = previous[key]
                 view["files"] = {
                     **previous["files"],
@@ -352,7 +358,14 @@ class SessionBackend:
         for path in (state.results.packing, state.results.placement, state.results.routing):
             if path:
                 files["results"].append(self._name(path, entry.directory))
+        odc = self._constraints(entry, session, state)
+        view["constraints"] = {k: v for k, v in odc.items() if k != "outputs"} if odc else None
+        given = set(odc["outputs"]) if odc else set()
+        if odc and odc["file"]:
+            files["constraints"].append("odc %s" % odc["file"])
         for option in session.options.changed():
+            if option.name in _CONSTRAINT_OPTIONS and os.path.realpath(str(option.value)) in given:
+                continue  # a file that the ODC gave to VPR: the ODC is what the sidebar shows
             if option.name == "router.route_chan_width":
                 if option.value != -1:
                     files["constraints"].append("chan width %s" % option.value)
@@ -377,6 +390,69 @@ class SessionBackend:
             view["latest"] = {"status": "none", "text": "%s · opened" % entry.id}
         return view
 
+    def _constraints(self, entry, session, state) -> Optional[Dict[str, Any]]:
+        """What the sidebar shows of the ODC of the session: its file, how many commands, the
+        errors and warnings with their lines (names that the viewer opens), the timing that is not
+        constrained, the I/O map of the package. None when the session has no ODC and its package
+        no I/O map. The report is read again when something ran, not for each view"""
+        key = (entry.id, self._calls, tuple(state.reached))
+        if self._odc_cache is not None and self._odc_cache[0] == key:
+            return self._odc_cache[1]
+        try:
+            report = session.constraints(limit=1)
+        except Exception:  # noqa: BLE001 - a shell without the ui plugin: no constraints
+            report = None
+        shown = None
+        if report is not None and (report["file"] or report["design"]["io_map"]):
+
+            def name(path: Optional[str]) -> Optional[str]:
+                """The name that the sidebar opens: a file of the uploads or of the model by its
+                own name, as they are listed"""
+                if not path:
+                    return None
+                shown = self._name(path, entry.directory)
+                for folder in (uploads.UPLOADS, uploads.CREATED):
+                    if shown.startswith(folder + "/") and "/" not in shown[len(folder) + 1 :]:
+                        return shown[len(folder) + 1 :]
+                return shown
+
+            levels = [d["level"] for d in report["diagnostics"]]
+            timing = report["timing"]
+            shown = {
+                "file": name(report["file"]),
+                "defaults": name(report["defaults"]),
+                "commands": sum(1 for c in report["commands"] if not c["from_defaults"]),
+                "errors": levels.count("error"),
+                "warnings": levels.count("warning"),
+                "diagnostics": [
+                    {
+                        "level": d["level"],
+                        "file": name(d["file"]),
+                        "line": d["line"],
+                        "message": d["message"],
+                    }
+                    for d in report["diagnostics"][:_ODC_DIAGNOSTICS]
+                ],
+                "clocks": [c["name"] for c in timing["clocks"]],
+                "timing_checked": timing["checked"],
+                "unconstrained_clocks": timing["unconstrained_clocks"],
+                "inputs_without_delay": len(timing["inputs_without_delay"]),
+                "outputs_without_delay": len(timing["outputs_without_delay"]),
+                "io_map": name(report["design"]["io_map"]),
+                # The files of the ODC, as they are on disk: the options that name them are not
+                # shown as constraints of their own
+                "outputs": [
+                    os.path.realpath(f)
+                    for f in (
+                        report["outputs"]["constraints"],
+                        report["outputs"]["vpr_constraints"],
+                    )
+                    if f
+                ],
+            }
+        self._odc_cache = (key, shown)
+        return shown
+
     # The sessions ---------------------------------------------------------------------------
 
     async def _tool(self, tool: str, /, **arguments) -> Dict[str, Any]:
@@ -390,6 +466,7 @@ class SessionBackend:
             answer = json.loads(await self.tools[name](**arguments))
         finally:
             self._running = None
+            self._calls += 1
         if name == "synthesize" and arguments.get("session"):
             failed = (answer.get("diagnostics") or [{}])[0].get("message", "Synthesis failed")
             self._synthesis_runs[arguments["session"]] = {
@@ -652,27 +729,41 @@ class SessionBackend:
             return answers.from_exception(error)
         except Exception as error:  # noqa: BLE001 - a file that is gone, a disk that fails
             return answers.from_exception(error)
-        saved["in_use"] = in_use
+        saved["in_use"] = in_use is not None
         what = "The person edited the file %s in session %s" % (name, self.sid)
         if in_use:
             what += (
                 ", and the session had read it: the stages that used it are out of date until "
-                "read_inputs reads it again"
+                "%s reads it again" % in_use
             )
         self._changed_outside(what)
         return {"ok": True, "data": saved, "truncated": False, "more": None}
 
     @staticmethod
-    def _is_input(entry, path: str) -> bool:
-        """The session has read this file as one of its inputs"""
+    def _is_input(entry, path: str) -> Optional[str]:
+        """The call that reads this file again, when the session has read it: one of its inputs,
+        a constraints file, or a file of its ODC (one that the ODC includes too)"""
         session = entry.session
         if session._lock.locked():
-            return False
+            return None
         inputs = session.state().inputs
-        return any(
-            f is not None and os.path.realpath(f.file) == os.path.realpath(path)
+        path = os.path.realpath(path)
+        if any(
+            f is not None and os.path.realpath(f.file) == path
             for f in (inputs.vpr_arch, inputs.openfpga_arch, inputs.circuit)
-        )
+        ):
+            return "read_inputs"
+        for option in _CONSTRAINT_OPTIONS:
+            value = session.options.get(option).value
+            if value and os.path.realpath(str(value)) == path:
+                return "set_constraint"
+        try:
+            odc = session.constraints(limit=1)
+        except Exception:  # noqa: BLE001 - a shell without the ui plugin
+            return None
+        if any(os.path.realpath(f) == path for f in odc["files"]):
+            return "set_constraint kind=odc"
+        return None
 
     async def copy_file(self, name: str) -> Dict[str, Any]:
         """A copy of a file that cannot be edited, in the uploads of the session, to edit there"""
@@ -974,6 +1065,7 @@ class SessionBackend:
         finally:
             self._busy = False
             self._running = None
+            self._calls += 1
 
     # The console -----------------------------------------------------------------------------------
 
@@ -1046,6 +1138,7 @@ class SessionBackend:
             answer = {"ok": False, "output": str(error), "state_changed": True}
         finally:
             self._running = None
+            self._calls += 1
         return answer
 
     async def _console_tcl(self, script: str) -> Dict[str, Any]:
@@ -1104,4 +1197,5 @@ class SessionBackend:
             answer = {"ok": False, "output": str(error), "state_changed": True}
         finally:
             self._running = None
+            self._calls += 1
         return answer

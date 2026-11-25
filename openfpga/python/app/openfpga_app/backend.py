@@ -85,6 +85,8 @@ def empty_view() -> Dict[str, Any]:
         "designs": [],
         # The open sessions (id, name, running): the tabs of the sidebar
         "sessions": [],
+        # The ODC of the session, checked on what is read now (None: none, and no I/O map)
+        "constraints": None,
     }
 
 

@@ -66,7 +66,7 @@ Failure (a failed call is a finished call, not an exception):
 Size: the default limit of an answer is 4,000 characters (about 1,000 tokens); a server may set a
 limit between 500 and 16,000. A number is given as it is in VPR; the model must quote it as it is.
 
-## 4. Actions: the 27 tools
+## 4. Actions: the 28 tools
 
 `session` is an argument of every tool except `session_open`, `session_list` and `list_device_packages`; it is left out of
 the table. A `?` marks an optional argument. "Needs" is the stage that must be reached; a query
@@ -109,7 +109,9 @@ tool needs one and none is open (the answer carries a note).
 | `list_options` | `stage?`, `query?`, `changed?`, `limit?` | the options of a stage (or those that match a pattern such as `place.*`, or those not at their default) with value, default, choices and the stages that a change drops |
 | `describe_option` | `name` | one option: type, value, default, help, choices, the stage it changes, the stages it drops |
 | `set_option` | `name`, `value` | sets an option; the answer says which stages were dropped and must run again. An option that names a file is refused (`option_not_allowed`): use `set_constraint` or `read_inputs` |
-| `set_constraint` | `kind` (`vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | sets or takes away an input that changes the whole flow; `chan_width` routes with a fixed number of tracks, which can be changed but not cleared (`chan_width_required`); `clear` takes a constraints file away |
+| `set_constraint` | `kind` (`odc`, `vpr_constraints`, `sdc`, `chan_width`), `file?`, `width?`, `clear?` | sets or takes away an input that changes the whole flow; `odc` is the constraints of the design in one file (timing, synthesis, floorplan, routing, pins; docs/spec_odc.md), and the answer adds its warnings and the clocks and ports without timing; `chan_width` routes with a fixed number of tracks, which can be changed but not cleared (`chan_width_required`); `clear` takes a constraints file away |
+
+| `check_constraints` | `limit?` | the ODC of the session checked again on what is read now: each command with its line and the objects its queries matched (default 20, at most 200), or the nearest names when one matched nothing; the errors and warnings; the clocks without a period and the ports without a delay; the files given to the tools (`constraints`) |
 
 Changing an option or a constraint drops the stages after it; they must be run again.
 
@@ -131,7 +133,7 @@ their content through `get_state`.
 
 ### 4.5 Optional: Tcl scripts
 
-With `--tcl-tool` (MCP server or app) the model has a 28th tool, `run_tcl(script)`: a Tcl script in a
+With `--tcl-tool` (MCP server or app) the model has a 29th tool, `run_tcl(script)`: a Tcl script in a
 safe interpreter of the session, for a loop or a sweep that would take many calls. Every command of
 the shell is a Tcl command, a query returns a dict, and a failed command is an error that `catch`
 takes. No files, no programs (`ext_exec`, `source` and `yosys` are refused, `tcl_refused`), and a
@@ -174,6 +176,7 @@ kept and `failed` says which one and why.
 | `out_of_memory` | a command needed more memory than the worker may use (for example Yosys on a very large memory) | use a smaller design; the worker is the same and the session is as it was |
 | `circuit_not_read` | `synthesize` made a netlist that the flow cannot read as the circuit (a cell that the device has no primitive for, a format); the data has what the netlist has | change the Verilog or use a device that has the cell; the stages cannot run until a circuit is read |
 | `package_not_found`, `package_invalid` | a device package is missing or fails its checks | say so |
+| `constraints_invalid` | `set_constraint kind=odc` with a file that has errors: one diagnostic per line, with `file` and `line`; a name that the flow does not know (a command, a port, a cell, a pin of the package) comes with the nearest names. The session keeps the constraints it had | fix the line with `write_file` and call `set_constraint` again; `check_constraints` lists what each query matched |
 | `not_run` | the call was not made because an earlier call of the reply failed | repeat it after fixing the first |
 
 ### 5.3 Files the model can name
@@ -189,7 +192,7 @@ kept and `failed` says which one and why.
   the person names or uploads.
 - Kinds: a VPR architecture (XML, root `<architecture>`), an OpenFPGA architecture (XML, root
   `<openfpga_architecture>`), a circuit (BLIF, starts with `.model`), a VPR constraints file (XML),
-  an SDC file, and the files that earlier stages wrote (packing, placement, routing) for
+  an SDC file, an ODC file (`.odc`, the constraints of a design: docs/spec_odc.md), and the files that earlier stages wrote (packing, placement, routing) for
   `run_stage from_file`.
 - A device package gives both architectures and the layout; the model gives the circuit.
 
