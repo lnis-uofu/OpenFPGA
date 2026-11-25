@@ -48,8 +48,7 @@ double ratio(const size_t used, const size_t total) {
  * if it has none */
 const RouteTree* routed_net(const ParentNetId id) {
   const auto& route_trees = g_vpr_ctx.routing().route_trees;
-  if (!id.is_valid() || size_t(id) >= route_trees.size() ||
-      !route_trees[id]) {
+  if (!id.is_valid() || size_t(id) >= route_trees.size() || !route_trees[id]) {
     return nullptr;
   }
   return &(*route_trees[id]);
@@ -671,9 +670,9 @@ bool net_info_json(const vpr::VprRun& run, const std::string& net_name,
   /* The size of the routing, once routed */
   json.key("routing");
   const auto& route_ctx = g_vpr_ctx.routing();
-  const RouteTree* tree =
-    has_routing && !route_ctx.route_trees.empty() ? cluster_net_route(net)
-                                                  : nullptr;
+  const RouteTree* tree = has_routing && !route_ctx.route_trees.empty()
+                            ? cluster_net_route(net)
+                            : nullptr;
   const bool routed = nullptr != tree;
   if (routed) {
     int64_t nodes = 0, wires = 0, wirelength = 0;

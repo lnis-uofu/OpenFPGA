@@ -1206,6 +1206,12 @@ class Session:
 
     def __init__(self, shell=None, checkpoint_dir=None, journal=None, resume_journal=False):
         self.shell = shell if shell is not None else OpenfpgaShell()
+        # The queries and the options are the commands of the ui plugin
+        if "ui" not in [plugin.name for plugin in self.plugins()]:
+            raise RuntimeError(
+                "This build of OpenFPGA has no ui plugin, whose commands a Session uses: "
+                "build it with -DOPENFPGA_PLUGINS=ui"
+            )
         self.options = Options(self.shell, run=self.command)
         self.checkpoint_dir = checkpoint_dir
         # resume_journal: go on with the files of the directory instead of writing them again
@@ -1567,9 +1573,10 @@ class Session:
                         % (key, entry["file"])
                     )
         session = cls(shell, **session_options)
-        # A checkpoint made before the plugins were recorded was made by a build without any
-        saved, built = manifest.get("plugins", []), session._plugin_list()
-        if saved != built:
+        # A checkpoint made before the plugins were recorded (no "plugins") was made by a
+        # build whose commands were those of the shell and of the ui plugin now: it is taken
+        saved, built = manifest.get("plugins"), session._plugin_list()
+        if saved is not None and saved != built:
             raise CheckpointError(
                 "The checkpoint was made with the plugins %s, and this build has %s"
                 % (_plugin_label(saved), _plugin_label(built))

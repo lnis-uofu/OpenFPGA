@@ -14,6 +14,8 @@ In Python, the ``Session`` class gives the answers as objects, see :ref:`openfpg
 
 The queries read, and never change, the results of the stage that they need. The shell refuses a query when that stage has not been reached, or when an option or a stage that ran again made it out of date, and names the command to run first. Outside of the flow that is run stage by stage, e.g., after ``vpr``, the queries read the data that VPR holds. The schema of each answer is in ``openfpga_flow/schemas``. Times are in ns, frequencies in MHz, and the answers are in the same units as the reports of VPR: the numbers agree with its log and files.
 
+The queries are commands of the plugin ``ui``, which a build has by default, see :ref:`openfpga_shell_plugins`.
+
 Queries that list items stop at a limit (``--limit``, 1000 by default), and say so with ``truncated``, so that the answer cannot grow without bounds.
 
 report_session

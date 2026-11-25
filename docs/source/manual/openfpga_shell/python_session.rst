@@ -3,7 +3,7 @@
 Python Session
 --------------
 
-The module ``openfpga`` (see the build option ``OPENFPGA_SWIG_PYTHON`` in :ref:`tutorial_compile`) has the class ``Session`` to run the flow from Python. It wraps an ``OpenfpgaShell``, which stays available as ``session.shell`` for the commands that have no method.
+The module ``openfpga`` (see the build option ``OPENFPGA_SWIG_PYTHON`` in :ref:`tutorial_compile`) has the class ``Session`` to run the flow from Python. It wraps an ``OpenfpgaShell``, which stays available as ``session.shell`` for the commands that have no method. It reads the flow through the commands of the plugin ``ui`` (see :ref:`openfpga_shell_plugins`), which the module needs: a ``Session`` of a build without it raises ``RuntimeError``. ``session.plugins()`` lists the plugins of the build.
 
 .. code-block:: python
 
@@ -157,8 +157,9 @@ What is written:
 - a command that failed is a comment, ``# Failed, not replayed: route (...)``, with the reason
 - the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again
 - ``Session.restore(directory, journal=...)`` writes the commands that restore does: the options, the inputs and the results that are read from the checkpoint
+- the plugins of the build, in a comment at the start of both scripts: ``# Plugins of the build: ui 1.0``
 
-``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. A ``RemoteSession`` has no journal yet.
+``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``, and so does a journal whose plugins are not those of the build (a script without the comment is replayed). A ``RemoteSession`` has no journal yet.
 
 .. _failed_stages:
 
@@ -205,7 +206,7 @@ State and checkpoints
 
 The directory gets ``checkpoint.json`` and the files of the results of the stages that are reached (``.net``, ``.place`` and ``.route``). ``checkpoint.json`` lists the stages, the options that do not have their default value, and the files of the inputs, with the checksum of every file. The inputs are not copied: they must be where they were when ``restore()`` is called. Restoring sets the options, reads the inputs, reads the results of the stages instead of running them, and runs ``analysis`` again if it was reached. The flow then goes on with the same results as the one that was saved. The stages after ``ANALYZED`` (``repack`` and the bitstream) are not part of a checkpoint: run ``link_openfpga_arch``, ``build_fabric`` and the rest again after a restore.
 
-A new checkpoint in the same directory replaces the old one, and the manifest is the last file to change. A file of the results that does not match its checksum, a missing file or an input that changed raises ``CheckpointError`` (``check_inputs=False`` accepts an input that changed, and VPR still refuses a packing that is not of the circuit). ``Session(checkpoint_dir=directory)`` makes a checkpoint after each stage.
+The manifest also has the plugins of the build, and a build with other plugins does not restore the checkpoint (``CheckpointError``); a checkpoint made before the plugins were recorded is restored. A new checkpoint in the same directory replaces the old one, and the manifest is the last file to change. A file of the results that does not match its checksum, a missing file or an input that changed raises ``CheckpointError`` (``check_inputs=False`` accepts an input that changed, and VPR still refuses a packing that is not of the circuit). ``Session(checkpoint_dir=directory)`` makes a checkpoint after each stage.
 
 Queries
 ~~~~~~~

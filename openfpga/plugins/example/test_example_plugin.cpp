@@ -40,7 +40,9 @@ int main() {
     has(plugins.data, "{\"command\":\"read_circuit\",\"when\":\"before\"}"));
   CHECK(has(plugins.data, "\"every_command\":true"));
 
-  CHECK(has(shell.execute("version").log, "Plugins: example 1.0"));
+  /* The build may have other plugins too (ui by default) */
+  const std::string version = shell.execute("version").log;
+  CHECK(has(version, "Plugins: ") && has(version, "example 1.0"));
   const std::string help = shell.execute("help").log;
   CHECK(has(help, "example_report (plugin example)"));
   CHECK(has(help, "write_fabric_spice (overridden by plugin example)"));

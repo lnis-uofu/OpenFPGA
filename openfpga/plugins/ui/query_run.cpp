@@ -52,7 +52,7 @@ const char* const NUMBER = "([-+0-9.eE]+|nan|inf)";
 }  // End anonymous namespace
 
 bool run_report_json(const OpenFpgaSession& session, const bool in_flow,
-                     const vpr::VprRun& run, std::string& json_text) {
+                     const vpr::VprRun& /* run */, std::string& json_text) {
   const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
   const auto& block_locs = g_vpr_ctx.placement().block_locs();
   const auto& route_ctx = g_vpr_ctx.routing();

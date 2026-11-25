@@ -32,6 +32,18 @@ def test_the_answer_follows_its_schema(openfpga_module, tmp_path, monkeypatch):
     assert ("Plugins: %s" % (built or "none")) in shell.run("version").log
 
 
+def test_the_ui_plugin_has_the_queries_and_the_options(openfpga_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    session = openfpga_module.Session()
+    (ui,) = [p for p in session.plugins() if p.name == "ui"]
+    assert {"set_app_option", "reset_app_option", "report_app_option"} <= set(ui.commands)
+    assert {"report_session", "timing_summary", "placement", "find"} <= set(ui.commands)
+    # It adds commands, and changes none of the shell's
+    assert ui.overrides == [] and ui.removes == [] and ui.hooks == [] and not ui.every_command
+    # The flow itself stays in the shell
+    assert not {"read_vpr_arch", "pack", "route", "report_plugins"} & set(ui.commands)
+
+
 def test_a_checkpoint_keeps_the_plugins(openfpga_module, golden, work):  # noqa: F811
     _, checkpoint = work
     session = start(openfpga_module, golden)
@@ -49,14 +61,11 @@ def test_a_checkpoint_keeps_the_plugins(openfpga_module, golden, work):  # noqa:
     with pytest.raises(openfpga_module.CheckpointError, match="other 2"):
         openfpga_module.Session.restore(checkpoint)
 
-    # Made before the plugins were kept: a build without plugins takes it
+    # Made before the plugins were kept, when the commands of the ui plugin were the
+    # shell's own: taken
     del manifest["plugins"]
     manifest_path.write_text(json.dumps(manifest))
-    if names(session):
-        with pytest.raises(openfpga_module.CheckpointError, match="plugins none"):
-            openfpga_module.Session.restore(checkpoint)
-    else:
-        openfpga_module.Session.restore(checkpoint)
+    openfpga_module.Session.restore(checkpoint)
 
 
 def test_a_journal_keeps_the_plugins(openfpga_module, golden, tmp_path, monkeypatch):  # noqa: F811

@@ -51,6 +51,7 @@ regex = '(?P<value>\d+\.\d+\.\d+)'
 
 [tool.scikit-build.cmake.define]
 OPENFPGA_SWIG_PYTHON = "ON"
+OPENFPGA_PLUGINS = "ui"
 OPENFPGA_WITH_YOSYS = "OFF"
 OPENFPGA_WITH_TEST = "OFF"
 OPENFPGA_WITH_INSTALLER = "OFF"

@@ -5,7 +5,6 @@
 #include <mutex>
 #include <utility>
 
-#include "app_options_commands.h"
 #include "basic_command.h"
 #include "command_echo.h"
 #include "command_exit_codes.h"
@@ -22,7 +21,6 @@
 #ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
 #include "openfpga_yosys_command.h"
 #endif
-#include "query_commands.h"
 #include "stage_commands.h"
 #include "vpr_command.h"
 #include "vtr_log.h"
@@ -54,12 +52,8 @@ OpenfpgaShell::OpenfpgaShell() {
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell_);
 
-  /* Add commands to set and report the application options */
-  openfpga::add_app_options_commands(shell_);
-
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
-  openfpga::add_query_commands(shell_);
 
   /* The plugins of the build, after the commands of the shell that they may
    * override, remove or hook, and before the basic ones, which they may not */
