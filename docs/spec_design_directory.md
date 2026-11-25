@@ -1,6 +1,6 @@
 # Spec: OpenFPGA design directory
 
-Status: proposal for discussion (https://github.com/lnis-uofu/OpenFPGA/discussions/2896). Not implemented. It is the counterpart of the device package spec (`docs/spec_device_package.md`): the device package describes a device, the design directory describes a design.
+Status: proposal for discussion (https://github.com/lnis-uofu/OpenFPGA/discussions/2896). Partly implemented: the MCP server reads a design directory to synthesize it (in Python); `read_design` in C++ and the role `odc` are planned (docs/plan_odc_constraints.md). It is the counterpart of the device package spec (`docs/spec_device_package.md`): the device package describes a device, the design directory describes a design.
 
 ## Overview
 
@@ -45,7 +45,7 @@ Non-goals:
   netlist/                     netlists that were synthesized already (optional): .blif, .eblif or .edif
   tb/                          testbench and the files it reads (optional)
   mem/                         memory initialization files: .hex, .bin, .mem, .mif (optional)
-  constraints/                 SDC, pin, placement and repack constraints (optional)
+  constraints/                 ODC, SDC, pin, placement and repack constraints (optional)
   activity/                    switching activity, .act (optional)
   docs/                        notes, datasheet (optional)
   CHECKSUMS.sha256             SHA-256 of every file except itself (optional while a design is in development)
@@ -126,6 +126,7 @@ Paths in the manifest are relative to the design directory. The directory names 
 | `testbench` | simulation top | never synthesized; has its own `top`; `stage` is `functional` (default) or `post_layout` (R-19) |
 | `stimulus` | a file the testbench reads | vectors, expected outputs |
 | `mem_init` | memory initialization | `format`: `hex`, `bin`, `mem`, `mif`; `used_by` names the `rtl` file that reads it |
+| `odc` | constraints in ODC (spec_odc.md): timing, synthesis, floorplanning, routing, pins | one at most; R-23a |
 | `sdc` | timing constraints | `stage`: `synthesis`, `implementation` or both (default); R-23 |
 | `pin_constraints` | pin constraints | `format`: `xml` (OpenFPGA, default), `csv` or `pcf`; R-24 |
 | `placement_constraints` | placement constraints (`.place`) | R-24 |
@@ -141,6 +142,7 @@ Paths in the manifest are relative to the design directory. The directory names 
 ### Constraints
 
 - **R-23** An `sdc` file of the stage `implementation` or of both stages is given to VPR (`--sdc_file`); a file of the stage `synthesis` is given to the synthesis step only. VPR reads `create_clock`, `set_input_delay`, `set_output_delay`, `set_clock_groups`, `set_false_path`, `set_max_delay` and `set_multicycle_path`; `check` warns for any other command because it is ignored.
+- **R-23a** An `odc` file holds the constraints of the design in one file (spec_odc.md). A design with an `odc` file does not also have an `sdc` of the stage `implementation` or a `placement_constraints` file: `check` fails on the pair, as the two would set the same things. When the device package has `odc_defaults`, they are read first.
 - **R-24** `pin_constraints`, `placement_constraints` and `repack_constraints` are given to the commands of the flow that take them. A `pin_constraints` file has a `format` (`xml`, `csv` or `pcf`), and a tool that cannot read a format says so. When the device also has default constraints of the same kind, the file of the design is used.
 
 ### Derived files
@@ -157,6 +159,12 @@ Paths in the manifest are relative to the design directory. The directory names 
 - **R-30** `openfpga-design check <dir>` validates the manifest against the schema, applies R-2 to R-13, R-19, R-21 to R-27, and exits non-zero with one line per problem.
 - **R-31** `openfpga-design create <dir>` writes a manifest for an existing directory: it classifies files by suffix and folder, finds the top when exactly one module is not instantiated by another, and reports any file it cannot classify and leaves it out. It does not guess a top that is not unique.
 - **R-32** `openfpga-design pack <dir>` and `unpack <archive>` convert between the directory and the archive, deterministically (sorted entries, fixed times, fixed owner).
+- **R-34** The shell has `read_design --file <dir> [--netlist <label>]`, in C++, which the Python `Session`, the MCP server and the web app call. It:
+  - checks the manifest (R-2 to R-7, R-10, R-11, R-25, R-26);
+  - synthesizes the `rtl` with the Yosys script of the device package of the session, through the shell's `yosys` command, or reads the `netlist` of the label (R-25), and reads the result as the circuit;
+  - reads the `odc` file, or the `sdc` file of the stage `implementation` as the SDC of VPR.
+
+  It needs a device package in the session when the design has RTL, and a build with Yosys to synthesize. The design is an input of the session: a checkpoint saves it, and a journal replays it.
 - **R-33** `openfpga-design info <dir> --json` prints the manifest with resolved absolute paths in the envelope `{schema_version, kind: "design", data}` of the other JSON queries, with a schema in `openfpga_flow/schemas/`.
 
 ## Test plan
@@ -177,6 +185,7 @@ Paths in the manifest are relative to the design directory. The directory names 
 | T-12 | A design with a `.vhd` file and a `.sv` file and an `rtl_other` file passes `check`. A `top` declared as a VHDL entity is found. A design with `origin` passes, and `info --json` shows it. | R-5, R-9, R-10 |
 | T-13 | An `sdc` file of the stage `synthesis` is not given to VPR and is not compared with `clocks`. A `pin_constraints` file with `format` `csv` or `pcf` passes `check`, and one with another format fails. | R-13, R-23, R-24 |
 | T-14 | A design with a `functional` and a `post_layout` testbench passes `check`. A `testbench` with another stage fails. | R-19 |
+| T-16 | `read_design` on a design with RTL gives the netlist that `synthesize design=...` of the MCP server gives today, and on a design with only a netlist reads it. A design with an `odc` file and an `sdc` of the stage `implementation` fails `check`. A checkpoint restores the design, and a journal replays it. | R-23a, R-34 |
 | T-15 | A design with two netlists with different labels passes `check`. A duplicate label fails. Each netlist warns separately when the RTL changes. A tool with no label and with `rtl` synthesizes; with a label it reads that netlist. | R-25 |
 
 The tests are a task in `openfpga_flow/tasks/` and run in the regression tests. The example designs are made from existing benchmarks.

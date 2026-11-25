@@ -1,6 +1,6 @@
 # Spec: OpenFPGA device package
 
-Status: draft for review. Not implemented.
+Status: draft for review. Partly implemented: the manifest, its checks and the use of a package by the MCP server and the web app (in Python); `read_device_package` in C++, the I/O map and `odc_defaults` are planned (docs/plan_odc_constraints.md).
 
 ## Overview
 
@@ -59,11 +59,12 @@ Non-goals:
     synth_script.ys            Yosys script (or script template)
     techlib/                   cell_sim.v, *_map.v, *_bram.txt, lut and carry maps
     constraints/               default SDC, clock definitions (optional)
+    defaults.odc               default constraints of the device, in ODC (optional, R-26)
   bitstream/
     arch_bitstream.xml(.gz)    architecture bitstream of a reference design (optional)
     fabric_bitstream.*         fabric bitstream of a reference design (optional)
     io_info.xml                I/O naming and location table
-    pin_table.csv              package pin to fabric I/O map (optional)
+    io_map.csv                 I/O map: each I/O subtile, its fabric pin and its customer name (optional, R-25)
   corners/                     design corner files, one directory per corner (optional)
     <corner_name>/             for example tt_0p80v_25c_typ, ss_0p72v_125c_cworst, ff_0p88v_m40c_cbest
       timing_data.json         values of the vpr_arch.xml timing variables for this corner (R-22)
@@ -78,7 +79,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 
 ## Manifest
 
-`device_package.json` is validated by `openfpga_flow/schemas/device_package.schema.json`.
+`device_package.json` is validated by `openfpga_flow/schemas/device_package_manifest.schema.json` (`device_package.schema.json` is the schema of the answer of `report_device_package`, R-51).
 
 ```json
 {
@@ -138,6 +139,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 
 - **R-10** A package must list exactly one file for each of the roles `vpr_arch` and `openfpga_arch`, and one for `bitstream_setting` when the device supports bitstream generation.
 - **R-11** A package for a device with synthesis support must list a `yosys_script` and every techlib file that script reads. A script reads techlib files through paths the tool resolves from the manifest, and does not use absolute paths.
+- **R-11a** A script that takes the synthesis commands of an ODC file has a line `${ODC_SYNTHESIS}` right after its `hierarchy` command, where the design is elaborated and still has its RTL names (spec_odc.md, R-24). A tool that runs the script without ODC replaces it with nothing.
 - **R-12** A package for a device with bitstream support lists the files needed by `build_architecture_bitstream`, `build_fabric_bitstream` and the fabric writers. These include `fabric_key`, `tile_config`, `repack_constraints`, and `pin_constraints` when the architecture needs them.
 - **R-13** Files in `arch/cell_library/` that the OpenFPGA architecture refers to are found through the package, not through `OPENFPGA_PATH`.
 - **R-14** `device.grid`, `device.lut_size` and `device.channel_width` are facts about the files. `check` (R-40) compares them with the VPR architecture and reports a mismatch. It reads the architecture with the variables replaced by the values of the default corner.
@@ -156,6 +158,30 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-23** `check` fails when a variable in `vpr_arch.xml` has no value in the `timing_data.json` of one of the corners, and when a package with no corners has variables in `vpr_arch.xml`. It warns when a `timing_data.json` has a name that is not a variable of `vpr_arch.xml`. A flow run fails with the variable name when a value is missing, and never runs with a variable left in the architecture.
 - **R-24** The manifest has `timing_units` with a unit for `time` (`ns`, `ps`, `fs`), `capacitance` (`pF`, `fF`) and `resistance` (`ohm`, `kohm`). All numbers in all `timing_data.json` files of the package are in these units. The kind of a variable comes from the end of its name: `_T` is time, `_C` is capacitance and `_R` is resistance, for example `${lut_T}`, `${wire_C}`, `${switch_R}`. `timing_data.json` is a flat map from the name without `${}` to a number, for example `{"lut_T": 120, "wire_C": 3.5}`. The tool converts each value to the unit VPR reads (seconds, farads, ohms) when it replaces the variable. `check` fails when `timing_units` is missing in a package with `timing_data` files, when a unit is not in the lists, when a variable name does not end in `_T`, `_C` or `_R`, and when a value is not a number.
 
+### I/O map
+
+- **R-25** The I/O map (role `io_map`) is a CSV file, comma- or tab-separated, with a header row that names these columns, in any order. A column of another name is an error. There is one row per I/O subtile of the layout, and one per global port of the fabric.
+
+  | Column | Meaning |
+  |--------|---------|
+  | `side` | `TOP`, `BOTTOM`, `LEFT`, `RIGHT` of the I/O ring, `CORE` for an I/O inside the grid, empty for a global port. It is the name that the maker gives, not checked against the grid: the pin tables of OpenFPGA call the row `y = 0` `TOP`, which is the bottom of the grid of VPR. `write_io_map` writes the side of the grid of VPR |
+  | `pin_direction` | `input`, `output` or `inout` |
+  | `pin_type` | `GPIO`, `CONTROL`, `SCAN` or `UNDEF` |
+  | `row` | the `y` of the VPR grid, `(0,0)` at the bottom left |
+  | `col` | the `x` of the VPR grid |
+  | `subtile` | the subtile of the I/O in its tile |
+  | `netlist_name` | the name of the pin in the fabric: a port of `fpga_top` (`gfpga_pad_GPIO_PAD[3]`, `clk[0]`) |
+  | `customer_pin_alias` | optional: the name that a user of the device knows the pin by (a ball of the package, `LED0`) |
+
+  The rules, which `check` applies with the line of each problem:
+  - `row`, `col` and `subtile` name an I/O subtile of the layout. A location has one row for each pin of the fabric there (the input and the output of a pad are two pins, with two `netlist_name`).
+  - A global port of the fabric (a clock or a reset) has no tile: its row leaves `row`, `col` and `subtile` empty, and its `pin_type` is `CONTROL`.
+  - `netlist_name`, when it is given, is unique. `customer_pin_alias`, when it is given, is unique among the rows of one `pin_direction`: the input and the output of one pad may share it (`pad_fpga_io[0]` for `gfpga_pad_IO_A2F[0]` and `gfpga_pad_IO_F2A[0]`).
+  - An I/O subtile of the layout with no row cannot be given by `PACKAGE_PIN`, but `LOC` still places a port on it.
+
+  ODC places a port on a pin of the I/O map by `PACKAGE_PIN` (spec_odc.md, R-32). The pin table, the I/O location map and the PCF of the older commands can be written from the I/O map.
+- **R-26** A package may have an ODC file of role `odc_defaults`, read before the ODC file of the user (spec_odc.md, R-46), for example the clock pins of the device.
+
 ### Roles
 
 - **R-20** The manifest uses only these roles. A package may add roles that start with `x_`; tools ignore them.
@@ -171,7 +197,8 @@ Paths in the manifest are relative to the package root. Directories may be empty
 | `fabric_key` | fabric key | fabric uses a key |
 | `tile_config` | tile config | tile-based fabric |
 | `io_info` | I/O naming and location table | bitstream support |
-| `pin_table` | package pin map | a physical package exists |
+| `io_map` | I/O map (R-25) | optional |
+| `odc_defaults` | default constraints in ODC (R-26) | optional |
 | `yosys_script` | Yosys script | synthesis support |
 | `yosys_cell_sim` | cell simulation models | synthesis support |
 | `yosys_map` | techmap files (LUT, carry, BRAM, DSP) | per architecture |
@@ -201,19 +228,27 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-43** `openfpga-package test <pkg>` runs the reference design in `reference/` through the flow and compares the results with those recorded in the manifest: the critical path delay, the Fmax, the wirelength, the channel width and the blocks of each type, as VPR logs them, and the SHA-256 of each bitstream file without its `//` comment lines, which hold the date of the run.
 - **R-44** Task files accept `device_package = <path>` in place of the separate architecture variables. The variables that a package defines (`vpr_arch`, `openfpga_arch`, `bitstream_setting`, ...) are filled in from the manifest; a value given in the task file wins and is logged.
 - **R-45** The Python `Session` takes `Session(device_package=<path>, corner=<name>)`, which reads the VPR architecture and the OpenFPGA architecture from the package, and gives the other files through `session.device_package.path(role)`. `corner` defaults to `corners.default` (R-18).
-- **R-46** The shell has `read_device_package --file <dir> [--corner <name>]` which does what R-45 does for a shell script. It is refused when `check` would fail, or when the corner is not in the package.
+- **R-46** The shell has `read_device_package --file <dir> [--corner <name>]`, in C++, which the Python `Session`, the MCP server and the web app call. It is refused when `check` would fail, or when the corner is not in the package. It:
+  - checks the manifest (R-2 to R-6, R-10, R-14 to R-14b, R-25, R-30);
+  - reads the VPR architecture with the layout of `device.grid`, then the OpenFPGA architecture;
+  - sets `router.route_chan_width` to `device.channel_width`, and the options of `flow_defaults.vpr_options` (R-14b);
+  - keeps for the session what the flow needs later: `device.flat_routing`, the Yosys script and its techlib files, the I/O map, and the `odc_defaults`, which it reads.
+
+  The package is an input of the session: a checkpoint saves it, the journal has the command, and a replay runs it.
+- **R-48** `write_io_map --file <f.csv>` writes a first I/O map for the device of the session: a row for each I/O subtile of the grid with `side`, `row`, `col` and `subtile`, and `netlist_name` once the fabric is built. The maker of the package fills in `pin_type`, `pin_direction` and `customer_pin_alias`.
 - **R-47** A task file accepts `device_corner = <name>` next to `device_package`. `openfpga-package check` also verifies that every corner in `corners.list` has a directory and every corner directory is listed.
 
 ### JSON
 
+- **R-51** `report_device_package` answers, as JSON (kind `device_package`), the package of the session: its name, version, device, files, flow defaults and what `read_device_package` set or did not set, and why.
 - **R-50** `openfpga-package info <pkg> --json` prints the manifest with the resolved absolute paths in the envelope `{schema_version, kind: "device_package", data}` used by the other JSON queries, with a schema in `openfpga_flow/schemas/`.
 
 ## Design notes
 
-- A manifest in JSON, not XML: the schemas in `openfpga_flow/schemas` are already JSON, and it is read by Python and by C++ (nlohmann/json is already in the tree).
+- A manifest in JSON, not XML: the schemas in `openfpga_flow/schemas` are already JSON, and it is read by Python and by C++ (nlohmann/json, vendored in `libs/EXTERNAL` for `read_device_package`).
 - A role table, not a fixed file name per role, so that two devices may name their files differently and one device may have several `yosys_map` files.
 - Checksums in a separate file so that a person can regenerate them with `sha256sum` and no tool.
-- Code location: the C++ part is only the `read_device_package` command. The `openfpga-package` tool is Python, in `openfpga_flow/scripts/`, next to `run_fpga_task.py`.
+- Code location: the C++ part is `read_device_package`, `report_device_package`, `write_io_map` and the reader of the I/O map. The `openfpga-package` tool is Python, in `openfpga_flow/scripts/`, next to `run_fpga_task.py`.
 - Existing devices: a first set of packages is made with `create` from existing tasks, one with logic only, one with BRAM and one with DSP (`basic_tests/generate_fabric`, `fpga_verilog/bram/dpram1k` and `fpga_bitstream/extract_dsp_mode_bit`).
 
 ## Test plan
@@ -232,6 +267,8 @@ Paths in the manifest are relative to the package root. Directories may be empty
 | T-10 | A run with `corner=A` and a run with `corner=B` read the files of their own corner, and a run with no corner uses `corners.default`. A package with no corners runs as in T-5. | R-18, R-45, R-46 |
 | T-11 | `check` fails on a package with no `license`, and on a generated fabric netlist in `files`. A package with a file-level `license` passes, and `info --json` shows it. | R-8, R-9, R-50 |
 | T-12 | The same package run for corner A and for corner B gives architectures that differ only in the timing values, equal to the values of each `timing_data.json`. The package files have the same checksums after the run. A run with a value deleted fails with the variable name. | R-22, R-23, R-32 |
+| T-14 | An I/O map passes `check`. Each of these fails with its line: an unknown column, a location outside the grid or not an I/O subtile, a location given twice, a duplicate alias, a bad `pin_type`. A global port with no location passes. A tab-separated file passes. `write_io_map` writes a map that passes, and the CSV made from the pin table and the I/O location map of basic_tests/io_constraints/example_pcf places the pins of its PCF as `pcf2place` does. | R-25, R-48 |
+| T-15 | `read_device_package` gives the session of the Python reading of today: the same architectures, layout, channel width and options set or not set, and the refusals with the same reasons. `report_device_package` validates against its schema. A checkpoint and a journal restore and replay it. | R-46, R-51 |
 | T-13 | Two packages with the same timing, one in `ps` and one in `ns` with the values divided by 1000, give the same architecture after substitution, for `_T`, `_C` and `_R` variables. A missing `timing_units`, an unknown unit, or a variable name with no `_T`, `_C` or `_R` suffix fails `check`. | R-22, R-24 |
 
 The tests are a task in `openfpga_flow/tasks/` and run in the regression tests.
