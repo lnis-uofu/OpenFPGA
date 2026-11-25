@@ -4,6 +4,9 @@
  *******************************************************************/
 #include "openfpga_title.h"
 
+#include <string>
+
+#include "openfpga_plugins.h"
 #include "openfpga_version.h"
 #include "vtr_log.h"
 
@@ -99,5 +102,11 @@ void print_openfpga_version_info() {
   VTR_LOG("Compiled: %s\n", openfpga::BUILD_TIMESTAMP);
   VTR_LOG("Compiler: %s\n", openfpga::COMPILER);
   VTR_LOG("Build Info: %s\n", openfpga::BUILD_INFO);
+  std::string plugins;
+  for (const openfpga::PluginInfo& plugin : openfpga::openfpga_plugins()) {
+    plugins +=
+      (plugins.empty() ? "" : ", ") + plugin.name + " " + plugin.version;
+  }
+  VTR_LOG("Plugins: %s\n", plugins.empty() ? "none" : plugins.c_str());
   VTR_LOG("\n");
 }
