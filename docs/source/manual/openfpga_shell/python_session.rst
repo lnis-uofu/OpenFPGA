@@ -145,6 +145,17 @@ It returns what ``report_device_package`` answers (kind ``device_package``): the
 
 ``report_device_package --file <directory>`` checks and describes a package without reading it. ``write_io_map --file <f.csv>`` writes a first I/O map of the device (a row for each I/O subtile, with the names of the fabric once it is built), and ``check_io_map --file <f.csv>`` checks one.
 
+.. _synthesis_in_python:
+
+Synthesis and design directories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``session.synthesize(top, files)`` synthesizes Verilog files into a netlist of the LUTs of the device with Yosys (the shell's command ``synthesize``; it needs a build with Yosys). The script is made from the template of the device package of the session (role ``yosys_script``), or from a generic one when ``lut_size`` is given. The script and the netlist go to ``synth/`` (``output_dir``), and the netlist is read as the circuit when the architectures are read (``read=False`` does not). A source that takes a file from outside its folder (`` `include "/etc/passwd"``), a top module or a value that a script does not take, are refused before Yosys runs: ``OpenfpgaError`` with ``Synthesis refused: <reason>``.
+
+``session.read_design(directory)`` reads a design directory (``docs/spec_design_directory.md``, command ``read_design``): its RTL is synthesized with the top, the defines, the include folders and the options of its manifest, or its netlist is read (the one of the label ``netlist``, or the only one of a design with no RTL); its SDC is set as ``filename.sdc_file``.
+
+Both return what the command answers (kind ``synthesis``): ``top``, ``netlist``, ``script``, ``device_package``, ``lut_size``, ``files``, ``synthesized`` and ``circuit_read``, with ``design`` and ``sdc`` for a design. ``run=False`` writes the script and returns the plan without running Yosys, and ``read_design(..., check=True)`` checks the design without writing anything; neither is written in the journal.
+
 .. _journal_and_replay:
 
 Journal and replay

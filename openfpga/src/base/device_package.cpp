@@ -468,6 +468,29 @@ DevicePackage load_device_package(const fs::path& given,
   }
   const json reference = member(manifest, "reference");
   package.reference = reference.is_object() ? reference.dump() : "{}";
+  json yosys =
+    falsy(flow_defaults) ? json() : member(flow_defaults, "yosys_options");
+  if (!falsy(yosys)) {
+    if (!yosys.is_object()) {
+      package.yosys_options_valid = false;
+    } else {
+      for (const auto& list :
+           {std::make_pair("read_verilog", &package.yosys_read_verilog),
+            std::make_pair("dsp_map", &package.yosys_dsp_map)}) {
+        const json values = member(yosys, list.first);
+        if (values.is_null()) {
+          continue;
+        }
+        if (!values.is_array()) {
+          package.yosys_options_valid = false;
+          continue;
+        }
+        for (const json& value : values) {
+          list.second->push_back(text_of(value));
+        }
+      }
+    }
+  }
   return package;
 }
 

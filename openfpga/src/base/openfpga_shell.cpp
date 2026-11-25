@@ -19,6 +19,7 @@
 #include "openfpga_title.h"
 #include "openfpga_verilog_command.h"
 #include "output_capture.h"
+#include "synthesis_commands.h"
 #ifdef OPENFPGA_INCLUDE_YOSYS_COMMAND
 #include "openfpga_yosys_command.h"
 #endif
@@ -56,6 +57,7 @@ OpenfpgaShell::OpenfpgaShell() {
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
   openfpga::add_device_package_commands(shell_);
+  openfpga::add_synthesis_commands(shell_);
 
   /* The plugins of the build, after the commands of the shell that they may
    * override, remove or hook, and before the basic ones, which they may not */

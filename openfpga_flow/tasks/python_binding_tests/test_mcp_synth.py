@@ -175,31 +175,39 @@ def test_with_no_device_package_the_lut_size_is_given_and_used(server):
     assert call(server, "synthesize", top="wide", files="wide.v", lut_size=6)["data"]["luts"] == 1
 
 
-def test_the_script_of_every_package_gets_its_values(tmp_path):
-    cfg = Config(root=tmp_path, package_dirs=(PACKAGES,))
+def test_the_script_of_every_package_gets_its_values(openfpga_module, tmp_path, monkeypatch):
+    """The plan of the shell's command synthesize (run=False), for the package of a session"""
+    monkeypatch.chdir(tmp_path)
     source = tmp_path / "d.v"
     source.write_text(AND2)
     for name in ("k6_frac_n10_2x2", "k4_n4_dsp16_3x4", "k6_frac_n10_mem1k_3x2"):
-        package = device_packages.find(cfg, name)
-        plan = synthesis.make_plan("and2", [source], tmp_path / "synth", package, None)
-        assert "${" not in plan.script and plan.lut_size == package.lut_size
-        assert "read_verilog" in plan.script and str(source) in plan.script
-        assert str(plan.blif) in plan.script and "write_blif" in plan.script
+        session = openfpga_module.Session()
+        package = session.read_device_package(PACKAGES / name)
+        plan = session.synthesize("and2", [source], output_dir=tmp_path / "synth", run=False)
+        script = Path(plan["script"]).read_text()
+        assert "${" not in script and plan["lut_size"] == package["lut_size"]
+        assert "read_verilog" in script and str(source) in script
+        assert plan["netlist"] in script and "write_blif" in script
         # A device that reads extended BLIF gets a netlist with that extension
-        assert plan.blif.suffix == (".eblif" if name == "k4_n4_dsp16_3x4" else ".blif")
-    dsp = synthesis.make_plan("and2", [source], tmp_path, device_packages.find(cfg, "k4_n4_dsp16_3x4"), None)
-    assert "-D DSP_A_MAXWIDTH=8" in dsp.script and "-nolatches" in dsp.script
+        assert Path(plan["netlist"]).suffix == (".eblif" if name == "k4_n4_dsp16_3x4" else ".blif")
+        assert plan["synthesized"] is False and not Path(plan["netlist"]).exists()
+        if name == "k4_n4_dsp16_3x4":
+            assert "-D DSP_A_MAXWIDTH=8" in script and "-nolatches" in script
 
 
-def test_systemverilog_files_get_the_sv_option_and_a_value_with_a_space_is_refused(tmp_path):
+def test_systemverilog_files_get_the_sv_option_and_a_value_with_a_space_is_refused(
+    openfpga_module, tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    session = openfpga_module.Session()
     good = tmp_path / "d.sv"
     good.write_text(AND2)
-    plan = synthesis.make_plan("and2", [good], tmp_path, None, 6)
-    assert "read_verilog -sv" in plan.script
+    plan = session.synthesize("and2", [good], lut_size=6, run=False)
+    assert "read_verilog -sv" in Path(plan["script"]).read_text()
     odd = tmp_path / "my design.v"
     odd.write_text(AND2)
-    with pytest.raises(InvalidArgument):
-        synthesis.make_plan("and2", [odd], tmp_path, None, 6)
+    with pytest.raises(openfpga_module.OpenfpgaError, match="Synthesis refused: The path"):
+        session.synthesize("and2", [odd], lut_size=6, run=False)
 
 
 def test_the_log_and_the_netlist_are_read(tmp_path):

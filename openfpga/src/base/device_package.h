@@ -59,6 +59,12 @@ struct DevicePackage {
    * order of the names */
   std::vector<std::pair<std::string, DevicePackageValue>> vpr_options;
   std::vector<DevicePackageFile> files;
+  /* flow_defaults.yosys_options: the options of read_verilog and of the DSP
+   * mapping that the script of the package takes, as the manifest gives them.
+   * valid is false when yosys_options is not a map of lists */
+  std::vector<std::string> yosys_read_verilog;
+  std::vector<std::string> yosys_dsp_map;
+  bool yosys_options_valid = true;
   /* The JSON text of the reference of the manifest, or "{}" */
   std::string reference;
 

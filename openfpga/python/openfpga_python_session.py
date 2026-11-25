@@ -829,6 +829,7 @@ _SCHEMA_VERSIONS = {
     "stage_info": 1,
     "plugins": 1,
     "device_package": 1,
+    "synthesis": 1,
 }
 
 
@@ -1351,6 +1352,78 @@ class Session:
         be used raises OpenfpgaError, with the reason, before anything is read"""
         self.command("read_device_package", file=os.fspath(directory))
         return self.device_package()
+
+    def synthesize(
+        self,
+        top,
+        files,
+        lut_size=None,
+        include_dirs=None,
+        defines=None,
+        read_options=None,
+        output_dir=None,
+        read=True,
+        run=True,
+    ):
+        """Synthesize Verilog files (paths) into a netlist of the LUTs of the device, with
+        Yosys (the shell's command synthesize): the script is made from the template of the
+        device package of the session (read_device_package), or from a generic one with
+        lut_size. The script and the netlist go to output_dir (synth). The netlist is read as
+        the circuit when the architectures are read, unless read is False. defines is a dict
+        of NAME: value, read_options a list (-nolatches).
+
+        With run=False the script is written and the plan is returned, and nothing else
+        happens (not written in the journal). Returns what the command answers (kind
+        synthesis): top, netlist, script, device_package, lut_size, files, synthesized,
+        circuit_read. Arguments that are refused, and a failure of Yosys, raise
+        OpenfpgaError ('Synthesis refused: ...' for the first)"""
+        options = {
+            "top": top,
+            "files": ",".join(os.path.abspath(os.fspath(f)) for f in files),
+            "lut_size": lut_size,
+            "include_dirs": ",".join(os.path.abspath(os.fspath(d)) for d in include_dirs or []),
+            "defines": ",".join("%s=%s" % item for item in (defines or {}).items()),
+            "read_options": ",".join(read_options or []),
+            "output_dir": None if output_dir is None else os.path.abspath(os.fspath(output_dir)),
+        }
+        return self._synthesis("synthesize", options, read, run, check=False)
+
+    def read_design(self, directory, netlist=None, output_dir=None, read=True, run=True,
+                    check=False, lut_size=None):
+        """Read a design directory (docs/spec_design_directory.md) with the shell's command
+        read_design: its RTL is synthesized as synthesize() does (or its netlist is read, the
+        one of the label netlist, or the only one of a design with no RTL), and its SDC is given
+        to VPR. With check=True the design is checked and what would be synthesized is
+        returned, without writing anything; with run=False the script is written and the plan
+        returned. Neither is written in the journal. lut_size is for a session without a device
+        package. Returns what the command answers (kind synthesis), with design and
+        design_folder"""
+        options = {
+            "file": os.path.abspath(os.fspath(directory)),
+            "netlist": netlist,
+            "lut_size": lut_size,
+            "output_dir": None if output_dir is None else os.path.abspath(os.fspath(output_dir)),
+        }
+        return self._synthesis("read_design", options, read, run, check)
+
+    def _synthesis(self, name, options, read, run, check):
+        options = {k: v for k, v in options.items() if v not in (None, "")}
+        if not read:
+            options["no_read"] = True
+        if check:
+            options["check"] = True
+        elif not run:
+            options["no_run"] = True
+        if run and not check:
+            _, result = self._run_command(name, (), options)
+        else:  # a plan or a check changes nothing of the flow: not in the journal
+            result = self.shell.run(_command_line(name, (), options))
+        answer = result.data
+        if answer is None or answer.get("kind") != "synthesis":
+            raise AnswerError("Expected an answer of the kind 'synthesis'")
+        if answer.get("schema_version") != _SCHEMA_VERSIONS["synthesis"]:
+            raise AnswerError("The answer 'synthesis' has an unknown schema version")
+        return answer["data"]
 
     def device_package(self):
         """What report_device_package answers of the device package of the session (see

@@ -494,47 +494,45 @@ def register(
             entry = session_of(session)
             handle = entry.session
             nonlocal top
-            include_dirs: List[Path] = []
-            options: Dict[str, Any] = {}
+            folder = config.root / entry.directory / "synth"
             if design is not None:
                 if top is not None or files is not None:
                     raise InvalidArgument("give design, or top and files, not both")
                 found = find_design(config, design)
-                netlist = _design_netlist(found)  # only for a design that has no RTL
-                if netlist is None:
-                    _design_inputs(found)  # what is wrong with the design is said before it is copied
+                # What is wrong with the design is said before it is copied
+                checked = _planned(lambda: handle.read_design(found["folder"], check=True))
                 check_room(entry)
                 found = copy_design(found, config.root / entry.directory)
-                if netlist is not None:
-                    return _read_design_netlist(entry, found, netlist, read)
-                names, paths, top, include_dirs, options = _design_inputs(found)
+                if not checked.get("files"):  # a design of a netlist: it is read
+                    relative = Path(checked["netlist"]).relative_to(checked["design_folder"])
+                    return _read_design_netlist(entry, found, str(relative), read)
+                answer = _planned(
+                    lambda: handle.read_design(
+                        found["folder"], output_dir=folder, read=False, run=False
+                    )
+                )
+                paths = [Path(p) for p in answer["files"]]
+                names = [p.name for p in paths]
             else:
                 if top is None or files is None:
                     raise InvalidArgument("give design, or top and files")
                 names = [n.strip() for n in str(files).split(",") if n.strip()]
                 paths = [Path(resolve_file(config, entry.directory, n)) for n in names]
-            package = None
-            package_name = registry.read_meta(entry.directory).get("package_name")
-            if package_name:
-                package = device_packages.find(config, package_name)
-            check_room(entry)
-            folder = config.root / entry.directory / "synth"
-            plan = synthesis.make_plan(
-                top,
-                paths,
-                folder,
-                package,
-                lut_size,
-                include_dirs=include_dirs,
-                defines=options.get("defines"),
-                read_options=options.get("read_options"),
+                check_room(entry)
+                answer = _planned(
+                    lambda: handle.synthesize(
+                        top, paths, lut_size=lut_size, output_dir=folder, read=False, run=False
+                    )
+                )
+            plan = synthesis.Plan(
+                top=answer["top"],
+                script=Path(answer["script"]).read_text(),
+                script_file=Path(answer["script"]),
+                blif=Path(answer["netlist"]),
+                lut_size=answer["lut_size"],
+                files=paths,
+                package=answer["device_package"],
             )
-            folder.mkdir(parents=True, exist_ok=True)
-            for old in folder.glob("*.ys"):  # one script: not one for each top module
-                if old != plan.script_file:
-                    old.unlink()
-            plan.script_file.write_text(plan.script)
-            plan.blif.unlink(missing_ok=True)
             started = time.monotonic()
             try:
                 log = handle.command("yosys", file=str(plan.script_file)).log
@@ -601,29 +599,18 @@ def register(
 
         return await run(work)
 
-    def _design_netlist(found: Dict[str, Any]) -> Optional[str]:
-        """The netlist of a design directory that has no RTL (its path in the directory), or None
-        when the design has RTL, which is what is synthesized even when it has a netlist too"""
-        entries = [e for e in found["manifest"].get("files", []) if isinstance(e, dict)]
-        if any(e.get("role") == "rtl" for e in entries):
-            return None
-        netlists = [e.get("path") for e in entries if e.get("role") == "netlist"]
-        if not netlists:
-            return None  # no RTL and no netlist: _design_inputs says so
-        relative = netlists[0]
-        if not isinstance(relative, str) or os.path.isabs(relative) or ".." in Path(relative).parts:
-            raise InvalidArgument(
-                "The manifest of '%s' has the netlist '%s', which is not inside the design" % (found["name"], relative)
-            )
-        if Path(relative).suffix.lower() not in (".blif", ".eblif"):
-            raise InvalidArgument(
-                "The design '%s' has only the netlist '%s', which the flow does not read (it reads "
-                "BLIF and extended BLIF)" % (found["name"], relative)
-            )
-        path = (found["folder"] / relative).resolve()
-        if found["folder"].resolve() not in path.parents or not path.is_file():
-            raise InvalidArgument("The netlist '%s' of '%s' does not exist" % (relative, found["name"]))
-        return relative
+    def _planned(make):
+        """The plan of a synthesis (or the check of a design) that the shell answers. What the
+        shell refuses before Yosys runs ('Synthesis refused: ...') is an invalid argument"""
+        import openfpga
+
+        try:
+            return make()
+        except openfpga.OpenfpgaError as error:
+            found = re.search(r"Synthesis refused: (.*)$", error.log or "", re.M)
+            if found:
+                raise InvalidArgument(found.group(1).strip())
+            raise
 
     def _read_design_netlist(entry: Entry, found: Dict[str, Any], relative: str, read: bool):
         """The copy of a design that has only a netlist: the netlist is read as the circuit"""
@@ -656,54 +643,6 @@ def register(
                 "circuit=%s" % path.relative_to(config.root / entry.directory)
             )
         return reply(result)
-
-    def _design_inputs(found: Dict[str, Any]):
-        """The names, whole paths, top, include folders and options of a design directory: the
-        files of its manifest, each inside the folder (the manifest is read as data, never as
-        paths to trust)"""
-        manifest = found["manifest"]
-        folder = found["folder"].resolve()
-
-        def inside(relative: Any, what: str) -> Path:
-            if not isinstance(relative, str) or os.path.isabs(relative) or ".." in Path(relative).parts:
-                raise InvalidArgument(
-                    "The manifest of '%s' has the %s '%s', which is not inside the design"
-                    % (found["name"], what, relative)
-                )
-            path = (folder / relative).resolve()
-            if folder not in path.parents:
-                raise InvalidArgument(
-                    "The %s '%s' of '%s' leads outside the design" % (what, relative, found["name"])
-                )
-            return path
-
-        entries = [e for e in manifest.get("files", []) if isinstance(e, dict)]
-        rtl = [e for e in entries if e.get("role") == "rtl"]
-        if not rtl:
-            raise InvalidArgument(
-                "The design '%s' has no RTL to synthesize%s"
-                % (found["name"], "; it has a netlist: read it with read_inputs" if any(
-                    e.get("role") == "netlist" for e in entries) else "")
-            )
-        paths = [inside(e.get("path"), "file") for e in rtl]
-        for path, entry in zip(paths, rtl):
-            if path.suffix.lower() not in synthesis.SOURCE_SUFFIXES:
-                raise InvalidArgument(
-                    "The design '%s' has the file '%s', which is not Verilog or SystemVerilog "
-                    "(this tool synthesizes those)" % (found["name"], entry.get("path"))
-                )
-            if not path.is_file():
-                raise InvalidArgument("The file '%s' of '%s' does not exist" % (entry.get("path"), found["name"]))
-        rtl_block = manifest.get("rtl") if isinstance(manifest.get("rtl"), dict) else {}
-        dirs = [inside(d, "include folder") for d in rtl_block.get("include_dirs", [])]
-        top = manifest.get("top")
-        if not isinstance(top, str):
-            raise InvalidArgument("The manifest of '%s' has no top" % found["name"])
-        options = {
-            "defines": rtl_block.get("defines") or {},
-            "read_options": rtl_block.get("read_options") or [],
-        }
-        return [p.name for p in paths], paths, top, dirs, options
 
     def _circuit_not_read(plan, result: Dict[str, Any], error: BaseException):
         """The netlist was made and the flow cannot read it: not a success, because the stages
