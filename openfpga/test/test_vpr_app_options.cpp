@@ -207,7 +207,7 @@ static void test_specs_match_the_table() {
   const auto specs = specs_by_option();
   const std::set<std::string> openfpga_only = {
     "build_fabric.reorder_incoming_edges",
-    "build_fabric.sort_gsb_chan_node_in_edges"};
+    "build_fabric.sort_gsb_chan_node_in_edges", "place.placer"};
 
   std::set<std::string> flags;
   for (const auto& entry : specs) {
