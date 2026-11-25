@@ -352,9 +352,21 @@ SynthesisPlan make_synthesis_plan(const SynthesisRequest& request,
   values["VERILOG_FILES"] = joined(names, " ");
   values["LUT_SIZE"] = std::to_string(size);
   values["OUTPUT_BLIF"] = netlist.string();
-  /* The hook of the synthesis constraints of ODC (spec_odc.md, R-24): none
-   * yet */
-  values["ODC_SYNTHESIS"] = "";
+  /* The hook of the synthesis constraints of ODC (spec_odc.md, R-24), right
+   * after the hierarchy is elaborated. A script without it cannot take them */
+  if (!request.constraints.empty() &&
+      std::string::npos == script_template.find("${ODC_SYNTHESIS}")) {
+    throw SynthesisRefused(
+      "The ODC of the session has synthesis commands, and the Yosys script " +
+      (nullptr != package ? "of the device package '" + package->name + "'"
+                          : std::string("of the synthesis")) +
+      " has no line ${ODC_SYNTHESIS} to take them (docs/spec_odc.md, R-24)");
+  }
+  std::string constraints = request.constraints;
+  while (!constraints.empty() && '\n' == constraints.back()) {
+    constraints.pop_back();
+  }
+  values["ODC_SYNTHESIS"] = constraints;
   const std::string script = substitute(script_template, values);
   static const std::regex left("\\$\\{([A-Z0-9_]+)\\}");
   std::vector<std::string> missing;
@@ -379,6 +391,7 @@ SynthesisPlan make_synthesis_plan(const SynthesisRequest& request,
   plan.lut_size = size;
   plan.files = request.files;
   plan.package = nullptr != package ? package->name : std::string();
+  plan.constraints = !constraints.empty();
   return plan;
 }
 
@@ -443,6 +456,7 @@ DesignDirectory read_design_directory(const fs::path& given,
   };
   std::vector<json> rtl;
   std::vector<json> netlists;
+  bool placement = false;
   for (const json& entry : entries) {
     if ("rtl" == role_of(entry)) {
       rtl.push_back(entry);
@@ -456,7 +470,24 @@ DesignDirectory read_design_directory(const fs::path& given,
       if ("synthesis" != stage && design.sdc.empty()) {
         design.sdc = inside(entry.value("path", json()), "file");
       }
+    } else if ("odc" == role_of(entry)) {
+      if (!design.odc.empty()) {
+        throw SynthesisRefused("The design '" + design.name +
+                               "' has more than one file of the role odc");
+      }
+      design.odc = inside(entry.value("path", json()), "file");
+    } else if ("placement_constraints" == role_of(entry)) {
+      placement = true;
     }
+  }
+  /* The ODC holds what an SDC of the implementation and the placement
+   * constraints hold: a design has one or the other (R-23a) */
+  if (!design.odc.empty() && (!design.sdc.empty() || placement)) {
+    throw SynthesisRefused(
+      "The design '" + design.name + "' has an odc file and " +
+      (design.sdc.empty() ? std::string("a placement_constraints file")
+                          : std::string("an sdc file of the implementation")) +
+      ", which would set the same constraints: keep one");
   }
   /* The netlist to read: the one of a label, or the only one of a design
    * with no RTL (a design with RTL is synthesized, even when it has a

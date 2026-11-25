@@ -81,6 +81,17 @@
           ],
           "description": "The SDC of the design, given to VPR (read_design)"
         },
+        "odc": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The ODC file of the design (role odc), read with read_odc (read_design)"
+        },
+        "constraints": {
+          "type": "boolean",
+          "description": "The script has the synthesis commands of the ODC of the session"
+        },
         "synthesized": {
           "type": "boolean",
           "description": "Yosys ran and made the netlist (false for a plan, a check, or a design of a netlist)"

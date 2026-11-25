@@ -38,8 +38,13 @@ def test_the_ui_plugin_has_the_queries_and_the_options(openfpga_module, tmp_path
     (ui,) = [p for p in session.plugins() if p.name == "ui"]
     assert {"set_app_option", "reset_app_option", "report_app_option"} <= set(ui.commands)
     assert {"report_session", "timing_summary", "placement", "find"} <= set(ui.commands)
-    # It adds commands, and changes none of the shell's
-    assert ui.overrides == [] and ui.removes == [] and ui.hooks == [] and not ui.every_command
+    assert {"read_odc", "write_odc", "clear_odc", "report_constraints"} <= set(ui.commands)
+    # It adds commands, and changes none of the shell's. Its hooks keep the constraints of ODC
+    # up to date when the circuit is read and before the device is made
+    assert ui.overrides == [] and ui.removes == [] and not ui.every_command
+    hooks = {(h.command, h.when) for h in ui.hooks}
+    assert {("read_circuit", "before"), ("read_circuit", "after"), ("pack", "before")} <= hooks
+    assert {("set_app_option", "before"), ("read_device_package", "after")} <= hooks
     # The flow itself stays in the shell
     assert not {"read_vpr_arch", "pack", "route", "report_plugins"} & set(ui.commands)
 

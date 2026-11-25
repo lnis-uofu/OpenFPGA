@@ -830,6 +830,7 @@ _SCHEMA_VERSIONS = {
     "plugins": 1,
     "device_package": 1,
     "synthesis": 1,
+    "constraints": 1,
 }
 
 
@@ -970,6 +971,7 @@ _QUERY_COMMANDS = frozenset(
         "find",
         "block_info",
         "net_info",
+        "report_constraints",
     )
 )
 
@@ -1439,6 +1441,43 @@ class Session:
             raise AnswerError("The answer 'device_package' has an unknown schema version")
         return answer["data"]
 
+    # The constraints of ODC ---------------------------------------------------------
+
+    def read_odc(self, file, lenient=False):
+        """Read the constraints of the design from an ODC file (docs/spec_odc.md): timing,
+        synthesis, floorplanning, routing and pins, with the default constraints of the device
+        package first. They replace the ones of the session, and are checked against what is
+        read (the netlist, the device) as far as it is known; the rest is checked when it is
+        read, and an error stops the command that reads it. With lenient, an unknown command
+        is a warning. Returns constraints(). A file with errors raises OpenfpgaError, and the
+        session keeps its constraints"""
+        options = {"file": os.path.abspath(os.fspath(file))}
+        if lenient:
+            options["lenient"] = True
+        self.command("read_odc", **options)
+        return self.constraints()
+
+    def write_odc(self, file):
+        """Write the ODC of the session in a file, one command per line"""
+        return self.command("write_odc", file=os.fspath(file))
+
+    def clear_odc(self):
+        """Take the ODC of the session away, with the files it gave to VPR"""
+        return self.command("clear_odc")
+
+    def constraints(self, limit=None):
+        """What report_constraints answers (kind constraints): the file of the ODC (None when
+        the session has none), each command with its line and the objects it matched, the
+        errors and warnings, the coverage of the timing, and the files given to the tools"""
+        options = {} if limit is None else {"limit": int(limit)}
+        result = self.shell.run(_command_line("report_constraints", (), options))
+        answer = result.data
+        if answer is None or answer.get("kind") != "constraints":
+            raise AnswerError("Expected an answer of the kind 'constraints'")
+        if answer.get("schema_version") != _SCHEMA_VERSIONS["constraints"]:
+            raise AnswerError("The answer 'constraints' has an unknown schema version")
+        return answer["data"]
+
     # The stages ------------------------------------------------------------------
 
     def pack(self):
@@ -1525,8 +1564,10 @@ class Session:
         return self.set_option("router.route_chan_width", int(width))
 
     def clear_constraints(self):
-        """Take away the constraints of VPR and the timing constraints. Returns
+        """Take away the constraints of VPR and the timing constraints, and the ODC. Returns
         the Changes, one for each that was set"""
+        if self.constraints()["file"] is not None:
+            self.clear_odc()
         return [
             change
             for change in (
@@ -1592,7 +1633,8 @@ class Session:
         routing of the stages that are reached, and checkpoint.json: the
         stages, the options that are not the default, where the inputs come
         from, with the checksum of every file, the plugins of the build, and
-        the device package that the architectures were read from, if any.
+        the device package that the architectures were read from, if any, and
+        the ODC of the session (read again when it is restored).
         The inputs are not copied: restore() needs them where they are. The
         stages after ANALYZED (repack, bitstream) are not saved. A checkpoint
         that was in the directory is replaced.
@@ -1631,6 +1673,18 @@ class Session:
         package = self.device_package()
         if package is not None:
             manifest["device_package"] = package["directory"]
+        constraints = self.constraints()
+        if constraints["file"] is not None:
+            # The files that the ODC gives to VPR are made again from it
+            manifest["odc"] = {
+                "file": constraints["file"],
+                "lenient": constraints["lenient"],
+                "sha256": _sha256(constraints["file"]),
+            }
+            given = [path for path in constraints["outputs"].values() if path is not None]
+            manifest["options"] = [
+                option for option in manifest["options"] if option["value"] not in given
+            ]
         path = os.path.join(directory, _CHECKPOINT_MANIFEST)
         previous = _read_manifest(path, missing_ok=True)
         with open(path + ".part", "w") as handle:
@@ -1674,6 +1728,9 @@ class Session:
                         "The input '%s' (%s) is not the one of the checkpoint"
                         % (key, entry["file"])
                     )
+            odc = manifest.get("odc")
+            if odc is not None and _sha256(odc["file"]) != odc["sha256"]:
+                raise CheckpointError("The ODC '%s' is not the one of the checkpoint" % odc["file"])
         session = cls(shell, **session_options)
         # A checkpoint made before the plugins were recorded (no "plugins") was made by a
         # build whose commands were those of the shell and of the ui plugin now: it is taken
@@ -1694,6 +1751,9 @@ class Session:
         if package is None:
             session.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
             session.read_openfpga_arch(inputs["openfpga_arch"]["file"])
+        odc = manifest.get("odc")
+        if odc is not None:
+            session.read_odc(odc["file"], lenient=odc["lenient"])
         session.read_circuit(inputs["circuit"]["file"])
         for key, _, command in _CHECKPOINT_RESULTS:
             if key in manifest["results"]:

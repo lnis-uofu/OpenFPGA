@@ -16,6 +16,8 @@ As OpenFPGA integrates various tools, the commands are categorized into differen
 
    query_commands
 
+   constraint_commands
+
    setup_commands
 
    fpga_bitstream_commands

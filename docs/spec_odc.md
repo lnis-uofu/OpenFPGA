@@ -1,6 +1,6 @@
 # Spec: ODC, the constraints file of OpenFPGA
 
-Status: draft for review (phase 1 of `docs/plan_odc_constraints.md`). Not implemented.
+Status: draft for review. Implemented (phases 3 and 4 of `docs/plan_odc_constraints.md`): `libs/libodc` (the reader, the checks, the writers) and the commands of the plugin `ui`. Not yet: the custom properties of a `pcf_config.xml` (R-35), the objects of the synthesis commands reported from the log of Yosys (R-23), and the share of the endpoints that are constrained (R-41).
 
 ## Overview
 
@@ -122,7 +122,7 @@ Each command has a **stage**, the first stage of the flow whose result it change
   - `set_property MAX_FANOUT <n> <nets>`: it becomes the attribute `max_fanout`, which the script of a package may use. A script that does not use it ignores it, with a warning.
   - `set_property RAM_STYLE block|distributed <cells>`: it becomes the attribute `ram_style`, read by the memory inference of the package's script.
   - `set_synth_option -flatten | -keep_hierarchy`, `-top <module>`, `-define <NAME>=<value>`: options of the synthesis.
-- **R-23** The objects of a synthesis command are matched by Yosys (`select`) at the hook. One that matches nothing is reported from the log of Yosys.
+- **R-23** The objects of a synthesis command are matched by Yosys (`select`) at the hook, with its globs: `-regexp`, `-nocase` and `-filter` are refused there. One that matches nothing is reported from the log of Yosys (not yet: the report shows the query as not checked).
 - **R-24** A device package whose script takes ODC has a line `${ODC_SYNTHESIS}` right after its `hierarchy` command: the design is elaborated there and still has its RTL names. A package whose script has no such line refuses an ODC file with synthesis commands, with the reason.
 
 ### Floorplanning (consumer: VPR's constraints, stage DEVICE)
@@ -140,7 +140,7 @@ Each command has a **stage**, the first stage of the flow whose result it change
   - that each tile of a `LOC`, and each pblock, has a type that can hold the cells given to it;
   - that a pblock has room for its cells.
 
-  The reason for each is that VPR fails with "Failed to find pack clusters densely enough" without naming the cause. The check names the cell, the location and the type of the tile.
+  The reason for each is that VPR fails with "Failed to find pack clusters densely enough" without naming the cause. The check names the cell, the location and the type of the tile. The room is counted by primitives: for each model of the cells of a pblock, the primitives of that model in its tiles.
 - **R-27** A cell is in one pblock at most, and has one `LOC` at most. A cell with both must have its `LOC` inside the pblock.
 
 ### Routing (consumer: VPR's constraints, stage DEVICE)
@@ -167,8 +167,8 @@ Each command has a **stage**, the first stage of the flow whose result it change
   - a direction that does not fit is an error;
   - a port on a pin whose `pin_type` is `UNDEF` is a warning;
   - two ports on one pin is an error.
-- **R-34** `set_property PIN_DEFAULT 0|1 <pins>` gives the default value of a fabric pin that no net uses, as the `default_value` of the pin constraints XML.
-- **R-35** `set_property <property> <value> <ports>`, for a property that the `pcf_config.xml` of the device package defines (for example an I/O mode), becomes a setting of the bitstream for the I/O that holds the port, as `pcf2bitstream_setting` does today.
+- **R-34** `set_property PIN_DEFAULT 0|1 <ports>` gives the `default_value` of the pin constraints XML to a port that `PACKAGE_PIN` puts on a pin without a location (a global port of the fabric). On another port it is an error.
+- **R-35** `set_property <property> <value> <ports>`, for a property that the `pcf_config.xml` of the device package defines (for example an I/O mode), becomes a setting of the bitstream for the I/O that holds the port, as `pcf2bitstream_setting` does today. Not yet: no package has a `pcf_config.xml`, and such a property is refused with the reason.
 
 ### Other commands
 
@@ -180,12 +180,14 @@ Each command has a **stage**, the first stage of the flow whose result it change
 - **R-40** `read_odc --file <f> [--lenient]` reads a file into the session. It replaces the ODC that the session had. The steps:
   1. The file is parsed. An error stops the read, and the session keeps its old ODC.
   2. Each command is checked as far as the inputs that the session has allow: the device when the architecture is read, the netlist when the circuit is read. A check that needs an input that is not read yet runs when that input is read, and its result is in the report.
-  3. The files for the consumers are written in the folder `odc/` of the current directory: `constraints.sdc`, `vpr_constraints.xml`, `pin_constraints.xml`, `synthesis.ys` and `bitstream_setting.xml`, each only when it has something. They are given to the flow: the SDC as `filename.sdc_file`, the XML as `filename.read_vpr_constraints_file`, the others to the commands that take them.
+  3. The files for the consumers are written in the folder `odc/` of the current directory: `constraints.sdc`, `vpr_constraints.xml`, `pin_constraints.xml` and `synthesis.ys`, each only when it has something. They are given to the flow: the SDC as `filename.sdc_file`, the XML as `filename.read_vpr_constraints_file`, the pin constraints to the commands that take `--pin_constraints_file` and are not given one, and the Yosys commands to the synthesis. A file that changes where it is makes the device again.
+
+  The objects are matched in the netlist that VPR read, as VPR names its blocks: a buffer LUT that VPR absorbs is not a cell. Before the circuit is read, they are matched in the BLIF file that `read_circuit` is given, and the files are written again once VPR has read it. A pattern is written for VPR as the names it matched (`is_regex="false"`), or, before the netlist is known, as an anchored regular expression.
 - **R-41** `report_constraints` answers, as JSON (kind `constraints`, schema `openfpga_flow/schemas/constraints.schema.json`):
   - each command, with its file and line, its kind, its stage, and whether it is checked yet;
   - for each object query, the objects it matched (at most a limit, with `truncated`), or the nearest names when it matched nothing;
   - the errors and warnings, with their line;
-  - the coverage of the timing: the clocks and their periods, the clocks of the netlist that no `create_clock` names, the input and output ports without a delay, and the share of the endpoints of the timing graph that are constrained (after the analysis).
+  - the coverage of the timing: the clocks and their periods, the clocks of the netlist that no `create_clock` names, the input and output ports without a delay, and the share of the endpoints of the timing graph that are constrained (after the analysis; not yet).
 - **R-42** `write_odc --file <f>` writes the ODC of the session back as a file, one command per line, in the order of the file, without its comments.
 - **R-43** `clear_odc` takes the ODC away. It drops what reading it dropped.
 - **R-44** The ODC is an input of the session, as the SDC and the VPR constraints are:

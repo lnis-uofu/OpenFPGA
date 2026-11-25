@@ -154,7 +154,16 @@ Synthesis and design directories
 
 ``session.read_design(directory)`` reads a design directory (``docs/spec_design_directory.md``, command ``read_design``): its RTL is synthesized with the top, the defines, the include folders and the options of its manifest, or its netlist is read (the one of the label ``netlist``, or the only one of a design with no RTL); its SDC is set as ``filename.sdc_file``.
 
-Both return what the command answers (kind ``synthesis``): ``top``, ``netlist``, ``script``, ``device_package``, ``lut_size``, ``files``, ``synthesized`` and ``circuit_read``, with ``design`` and ``sdc`` for a design. ``run=False`` writes the script and returns the plan without running Yosys, and ``read_design(..., check=True)`` checks the design without writing anything; neither is written in the journal.
+Both return what the command answers (kind ``synthesis``): ``top``, ``netlist``, ``script``, ``device_package``, ``lut_size``, ``files``, ``synthesized`` and ``circuit_read``, with ``design``, ``sdc`` and ``odc`` for a design, and ``constraints`` when the script has the synthesis commands of an ODC. ``run=False`` writes the script and returns the plan without running Yosys, and ``read_design(..., check=True)`` checks the design without writing anything; neither is written in the journal.
+
+.. _odc_in_python:
+
+Constraints in ODC
+~~~~~~~~~~~~~~~~~~
+
+``session.read_odc(file)`` reads the constraints of the design from an ODC file (``docs/spec_odc.md``, command ``read_odc``, see :ref:`openfpga_constraint_commands`): timing, synthesis, floorplanning, routing and pins. They are checked against what is read, and the rest when it is read: a constraint that does not fit raises ``OpenfpgaError`` with its file and line, from ``read_odc``, or from the command that reads the netlist or makes the device. It returns ``session.constraints()``, what ``report_constraints`` answers: each command with the objects it matched, the errors and warnings, the coverage of the timing, and the files given to the tools. ``session.write_odc(file)`` writes the constraints back, and ``session.clear_odc()`` takes them away; ``clear_constraints()`` takes them away too.
+
+A checkpoint records the ODC file with its checksum, and ``restore`` reads it again; the journal has ``read_odc``. ``read_design`` reads the ODC file of a design (role ``odc``) before it synthesizes it, and ``synthesize`` gives the synthesis commands of the session to Yosys.
 
 .. _journal_and_replay:
 

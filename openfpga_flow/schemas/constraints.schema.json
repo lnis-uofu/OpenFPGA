@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "constraints",
+  "description": "The constraints of the session, read from an ODC file (answer of 'report_constraints', docs/spec_odc.md, R-41): each command with the objects it matched, the errors and warnings, the coverage of the timing, and the files given to the tools. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "constraints"
+    },
+    "stage": {
+      "type": "null"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "file",
+        "lenient",
+        "defaults",
+        "files",
+        "design",
+        "commands",
+        "diagnostics",
+        "timing",
+        "outputs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The ODC file of the session, or null when it has none"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "defaults": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The odc_defaults of the device package, read first"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The files read: the defaults, the file, and the files they include"
+        },
+        "design": {
+          "type": "object",
+          "required": [
+            "netlist",
+            "device",
+            "io_map",
+            "problems"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "netlist": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The netlist the objects are matched in, or null before the circuit is read"
+            },
+            "device": {
+              "type": "boolean",
+              "description": "The grid of the device is known (the VPR architecture is read)"
+            },
+            "io_map": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The I/O map of the device package, or null"
+            },
+            "problems": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "What could not be read"
+            }
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "line",
+              "name",
+              "text",
+              "kind",
+              "stage",
+              "consumer",
+              "checked",
+              "from_defaults",
+              "queries"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "name": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string",
+                "description": "The command in one line, as write_odc writes it"
+              },
+              "kind": {
+                "enum": [
+                  "timing",
+                  "synthesis",
+                  "floorplanning",
+                  "routing",
+                  "pins"
+                ]
+              },
+              "stage": {
+                "enum": [
+                  "CIRCUIT",
+                  "DEVICE"
+                ],
+                "description": "The first input or stage whose result the command changes"
+              },
+              "consumer": {
+                "enum": [
+                  "yosys",
+                  "vpr_sdc",
+                  "vpr_constraints",
+                  "pin_constraints",
+                  "none"
+                ]
+              },
+              "checked": {
+                "type": "boolean",
+                "description": "Its objects and locations were checked against what is read"
+              },
+              "from_defaults": {
+                "type": "boolean",
+                "description": "A command of the odc_defaults of the device package"
+              },
+              "queries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "kind",
+                    "checked",
+                    "count",
+                    "matched",
+                    "truncated",
+                    "nearest"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "The query, as written, with its brackets"
+                    },
+                    "kind": {
+                      "enum": [
+                        "ports",
+                        "cells",
+                        "nets",
+                        "pins",
+                        "clocks",
+                        "pblocks",
+                        "sites"
+                      ]
+                    },
+                    "checked": {
+                      "type": "boolean",
+                      "description": "The objects were known: false before the netlist is read, and always for a synthesis command (Yosys matches them)"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "How many objects it matched"
+                    },
+                    "matched": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The objects it matched, at most --limit of them"
+                    },
+                    "truncated": {
+                      "type": "boolean"
+                    },
+                    "nearest": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The names closest to its first pattern, when it matched nothing"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "file",
+              "line",
+              "message"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "enum": [
+                  "error",
+                  "warning"
+                ]
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "0 when the problem is with the file itself"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timing": {
+          "type": "object",
+          "required": [
+            "checked",
+            "clocks",
+            "unconstrained_clocks",
+            "inputs_without_delay",
+            "outputs_without_delay"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "checked": {
+              "type": "boolean",
+              "description": "The netlist is known"
+            },
+            "clocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "period",
+                  "line",
+                  "targets"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "period": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "targets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "unconstrained_clocks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The nets that clock a register and that no create_clock names"
+            },
+            "inputs_without_delay": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "outputs_without_delay": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "required": [
+            "constraints",
+            "vpr_constraints",
+            "pin_constraints",
+            "synthesis"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "constraints": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The SDC given to VPR (filename.sdc_file)"
+            },
+            "vpr_constraints": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The VPR constraints XML (filename.read_vpr_constraints_file)"
+            },
+            "pin_constraints": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The pin constraints XML of the OpenFPGA commands"
+            },
+            "synthesis": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The Yosys commands of the synthesis (at ${ODC_SYNTHESIS})"
+            }
+          }
+        }
+      }
+    }
+  }
+}

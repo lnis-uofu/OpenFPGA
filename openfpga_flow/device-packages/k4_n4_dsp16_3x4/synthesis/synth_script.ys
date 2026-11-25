@@ -13,6 +13,9 @@ read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
 #########################
 # Identify top module from hierarchy
 hierarchy -check -top ${TOP_MODULE}
+# The synthesis constraints of ODC (docs/spec_odc.md, R-24): the design is
+# elaborated and has its RTL names. Empty without an ODC
+${ODC_SYNTHESIS}
 # - Convert process blocks to AST
 proc
 # Flatten all the gates/primitives

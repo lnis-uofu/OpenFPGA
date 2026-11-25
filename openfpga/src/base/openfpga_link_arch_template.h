@@ -26,6 +26,7 @@
 #include "read_xml_pin_constraints.h"
 #include "route_clock_rr_graph.h"
 #include "rr_graph_in_edges.h"
+#include "session_pin_constraints.h"
 #include "vpr_device_annotation.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -253,9 +254,10 @@ int route_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
-  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
-    pin_constraints =
-      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  const std::string pcf_file =
+    pin_constraints_file(openfpga_ctx, cmd, cmd_context, opt_pcf);
+  if (!pcf_file.empty()) {
+    pin_constraints = read_xml_pin_constraints(pcf_file.c_str());
   }
 
   return route_clock_rr_graph(

@@ -40,6 +40,9 @@ struct SynthesisRequest {
   std::vector<std::pair<std::string, std::string>> defines;
   std::vector<std::string> read_options;
   std::filesystem::path folder; /* where the script and the netlist go */
+  /* The Yosys commands of the synthesis constraints of ODC, for the line
+   * ${ODC_SYNTHESIS} of the script (docs/spec_odc.md, R-24), or empty */
+  std::string constraints;
 };
 
 /* What one synthesis runs: the script, and where its result goes */
@@ -51,6 +54,8 @@ struct SynthesisPlan {
   int lut_size = 0;
   std::vector<std::filesystem::path> files;
   std::string package; /* the name of the device package, or empty */
+  /* The script has the synthesis commands of an ODC */
+  bool constraints = false;
 };
 
 /* The only script of a folder: each synthesis writes it again */
@@ -75,6 +80,8 @@ struct DesignDirectory {
   std::filesystem::path netlist;
   /* The SDC of the stage implementation (or of both), or empty */
   std::filesystem::path sdc;
+  /* The constraints of the design in ODC (role odc), or empty */
+  std::filesystem::path odc;
 };
 
 /* Read the manifest of a design directory and check its files. label asks

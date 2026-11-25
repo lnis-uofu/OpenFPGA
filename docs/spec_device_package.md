@@ -1,6 +1,6 @@
 # Spec: OpenFPGA device package
 
-Status: draft for review. Partly implemented: the manifest, its checks and the use of a package by the MCP server and the web app (in Python); `read_device_package` in C++, the I/O map and `odc_defaults` are planned (docs/plan_odc_constraints.md).
+Status: draft for review. Implemented: the manifest and its checks, `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md).
 
 ## Overview
 

@@ -1,6 +1,6 @@
 # Spec: OpenFPGA design directory
 
-Status: proposal for discussion (https://github.com/lnis-uofu/OpenFPGA/discussions/2896). Partly implemented: the MCP server reads a design directory to synthesize it (in Python); `read_design` in C++ and the role `odc` are planned (docs/plan_odc_constraints.md). It is the counterpart of the device package spec (`docs/spec_device_package.md`): the device package describes a device, the design directory describes a design.
+Status: proposal for discussion (https://github.com/lnis-uofu/OpenFPGA/discussions/2896). Implemented: `read_design` in C++, which Python, the MCP server and the web app call, and the role `odc` (docs/plan_odc_constraints.md). It is the counterpart of the device package spec (`docs/spec_device_package.md`): the device package describes a device, the design directory describes a design.
 
 ## Overview
 

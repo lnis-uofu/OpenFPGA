@@ -4,6 +4,9 @@ read_verilog ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
 
 # Technology mapping
 hierarchy -top ${TOP_MODULE}
+# The synthesis constraints of ODC (docs/spec_odc.md, R-24): the design is
+# elaborated and has its RTL names. Empty without an ODC
+${ODC_SYNTHESIS}
 proc
 techmap -D NO_LUT -map +/adff2dff.v
 

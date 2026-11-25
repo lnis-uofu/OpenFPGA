@@ -100,6 +100,7 @@ int run_plan(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
     files.push_back(whole(file));
   }
   answer["files"] = files;
+  answer["constraints"] = plan.constraints;
   answer["synthesized"] = !no_run;
   answer["circuit_read"] = false;
   if (no_run) {
@@ -136,6 +137,52 @@ int run_plan(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
     answer["circuit_read"] = true;
   }
   return CMD_EXEC_SUCCESS;
+}
+
+/* What the constraints of the session (ODC) give to a synthesis: its Yosys
+ * commands, the top module and the defines (docs/spec_odc.md, R-22) */
+void apply_constraints(const OpenFpgaSession& session,
+                       SynthesisRequest& request) {
+  const SessionConstraints& constraints = session.constraints();
+  request.constraints = constraints.synthesis_script;
+  if (!constraints.synthesis_top.empty() &&
+      constraints.synthesis_top != request.top) {
+    VTR_LOG("The top module is '%s', as set_synth_option -top of '%s' says\n",
+            constraints.synthesis_top.c_str(), constraints.source.c_str());
+    request.top = constraints.synthesis_top;
+  }
+  for (const auto& define : constraints.synthesis_defines) {
+    bool replaced = false;
+    for (auto& existing : request.defines) {
+      if (existing.first == define.first) {
+        existing.second = define.second;
+        replaced = true;
+      }
+    }
+    if (!replaced) {
+      request.defines.push_back(define);
+    }
+  }
+}
+
+/* Read the ODC file of a design with the command read_odc (R-47), which a
+ * plugin gives */
+int read_design_odc(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
+                    const DesignDirectory& design) {
+  if (design.odc.empty()) {
+    return CMD_EXEC_SUCCESS;
+  }
+  const ShellCommandId read_odc = shell->command("read_odc");
+  if (ShellCommandId::INVALID() == read_odc ||
+      shell->command_removed(read_odc)) {
+    VTR_LOG_ERROR(
+      "The design '%s' has an ODC file, and this build has no command "
+      "'read_odc' (the plugin ui)\n",
+      design.name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  const std::string read = "read_odc --file \"" + design.odc.string() + "\"";
+  return shell->execute_command(read.c_str(), ctx);
 }
 
 /* Give the answer to the caller, as a query does */
@@ -181,6 +228,7 @@ int synthesize_command(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
     request.read_options = list_of(value_of(cmd, context, "read_options"));
     const std::string folder = value_of(cmd, context, "output_dir");
     request.folder = whole(folder.empty() ? std::string("synth") : folder);
+    apply_constraints(ctx.session(), request);
     DevicePackage package;
     const bool has_package = session_package(ctx, package);
     plan = make_synthesis_plan(request, has_package ? &package : nullptr);
@@ -214,8 +262,14 @@ int read_design_command(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
   answer["design_folder"] = whole(design.folder);
   answer["top"] = design.top.empty() ? json() : json(design.top);
   answer["sdc"] = design.sdc.empty() ? json() : json(whole(design.sdc));
+  answer["odc"] = design.odc.empty() ? json() : json(whole(design.odc));
   const bool check = switch_of(cmd, context, "check");
   const bool no_read = switch_of(cmd, context, "no_read");
+  /* The constraints of the design come first: the synthesis takes its part
+   * of them */
+  if (!check && CMD_EXEC_SUCCESS != read_design_odc(shell, ctx, design)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
   /* A design of a netlist: it is read, nothing is synthesized */
   if (!design.netlist.empty()) {
     answer["netlist"] = whole(design.netlist);
@@ -250,6 +304,7 @@ int read_design_command(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
   request.folder = whole(folder.empty() ? std::string("synth") : folder);
   SynthesisPlan plan;
   try {
+    apply_constraints(ctx.session(), request);
     DevicePackage package;
     const bool has_package = session_package(ctx, package);
     plan = make_synthesis_plan(request, has_package ? &package : nullptr);
@@ -271,6 +326,13 @@ int read_design_command(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
   /* The SDC of the design is the one of VPR (spec_design_directory.md,
    * R-23) */
   if (!design.sdc.empty()) {
+    if (ctx.session().constraints().timing) {
+      VTR_LOG_ERROR(
+        "The design '%s' has an SDC, and the ODC '%s' of the session has "
+        "timing commands: use clear_odc first\n",
+        design.name.c_str(), ctx.session().constraints().source.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
     std::string error;
     if (!ctx.mutable_session().set_app_option("filename.sdc_file",
                                               whole(design.sdc), error)) {

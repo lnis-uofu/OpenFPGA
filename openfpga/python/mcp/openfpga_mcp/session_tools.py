@@ -33,6 +33,8 @@ REPLAY_COMMANDS = frozenset(
         "set_app_option",
         "reset_app_option",
         "yosys",
+        "read_odc",
+        "clear_odc",
     )
 )
 
