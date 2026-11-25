@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "device_package",
+  "description": "A device package: the one that the architectures of the session were read from (with what read_device_package set and did not set), or the one of a directory (report_device_package --file), answer of 'report_device_package'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "device_package"
+    },
+    "stage": {
+      "type": "null"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "description",
+        "layout",
+        "lut_size",
+        "tags",
+        "flat_routing",
+        "license",
+        "channel_width",
+        "vpr_options",
+        "vpr_arch",
+        "openfpga_arch",
+        "files",
+        "reference",
+        "readme",
+        "readme_cut",
+        "directory"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "version": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "string",
+          "pattern": "^[0-9]+x[0-9]+$",
+          "description": "The fixed layout of the VPR architecture, from device.grid"
+        },
+        "lut_size": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "flat_routing": {
+          "type": "boolean",
+          "description": "device.flat_routing: the flow was checked with flat routing on this device"
+        },
+        "license": {
+          "type": "string"
+        },
+        "channel_width": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "vpr_options": {
+          "type": "object",
+          "description": "flow_defaults.vpr_options of the manifest, by the flag of VPR without its dashes",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "vpr_arch": {
+          "type": "string",
+          "description": "The path of the VPR architecture inside the package"
+        },
+        "openfpga_arch": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "path",
+              "bytes"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "reference": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "design",
+                "top",
+                "expected"
+              ],
+              "properties": {
+                "design": {},
+                "top": {},
+                "expected": {}
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "readme": {
+          "type": "string",
+          "description": "The start of README.md (1200 characters at most)"
+        },
+        "readme_cut": {
+          "type": "boolean"
+        },
+        "directory": {
+          "type": "string",
+          "description": "The directory of the package, as a whole path"
+        },
+        "options_set": {
+          "type": "object",
+          "description": "The application options that read_device_package set, by name (only for the package of the session)",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "options_not_set": {
+          "type": "object",
+          "description": "The entries of flow_defaults.vpr_options that were not set, with the reason (only for the package of the session)",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

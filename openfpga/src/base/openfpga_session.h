@@ -121,6 +121,10 @@ class OpenFpgaSession {
   /* The file that an input was read from, as it was given to read_input().
    * Empty if it is not known, or the input is not read */
   std::string input_file(const OpenFpgaInput& input) const;
+  /* The device package that the architectures were read from, as the data of
+   * the answer of report_device_package (JSON), or empty when they were not
+   * read from one */
+  const std::string& device_package() const { return device_package_; }
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
@@ -160,6 +164,10 @@ class OpenFpgaSession {
   void set_stage_log(const OpenFpgaStage& stage, const std::string& log);
   void set_stage_seconds(const OpenFpgaStage& stage, const double seconds);
   void set_vpr_generation(uint64_t generation) { vpr_generation_ = generation; }
+  /* Record the device package that the architectures were just read from
+   * (see device_package()). Reading an architecture, or failing to, forgets
+   * it, and so does reset() */
+  void set_device_package(const std::string& json) { device_package_ = json; }
   /* Record the generation of the VPR run that the OpenFPGA architecture was
    * linked to, by link_openfpga_arch. What the link makes refers to the data
    * of that run, and it is not valid for another one */
@@ -187,6 +195,7 @@ class OpenFpgaSession {
   std::map<OpenFpgaStage, std::string> stage_logs_;
   std::map<OpenFpgaStage, double> stage_seconds_;
   std::map<OpenFpgaInput, std::string> input_files_;
+  std::string device_package_;
 };
 
 } /* End namespace openfpga */

@@ -139,3 +139,53 @@ def test_the_model_is_told_the_options_and_the_memory_reference_runs(openfpga_mo
     assert synthesized.get("ok"), synthesized
     assert analysis.get("ok"), analysis
     assert analysis["data"]["reached"][-1] == "ANALYZED"
+
+
+def test_the_shell_reads_a_package_as_the_python_code_did(openfpga_module, session):
+    """read_device_package is the command of the shell that Session.read_device_package and the
+    MCP server run: it says what it set, and the session keeps the package"""
+    name = "k6_frac_n10_mem1k_3x2"
+    answer = session.read_device_package(PACKAGES / name)
+    assert answer["name"] == name and answer["options_set"] == EXPECTED[name]
+    assert answer["options_not_set"] == {}
+    assert session.device_package() == answer
+    # Reading an architecture by hand forgets the package
+    session.read_openfpga_arch(str(PACKAGES / name / "arch" / "openfpga_arch.xml"))
+    assert session.device_package() is None
+
+
+def test_a_checkpoint_and_a_journal_keep_the_package(openfpga_module, tmp_path, monkeypatch):
+
+    monkeypatch.chdir(tmp_path)
+    name = "k6_frac_n10_2x2"
+    journal, checkpoint = tmp_path / "journal", tmp_path / "checkpoint"
+    session = openfpga_module.Session(journal=journal)
+    session.read_device_package(PACKAGES / name)
+    session.options["place.seed"] = 3  # a change after the package, which a restore keeps
+    session.read_circuit(str(PACKAGES / name / "reference" / "and2.blif"))
+    session.pack()
+    session.checkpoint(checkpoint)
+    manifest = json.loads((checkpoint / "checkpoint.json").read_text())
+    assert manifest["device_package"] == str(PACKAGES / name)
+
+    restored = openfpga_module.Session.restore(checkpoint)
+    assert restored.device_package()["name"] == name
+    assert restored.options["place.seed"] == 3
+    assert restored.options["general.clock_modeling"] == "route"
+    assert restored.state().reached == ["DEVICE", "PACKED"]
+
+    replayed = openfpga_module.Session.replay(journal)
+    assert replayed.device_package()["name"] == name
+    assert replayed.state().reached == ["DEVICE", "PACKED"]
+
+
+@pytest.mark.parametrize("name", sorted(EXPECTED))
+def test_the_answer_follows_its_schema(openfpga_module, session, name):
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = json.loads((SCHEMAS / "device_package.schema.json").read_text())
+    on_disk = session.shell.run("report_device_package --file %s" % (PACKAGES / name)).data
+    jsonschema.validate(on_disk, schema, cls=jsonschema.Draft202012Validator)
+    assert "options_set" not in on_disk["data"]
+    session.read_device_package(PACKAGES / name)
+    read = session.shell.run("report_device_package").data
+    jsonschema.validate(read, schema, cls=jsonschema.Draft202012Validator)

@@ -76,6 +76,7 @@ target_link_libraries(libopenfpga
                       libpugixml
                       libvpr
                       libopenfpgacapnproto
+                      nlohmann_json
                       )
 if (OPENFPGA_WITH_YOSYS STREQUAL "ON")
   # For yosys header files

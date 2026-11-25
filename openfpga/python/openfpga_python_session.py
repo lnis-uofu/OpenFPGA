@@ -828,6 +828,7 @@ _SCHEMA_VERSIONS = {
     "run_report": 1,
     "stage_info": 1,
     "plugins": 1,
+    "device_package": 1,
 }
 
 
@@ -1341,6 +1342,30 @@ class Session:
         """Read the circuit (a BLIF netlist)"""
         return self.command("read_circuit", file=file)
 
+    def read_device_package(self, directory):
+        """Target the device of a device package (docs/spec_device_package.md): the package
+        is checked, the options of its flow and its channel width are set, and its two
+        architectures are read. Returns what report_device_package answers: the package,
+        with options_set (the options, by name) and options_not_set (the entries of
+        flow_defaults.vpr_options that were not set, with the reason). A package that cannot
+        be used raises OpenfpgaError, with the reason, before anything is read"""
+        self.command("read_device_package", file=os.fspath(directory))
+        return self.device_package()
+
+    def device_package(self):
+        """What report_device_package answers of the device package of the session (see
+        read_device_package), or None when the architectures were not read from one"""
+        try:
+            result = self.shell.run("report_device_package")
+        except OpenfpgaError:
+            return None
+        answer = result.data
+        if answer is None or answer.get("kind") != "device_package":
+            raise AnswerError("Expected an answer of the kind 'device_package'")
+        if answer.get("schema_version") != _SCHEMA_VERSIONS["device_package"]:
+            raise AnswerError("The answer 'device_package' has an unknown schema version")
+        return answer["data"]
+
     # The stages ------------------------------------------------------------------
 
     def pack(self):
@@ -1493,7 +1518,8 @@ class Session:
         The directory gets the files of the packing, the placement and the
         routing of the stages that are reached, and checkpoint.json: the
         stages, the options that are not the default, where the inputs come
-        from, with the checksum of every file, and the plugins of the build.
+        from, with the checksum of every file, the plugins of the build, and
+        the device package that the architectures were read from, if any.
         The inputs are not copied: restore() needs them where they are. The
         stages after ANALYZED (repack, bitstream) are not saved. A checkpoint
         that was in the directory is replaced.
@@ -1529,6 +1555,9 @@ class Session:
             "results": results,
             "plugins": self._plugin_list(),
         }
+        package = self.device_package()
+        if package is not None:
+            manifest["device_package"] = package["directory"]
         path = os.path.join(directory, _CHECKPOINT_MANIFEST)
         previous = _read_manifest(path, missing_ok=True)
         with open(path + ".part", "w") as handle:
@@ -1581,11 +1610,17 @@ class Session:
                 "The checkpoint was made with the plugins %s, and this build has %s"
                 % (_plugin_label(saved), _plugin_label(built))
             )
+        # The architectures of a device package are read by the package, which sets the options
+        # of its flow: the options of the checkpoint are set after it, so that they win
+        package = manifest.get("device_package")
+        if package is not None:
+            session.read_device_package(package)
         for option in manifest["options"]:
             session.options.set(option["name"], option["value"])
         inputs = manifest["inputs"]
-        session.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
-        session.read_openfpga_arch(inputs["openfpga_arch"]["file"])
+        if package is None:
+            session.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
+            session.read_openfpga_arch(inputs["openfpga_arch"]["file"])
         session.read_circuit(inputs["circuit"]["file"])
         for key, _, command in _CHECKPOINT_RESULTS:
             if key in manifest["results"]:

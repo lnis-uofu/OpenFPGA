@@ -39,7 +39,7 @@ Commands
 
 A step returns a ``StepResult`` with the ``command`` that was sent, its ``log`` and the time it took (``elapsed_s``). A step that does not succeed **raises** ``OpenfpgaError``, with the status, the log and the message of the failure, and the session stays usable.
 
-- Inputs: ``read_vpr_arch(file, layout)``, ``read_openfpga_arch(file)``, ``read_circuit(file)``
+- Inputs: ``read_vpr_arch(file, layout)``, ``read_openfpga_arch(file)``, ``read_circuit(file)``, and ``read_device_package(directory)``, which reads both architectures from a device package (see below)
 - Stages: ``pack()``, ``place()``, ``route()``, ``analysis()``, and ``run_flow()`` for the four
 - Results made elsewhere: ``read_packing(file)``, ``read_placement(file)``, ``read_routing(file)``
 - Any other command of the shell: ``command(name, *args, **options)``. ``key=value`` is written ``--key value``, ``key=True`` is the switch ``--key``
@@ -129,6 +129,21 @@ The placer is the option ``place.placer``: ``classic`` (``pack``, then ``place``
 VPR reads these when the device is made, so the options belong to the stage ``DEVICE`` and the whole flow runs again. A file is written as a whole path in the option, and a file that does not exist raises ``FileNotFoundError`` before anything changes. The constraints are not checked until VPR reads them: a constraint that VPR refuses makes the next command fail, with the message of VPR.
 
 The pin constraints of OpenFPGA are not inputs of a stage: they are options of the commands that follow the stages, e.g., ``route_clock_rr_graph`` and ``pcf2place``. Give them with ``session.command("route_clock_rr_graph", pin_constraints_file="pcf.xml")``, which the journal records.
+
+.. _device_packages_in_python:
+
+Device packages
+~~~~~~~~~~~~~~~
+
+``session.read_device_package(directory)`` targets the device of a device package (``docs/spec_device_package.md``), with the shell's command ``read_device_package``:
+
+- the package is checked: its manifest, its checksums, its files, its grid and its I/O map, if it has one. A package that cannot be used raises ``OpenfpgaError`` with the reason, before anything is read;
+- the options of its flow (``flow_defaults.vpr_options``) are set, found by the flag of VPR of each option (``AppOption.vpr_flag``), and so is its channel width;
+- its VPR architecture is read with the layout of its grid, then its OpenFPGA architecture.
+
+It returns what ``report_device_package`` answers (kind ``device_package``): the package, its files, ``options_set`` (by name) and ``options_not_set`` (with the reason). ``session.device_package()`` gives the same later, or ``None`` when the architectures were not read from a package; reading an architecture by hand forgets the package. A checkpoint records the package, and ``restore`` reads it again before it sets the options of the checkpoint; the journal has the one command.
+
+``report_device_package --file <directory>`` checks and describes a package without reading it. ``write_io_map --file <f.csv>`` writes a first I/O map of the device (a row for each I/O subtile, with the names of the fabric once it is built), and ``check_io_map --file <f.csv>`` checks one.
 
 .. _journal_and_replay:
 

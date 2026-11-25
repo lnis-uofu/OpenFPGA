@@ -19,6 +19,7 @@ from .registry import JOURNAL, SessionRegistry
 # of another command (a file that someone wrote) is not run
 REPLAY_COMMANDS = frozenset(
     (
+        "read_device_package",
         "read_vpr_arch",
         "read_openfpga_arch",
         "read_circuit",

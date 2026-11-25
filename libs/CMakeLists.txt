@@ -1,4 +1,5 @@
 # OpenFPGA-related libraries
+add_subdirectory(EXTERNAL)
 add_subdirectory(libini)
 add_subdirectory(libopenfpgashell)
 add_subdirectory(libclkarchopenfpga)

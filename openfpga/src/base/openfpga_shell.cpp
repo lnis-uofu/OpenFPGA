@@ -9,6 +9,7 @@
 #include "command_echo.h"
 #include "command_exit_codes.h"
 #include "command_parser.h"
+#include "device_package_commands.h"
 #include "openfpga_bitstream_command.h"
 #include "openfpga_context.h"
 #include "openfpga_plugins.h"
@@ -54,6 +55,7 @@ OpenfpgaShell::OpenfpgaShell() {
 
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
+  openfpga::add_device_package_commands(shell_);
 
   /* The plugins of the build, after the commands of the shell that they may
    * override, remove or hook, and before the basic ones, which they may not */

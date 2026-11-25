@@ -1,16 +1,12 @@
 """Device packages: one directory with everything that targets one device (docs/spec_device_package.md)
 
-This reads the manifest of a package and checks what a session needs before it uses the package:
-the format version, the name, that every path is a file inside the package, one architecture of
-VPR and one of OpenFPGA, the layout that the grid names, and the checksums. It does not run the
-flow and it never writes into a package.
+The package is checked and read by the commands of the shell (read_device_package and
+report_device_package, in C++): this module finds the packages in the folders of the server,
+and gives what the commands answer to the tools and the page. It never writes into a package.
 """
 
-import hashlib
-import json
 import os
 import re
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -19,9 +15,7 @@ from .config import Config
 from .errors import PackageInvalid, PackageNotFound
 
 MANIFEST = "device_package.json"
-CHECKSUMS = "CHECKSUMS.sha256"
 _NAME = re.compile(r"^[a-z][a-z0-9_]*$")
-_KNOWN_MAJOR = 1
 
 
 @dataclass
@@ -43,6 +37,8 @@ class DevicePackage:
     license: str = ""
     files: List[Dict[str, str]] = field(default_factory=list)  # role and path inside the package
     reference: Dict[str, Any] = field(default_factory=dict)
+    # What report_device_package answers of the package
+    answer: Dict[str, Any] = field(default_factory=dict)
 
     def summary(self) -> Dict[str, Any]:
         """What the page shows to choose a package"""
@@ -57,129 +53,58 @@ class DevicePackage:
         }
 
 
-def _invalid(name: str, why: str) -> PackageInvalid:
-    return PackageInvalid("The device package '%s' cannot be used: %s" % (name, why))
+_SHELL = None
 
 
-def _inside(root: Path, relative: Any, name: str) -> Path:
-    if not isinstance(relative, str) or not relative or "\0" in relative:
-        raise _invalid(name, "a path in the manifest is not text")
-    if os.path.isabs(relative) or ".." in Path(relative).parts or "\\" in relative:
-        raise _invalid(name, "the path '%s' is not inside the package" % relative)
-    target = root / relative
-    if target.is_symlink() or not target.is_file():
-        raise _invalid(name, "the file '%s' is missing or is a link" % relative)
-    if root.resolve() not in target.resolve().parents:
-        raise _invalid(name, "the file '%s' leads outside the package" % relative)
-    return target
+def _shell():
+    """A shell of this process, which checks and describes packages (it reads no flow)"""
+    global _SHELL
+    if _SHELL is None:
+        import openfpga
+
+        _SHELL = openfpga.OpenfpgaShell()
+    return _SHELL
 
 
-def _layouts(vpr_arch: Path) -> List[str]:
-    try:
-        tree = ET.parse(vpr_arch)
-    except (ET.ParseError, OSError) as error:
-        raise PackageInvalid("The VPR architecture of the package is not readable: %s" % error)
-    return [e.get("name", "") for e in tree.iter("fixed_layout")]
+def _reason(error: Exception) -> str:
+    """The reason that a command of the shell gave, from the failure it raised"""
+    text = getattr(error, "log", None) or str(error)
+    found = re.search(r"^Error \d+: (.*)$", text, re.M)
+    return found.group(1).strip() if found else str(error)
 
 
 def load(directory: Path, verify_checksums: bool = True) -> DevicePackage:
-    """The package in a directory, checked. Raises PackageInvalid with the first problem"""
-    name = directory.name
+    """The package in a directory, checked (report_device_package --file). Raises
+    PackageInvalid with the first problem"""
+    import openfpga
+
+    directory = Path(directory)
     try:
-        manifest = json.loads((directory / MANIFEST).read_text())
-    except (OSError, ValueError) as error:
-        raise _invalid(name, "its %s is not readable (%s)" % (MANIFEST, error))
-    if not isinstance(manifest, dict):
-        raise _invalid(name, "its %s is not an object" % MANIFEST)
-    version = str(manifest.get("format_version", ""))
-    if not re.fullmatch(r"\d+\.\d+", version) or int(version.split(".")[0]) > _KNOWN_MAJOR:
-        raise _invalid(name, "format_version '%s' is not one that is known (1.x)" % version)
-    if manifest.get("name") != name or not _NAME.match(name):
-        raise _invalid(name, "its name '%s' is not the name of its directory" % manifest.get("name"))
-    if not manifest.get("license"):
-        raise _invalid(name, "it has no license")
-    if verify_checksums:  # first: a file that was changed is the reason, whatever else follows
-        _verify(directory, name)
-    files = manifest.get("files")
-    if not isinstance(files, list):
-        raise _invalid(name, "it has no list of files")
-    roles: Dict[str, List[Path]] = {}
-    listed = set()
-    listing: List[Dict[str, str]] = []
-    for entry in files:
-        if not isinstance(entry, dict):
-            raise _invalid(name, "an entry of files is not an object")
-        path = _inside(directory, entry.get("path"), name)
-        listed.add(str(path.relative_to(directory)))
-        listing.append({"role": str(entry.get("role", "")), "path": str(path.relative_to(directory))})
-        roles.setdefault(str(entry.get("role", "")), []).append(path)
-    for role in ("vpr_arch", "openfpga_arch"):
-        if len(roles.get(role, [])) != 1:
-            raise _invalid(name, "it must list exactly one file with the role %s" % role)
-    present = {
-        str(p.relative_to(directory)) for p in directory.rglob("*") if p.is_file() or p.is_symlink()
-    } - {MANIFEST, "README.md", CHECKSUMS}
-    if present != listed:
-        extra = sorted(present - listed) + sorted(listed - present)
-        raise _invalid(name, "the files and the manifest differ: %s" % ", ".join(extra[:3]))
-    device = manifest.get("device") or {}
-    grid = device.get("grid") or {}
-    try:
-        layout = "%dx%d" % (int(grid["width"]), int(grid["height"]))
-    except (KeyError, TypeError, ValueError):
-        raise _invalid(name, "device.grid needs a width and a height")
-    vpr_options = (manifest.get("flow_defaults") or {}).get("vpr_options") or {}
-    if not isinstance(vpr_options, dict) or not all(
-        isinstance(k, str) and isinstance(v, (str, int, float, bool)) for k, v in vpr_options.items()
-    ):
-        raise _invalid(name, "flow_defaults.vpr_options maps the flags of VPR to values")
-    flat_routing = device.get("flat_routing", False)
-    if not isinstance(flat_routing, bool):
-        raise _invalid(name, "device.flat_routing is true or false")
-    vpr_arch = roles["vpr_arch"][0]
-    if layout not in _layouts(vpr_arch):
-        raise _invalid(
-            name, "its grid is %s and the VPR architecture has no fixed layout of that name" % layout
+        result = _shell().report_device_package(
+            file=os.fspath(directory), no_checksums=not verify_checksums
         )
+    except openfpga.OpenfpgaError as error:
+        raise PackageInvalid(_reason(error))
+    data = result.data["data"]
+    reference = data.get("reference") or {}
     return DevicePackage(
-        name=name,
-        version=str(manifest.get("version", "")),
-        description=str(manifest.get("description", "")),
+        name=data["name"],
+        version=data["version"],
+        description=data["description"],
         path=directory,
-        layout=layout,
-        vpr_arch=vpr_arch,
-        openfpga_arch=roles["openfpga_arch"][0],
-        lut_size=device.get("lut_size"),
-        channel_width=device.get("channel_width"),
-        tags=[str(t) for t in device.get("tags", [])],
-        flat_routing=flat_routing,
-        vpr_options=dict(vpr_options),
-        license=str(manifest["license"]),
-        files=listing,
-        reference=manifest.get("reference") if isinstance(manifest.get("reference"), dict) else {},
+        layout=data["layout"],
+        vpr_arch=directory / data["vpr_arch"],
+        openfpga_arch=directory / data["openfpga_arch"],
+        lut_size=data["lut_size"],
+        channel_width=data["channel_width"],
+        tags=list(data["tags"]),
+        flat_routing=data["flat_routing"],
+        vpr_options=dict(data["vpr_options"]),
+        license=data["license"],
+        files=[{"role": f["role"], "path": f["path"]} for f in data["files"]],
+        reference={k: v for k, v in reference.items() if v is not None},
+        answer=data,
     )
-
-
-def _verify(directory: Path, name: str) -> None:
-    sums = directory / CHECKSUMS
-    if not sums.is_file():
-        raise _invalid(name, "it has no %s" % CHECKSUMS)
-    seen = set()
-    for line in sums.read_text().splitlines():
-        digest, _, relative = line.partition("  ")
-        target = directory / relative
-        if not relative or ".." in Path(relative).parts or not target.is_file():
-            raise _invalid(name, "%s names '%s', which is not a file" % (CHECKSUMS, relative))
-        if hashlib.sha256(target.read_bytes()).hexdigest() != digest:
-            raise _invalid(name, "the file '%s' was changed (checksum)" % relative)
-        seen.add(relative)
-    missing = {
-        str(p.relative_to(directory))
-        for p in directory.rglob("*")
-        if p.is_file() and p.name != CHECKSUMS
-    } - seen
-    if missing:
-        raise _invalid(name, "%s does not list '%s'" % (CHECKSUMS, sorted(missing)[0]))
 
 
 def discover(config: Config) -> Dict[str, Any]:
@@ -232,57 +157,19 @@ def find(config: Config, name: str) -> DevicePackage:
     raise _not_found("There is no device package '%s'" % name, config)
 
 
-def _given_otherwise(package: DevicePackage, key: str, value: Any) -> Optional[str]:
-    """Why an option of the manifest is not set as an option: the package gives it otherwise (its
-    grid is the layout, device.channel_width the width, and synthesize writes the netlist in the
-    format that the flow reads from its extension). None for an option that is set. An entry that
-    says the same as the package is not told"""
-    if key == "device":
-        return None if value == package.layout else "the layout is the grid of the package, %s" % (
-            package.layout
-        )
-    if key == "route_chan_width":
-        return (
-            None
-            if value == package.channel_width
-            else "the channel width is device.channel_width of the package, %s" % package.channel_width
-        )
-    if key == "circuit_format":
-        return None
-    return ""
-
-
 def read_into(session, package: DevicePackage) -> Dict[str, Any]:
-    """Make a session target the device of a package: the options of VPR of its flow
-    (flow_defaults.vpr_options), its two architectures, and its channel width (the routing runs
-    at a fixed width). Returns the options that were set, by name, and the entries of the
-    manifest that were not, with the reason. An option that the flow refuses raises
-    PackageInvalid before the architectures are read"""
-    by_flag = {o.vpr_flag: o.name for o in session.options.list() if o.vpr_flag}
-    options: Dict[str, Any] = {}
-    ignored: Dict[str, str] = {}
-    for key, value in sorted(package.vpr_options.items()):
-        reason = _given_otherwise(package, key, value)
-        if reason:
-            ignored[key] = reason
-        elif reason is None:
-            continue
-        elif "--" + key not in by_flag:
-            ignored[key] = "not an option of VPR that the flow knows"
-        else:
-            options[by_flag["--" + key]] = value
-    for name, value in options.items():
-        try:
-            session.options[name] = value
-        except Exception as error:  # noqa: BLE001 - the flow says why it refuses the value
-            raise _invalid(
-                package.name, "flow_defaults.vpr_options sets %s to %r: %s" % (name, value, error)
-            )
-    session.read_vpr_arch(str(package.vpr_arch), layout=package.layout)
-    session.read_openfpga_arch(str(package.openfpga_arch))
-    if package.channel_width:
-        session.set_route_chan_width(package.channel_width)
-    return {"options": options, "ignored": ignored}
+    """Make a session target the device of a package (read_device_package): the options of VPR
+    of its flow (flow_defaults.vpr_options), its two architectures, and its channel width (the
+    routing runs at a fixed width). Returns the options that were set, by name, and the entries
+    of the manifest that were not, with the reason. A package or an option that the flow
+    refuses raises PackageInvalid before the architectures are read"""
+    import openfpga
+
+    try:
+        answer = session.read_device_package(os.fspath(package.path))
+    except openfpga.OpenfpgaError as error:
+        raise PackageInvalid(_reason(error))
+    return {"options": answer["options_set"], "ignored": answer["options_not_set"]}
 
 
 def flat_routing_allowed(config: Config, meta: Dict[str, Any]) -> bool:
@@ -299,35 +186,8 @@ def flat_routing_allowed(config: Config, meta: Dict[str, Any]) -> bool:
         return True
 
 
-_README_CHARS = 1200
-
-
 def describe(package: DevicePackage) -> Dict[str, Any]:
     """Everything that a person or a model may want to know of one package: the device, the files
     (role, path inside the package, size) and the reference result, with the start of its README.
     The paths are inside the package: the folder of the package on the disk is not told"""
-    files = []
-    for entry in package.files:
-        size = (package.path / entry["path"]).stat().st_size
-        files.append({**entry, "bytes": size})
-    readme = package.path / "README.md"
-    text = readme.read_text(errors="replace") if readme.is_file() else ""
-    expected = package.reference.get("expected") if package.reference else None
-    return {
-        **package.summary(),
-        "license": package.license,
-        "channel_width": package.channel_width,
-        "vpr_options": dict(package.vpr_options),
-        "vpr_arch": str(package.vpr_arch.relative_to(package.path)),
-        "openfpga_arch": str(package.openfpga_arch.relative_to(package.path)),
-        "files": files,
-        "reference": {
-            "design": package.reference.get("design"),
-            "top": package.reference.get("top"),
-            "expected": expected,
-        }
-        if package.reference
-        else None,
-        "readme": text[:_README_CHARS],
-        "readme_cut": len(text) > _README_CHARS,
-    }
+    return {k: v for k, v in package.answer.items() if k != "directory"}
