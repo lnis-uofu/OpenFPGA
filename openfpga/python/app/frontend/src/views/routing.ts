@@ -3,10 +3,25 @@
 // the channels far out. Everything comes in tiles of the core: what is on the screen only.
 import { type ViewData, numbers, texts } from "./format";
 import { wholeView, wholeViewNow } from "./data";
-import { blockBox, gridLayer, netBox, rects } from "./floorplan";
+import {
+  blockBox,
+  boxOf,
+  gridLayer,
+  netBox,
+  pathCentres,
+  rects,
+} from "./floorplan";
 import { logicBox, pinPoint, wireSegment } from "./geometry";
 import type { Layer, PointsLayer, SegmentsLayer } from "./scene";
 import { TILE, levelFor, visibleTiles } from "./tiles";
+import {
+  slackColor,
+  slackLegend,
+  slackRange,
+  slackStep,
+  stepSlack,
+  timingNow,
+} from "./timing";
 import {
   type LegendEntry,
   StyleTable,
@@ -22,6 +37,8 @@ export interface RoutingBase {
   /** The width of the channels: horizontal, vertical */
   chanx: number;
   chany: number;
+  /** The index of a net by its name, from the tiles read (for its slack) */
+  netIds?: Map<string, number>;
   tilesLayer?: { layer: Layer; dark: boolean };
 }
 
@@ -201,6 +218,7 @@ export const routingView: ViewDef<RoutingBase> = {
     { id: "tracks", label: "Tracks" },
     { id: "routes", label: "Routes" },
     { id: "congestion", label: "Congestion" },
+    { id: "slack", label: "Slack", off: true },
   ],
   key(base, view, hidden) {
     const level = levelFor(view.scale, ROUTE_PX, base.width, base.height);
@@ -219,6 +237,8 @@ export const routingView: ViewDef<RoutingBase> = {
     const level = levelFor(view.scale, ROUTE_PX, base.width, base.height);
     const layers: Layer[] = [];
     let loading = 0;
+    let waiting = false;
+    const timing = hidden.has("slack") ? undefined : timingNow(changed);
     const errors = new Set<string>();
     const visible = visibleTiles(view, level, base.width, base.height);
     if (level > 0) {
@@ -310,6 +330,9 @@ export const routingView: ViewDef<RoutingBase> = {
       }
       const shapes = emptyShapes();
       const seen = new Set<string>();
+      const netSlack = timing ? numbers(timing, "nets", "slack_ns") : null;
+      const range = netSlack ? slackRange(netSlack) : null;
+      if (!hidden.has("slack") && !timing) waiting = true;
       for (const [x, y] of visible) {
         const t = tiles.get("routing", 0, x, y);
         const error = tiles.error("routing", 0, x, y);
@@ -319,20 +342,47 @@ export const routingView: ViewDef<RoutingBase> = {
           continue;
         }
         addRouteTile(t, base.chanx, base.chany, shapes, seen);
+        if (timing) {
+          base.netIds ??= new Map();
+          const names = texts(t, "nets", "name");
+          const ids = numbers(t, "nets", "net");
+          for (let i = 0; i < ids.length; i++)
+            base.netIds.set(names.get(i), ids[i]);
+        }
       }
+      // The colour of a net: its own, or that of its slack
+      const colour = (n: string, alpha = 230) => {
+        if (!netSlack || !range) return netStyle(styles, n, dark, alpha);
+        const id = base.netIds?.get(n);
+        const step = slackStep(
+          id === undefined ? Infinity : netSlack[id],
+          range,
+        );
+        const c = slackColor(
+          step < 0 ? Infinity : stepSlack(step, range),
+          range,
+          dark,
+        );
+        c[3] = alpha;
+        return styles.add(`slack:${step}:${alpha}`, {
+          stroke: c,
+          fill: c,
+          width: 1.5,
+        });
+      };
       if (!hidden.has("routes")) {
         layers.push(
           segmentsLayer(
             "links",
             shapes.links.xy,
             shapes.links.net,
-            (n) => netStyle(styles, n, dark, 150),
+            (n) => colour(n, 150),
             { size: 0.3 },
           ),
         );
         layers.push(
           segmentsLayer("wires", shapes.wires.xy, shapes.wires.net, (n) =>
-            netStyle(styles, n, dark),
+            colour(n),
           ),
         );
         const pins: PointsLayer = {
@@ -341,9 +391,7 @@ export const routingView: ViewDef<RoutingBase> = {
           x: Float32Array.from(shapes.pins.x),
           y: Float32Array.from(shapes.pins.y),
           radius: 3,
-          style: Uint16Array.from(shapes.pins.net, (n) =>
-            netStyle(styles, n, dark),
-          ),
+          style: Uint16Array.from(shapes.pins.net, (n) => colour(n)),
           objectKind: "net",
           name: (i) => shapes.pins.net[i],
           size: 0.1,
@@ -422,6 +470,7 @@ export const routingView: ViewDef<RoutingBase> = {
         : "",
       `channel width ${base.chanx}`,
       loading ? `${loading} tiles loading` : "",
+      waiting ? "analyzing the timing" : "",
       ...errors,
     ].filter(Boolean);
     const legend: LegendEntry[] =
@@ -444,13 +493,15 @@ export const routingView: ViewDef<RoutingBase> = {
               .map((e) => ({ ...e, line: true })),
             ...(hidden.has("routes")
               ? []
-              : [
-                  {
-                    label: "A net (a colour each)",
-                    stroke: hsl(200, 0.65, dark ? 0.62 : 0.42),
-                    line: true,
-                  },
-                ]),
+              : !hidden.has("slack") && timing
+                ? [slackLegend(slackRange(numbers(timing, "nets", "slack_ns")))]
+                : [
+                    {
+                      label: "A net (a colour each)",
+                      stroke: hsl(200, 0.65, dark ? 0.62 : 0.42),
+                      line: true,
+                    },
+                  ]),
             ...styles
               .legend([["selected", "Selected net"]])
               .map((e) => ({ ...e, line: true })),
@@ -467,6 +518,20 @@ export const routingView: ViewDef<RoutingBase> = {
     };
   },
   locate(base, ref, changed) {
+    if (ref.kind === "path") {
+      const placement = wholeViewNow("placement", changed);
+      if (!placement) return null;
+      const fp = {
+        device: base.device,
+        placement,
+        unplaced: null,
+        width: base.width,
+        height: base.height,
+        tileAt: tileIndex(base.device),
+        blockRow: blockIndex(placement),
+      };
+      return boxOf(pathCentres(fp, changed, [ref]) ?? []);
+    }
     if (ref.kind === "net" || ref.kind === "block") {
       const clusters =
         ref.kind === "net" ? wholeViewNow("clusters", changed) : undefined;

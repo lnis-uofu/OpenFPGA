@@ -165,6 +165,14 @@ def test_the_slack_of_each_net_is_the_one_of_net_info(openfpga_module, flow):
             q["pin"]
             for q in points[mine["point_start"] : mine["point_start"] + mine["point_count"]]
         ] == [q.pin for q in theirs.points]
+    # The delay to each point is on a net or in a cell; the first has none
+    edges = [q["edge"] for q in points[: exported[0]["point_count"]]]
+    assert edges[0] == "" and set(edges[1:]) <= {"net", "cell"} and "net" in edges
+    # The histogram of the slack of the end points starts at the slack of the worst path
+    bins = rows(view, "histogram")
+    assert bins and sum(b["count"] for b in bins) > 0
+    assert bins[0]["low_ns"] == pytest.approx(paths[0].slack_ns, abs=1e-3)
+    assert all(a["high_ns"] == pytest.approx(b["low_ns"]) for a, b in zip(bins, bins[1:]))
 
 
 # P1.4: atoms and clusters ----------------------------------------------------------------------

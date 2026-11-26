@@ -187,7 +187,10 @@ because the session is busy answers 409. Not in the demo.
 The views of the design open from the rows of the stages in the sidebar, once the stage is
 reached: ⌗ the floorplan (DEVICE: the tiles, the I/O sites, the pins of the package from its I/O
 map, the ports on them), ▦ the placement (PLACED: the tiles and the blocks, the regions of the
-constraints), ⋕ the routing (ROUTED: the routes on their tracks, the congestion far out). A legend
+constraints), ⋕ the routing (ROUTED: the routes on their tracks, the congestion far out), ⏱ the
+timing (ANALYZED: the histogram of the slack of the end points, the worst paths, the delays of a
+path on nets and in cells; a path selected is drawn on the placement and its nets on the routing,
+and the layer Slack colours the blocks and the nets by their slack). A legend
 in the top left corner of each says what its colours are (folded, it stays folded). Drag to move, the wheel to
 zoom, a click selects (Shift adds), a double click or f fits, Escape clears. The selection is shared
 by the views; its line in the status of a panel zooms to it. The toolbar turns layers off and

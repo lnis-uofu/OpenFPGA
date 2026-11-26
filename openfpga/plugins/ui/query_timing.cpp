@@ -198,7 +198,7 @@ void paths_of(const RoutedTiming& timing_data, const size_t count,
   std::vector<float> slack, arrival_end, required;
   std::vector<std::string> launch, capture, start, end;
   std::vector<uint32_t> point_start, point_count;
-  std::vector<std::string> pin, type, block, net;
+  std::vector<std::string> pin, type, edge, block, net;
   std::vector<float> arrival, delay;
   std::vector<int32_t> cluster, x, y;
   for (const tatum::TimingPath& path : paths) {
@@ -217,6 +217,13 @@ void paths_of(const RoutedTiming& timing_data, const size_t count,
       const double at = elem.tag().time().value();
       pin.push_back(resolver.node_name(elem.node()));
       type.push_back(resolver.node_type_name(elem.node()));
+      /* What the delay to the point is: a net (interconnect) or a cell */
+      const tatum::EdgeId in_edge = elem.incomming_edge();
+      edge.push_back(!in_edge ? std::string()
+                     : timing_ctx.graph->edge_type(in_edge) ==
+                         tatum::EdgeType::INTERCONNECT
+                       ? "net"
+                       : "cell");
       const AtomPinId atom_pin = atom_ctx.lookup().tnode_atom_pin(elem.node());
       const AtomBlockId atom_block = atom_pin.is_valid()
                                        ? netlist.pin_block(atom_pin)
@@ -256,6 +263,7 @@ void paths_of(const RoutedTiming& timing_data, const size_t count,
   file.table("points", pin.size())
     .strings("pin", pin)
     .strings("type", type)
+    .strings("edge", edge)
     .strings("block", block)
     .strings("net", net)
     .column("cluster", cluster)
@@ -263,6 +271,51 @@ void paths_of(const RoutedTiming& timing_data, const size_t count,
     .column("y", y)
     .column("arrival_ns", arrival)
     .column("delay_ns", delay);
+}
+
+/* The histogram of the setup slack of every end point of the timing graph:
+ * HISTOGRAM_BINS bins of the same width from the worst to the best finite
+ * slack; an end point with no finite slack (not timed) is not counted */
+constexpr size_t HISTOGRAM_BINS = 32;
+
+void endpoints_of(const RoutedTiming& timing, ViewFile& file) {
+  const auto& graph = *g_vpr_ctx.timing().graph;
+  const tatum::SetupTimingAnalyzer& setup = *timing.info->setup_analyzer();
+  std::vector<double> slacks;
+  for (const tatum::NodeId node : graph.logical_outputs()) {
+    double worst = std::numeric_limits<double>::infinity();
+    for (const tatum::TimingTag& tag : setup.setup_slacks(node)) {
+      worst = std::min<double>(worst, tag.time().value());
+    }
+    if (std::isfinite(worst)) {
+      slacks.push_back(sec_to_nanosec(worst));
+    }
+  }
+  std::vector<float> low, high;
+  std::vector<uint32_t> count;
+  if (!slacks.empty()) {
+    const auto [least, most] =
+      std::minmax_element(slacks.begin(), slacks.end());
+    const double from = *least;
+    const double width = (*most - from) / HISTOGRAM_BINS;
+    const size_t bins = width > 0. ? HISTOGRAM_BINS : 1;
+    count.assign(bins, 0);
+    for (const double s : slacks) {
+      const size_t bin =
+        width > 0. ? std::min(bins - 1, static_cast<size_t>((s - from) / width))
+                   : 0;
+      ++count[bin];
+    }
+    for (size_t i = 0; i < bins; ++i) {
+      low.push_back(static_cast<float>(from + i * width));
+      high.push_back(
+        static_cast<float>(width > 0. ? from + (i + 1) * width : from));
+    }
+  }
+  file.table("histogram", count.size())
+    .column("low_ns", low)
+    .column("high_ns", high)
+    .column("count", count);
 }
 
 }  // namespace
@@ -322,6 +375,7 @@ bool timing_view_tables(const vpr::VprRun& run, const std::string& version,
   slack_ns = timing->slack_ns;
   criticality = timing->criticality;
   paths_of(*timing->timing, count, file);
+  endpoints_of(*timing->timing, file);
   return true;
 }
 

@@ -14,17 +14,26 @@ export function setDataSignature(next: string) {
   ready.clear();
 }
 
-/** A whole export, fetched once for the state of the session */
-export function wholeView(kind: string): Promise<ViewData> {
-  let found = cache.get(kind);
+type Scope = Record<string, string | number>;
+
+const keyOf = (kind: string, scope: Scope) =>
+  Object.keys(scope).length
+    ? `${kind}?${new URLSearchParams(Object.entries(scope).map(([k, v]) => [k, String(v)]))}`
+    : kind;
+
+/** A whole export (of a scope: the number of paths of the timing...), fetched once for the state
+ * of the session */
+export function wholeView(kind: string, scope: Scope = {}): Promise<ViewData> {
+  const key = keyOf(kind, scope);
+  let found = cache.get(key);
   if (!found) {
     const asked = signature;
-    found = fetchView(kind).then((data) => {
-      if (asked === signature) ready.set(kind, data);
+    found = fetchView(kind, scope).then((data) => {
+      if (asked === signature) ready.set(key, data);
       return data;
     });
-    found.catch(() => cache.delete(kind));
-    cache.set(kind, found);
+    found.catch(() => cache.delete(key));
+    cache.set(key, found);
   }
   return found;
 }
@@ -33,11 +42,19 @@ export function wholeView(kind: string): Promise<ViewData> {
 export function wholeViewNow(
   kind: string,
   then: () => void,
+  scope: Scope = {},
 ): ViewData | undefined {
-  const found = ready.get(kind);
+  const found = ready.get(keyOf(kind, scope));
   if (found) return found;
-  wholeView(kind).then(then, () => undefined);
+  wholeView(kind, scope).then(then, () => undefined);
   return undefined;
+}
+
+/** For the tests: a whole export, as if it was fetched */
+export function setWholeView(kind: string, data: ViewData, scope: Scope = {}) {
+  const key = keyOf(kind, scope);
+  cache.set(key, Promise.resolve(data));
+  ready.set(key, data);
 }
 
 /** For the tests */

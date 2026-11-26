@@ -6,6 +6,18 @@ import { type ViewData, numbers, texts } from "./format";
 import { wholeView, wholeViewNow } from "./data";
 import { logicBox, slotBox } from "./geometry";
 import { categoryColor } from "./palette";
+import {
+  SLACK_STEPS,
+  clusterNames,
+  pathClusters,
+  selectedPath,
+  slackColor,
+  slackLegend,
+  slackRange,
+  slackStep,
+  stepSlack,
+  timingNow,
+} from "./timing";
 import type { GridLayer, Layer, ObjectRef, RectsLayer, Rgba } from "./scene";
 import { TILE, levelFor, visibleTiles } from "./tiles";
 import {
@@ -35,11 +47,16 @@ export interface FloorplanBase {
     tileLegend: LegendEntry[];
     blockLegend: LegendEntry[];
   };
+  /** The blocks coloured by their slack, for a timing export */
+  slackBlocks?: { timing: ViewData; dark: boolean; layer: RectsLayer };
+  /** The names of the clusters by their index, for the paths */
+  clusterName?: Map<number, string>;
 }
 
 const SELECTED: Rgba = [250, 80, 40, 255];
 const NET_BOX: Rgba = [40, 160, 230, 255];
 const REGION: Rgba = [120, 90, 220, 255];
+export const PATH: Rgba = [200, 40, 170, 255];
 
 /** The colour of a type of tile, and of a type of block */
 const tileFill = (type: number, io: boolean, dark: boolean): Rgba =>
@@ -339,7 +356,13 @@ function floorplanLegend(
   const legend: LegendEntry[] = [];
   if (!hidden.has("tiles"))
     legend.push({ label: "Tiles" }, ...objects.tileLegend);
-  if (base.placement && !hidden.has("blocks")) {
+  const timing = slackTiming(context);
+  if (base.placement && !hidden.has("blocks") && timing)
+    legend.push(
+      { label: "Blocks" },
+      slackLegend(slackRange(numbers(timing, "blocks", "slack_ns"))),
+    );
+  else if (base.placement && !hidden.has("blocks")) {
     if (level === 0) legend.push({ label: "Blocks" }, ...objects.blockLegend);
     else
       legend.push({
@@ -354,7 +377,9 @@ function floorplanLegend(
     legend.push({ label: "Region", stroke: REGION, fill: [120, 90, 220, 28] });
   if (selection.length) {
     legend.push({ label: "Selected", stroke: SELECTED });
-    if (selection.some((r) => r.kind === "block" || r.kind === "net"))
+    if (selection.some((r) => r.kind === "path"))
+      legend.push({ label: "Path", stroke: PATH, line: true });
+    else if (selection.some((r) => r.kind === "block" || r.kind === "net"))
       legend.push({
         label: "Box of a net",
         stroke: NET_BOX,
@@ -362,6 +387,50 @@ function floorplanLegend(
       });
   }
   return legend;
+}
+
+/** The timing export when the blocks are coloured by slack (asked for if it is not there) */
+function slackTiming(
+  context: BuildContext<FloorplanBase>,
+): ViewData | undefined {
+  const { base, hidden, changed } = context;
+  if (hidden.has("slack") || !base.placement) return undefined;
+  return timingNow(changed);
+}
+
+/** The blocks, coloured by their slack */
+function slackBlocks(
+  base: FloorplanBase,
+  blocks: RectsLayer,
+  timing: ViewData,
+  styles: StyleTable,
+  dark: boolean,
+): RectsLayer {
+  const kept = base.slackBlocks;
+  if (kept && kept.timing === timing && kept.dark === dark) return kept.layer;
+  const slack = numbers(timing, "blocks", "slack_ns");
+  const range = slackRange(slack);
+  const id = numbers(base.placement!, "blocks", "id");
+  const stroke: Rgba = dark ? [20, 20, 20, 255] : [60, 60, 60, 255];
+  const stepStyle = Array.from({ length: SLACK_STEPS }, (_, k) =>
+    styles.add(`slack:${k}`, {
+      fill: slackColor(stepSlack(k, range), range, dark),
+      stroke,
+      width: 1,
+    }),
+  );
+  const none = styles.add("slack:none", {
+    fill: slackColor(Infinity, range, dark),
+    stroke,
+    width: 1,
+  });
+  const style = Uint16Array.from({ length: blocks.style.length }, (_, i) => {
+    const step = slackStep(slack[id[i]] ?? Infinity, range);
+    return step < 0 ? none : stepStyle[step];
+  });
+  const layer = { ...blocks, style };
+  base.slackBlocks = { timing, dark, layer };
+  return layer;
 }
 
 /** The coarse tiles of a level on the screen, as grid layers */
@@ -398,7 +467,30 @@ function coarseLayers(
         );
       }
     }
-    if (base.placement && !hidden.has("blocks")) {
+    const timing = slackTiming(context);
+    if (base.placement && !hidden.has("blocks") && timing) {
+      const t = tiles.get("timing", level, x, y);
+      if (!t) loading++;
+      else {
+        const [min, max] = slackRange(numbers(timing, "blocks", "slack_ns"));
+        const least = numbers(t, "cells", "value") as Float32Array;
+        layers.push(
+          gridLayer(
+            `slack:${level}:${x}:${y}`,
+            x * span,
+            y * span,
+            cell,
+            Float32Array.from(least, (v) => (Number.isFinite(v) ? v : NaN)),
+            {
+              kind: "ramp",
+              min,
+              max: max > min ? max : min + 1,
+              ramp: "slack",
+            },
+          ),
+        );
+      }
+    } else if (base.placement && !hidden.has("blocks")) {
       const p = tiles.get("placement", level, x, y);
       if (!p) loading++;
       else {
@@ -453,11 +545,16 @@ function selectionLayers(
   const blocks: [number, number, number, number][] = [];
   const nets: string[] = [];
   let clusters: ViewData | undefined;
-  for (const ref of selection) {
+  // A path: its blocks and the line through them, not the boxes of its nets
+  const path = selection.some((r) => r.kind === "path");
+  for (const ref of path
+    ? selection.filter((r) => r.kind === "block")
+    : selection) {
     if (ref.kind === "block") {
       const row = base.blockRow.get(ref.name);
       const box = row === undefined ? null : blockBox(base, row);
       if (box) blocks.push(box);
+      if (path) continue; // a block of a path: not the boxes of its nets
       clusters ??= wholeViewNow("clusters", changed);
       if (clusters) nets.push(...netsOfBlock(clusters, ref.name));
     } else if (ref.kind === "net") nets.push(ref.name);
@@ -484,6 +581,7 @@ function selectionLayers(
         ),
       );
   }
+  if (path) layers.push(...pathLayers(context, styles));
   if (blocks.length)
     layers.push(
       rects(
@@ -496,6 +594,72 @@ function selectionLayers(
   return layers;
 }
 
+/** The centres of the blocks of the selected path, in its order */
+export function pathCentres(
+  base: FloorplanBase,
+  changed: () => void,
+  selection: ObjectRef[],
+): [number, number][] | null {
+  if (!base.placement || !selection.some((r) => r.kind === "path")) return null;
+  const path = selectedPath(selection, timingNow(changed));
+  if (!path) return null;
+  base.clusterName ??= clusterNames(base.placement);
+  const centres: [number, number][] = [];
+  for (const p of pathClusters(path)) {
+    const row = base.blockRow.get(base.clusterName.get(p.cluster) ?? "");
+    const box = row === undefined ? null : blockBox(base, row);
+    if (box) centres.push([(box[0] + box[2]) / 2, (box[1] + box[3]) / 2]);
+  }
+  return centres;
+}
+
+/** The selected path: a line through the centres of its blocks, and a dot on each */
+function pathLayers(
+  context: BuildContext<FloorplanBase>,
+  styles: StyleTable,
+): Layer[] {
+  const centres = pathCentres(context.base, context.changed, context.selection);
+  if (!centres?.length) return [];
+  const style = styles.add("path", { stroke: PATH, fill: PATH, width: 3 });
+  const xy = Float32Array.from(centres.flat());
+  return [
+    {
+      id: "selection:path",
+      kind: "polylines",
+      xy,
+      start: Uint32Array.of(0, centres.length),
+      style: Uint16Array.of(style),
+      size: 1,
+      inert: true,
+    },
+    {
+      id: "selection:path-points",
+      kind: "points",
+      x: Float32Array.from(centres, (c) => c[0]),
+      y: Float32Array.from(centres, (c) => c[1]),
+      radius: 4,
+      style: new Uint16Array(centres.length).fill(style),
+      size: 1,
+      inert: true,
+    },
+  ];
+}
+
+/** The box of some points, a little larger */
+export function boxOf(
+  points: [number, number][],
+): [number, number, number, number] | null {
+  if (!points.length) return null;
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  return [
+    Math.min(...xs) - 0.5,
+    Math.min(...ys) - 0.5,
+    Math.max(...xs) + 0.5,
+    Math.max(...ys) + 0.5,
+  ];
+}
+
 export const floorplanView: ViewDef<FloorplanBase> = {
   needs: "PLACED",
   load: loadFloorplan,
@@ -505,6 +669,7 @@ export const floorplanView: ViewDef<FloorplanBase> = {
     { id: "blocks", label: "Blocks" },
     { id: "labels", label: "Names" },
     { id: "regions", label: "Regions" },
+    { id: "slack", label: "Slack", off: true },
   ],
   key(base, view, hidden) {
     const level = levelFor(view.scale, OBJECT_PX, base.width, base.height);
@@ -522,8 +687,15 @@ export const floorplanView: ViewDef<FloorplanBase> = {
     const styles = base.objects.styles;
     let layers: Layer[];
     let loading = 0;
+    const timing = slackTiming(context);
     if (level === 0)
-      layers = base.objects.layers.filter((l) => !hidden.has(l.id));
+      layers = base.objects.layers
+        .filter((l) => !hidden.has(l.id))
+        .map((l) =>
+          l.id === "blocks" && timing
+            ? slackBlocks(base, l as RectsLayer, timing, styles, colors.dark)
+            : l,
+        );
     else {
       const coarse = coarseLayers(context, level);
       layers = [
@@ -543,6 +715,9 @@ export const floorplanView: ViewDef<FloorplanBase> = {
         ? "not placed yet: the tiles only"
         : `${base.blockRow.size} blocks`,
       loading ? `${loading} tiles loading` : "",
+      !hidden.has("slack") && !timing && base.placement
+        ? "analyzing the timing"
+        : "",
     ].filter(Boolean);
     return {
       scene: {
@@ -563,6 +738,8 @@ export const floorplanView: ViewDef<FloorplanBase> = {
       const clusters = wholeViewNow("clusters", changed);
       return clusters ? netBox(base, clusters, ref.name) : null;
     }
+    if (ref.kind === "path")
+      return boxOf(pathCentres(base, changed, [ref]) ?? []);
     return null;
   },
   describe(base, ref: ObjectRef) {

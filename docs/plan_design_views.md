@@ -600,6 +600,22 @@ look at the views on their machine.
 - Accept: the points of a path equal `critical_paths`; selecting a path in the table selects its
   blocks in V3 and its nets in V5.
 
+Status of phase 5: done (2026-11-26), not committed. The timing export gains the histogram of the
+setup slack of the end points (32 bins, from the worst to the best finite slack) and, for each
+point of a path, whether the delay to it is on a net or in a cell (the type of its edge in the
+timing graph). The Timing tab (from the ANALYZED stage) shows the histogram, the 50 worst paths,
+and for a path its delays as one bar (nets and cells) and point by point; a point selects its
+block and its net. Selecting a path selects the path, its blocks in their order and its nets:
+the placement draws a line through its blocks (and not the boxes of their nets), the routing its
+nets over all; "Show on" opens either and zooms to the path. A "Slack" layer, off at first (it
+needs the analysis), colours the blocks of the placement (the coarse levels by the timing tiles)
+and the nets of the routing from red, the worst, to green, with its range in the legend.
+Checked: the points of the exported paths are those of `critical_paths` and the histogram starts
+at the slack of the worst path (Python); a path selected in the browser test puts a dot on each of
+its blocks in the placement and draws its nets in the routing. Also fixed: the selection and a
+request to zoom are forgotten when another session opens, and a view applies a request to zoom
+once, not again each time its tab is shown. Slack in V1 waits for V1 (phase 6).
+
 ### Phase 6: layout and V1, V2
 - **P6.1** ELK in a worker, scoped, cancellable, cached; an incremental layout that keeps the
   nodes already shown (3.7). Accept: expanding a node moves no node that was shown by more than

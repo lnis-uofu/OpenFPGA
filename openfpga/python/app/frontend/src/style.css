@@ -466,3 +466,29 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .status-dot.busy { background: #e8c547; box-shadow: 0 0 0 3px color-mix(in srgb, #e8c547 30%, transparent); animation: blink 0.9s ease-in-out infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 @media (prefers-reduced-motion: reduce) { .status-dot.busy { animation: none; } }
+.timing-panel { padding: 0; gap: 0; }
+.timing-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 10px 16px; }
+.timing-histogram { margin: 0; }
+.timing-histogram svg { width: 100%; max-width: 720px; height: auto; display: block; }
+.timing-histogram figcaption { font-size: 12px; }
+.timing-axis { font-size: 11px; fill: var(--muted); }
+.timing-zero { stroke: var(--muted); stroke-dasharray: 3 3; }
+.timing-mark { stroke: #c828aa; stroke-width: 2; }
+.timing-table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+.timing-paths { max-height: 260px; flex: none; }
+.timing-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.timing-table th { position: sticky; top: 0; background: var(--panel); text-align: left; font-weight: 600; padding: 3px 8px; border-bottom: 1px solid var(--line); }
+.timing-table td { padding: 2px 8px; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); white-space: nowrap; }
+.timing-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.timing-table tr.clickable { cursor: pointer; }
+.timing-table tr.clickable:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.timing-table tr.selected { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.timing-detail { display: flex; flex-direction: column; gap: 6px; }
+.timing-detail-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; font-size: 12.5px; }
+.timing-detail-head button { font-size: 12px; padding: 2px 8px; }
+.timing-bar { display: flex; height: 16px; border-radius: 3px; overflow: hidden; border: 1px solid var(--line); }
+.timing-bar span { min-width: 1px; border-right: 1px solid var(--panel); }
+.timing-bar .net, .timing-swatch.net { background: #3c8cdc; }
+.timing-bar .cell, .timing-swatch.cell { background: #e68c32; }
+.timing-key { font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.timing-swatch { display: inline-block; width: 12px; height: 10px; border-radius: 2px; }

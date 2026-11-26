@@ -41,6 +41,8 @@ export interface LegendEntry {
 export interface LayerGroup {
   id: string;
   label: string;
+  /** Off until the person turns it on (a colouring that costs an analysis) */
+  off?: boolean;
 }
 
 export interface ViewDef<B> {

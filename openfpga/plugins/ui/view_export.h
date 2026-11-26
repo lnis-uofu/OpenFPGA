@@ -13,7 +13,8 @@
  * - pins: the I/O sites and the ports of the design on them
  * - routing: the route of each net (its nodes), the use of each segment of
  *   the channels
- * - timing: the slack and the criticality of each net, the worst paths
+ * - timing: the slack and the criticality of each net, the worst paths, the
+ *   histogram of the slack of the end points
  * - atoms: the atoms of a scope (a module, a cone, or all of a small
  *   design), their pins and nets, and the module of each atom
  * - clusters: the clusters of a scope, their atoms and the nets between them

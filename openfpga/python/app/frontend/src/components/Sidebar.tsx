@@ -215,10 +215,11 @@ const REPORT: Record<string, string> = {
 
 /** The command of the run button of a stage (none for the stages that have no button) */
 /** The view of the design that a stage gives the data of (docs/plan_design_views.md) */
-const VIEWS: Record<string, { panel: "pins" | "floorplan" | "routing"; name: string; icon: string; title: string }> = {
+const VIEWS: Record<string, { panel: "pins" | "floorplan" | "routing" | "timing"; name: string; icon: string; title: string }> = {
   DEVICE: { panel: "pins", name: "floorplan", icon: "⌗", title: "the floorplan: the tiles, the I/O sites, the pins of the package and the ports on them" },
   PLACED: { panel: "floorplan", name: "placement", icon: "▦", title: "the placement: the tiles and the blocks on them" },
   ROUTED: { panel: "routing", name: "routing", icon: "⋕", title: "the routing: the routes on the channels, and the congestion" },
+  ANALYZED: { panel: "timing", name: "timing", icon: "⏱", title: "the timing: the slack of the end points, the worst paths and their delays" },
 };
 
 const RUN: Record<string, string> = {

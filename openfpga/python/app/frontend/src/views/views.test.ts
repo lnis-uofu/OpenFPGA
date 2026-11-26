@@ -1,11 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { consoleLines, resetStore, tabs } from "../store";
+import { consoleLines, emptyView, resetStore, tabs, view } from "../store";
 import { attachController } from "./controller";
 import { resetViewData, setDataSignature } from "./data";
 import { floorplanView, type FloorplanBase } from "./floorplan";
 import { makeView, type ViewData } from "./format";
 import { logicBox, slotBox, trackOffset, wireSegment } from "./geometry";
 import { pinsView, type PinsBase } from "./pins";
+import { rampColor } from "./palette";
+import {
+  clusterNames,
+  histogramOf,
+  isNetDelay,
+  pathClusters,
+  pathRefs,
+  pathsOf,
+  setTiming,
+  slackColor,
+  slackStep,
+} from "./timing";
 import { chooseBackend, p95 } from "./renderer";
 import {
   addRouteTile,
@@ -15,6 +27,7 @@ import {
 } from "./routing";
 import {
   type Layer,
+  type PointsLayer,
   type RectsLayer,
   type SegmentsLayer,
   itemBox,
@@ -477,7 +490,8 @@ const context = <B>(
     dark: false,
     background: [255, 255, 255, 255] as [number, number, number, number],
   },
-  hidden: extra.hidden ?? new Set<string>(),
+  // As the panel starts: the colours of the slack off
+  hidden: extra.hidden ?? new Set<string>(["slack"]),
   changed: () => undefined,
 });
 
@@ -754,6 +768,239 @@ describe("the routing", () => {
         .build(context(base, tracks, { tiles }))
         .scene.layers.map((l) => l.id),
     ).toContain("tracks");
+  });
+
+  it("colours the nets by their slack when asked", async () => {
+    setTiming(timing());
+    const base: RoutingBase = {
+      device: device(),
+      width: 4,
+      height: 4,
+      chanx: 4,
+      chany: 4,
+    };
+    const tiles = new TileCache(
+      () => undefined,
+      async (kind: string) =>
+        kind === "routing" ? tile() : makeView(kind, {}),
+    );
+    const close = { cx: 2, cy: 2, scale: 30, width: 800, height: 600 };
+    const hidden = new Set(["tracks"]);
+    routingView.build(context(base, close, { tiles, hidden }));
+    await vi.waitFor(() => expect(tiles.pending).toBe(0));
+    const built = routingView.build(context(base, close, { tiles, hidden }));
+    const wires = built.scene.layers.find(
+      (l) => l.id === "wires",
+    ) as SegmentsLayer;
+    const stroke = (net: string) => {
+      const i = Array.from({ length: wires.xy.length / 4 }, (_, k) => k).find(
+        (k) => wires.name!(k) === net,
+      )!;
+      return built.scene.styles[wires.style[i]].stroke!.slice(0, 3);
+    };
+    // n0 is net 5 (slack -1, the worst), n1 is net 9 (slack 2, the best)
+    expect(stroke("n0")).toEqual(rampColor("slack", 0).slice(0, 3));
+    expect(stroke("n1")).toEqual(rampColor("slack", 1).slice(0, 3));
+    expect(built.legend!.map((e) => e.label)).toContain("Slack");
+  });
+});
+
+/** The timing of the 4x4 device: one path from a (cluster 1) through c1 (cluster 0) to out:y
+ * (cluster 2), the slack of the blocks and of the nets (5 and 9 are those of the routing tile) */
+function timing(): ViewData {
+  return makeView("timing", {
+    nets: {
+      slack_ns: Float32Array.from({ length: 10 }, (_, i) =>
+        i === 5 ? -1 : i === 9 ? 2 : Infinity,
+      ),
+      criticality: new Float32Array(10),
+    },
+    blocks: { slack_ns: Float32Array.of(-1, -1, 2) },
+    paths: {
+      slack_ns: Float32Array.of(-1),
+      launch_clock: ["clk"],
+      capture_clock: ["clk"],
+      startpoint: ["a.inpad[0]"],
+      endpoint: ["out:y.outpad[0]"],
+      arrival_ns: Float32Array.of(3),
+      required_ns: Float32Array.of(2),
+      point_start: Uint32Array.of(0),
+      point_count: Uint32Array.of(6),
+    },
+    points: {
+      pin: [
+        "a.inpad[0]",
+        "a.o",
+        "c1.in[0]",
+        "c1.out[0]",
+        "out:y.outpad[0]",
+        "out:y.sink",
+      ],
+      type: ["SOURCE", "OPIN", "IPIN", "OPIN", "IPIN", "SINK"],
+      edge: ["", "cell", "net", "cell", "net", "cell"],
+      block: ["a", "a", "lut", "lut", "out:y", "out:y"],
+      net: ["", "n0", "n0", "n1", "n1", ""],
+      cluster: Int32Array.of(1, 1, 0, 0, 2, 2),
+      x: Int32Array.of(0, 0, 1, 1, 3, 3),
+      y: Int32Array.of(1, 1, 1, 1, 2, 2),
+      arrival_ns: Float32Array.of(0, 0.5, 1.2, 1.9, 2.8, 3),
+      delay_ns: Float32Array.of(0, 0.5, 0.7, 0.7, 0.9, 0.2),
+    },
+    histogram: {
+      low_ns: Float32Array.of(-1, 0.5),
+      high_ns: Float32Array.of(0.5, 2),
+      count: Uint32Array.of(1, 3),
+    },
+  });
+}
+
+describe("the selection across sessions", () => {
+  it("is forgotten when another session opens", () => {
+    const session = (id: string) => ({
+      ...emptyView(),
+      session: {
+        id,
+        name: id,
+        worker: "running" as const,
+        ended: null,
+        idle_s: 0,
+      },
+    });
+    view.value = session("s1");
+    runViewCommand({ op: "select", kind: "block", name: "a" });
+    runViewCommand({ op: "zoom_to", kind: "block", name: "a" });
+    view.value = { ...session("s1"), latest: { status: "reached", text: "x" } };
+    expect(selection.value).toHaveLength(1);
+    view.value = session("s2");
+    expect(selection.value).toEqual([]);
+    expect(zoomRequest.value).toBeNull();
+  });
+});
+
+describe("the timing", () => {
+  it("reads the paths, their points and the histogram of the end points", () => {
+    const [path] = pathsOf(timing());
+    expect(path.slack).toBe(-1);
+    expect(path.points.map((p) => p.type)).toEqual([
+      "SOURCE",
+      "OPIN",
+      "IPIN",
+      "OPIN",
+      "IPIN",
+      "SINK",
+    ]);
+    expect(path.points[2]).toMatchObject({
+      net: "n0",
+      cluster: 0,
+      edge: "net",
+    });
+    expect(path.points.filter(isNetDelay).map((p) => p.delay)).toEqual([
+      Math.fround(0.7),
+      Math.fround(0.9),
+    ]);
+    expect(histogramOf(timing()).map((b) => b.count)).toEqual([1, 3]);
+    expect(histogramOf(makeView("timing", {}))).toEqual([]);
+  });
+
+  it("selects a path as the path, its blocks in its order and its nets", () => {
+    const [path] = pathsOf(timing());
+    expect(pathClusters(path).map((p) => p.cluster)).toEqual([1, 0, 2]);
+    expect(pathRefs(path, clusterNames(placement()))).toEqual([
+      { kind: "path", name: "0" },
+      { kind: "block", name: "a" },
+      { kind: "block", name: "c1" },
+      { kind: "block", name: "out:y" },
+      { kind: "net", name: "n0" },
+      { kind: "net", name: "n1" },
+    ]);
+  });
+
+  it("colours a slack from red, the worst, to green, and grey with none", () => {
+    expect(slackColor(-1, [-1, 2], false)).toEqual(rampColor("slack", 0));
+    expect(slackColor(2, [-1, 2], false)).toEqual(rampColor("slack", 1));
+    expect(slackStep(Infinity, [-1, 2])).toBe(-1);
+    expect(slackStep(2, [-1, 2])).toBe(15);
+  });
+
+  it("draws the selected path on the placement through its blocks, and zooms to it", () => {
+    setTiming(timing());
+    const base = floorplanBase();
+    const [path] = pathsOf(timing());
+    selection.value = pathRefs(path, clusterNames(placement()));
+    const built = floorplanView.build(
+      context(base, { cx: 2, cy: 2, scale: 100, width: 800, height: 600 }),
+    );
+    const points = built.scene.layers.find(
+      (l) => l.id === "selection:path-points",
+    ) as PointsLayer;
+    const centre = (row: number) => {
+      const b = itemBox(
+        built.scene.layers.find((l) => l.id === "blocks")!,
+        row,
+      );
+      return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+    };
+    // a (row 1), c1 (row 0), out:y (row 2)
+    expect(Array.from(points.x)).toEqual(
+      [centre(1)[0], centre(0)[0], centre(2)[0]].map(Math.fround),
+    );
+    expect(built.scene.layers.some((l) => l.id === "selection:path")).toBe(
+      true,
+    );
+    // The boxes of its nets are not drawn: the line is
+    expect(built.scene.layers.some((l) => l.id === "selection:nets")).toBe(
+      false,
+    );
+    expect(
+      built.scene.layers.find((l) => l.id === "selection:blocks"),
+    ).toMatchObject({
+      x: expect.objectContaining({ length: 3 }),
+    });
+    expect(built.legend!.map((e) => e.label)).toContain("Path");
+    const box = floorplanView.locate(
+      base,
+      { kind: "path", name: "0" },
+      () => undefined,
+    )!;
+    expect(box[0]).toBeLessThan(centre(1)[0]);
+    expect(box[2]).toBeGreaterThan(centre(2)[0]);
+  });
+
+  it("colours the blocks of the placement by their slack when asked", () => {
+    setTiming(timing());
+    const view = { cx: 2, cy: 2, scale: 100, width: 800, height: 600 };
+    const plain = floorplanView.build(context(floorplanBase(), view));
+    const base = floorplanBase();
+    const built = floorplanView.build(
+      context(base, view, { hidden: new Set() }),
+    );
+    const blocks = (b: typeof built) =>
+      b.scene.layers.find((l) => l.id === "blocks") as RectsLayer;
+    // c1 and a have the worst slack, out:y the best
+    const fill = (b: typeof built, i: number) =>
+      b.scene.styles[blocks(b).style[i]].fill;
+    expect(fill(built, 0)).toEqual(rampColor("slack", 0));
+    expect(fill(built, 2)).toEqual(rampColor("slack", 1));
+    expect(fill(plain, 0)).not.toEqual(rampColor("slack", 0));
+    const legend = built.legend!.find((e) => e.label === "Slack");
+    expect(legend?.ramp).toEqual({
+      ramp: "slack",
+      from: "-1.00 ns",
+      to: "2.00 ns",
+    });
+  });
+
+  it("says it analyzes the timing until the export is there", () => {
+    const built = floorplanView.build(
+      context(
+        floorplanBase(),
+        { cx: 2, cy: 2, scale: 100, width: 800, height: 600 },
+        {
+          hidden: new Set(),
+        },
+      ),
+    );
+    expect(built.status).toContain("analyzing the timing");
   });
 });
 

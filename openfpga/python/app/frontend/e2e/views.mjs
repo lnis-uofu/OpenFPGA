@@ -507,6 +507,65 @@ try {
   assert.ok(await page.isVisible(".view-backend-now:has-text('Canvas2D')"));
   await page.selectOption('[aria-label="Renderer"]', "auto");
 
+  // V6, the timing (P5): the paths, the histogram; a path selected is its blocks on the placement
+  // and its nets on the routing
+  await say("/run_stage stage=analysis");
+  await page.waitForSelector("header >> text=ANALYZED ✔", { timeout: 120000 });
+  await page.click('[aria-label="Open the timing"]');
+  await page.waitForSelector(".timing-paths tbody tr", { timeout: 60000 });
+  assert.ok(
+    (await page.locator(".timing-histogram rect").count()) > 0,
+    "the histogram of the end points",
+  );
+  await page.click(".timing-paths tbody tr >> nth=0");
+  await page.waitForSelector(".timing-detail-head >> text=Path 1");
+  const pathPoints = await page.locator(".timing-detail tbody tr").count();
+  const blocksOfPath = await page.evaluate(() =>
+    [...document.querySelectorAll(".timing-detail tbody tr td:nth-child(4)")]
+      .map((td) => td.textContent)
+      .filter(Boolean),
+  );
+  assert.ok(
+    pathPoints > 1 && blocksOfPath.length > 0,
+    "the points of the path",
+  );
+  await page
+    .locator(".timing-panel")
+    .screenshot({ path: path.join(shots, "timing-4x4.png") });
+  await page.click("text=Show on the placement");
+  await page.waitForFunction(
+    () => window.openfpgaViews.floorplan?.drawn("selection:path-points") > 0,
+    null,
+    { timeout: 30000 },
+  );
+  const centres = await page.evaluate(() =>
+    window.openfpgaViews.floorplan.drawn("selection:path-points"),
+  );
+  // The blocks of the path in its order, each once in a row
+  const inOrder = blocksOfPath.filter(
+    (b, i, all) => i === 0 || all[i - 1] !== b,
+  );
+  assert.equal(centres, inOrder.length, "a dot on each block of the path");
+  await page.waitForFunction(
+    () => window.openfpgaViews.floorplan.drawn("selection:blocks") > 0,
+  );
+  // The slack of the blocks as their colour
+  await page.click(".view-groups label:has-text('Slack') input");
+  await page.click(".legend-fold"); // folded since the first view
+  await page.waitForSelector(".view-legend li:has-text('Slack')", {
+    timeout: 60000,
+  });
+  await shot("placement-path-4x4.png");
+  await page.click(".legend-fold");
+  await page.click('[role=tab]:has-text("Timing")');
+  await page.click("text=Show on the routing");
+  await page.waitForFunction(
+    () => window.openfpgaViews.routing?.drawn("selection:nets") > 0,
+    null,
+    { timeout: 60000 },
+  );
+  await shot("routing-path-4x4.png");
+
   // The 32x32 device: the objects close up, the coarse tiles far out
   await page.click(".session-action:text-is('Close')");
   await page.click("text=Create session from device package…");

@@ -1,7 +1,7 @@
 // The selection that all the views share (docs/plan_design_views.md, 3.3 and 3.6), and the commands
 // that drive the views: plain data, run from the views, from the console and, later, from the model.
-import { signal } from "@preact/signals";
-import { consoleLines, openPanel, type Panel } from "../store";
+import { effect, signal } from "@preact/signals";
+import { consoleLines, openPanel, type Panel, view } from "../store";
 import { type ObjectKind, type ObjectRef, refKey } from "./scene";
 
 /** The objects that are selected, in every view */
@@ -19,9 +19,9 @@ export type ViewCommand =
   | { op: "highlight"; kind: ObjectKind; name: string }
   | { op: "clear" }
   | { op: "zoom_to"; kind: ObjectKind; name: string }
-  | { op: "open_view"; view: "floorplan" | "pins" | "routing" };
+  | { op: "open_view"; view: "floorplan" | "pins" | "routing" | "timing" };
 
-const VIEWS: Panel[] = ["floorplan", "pins", "routing"];
+const VIEWS: Panel[] = ["floorplan", "pins", "routing", "timing"];
 let seq = 0;
 
 /** Run a command of the views. It is logged in the console; returns what it did */
@@ -66,6 +66,28 @@ export function runViewCommand(command: ViewCommand): string {
   ];
   return text;
 }
+
+/** Select several objects at once (a path: the path, its blocks, its nets), logged as what */
+export function selectRefs(refs: ObjectRef[], what: string) {
+  selection.value = refs;
+  highlighted.value = [];
+  consoleLines.value = [
+    ...consoleLines.value,
+    { kind: "model", text: `view › select ${what}` },
+  ];
+}
+
+// Another session: what was selected is of the one before
+let sessionId: string | null | undefined;
+effect(() => {
+  const id = view.value.session?.id ?? null;
+  if (sessionId !== undefined && id !== sessionId) {
+    selection.value = [];
+    highlighted.value = [];
+    zoomRequest.value = null;
+  }
+  sessionId = id;
+});
 
 /** For the tests */
 export function resetSelection() {

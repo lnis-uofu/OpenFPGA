@@ -6,7 +6,13 @@ import { Console, tclComplete } from "./components/Console";
 import { DesignsPanel, HierarchyPanel, filterTree, matches } from "./components/Panels";
 import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { CallGroup, ToolCard } from "./components/ToolCard";
+import { TimingPanel } from "./components/TimingPanel";
 import { TopBar } from "./components/TopBar";
+import { sessionSignature } from "./components/ViewPanel";
+import { resetViewData, setDataSignature, setWholeView } from "./views/data";
+import { makeView } from "./views/format";
+import { resetSelection, selection, zoomRequest } from "./views/selection";
+import { setTiming } from "./views/timing";
 import { Workspace } from "./components/Workspace";
 import {
   banner,
@@ -1881,5 +1887,110 @@ describe("the views of the design in the stages", () => {
     view.value = filled();
     render(<Sidebar />);
     expect(screen.queryByLabelText("Open the placement")).toBeNull();
+  });
+
+  it("open the timing once the timing is analyzed", () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+    const v = filled();
+    v.stages = v.stages.map((s) => ({ ...s, status: "reached" as const }));
+    view.value = v;
+    render(<Sidebar />);
+    fireEvent.click(screen.getByLabelText("Open the timing"));
+    expect(tabs.value.find((t) => t.id === "panel:timing")?.title).toBe("Timing");
+  });
+});
+
+describe("the timing panel", () => {
+  const timing = () =>
+    makeView("timing", {
+      nets: { slack_ns: Float32Array.of(-1), criticality: Float32Array.of(1) },
+      blocks: { slack_ns: Float32Array.of(-1, 2) },
+      paths: {
+        slack_ns: Float32Array.of(-1, 0.5),
+        launch_clock: ["clk", "clk"],
+        capture_clock: ["clk", "clk"],
+        startpoint: ["a.inpad[0]", "b.inpad[0]"],
+        endpoint: ["c.outpad[0]", "c.outpad[0]"],
+        arrival_ns: Float32Array.of(3, 1.5),
+        required_ns: Float32Array.of(2, 2),
+        point_start: Uint32Array.of(0, 3),
+        point_count: Uint32Array.of(3, 2),
+      },
+      points: {
+        pin: ["a.inpad[0]", "c.in[0]", "c.outpad[0]", "b.inpad[0]", "c.outpad[0]"],
+        type: ["SOURCE", "IPIN", "SINK", "SOURCE", "SINK"],
+        edge: ["", "net", "cell", "", "net"],
+        block: ["a", "c", "c", "b", "c"],
+        net: ["", "n_a", "", "", ""],
+        cluster: Int32Array.of(0, 1, 1, 0, 1),
+        x: Int32Array.of(0, 1, 1, 0, 1),
+        y: Int32Array.of(0, 1, 1, 0, 1),
+        arrival_ns: Float32Array.of(0, 2, 3, 0, 1.5),
+        delay_ns: Float32Array.of(0, 2, 1, 0, 1.5),
+      },
+      histogram: { low_ns: Float32Array.of(-1, 0.5), high_ns: Float32Array.of(0.5, 2), count: Uint32Array.of(2, 5) },
+    });
+  const ready = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+    view.value = filled();
+    resetViewData();
+    resetSelection();
+    setDataSignature(sessionSignature());
+    setTiming(timing());
+    setWholeView(
+      "placement",
+      makeView("placement", { blocks: { name: ["io_a", "clb_c"], id: Uint32Array.of(0, 1) } }),
+    );
+  };
+
+  it("shows the histogram of the end points and the worst paths", async () => {
+    ready();
+    render(<TimingPanel />);
+    await screen.findByText("a.inpad[0]");
+    expect(screen.getByText(/worst slack -1.000 ns \(clk to clk\) · the 2 worst paths/)).toBeTruthy();
+    expect(document.querySelectorAll(".timing-histogram rect")).toHaveLength(2);
+    expect(screen.getByText(/The setup slack of 7 end points/)).toBeTruthy();
+    expect(screen.getByText(/Select a path for its delays/)).toBeTruthy();
+  });
+
+  it("selects a path as its blocks and nets, shows its delays, and shows it on the placement", async () => {
+    ready();
+    render(
+      <>
+        <TimingPanel />
+        <Workspace />
+      </>,
+    );
+    fireEvent.click(await screen.findByText("a.inpad[0]"));
+    expect(selection.value).toEqual([
+      { kind: "path", name: "0" },
+      { kind: "block", name: "io_a" },
+      { kind: "block", name: "clb_c" },
+      { kind: "net", name: "n_a" },
+    ]);
+    await screen.findByText("Path 1");
+    expect(document.querySelectorAll(".timing-bar span")).toHaveLength(2); // the two delays
+    expect(document.querySelector(".timing-bar .net")).toBeTruthy();
+    expect(document.querySelector(".timing-mark")).toBeTruthy();
+    fireEvent.click(screen.getByText("Show on the placement"));
+    expect(activeTab.value).toBe("panel:floorplan");
+    expect(zoomRequest.value?.ref).toEqual({ kind: "path", name: "0" });
+    // A point of the path selects its block and its net
+    fireEvent.click(screen.getByText("c.in[0]"));
+    expect(selection.value).toEqual([
+      { kind: "block", name: "clb_c" },
+      { kind: "net", name: "n_a" },
+    ]);
+  });
+
+  it("selects the path again to clear it", async () => {
+    ready();
+    render(<TimingPanel />);
+    fireEvent.click(await screen.findByText("b.inpad[0]"));
+    expect(selection.value[0]).toEqual({ kind: "path", name: "1" });
+    await screen.findByText("Path 2");
+    const paths = document.querySelector(".timing-paths") as HTMLElement;
+    fireEvent.click(within(paths).getByText("b.inpad[0]"));
+    expect(selection.value).toEqual([]);
   });
 });

@@ -173,8 +173,11 @@ function Legend(props: { entries: LegendEntry[] }) {
   );
 }
 
+/** The last request to show an object that each view did, by its name */
+const zoomsDone = new Map<string, number>();
+
 /** The state of the session that the data of the views is of */
-function sessionSignature(): string {
+export function sessionSignature(): string {
   const v = sessionView.value;
   return `${v.session?.id ?? ""}|${v.stages.map((s) => `${s.stage}:${s.status}:${s.seconds ?? ""}`).join(",")}`;
 }
@@ -194,7 +197,9 @@ export function ViewPanel<B>(props: {
     kind: BackendKind;
     reason: string;
   } | null>(null);
-  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [hidden, setHidden] = useState<Set<string>>(
+    () => new Set(def.groups.filter((g) => g.off).map((g) => g.id)),
+  );
   const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(
     null,
   );
@@ -215,6 +220,8 @@ export function ViewPanel<B>(props: {
     hidden: new Set<string>(),
     tiles: null as TileCache | null,
     legend: "",
+    /** A request to show an object that waits for its data */
+    pendingZoom: null as { ref: ObjectRef; seq: number } | null,
   }).current;
   state.base = base;
   state.hidden = hidden;
@@ -253,8 +260,19 @@ export function ViewPanel<B>(props: {
       state.renderer.render(state.view);
     });
   };
+  // A request to show an object, once its data is there (a path needs the timing)
+  const tryZoom = () => {
+    const request = state.pendingZoom;
+    if (!request || !state.base) return;
+    const box = def.locate(state.base, request.ref, changed);
+    if (!box) return;
+    state.pendingZoom = null;
+    zoomsDone.set(name, request.seq);
+    state.view = zoomTo(state.view, box);
+  };
   const changed = () => {
     state.tileVersion++;
+    tryZoom();
     draw();
   };
   const setView = (next: ViewState) => {
@@ -472,9 +490,11 @@ export function ViewPanel<B>(props: {
   // A request to show an object: zoom to it if this view has it
   const request = zoomRequest.value;
   useEffect(() => {
-    if (!request || !base) return;
-    const box = def.locate(base, request.ref, changed);
-    if (box) setView(zoomTo(state.view, box));
+    // Each request once in a view: not again when its tab is shown again
+    if (!request || !base || (zoomsDone.get(name) ?? 0) >= request.seq) return;
+    state.pendingZoom = request;
+    tryZoom();
+    draw();
   }, [request?.seq, base]);
 
   const toggle = (group: string) => {

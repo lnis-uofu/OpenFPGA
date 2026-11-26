@@ -68,7 +68,7 @@ export interface ConsoleLine {
 
 export const CHAT = "chat";
 /** The lists that open in a tab from the menu of the sidebar */
-export type Panel = "devices" | "designs" | "hierarchy" | "floorplan" | "pins" | "routing";
+export type Panel = "devices" | "designs" | "hierarchy" | "floorplan" | "pins" | "routing" | "timing";
 // The calls that change the flow: the console shows them as the lines of the journal
 const CHANGING = new Set(["session_open", "session_close", "read_inputs", "run_stage", "set_option", "set_constraint", "checkpoint"]);
 
@@ -621,6 +621,7 @@ export const PANEL_TITLES: Record<Panel, string> = {
   hierarchy: "Hierarchy",
   floorplan: "Placement",
   pins: "Floorplan",
+  timing: "Timing",
   routing: "Routing",
 };
 
