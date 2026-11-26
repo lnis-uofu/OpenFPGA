@@ -338,6 +338,9 @@ try {
   // flow; the line of an instance opens in the viewer
   await page.click(".menu-item:has-text('Designs')");
   await page.click(".panel-item:has-text('hier') >> text=Add to session");
+  // Added, the tab of the designs closes; open again, it marks the design
+  await page.waitForSelector("[role=tab]:has-text('Designs')", { state: "detached", timeout: 30000 });
+  await page.click(".menu-item:has-text('Designs')");
   await page.waitForSelector(".panel-item:has-text('hier') >> text=in this session", { timeout: 30000 });
   // The sidebar elaborates it by itself, and shows its first level
   await page.waitForSelector(".sidebar .hier-compact .hier-instance:has-text('u_wide')", { timeout: 60000 });

@@ -1,6 +1,6 @@
 // The state of the page: signals that the components read, and the one function that turns an
 // event of the server into a change of them.
-import { effect, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 import {
   Answer,
   AppConfig,
@@ -68,7 +68,7 @@ export interface ConsoleLine {
 
 export const CHAT = "chat";
 /** The lists that open in a tab from the menu of the sidebar */
-export type Panel = "devices" | "designs" | "hierarchy";
+export type Panel = "devices" | "designs" | "hierarchy" | "floorplan" | "pins" | "routing";
 // The calls that change the flow: the console shows them as the lines of the journal
 const CHANGING = new Set(["session_open", "session_close", "read_inputs", "run_stage", "set_option", "set_constraint", "checkpoint"]);
 
@@ -362,13 +362,35 @@ function reportFailure(answer: Answer) {
   banner.value = { kind: d?.kind ?? "error", message: d?.message ?? "The call failed", hint: d?.hint };
 }
 
-async function sessionAction(action: () => Promise<Answer>) {
+/** The session actions in progress (a new session, a design added...) */
+export const acting = signal(0);
+
+/** Something is being done: an answer, a command of the console, an upload, a session action, a
+ * stage that runs */
+export const working = computed(
+  () =>
+    busy.value ||
+    consoleBusy.value ||
+    uploading.value ||
+    acting.value > 0 ||
+    hierarchy.value.loading ||
+    view.value.latest.status === "running",
+);
+
+async function sessionAction(action: () => Promise<Answer>): Promise<boolean> {
+  acting.value++;
+  let ok = false;
   try {
-    reportFailure(await action());
+    const answer = await action();
+    ok = answer.ok;
+    reportFailure(answer);
   } catch (error) {
     banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
+  } finally {
+    acting.value--;
   }
   await refreshView();
+  return ok;
 }
 
 export const makeSession = (name?: string) => sessionAction(() => newSession(name));
@@ -418,12 +440,18 @@ export async function openSession(id: string) {
 /** A session that reads the files of a device package and waits for the circuit */
 export async function makeSessionFromPackage(name: string) {
   packagesOpen.value = false;
-  await sessionAction(() => newSession(undefined, name));
+  return sessionAction(() => newSession(undefined, name));
 }
 /** Read the architectures of a package into the open session */
 export async function loadPackageIntoSession(name: string) {
   packagesOpen.value = false;
-  await sessionAction(() => applyDevicePackage(name));
+  return sessionAction(() => applyDevicePackage(name));
+}
+/** The button of the Devices tab: the package into the open session if it is empty, else into a
+ * new session; the tab closes when it worked */
+export async function addPackage(name: string, intoOpen: boolean) {
+  const ok = await (intoOpen ? loadPackageIntoSession(name) : makeSessionFromPackage(name));
+  if (ok) closeTab("panel:devices");
 }
 export async function endSession() {
   await sessionAction(async () => {
@@ -438,7 +466,10 @@ export const restore = (checkpoint?: string) => sessionAction(() => restoreSessi
 export const saveSession = (name?: string) => sessionAction(() => saveCheckpoint(name));
 /** Copy a design directory into the session. It is not synthesized: the run button of synthesis
  * (or the model) does that when asked */
-export const addDesign = (name: string) => sessionAction(() => addDesignToSession(name));
+export async function addDesign(name: string) {
+  const ok = await sessionAction(() => addDesignToSession(name));
+  if (ok) closeTab("panel:designs");
+}
 
 /** Give files to the session (one is opened if there is none). A name that is taken is replaced
  * only if the person says so */
@@ -584,7 +615,14 @@ export function openReport(stage: string) {
 }
 
 /** The titles of the tabs of the lists */
-export const PANEL_TITLES: Record<Panel, string> = { devices: "Devices", designs: "Designs", hierarchy: "Hierarchy" };
+export const PANEL_TITLES: Record<Panel, string> = {
+  devices: "Devices",
+  designs: "Designs",
+  hierarchy: "Hierarchy",
+  floorplan: "Placement",
+  pins: "Floorplan",
+  routing: "Routing",
+};
 
 /** A list in a tab of its own: the device packages (read again each time, a package may have been
  * added) or the design directories (they come with the view) */

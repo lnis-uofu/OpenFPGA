@@ -2,13 +2,12 @@ import { useEffect, useState } from "preact/hooks";
 import type { DesignView, DevicePackageInfo, Hierarchy, HierarchyModule, HierarchyNode, HierarchySource } from "../api";
 import {
   addDesign,
+  addPackage,
   busy,
   config,
   devicePackages,
   hierarchy,
   loadHierarchy,
-  loadPackageIntoSession,
-  makeSessionFromPackage,
   openFile,
   openPanel,
   view,
@@ -71,14 +70,19 @@ export function DevicesPanel() {
                 {p.version && <span class="muted">v{p.version}</span>}
                 {p.name === current && <span class="chip chip-current">this session</span>}
                 <span class="spacer" />
-                <button disabled={!real || busy.value} onClick={() => void makeSessionFromPackage(p.name)} title={real ? "A new session that reads its architectures" : "Not in the demo"}>
-                  Create session
+                <button
+                  disabled={!real || busy.value}
+                  onClick={() => void addPackage(p.name, empty)}
+                  title={
+                    !real
+                      ? "Not in the demo"
+                      : empty
+                        ? "Read its architectures into the open session"
+                        : "A new session that reads its architectures"
+                  }
+                >
+                  Add to session
                 </button>
-                {empty && (
-                  <button disabled={busy.value} onClick={() => void loadPackageIntoSession(p.name)} title="Read its architectures into the open session">
-                    Load into this session
-                  </button>
-                )}
               </div>
               {p.description && <div class="muted panel-item-text">{p.description}</div>}
               {p.tags.length > 0 && <div class="muted panel-item-text">{p.tags.join(" · ")}</div>}

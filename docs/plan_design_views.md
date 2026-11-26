@@ -541,11 +541,36 @@ so it is not concerned.
 - **P2.5** A view panel: a tab of the workspace (like the hierarchy tab) with the canvas, a small
   toolbar (fit, layers, backend), and the stage that is missing when there is no data (R-2).
 
+Status of phase 2: done (2026-11-25), not committed. In `src/views/`: `scene.ts` (the seven
+layer kinds, objects by kind and name, the rule of the levels of detail), `palette.ts`,
+`spatial.ts` (flatbush 4.8, one index a layer: search, pick by distance, the top layer first),
+`viewstate.ts`, `controller.ts` (drag, wheel about the cursor, click, double click, keys),
+`selection.ts` (the shared selection, the commands, logged in the console), `tiles.ts` (the
+level for a scale, the tiles on the screen, a cache that fetches four at a time), `data.ts` (the
+whole exports, once a state of the session), `canvas2d.ts` and `deck.ts` (every layer kind each),
+`renderer.ts` (the choice, the probe), `view.ts` (what a view gives the panel); the panel
+`components/ViewPanel.tsx` (the toolbar: fit, the layers, the renderer; the tooltip; the
+selection; the stage that is missing). The views open from the rows of the stages of the sidebar
+(pins on DEVICE, floorplan on PLACED, routing on ROUTED), not from a menu. deck.gl is a chunk of
+its own (940 kB), loaded by the first view that draws with it; the page stays at 150 kB.
+Measures: a pick among 100k items takes far under 1 ms (a test); the frame times of Canvas2D are
+those of P0.2.
+
 ### Phase 3: V3 Floorplan and V4 Pins (no layout, data from the device)
 - **P3.1** V3 with the device and the placement; regions; the selection's nets as boxes.
 - **P3.2** V4 read only.
 - Accept: Playwright screenshots of a 4x4 and a 32x32 package; a block clicked in V3 is selected
   in the sidebar's tables and in V4 when it is an I/O.
+
+Status of phase 3: done (2026-11-25), not committed. V3 (`floorplan.ts`) draws the objects from
+the whole device and placement exports (bounded at 500x500, R-11), culled by the index, and far
+out the coarse `grid` and `placement` tiles; the regions; the selection with the boxes of the nets
+of a selected block or net (from the clusters export). V4 (`pins.ts`) shows the sites, the ports by
+direction, the package pins of the I/O map (the core's `pins` export got the package pin of each
+site and the block of each port), and the ports with no site. A block clicked in V3 is the
+selection of every view: its box in V4 when it is an I/O, in the status line of each panel (there
+are no block tables in the sidebar). `e2e/views.mjs` has the screenshots of a 4x4 package and of a
+32x32 copy of it (close up and coarse).
 
 ### Phase 4: WebGL and V5 Routing
 - **P4.1** The WebGL backend for `segments`, `rects`, `grid`, with the Canvas2D overlay; the probe
@@ -554,6 +579,20 @@ so it is not concerned.
 - **P4.2** V5: channels, tracks, routes, congestion. Accept: the route of a net equals its
   `net_route` (drawn nodes); hotspots equal `congestion`.
 - **P4.3** Parity tests of the shared layer kinds (Canvas2D vs WebGL), with a tolerance.
+
+Status of phase 4: done (2026-11-25), not committed. deck.gl draws every layer kind (the owner's
+decision, so no Canvas2D overlay); `auto` takes Canvas2D when there is no WebGL2 or when WebGL is
+drawn in software (SwiftShader, llvmpipe: the slow path of P0.2), else deck.gl, which a probe of
+30 frames sends to Canvas2D when its p95 is over 50 ms; a lost context goes to Canvas2D at once;
+the choice is kept in the browser. V5 (`routing.ts`) draws the routes of the tiles of the screen
+(wires on their tracks, pins, the links to their parents, one colour a net), the tracks when they
+can be told apart (6 W pixels a grid tile), the congestion far out, and the selected net over all.
+Checked: the wires of a net drawn are the CHANX and CHANY nodes of its route in the routing export
+(the browser test, and a unit test), the coarse congestion is that of `congestion` (P1.7); deck.gl
+and Canvas2D give the same picture (a mean difference of 1.3 of 255 a channel on the routing, 0.1
+on the floorplan); a forced software GL ends on Canvas2D; a lost context too. Not measured: R-3 on
+a routed 32x32 with deck.gl on a GPU (headless Chromium has none): the owner's `/bench.html` and a
+look at the views on their machine.
 
 ### Phase 5: V6 Timing
 - **P5.1** The paths table, the slack histogram, the delay bar.

@@ -214,6 +214,13 @@ const REPORT: Record<string, string> = {
 };
 
 /** The command of the run button of a stage (none for the stages that have no button) */
+/** The view of the design that a stage gives the data of (docs/plan_design_views.md) */
+const VIEWS: Record<string, { panel: "pins" | "floorplan" | "routing"; name: string; icon: string; title: string }> = {
+  DEVICE: { panel: "pins", name: "floorplan", icon: "⌗", title: "the floorplan: the tiles, the I/O sites, the pins of the package and the ports on them" },
+  PLACED: { panel: "floorplan", name: "placement", icon: "▦", title: "the placement: the tiles and the blocks on them" },
+  ROUTED: { panel: "routing", name: "routing", icon: "⋕", title: "the routing: the routes on the channels, and the congestion" },
+};
+
 const RUN: Record<string, string> = {
   PACKED: "pack",
   PLACED: "place",
@@ -443,7 +450,9 @@ export function Sidebar() {
   const counted = stages.filter((s) => s.status !== "skipped");
   const reached = counted.filter((s) => s.status === "reached").length;
   const rows = designFiles(files);
-  const canRun = real && !busy.value && !!session && session.worker === "running";
+  // A design is loaded: one added (synthesis makes its circuit) or a circuit read
+  const hasDesign = !!v.synthesis?.design || files.inputs.some((f) => f.label === "circuit");
+  const canRun = real && !busy.value && !!session && session.worker === "running" && hasDesign;
   // The placer of the flow (option place.placer): classic, or the analytical placer of VPR,
   // which packs and places at once
   const placer = String(v.options_changed.find((o) => o.name === "place.placer")?.value ?? "classic");
@@ -530,6 +539,16 @@ export function Sidebar() {
                     ≣
                   </button>
                 )}
+                {VIEWS[s.stage] && s.status === "reached" && real && (
+                  <button
+                    class="stage-button stage-view"
+                    aria-label={`Open the ${VIEWS[s.stage].name}`}
+                    title={`Open ${VIEWS[s.stage].title}`}
+                    onClick={() => openPanel(VIEWS[s.stage].panel)}
+                  >
+                    {VIEWS[s.stage].icon}
+                  </button>
+                )}
                 {(s.stage === "SYNTHESIS" || RUN[s.stage]) && (
                   <button
                     class="stage-button"
@@ -538,7 +557,9 @@ export function Sidebar() {
                     title={
                       !real
                         ? "Not in the demo"
-                        : s.stage === "SYNTHESIS" && !v.synthesis?.design
+                        : !hasDesign
+                          ? "Add a design first (Designs)"
+                          : s.stage === "SYNTHESIS" && !v.synthesis?.design
                           ? "Add a design first (Designs)"
                           : s.stage === "SYNTHESIS"
                             ? `Synthesize ${v.synthesis?.design} again`

@@ -13,9 +13,13 @@
 #include <tuple>
 #include <unordered_map>
 
+#include "device_package.h"
 #include "globals.h"
 #include "json_writer.h"
+#include "nlohmann/json.hpp"
+#include "package_io_map.h"
 #include "query_timing.h"
+#include "vtr_log.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -509,7 +513,54 @@ bool placement_view(ViewFile& file, std::string& error) {
   return true;
 }
 
-bool pins_view(ViewFile& file, std::string& error) {
+/* The pins of the package on each site, from the I/O map of the device
+ * package of the session (role io_map): the aliases of the rows at the site,
+ * by the index of the site. Empty when there is no map */
+std::vector<std::string> package_pins(
+  const OpenFpgaSession& session,
+  const std::map<std::tuple<int, int, int, int>, int32_t>& site_of,
+  size_t sites, std::string& map_file) {
+  std::vector<std::string> pins(sites);
+  const std::string data = session.device_package();
+  if (data.empty()) {
+    return pins;
+  }
+  try {
+    const DevicePackage package = load_device_package(
+      nlohmann::json::parse(data)["directory"].get<std::string>(), false);
+    const std::vector<std::filesystem::path> maps = package.files_of("io_map");
+    if (maps.empty()) {
+      return pins;
+    }
+    const PackageIoMap map = read_package_io_map(maps[0]);
+    map_file = maps[0].filename().string();
+    for (const PackageIoMapRow& row : map.rows) {
+      if (!row.has_location()) {
+        continue;
+      }
+      const auto found = site_of.find(
+        {row.col.value(), row.row.value(), row.subtile.value_or(0), 0});
+      if (found == site_of.end()) {
+        continue;
+      }
+      const std::string& name = row.customer_pin_alias.empty()
+                                  ? row.netlist_name
+                                  : row.customer_pin_alias;
+      std::string& here = pins[found->second];
+      if (!name.empty() &&
+          std::string::npos == ("/" + here + "/").find("/" + name + "/")) {
+        here += (here.empty() ? "" : "/") + name;
+      }
+    }
+  } catch (const std::exception& error) {
+    VTR_LOG_WARN("The I/O map of the device package cannot be read: %s\n",
+                 error.what());
+  }
+  return pins;
+}
+
+bool pins_view(const OpenFpgaSession& session, ViewFile& file,
+               std::string& error) {
   if (!device_made(error)) {
     return false;
   }
@@ -548,7 +599,11 @@ bool pins_view(ViewFile& file, std::string& error) {
       }
     }
   }
+  std::string map_file;
+  const std::vector<std::string> package_pin =
+    package_pins(session, site_of, sx.size(), map_file);
   file.table("sites", sx.size())
+    .strings("package_pin", package_pin)
     .column("x", sx)
     .column("y", sy)
     .column("sub_tile", slot)
@@ -559,7 +614,7 @@ bool pins_view(ViewFile& file, std::string& error) {
   const auto& lookup = g_vpr_ctx.atom().lookup();
   const bool has_locs = placed();
   const auto& block_locs = g_vpr_ctx.placement().block_locs();
-  std::vector<std::string> name;
+  std::vector<std::string> name, block;
   std::vector<uint8_t> dir, fixed;
   std::vector<int32_t> site, cluster;
   for (const AtomBlockId blk : netlist.blocks()) {
@@ -575,6 +630,9 @@ bool pins_view(ViewFile& file, std::string& error) {
     dir.push_back(AtomBlockType::INPAD == type ? 0 : 1);
     const ClusterBlockId clb = lookup.atom_clb(blk);
     cluster.push_back(clb.is_valid() ? static_cast<int32_t>(size_t(clb)) : -1);
+    block.push_back(clb.is_valid()
+                      ? g_vpr_ctx.clustering().clb_nlist.block_name(clb)
+                      : std::string());
     int32_t where = -1;
     uint8_t is_fixed = 0;
     if (has_locs && clb.is_valid()) {
@@ -591,10 +649,16 @@ bool pins_view(ViewFile& file, std::string& error) {
     .column("dir", dir)
     .column("site", site)
     .column("fixed", fixed)
-    .column("cluster", cluster);
+    .column("cluster", cluster)
+    .strings("block", block);
   Meta meta;
   meta.grid();
   meta.key("placed").value(has_locs);
+  if (map_file.empty()) {
+    meta.key("io_map_file").null();
+  } else {
+    meta.key("io_map_file").value(map_file);
+  }
   JsonWriter& sides = meta.key("sides").begin_array();
   for (const char* s : {"left", "right", "bottom", "top", "inside"}) {
     sides.value(s);
@@ -1238,7 +1302,7 @@ bool export_view(const vpr::VprRun& run, const OpenFpgaSession& session,
     return placement_view(file, error);
   }
   if ("pins" == kind) {
-    return pins_view(file, error);
+    return pins_view(session, file, error);
   }
   if ("routing" == kind) {
     return routing_view(file, error);

@@ -11,12 +11,14 @@
     "e2e": "node e2e/smoke.mjs",
     "e2e:session": "node e2e/session.mjs",
     "e2e:model": "node e2e/model.mjs",
-    "bench": "node e2e/bench.mjs"
+    "bench": "node e2e/bench.mjs",
+    "e2e:views": "node e2e/views.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.4.2",
     "@deck.gl/layers": "^9.4.2",
     "@preact/signals": "^2.0.0",
+    "flatbush": "^4.8.0",
     "preact": "^10.24.0"
   },
   "devDependencies": {

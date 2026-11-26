@@ -309,6 +309,43 @@ def test_views_are_not_in_the_journal(openfpga_module, tmp_path, monkeypatch):
     assert "export_view" not in script and "view_tile" not in script
 
 
+def test_the_sites_have_the_pins_of_the_package_and_the_ports_their_block(
+    openfpga_module, tmp_path, monkeypatch
+):
+    from test_package_io_map import package_with_map
+
+    map_rows = [
+        {
+            "side": "BOTTOM",
+            "pin_direction": "inout",
+            "pin_type": "GPIO",
+            "row": 0,
+            "col": 1,
+            "subtile": s,
+            "netlist_name": "gfpga_pad_%d" % s,
+            "customer_pin_alias": "P%d" % s,
+        }
+        for s in range(3)
+    ]
+    package = package_with_map(tmp_path, map_rows)
+    monkeypatch.chdir(tmp_path)
+    session = openfpga_module.Session()
+    session.read_device_package(package)
+    session.read_design(make_design(tmp_path / "d"))
+    session.pack()
+    session.place()
+    view = openfpga_module.read_view(session.export_view("pins", tmp_path / "pins.bin")["file"])
+    assert view["meta"]["io_map_file"] == "io_map.csv"
+    named = {
+        (s["x"], s["y"], s["sub_tile"]): s["package_pin"]
+        for s in rows(view, "sites")
+        if s["package_pin"]
+    }
+    assert named == {(1, 0, 0): "P0", (1, 0, 1): "P1", (1, 0, 2): "P2"}
+    placed = {b.name for b in session.placement(limit=100000).blocks}
+    assert all(p["block"] in placed for p in rows(view, "ports"))
+
+
 def test_a_view_needs_its_stage(openfpga_module, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     session = openfpga_module.Session()

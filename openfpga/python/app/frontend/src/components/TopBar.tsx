@@ -1,4 +1,4 @@
-import { config, settingsOpen, sidebarOpen, usage, view } from "../store";
+import { config, settingsOpen, sidebarOpen, usage, view, working } from "../store";
 import { nextTheme, theme } from "../theme";
 
 const THEME_SYMBOL = { auto: "◐", light: "☀", dark: "☾" } as const;
@@ -31,10 +31,19 @@ export function TopBar() {
       {session && (
         <span
           class={`worker worker-${session.worker}`}
-          title={session.worker === "running" ? `The worker of session ${session.id} is running` : session.ended ?? "The worker has ended"}
+          title={
+            session.worker !== "running"
+              ? session.ended ?? "The worker has ended"
+              : working.value
+                ? `The worker of session ${session.id} is working`
+                : `The worker of session ${session.id} is running`
+          }
         >
-          <span class={`status-dot ${session.worker === "running" ? "on" : "off"}`} aria-hidden="true" />{" "}
-          {session.worker === "running" ? "worker running" : session.worker === "none" ? "closed" : "⚠ worker ended"}
+          <span
+            class={`status-dot ${session.worker !== "running" ? "off" : working.value ? "busy" : "on"}`}
+            aria-hidden="true"
+          />{" "}
+          {session.worker !== "running" ? (session.worker === "none" ? "closed" : "⚠ worker ended") : working.value ? "working…" : "worker running"}
         </span>
       )}
       <span class="model" title={model?.endpoint ?? "recorded demo"}>

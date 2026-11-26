@@ -209,3 +209,29 @@ async function decodeResponse(response: Response): Promise<ViewData> {
   }
   return decodeView(await response.arrayBuffer());
 }
+
+/** View data from plain arrays: for the tests, and for data made in the page */
+export function makeView(
+  kind: string,
+  tables: Record<string, Record<string, NumberArray | string[]>>,
+  meta: Record<string, unknown> = {},
+  version = "v0",
+): ViewData {
+  const out: Record<string, ViewTable> = {};
+  for (const [name, columns] of Object.entries(tables)) {
+    const made: Record<string, Column> = {};
+    let rows = 0;
+    for (const [column, values] of Object.entries(columns)) {
+      rows = values.length;
+      made[column] = Array.isArray(values)
+        ? {
+            length: values.length,
+            get: (row: number) => values[row],
+            all: () => [...values],
+          }
+        : values;
+    }
+    out[name] = { rows, columns: made };
+  }
+  return { kind, version, meta, tables: out };
+}

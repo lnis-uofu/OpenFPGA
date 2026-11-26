@@ -184,6 +184,17 @@ its version is current; the header `X-View-Version` gives it. A scope of `atoms`
 with `depth`) or of `clusters` (`blocks`), and `paths` of `timing`, are parameters. A call refused
 because the session is busy answers 409. Not in the demo.
 
+The views of the design open from the rows of the stages in the sidebar, once the stage is
+reached: ⌗ the floorplan (DEVICE: the tiles, the I/O sites, the pins of the package from its I/O
+map, the ports on them), ▦ the placement (PLACED: the tiles and the blocks, the regions of the
+constraints), ⋕ the routing (ROUTED: the routes on their tracks, the congestion far out). A legend
+in the top left corner of each says what its colours are (folded, it stays folded). Drag to move, the wheel to
+zoom, a click selects (Shift adds), a double click or f fits, Escape clears. The selection is shared
+by the views; its line in the status of a panel zooms to it. The toolbar turns layers off and
+chooses the renderer: Auto (deck.gl, or Canvas2D when WebGL is missing, drawn in software, slow, or
+lost; measured once a page), WebGL or Canvas2D, kept in the browser. `npm run e2e:views` checks them in a browser (with
+`SHOTS=<folder>` for the screenshots).
+
 The renderer benchmark (`bench.html`, `src/bench/bench.ts`) draws synthetic scenes of the measured
 sizes with deck.gl and with Canvas2D through a zoom sweep: open `/bench.html` on the development
 server (`npm run dev`), or `npm run bench` for a table from headless Chromium (whose WebGL is

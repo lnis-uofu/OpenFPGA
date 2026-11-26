@@ -20,6 +20,7 @@ import {
   consoleOpen,
   emptyView,
   messages,
+  openPanel,
   openReport,
   openResult,
   resetStore,
@@ -93,6 +94,18 @@ describe("the top bar", () => {
     expect(screen.getByRole("status").textContent).toContain("s1 · PLACED ✔ 2.1 s");
     expect(screen.getByText(/llama3.1/)).toBeTruthy();
     expect(screen.queryByText("ANALYZED")).toBeNull();
+  });
+
+  it("blinks the dot of the worker while something is being done", async () => {
+    view.value = filled();
+    render(<TopBar />);
+    const dot = () => document.querySelector(".worker .status-dot")!;
+    expect(dot().classList.contains("on")).toBe(true);
+    busy.value = true;
+    await screen.findByText(/working…/);
+    expect(dot().classList.contains("busy")).toBe(true);
+    busy.value = false;
+    await waitFor(() => expect(dot().classList.contains("busy")).toBe(false));
   });
 
   it("shows the worker of the session next to the model, and why it ended", () => {
@@ -467,10 +480,10 @@ describe("the devices tab", () => {
     vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
     page();
     await screen.findByText("k6_frac_n10_2x2");
-    expect((screen.getAllByText("Create session")[0] as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getAllByText("Add to session")[0] as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("creates the session of the package that is chosen, and reads the session again", async () => {
+  it("creates the session of the package that is chosen, reads the session again and closes the tab", async () => {
     real();
     const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
       reply(url === "/api/device-packages" ? listing : url === "/api/session" ? emptyView() : { ok: true, data: {} }),
@@ -478,13 +491,33 @@ describe("the devices tab", () => {
     vi.stubGlobal("fetch", fetchMock);
     page();
     await screen.findByText("k6_frac_n10_2x2");
-    fireEvent.click(screen.getAllByText("Create session")[0]);
+    fireEvent.click(screen.getAllByText("Add to session")[0]);
     await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
     const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/new")!;
     expect(JSON.parse(String(sent[1]?.body))).toEqual({ device_package: "k6_frac_n10_2x2" });
+    await waitFor(() => expect(tabs.value.some((t) => t.id === "panel:devices")).toBe(false));
   });
 
-  it("offers to load a package into an open session that is empty, and only then", async () => {
+  it("keeps the tab open when the session could not be created", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      reply(
+        url === "/api/device-packages"
+          ? listing
+          : url === "/api/session"
+            ? emptyView()
+            : { ok: false, diagnostics: [{ kind: "error", message: "no" }] },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    page();
+    await screen.findByText("k6_frac_n10_2x2");
+    fireEvent.click(screen.getAllByText("Add to session")[0]);
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
+    expect(tabs.value.some((t) => t.id === "panel:devices")).toBe(true);
+  });
+
+  it("loads a package into an open session that is empty", async () => {
     real();
     const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
       reply(url === "/api/device-packages" ? listing : url === "/api/session" ? filled() : { ok: true, data: {} }),
@@ -495,13 +528,14 @@ describe("the devices tab", () => {
     view.value = v;
     page();
     await screen.findByText("k6_frac_n10_2x2");
-    fireEvent.click(screen.getAllByText("Load into this session")[0]);
+    fireEvent.click(screen.getAllByText("Add to session")[0]);
     await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session/device")).toBe(true));
+    expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session/new")).toBe(false);
     const sent = fetchMock.mock.calls.find((c) => c[0] === "/api/session/device")!;
     expect(JSON.parse(String(sent[1]?.body))).toEqual({ device_package: "k6_frac_n10_2x2" });
   });
 
-  it("does not offer it when the session has files, and marks the package of the session", async () => {
+  it("makes a new session when the open one has files, and marks the package of the session", async () => {
     real();
     vi.stubGlobal("fetch", vi.fn(() => reply(listing)));
     const v = filled(); // has inputs
@@ -509,7 +543,7 @@ describe("the devices tab", () => {
     view.value = v;
     page();
     await screen.findByText("K6 logic only"); // the name is also on the device stage of the sidebar
-    expect(screen.queryByText("Load into this session")).toBeNull();
+    expect(screen.getAllByText("Add to session")[0].getAttribute("title")).toBe("A new session that reads its architectures");
     expect(screen.getByText("this session")).toBeTruthy();
   });
 
@@ -1346,6 +1380,19 @@ describe("the run buttons of the stages", () => {
     render(<Sidebar />);
     expect((screen.getByLabelText("Run packed") as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it("runs nothing before a design is loaded", () => {
+    real();
+    const v = filled();
+    v.files = { ...v.files, inputs: v.files.inputs.filter((f) => f.label !== "circuit") };
+    view.value = v;
+    render(<Sidebar />);
+    for (const stage of ["packed", "placed", "routed", "analyzed", "bitstream"]) {
+      const run = screen.getByLabelText(`Run ${stage}`) as HTMLButtonElement;
+      expect(run.disabled).toBe(true);
+      expect(run.getAttribute("title")).toBe("Add a design first (Designs)");
+    }
+  });
 });
 
 describe("synthesis as a stage", () => {
@@ -1534,6 +1581,20 @@ describe("the designs tab", () => {
       expect(JSON.parse(String(call?.[1]?.body))).toEqual({ design: "opencores_gpio" });
     });
     expect(fetchMock.mock.calls.some((c) => c[0] === "/api/chat")).toBe(false);
+  });
+
+  it("closes its tab once the design is added", async () => {
+    real();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify(url === "/api/session" ? emptyView() : { ok: true, data: {} }))),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    view.value = { ...filled(), designs };
+    openPanel("designs");
+    render(<Workspace />);
+    fireEvent.click(screen.getAllByText("Add to session")[0]);
+    await waitFor(() => expect(tabs.value.some((t) => t.id === "panel:designs")).toBe(false));
+    expect(activeTab.value).toBe("chat");
   });
 
   it("marks a design that the session has, and asks before it is copied again", async () => {
@@ -1798,5 +1859,27 @@ describe("the hierarchy tab", () => {
     expect(found?.children[0].children.map((c) => c.instance)).toEqual(["u_leaf0"]);
     expect(found?.children[0].more).toBeUndefined();
     expect(filterTree(data.tree, "nothing")).toBeNull();
+  });
+});
+
+describe("the views of the design in the stages", () => {
+  it("open from the stage that makes their data, once it is reached", () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+    view.value = filled(); // DEVICE, PACKED and PLACED are reached
+    render(<Sidebar />);
+    expect(screen.getByLabelText("Open the floorplan")).toBeTruthy();
+    expect(screen.queryByLabelText("Open the routing")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Open the placement"));
+    expect(activeTab.value).toBe("panel:floorplan");
+    expect(tabs.value.find((t) => t.id === "panel:floorplan")?.title).toBe("Placement");
+    fireEvent.click(screen.getByLabelText("Open the floorplan"));
+    expect(tabs.value.find((t) => t.id === "panel:pins")?.title).toBe("Floorplan");
+  });
+
+  it("are not in the demo", () => {
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    view.value = filled();
+    render(<Sidebar />);
+    expect(screen.queryByLabelText("Open the placement")).toBeNull();
   });
 });
