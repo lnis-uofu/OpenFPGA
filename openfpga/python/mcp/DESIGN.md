@@ -96,7 +96,13 @@ A query on a stage that is not reached answers `ok: false` with the diagnostic `
 | `get_journal` | `session`, `format?` (`openfpga` or `python`), `tail?` | the commands that changed the flow (the inputs, the options, the stages, the synthesis); cut from the start if long. The journal is the folder `journal` of the session directory; a worker that starts again goes on with it |
 | `replay` | `journal`, `name?` | a new session that has run the commands of the journal of a session (its id, or `sN/journal`). Only the commands that change the flow run, with files inside the workspace, the designs folders and the packages, and a script of Yosys only from the journal's own `scripts/` (the one that was run, not the file that is written again); the replay stops at the first line that fails and the new session stays with what ran |
 
-That is 23 tools. The server has 28: the 23, `list_device_packages`, `use_device_package`, `write_file`, `synthesize` and `check_constraints`.
+### The views of the web app
+
+| Tool | Arguments | Gives |
+|------|-----------|-------|
+| `show` | `session`, `action` (`select`, `highlight`, `clear`, `zoom_to`, `open_view`, `show_cone`, `show_path`), `kind?` (`block`, `net`, `atom`, `module`, `path`), `name?`, `view?` (`floorplan`, `placement`, `routing`, `timing`, `netlist`, `clusters`) | the command for the views of the page; a block or a net is checked with the session, a path is its number in `get_timing`. The web app sends it to the page, which shows the object; other clients show nothing |
+
+That is 23 tools. The server has 29: the 23, `list_device_packages`, `use_device_package`, `write_file`, `synthesize`, `check_constraints` and `show`.
 
 ## Resources and prompts
 

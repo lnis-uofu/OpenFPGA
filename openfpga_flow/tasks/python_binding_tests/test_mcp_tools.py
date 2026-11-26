@@ -641,3 +641,28 @@ def test_a_file_that_is_given_for_the_wrong_input_says_what_it_is_and_where_it_b
     assert blif["diagnostics"][0]["hint"].endswith("as circuit")
     # Nothing was read: the session is as it was
     assert state["data"]["state"]["reached"] == []
+
+
+# What the model shows in the views of the app -------------------------------------------------
+
+
+def test_show_checks_what_it_points_at_and_gives_the_command_of_the_page(flow):
+    script, sid = flow
+    found = ask(script, sid, "find", pattern="*", kind="cluster", limit=3)["data"]
+    block = found["clusters"][0]["name"]
+    shown = ask(script, sid, "show", action="select", kind="block", name=block)
+    assert shown["ok"], shown
+    assert shown["data"]["command"] == {"action": "select", "kind": "block", "name": block}
+    missing = ask(script, sid, "show", action="zoom_to", kind="block", name="no_such_block")
+    assert not missing["ok"]
+    # A path is its number in get_timing; the page counts from 0
+    path = ask(script, sid, "show", action="show_path", name="1")
+    assert path["data"]["command"] == {"action": "show_path", "kind": "path", "name": "0"}
+    assert not ask(script, sid, "show", action="show_path", name="0")["ok"]
+    view = ask(script, sid, "show", action="open_view", view="routing")
+    assert view["data"]["command"] == {"action": "open_view", "view": "routing"}
+    assert not ask(script, sid, "show", action="open_view")["ok"]
+    assert not ask(script, sid, "show", action="select")["ok"]
+    assert ask(script, sid, "show", action="clear")["data"]["command"] == {"action": "clear"}
+    module = ask(script, sid, "show", action="select", kind="module", name="u_a.u_b")
+    assert module["data"]["command"]["name"] == "u_a.u_b"  # not checked: the page says

@@ -77,12 +77,15 @@ export const netlistRequest = signal<{
   seq: number;
   module?: string;
   atoms?: string[];
+  /** An atom: its cone, two nets away */
+  cone?: string;
   what?: string;
 } | null>(null);
 let requestSeq = 0;
 export function showInNetlist(request: {
   module?: string;
   atoms?: string[];
+  cone?: string;
   what?: string;
 }) {
   netlistRequest.value = { ...request, seq: ++requestSeq };
@@ -343,6 +346,16 @@ function applyRequest(base: NetlistBase) {
       )
     )
       base.message = `No atom is in ${module}: the synthesis put its logic into its neighbours`;
+  } else if (request.cone !== undefined) {
+    const a = base.netlist.atomIndex.get(request.cone);
+    if (a === undefined) base.message = `There is no atom ${request.cone}`;
+    else
+      change(base, request.what ?? "The cone", () => {
+        const around = cone(base.netlist, [a], 2);
+        base.flat = true;
+        base.scope = around;
+        base.scopeText = `${request.what ?? "a cone"} (${around.size} atoms)`;
+      });
   } else if (request.atoms) {
     const found = request.atoms.flatMap((name) => {
       const a = base.netlist.atomIndex.get(name);

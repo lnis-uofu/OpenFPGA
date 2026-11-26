@@ -134,6 +134,7 @@ export type AppEvent =
       result: Answer;
     }
   | { type: "state_changed"; reason: string }
+  | { type: "view_command"; command: ViewCommandEvent }
   | {
       type: "usage";
       id: string;
@@ -154,6 +155,13 @@ export interface ConsoleAnswer {
   state_changed: boolean;
 }
 /** What the console runs: a command of the shell, or a Tcl script over the commands of the shell */
+/** What the tool show of the model asks the views (the schema of the event view_command) */
+export interface ViewCommandEvent {
+  action: "select" | "highlight" | "clear" | "zoom_to" | "open_view" | "show_cone" | "show_path";
+  kind?: string;
+  name?: string;
+  view?: string;
+}
 export type ConsoleMode = "shell" | "tcl";
 
 async function json<T>(response: Response): Promise<T> {

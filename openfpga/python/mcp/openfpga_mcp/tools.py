@@ -1321,6 +1321,50 @@ def register(
 
         return await run(work)
 
+    @tool()
+    async def show(
+        session: str,
+        action: Literal[
+            "select", "highlight", "clear", "zoom_to", "open_view", "show_cone", "show_path"
+        ],
+        kind: Optional[Literal["block", "net", "atom", "module", "path"]] = None,
+        name: Optional[str] = None,
+        view: Optional[
+            Literal["floorplan", "placement", "routing", "timing", "netlist", "clusters"]
+        ] = None,
+    ):
+        """Show the person something in the views of the web app: select, highlight or
+        zoom_to a block, net, atom, module (u_a.u_b) or path (its number in get_timing);
+        open_view; show_cone of an atom; show_path of a path."""
+
+        def work():
+            wanted: Dict[str, Any] = {"action": action}
+            if action == "open_view":
+                if view is None:
+                    raise InvalidArgument("open_view needs view")
+                wanted["view"] = view
+            elif action != "clear":
+                needs = {"show_cone": "atom", "show_path": "path"}.get(action)
+                what = needs or kind
+                if what is None or not name:
+                    raise InvalidArgument("%s needs kind and name" % action)
+                if needs and kind not in (None, needs):
+                    raise InvalidArgument("%s takes a %s" % (action, needs))
+                label = _text("name", name, True)
+                handle = session_of(session).session
+                if what == "block":
+                    handle.block_info(label)
+                elif what == "net":
+                    handle.net_info(label)
+                elif what == "path":
+                    if not label.isdigit() or int(label) < 1:
+                        raise InvalidArgument("A path is its number in get_timing: 1, 2, ...")
+                    label = str(int(label) - 1)  # the page counts from 0
+                wanted.update(kind=what, name=label)
+            return reply({"command": wanted, "shown": "in the views of the web app, if open"})
+
+        return await run(work)
+
 
 _TCL_MAX = 16000  # characters of a script
 _TCL_OUTPUT = 2000  # characters of what a script printed: the end of it

@@ -657,6 +657,18 @@ an expansion at scale. Also fixed: a view asked for while the session is busy is
   descriptions.
 - **P7.2** spec_web_app.md: UI-43 replaced, X-10 to X-14 marked by what is built; the app README.
 
+Status of phase 7: done (2026-11-26), not committed. The MCP server has a tool `show` (select,
+highlight, clear, zoom_to, open_view, show_cone, show_path; a block or a net is checked with the
+session, a path is its number in get_timing). Its answer has the command; the agent loop of the
+app sends it to the page as an event `view_command` (in the schema of the events), and the page
+runs it with the commands of the views (views/commands.ts): it opens the view of the kind of the
+object when no view is open, and a command that cannot be done says why in the console. The
+descriptions of the tools take about 4230 tokens (the test's limit is 4300: the corners of
+use_device_package had taken them to 4041, over the 4000 before). A line of the system prompt
+asking the model to use `show` was tried and left out: it made a scenario of the 8k context
+overflow. The spec marks UI-43 replaced, adds UI-47 and UI-48, and marks X-10, X-11 done and X-12,
+X-14 partial.
+
 ## 6. Risks
 
 | Risk | Mitigation |

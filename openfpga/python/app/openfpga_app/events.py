@@ -14,6 +14,7 @@ EVENT_TYPES = (
     "tool_call_started",
     "tool_call_finished",
     "state_changed",
+    "view_command",
     "usage",
     "error",
     "done",
@@ -57,6 +58,11 @@ def tool_call_finished(
 def state_changed(reason: str) -> Dict[str, Any]:
     """The page asks for the session again: something changed it, e.g. a command of the console"""
     return event("state_changed", reason=reason)
+
+
+def view_command(command: Dict[str, Any]) -> Dict[str, Any]:
+    """The page shows something in its views: what the tool show of the model asked"""
+    return event("view_command", command=command)
 
 
 def usage(

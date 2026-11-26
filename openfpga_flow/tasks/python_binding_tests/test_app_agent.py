@@ -125,7 +125,7 @@ def test_the_definitions_of_the_tools_of_the_server_say_what_the_server_says(
     try:
         theirs = {t.name: t.input_schema for t in asyncio.run(server.list_tools())}
         ours = {d["function"]["name"]: d["function"] for d in tool_definitions(backend.tools)}
-        assert set(ours) == set(theirs) and len(ours) == 28
+        assert set(ours) == set(theirs) and len(ours) == 29
         for name, function in ours.items():
             properties = function["parameters"]["properties"]
             assert set(properties) == set(theirs[name].get("properties", {})), name
@@ -133,9 +133,10 @@ def test_the_definitions_of_the_tools_of_the_server_say_what_the_server_says(
             assert set(function["parameters"]["required"]) == wanted, name
         stage = ours["run_stage"]["parameters"]["properties"]["stage"]
         assert stage["enum"] == ["pack", "place", "route", "analysis", "bitstream"]
-        # The cost of all 21 in the context: written down so that a change shows
+        # The cost of all of them in the context: written down so that a change shows (4041
+        # with the corners of use_device_package, 4230 with show)
         text = json.dumps(list(ours.values()))
-        assert len(text) // 4 < 4000
+        assert len(text) // 4 < 4300
         assert [d["function"]["name"] for d in tool_definitions(backend.tools)] == sorted(ours)
     finally:
         backend.close()
@@ -1047,3 +1048,25 @@ def test_a_device_package_that_the_model_makes_up_is_skipped_when_the_person_nam
     loop = make_loop(model, tools)
     run(loop, "Run the flow on c.blif")
     assert calls == ["k6"]
+
+
+def test_what_the_model_shows_is_a_command_of_the_views_of_the_page():
+    async def show(session: Optional[str] = None, action: str = "", kind: str = "", name: str = ""):
+        """Show the person something in the views."""
+        command = {"action": action, "kind": kind, "name": name}
+        return json.dumps({"ok": True, "data": {"command": command}, "truncated": False})
+
+    tools = {**make_tools(), "show": show}
+    model = ScriptedModel(
+        [
+            say("", call("show", action="select", kind="block", name="b1")),
+            say("", call("fail")),
+            say("There."),
+        ]
+    )
+    found = run(make_loop(model, tools))
+    commands = [e["command"] for e in found if e["type"] == "view_command"]
+    assert commands == [{"action": "select", "kind": "block", "name": "b1"}]
+    # After the answer of the call, before the page reads the session again
+    at = kinds(found).index("view_command")
+    assert kinds(found)[at - 1] == "tool_call_finished"

@@ -175,14 +175,24 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
   them). It works with no model.
 - **UI-42** (done) The answer of a tool is shown as formatted text (a sentence, a table of fields,
   a table of rows); "JSON" shows what the model read.
-- **UI-43** (partial) A result tab draws utilization, placement and congestion. The drawings are a
-  first version to be redesigned; timing, paths and clusters have none.
+- **UI-43** (replaced by UI-47) A result tab draws utilization, placement and congestion. These
+  first drawings stay in the result tabs of the model's answers; the views of the design (UI-47)
+  are the drawings of the device, the timing and the netlist.
 - **UI-44** (done) A file opens in a tab with an editor (Monaco): colours for XML, Verilog, Tcl,
   BLIF and ODC, search, folding. Uploads and the model's files are edited in place; other files through
   "Edit a copy". Text only, one megabyte at most.
 - **UI-45** (done) A report opens in a tab (REP-20).
 - **UI-46** (done) The errors and warnings of the session's ODC (docs/spec_odc.md R-49) are marked
   on the lines of the file that is open, and the head of the file says how many.
+- **UI-47** (done) The views of the design open in tabs from the stages that make their data
+  (docs/plan_design_views.md): the floorplan (DEVICE: tiles, I/O sites, package pins, ports), the
+  netlist (a circuit read: the atoms by module of the RTL), the clusters (PACKED), the placement
+  (PLACED), the routing (ROUTED) and the timing (ANALYZED). They pan and zoom up to devices of
+  500x500 (tiles of the screen, coarse levels far out), draw with WebGL (deck.gl) or Canvas2D, have
+  a legend, and share one selection.
+- **UI-48** (done) The model points at what it talks about: the tool `show` (select, highlight,
+  zoom to a block, a net, an atom, a module or a path; open a view; the cone of an atom or the
+  atoms of a path in the netlist) sends a command to the views of the page, logged in the console.
 
 ### 5.6 Console
 
@@ -351,7 +361,7 @@ A requirement that is **done** has at least one test in these suites. A recorded
 
 An expert runs many variants of one design, reads numbers and not sentences, and wants to get from
 a number to its cause in one step. The items are grouped by what the expert is doing, with the
-most useful first in each group. None is built.
+most useful first in each group. None is built, except where an item is marked.
 
 ### 9.1 Compare runs
 
@@ -366,15 +376,19 @@ most useful first in each group. None is built.
 
 ### 9.2 From a number to its cause (cross-probing)
 
-- **X-10** A floorplan view of the device with zoom and pan: tiles by type, the placed blocks,
-  the routing of a selected net, congestion as an overlay. It replaces the first drawings.
-- **X-11** A timing path viewer: the points of a path with their delays as a bar, the path drawn on
-  the floorplan, the slack histogram of all end points.
-- **X-12** Selection is shared: a click on a block, a net or a path in one view selects it in the
-  others, and offers "open the RTL line" when the netlist keeps the source attribute.
+- **X-10** (done: UI-47) A floorplan view of the device with zoom and pan: tiles by type, the
+  placed blocks, the routing of a selected net, congestion as an overlay. It replaces the first
+  drawings.
+- **X-11** (done: UI-47) A timing path viewer: the points of a path with their delays as a bar,
+  the path drawn on the floorplan, the slack histogram of all end points.
+- **X-12** (partial) Selection is shared: a click on a block, a net or a path in one view selects
+  it in the others, and offers "open the RTL line" when the netlist keeps the source attribute.
+  The selection is shared; the RTL line is not offered yet.
 - **X-13** A message of a report or a log links to what it names: the file and line, the net, the
   block, the option.
-- **X-14** A hierarchy view of the design with the area and the worst slack of each module.
+- **X-14** (partial) A hierarchy view of the design with the area and the worst slack of each
+  module. The Design hierarchy and the netlist by module are built; the area and the slack of a
+  module are not shown.
 
 ### 9.3 Reports for sign-off
 
@@ -441,5 +455,6 @@ most useful first in each group. None is built.
    directory, with a limit on how many?
 3. Which identifiers do messages get (X-22): the ones of VPR where they exist, or a list of this
    project?
-4. Which floorplan comes first (X-10): the placement grid redrawn, or a routing view?
+4. Which floorplan comes first (X-10): the placement grid redrawn, or a routing view? (Settled:
+   both, in docs/plan_design_views.md.)
 5. Is the report template (X-26) a file of the device package, of the design, or of the installation?

@@ -9,6 +9,7 @@ import {
   DevicePackageInfo,
   MAX_UPLOAD_BYTES,
   SessionView,
+  ViewCommandEvent,
   UPLOAD_EXTENSIONS,
   cancel,
   closeSession,
@@ -236,6 +237,13 @@ function shortArguments(args: Record<string, unknown>): string {
     .join(" ");
 }
 
+/** What runs a command of the views that the model sent (set by views/commands.ts, which the
+ * store cannot import: the views import the store) */
+let viewCommandHandler: (command: ViewCommandEvent) => void = () => undefined;
+export function setViewCommandHandler(handler: (command: ViewCommandEvent) => void) {
+  viewCommandHandler = handler;
+}
+
 export function applyEvent(event: AppEvent) {
   switch (event.type) {
     case "message_start":
@@ -288,6 +296,9 @@ export function applyEvent(event: AppEvent) {
     }
     case "state_changed":
       void refreshView();
+      break;
+    case "view_command":
+      viewCommandHandler(event.command);
       break;
     case "usage":
       usage.value = { step: event.step, used: event.context_tokens, limit: event.context_limit };

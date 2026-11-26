@@ -4,6 +4,8 @@ import { Console } from "./components/Console";
 import { Settings } from "./components/Settings";
 import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
+// The commands of the views that the model sends (the tool show)
+import "./views/commands";
 import { Welcome } from "./components/Welcome";
 import { Workspace } from "./components/Workspace";
 import { activeTab, closeTab, consoleOpen, loaded, loadAll, nextTab, settingsOpen, sidebarOpen, stop, welcoming, CHAT } from "./store";

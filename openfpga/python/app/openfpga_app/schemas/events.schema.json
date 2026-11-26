@@ -19,6 +19,9 @@
       "$ref": "#/$defs/state_changed"
     },
     {
+      "$ref": "#/$defs/view_command"
+    },
+    {
       "$ref": "#/$defs/usage"
     },
     {
@@ -178,6 +181,52 @@
         },
         "reason": {
           "type": "string"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "view_command": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        }
+      ],
+      "required": [
+        "type",
+        "command"
+      ],
+      "properties": {
+        "type": {
+          "const": "view_command"
+        },
+        "command": {
+          "type": "object",
+          "required": [
+            "action"
+          ],
+          "properties": {
+            "action": {
+              "enum": [
+                "select",
+                "highlight",
+                "clear",
+                "zoom_to",
+                "open_view",
+                "show_cone",
+                "show_path"
+              ]
+            },
+            "kind": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "view": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "unevaluatedProperties": false

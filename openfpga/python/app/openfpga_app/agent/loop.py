@@ -367,6 +367,10 @@ class AgentLoop:
                 yield events.tool_call_finished(
                     message_id, request.id, bool(answer.get("ok")), seconds, answer
                 )
+                command = (answer.get("data") or {}).get("command") if answer.get("ok") else None
+                if request.name == "show" and isinstance(command, dict):
+                    # What the model points at, shown in the views of the page
+                    yield events.view_command(command)
                 yield events.state_changed(request.name)
                 if self._cancelled:
                     yield events.done(message_id, cancelled=True)
