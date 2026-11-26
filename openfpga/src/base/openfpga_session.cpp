@@ -209,7 +209,16 @@ bool OpenFpgaSession::complete(const OpenFpgaStage& stage) {
   /* What depends on the stage was made from its previous results */
   invalidate_stage_and_dependents(stage);
   stages_ |= bit(stage);
+  stage_generations_[stage] = ++completions_;
   return true;
+}
+
+uint64_t OpenFpgaSession::stage_generation(const OpenFpgaStage& stage) const {
+  if (!reached(stage)) {
+    return 0;
+  }
+  const auto found = stage_generations_.find(stage);
+  return stage_generations_.end() == found ? 0 : found->second;
 }
 
 bool OpenFpgaSession::analytical_placer() const {

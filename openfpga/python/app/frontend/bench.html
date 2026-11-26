@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>OpenFPGA renderer benchmark</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font:
+          13px system-ui,
+          sans-serif;
+      }
+      #stage {
+        position: absolute;
+        inset: 0 0 160px 0;
+        background: #111;
+      }
+      #stage canvas {
+        position: absolute;
+        inset: 0;
+      }
+      #panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 160px;
+        overflow: auto;
+        padding: 6px 10px;
+        box-sizing: border-box;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      td,
+      th {
+        padding: 1px 8px;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div id="panel">
+      <button id="run">Run all</button> <span id="status"></span>
+      <table id="results">
+        <tr>
+          <th>scene</th>
+          <th>backend</th>
+          <th>items</th>
+          <th>build ms</th>
+          <th>p50 ms</th>
+          <th>p95 ms</th>
+          <th>worst ms</th>
+        </tr>
+      </table>
+    </div>
+    <script type="module" src="/src/bench/bench.ts"></script>
+  </body>
+</html>

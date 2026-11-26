@@ -10,9 +10,12 @@
     "typecheck": "tsc --noEmit",
     "e2e": "node e2e/smoke.mjs",
     "e2e:session": "node e2e/session.mjs",
-    "e2e:model": "node e2e/model.mjs"
+    "e2e:model": "node e2e/model.mjs",
+    "bench": "node e2e/bench.mjs"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.4.2",
+    "@deck.gl/layers": "^9.4.2",
     "@preact/signals": "^2.0.0",
     "preact": "^10.24.0"
   },

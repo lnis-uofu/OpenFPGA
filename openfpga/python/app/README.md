@@ -174,6 +174,21 @@ module opens its line in the viewer. The tree has 2000 instances at most, breadt
 elaborates the RTL again (after an edit). `GET /api/hierarchy` gives the same data. Not in the
 demo.
 
+## The data of the views
+
+`GET /api/view?kind=K` and `GET /api/tile?kind=K&level=L&x=I&y=J` give the data of the views of a
+design (docs/plan_design_views.md) as binary files of tables, which `src/views/format.ts`
+(`decodeView`, `fetchView`, `fetchTile`) maps as typed arrays. The worker writes them with
+`export_view` and `view_tile` into `views/` of the session, one at a time, and keeps a file while
+its version is current; the header `X-View-Version` gives it. A scope of `atoms` (`module`, `cone`
+with `depth`) or of `clusters` (`blocks`), and `paths` of `timing`, are parameters. A call refused
+because the session is busy answers 409. Not in the demo.
+
+The renderer benchmark (`bench.html`, `src/bench/bench.ts`) draws synthetic scenes of the measured
+sizes with deck.gl and with Canvas2D through a zoom sweep: open `/bench.html` on the development
+server (`npm run dev`), or `npm run bench` for a table from headless Chromium (whose WebGL is
+software, the slow path).
+
 ## Without a model
 
 The chat takes lines that start with `/`: `/help` lists the tools, `/session_open`,

@@ -3,8 +3,10 @@
 
 #include <cstddef>
 #include <string>
+#include <vector>
 
 #include "clustered_netlist_fwd.h"
+#include "view_file.h"
 #include "vpr_run.h"
 
 /********************************************************************
@@ -63,6 +65,22 @@ bool net_timing(const vpr::VprRun& run, const ClusterNetId net,
                 double& criticality, double& slack_ns);
 
 bool timing_summary_json(const vpr::VprRun& run, std::string& json);
+
+/* The worst setup slack (ns) and the criticality of every net of the
+ * clusters, by its index. A net with no timed sink has an infinite slack and
+ * a criticality of 0. The analysis is kept for the views while version (of
+ * the data that the timing reads) is the same: a second call does not analyze
+ * again. False, with an error logged, if the timing cannot be analyzed */
+bool net_slacks(const vpr::VprRun& run, const std::string& version,
+                std::vector<float>& slack_ns, std::vector<float>& criticality);
+
+/* The slacks of net_slacks(), and the count worst setup paths as the tables
+ * 'paths' and 'points' of the data of a view (docs/plan_design_views.md,
+ * 3.1), from the same kept analysis */
+bool timing_view_tables(const vpr::VprRun& run, const std::string& version,
+                        size_t count, ViewFile& file,
+                        std::vector<float>& slack_ns,
+                        std::vector<float>& criticality);
 bool critical_paths_json(const vpr::VprRun& run, const size_t count,
                          std::string& json);
 

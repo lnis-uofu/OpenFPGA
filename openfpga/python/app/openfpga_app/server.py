@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -11,7 +11,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 from . import events, uploads, viewer
-from .backend import Backend
+from .backend import TILE_KINDS, VIEW_KINDS, Backend
 from .config import AppConfig
 from .security import SecurityMiddleware
 
@@ -182,7 +182,7 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         if answer.get("ok"):
             return JSONResponse(answer)
         kind = (answer.get("diagnostics") or [{}])[0].get("kind")
-        status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "no_session": 404, "unknown_session": 404, "ambiguous_file": 409, "no_design": 404}.get(kind, 400)
+        status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "no_session": 404, "unknown_session": 404, "ambiguous_file": 409, "no_design": 404, "busy": 409}.get(kind, 400)
         return JSONResponse(answer, status)
 
     async def sessions(request: Request) -> Response:
@@ -229,6 +229,70 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
                 }
             )
         return _file_answer(await find(request.query_params.get("design") or None))
+
+    def _view_response(answer: Dict[str, Any], path: Optional[str]) -> Response:
+        if path is None:
+            return _file_answer(answer)
+        data = answer["data"]
+        return FileResponse(
+            path,
+            media_type="application/octet-stream",
+            headers={"Cache-Control": "no-store", "X-View-Version": str(data["version"])},
+        )
+
+    def _view_options(params) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+        """The options of /api/view, checked, or the reason they are refused"""
+        kind = params.get("kind", "")
+        if kind not in VIEW_KINDS:
+            return None, "kind is one of %s" % ", ".join(VIEW_KINDS)
+        options: Dict[str, Any] = {"kind": kind}
+        for name in ("module", "cone", "blocks"):
+            if name in params:
+                if len(params[name]) > 4096:
+                    return None, "%s is too long" % name
+                options[name] = params[name]
+        for name, low, high in (("depth", 0, 20), ("paths", 1, 100)):
+            if name in params:
+                text = params[name]
+                if not text.isdigit() or not low <= int(text) <= high:
+                    return None, "%s is a whole number from %d to %d" % (name, low, high)
+                options[name] = int(text)
+        if "blocks" in options:
+            options["blocks"] = [b for b in options["blocks"].split(",") if b]
+        return options, None
+
+    async def view(request: Request) -> Response:
+        """The data of a view of the session, as a binary file of tables"""
+        find = getattr(backend, "view_file", None)
+        if find is None:
+            return _file_answer(
+                {"ok": False, "diagnostics": [{"kind": "demo", "message": "Not in the demo"}]}
+            )
+        options, refused = _view_options(request.query_params)
+        if options is None:
+            return JSONResponse({"error": refused}, 400)
+        return _view_response(*(await find(options)))
+
+    async def tile(request: Request) -> Response:
+        """A tile of a view of the device, as a binary file of tables"""
+        find = getattr(backend, "tile_file", None)
+        if find is None:
+            return _file_answer(
+                {"ok": False, "diagnostics": [{"kind": "demo", "message": "Not in the demo"}]}
+            )
+        params = request.query_params
+        kind = params.get("kind", "")
+        if kind not in TILE_KINDS:
+            return JSONResponse({"error": "kind is one of %s" % ", ".join(TILE_KINDS)}, 400)
+        numbers = []
+        for name, high in (("level", 16), ("x", 1 << 20), ("y", 1 << 20)):
+            text = params.get(name, "")
+            if not text.isdigit() or int(text) > high:
+                return JSONResponse(
+                    {"error": "%s is a whole number from 0 to %d" % (name, high)}, 400
+                )
+            numbers.append(int(text))
+        return _view_response(*(await find(kind, *numbers)))
 
     async def upload(request: Request) -> Response:
         name = request.query_params.get("name", "")
@@ -279,6 +343,8 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/file/copy", copy_file, methods=["POST"]),
         Route("/api/download", download),
         Route("/api/hierarchy", hierarchy),
+        Route("/api/view", view),
+        Route("/api/tile", tile),
         Route("/api/sessions", sessions),
         Route("/api/session/open", open_session, methods=["POST"]),
         Route("/api/session/new", new_session, methods=["POST"]),

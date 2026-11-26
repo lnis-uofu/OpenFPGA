@@ -7,6 +7,7 @@ and the console runs commands of the OpenFPGA shell in it. A model that chooses 
 where the chat line is read, later.
 """
 
+import hashlib
 import inspect
 import json
 import os
@@ -16,6 +17,7 @@ import time
 from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
 
+import anyio
 import anyio.to_thread
 from openfpga_mcp import answers, device_packages, reports, session_tools, tools
 from openfpga_mcp.errors import InvalidArgument, RegistryError, SessionFull
@@ -103,6 +105,7 @@ class SessionBackend:
         self._busy = False
         self._cancelled = False
         self._last = empty_view()
+        self._view_lock = anyio.Lock()  # the exports of the views, one at a time
         self._counter = 0
         self.agent: Optional[AgentLoop] = None
         if model is not None:
@@ -974,6 +977,70 @@ class SessionBackend:
             "rtl": list(copied["rtl"]),
         }
         return {"ok": True, "data": data, "truncated": False, "more": None}
+
+    def _view_refusal(self) -> Optional[Dict[str, Any]]:
+        """Why the data of a view cannot be made now, or None"""
+        if self.sid is None:
+            return answers.failed(
+                [
+                    answers.diagnostic(
+                        "no_session", "There is no session", hint="Open a session first"
+                    )
+                ]
+            )
+        if self._running is not None or self._busy:
+            return answers.failed(
+                [answers.diagnostic("busy", "A call is running", hint="Wait for it to end")]
+            )
+        return None
+
+    async def _view_call(self, name: str, call) -> Tuple[Dict[str, Any], Optional[str]]:
+        """Run an export of the worker (one at a time: the page asks for several tiles at once),
+        and give its answer and the path of its file"""
+        refused = self._view_refusal()
+        if refused is not None:
+            return refused, None
+        try:
+            entry = self.registry.get(self.sid)
+        except RegistryError as error:
+            return answers.from_exception(error), None
+        folder = self.config.root / entry.directory / "views"
+        async with self._view_lock:
+            try:
+                data = await anyio.to_thread.run_sync(lambda: call(entry.session, folder))
+            except Exception as error:  # noqa: BLE001 - not reached, refused, the worker failed
+                return answers.from_exception(error), None
+        return {"ok": True, "data": data, "truncated": False, "more": None}, data["file"]
+
+    async def view_file(self, options: Dict[str, Any]) -> Tuple[Dict[str, Any], Optional[str]]:
+        """The file of the data of a view of the session (export_view): kind, and a scope (module,
+        cone with depth, blocks) or paths for timing. A file per kind and scope in views/, kept
+        while its version is current"""
+        kind = options["kind"]
+        scope = {
+            k: options[k] for k in ("module", "cone", "depth", "blocks", "paths") if k in options
+        }
+        name = kind
+        if scope:
+            name += "-" + hashlib.sha1(json.dumps(scope, sort_keys=True).encode()).hexdigest()[:12]
+
+        def call(session, folder):
+            folder.mkdir(parents=True, exist_ok=True)
+            return session.export_view(kind, folder / (name + ".bin"), **scope)
+
+        return await self._view_call("export_view", call)
+
+    async def tile_file(
+        self, kind: str, level: int, x: int, y: int
+    ) -> Tuple[Dict[str, Any], Optional[str]]:
+        """The file of a tile of a view of the device (view_tile), in views/tiles/"""
+
+        def call(session, folder):
+            where = folder / "tiles" / kind / str(level)
+            where.mkdir(parents=True, exist_ok=True)
+            return session.view_tile(kind, level, x, y, where / ("%d_%d.bin" % (x, y)))
+
+        return await self._view_call("view_tile", call)
 
     async def design_hierarchy(self, design: Optional[str] = None) -> Dict[str, Any]:
         """The hierarchy of a design that the session copied (design/<folder>; the one added last

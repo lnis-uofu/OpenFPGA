@@ -150,6 +150,181 @@ bool net_timing(const vpr::VprRun& run, const ClusterNetId net,
   return true;
 }
 
+namespace {
+
+void slacks_of(const RoutedTiming& timing, std::vector<float>& slack_ns,
+               std::vector<float>& criticality) {
+  const auto& atom_ctx = g_vpr_ctx.atom();
+  const auto& netlist = atom_ctx.netlist();
+  const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
+  slack_ns.assign(clb_nlist.nets().size(),
+                  std::numeric_limits<float>::infinity());
+  criticality.assign(clb_nlist.nets().size(), 0.f);
+  for (const ClusterNetId net : clb_nlist.nets()) {
+    const AtomNetId atom_net = atom_ctx.lookup().atom_net(net);
+    if (!atom_net.is_valid()) {
+      continue;
+    }
+    double worst = std::numeric_limits<double>::infinity();
+    double crit = 0.;
+    for (const AtomPinId pin : netlist.net_sinks(atom_net)) {
+      worst = std::min<double>(worst, timing.info->setup_pin_slack(pin));
+      crit = std::max<double>(crit, timing.info->setup_pin_criticality(pin));
+    }
+    if (std::isfinite(worst)) {
+      slack_ns[size_t(net)] = static_cast<float>(sec_to_nanosec(worst));
+    }
+    criticality[size_t(net)] = static_cast<float>(crit);
+  }
+}
+
+void paths_of(const RoutedTiming& timing_data, const size_t count,
+              ViewFile& file) {
+  const RoutedTiming* timing = &timing_data;
+  const auto& timing_ctx = g_vpr_ctx.timing();
+  const auto& atom_ctx = g_vpr_ctx.atom();
+  const auto& netlist = atom_ctx.netlist();
+  const tatum::TimingConstraints& constraints = *timing_ctx.constraints;
+  const tatum::SetupTimingAnalyzer& setup = *timing->info->setup_analyzer();
+  const std::vector<tatum::TimingPath> paths =
+    tatum::TimingPathCollector().collect_worst_setup_timing_paths(
+      *timing_ctx.graph, setup, count);
+  VprTimingGraphResolver resolver(atom_ctx.netlist(), atom_ctx.lookup(),
+                                  g_vpr_ctx.device().arch->models,
+                                  *timing_ctx.graph, *timing->delay_calc, false,
+                                  g_vpr_ctx.placement().blk_loc_registry());
+  const auto& block_locs = g_vpr_ctx.placement().block_locs();
+
+  std::vector<float> slack, arrival_end, required;
+  std::vector<std::string> launch, capture, start, end;
+  std::vector<uint32_t> point_start, point_count;
+  std::vector<std::string> pin, type, block, net;
+  std::vector<float> arrival, delay;
+  std::vector<int32_t> cluster, x, y;
+  for (const tatum::TimingPath& path : paths) {
+    const tatum::TimingPathInfo& info = path.path_info();
+    slack.push_back(static_cast<float>(sec_to_nanosec(info.slack())));
+    launch.push_back(constraints.clock_domain_name(info.launch_domain()));
+    capture.push_back(constraints.clock_domain_name(info.capture_domain()));
+    start.push_back(resolver.node_name(info.startpoint()));
+    end.push_back(resolver.node_name(info.endpoint()));
+    required.push_back(static_cast<float>(
+      sec_to_nanosec(path.data_required_element().tag().time().value())));
+    point_start.push_back(static_cast<uint32_t>(pin.size()));
+    double last = 0.;
+    for (const tatum::TimingPathElem& elem :
+         path.data_arrival_path().elements()) {
+      const double at = elem.tag().time().value();
+      pin.push_back(resolver.node_name(elem.node()));
+      type.push_back(resolver.node_type_name(elem.node()));
+      const AtomPinId atom_pin = atom_ctx.lookup().tnode_atom_pin(elem.node());
+      const AtomBlockId atom_block = atom_pin.is_valid()
+                                       ? netlist.pin_block(atom_pin)
+                                       : AtomBlockId::INVALID();
+      block.push_back(atom_block.is_valid() ? netlist.block_name(atom_block)
+                                            : std::string());
+      const AtomNetId atom_net =
+        atom_pin.is_valid() ? netlist.pin_net(atom_pin) : AtomNetId::INVALID();
+      net.push_back(atom_net.is_valid() ? netlist.net_name(atom_net)
+                                        : std::string());
+      const ClusterBlockId clb = atom_block.is_valid()
+                                   ? atom_ctx.lookup().atom_clb(atom_block)
+                                   : ClusterBlockId::INVALID();
+      cluster.push_back(clb.is_valid() ? static_cast<int32_t>(size_t(clb))
+                                       : -1);
+      const bool placed = clb.is_valid() && size_t(clb) < block_locs.size();
+      x.push_back(placed ? block_locs[clb].loc.x : -1);
+      y.push_back(placed ? block_locs[clb].loc.y : -1);
+      arrival.push_back(static_cast<float>(sec_to_nanosec(at)));
+      delay.push_back(static_cast<float>(sec_to_nanosec(at - last)));
+      last = at;
+    }
+    point_count.push_back(static_cast<uint32_t>(pin.size()) -
+                          point_start.back());
+    arrival_end.push_back(static_cast<float>(sec_to_nanosec(last)));
+  }
+  file.table("paths", slack.size())
+    .column("slack_ns", slack)
+    .strings("launch_clock", launch)
+    .strings("capture_clock", capture)
+    .strings("startpoint", start)
+    .strings("endpoint", end)
+    .column("arrival_ns", arrival_end)
+    .column("required_ns", required)
+    .column("point_start", point_start)
+    .column("point_count", point_count);
+  file.table("points", pin.size())
+    .strings("pin", pin)
+    .strings("type", type)
+    .strings("block", block)
+    .strings("net", net)
+    .column("cluster", cluster)
+    .column("x", x)
+    .column("y", y)
+    .column("arrival_ns", arrival)
+    .column("delay_ns", delay);
+}
+
+}  // namespace
+
+namespace {
+
+/* The analysis of the views, and the slacks from it, kept while the version
+ * of the data they were made from is current: the export of the timing and
+ * the tiles of the timing share it. Made on the heap and never freed, so that
+ * it outlives the data of VPR at the exit of the process */
+struct ViewTiming {
+  std::string version;
+  std::unique_ptr<RoutedTiming> timing;
+  std::vector<float> slack_ns;
+  std::vector<float> criticality;
+};
+
+const ViewTiming* view_timing(const vpr::VprRun& run,
+                              const std::string& version) {
+  static ViewTiming* cache = new ViewTiming();
+  if (cache->timing && cache->version == version) {
+    return cache;
+  }
+  cache->timing.reset();
+  cache->version.clear();
+  std::unique_ptr<RoutedTiming> timing = analyze_routed_timing(run);
+  if (nullptr == timing) {
+    return nullptr;
+  }
+  slacks_of(*timing, cache->slack_ns, cache->criticality);
+  cache->timing = std::move(timing);
+  cache->version = version;
+  return cache;
+}
+
+}  // namespace
+
+bool net_slacks(const vpr::VprRun& run, const std::string& version,
+                std::vector<float>& slack_ns, std::vector<float>& criticality) {
+  const ViewTiming* timing = view_timing(run, version);
+  if (nullptr == timing) {
+    return false;
+  }
+  slack_ns = timing->slack_ns;
+  criticality = timing->criticality;
+  return true;
+}
+
+bool timing_view_tables(const vpr::VprRun& run, const std::string& version,
+                        const size_t count, ViewFile& file,
+                        std::vector<float>& slack_ns,
+                        std::vector<float>& criticality) {
+  const ViewTiming* timing = view_timing(run, version);
+  if (nullptr == timing) {
+    return false;
+  }
+  slack_ns = timing->slack_ns;
+  criticality = timing->criticality;
+  paths_of(*timing->timing, count, file);
+  return true;
+}
+
 bool timing_summary_json(const vpr::VprRun& run, std::string& json_text) {
   std::unique_ptr<RoutedTiming> timing = analyze_routed_timing(run);
   if (nullptr == timing) {

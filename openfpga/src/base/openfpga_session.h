@@ -160,6 +160,10 @@ class OpenFpgaSession {
    * stage was not run by a command of this session (e.g., its results were
    * read from a file), or was dropped, see set_stage_log() */
   const std::string* stage_log(const OpenFpgaStage& stage) const;
+  /* A number that changes each time a stage completes, and only then: the
+   * version of what was made from its data (the exports of the views). 0 if
+   * the stage is not reached */
+  uint64_t stage_generation(const OpenFpgaStage& stage) const;
   const double* stage_seconds(const OpenFpgaStage& stage) const;
   /* Return true if the placer is the analytical placement of VPR (the option
    * place.placer): it makes the packing and the placement at once, and they
@@ -286,6 +290,8 @@ class OpenFpgaSession {
   std::map<std::string, std::vector<std::string>> settings_files_;
   BitstreamRecipe bitstream_recipe_;
   BitstreamOutput bitstream_output_;
+  std::map<OpenFpgaStage, uint64_t> stage_generations_;
+  uint64_t completions_ = 0;
   std::map<OpenFpgaStage, std::string> imported_;
   std::map<OpenFpgaStage, std::string> failures_;
   std::map<OpenFpgaStage, std::string> stage_logs_;

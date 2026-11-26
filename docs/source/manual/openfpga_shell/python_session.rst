@@ -164,6 +164,19 @@ Both return what the command answers (kind ``synthesis``): ``top``, ``netlist``,
     for child in h["tree"]["children"]:
         print(child["instance"], child["module"], child.get("parameters", {}))
 
+The data of the views
+~~~~~~~~~~~~~~~~~~~~~
+
+``session.export_view(kind, file, ...)`` and ``session.view_tile(kind, level, x, y, file)`` write the data of the views of the app with the commands ``export_view`` and ``view_tile`` (see their reference): binary files of tables, which ``openfpga.read_view(file)`` reads into a dict of ``kind``, ``version``, ``meta`` and ``tables``, each column an ``array.array`` or a list of ``str``. They are queries: not in the journal, and a file of the current version is not written again.
+
+.. code-block:: python
+
+    session.export_view("routing", "views/routing.bin")
+    routing = openfpga.read_view("views/routing.bin")
+    nodes = routing["tables"]["nodes"]
+    print(len(nodes["type"]), "route nodes")
+    alu = session.export_view("atoms", "views/alu.bin", module="u_core.u_alu")
+
 .. _odc_in_python:
 
 Constraints in ODC

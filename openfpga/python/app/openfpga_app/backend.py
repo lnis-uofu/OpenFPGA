@@ -18,6 +18,11 @@ STAGES = ("DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "BITSTREAM")
 VIEW_VERSION = 1
 
 
+# The data of the views (docs/plan_design_views.md, 3.1): the kinds of export_view and of view_tile
+VIEW_KINDS = ("device", "placement", "pins", "routing", "timing", "atoms", "clusters")
+TILE_KINDS = ("grid", "placement", "routing", "channels", "timing")
+
+
 class Backend(Protocol):
     kind: str  # "demo" or "session": the page enables the buttons of the sessions for the second
 

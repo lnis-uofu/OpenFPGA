@@ -4,12 +4,14 @@
 # includes it after the classes generated for OpenfpgaShell. It needs nothing
 # else than the shell: a Session sends the commands of the shell, and reads the
 # answers of the queries (JSON, see openfpga_flow/schemas) into typed objects.
+import array
 import dataclasses
 import hashlib
 import json
 import os
 import shlex
 import shutil
+import sys
 import time
 import typing
 from typing import List, Optional, Union
@@ -838,6 +840,7 @@ _SCHEMA_VERSIONS = {
     "constraints": 1,
     "bitstream": 1,
     "design_hierarchy": 1,
+    "view_export": 1,
 }
 
 
@@ -981,8 +984,67 @@ _QUERY_COMMANDS = frozenset(
         "report_constraints",
         "report_bitstream",
         "report_design_hierarchy",
+        "export_view",
+        "view_tile",
     )
 )
+
+_VIEW_TYPECODES = {
+    "u8": "B",
+    "i8": "b",
+    "u16": "H",
+    "i16": "h",
+    "u32": "I",
+    "i32": "i",
+    "f32": "f",
+    "f64": "d",
+}
+
+
+def read_view(file):
+    """Read a file of the data of a view (export_view, view_tile; docs/plan_design_views.md, 3.1).
+    Returns a dict: kind, version, meta, and tables, each a dict of its columns: an array.array
+    for numbers, a list of str for text. file is a path or the bytes of the file"""
+    data = file if isinstance(file, (bytes, bytearray)) else open(os.fspath(file), "rb").read()
+    if data[:8] != b"OFVIEW1\0":
+        raise ValueError("Not a file of a view")
+    length = int.from_bytes(data[8:12], "little")
+    header = json.loads(data[12 : 12 + length].decode("utf-8"))
+    if header.get("format_version") != 1:
+        raise ValueError("A file of a view of an unknown version")
+    start = (12 + length + 7) // 8 * 8
+    swap = sys.byteorder != "little"
+
+    def numbers(code, offset, count):
+        values = array.array(code)
+        values.frombytes(data[offset : offset + values.itemsize * count])
+        if swap:
+            values.byteswap()
+        return values
+
+    tables = {}
+    for table in header["tables"]:
+        columns = {}
+        for column in table["columns"]:
+            offset = start + column["offset"]
+            if column["dtype"] == "str":
+                ends = numbers("I", offset, column["count"])
+                blob_at = start + column["blob_offset"]
+                blob = data[blob_at : blob_at + column["blob_bytes"]]
+                columns[column["name"]] = [
+                    blob[ends[i] : ends[i + 1]].decode("utf-8") for i in range(len(ends) - 1)
+                ]
+            else:
+                code = _VIEW_TYPECODES[column["dtype"]]
+                columns[column["name"]] = numbers(code, offset, column["count"])
+        tables[table["name"]] = columns
+    return {
+        "kind": header["kind"],
+        "version": header["version"],
+        "meta": header.get("meta", {}),
+        "tables": tables,
+    }
+
 
 JOURNAL_PYTHON = "replay.py"
 JOURNAL_SHELL = "replay.openfpga"
@@ -1456,6 +1518,52 @@ class Session:
             raise AnswerError("Expected an answer of the kind 'design_hierarchy'")
         if answer.get("schema_version") != _SCHEMA_VERSIONS["design_hierarchy"]:
             raise AnswerError("The answer 'design_hierarchy' has an unknown schema version")
+        return answer["data"]
+
+    def export_view(
+        self, kind, file, module=None, cone=None, depth=None, blocks=None, limit=None, paths=None
+    ):
+        """Write the data of a view of the design (the shell's command export_view;
+        docs/plan_design_views.md, 3.1) in file, as tables that read_view() reads: kind is
+        device, placement, pins, routing, timing, atoms or clusters. atoms takes a scope: module
+        (a module and the modules in it, "" for the top) or cone (an atom or a net, with
+        depth); clusters takes blocks (names). A file of the current version is not written
+        again. Not in the journal. Returns the answer: kind, file, version, bytes, cached,
+        tables (the rows of each)"""
+        options = {
+            "kind": kind,
+            "file": os.path.abspath(os.fspath(file)),
+            "module": None if module is None else (module or "."),
+            "cone": cone,
+            "depth": depth,
+            "blocks": None if blocks is None else ",".join(blocks),
+            "limit": limit,
+            "paths": paths,
+        }
+        return self._view_answer("export_view", options)
+
+    def view_tile(self, kind, level, x, y, file):
+        """Write a tile of a view of the device (the shell's command view_tile): the square of
+        16 << level grid tiles at (x, y); kind is grid, placement, routing, channels or timing.
+        Level 0 has the objects, a coarser one a value per cell of 2^level grid tiles. Returns
+        the answer, as export_view()"""
+        options = {
+            "kind": kind,
+            "level": int(level),
+            "x": int(x),
+            "y": int(y),
+            "file": os.path.abspath(os.fspath(file)),
+        }
+        return self._view_answer("view_tile", options)
+
+    def _view_answer(self, command, options):
+        options = {k: v for k, v in options.items() if v is not None}
+        result = self.shell.run(_command_line(command, (), options))
+        answer = result.data
+        if answer is None or answer.get("kind") != "view_export":
+            raise AnswerError("Expected an answer of the kind 'view_export'")
+        if answer.get("schema_version") != _SCHEMA_VERSIONS["view_export"]:
+            raise AnswerError("The answer 'view_export' has an unknown schema version")
         return answer["data"]
 
     def _synthesis(self, name, options, read, run, check):

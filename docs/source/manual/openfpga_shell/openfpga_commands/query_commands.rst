@@ -269,3 +269,80 @@ net_info
   .. code-block::
 
     net_info --net n1
+
+export_view
+~~~~~~~~~~~
+
+  Write the data of a view of the design as a binary file of tables, for the views of the app (``docs/plan_design_views.md``): typed columns that the page maps as arrays with no parse, and text as a blob with its offsets. It answers kind ``view_export``: the ``file``, its ``version``, ``bytes``, ``cached`` and the rows of each of its ``tables``. The version changes when a stage that the kind reads runs again; a file that holds the current version is not written again (``cached`` is true). The kinds, and the stage each needs:
+
+  - ``device`` (DEVICE): the tile types and their sub-tiles, the tiles, the width of each channel
+  - ``placement`` (PLACED): the blocks on their slots, fixed or not, and the regions of the placement constraints
+  - ``pins`` (DEVICE): the I/O sites with their side, and the ports of the design on them once placed
+  - ``routing`` (ROUTED): the route of each net (its nodes, in the order of ``net_route``) and the use of each segment of the channels
+  - ``timing`` (ROUTED): the slack and the criticality of each net and the worst slack of each block, by their index (the column ``net`` of ``routing`` and ``clusters``, the column ``id`` of the blocks of ``placement`` and ``clusters``: no names, which those have), and the ``--paths`` worst paths with their points. The analysis is kept while the routing is the same: the tiles of ``timing`` use it, and do not analyze again
+  - ``atoms`` (DEVICE): the atoms of a scope with their model, cluster, pins and nets, and the module of the RTL of each: from the name of the net it drives, or from the named atoms it reaches (``module_by`` in the meta counts how)
+  - ``clusters`` (PACKED): the clusters of a scope, their atoms, and the nets between them
+
+  The format: the magic ``OFVIEW1`` and a 0, the length of the header (u32, little-endian), the header (JSON: ``kind``, ``version``, ``meta``, ``tables`` with their ``columns``: ``name``, ``dtype``, ``offset``, ``count``), then the columns from the next multiple of 8, each on a multiple of 8. ``openfpga.read_view()`` reads it in Python.
+
+  .. option:: --kind <string>
+
+    The kind of the data
+
+  .. option:: --file <path>
+
+    The file to write
+
+  .. option:: --module <string>
+
+    atoms: the atoms of a module and of the modules in it (``.`` for the top)
+
+  .. option:: --cone <string>
+
+    atoms: the atoms around an atom or a net, ``--depth`` nets away (2)
+
+  .. option:: --blocks <string>
+
+    clusters: these clusters, separated by commas
+
+  .. option:: --limit <int>
+
+    atoms, clusters: the most that an export has (100000); a larger design needs a scope
+
+  .. option:: --paths <int>
+
+    timing: the number of worst paths (20, at most 100)
+
+  .. code-block::
+
+    export_view --kind routing --file views/routing.bin
+    export_view --kind atoms --module u_core.u_alu --file views/alu.bin
+
+view_tile
+~~~~~~~~~
+
+  Write a tile of a view of the device as a binary file of tables, as ``export_view`` does: the square of ``16 << level`` grid tiles at ``(x, y)``. Level 0 has the objects of the square: ``grid`` the tiles, ``placement`` the blocks, ``routing`` the route nodes (with their net and their place in its tree), ``channels`` the wires of the channels with their use, ``timing`` the blocks with their worst slack. A coarser level has one value per cell of ``2^level`` grid tiles, 16 by 16 cells: ``grid`` the type of most tiles, ``placement`` the share of the slots that are used, ``routing`` and ``channels`` the use of the channels (``value``, and ``peak`` for the fullest segment), ``timing`` the worst slack. What a kind reads again and again (the routes and the wires by tile, the slacks) is made once a version.
+
+  .. option:: --kind <string>
+
+    ``grid``, ``placement``, ``routing``, ``channels`` or ``timing``
+
+  .. option:: --level <int>
+
+    0 for the objects, more for a value per cell
+
+  .. option:: --x <int>
+
+    The column of the tile at its level
+
+  .. option:: --y <int>
+
+    The row of the tile at its level
+
+  .. option:: --file <path>
+
+    The file to write
+
+  .. code-block::
+
+    view_tile --kind channels --level 2 --x 0 --y 1 --file tiles/channels_2_0_1.bin
