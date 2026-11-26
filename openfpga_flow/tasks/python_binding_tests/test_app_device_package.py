@@ -17,6 +17,7 @@ from openfpga_mcp.errors import PackageInvalid, PackageNotFound  # noqa: E402
 from openfpga_app.session_backend import SessionBackend  # noqa: E402
 from test_app_session import HOST, call, client, say, view  # noqa: E402,F401
 from test_mcp_tools import golden  # noqa: E402,F401
+from test_package_corners import package  # noqa: E402,F401
 
 PACKAGES = Path(__file__).resolve().parents[2] / "device-packages"
 LOGIC = "k6_frac_n10_2x2"
@@ -368,3 +369,31 @@ def test_the_model_reads_a_package_into_an_empty_session(backend, golden):
     assert read["ok"], read
     again = asyncio.run(use("use_device_package", {"session": sid, "name": LOGIC}))
     assert again["diagnostics"][0]["kind"] == "session_not_empty"
+
+
+def test_the_model_chooses_a_corner_of_a_package(openfpga_module, tmp_path, golden, package):
+    from test_package_corners import NAME
+
+    backend = SessionBackend(
+        Config(
+            root=tmp_path / "workspace",
+            design_dirs=(golden.circuit.parent,),
+            package_dirs=(package.parent,),
+            call_timeout_s=120,
+        )
+    )
+    try:
+        use = backend.invoke
+        assert asyncio.run(use("session_open", {"name": "corners"}))["ok"]
+        sid = backend.sid
+        bad = asyncio.run(
+            use("use_device_package", {"session": sid, "name": NAME, "corner": "fast"})
+        )
+        assert not bad["ok"] and "corner 'fast' is not in the package" in str(bad)
+        answer = asyncio.run(
+            use("use_device_package", {"session": sid, "name": NAME, "corner": "slow"})
+        )
+        assert answer["ok"], answer
+        assert answer["data"]["corner"] == "slow"
+    finally:
+        backend.close()

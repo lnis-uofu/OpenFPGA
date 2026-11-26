@@ -410,29 +410,34 @@ def register(
         return await run(work)
 
     @tool()
-    async def use_device_package(session: str, name: str):
+    async def use_device_package(session: str, name: str, corner: Optional[str] = None):
         """Read a device package into a session: its VPR architecture (with the layout of its
         grid) and its OpenFPGA architecture, so that the session targets that device. Give the
         name of a package from list_device_packages. Only a session with nothing read yet takes a
         package (fails with session_not_empty otherwise); its channel width and options are set. It stops
         there: read_inputs with only the circuit is the next call, and the architectures are not
-        given again. Returns the package and the state of the session."""
+        given again. A package may have design corners (list_device_packages shows them): give
+        corner to read the timing of one, otherwise its default corner is used. Returns the
+        package, its corner and the state of the session."""
 
         def work():
             entry = session_of(session)
             handle = entry.session
             package = device_packages.find(config, name)
+            if corner is not None and (not isinstance(corner, str) or not corner):
+                raise InvalidArgument("corner is the name of a corner of the package")
             have = handle.state().inputs
             if have.vpr_arch or have.openfpga_arch or have.circuit:
                 raise SessionNotEmpty(
                     "Session %s has already read files, and a device package would replace them"
                     % session
                 )
-            applied = device_packages.read_into(handle, package)
+            applied = device_packages.read_into(handle, package, corner)
             registry.update_meta(entry, package_name=package.name)  # for synthesize
             return reply(
                 {
                     "device_package": package.summary(),
+                    "corner": applied["corner"],
                     # The options of the flow of the package (flow_defaults.vpr_options)
                     "options_set": applied["options"],
                     **({"options_not_set": applied["ignored"]} if applied["ignored"] else {}),

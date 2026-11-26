@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iterator>
 #include <map>
@@ -190,6 +192,82 @@ void verify(const fs::path& directory, const std::string& name) {
   }
 }
 
+
+/* The variables ${name} of a text, in the order they first appear */
+std::vector<std::string> variables_of(const std::string& text) {
+  static const std::regex variable("\\$\\{([^}\\s]*)\\}");
+  std::vector<std::string> names;
+  std::set<std::string> seen;
+  for (std::sregex_iterator it(text.begin(), text.end(), variable), end;
+       it != end; ++it) {
+    if (seen.insert((*it)[1].str()).second) {
+      names.push_back((*it)[1].str());
+    }
+  }
+  return names;
+}
+
+/* The factor from a unit of timing_units to the unit of VPR, or 0 */
+double unit_factor(const std::string& kind, const std::string& unit) {
+  static const std::map<std::string, std::map<std::string, double>> factors = {
+    {"time", {{"ns", 1e-9}, {"ps", 1e-12}, {"fs", 1e-15}}},
+    {"capacitance", {{"pF", 1e-12}, {"fF", 1e-15}}},
+    {"resistance", {{"ohm", 1.0}, {"kohm", 1e3}}}};
+  const auto units = factors.find(kind);
+  if (factors.end() == units) {
+    return 0;
+  }
+  const auto factor = units->second.find(unit);
+  return units->second.end() == factor ? 0 : factor->second;
+}
+
+/* The values of one corner (R-22 to R-24), in the units of VPR. The name of a
+ * variable ends in _T, _C or _R, which says its kind */
+std::map<std::string, double> read_timing_data(
+  const std::string& name, const fs::path& file, const std::string& corner,
+  const json& units, const std::vector<std::string>& variables) {
+  const std::string where = "the timing data of corner '" + corner + "'";
+  json data;
+  try {
+    data = json::parse(read_file(file));
+  } catch (const std::exception& reason) {
+    throw invalid(name, where + " is not readable (" + reason.what() + ")");
+  }
+  if (!data.is_object()) {
+    throw invalid(name, where + " is not a map of names to numbers");
+  }
+  std::map<std::string, double> values;
+  for (const auto& item : data.items()) {
+    const std::string& key = item.key();
+    if (!item.value().is_number()) {
+      throw invalid(name, where + " has a value that is not a number: " + key);
+    }
+    const char kind = key.empty() ? 0 : key.back();
+    const std::string kind_name = 'T' == kind   ? "time"
+                                  : 'C' == kind ? "capacitance"
+                                  : 'R' == kind ? "resistance"
+                                                : "";
+    if (key.size() < 3 || '_' != key[key.size() - 2] || kind_name.empty()) {
+      throw invalid(name, "the variable '" + key +
+                            "' does not end in _T, _C or _R");
+    }
+    const json unit = member(units, kind_name.c_str());
+    const double factor =
+      unit.is_string() ? unit_factor(kind_name, unit.get<std::string>()) : 0;
+    if (0 == factor) {
+      throw invalid(name, "timing_units has no known unit for " + kind_name);
+    }
+    values[key] = item.value().get<double>() * factor;
+  }
+  for (const std::string& variable : variables) {
+    if (!values.count(variable)) {
+      throw invalid(name, where + " has no value for the variable '" +
+                            variable + "'");
+    }
+  }
+  return values;
+}
+
 /* The names of the fixed layouts of a VPR architecture */
 std::vector<std::string> layouts(const fs::path& vpr_arch) {
   pugi::xml_document document;
@@ -363,7 +441,8 @@ std::vector<fs::path> DevicePackage::files_of(const std::string& role) const {
 }
 
 DevicePackage load_device_package(const fs::path& given,
-                                  const bool verify_checksums) {
+                                  const bool verify_checksums,
+                                  const std::string& corner) {
   std::error_code error;
   fs::path directory = fs::absolute(given, error).lexically_normal();
   if (directory.has_filename() == false) {
@@ -495,7 +574,93 @@ DevicePackage load_device_package(const fs::path& given,
   read_bitstream_recipe(
     name, falsy(flow_defaults) ? json() : member(flow_defaults, "bitstream"),
     package);
+  /* The corners (R-16 to R-19) and the variables of the architecture (R-22,
+   * R-23). The names of the corners and the file of each are checked; the
+   * process, voltage, temperature and rc of a corner are not */
+  const json corners = member(manifest, "corners");
+  std::map<std::string, std::string> timing_files;
+  if (!falsy(corners)) {
+    const json list = member(corners, "list");
+    if (!corners.is_object() || !list.is_array() || list.empty()) {
+      throw invalid(name, "corners has a default and a list of corners");
+    }
+    for (const json& entry : list) {
+      const json corner_name = member(entry, "name");
+      if (!corner_name.is_string() ||
+          !valid_name(corner_name.get<std::string>())) {
+        throw invalid(name, "a corner has no name of [a-z][a-z0-9_]*");
+      }
+      package.corners.push_back(corner_name.get<std::string>());
+    }
+    const std::set<std::string> distinct(package.corners.begin(),
+                                         package.corners.end());
+    if (distinct.size() != package.corners.size()) {
+      throw invalid(name, "a corner is listed twice");
+    }
+    const json fallback = member(corners, "default");
+    if (!fallback.is_string() || !distinct.count(fallback.get<std::string>())) {
+      throw invalid(name, "corners.default is not one of the corners");
+    }
+    if (!corner.empty() && !distinct.count(corner)) {
+      throw invalid(name, "corner '" + corner + "' is not in the package");
+    }
+    package.corner = corner.empty() ? fallback.get<std::string>() : corner;
+    for (const json& entry : files) {
+      const json entry_corner = member(entry, "corner");
+      const std::string path = entry["path"].get<std::string>();
+      if (entry_corner.is_null()) {
+        continue;
+      }
+      if (!entry_corner.is_string() ||
+          !distinct.count(entry_corner.get<std::string>())) {
+        throw invalid(name, "the file '" + path + "' is of a corner that is "
+                                                  "not in the package");
+      }
+      const std::string dir = "corners/" + entry_corner.get<std::string>() + "/";
+      if (0 != fs::path(path).lexically_normal().generic_string().rfind(dir, 0)) {
+        throw invalid(name, "the file '" + path + "' of corner '" +
+                              entry_corner.get<std::string>() +
+                              "' is not in " + dir);
+      }
+      if ("timing_data" == member(entry, "role")) {
+        timing_files[entry_corner.get<std::string>()] = path;
+      }
+    }
+    for (const std::string& dir : files_under(directory / "corners", false)) {
+      const std::string first = dir.substr(0, dir.find('/'));
+      if (!distinct.count(first)) {
+        throw invalid(name, "the directory corners/" + first +
+                              " is not a corner of the manifest");
+      }
+    }
+  } else if (!corner.empty()) {
+    throw invalid(name, "it has no corners, and corner '" + corner +
+                          "' was asked for");
+  }
   const fs::path vpr_arch = directory / roles["vpr_arch"][0];
+  const std::vector<std::string> variables = variables_of(read_file(vpr_arch));
+  package.has_variables = !variables.empty();
+  if (package.has_variables && package.corners.empty()) {
+    throw invalid(name, "its VPR architecture has variables (" + variables[0] +
+                          ") and the package has no corners");
+  }
+  if (package.has_variables) {
+    const json units = member(manifest, "timing_units");
+    if (!units.is_object()) {
+      throw invalid(name, "it has timing data and no timing_units");
+    }
+    for (const std::string& each : package.corners) {
+      if (!timing_files.count(each)) {
+        throw invalid(name, "corner '" + each + "' has no file of the role "
+                                                "timing_data");
+      }
+      std::map<std::string, double> values = read_timing_data(
+        name, directory / timing_files[each], each, units, variables);
+      if (each == package.corner) {
+        package.timing_values = std::move(values);
+      }
+    }
+  }
   const std::vector<std::string> names = layouts(vpr_arch);
   if (names.end() == std::find(names.begin(), names.end(), package.layout)) {
     throw invalid(name, "its grid is " + package.layout +
@@ -553,6 +718,33 @@ DevicePackage load_device_package(const fs::path& given,
   return package;
 }
 
+std::string render_vpr_arch(const DevicePackage& package) {
+  std::string text = read_file(package.vpr_arch);
+  if (!package.has_variables) {
+    return text;
+  }
+  static const std::regex variable("\\$\\{([^}\\s]*)\\}");
+  std::string out;
+  out.reserve(text.size());
+  size_t from = 0;
+  for (std::sregex_iterator it(text.begin(), text.end(), variable), end;
+       it != end; ++it) {
+    const auto value = package.timing_values.find((*it)[1].str());
+    if (package.timing_values.end() == value) {
+      throw invalid(package.name, "the corner '" + package.corner +
+                                    "' has no value for the variable '" +
+                                    (*it)[1].str() + "'");
+    }
+    char number[40];
+    std::snprintf(number, sizeof number, "%.9g", value->second);
+    out.append(text, from, it->position() - from);
+    out += number;
+    from = it->position() + it->length();
+  }
+  out.append(text, from, std::string::npos);
+  return out;
+}
+
 DevicePackageOptions device_package_options(
   const DevicePackage& package,
   const std::vector<std::pair<std::string, std::string>>& flags) {
@@ -604,6 +796,8 @@ std::string device_package_json(const DevicePackage& package,
   data["version"] = package.version;
   data["description"] = package.description;
   data["layout"] = package.layout;
+  data["corner"] = package.corner.empty() ? json() : json(package.corner);
+  data["corners"] = package.corners;
   data["lut_size"] = package.lut_size ? json(*package.lut_size) : json();
   data["tags"] = package.tags;
   data["flat_routing"] = package.flat_routing;

@@ -157,19 +157,24 @@ def find(config: Config, name: str) -> DevicePackage:
     raise _not_found("There is no device package '%s'" % name, config)
 
 
-def read_into(session, package: DevicePackage) -> Dict[str, Any]:
+def read_into(session, package: DevicePackage, corner: Optional[str] = None) -> Dict[str, Any]:
     """Make a session target the device of a package (read_device_package): the options of VPR
     of its flow (flow_defaults.vpr_options), its two architectures, and its channel width (the
     routing runs at a fixed width). Returns the options that were set, by name, and the entries
     of the manifest that were not, with the reason. A package or an option that the flow
-    refuses raises PackageInvalid before the architectures are read"""
+    refuses raises PackageInvalid before the architectures are read. corner is a corner of the
+    package (None: its default), whose timing values replace the variables of the architecture"""
     import openfpga
 
     try:
-        answer = session.read_device_package(os.fspath(package.path))
+        answer = session.read_device_package(os.fspath(package.path), corner=corner)
     except openfpga.OpenfpgaError as error:
         raise PackageInvalid(_reason(error))
-    return {"options": answer["options_set"], "ignored": answer["options_not_set"]}
+    return {
+        "options": answer["options_set"],
+        "ignored": answer["options_not_set"],
+        "corner": answer.get("corner"),
+    }
 
 
 def flat_routing_allowed(config: Config, meta: Dict[str, Any]) -> bool:

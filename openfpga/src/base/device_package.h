@@ -12,6 +12,7 @@
  * the options of the flow. It never writes into a package.
  *******************************************************************/
 #include <filesystem>
+#include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -73,6 +74,15 @@ struct DevicePackage {
   std::vector<std::string> bitstream_link_options;
   std::vector<std::string> bitstream_fixups;
   std::vector<std::string> bitstream_fabric_options;
+  /* The corners (spec R-16 to R-24): the names of corners.list, and the corner
+   * in use, which is the one asked for or corners.default. corner is empty
+   * when the package has none. timing_values holds the variables of
+   * vpr_arch.xml for that corner, already in the units of VPR (seconds,
+   * farads, ohms). has_variables is true when vpr_arch.xml has any ${name} */
+  std::vector<std::string> corners;
+  std::string corner;
+  std::map<std::string, double> timing_values;
+  bool has_variables = false;
   /* The JSON text of the reference of the manifest, or "{}" */
   std::string reference;
 
@@ -80,10 +90,17 @@ struct DevicePackage {
   std::vector<std::filesystem::path> files_of(const std::string& role) const;
 };
 
-/* The package in a directory, checked. Throws DevicePackageError with the
- * first problem */
+/* The package in a directory, checked. corner is the corner to use ("" for
+ * corners.default). Throws DevicePackageError with the first problem */
 DevicePackage load_device_package(const std::filesystem::path& directory,
-                                  const bool verify_checksums = true);
+                                  const bool verify_checksums = true,
+                                  const std::string& corner = "");
+
+/* The VPR architecture of the package for its corner: the text of vpr_arch.xml
+ * with each ${name} replaced by its value (R-22). The file of the package is
+ * not changed. Throws DevicePackageError with the name of a variable that has
+ * no value */
+std::string render_vpr_arch(const DevicePackage& package);
 
 /* What a package sets when it is read into a session: the application options
  * (by name, with their value as text) and the entries of

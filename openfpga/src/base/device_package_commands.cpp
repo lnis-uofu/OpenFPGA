@@ -3,6 +3,8 @@
  *******************************************************************/
 #include "device_package_commands.h"
 
+#include <unistd.h>
+
 #include <fstream>
 #include <string>
 #include <utility>
@@ -53,9 +55,13 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
                                 const Command& cmd,
                                 const CommandContext& cmd_context) {
   const std::string file = cmd_context.option_value(cmd, cmd.option("file"));
+  const CommandOptionId opt_corner = cmd.option("corner");
+  const std::string corner = cmd_context.option_enable(cmd, opt_corner)
+                               ? cmd_context.option_value(cmd, opt_corner)
+                               : std::string();
   DevicePackage package;
   try {
-    package = load_device_package(file);
+    package = load_device_package(file, true, corner);
   } catch (const DevicePackageError& error) {
     VTR_LOG_ERROR("%s\n", error.what());
     return CMD_EXEC_FATAL_ERROR;
@@ -89,11 +95,42 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
     VTR_LOG("Not set: %s, as %s\n", ignored.first.c_str(),
             ignored.second.c_str());
   }
-  const std::string read_vpr = "read_vpr_arch --file " +
-                               quoted(package.vpr_arch) + " --layout " +
-                               package.layout;
-  if (CMD_EXEC_SUCCESS !=
-      shell->execute_command(read_vpr.c_str(), openfpga_ctx)) {
+  /* An architecture with variables is read from a copy with the values of the
+   * corner: the package is never changed (R-32), and the copy is removed once
+   * VPR has read it */
+  std::filesystem::path arch_file = package.vpr_arch;
+  std::filesystem::path copy_dir;
+  if (package.has_variables) {
+    try {
+      std::error_code fs_error;
+      copy_dir = std::filesystem::temp_directory_path(fs_error) /
+                 ("openfpga_package_" + std::to_string(::getpid()) + "_" +
+                  package.name + "_" + package.corner);
+      std::filesystem::create_directories(copy_dir, fs_error);
+      arch_file = copy_dir / "vpr_arch.xml";
+      std::ofstream out(arch_file);
+      out << render_vpr_arch(package);
+      out.close();
+      if (!out) {
+        throw DevicePackageError("The architecture of corner '" +
+                                 package.corner + "' cannot be written to '" +
+                                 arch_file.string() + "'");
+      }
+    } catch (const DevicePackageError& error) {
+      VTR_LOG_ERROR("%s\n", error.what());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    VTR_LOG("Read the architecture of corner '%s' (%lu variables replaced)\n",
+            package.corner.c_str(), package.timing_values.size());
+  }
+  const std::string read_vpr = "read_vpr_arch --file " + quoted(arch_file) +
+                               " --layout " + package.layout;
+  const int vpr_status = shell->execute_command(read_vpr.c_str(), openfpga_ctx);
+  if (!copy_dir.empty()) {
+    std::error_code fs_error;
+    std::filesystem::remove_all(copy_dir, fs_error);
+  }
+  if (CMD_EXEC_SUCCESS != vpr_status) {
     return CMD_EXEC_FATAL_ERROR;
   }
   const std::string read_openfpga =
@@ -139,8 +176,9 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
   }
   session.set_bitstream_recipe(recipe);
   session.set_device_package(device_package_json(package, &applied));
-  VTR_LOG("Device package '%s' %s: layout %s\n", package.name.c_str(),
-          package.version.c_str(), package.layout.c_str());
+  VTR_LOG("Device package '%s' %s: layout %s%s%s\n", package.name.c_str(),
+          package.version.c_str(), package.layout.c_str(),
+          package.corner.empty() ? "" : ", corner ", package.corner.c_str());
   return CMD_EXEC_SUCCESS;
 }
 
@@ -253,11 +291,16 @@ void add_device_package_commands(Shell<OpenfpgaContext>& shell) {
     read_cmd.add_option("file", true, "The directory of the device package");
   read_cmd.set_option_short_name(opt_file, "f");
   read_cmd.set_option_require_value(opt_file, OPT_STRING);
+  CommandOptionId opt_read_corner = read_cmd.add_option(
+    "corner", false,
+    "The design corner of the package to read (default: corners.default)");
+  read_cmd.set_option_require_value(opt_read_corner, OPT_STRING);
   ShellCommandId read_id = shell.add_command(
     read_cmd,
     "Target the device of a device package: check it, set the options of its "
     "flow and its channel width, and read its VPR architecture (with the "
-    "layout of its grid) and its OpenFPGA architecture");
+    "layout of its grid, and the timing values of its corner) and its "
+    "OpenFPGA architecture");
   shell.set_command_class(read_id, cmd_class);
   shell.set_command_execute_function(read_id, read_device_package_command);
 

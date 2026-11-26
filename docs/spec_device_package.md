@@ -1,6 +1,6 @@
 # Spec: OpenFPGA device package
 
-Status: draft for review. Implemented: the manifest and its checks, `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md).
+Status: draft for review. Implemented: the manifest and its checks, the corners and the substitution of the timing variables in `read_device_package` (`--corner`; R-16 to R-19, R-22 to R-24, R-46; the process, voltage, temperature and rc of a corner are not required yet), `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md).
 
 ## Overview
 
