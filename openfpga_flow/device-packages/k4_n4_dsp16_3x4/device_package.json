@@ -100,6 +100,18 @@
         "-D DSP_B_MINWIDTH=2",
         "-D DSP_NAME=mult_8x8"
       ]
+    },
+    "bitstream": {
+      "link_options": [
+        "--sort_gsb_chan_node_in_edges"
+      ],
+      "fixups": [
+        "check_netlist_naming_conflict",
+        "lut_truth_table_fixup"
+      ],
+      "fabric_options": [
+        "--compress_routing"
+      ]
     }
   },
   "reference": {
@@ -108,7 +120,8 @@
     "source_task": "fpga_bitstream/extract_dsp_mode_bit",
     "expected": {
       "bitstreams": {
-        "fabric_independent_bitstream.xml": "bc5306cb438caba1915d3dd0a8c03e3bcb479db956a92b70f660d7979c7a070b"
+        "fabric_independent_bitstream.xml": "bc5306cb438caba1915d3dd0a8c03e3bcb479db956a92b70f660d7979c7a070b",
+        "build_bitstream": "9e6f8b54e016e0b143991c73c239b634faf6f87482849fcd0135aef320f875dd"
       },
       "channel_width": 58,
       "critical_path_delay_ns": 5.83984,

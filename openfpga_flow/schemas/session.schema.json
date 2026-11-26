@@ -82,6 +82,34 @@
             },
             "circuit": {
               "$ref": "#/$defs/input"
+            },
+            "simulation_setting": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "The files read, in order (docs/spec_bitstream.md B-1)"
+            },
+            "bitstream_setting": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "The files read, in order (docs/spec_bitstream.md B-1)"
             }
           }
         },
@@ -111,6 +139,13 @@
                 "string",
                 "null"
               ]
+            },
+            "bitstream": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The file that build_bitstream wrote"
             }
           }
         },

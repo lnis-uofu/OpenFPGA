@@ -722,6 +722,9 @@ class SessionInputs:
     vpr_arch: Optional[VprArchInput]
     openfpga_arch: Optional[InputFile]
     circuit: Optional[InputFile]
+    # The files of the settings that the bitstream is made with, in the order they were read
+    simulation_setting: Optional[List[str]] = None
+    bitstream_setting: Optional[List[str]] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -733,6 +736,8 @@ class SessionResults:
     packing: Optional[str]
     placement: Optional[str]
     routing: Optional[str]
+    # The file of the fabric bitstream that build_bitstream wrote (bitstream())
+    bitstream: Optional[str] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -831,6 +836,8 @@ _SCHEMA_VERSIONS = {
     "device_package": 1,
     "synthesis": 1,
     "constraints": 1,
+    "bitstream": 1,
+    "design_hierarchy": 1,
 }
 
 
@@ -972,6 +979,8 @@ _QUERY_COMMANDS = frozenset(
         "block_info",
         "net_info",
         "report_constraints",
+        "report_bitstream",
+        "report_design_hierarchy",
     )
 )
 
@@ -1283,7 +1292,7 @@ class Session:
                 "stages pack, place, route and analysis"
             )
         routes = command == "route" or (
-            command == "analysis" and "ROUTED" not in self.state().reached
+            command in ("analysis", "bitstream") and "ROUTED" not in self.state().reached
         )
         if routes and self.options["router.route_chan_width"] <= 0:
             return (
@@ -1408,6 +1417,47 @@ class Session:
         }
         return self._synthesis("read_design", options, read, run, check)
 
+    def design_hierarchy(
+        self,
+        directory=None,
+        top=None,
+        files=None,
+        include_dirs=None,
+        defines=None,
+        read_options=None,
+        output_dir=None,
+        limit=None,
+    ):
+        """The hierarchy of a design, with the shell's command report_design_hierarchy: its RTL
+        is elaborated from its top by a Yosys script of its own (as the synthesis reads it, with
+        the cell library of the device package), and nothing of the flow changes (not written in
+        the journal). Give directory (a design directory), or top and files as synthesize()
+        takes them. The script and the JSON of Yosys go to output_dir (hierarchy).
+
+        Returns a dict: design, top, files, script, json; modules (name, module, parameters,
+        kind: module, library or unknown, instances in the whole tree, cells of Yosys, src:
+        file and line), most instances first; tree (instance, name, module, kind, parameters,
+        src, children, and more: the children that limit left out, breadth first); nodes,
+        instances, truncated. A refusal or a failure of Yosys raises OpenfpgaError"""
+        options = {
+            "file": None if directory is None else os.path.abspath(os.fspath(directory)),
+            "top": top,
+            "files": ",".join(os.path.abspath(os.fspath(f)) for f in files or []),
+            "include_dirs": ",".join(os.path.abspath(os.fspath(d)) for d in include_dirs or []),
+            "defines": ",".join("%s=%s" % item for item in (defines or {}).items()),
+            "read_options": ",".join(read_options or []),
+            "output_dir": None if output_dir is None else os.path.abspath(os.fspath(output_dir)),
+            "limit": None if limit is None else int(limit),
+        }
+        options = {k: v for k, v in options.items() if v not in (None, "")}
+        result = self.shell.run(_command_line("report_design_hierarchy", (), options))
+        answer = result.data
+        if answer is None or answer.get("kind") != "design_hierarchy":
+            raise AnswerError("Expected an answer of the kind 'design_hierarchy'")
+        if answer.get("schema_version") != _SCHEMA_VERSIONS["design_hierarchy"]:
+            raise AnswerError("The answer 'design_hierarchy' has an unknown schema version")
+        return answer["data"]
+
     def _synthesis(self, name, options, read, run, check):
         options = {k: v for k, v in options.items() if v not in (None, "")}
         if not read:
@@ -1498,9 +1548,63 @@ class Session:
             self.checkpoint(self.checkpoint_dir)
         return step
 
-    def run_flow(self):
-        """Run pack, place, route and analysis, and return their results"""
-        return [stage() for stage in (self.pack, self.place, self.route, self.analysis)]
+    def run_flow(self, bitstream=False):
+        """Run pack, place, route and analysis, and return their results. With bitstream, the
+        bitstream is made after them (bitstream()), and its answer is the last item"""
+        steps = [stage() for stage in (self.pack, self.place, self.route, self.analysis)]
+        if bitstream:
+            steps.append(self.bitstream())
+        return steps
+
+    # The bitstream (docs/spec_bitstream.md) ------------------------------------------
+
+    def read_simulation_setting(self, file):
+        """Read the simulation settings of OpenFPGA. The link of the architecture is made
+        again by the next bitstream(); nothing else is dropped"""
+        return self.command("read_openfpga_simulation_setting", file=os.path.abspath(file))
+
+    def read_bitstream_setting(self, file, append=False):
+        """Read the bitstream settings of OpenFPGA (with append, after the ones read before).
+        They change the bitstream: REPACKED and BITSTREAM are dropped"""
+        options = {"file": os.path.abspath(file)}
+        if append:
+            options["append"] = True
+        return self.command("read_openfpga_bitstream_setting", **options)
+
+    def repack(self):
+        """Repack the routed design (REPACKED), as the first step of a bitstream does. The
+        architecture must have been linked and the fabric built (bitstream() does both)"""
+        return self.command("repack")
+
+    def bitstream(self, file=None, format="plain_text", arch_file=None):
+        """Make the bitstream of the routed design with the shell's build_bitstream: the link
+        and the fabric (kept when still valid), repack, the architecture and fabric
+        bitstreams, and the file (default bitstream/<circuit>.bit), with the recipe of the
+        device package. Returns what report_bitstream answers (kind bitstream): the file, its
+        SHA-256, the bits, the protocol, the bits per type of block, the settings and the
+        steps"""
+        options = {"format": format}
+        if file is not None:
+            options["file"] = os.path.abspath(os.fspath(file))
+        if arch_file is not None:
+            options["arch_file"] = os.path.abspath(os.fspath(arch_file))
+        _, result = self._run_command("build_bitstream", (), options)
+        return self._bitstream_answer(result)
+
+    def bitstream_report(self, limit=None):
+        """What report_bitstream answers about the bitstream of the session (BITSTREAM)"""
+        options = {} if limit is None else {"limit": int(limit)}
+        result = self.shell.run(_command_line("report_bitstream", (), options))
+        return self._bitstream_answer(result)
+
+    @staticmethod
+    def _bitstream_answer(result):
+        answer = result.data
+        if answer is None or answer.get("kind") != "bitstream":
+            raise AnswerError("Expected an answer of the kind 'bitstream'")
+        if answer.get("schema_version") != _SCHEMA_VERSIONS["bitstream"]:
+            raise AnswerError("The answer 'bitstream' has an unknown schema version")
+        return answer["data"]
 
     def read_packing(self, file):
         """Take the packing (.net) of a file, instead of running pack"""
@@ -1634,10 +1738,12 @@ class Session:
         stages, the options that are not the default, where the inputs come
         from, with the checksum of every file, the plugins of the build, and
         the device package that the architectures were read from, if any, and
-        the ODC of the session (read again when it is restored).
+        the ODC of the session (read again when it is restored), and the
+        simulation and bitstream settings (read again too).
         The inputs are not copied: restore() needs them where they are. The
-        stages after ANALYZED (repack, bitstream) are not saved. A checkpoint
-        that was in the directory is replaced.
+        stages after ANALYZED (repack, bitstream) are not saved: the file of
+        the bitstream is copied, with its checksum, and restore() does not
+        make it again. A checkpoint that was in the directory is replaced.
         """
         state = self.state()
         if "DEVICE" not in state.reached:
@@ -1649,7 +1755,7 @@ class Session:
             entry = getattr(state.inputs, key)
             inputs[key] = dict(dataclasses.asdict(entry), sha256=_sha256(entry.file))
         results = {}
-        for key, _, _ in _CHECKPOINT_RESULTS:
+        for key in [item[0] for item in _CHECKPOINT_RESULTS] + ["bitstream"]:
             source = getattr(state.results, key)
             if source is None:
                 continue
@@ -1673,6 +1779,16 @@ class Session:
         package = self.device_package()
         if package is not None:
             manifest["device_package"] = package["directory"]
+        settings = {
+            kind: [{"file": file, "sha256": _sha256(file)} for file in files]
+            for kind, files in (
+                ("simulation_setting", state.inputs.simulation_setting),
+                ("bitstream_setting", state.inputs.bitstream_setting),
+            )
+            if files
+        }
+        if settings:
+            manifest["settings"] = settings
         constraints = self.constraints()
         if constraints["file"] is not None:
             # The files that the ODC gives to VPR are made again from it
@@ -1707,7 +1823,9 @@ class Session:
         It sets the options, reads the inputs, and reads the results of the
         stages that were reached instead of running them, so that the flow
         goes on from there, in this process or in another one, and gives the
-        same results. ANALYZED is run again. A file of the results that does
+        same results. ANALYZED is run again; the settings of the bitstream
+        are read again, and the bitstream is not made again (its file is in
+        the checkpoint, results.bitstream). A file of the results that does
         not match its checksum raises CheckpointError, and so does an input
         that changed, unless check_inputs is False, and a checkpoint made by a
         build with other plugins, as their commands may not do the same. The
@@ -1731,6 +1849,12 @@ class Session:
             odc = manifest.get("odc")
             if odc is not None and _sha256(odc["file"]) != odc["sha256"]:
                 raise CheckpointError("The ODC '%s' is not the one of the checkpoint" % odc["file"])
+            for kind, entries in manifest.get("settings", {}).items():
+                for entry in entries:
+                    if _sha256(entry["file"]) != entry["sha256"]:
+                        raise CheckpointError(
+                            "The %s '%s' is not the one of the checkpoint" % (kind, entry["file"])
+                        )
         session = cls(shell, **session_options)
         # A checkpoint made before the plugins were recorded (no "plugins") was made by a
         # build whose commands were those of the shell and of the ui plugin now: it is taken
@@ -1751,6 +1875,20 @@ class Session:
         if package is None:
             session.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
             session.read_openfpga_arch(inputs["openfpga_arch"]["file"])
+        # The settings, when they are not the ones that the package read
+        now = session.state().inputs
+        for kind, read in (
+            ("simulation_setting", session.read_simulation_setting),
+            ("bitstream_setting", session.read_bitstream_setting),
+        ):
+            files = [entry["file"] for entry in manifest.get("settings", {}).get(kind, [])]
+            if files and files != (getattr(now, kind) or []):
+                read(files[0])
+                for file in files[1:]:
+                    if kind == "bitstream_setting":
+                        read(file, append=True)
+                    else:
+                        read(file)
         odc = manifest.get("odc")
         if odc is not None:
             session.read_odc(odc["file"], lenient=odc["lenient"])

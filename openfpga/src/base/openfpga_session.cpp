@@ -183,7 +183,7 @@ bool OpenFpgaSession::read_input(const OpenFpgaInput& input,
   inputs_ |= bit(input);
   input_files_[input] = file;
   if (OpenFpgaInput::CIRCUIT != input) {
-    device_package_.clear();
+    forget_package();
   }
   invalidate_all_stages();
   return true;
@@ -193,7 +193,7 @@ void OpenFpgaSession::fail_input(const OpenFpgaInput& input) {
   inputs_ &= ~bit(input);
   input_files_.erase(input);
   if (OpenFpgaInput::CIRCUIT != input) {
-    device_package_.clear();
+    forget_package();
   }
   if (OpenFpgaInput::VPR_ARCH == input) {
     inputs_ &= ~bit(OpenFpgaInput::CIRCUIT);
@@ -297,9 +297,10 @@ void OpenFpgaSession::reset_app_options() {
 void OpenFpgaSession::reset() {
   inputs_ = 0;
   input_files_.clear();
-  device_package_.clear();
+  forget_package();
   stages_ = 0;
   linked_generation_ = 0;
+  fabric_generation_ = 0;
   imported_.clear();
   failures_.clear();
   stage_logs_.clear();
@@ -310,6 +311,9 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
   const OpenFpgaStage& stage) {
   for (const OpenFpgaStage& other : all_stages) {
     if (is_or_depends_on(other, stage)) {
+      if (OpenFpgaStage::BITSTREAM == other) {
+        bitstream_output_ = BitstreamOutput();
+      }
       stages_ &= ~bit(other);
       imported_.erase(other);
       failures_.erase(other);
@@ -321,10 +325,46 @@ void OpenFpgaSession::invalidate_stage_and_dependents(
 
 void OpenFpgaSession::invalidate_all_stages() {
   stages_ = 0;
+  bitstream_output_ = BitstreamOutput();
   imported_.clear();
   failures_.clear();
   stage_logs_.clear();
   stage_seconds_.clear();
+}
+
+void OpenFpgaSession::forget_package() {
+  device_package_.clear();
+  bitstream_recipe_ = BitstreamRecipe();
+}
+
+std::vector<std::string> OpenFpgaSession::settings_files(
+  const std::string& kind) const {
+  const auto found = settings_files_.find(kind);
+  return settings_files_.end() == found ? std::vector<std::string>()
+                                        : found->second;
+}
+
+bool OpenFpgaSession::link_current() const {
+  return 0 != linked_generation_ && linked_generation_ == vpr_generation_;
+}
+
+bool OpenFpgaSession::fabric_current() const {
+  return link_current() && fabric_generation_ == linked_generation_;
+}
+
+void OpenFpgaSession::read_settings(const std::string& kind,
+                                    const std::string& file,
+                                    const bool append) {
+  std::vector<std::string>& files = settings_files_[kind];
+  if (!append) {
+    files.clear();
+  }
+  files.push_back(file);
+  linked_generation_ = 0;
+  fabric_generation_ = 0;
+  if ("bitstream_setting" == kind) {
+    invalidate_stage_and_dependents(OpenFpgaStage::REPACKED);
+  }
 }
 
 void OpenFpgaSession::invalidate_for_option(const std::string& name) {

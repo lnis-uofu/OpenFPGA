@@ -3,7 +3,7 @@
 //   OPENFPGA_PYTHON_PATH=<dir of openfpga.py> PYTHON=python3 npm run e2e:session
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import assert from "node:assert/strict";
@@ -20,10 +20,36 @@ const files = {
   arch: "k6_frac_N10_40nm_openfpga.xml",
   circuit: "routing_test.blif",
 };
+// A design directory with a hierarchy, for the hierarchy tab
+const designs = mkdtempSync(path.join(tmpdir(), "openfpga-designs-"));
+mkdirSync(path.join(designs, "hier", "rtl"), { recursive: true });
+writeFileSync(
+  path.join(designs, "hier", "rtl", "top.v"),
+  [
+    "module leaf(input a, input b, output y);",
+    "  assign y = a ^ b;",
+    "endmodule",
+    "module sub #(parameter W = 4) (input [W-1:0] a, output y);",
+    "  wire t;",
+    "  leaf u_leaf0 (.a(a[0]), .b(a[1]), .y(t));",
+    "  leaf u_leaf1 (.a(t), .b(a[W-1]), .y(y));",
+    "endmodule",
+    "module top(input [7:0] a, output [1:0] y);",
+    "  sub #(.W(8)) u_wide (.a(a), .y(y[0]));",
+    "  sub u_narrow (.a(a[3:0]), .y(y[1]));",
+    "endmodule",
+    "",
+  ].join("\n"),
+);
+writeFileSync(
+  path.join(designs, "hier", "design.json"),
+  JSON.stringify({ format_version: "1.0", name: "hier", license: "MIT", top: "top", files: [{ role: "rtl", path: "rtl/top.v" }] }),
+);
 const inputs = [
   path.join(flow, "vpr_arch"),
   path.join(flow, "openfpga_arch"),
   path.join(flow, "benchmarks", "ubm", "interface", "routing_test"),
+  designs,
 ];
 // INSTALLED=1: the packages are the installed ones (a clean environment), not the source tree
 const pythonPath = process.env.INSTALLED
@@ -55,6 +81,12 @@ const url = await started();
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1400, height: 850 } });
+  // The design files of the sidebar start folded: unfold them to see the files
+  async function unfoldFiles() {
+    const fold = page.locator(".sidebar .section-fold:has-text('Design files')");
+    await fold.waitFor();
+    if ((await fold.getAttribute("aria-expanded")) === "false") await fold.click();
+  }
   const errors = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.goto(url);
@@ -90,6 +122,7 @@ try {
     mimeType: "application/octet-stream",
     buffer: readFileSync(path.join(inputs[2], files.circuit)),
   });
+  await unfoldFiles();
   await page.waitForSelector(".upload-row:has-text('mine.blif')");
   assert.ok(existsSync(path.join(root, "s1", "uploads", "mine.blif")), "written in the session directory");
   // The file opens in a tab, in Monaco
@@ -153,6 +186,16 @@ try {
   if (process.env.SHOT_RESULT) await page.screenshot({ path: process.env.SHOT_RESULT });
   await page.click('[role=tab]:has-text("Chat")');
 
+  // The bitstream: a stage of its own, its file in the results, downloaded
+  await say("/run_stage stage=bitstream");
+  await page.waitForSelector("header >> text=BITSTREAM ✔", { timeout: 60000 });
+  await page.waitForSelector(".result-download:has-text('bitstream/routing_test.bit')", { timeout: 30000 });
+  const href = await page.getAttribute(".result-download a.download", "href");
+  const download = await page.request.get(new URL(href, page.url()).href);
+  assert.equal(download.status(), 200, "the bitstream is downloaded");
+  assert.ok((await download.body()).length > 1000, "with its bits");
+  if (process.env.SHOT_BITSTREAM) await page.screenshot({ path: process.env.SHOT_BITSTREAM });
+
   // The console runs the shell in the same session; the sidebar follows
   await page.click("text=▸ Console");
   await page.fill('[aria-label="Command"]', "set_app_option --name place.seed --value 3");
@@ -213,6 +256,7 @@ try {
     mimeType: "text/plain",
     buffer: Buffer.from("odc_version 1\ncreate_clock -period 10 clk\nset_input_delay 0 -clock clk [get_ports {IN0 INX}]\n"),
   });
+  await unfoldFiles();
   await page.waitForSelector(".upload-row:has-text('top.odc')");
   await say("/set_constraint kind=odc file=top.odc");
   await page.waitForSelector(".odc-head:has-text('2 commands')", { timeout: 30000 });
@@ -238,6 +282,7 @@ try {
 
   await page.click('[role=tab]:has-text("Chat")');
   assert.equal(await page.locator(".upload-row.loaded").count(), 0, "no circuit yet");
+  await unfoldFiles(); // a new sidebar: folded again
   assert.ok(!(await page.isVisible("header >> text=DEVICE ✔")), "nothing reached");
   await page.setInputFiles('[aria-label="Upload files"]', {
     name: "design.blif",
@@ -288,6 +333,32 @@ try {
   assert.ok(wide > narrow + 80, `the sidebar is wider: ${narrow} -> ${wide}`);
   assert.equal(await page.evaluate(() => localStorage.getItem("openfpga-sidebar-width")), String(Math.round(wide)));
   await page.dblclick(".sidebar-resize");
+
+  // The hierarchy of a design that is added: a separate run of Yosys, which does not change the
+  // flow; the line of an instance opens in the viewer
+  await page.click(".menu-item:has-text('Designs')");
+  await page.click(".panel-item:has-text('hier') >> text=Add to session");
+  await page.waitForSelector(".panel-item:has-text('hier') >> text=in this session", { timeout: 30000 });
+  // The sidebar elaborates it by itself, and shows its first level
+  await page.waitForSelector(".sidebar .hier-compact .hier-instance:has-text('u_wide')", { timeout: 60000 });
+  await page.waitForSelector(".sidebar .hier-side-head:has-text('7 instances, 4 modules')");
+  await page.click(".sidebar [aria-label='Expand u_narrow']");
+  await page.waitForSelector(".sidebar .hier-compact .hier-instance:has-text('u_leaf1')");
+  // The design files are below it, and fold
+  await page.click(".sidebar .section-fold:has-text('Design files')");
+  await page.waitForSelector(".sidebar .upload-row", { state: "detached" });
+  await page.click(".sidebar .section-fold:has-text('Design files')");
+  await page.waitForSelector(".sidebar .upload-row:has-text('rtl/top.v')");
+  await page.click(".sidebar [aria-label='Open the hierarchy in a tab']");
+  await page.waitForSelector(".hier-instance:has-text('u_wide')", { timeout: 60000 });
+  await page.waitForSelector("text=#(W=8)");
+  await page.waitForSelector(".hier-instance:has-text('u_leaf1')");
+  await page.click("[aria-label='Collapse u_wide']");
+  await page.click(".hier-mode >> text=Modules");
+  await page.waitForSelector(".hier-modules td:has-text('W=8')");
+  await page.click(".hier-mode >> text=Tree");
+  await page.click("button[title='Open design/hier/rtl/top.v at line 10']");
+  await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("u_wide"), null, { timeout: 30000 });
 
   assert.deepEqual(errors, []);
   if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });

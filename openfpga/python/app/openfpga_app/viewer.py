@@ -36,17 +36,23 @@ def _in_packages(config: Config, name: str) -> str:
     raise FileNotInWorkspace("There is no file '%s'" % name)
 
 
-def read_text(config: Config, session_dir: str, name: str) -> Dict[str, Any]:
-    """The text of a file (cut at MAX_SHOWN_BYTES), with its size"""
+def file_path(config: Config, session_dir: str, name: str) -> str:
+    """The whole path of a file that the page names: in the session, the workspace, the designs
+    folders or a device package"""
     if not isinstance(name, str) or not name.strip() or len(name) > 400:
         raise InvalidArgument("A file name is needed")
     try:
-        path = resolve_file(config, session_dir, name)
+        return resolve_file(config, session_dir, name)
     except FileNotInWorkspace as not_found:
         try:
-            path = _in_packages(config, name)
+            return _in_packages(config, name)
         except FileNotInWorkspace:
             raise not_found
+
+
+def read_text(config: Config, session_dir: str, name: str) -> Dict[str, Any]:
+    """The text of a file (cut at MAX_SHOWN_BYTES), with its size"""
+    path = file_path(config, session_dir, name)
     size = os.path.getsize(path)
     with open(path, "rb") as handle:
         raw = handle.read(MAX_SHOWN_BYTES + 1)

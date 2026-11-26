@@ -10,6 +10,7 @@ where the chat line is read, later.
 import inspect
 import json
 import os
+import re
 import shlex
 import time
 from pathlib import Path
@@ -60,6 +61,9 @@ class ToolTable:
 
 # How the designs are named in the list for the model: it says what to do with them, because a model
 # that reads "design" runs "the wbscope design" as a circuit
+# The hierarchy of a design: the instances of its tree at most, and the names of its folder
+HIERARCHY_LIMIT = 2000
+HIERARCHY_DESIGN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 DESIGN_KIND = "design directory (Verilog: synthesize it with synthesize(design=name), never read it as a circuit)"
 
 
@@ -355,7 +359,12 @@ class SessionBackend:
             files["inputs"].append(
                 {"label": "circuit", "name": self._name(inputs.circuit.file), "extra": None}
             )
-        for path in (state.results.packing, state.results.placement, state.results.routing):
+        for path in (
+            state.results.packing,
+            state.results.placement,
+            state.results.routing,
+            state.results.bitstream,
+        ):
             if path:
                 files["results"].append(self._name(path, entry.directory))
         odc = self._constraints(entry, session, state)
@@ -600,6 +609,15 @@ class SessionBackend:
             return answers.from_exception(error)
         return {"ok": True, "data": data, "truncated": False, "more": None}
 
+    async def download_file(self, name: str) -> Optional[str]:
+        """The whole path of a file that the page downloads (a bitstream), or None when it is
+        not one that the viewer may read"""
+        try:
+            directory = self.registry.get(self.sid).directory if self.sid is not None else ""
+            return await anyio.to_thread.run_sync(viewer.file_path, self.config, directory, name)
+        except Exception:  # noqa: BLE001 - not there, refused: nothing to download
+            return None
+
     def _reports(self, directory: str) -> List[str]:
         """The stages that have a report, in the order of the flow"""
         folder = self.config.root / directory / reports.FOLDER
@@ -627,6 +645,19 @@ class SessionBackend:
         except OSError:
             return None
         return max(copies, key=lambda p: p.stat().st_mtime).name if copies else None
+
+    async def _design_to_synthesize(self, sid: Optional[str]) -> Optional[str]:
+        """The design that a run of a stage synthesizes first: the one the session copied last,
+        when no circuit is read yet (None otherwise, or when the session is not known)"""
+        try:
+            entry = self.registry.get(sid)
+        except (RegistryError, TypeError):
+            return None
+        try:
+            circuit = (await anyio.to_thread.run_sync(entry.session.state)).inputs.circuit
+        except Exception:
+            return None
+        return self._last_design(entry) if circuit is None else None
 
     def _synthesis_stage(self, entry, circuit) -> Dict[str, Any]:
         """The stage of synthesis for the sidebar. It is reached when the circuit is the netlist of a
@@ -944,6 +975,78 @@ class SessionBackend:
         }
         return {"ok": True, "data": data, "truncated": False, "more": None}
 
+    async def design_hierarchy(self, design: Optional[str] = None) -> Dict[str, Any]:
+        """The hierarchy of a design that the session copied (design/<folder>; the one added last
+        by default): its RTL elaborated by a Yosys run of its own, which leaves the flow as it is.
+        The files of its src are names of the session, for the viewer"""
+        if self.sid is None:
+            return answers.failed(
+                [
+                    answers.diagnostic(
+                        "no_session", "There is no session", hint="Open a session first"
+                    )
+                ]
+            )
+        if self._running is not None or self._busy:
+            return answers.failed(
+                [answers.diagnostic("busy", "A call is running", hint="Wait for it to end")]
+            )
+        try:
+            entry = self.registry.get(self.sid)
+        except RegistryError as error:
+            return answers.from_exception(error)
+        session_dir = self.config.root / entry.directory
+        name = design if design is not None else self._last_design(entry)
+        folder = session_dir / "design" / name if name else None
+        if (
+            folder is None
+            or not HIERARCHY_DESIGN.fullmatch(name)
+            or folder.is_symlink()
+            or not (folder / "design.json").is_file()
+        ):
+            return answers.failed(
+                [
+                    answers.diagnostic(
+                        "no_design",
+                        "The session has no design directory%s" % (" '%s'" % name if name else ""),
+                        hint="Add a design to the session first (Designs)",
+                    )
+                ]
+            )
+        self._running = "design_hierarchy"
+        try:
+            data = await anyio.to_thread.run_sync(
+                lambda: entry.session.design_hierarchy(
+                    directory=folder, output_dir=session_dir / "hierarchy", limit=HIERARCHY_LIMIT
+                )
+            )
+        except Exception as error:  # noqa: BLE001 - Yosys refused the RTL, the worker failed
+            return answers.from_exception(error)
+        finally:
+            self._running = None
+        base = os.path.realpath(session_dir)
+
+        def named(src):
+            if not src:
+                return src
+            path = os.path.realpath(src["file"])
+            inside = path.startswith(base + os.sep)
+            return {**src, "file": os.path.relpath(path, base) if inside else None}
+
+        def walk(node):
+            if "src" in node:
+                node["src"] = named(node["src"])
+            for child in node["children"]:
+                walk(child)
+
+        walk(data["tree"])
+        for module in data["modules"]:
+            module["src"] = named(module["src"])
+        for key in ("files", "script", "json"):
+            data.pop(key, None)  # whole paths of the disk: not for the page
+        data["folder"] = "design/%s" % name
+        return {"ok": True, "data": data, "truncated": bool(data["truncated"]), "more": None}
+
     async def restore_session(self, checkpoint: Optional[str] = None) -> Dict[str, Any]:
         if self.sid is None:
             return answers.failed([answers.diagnostic("no_session", "There is no session")])
@@ -1049,6 +1152,25 @@ class SessionBackend:
                 )
                 yield events.done(message_id)
                 return
+            design = None
+            if name == "run_stage" and arguments.get("from_file") is None:
+                design = await self._design_to_synthesize(arguments.get("session"))
+            if design is not None:
+                # A design was added and no circuit is read: the stage starts with its synthesis,
+                # as the stages before it that are not reached
+                call_id = "c%d-synth" % self._counter
+                synth = {"session": arguments["session"], "design": design}
+                yield events.tool_call_started(message_id, call_id, "synthesize", synth)
+                yield events.state_changed("running")
+                started = time.monotonic()
+                answer = await self.invoke("synthesize", synth)
+                yield events.tool_call_finished(
+                    message_id, call_id, bool(answer.get("ok")), time.monotonic() - started, answer
+                )
+                yield events.state_changed("synthesize")
+                if not answer.get("ok") or self._cancelled:
+                    yield events.done(message_id, cancelled=self._cancelled)
+                    return
             call_id = "c%d" % self._counter
             yield events.tool_call_started(message_id, call_id, name, arguments)
             if name in ("run_stage", "read_inputs"):

@@ -187,6 +187,59 @@ std::map<std::string, std::string> package_values(
   return values;
 }
 
+/* The paths of a script: Yosys does not take every character in them */
+void check_paths(const std::vector<std::string>& paths) {
+  for (const std::string& path : paths) {
+    if (!matches(path, "^[A-Za-z0-9_./+-]+$")) {
+      throw SynthesisRefused("The path '" + path +
+                             "' has characters that a Yosys script does not "
+                             "take");
+    }
+  }
+}
+
+/* The options of read_verilog for a request, after base (the ones of the
+ * device package): its read options, defines and include folders, and -sv
+ * for SystemVerilog */
+std::string read_options_of(const SynthesisRequest& request,
+                            const std::string& base) {
+  std::vector<std::string> extra;
+  for (const std::string& option : request.read_options) {
+    if (!matches(option, "^-[A-Za-z]{1,20}$")) {
+      throw SynthesisRefused(
+        "read_options of the design are options like -nolatches");
+    }
+    extra.push_back(option);
+  }
+  for (const auto& define : request.defines) {
+    const std::string option = "-D " + define.first + "=" + define.second;
+    if (!matches(option, "^-D [A-Za-z_][A-Za-z0-9_]*=[A-Za-z0-9_]+$")) {
+      throw SynthesisRefused("The define '" + define.first +
+                             "' of the design has characters that a Yosys "
+                             "script does not take");
+    }
+    extra.push_back(option);
+  }
+  for (const fs::path& folder : request.include_dirs) {
+    if (!matches(folder.string(), "^[A-Za-z0-9_./+-]+$")) {
+      throw SynthesisRefused("The include folder '" + folder.string() +
+                             "' has characters that a Yosys script does not "
+                             "take");
+    }
+    extra.push_back("-I" + folder.string());
+  }
+  for (const fs::path& file : request.files) {
+    if (".sv" == lower(file.extension().string())) {
+      extra.push_back("-sv");
+      break;
+    }
+  }
+  std::string read = joined({base, joined(extra, " ")}, " ");
+  read.erase(0, read.find_first_not_of(' '));
+  read.erase(read.find_last_not_of(' ') + 1);
+  return read;
+}
+
 /* A template as Python's string.Template.safe_substitute() fills it:
  * ${NAME} and $NAME of a known name become its value, $$ becomes $, and
  * the rest stays (a script has Yosys names with a dollar, as $mul) */
@@ -305,49 +358,9 @@ SynthesisPlan make_synthesis_plan(const SynthesisRequest& request,
       checked.push_back(value.second);
     }
   }
-  for (const std::string& path : checked) {
-    if (!matches(path, "^[A-Za-z0-9_./+-]+$")) {
-      throw SynthesisRefused("The path '" + path +
-                             "' has characters that a Yosys script does not "
-                             "take");
-    }
-  }
-  std::vector<std::string> extra;
-  for (const std::string& option : request.read_options) {
-    if (!matches(option, "^-[A-Za-z]{1,20}$")) {
-      throw SynthesisRefused(
-        "read_options of the design are options like -nolatches");
-    }
-    extra.push_back(option);
-  }
-  for (const auto& define : request.defines) {
-    const std::string option = "-D " + define.first + "=" + define.second;
-    if (!matches(option, "^-D [A-Za-z_][A-Za-z0-9_]*=[A-Za-z0-9_]+$")) {
-      throw SynthesisRefused("The define '" + define.first +
-                             "' of the design has characters that a Yosys "
-                             "script does not take");
-    }
-    extra.push_back(option);
-  }
-  for (const fs::path& folder : request.include_dirs) {
-    if (!matches(folder.string(), "^[A-Za-z0-9_./+-]+$")) {
-      throw SynthesisRefused("The include folder '" + folder.string() +
-                             "' has characters that a Yosys script does not "
-                             "take");
-    }
-    extra.push_back("-I" + folder.string());
-  }
-  for (const fs::path& file : request.files) {
-    if (".sv" == lower(file.extension().string())) {
-      extra.push_back("-sv");
-      break;
-    }
-  }
-  std::string read = values["READ_VERILOG_OPTIONS"];
-  read = joined({read, joined(extra, " ")}, " ");
-  read.erase(0, read.find_first_not_of(' '));
-  read.erase(read.find_last_not_of(' ') + 1);
-  values["READ_VERILOG_OPTIONS"] = read;
+  check_paths(checked);
+  values["READ_VERILOG_OPTIONS"] =
+    read_options_of(request, values["READ_VERILOG_OPTIONS"]);
   values["TOP_MODULE"] = request.top;
   values["VERILOG_FILES"] = joined(names, " ");
   values["LUT_SIZE"] = std::to_string(size);
@@ -393,6 +406,51 @@ SynthesisPlan make_synthesis_plan(const SynthesisRequest& request,
   plan.package = nullptr != package ? package->name : std::string();
   plan.constraints = !constraints.empty();
   return plan;
+}
+
+std::string make_hierarchy_script(const SynthesisRequest& request,
+                                  const DevicePackage* package,
+                                  const fs::path& json_file) {
+  check_top(request.top);
+  check_sources(request.files);
+  std::map<std::string, std::string> values;
+  if (nullptr != package) {
+    values = package_values(*package);
+  }
+  std::vector<std::string> names;
+  for (const fs::path& file : request.files) {
+    names.push_back(file.string());
+  }
+  std::vector<std::string> checked = names;
+  checked.push_back(json_file.string());
+  const auto library = values.find("YOSYS_CELL_SIM_VERILOG");
+  if (values.end() != library) {
+    checked.push_back(library->second);
+  }
+  check_paths(checked);
+  std::string script = "# The hierarchy of " + request.top + "\n";
+  script += joined({"read_verilog",
+                    read_options_of(request, values["READ_VERILOG_OPTIONS"]),
+                    joined(names, " ")},
+                   " ") +
+            "\n";
+  /* The cells of the device that the RTL instantiates are known, as
+   * blackboxes: the synthesis reads them the same way */
+  if (values.end() != library) {
+    script += "read_verilog -lib -specify " + library->second + "\n";
+  }
+  /* Without -check: a module that no file has stays in the tree, as unknown */
+  script += "hierarchy -top " + request.top + "\n";
+  script += "proc\n";
+  script += "write_json " + json_file.string() + "\n";
+  /* Two spaces where an option was empty */
+  std::string tidy;
+  for (const char c : script) {
+    if (!(' ' == c && !tidy.empty() && ' ' == tidy.back())) {
+      tidy += c;
+    }
+  }
+  return tidy;
 }
 
 DesignDirectory read_design_directory(const fs::path& given,

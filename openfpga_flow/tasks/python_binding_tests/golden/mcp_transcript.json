@@ -58,12 +58,14 @@
    "data": {
     "failed": null,
     "inputs": {
+     "bitstream_setting": null,
      "circuit": {
       "file": "routing_test.blif"
      },
      "openfpga_arch": {
       "file": "k6_frac_N10_40nm_openfpga.xml"
      },
+     "simulation_setting": null,
      "vpr_arch": {
       "file": "k6_frac_N10_tileable_40nm.xml",
       "layout": "2x2"
@@ -74,6 +76,7 @@
      "DEVICE"
     ],
     "results": {
+     "bitstream": null,
      "packing": null,
      "placement": null,
      "routing": null
@@ -326,12 +329,14 @@
     "state": {
      "failed": null,
      "inputs": {
+      "bitstream_setting": null,
       "circuit": {
        "file": "routing_test.blif"
       },
       "openfpga_arch": {
        "file": "k6_frac_N10_40nm_openfpga.xml"
       },
+      "simulation_setting": null,
       "vpr_arch": {
        "file": "k6_frac_N10_tileable_40nm.xml",
        "layout": "2x2"
@@ -346,6 +351,7 @@
       "ANALYZED"
      ],
      "results": {
+      "bitstream": null,
       "packing": "s1/routing_test.net",
       "placement": "s1/routing_test.place",
       "routing": "s1/routing_test.route"
@@ -1022,12 +1028,14 @@
     "state": {
      "failed": null,
      "inputs": {
+      "bitstream_setting": null,
       "circuit": {
        "file": "routing_test.blif"
       },
       "openfpga_arch": {
        "file": "k6_frac_N10_40nm_openfpga.xml"
       },
+      "simulation_setting": null,
       "vpr_arch": {
        "file": "k6_frac_N10_tileable_40nm.xml",
        "layout": "2x2"
@@ -1036,6 +1044,7 @@
      "kind": "session",
      "reached": [],
      "results": {
+      "bitstream": null,
       "packing": null,
       "placement": null,
       "routing": null

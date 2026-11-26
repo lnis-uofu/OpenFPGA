@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "basic_command.h"
+#include "bitstream_flow_commands.h"
 #include "command_echo.h"
 #include "command_exit_codes.h"
 #include "command_parser.h"
@@ -58,6 +59,7 @@ OpenfpgaShell::OpenfpgaShell() {
   openfpga::add_stage_commands(shell_);
   openfpga::add_device_package_commands(shell_);
   openfpga::add_synthesis_commands(shell_);
+  openfpga::add_bitstream_flow_commands(shell_);
 
   /* The plugins of the build, after the commands of the shell that they may
    * override, remove or hook, and before the basic ones, which they may not */

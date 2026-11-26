@@ -1,6 +1,7 @@
 import { useRef, useState } from "preact/hooks";
 import { UPLOAD_EXTENSIONS, type SessionView } from "../api";
 import { SessionPicker } from "./SessionPicker";
+import { HierarchySection } from "./Panels";
 import {
   busy,
   config,
@@ -28,11 +29,34 @@ import {
 
 const SYMBOL = { reached: "✔", not_reached: "○", failed: "✖", running: "░", skipped: "–" } as const;
 
-function Section(props: { title: string; children: preact.ComponentChildren }) {
+function Section(props: {
+  title: string;
+  children: preact.ComponentChildren;
+  foldable?: boolean; // its title folds it; it starts folded
+  note?: string;
+  shown?: preact.ComponentChildren; // what stays when it is folded
+}) {
+  const [open, setOpen] = useState(false);
+  if (!props.foldable) {
+    return (
+      <section class="side-section">
+        <h2>{props.title}</h2>
+        {props.children}
+      </section>
+    );
+  }
+  // A section that folds: its title is the button, and the note (a count) stays when it is folded
   return (
-    <section class="side-section">
-      <h2>{props.title}</h2>
-      {props.children}
+    <section class={`side-section ${open ? "" : "folded"}`}>
+      <h2>
+        <button class="section-fold" aria-expanded={open} onClick={() => setOpen(!open)}>
+          <span aria-hidden="true">{open ? "▾" : "▸"} </span>
+          <span>{props.title}</span>
+          {props.note && <span class="section-note"> {props.note}</span>}
+        </button>
+      </h2>
+      {props.shown}
+      {open && props.children}
     </section>
   );
 }
@@ -186,10 +210,17 @@ const REPORT: Record<string, string> = {
   PLACED: "place",
   ROUTED: "route",
   ANALYZED: "analysis",
+  BITSTREAM: "bitstream",
 };
 
 /** The command of the run button of a stage (none for the stages that have no button) */
-const RUN: Record<string, string> = { PACKED: "pack", PLACED: "place", ROUTED: "route" };
+const RUN: Record<string, string> = {
+  PACKED: "pack",
+  PLACED: "place",
+  ROUTED: "route",
+  ANALYZED: "analysis",
+  BITSTREAM: "bitstream",
+};
 
 /** The open sessions as tabs (a click switches to one), and the panel of the current one: its
  * checkpoints (folded), save and close */
@@ -529,7 +560,38 @@ export function Sidebar() {
           ))}
         </ol>
       </Section>
-      <Section title="Design files">
+      <Section title="Design hierarchy">
+        <HierarchySection />
+      </Section>
+      <Section
+        title="Design files"
+        foldable
+        note={rows.length ? `(${rows.length})` : undefined}
+        shown={
+          <>
+            {session?.device_package && !files.inputs.some((f) => f.label === "circuit") && (
+              <div class="waiting">
+                {v.synthesis?.design
+                  ? `Design ${v.synthesis.design} added: synthesize it (▶ of SYNTHESIS) to make the circuit.`
+                  : "Waiting for a circuit: add a design (Designs), or upload one (Design files) and say which to read."}
+              </div>
+            )}
+            <input
+              ref={picker}
+              type="file"
+              multiple
+              hidden
+              aria-label="Upload files"
+              accept={UPLOAD_EXTENSIONS.join(",")}
+              onChange={(e) => {
+                const input = e.target as HTMLInputElement;
+                void uploadFiles(Array.from(input.files ?? []));
+                input.value = ""; // the same file can be chosen again
+              }}
+            />
+          </>
+        }
+      >
         {rows.length ? (
           <div class="uploads design-files">
             {rows.map((f) => (
@@ -554,26 +616,6 @@ export function Sidebar() {
         ) : (
           <div class="muted">(none)</div>
         )}
-        {session?.device_package && !files.inputs.some((f) => f.label === "circuit") && (
-          <div class="waiting">
-            {v.synthesis?.design
-              ? `Design ${v.synthesis.design} added: synthesize it (▶ of SYNTHESIS) to make the circuit.`
-              : "Waiting for a circuit: add a design (Designs), or upload one below and say which to read."}
-          </div>
-        )}
-        <input
-          ref={picker}
-          type="file"
-          multiple
-          hidden
-          aria-label="Upload files"
-          accept={UPLOAD_EXTENSIONS.join(",")}
-          onChange={(e) => {
-            const input = e.target as HTMLInputElement;
-            void uploadFiles(Array.from(input.files ?? []));
-            input.value = ""; // the same file can be chosen again
-          }}
-        />
         <button
           class="upload-button"
           disabled={!real || uploading.value}
@@ -600,9 +642,20 @@ export function Sidebar() {
         <h3>Results</h3>
         {files.results.length ? (
           <div class="results">
-            {files.results.map((r) => (
-              <Name key={r} name={r} />
-            ))}
+            {files.results.map((r) =>
+              r.startsWith("bitstream/") ? (
+                <span key={r} class="result-download">
+                  <Name name={r} />
+                  {real && (
+                    <a class="download" href={`/api/download?name=${encodeURIComponent(r)}`} download title={`Download ${r}`}>
+                      ⤓
+                    </a>
+                  )}
+                </span>
+              ) : (
+                <Name key={r} name={r} />
+              ),
+            )}
           </div>
         ) : (
           <div class="muted">(none)</div>

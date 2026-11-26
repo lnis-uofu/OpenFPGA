@@ -66,6 +66,14 @@ extern const char* const SYNTHESIS_SCRIPT_NAME;
 SynthesisPlan make_synthesis_plan(const SynthesisRequest& request,
                                   const DevicePackage* package);
 
+/* The script of report_design_hierarchy: the RTL of a request read as its
+ * synthesis reads it (with the cell library of the device package, as
+ * blackboxes), elaborated from its top, and written as the JSON of Yosys in
+ * json_file. Throws SynthesisRefused */
+std::string make_hierarchy_script(const SynthesisRequest& request,
+                                  const DevicePackage* package,
+                                  const std::filesystem::path& json_file);
+
 /* A design directory, read and checked (docs/spec_design_directory.md) */
 struct DesignDirectory {
   std::string name;

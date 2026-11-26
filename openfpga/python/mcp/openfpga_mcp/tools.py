@@ -18,6 +18,7 @@ from .config import Config
 from .errors import (
     FileExists,
     FixedWidthOnly,
+    BitstreamUnsupported,
     FlatRoutingUnsupported,
     InvalidArgument,
     OptionNotAllowed,
@@ -29,9 +30,15 @@ from .registry import Entry, SessionRegistry
 
 _WRITE_MAX_BYTES = 256 * 1024  # the text that a model may write in one file
 _WRITE_MAX_FILES = 50
-Stage = Literal["pack", "place", "route", "analysis"]
-_ORDER = ("pack", "place", "route", "analysis")
-_STAGE_NAMES = {"pack": "PACKED", "place": "PLACED", "route": "ROUTED", "analysis": "ANALYZED"}
+Stage = Literal["pack", "place", "route", "analysis", "bitstream"]
+_ORDER = ("pack", "place", "route", "analysis", "bitstream")
+_STAGE_NAMES = {
+    "pack": "PACKED",
+    "place": "PLACED",
+    "route": "ROUTED",
+    "analysis": "ANALYZED",
+    "bitstream": "BITSTREAM",
+}
 _READS = {"pack": "read_packing", "place": "read_placement", "route": "read_routing"}
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 _LOG_KEEP = 256 * 1024  # of the log of a stage: the end of it
@@ -223,6 +230,30 @@ def register(
                 sections.append(part)
                 cards += [("Channel width", routing.channel_width), ("Wirelength", routing.wirelength),
                           ("Iterations", routing.iterations)]
+        elif stage == "bitstream":
+            bits = handle.bitstream_report()
+            part = reports.Section("Bitstream")
+            part.row("File", short(bits["file"]) if bits["file"] else "–")
+            part.row("Format", bits["format"]).row("Size", bits["bytes"], "bytes")
+            part.row("Configuration bits", bits["bits"]).row("Protocol", bits["protocol"])
+            part.row("Regions", bits["regions"]).row("SHA-256", bits["sha256"])
+            for setting in bits["settings"]:
+                part.row("Settings", short(setting))
+            if bits["steps"]:
+                part.row("Steps run", ", ".join(bits["steps"]["ran"]))
+                if bits["steps"]["kept"]:
+                    part.row("Kept (still valid)", ", ".join(bits["steps"]["kept"]))
+            part.table(
+                "Bits by type of block",
+                ["Type", "Instances", "Bits"],
+                [(b["type"], b["instances"], b["bits"]) for b in bits["blocks"]],
+            )
+            sections.append(part)
+            cards += [
+                ("Bits", bits["bits"]),
+                ("Protocol", bits["protocol"]),
+                ("Size", number(bits["bytes"], "bytes")),
+            ]
         elif stage == "analysis":
             timing = handle.timing_summary()
             part = reports.Section("Timing")
@@ -713,21 +744,27 @@ def register(
 
     @tool()
     async def run_stage(session: str, stage: Stage, from_file: Optional[str] = None):
-        """Run a stage of the flow: pack, place, route or analysis, in this order. The stages
-        before it that were not run yet are run first, and "ran" lists what was run (with
-        place.placer analytical, pack places too). Returns the seconds and the stages reached.
-        When it fails the answer has the diagnostics and what failed (e.g. no legal routing);
-        the data of the stage is kept, so get_congestion and the earlier queries still answer,
-        and the next run of a stage starts again. With from_file (a file of
-        the workspace: the packing, the placement or the routing that an earlier flow wrote) the
-        results are read instead of computed; there is none for analysis. route needs a channel
-        width (set_constraint)."""
+        """Run a stage of the flow: pack, place, route, analysis or bitstream, in this order.
+        The stages before it that were not run yet are run first, and "ran" lists what was run
+        (with place.placer analytical, pack places too). Returns the seconds and the stages
+        reached; bitstream adds its file, size and bits. When it fails the answer has the
+        diagnostics and what failed; the data of the stage is kept, so get_congestion and the
+        earlier queries still answer. With from_file (a file of the workspace: the packing, the
+        placement or the routing that an earlier flow wrote) the results are read instead of
+        computed. route needs a channel width (set_constraint)."""
 
         def work():
             entry = session_of(session)
             handle = entry.session
             check_room(entry)
             _choice("stage", stage, _ORDER)
+            if stage == "bitstream":
+                package = handle.device_package()
+                if package is not None and package.get("bitstream") is False:
+                    raise BitstreamUnsupported(
+                        "The device package %s says that its device cannot make a bitstream"
+                        % package["name"]
+                    )
             if from_file is None:
                 refusal = handle.fixed_width_refusal(stage)
                 if refusal:
@@ -743,7 +780,7 @@ def register(
             try:
                 if from_file is not None:
                     if stage not in _READS:
-                        raise InvalidArgument("analysis has no results to read from a file")
+                        raise InvalidArgument("%s has no results to read from a file" % stage)
                     path = resolve_file(config, entry.directory, from_file, workspace_only=True)
                     step = getattr(handle, _READS[stage])(path)
                 else:
@@ -766,7 +803,10 @@ def register(
                         return reply({"stage": stage, "seconds": round(seconds, 2),
                                       "reached": list(state.reached), "ran": ran,
                                       **({"report": report} if report else {})})
-                    step = getattr(handle, stage)()
+                    if stage == "bitstream":
+                        step = handle.command("build_bitstream")
+                    else:
+                        step = getattr(handle, stage)()
             except Exception as error:
                 log = getattr(error, "log", None)
                 if log is not None:
@@ -790,6 +830,15 @@ def register(
                 path = write_report(entry, done, "passed", step.log, step.elapsed_s)
                 report = path if done == stage else report
             state = handle.state()
+            made = {}
+            if stage == "bitstream":
+                bits = handle.bitstream_report(limit=3)
+                made = {
+                    "bitstream": {
+                        key: bits[key]
+                        for key in ("file", "bytes", "bits", "protocol", "settings", "blocks")
+                    }
+                }
             return reply(
                 {
                     "stage": stage,
@@ -797,6 +846,7 @@ def register(
                     "reached": list(state.reached),
                     **({"ran": ran + [stage]} if ran else {}),
                     **({"report": report} if report else {}),
+                    **made,
                 }
             )
 

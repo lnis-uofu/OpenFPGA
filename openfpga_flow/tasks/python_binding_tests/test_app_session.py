@@ -134,7 +134,7 @@ def test_a_flow_is_run_from_the_chat_and_the_sidebar_follows(client, golden):
         "name": golden.vpr_arch.name,
         "extra": "layout " + golden.layout,
     }
-    assert [s["status"] for s in v["stages"]] == ["reached"] + ["not_reached"] * 4
+    assert [s["status"] for s in v["stages"]] == ["reached"] + ["not_reached"] * 5
     assert v["files"]["constraints"] == ["chan width %d" % golden.chan_width]
     assert {"name": "general.clock_modeling", "value": "route"} in v["options_changed"]
     for stage in ("pack", "place", "route", "analysis"):
@@ -142,7 +142,7 @@ def test_a_flow_is_run_from_the_chat_and_the_sidebar_follows(client, golden):
         assert done["ok"] and done["result"]["data"]["stage"] == stage
     v = view(client)
     assert [s["stage"] for s in v["stages"] if s["status"] == "reached"] == FLOW
-    assert all(s["seconds"] is not None for s in v["stages"][1:])
+    assert all(s["seconds"] is not None for s in v["stages"][1:5])  # BITSTREAM was not run
     assert v["latest"]["status"] == "reached" and v["latest"]["text"].startswith("s1 · ANALYZED ✔")
     assert sorted(v["files"]["results"]) == [
         f"{golden.circuit.stem}.net",

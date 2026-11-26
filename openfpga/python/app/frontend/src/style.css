@@ -142,6 +142,8 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .waiting { margin-top: 6px; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--line); }
 .chip { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
 .results { display: flex; flex-direction: column; gap: 2px; }
+.result-download { display: flex; align-items: baseline; gap: 6px; }
+.result-download .download { text-decoration: none; font-size: 13px; }
 .fold { background: none; border: none; padding: 4px 0; margin-top: 10px; color: var(--muted); font-size: 12px; }
 .fold:hover { color: var(--text); }
 .options { margin: 2px 0; padding-left: 16px; font-size: 12px; }
@@ -395,3 +397,44 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .panel-item-text { font-size: 12.5px; margin-top: 3px; }
 .panel-path { font-family: var(--mono); font-size: 11.5px; }
 .chip-current { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); }
+
+/* The hierarchy of a design: a tree of instances, or a table of modules */
+.hier-head { flex-wrap: wrap; }
+.hier-mode { display: inline-flex; }
+.hier-mode button { border-radius: 0; }
+.hier-mode button:first-child { border-radius: 4px 0 0 4px; }
+.hier-mode button:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+.hier-mode button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.hier-tree, .hier-children { list-style: none; margin: 0; padding: 0; }
+.hier-tree { flex: 1; min-height: 0; overflow: auto; font-family: var(--mono); font-size: 13px; }
+.hier-children { padding-left: 18px; border-left: 1px dotted var(--line); margin-left: 8px; }
+.hier-row { display: flex; align-items: center; gap: 8px; padding: 1px 4px; border-radius: 3px; }
+.hier-row:hover { background: var(--panel); }
+.hier-toggle { width: 16px; flex: none; background: none; border: none; padding: 0; color: var(--muted); }
+.hier-toggle:disabled { opacity: 0.5; }
+.hier-params, .hier-count { font-size: 12px; }
+.hier-count::before { content: "× "; }
+.hier-src { font-size: 12px; white-space: nowrap; }
+.hier-more { padding: 1px 4px 1px 28px; font-style: italic; }
+.hier-library { color: var(--accent); }
+.hier-unknown { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, var(--line)); }
+.hier-error { color: var(--bad); }
+.hier-table { flex: 1; min-height: 0; overflow: auto; }
+.hier-modules { border-collapse: collapse; font-size: 13px; }
+.hier-modules th, .hier-modules td { text-align: left; padding: 3px 10px; border-bottom: 1px solid var(--line); }
+.hier-modules .num { text-align: right; font-variant-numeric: tabular-nums; }
+/* The hierarchy in the sidebar: small, and scrolled when it is long */
+.hier-side-head { display: flex; align-items: center; gap: 4px; font-size: 12px; margin-bottom: 4px; }
+.hier-compact { max-height: 320px; font-size: 12px; }
+.hier-compact .hier-row { gap: 6px; white-space: nowrap; }
+.hier-compact .hier-children { padding-left: 10px; margin-left: 6px; }
+.hier-compact .hier-instance { font-weight: 600; text-decoration: none; color: inherit; }
+.hier-compact button.hier-instance:hover { color: var(--accent); text-decoration: underline; }
+.hier-compact .hier-module { overflow: hidden; text-overflow: ellipsis; }
+.hier-compact .chip { font-size: 10px; padding: 0 5px; }
+.hier-side .hier-error { font-size: 12px; }
+/* A section of the sidebar that folds: its title is the button */
+.section-fold { background: none; border: none; padding: 0; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.section-fold:hover { color: var(--text); }
+.section-note { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.side-section.folded h2 { margin-bottom: 0; }

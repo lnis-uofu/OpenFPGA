@@ -69,6 +69,20 @@ std::string session_json(const OpenFpgaSession& session,
   write_file(json, session, OpenFpgaInput::OPENFPGA_ARCH);
   json.key("circuit");
   write_file(json, session, OpenFpgaInput::CIRCUIT);
+  /* The settings that the bitstream is made with (spec_bitstream.md B-1) */
+  for (const char* kind : {"simulation_setting", "bitstream_setting"}) {
+    json.key(kind);
+    const std::vector<std::string> files = session.settings_files(kind);
+    if (files.empty()) {
+      json.null();
+    } else {
+      json.begin_array();
+      for (const std::string& file : files) {
+        json.value(file);
+      }
+      json.end_array();
+    }
+  }
   json.end_object();
   json.key("results").begin_object();
   json.key("packing");
@@ -80,13 +94,18 @@ std::string session_json(const OpenFpgaSession& session,
   json.key("routing");
   write_result(json, current && session.reached(OpenFpgaStage::ROUTED),
                current ? run->setup.FileNameOpts.RouteFile : std::string());
+  const BitstreamOutput* bitstream = session.bitstream_output();
+  json.key("bitstream");
+  write_result(json, current && nullptr != bitstream,
+               nullptr != bitstream ? bitstream->file : std::string());
   json.end_object();
   json.key("failed");
   bool wrote = false;
   if (current) {
     /* The stage that failed last, if its data is still there */
     for (const OpenFpgaStage& stage :
-         {OpenFpgaStage::ROUTED, OpenFpgaStage::PLACED,
+         {OpenFpgaStage::BITSTREAM, OpenFpgaStage::REPACKED,
+          OpenFpgaStage::ROUTED, OpenFpgaStage::PLACED,
           OpenFpgaStage::PACKED}) {
       if (const std::string* failure = session.failure(stage)) {
         json.begin_object();

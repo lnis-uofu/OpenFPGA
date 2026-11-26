@@ -1,6 +1,6 @@
 # Spec: OpenFPGA device package
 
-Status: draft for review. Implemented: the manifest and its checks, `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md).
+Status: draft for review. Implemented: the manifest and its checks, `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md).
 
 ## Overview
 
@@ -145,7 +145,8 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-14** `device.grid`, `device.lut_size` and `device.channel_width` are facts about the files. `check` (R-40) compares them with the VPR architecture and reports a mismatch. It reads the architecture with the variables replaced by the values of the default corner.
 - **R-14a** `device.flat_routing` (true or false, false when it is missing) says that the flow, up to the bitstream, was checked with flat routing (`router.flat_routing`, VPR's `--flat_routing on`) on this device. The flow of the web app routes flat on a package only when it is true.
 - **R-14b** `flow_defaults.vpr_options` maps flags of VPR, without their dashes, to values (text, numbers or true/false): the options that the reference flow of the package gives to VPR, for example `{"constant_net_method": "route"}`. A session that uses the package sets them as application options, found by their VPR flag (`vpr_flag` of `report_app_option --json`), before it reads the architectures. A value that the flow refuses stops the use of the package. These entries are not set: `device` and `route_chan_width`, which `device.grid` and `device.channel_width` give (they are told when they say otherwise), `circuit_format`, which synthesis follows and the flow reads from the extension of the netlist, and a flag that the flow does not know (told).
-- **R-15** A reference bitstream, when present, is for the reference design in `reference/` and the manifest records the design and the SHA-256 of the files, so the package can be tested (R-43).
+- **R-14c** `flow_defaults.bitstream` says how the bitstream of the device is made in a session: `link_options` and `fabric_options` (flags of `link_openfpga_arch` and `build_fabric`, `--` and a name, no value) and `fixups` (`check_netlist_naming_conflict`, `pb_pin_fixup`, `lut_truth_table_fixup`). Anything else makes the package unusable. `device.bitstream` (true or false, true when missing) says whether the device can make one. See docs/spec_bitstream.md B-10 and B-11.
+- **R-15** A reference bitstream, when present, is for the reference design in `reference/` and the manifest records the design and the SHA-256 of the files, so the package can be tested (R-43). `reference.expected.bitstreams.build_bitstream` is the SHA-256 of the file that `build_bitstream` writes for the reference design in a session (synthesized with the package's script, then pack, place, route; docs/spec_bitstream.md).
 
 ### Corners
 
@@ -232,7 +233,8 @@ Paths in the manifest are relative to the package root. Directories may be empty
   - checks the manifest (R-2 to R-6, R-10, R-14 to R-14b, R-25, R-30);
   - reads the VPR architecture with the layout of `device.grid`, then the OpenFPGA architecture;
   - sets `router.route_chan_width` to `device.channel_width`, and the options of `flow_defaults.vpr_options` (R-14b);
-  - keeps for the session what the flow needs later: `device.flat_routing`, the Yosys script and its techlib files, the I/O map, and the `odc_defaults`, which it reads.
+  - keeps for the session what the flow needs later: `device.flat_routing`, the Yosys script and its techlib files, the I/O map, and the `odc_defaults`, which it reads;
+  - reads the files of the roles `simulation_setting` and `bitstream_setting`, and keeps `flow_defaults.bitstream` and `device.bitstream` for `build_bitstream` (docs/spec_bitstream.md B-3).
 
   The package is an input of the session: a checkpoint saves it, the journal has the command, and a replay runs it.
 - **R-48** `write_io_map --file <f.csv>` writes a first I/O map for the device of the session: a row for each I/O subtile of the grid with `side`, `row`, `col` and `subtile`, and `netlist_name` once the fabric is built. The maker of the package fills in `pin_type`, `pin_direction` and `customer_pin_alias`.

@@ -65,6 +65,14 @@ struct DevicePackage {
   std::vector<std::string> yosys_read_verilog;
   std::vector<std::string> yosys_dsp_map;
   bool yosys_options_valid = true;
+  /* device.bitstream, and flow_defaults.bitstream (spec_bitstream.md B-10,
+   * B-11): the flags of link_openfpga_arch and build_fabric, and the fixups.
+   * has_bitstream_recipe is false when the manifest has none (the defaults) */
+  bool bitstream = true;
+  bool has_bitstream_recipe = false;
+  std::vector<std::string> bitstream_link_options;
+  std::vector<std::string> bitstream_fixups;
+  std::vector<std::string> bitstream_fabric_options;
   /* The JSON text of the reference of the manifest, or "{}" */
   std::string reference;
 

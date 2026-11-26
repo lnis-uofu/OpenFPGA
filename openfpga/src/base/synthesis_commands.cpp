@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "command_exit_codes.h"
+#include "design_hierarchy.h"
 #include "design_synthesis.h"
 #include "device_package.h"
 #include "nlohmann/json.hpp"
@@ -24,6 +25,7 @@ using json = nlohmann::ordered_json;
 namespace {
 
 const int SYNTHESIS_SCHEMA_VERSION = 1;
+const int DESIGN_HIERARCHY_SCHEMA_VERSION = 1;
 
 /* The words of a list given as "a,b,c" */
 std::vector<std::string> list_of(const std::string& text) {
@@ -69,6 +71,24 @@ bool session_package(const OpenfpgaContext& ctx, DevicePackage& package) {
   return true;
 }
 
+/* Run a script with the command yosys of the shell */
+int run_yosys(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
+              const fs::path& script_file) {
+  const ShellCommandId yosys = shell->command("yosys");
+  if (ShellCommandId::INVALID() != yosys && shell->command_removed(yosys)) {
+    VTR_LOG_ERROR("The command 'yosys' was removed: Yosys cannot run\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  if (ShellCommandId::INVALID() == yosys) {
+    VTR_LOG_ERROR(
+      "This build of OpenFPGA has no Yosys (OPENFPGA_WITH_YOSYS): Yosys "
+      "cannot run\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  const std::string run = "yosys --file \"" + script_file.string() + "\"";
+  return shell->execute_command(run.c_str(), ctx);
+}
+
 /* Write the script of a plan, run Yosys on it unless no_run, and read the
  * netlist as the circuit when the architectures are read, unless no_read.
  * Fills the answer */
@@ -107,19 +127,7 @@ int run_plan(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
     VTR_LOG("Wrote the script '%s' (not run)\n", plan.script_file.c_str());
     return CMD_EXEC_SUCCESS;
   }
-  const ShellCommandId yosys = shell->command("yosys");
-  if (ShellCommandId::INVALID() != yosys && shell->command_removed(yosys)) {
-    VTR_LOG_ERROR("The command 'yosys' was removed: nothing is synthesized\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  if (ShellCommandId::INVALID() == yosys) {
-    VTR_LOG_ERROR(
-      "This build of OpenFPGA has no Yosys (OPENFPGA_WITH_YOSYS): nothing is "
-      "synthesized\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  const std::string run = "yosys --file \"" + plan.script_file.string() + "\"";
-  if (CMD_EXEC_SUCCESS != shell->execute_command(run.c_str(), ctx)) {
+  if (CMD_EXEC_SUCCESS != run_yosys(shell, ctx, plan.script_file)) {
     return CMD_EXEC_FATAL_ERROR;
   }
   if (!fs::is_regular_file(plan.netlist, error)) {
@@ -345,6 +353,125 @@ int read_design_command(Shell<OpenfpgaContext>* shell, OpenfpgaContext& ctx,
   return give(ctx, answer, status);
 }
 
+/* The hierarchy of a design (design_hierarchy.h): its RTL elaborated by a
+ * Yosys script of its own, which leaves the flow as it is */
+int report_design_hierarchy_command(Shell<OpenfpgaContext>* shell,
+                                    OpenfpgaContext& ctx, const Command& cmd,
+                                    const CommandContext& context) {
+  SynthesisRequest request;
+  json answer;
+  answer["design"] = json();
+  size_t limit = 500;
+  fs::path script_file;
+  fs::path json_file;
+  try {
+    const std::string limit_text = value_of(cmd, context, "limit");
+    if (!limit_text.empty()) {
+      const int given = std::stoi(limit_text);
+      if (given < 1 || given > 100000) {
+        throw SynthesisRefused("limit is a number from 1 to 100000");
+      }
+      limit = static_cast<size_t>(given);
+    }
+    const std::string file = value_of(cmd, context, "file");
+    if (!file.empty()) {
+      if (!value_of(cmd, context, "top").empty() ||
+          !value_of(cmd, context, "files").empty()) {
+        throw SynthesisRefused("give --file, or --top and --files, not both");
+      }
+      const DesignDirectory design = read_design_directory(file, "");
+      if (design.rtl.empty()) {
+        throw SynthesisRefused("The design '" + design.name +
+                               "' has no RTL, only a netlist: there is no "
+                               "hierarchy to elaborate");
+      }
+      answer["design"] = design.name;
+      request.top = design.top;
+      request.files = design.rtl;
+      request.include_dirs = design.include_dirs;
+      request.defines = design.defines;
+      request.read_options = design.read_options;
+    } else {
+      request.top = value_of(cmd, context, "top");
+      if (request.top.empty()) {
+        throw SynthesisRefused(
+          "give --file (a design directory), or --top "
+          "and --files");
+      }
+      for (const std::string& name : list_of(value_of(cmd, context, "files"))) {
+        request.files.push_back(whole(name));
+      }
+      for (const std::string& dir :
+           list_of(value_of(cmd, context, "include_dirs"))) {
+        request.include_dirs.push_back(whole(dir));
+      }
+      for (const std::string& define :
+           list_of(value_of(cmd, context, "defines"))) {
+        const size_t eq = define.find('=');
+        request.defines.emplace_back(
+          define.substr(0, eq),
+          std::string::npos == eq ? std::string() : define.substr(eq + 1));
+      }
+      request.read_options = list_of(value_of(cmd, context, "read_options"));
+    }
+    /* The top and the defines of the ODC of the session, as the synthesis
+     * takes them; its Yosys commands are for the synthesis only */
+    apply_constraints(ctx.session(), request);
+    request.constraints.clear();
+    const std::string folder = value_of(cmd, context, "output_dir");
+    const fs::path output =
+      whole(folder.empty() ? std::string("hierarchy") : folder);
+    script_file = output / "hierarchy.ys";
+    json_file = output / "hierarchy.json";
+    DevicePackage package;
+    const bool has_package = session_package(ctx, package);
+    const std::string script = make_hierarchy_script(
+      request, has_package ? &package : nullptr, json_file);
+    std::error_code error;
+    fs::create_directories(output, error);
+    std::ofstream(script_file) << script;
+    fs::remove(json_file, error);
+  } catch (const std::exception& error) {
+    VTR_LOG_ERROR("The hierarchy is refused: %s\n", error.what());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  if (CMD_EXEC_SUCCESS != run_yosys(shell, ctx, script_file)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  nlohmann::json yosys;
+  try {
+    std::ifstream in(json_file);
+    if (!in) {
+      throw std::runtime_error("Yosys wrote no file '" + json_file.string() +
+                               "'");
+    }
+    yosys = nlohmann::json::parse(in);
+    const json tree = hierarchy_of(yosys, request.top, limit);
+    for (auto it = tree.begin(); it != tree.end(); ++it) {
+      answer[it.key()] = it.value();
+    }
+  } catch (const std::exception& error) {
+    VTR_LOG_ERROR("The hierarchy cannot be read: %s\n", error.what());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  json files = json::array();
+  for (const fs::path& file : request.files) {
+    files.push_back(whole(file));
+  }
+  answer["files"] = files;
+  answer["script"] = whole(script_file);
+  answer["json"] = whole(json_file);
+  json reply;
+  reply["schema_version"] = DESIGN_HIERARCHY_SCHEMA_VERSION;
+  reply["kind"] = "design_hierarchy";
+  reply["stage"] = json();
+  reply["data"] = answer;
+  const std::string text = reply.dump();
+  ctx.set_query_result(text);
+  VTR_LOG("%s\n", text.c_str());
+  return CMD_EXEC_SUCCESS;
+}
+
 void add_text_option(Command& cmd, const char* name, const bool required,
                      const char* help) {
   const CommandOptionId opt = cmd.add_option(name, required, help);
@@ -405,6 +532,32 @@ void add_synthesis_commands(Shell<OpenfpgaContext>& shell) {
     "synthesize does, and give its SDC to VPR");
   shell.set_command_class(design_id, cmd_class);
   shell.set_command_execute_function(design_id, read_design_command);
+
+  Command hierarchy("report_design_hierarchy");
+  add_text_option(hierarchy, "file", false, "The design directory");
+  add_text_option(hierarchy, "top", false,
+                  "The top module (without a design directory)");
+  add_text_option(hierarchy, "files", false,
+                  "The Verilog files (.v, .sv, .vh), separated by commas");
+  add_text_option(hierarchy, "include_dirs", false,
+                  "The folders of `include, separated by commas");
+  add_text_option(hierarchy, "defines", false,
+                  "Defines NAME=value, separated by commas");
+  add_text_option(hierarchy, "read_options", false,
+                  "Options of read_verilog (-nolatches), separated by commas");
+  add_text_option(hierarchy, "output_dir", false,
+                  "The folder of the script and of the JSON of Yosys "
+                  "(hierarchy)");
+  add_text_option(hierarchy, "limit", false,
+                  "The instances of the tree at most, breadth first (500)");
+  ShellCommandId hierarchy_id = shell.add_command(
+    hierarchy,
+    "Elaborate the RTL of a design with Yosys, in a script of its own, and "
+    "answer the tree of its instances and its modules, as JSON. The flow is "
+    "not changed");
+  shell.set_command_class(hierarchy_id, cmd_class);
+  shell.set_command_execute_function(hierarchy_id,
+                                     report_design_hierarchy_command);
 }
 
 } /* end namespace openfpga */

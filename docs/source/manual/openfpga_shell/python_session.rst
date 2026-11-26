@@ -156,6 +156,14 @@ Synthesis and design directories
 
 Both return what the command answers (kind ``synthesis``): ``top``, ``netlist``, ``script``, ``device_package``, ``lut_size``, ``files``, ``synthesized`` and ``circuit_read``, with ``design``, ``sdc`` and ``odc`` for a design, and ``constraints`` when the script has the synthesis commands of an ODC. ``run=False`` writes the script and returns the plan without running Yosys, and ``read_design(..., check=True)`` checks the design without writing anything; neither is written in the journal.
 
+``session.design_hierarchy(directory)`` (or ``design_hierarchy(top=..., files=[...])``) gives the hierarchy of a design with the command ``report_design_hierarchy``: Yosys elaborates its RTL from its top in a script of its own, as the synthesis reads it, and the flow does not change (not in the journal). It returns a dict: ``tree`` (the instances, breadth first, ``limit`` of them at most), ``modules`` (each module with its parameters, its kind, ``module``, ``library`` or ``unknown``, and its instances in the whole design), ``nodes``, ``instances`` and ``truncated``.
+
+.. code-block:: python
+
+    h = session.design_hierarchy("designs/my_design", limit=1000)
+    for child in h["tree"]["children"]:
+        print(child["instance"], child["module"], child.get("parameters", {}))
+
 .. _odc_in_python:
 
 Constraints in ODC
@@ -164,6 +172,17 @@ Constraints in ODC
 ``session.read_odc(file)`` reads the constraints of the design from an ODC file (``docs/spec_odc.md``, command ``read_odc``, see :ref:`openfpga_constraint_commands`): timing, synthesis, floorplanning, routing and pins. They are checked against what is read, and the rest when it is read: a constraint that does not fit raises ``OpenfpgaError`` with its file and line, from ``read_odc``, or from the command that reads the netlist or makes the device. It returns ``session.constraints()``, what ``report_constraints`` answers: each command with the objects it matched, the errors and warnings, the coverage of the timing, and the files given to the tools. ``session.write_odc(file)`` writes the constraints back, and ``session.clear_odc()`` takes them away; ``clear_constraints()`` takes them away too.
 
 A checkpoint records the ODC file with its checksum, and ``restore`` reads it again; the journal has ``read_odc``. ``read_design`` reads the ODC file of a design (role ``odc``) before it synthesizes it, and ``synthesize`` gives the synthesis commands of the session to Yosys.
+
+.. _bitstream_in_python:
+
+The bitstream
+~~~~~~~~~~~~~
+
+``session.bitstream(file=None, format="plain_text", arch_file=None)`` makes the bitstream of the routed design with the command ``build_bitstream`` (``docs/spec_bitstream.md``): the analysis when it is not reached, the link and the fabric when they are not valid any more, repack, the architecture and fabric bitstreams, and the file (``bitstream/<circuit>.bit`` by default), with the options of the device package. It returns what ``report_bitstream`` answers (``session.bitstream_report()``): the file with its SHA-256, the bits, the configuration protocol, the bits per type of block, the settings and the steps. ``run_flow(bitstream=True)`` makes it after the analysis.
+
+``session.read_simulation_setting(file)`` and ``session.read_bitstream_setting(file, append=False)`` read the settings; a device package reads its own. ``state().inputs`` lists their files, and ``state().results.bitstream`` the file of the bitstream. Bitstream settings drop ``REPACKED`` and ``BITSTREAM``; a stage up to ``ROUTED`` that runs again drops them too.
+
+A checkpoint records the settings with their checksums, and the file of the bitstream as a result; ``restore`` reads the settings again, and does not make the bitstream again. The journal has ``build_bitstream`` and the reads of the settings.
 
 .. _journal_and_replay:
 

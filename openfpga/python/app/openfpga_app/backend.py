@@ -14,7 +14,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional, Protocol
 
 from . import events
 
-STAGES = ("DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED")
+STAGES = ("DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "BITSTREAM")
 VIEW_VERSION = 1
 
 

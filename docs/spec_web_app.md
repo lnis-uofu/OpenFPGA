@@ -283,8 +283,9 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
   drops. Timing (SDC) and VPR constraints are set from files of the session.
 - **FEA-5** (done) Queries: device, utilization, placement, congestion, timing summary and critical
   paths, a block, a net, a search by name, the log of a stage.
-- **FEA-6** (planned) The stages after routing: repack, bitstream, fabric netlists, testbenches.
-  The shell has the commands; there is no tool and no stage in the page.
+- **FEA-6** (partial) The stages after routing: the bitstream is a stage of the page (`BITSTREAM`,
+  with its run button and its report; docs/spec_bitstream.md B-43). Fabric netlists and testbenches
+  are not: the shell has the commands, there is no tool and no stage.
 
 ### 7.2 Sessions
 
@@ -421,8 +422,8 @@ most useful first in each group. None is built.
 - **X-52** Read-only sharing of a session (its reports and views) with a link, for a review.
 - **X-53** Design and device version in every report (the checksums of the design directory and
   of the device package), so that a result can be traced to its inputs.
-- **X-54** The stages after routing in the page (FEA-6), with a report for each, and a bitstream
-  that can be downloaded.
+- **X-54** The stages after routing in the page (FEA-6), with a report for each. Done for the
+  bitstream: its file is in "Results", opened in the viewer and downloaded (`/api/download`).
 
 ### 9.7 The model as an assistant for experts
 

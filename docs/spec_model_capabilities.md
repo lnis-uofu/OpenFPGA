@@ -36,7 +36,8 @@ way to run a command of the OpenFPGA shell: those belong to the person (the cons
 | Answer questions about the OpenFPGA documentation | no | planned (M10) |
 | Explain a failure beyond the diagnostics of the tools | no | planned (M10) |
 | Synthesize Verilog for a device and run the flow on it | yes | `synthesize` (Yosys, with the script of the device package); the model does not write Yosys scripts |
-| Generate fabric netlists, bitstreams, testbenches | no | the shell commands exist, there is no tool for them |
+| Generate a bitstream | yes | `run_stage bitstream` (docs/spec_bitstream.md): the file, its size, its bits, the protocol and the settings of the device package; a device whose package says it makes none is `bitstream_unsupported` |
+| Generate fabric netlists, testbenches | no | the shell commands exist, there is no tool for them |
 
 ## 3. The answer that every tool returns
 
@@ -98,7 +99,7 @@ tool needs one and none is open (the answer carries a note).
 | Tool | Arguments | Effect | Needs |
 |------|-----------|--------|-------|
 | `read_inputs` | `circuit`, `vpr_arch?`, `layout?`, `openfpga_arch?` | reads the circuit (BLIF), the VPR architecture with the name of its device layout (a size such as `2x2`; never a file and never `auto`) and the OpenFPGA architecture. A session created from a device package has both architectures: only `circuit` is given. Each file is checked for its kind first (`wrong_file_kind`) | none; reaches DEVICE |
-| `run_stage` | `stage` (`pack`, `place`, `route`, `analysis`), `from_file?` | runs the stage; the earlier stages that are not reached are run first and listed in `ran`. With `place.placer analytical`, pack places too, and place is not run again after it. With `from_file` the packing, placement or routing is read from a file of the workspace instead of computed (not for `analysis`). On failure the data of the stage is kept, so the queries of the earlier stages still answer | DEVICE; reaches PACKED, PLACED, ROUTED, ANALYZED |
+| `run_stage` | `stage` (`pack`, `place`, `route`, `analysis`, `bitstream`), `from_file?` | runs the stage; the earlier stages that are not reached are run first and listed in `ran`. `bitstream` runs the shell's `build_bitstream` and adds `bitstream` to the answer: the file (`bitstream/<circuit>.bit` of the session), its bytes, its bits, the protocol, the settings and the three largest types of block. With `place.placer analytical`, pack places too, and place is not run again after it. With `from_file` the packing, placement or routing is read from a file of the workspace instead of computed (not for `analysis` nor `bitstream`). On failure the data of the stage is kept, so the queries of the earlier stages still answer | DEVICE; reaches PACKED, PLACED, ROUTED, ANALYZED, BITSTREAM |
 | `get_state` | | the stages reached, the inputs, the result files, the stage that failed and why, and what each stage did (clusters, placement cost, routing iterations, wirelength, seconds) | none |
 | `read_log` | `stage`, `tail?` | the last lines that a stage printed (default 40, at most 200) with their numbers; none for a stage that was read from a file | the stage ran |
 
@@ -165,6 +166,7 @@ kept and `failed` says which one and why.
 | `stage_failed`, `route_failed` | a stage ended with an error | read the diagnostics after it; `read_log` for the router lines |
 | `route_unroutable` | the router found no legal routing at this channel width (the data has the width) | raise `router.route_chan_width`, or change the placement; report it as the reason |
 | `flat_routing_unsupported` | `set_option router.flat_routing true`, or `run_stage` route with it set, in a session of a device package that does not say it supports flat routing | set `router.flat_routing` to false; `list_device_packages` says which packages support it |
+| `bitstream_unsupported` | `run_stage bitstream` in a session of a device package that says its device makes no bitstream (`device.bitstream` false) | say so; the stages up to analysis run |
 | `chan_width_required` | `run_stage` route or analysis with no channel width set, or a width that is cleared or not above 0 | set it with `set_constraint kind=chan_width`; a device package sets its own |
 | `file_not_found`, `layout_not_found`, `load_error` | a file or a layout name does not exist or cannot be read | say so; do not guess another name |
 | `wrong_file_kind` | a file is given for an input that it is not (for example an OpenFPGA architecture as the VPR one) | say what it is; the hint says where it belongs |
@@ -211,7 +213,7 @@ or a number: it looks it up (`find`, `list_options`, `describe_option`).
   that already exists).
 - Run two sessions in one conversation at the same time (several sessions can exist; the app shows
   one).
-- Generate a fabric netlist, a bitstream or a testbench; run a simulation.
+- Generate a fabric netlist or a testbench; run a simulation.
 - Search the documentation or explain a failure beyond the diagnostics and the log tail.
 - Draw a result: the web app shows results as Markdown and JSON; the drawings are not made yet.
 
@@ -222,7 +224,7 @@ These are the rules of the system prompt (`agent/prompt.py`) and of the loop (`a
 | # | Rule | Where |
 |---|------|-------|
 | R1 | Use a session; if there is none, open one (the app also does it when a tool needs one). | prompt, loop |
-| R2 | The order is `read_inputs`, then `run_stage` pack, place, route, analysis. `run_stage` runs the missing earlier stages. A change of option or constraint drops the stages after it. | prompt, tool |
+| R2 | The order is `read_inputs`, then `run_stage` pack, place, route, analysis, and bitstream when it is asked for. `run_stage` runs the missing earlier stages. A change of option or constraint drops the stages after it. | prompt, tool |
 | R3 | Use only what the tools return; quote numbers exactly; never invent a file, an option or a number. | prompt |
 | R4 | A result marked `truncated` has more: ask again with a narrower filter or a smaller limit, as `more` says. | prompt |
 | R5 | Make the calls yourself. Never end a reply by telling the person to run a stage or a tool. | prompt |

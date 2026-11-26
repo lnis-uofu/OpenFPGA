@@ -35,6 +35,9 @@ REPLAY_COMMANDS = frozenset(
         "yosys",
         "read_odc",
         "clear_odc",
+        "read_openfpga_simulation_setting",
+        "read_openfpga_bitstream_setting",
+        "build_bitstream",
     )
 )
 

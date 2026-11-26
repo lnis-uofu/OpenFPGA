@@ -29,6 +29,7 @@ TITLES = {
     "place": "Placement",
     "route": "Routing",
     "analysis": "Timing analysis",
+    "bitstream": "Bitstream",
 }
 
 # A warning or an error of VPR ("Warning 12: ..."), of Yosys ("Warning: ...", "ERROR: ..."), or of

@@ -146,6 +146,21 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
             },
         )
 
+    async def download(request: Request) -> Response:
+        """A file of the session as it is, to save (the bitstream). The same files as the
+        viewer"""
+        name = request.query_params.get("name", "")
+        find = getattr(backend, "download_file", None)
+        path = await find(name) if find is not None else None
+        if path is None:
+            return Response("No such file", status_code=404, media_type="text/plain")
+        return FileResponse(
+            path,
+            filename=Path(path).name,
+            media_type="application/octet-stream",
+            headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"},
+        )
+
     async def save_file(request: Request) -> Response:
         name = request.query_params.get("name", "")
         data = bytearray()
@@ -167,7 +182,7 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         if answer.get("ok"):
             return JSONResponse(answer)
         kind = (answer.get("diagnostics") or [{}])[0].get("kind")
-        status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "no_session": 404, "unknown_session": 404, "ambiguous_file": 409}.get(kind, 400)
+        status = {"file_not_found": 404, "path_refused": 403, "demo": 404, "no_session": 404, "unknown_session": 404, "ambiguous_file": 409, "no_design": 404}.get(kind, 400)
         return JSONResponse(answer, status)
 
     async def sessions(request: Request) -> Response:
@@ -202,6 +217,18 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         if not isinstance(design, str) or not design or len(design) > 512:
             return JSONResponse({"error": "design is the name of a design directory"}, 400)
         return _file_answer(await backend.add_design(design))
+
+    async def hierarchy(request: Request) -> Response:
+        """The hierarchy of a design of the session (the one added last, or ?design=)"""
+        find = getattr(backend, "design_hierarchy", None)
+        if find is None:
+            return _file_answer(
+                {
+                    "ok": False,
+                    "diagnostics": [{"kind": "demo", "message": "Not in the demo"}],
+                }
+            )
+        return _file_answer(await find(request.query_params.get("design") or None))
 
     async def upload(request: Request) -> Response:
         name = request.query_params.get("name", "")
@@ -250,6 +277,8 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/report", report),
         Route("/api/file", save_file, methods=["PUT"]),
         Route("/api/file/copy", copy_file, methods=["POST"]),
+        Route("/api/download", download),
+        Route("/api/hierarchy", hierarchy),
         Route("/api/sessions", sessions),
         Route("/api/session/open", open_session, methods=["POST"]),
         Route("/api/session/new", new_session, methods=["POST"]),

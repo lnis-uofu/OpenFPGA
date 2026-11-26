@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/preact";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App, handleKey } from "./App";
-import { AppEvent, SessionView } from "./api";
+import { AppEvent, Hierarchy, SessionView } from "./api";
 import { Console, tclComplete } from "./components/Console";
-import { DesignsPanel, matches } from "./components/Panels";
+import { DesignsPanel, HierarchyPanel, filterTree, matches } from "./components/Panels";
 import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { CallGroup, ToolCard } from "./components/ToolCard";
 import { TopBar } from "./components/TopBar";
@@ -75,6 +75,8 @@ const filled = (): SessionView => ({
   checkpoints: [{ name: "last", kind: "after the last stage", stages: ["DEVICE", "PACKED", "PLACED"] }],
 });
 
+/** Unfold the design files of the sidebar (they start folded) */
+const unfoldFiles = () => fireEvent.click(screen.getByText("Design files").closest("button") as HTMLButtonElement);
 /** An item of the menu of the sidebar, by its label */
 const menuItem = (label: string) => screen.getByText(label, { selector: ".menu-label" }).closest("button") as HTMLButtonElement;
 
@@ -148,11 +150,12 @@ describe("what the model costs", () => {
 describe("the sidebar", () => {
   it("has every section, with nothing in it, before there is a session", () => {
     render(<Sidebar />);
-    for (const title of ["Stages", "Design files", "Constraints and results"]) expect(screen.getByText(title)).toBeTruthy();
+    for (const title of ["Stages", "Design hierarchy", "Design files", "Constraints and results"]) expect(screen.getByText(title)).toBeTruthy();
     for (const item of ["New", "Session", "Devices", "Designs"]) expect(menuItem(item)).toBeTruthy();
     expect(screen.getByText("(no session)")).toBeTruthy();
-    expect(screen.getAllByText("(none)").length).toBeGreaterThanOrEqual(3);
-    expect(screen.getAllByRole("listitem")).toHaveLength(6); // synthesis, then the five stages of the flow
+    expect(screen.getAllByText("(none)").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Design files").closest("button")?.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.getAllByRole("listitem")).toHaveLength(7); // synthesis, then the six stages of the flow
   });
 
   it("shows the stages, the files and the checkpoints of a session", () => {
@@ -178,8 +181,8 @@ describe("the sidebar", () => {
     render(<Sidebar />);
     const bar = screen.getByRole("progressbar", { name: "Stages reached" });
     expect(bar.getAttribute("aria-valuenow")).toBe("3");
-    expect(bar.getAttribute("aria-valuemax")).toBe("6");
-    expect((bar.firstChild as HTMLElement).style.width).toBe("50%");
+    expect(bar.getAttribute("aria-valuemax")).toBe("7");
+    expect((bar.firstChild as HTMLElement).style.width).toBe(`${(3 / 7) * 100}%`);
     expect(screen.getByText("no route at channel width 2")).toBeTruthy();
   });
 
@@ -198,6 +201,7 @@ describe("the sidebar", () => {
     v.files.uploads = [{ name: "k6_frac_N10_tileable_40nm_with_a_long_name.blif", kind: "circuit", bytes: 10 }];
     view.value = v;
     render(<Sidebar />);
+    unfoldFiles();
     const name = "k6_frac_N10_tileable_40nm_with_a_long_name.blif";
     const button = screen.getByTitle(name);
     expect(button.textContent).toContain("…");
@@ -546,6 +550,7 @@ describe("uploading files to the session", () => {
     ];
     view.value = v;
     render(<Sidebar />);
+    unfoldFiles();
     expect(screen.getByText("mine.blif")).toBeTruthy();
     expect(screen.getByText("900 B")).toBeTruthy();
     expect(screen.getByText("20 kB")).toBeTruthy();
@@ -557,6 +562,7 @@ describe("uploading files to the session", () => {
     v.files.created = [{ name: "my_arch.xml", kind: "vpr_arch", bytes: 2048 }];
     view.value = v;
     render(<Sidebar />);
+    unfoldFiles();
     expect(screen.queryByText("Written by the model")).toBeNull(); // one list, not one for each origin
     expect(screen.getByText("my_arch.xml")).toBeTruthy();
     expect(screen.queryByLabelText("Remove my_arch.xml")).toBeNull();
@@ -574,6 +580,7 @@ describe("uploading files to the session", () => {
     ];
     view.value = v;
     render(<Sidebar />);
+    unfoldFiles();
     expect(screen.queryByText("Synthesis", { selector: "h3" })).toBeNull();
     expect(screen.getByText("synth/and2.blif")).toBeTruthy();
     expect(screen.getByText("synth/synth.ys")).toBeTruthy();
@@ -591,6 +598,7 @@ describe("uploading files to the session", () => {
     v.files.synthesis = [{ name: "synth/chip.blif", kind: "circuit", bytes: 300 }];
     view.value = v;
     render(<Sidebar />);
+    unfoldFiles();
     // A file of the copy is shown by its path in the design; the title has the whole name
     expect(screen.getByText("rtl/chip.v").title).toBe("design/chip/rtl/chip.v");
     const rows = [...document.querySelectorAll(".design-files .upload-row")].map((e) => e.textContent ?? "");
@@ -602,6 +610,7 @@ describe("uploading files to the session", () => {
   it("lists only the circuit that was read when there is nothing else", () => {
     view.value = filled();
     render(<Sidebar />);
+    unfoldFiles();
     expect(screen.getByText("routing_test.blif")).toBeTruthy(); // the circuit from a designs folder
     expect(document.querySelector(".design-files .upload-row.loaded")?.textContent).toContain("routing_test.blif");
   });
@@ -618,6 +627,7 @@ describe("uploading files to the session", () => {
     const confirm = vi.fn(() => false);
     vi.stubGlobal("confirm", confirm);
     render(<Sidebar />);
+    unfoldFiles();
     fireEvent.click(screen.getByLabelText("Remove mine.blif"));
     expect(confirm).toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled(); // not confirmed: nothing is sent
@@ -627,6 +637,34 @@ describe("uploading files to the session", () => {
     const sent = fetchMock.mock.calls.find((c) => String(c[0]).startsWith("/api/upload"))!;
     expect(sent[0]).toBe("/api/upload?name=mine.blif");
     expect(sent[1]?.method).toBe("DELETE");
+  });
+
+  it("starts with the design files folded, and keeps how many there are in the title", () => {
+    const v = filled();
+    v.files.uploads = [{ name: "mine.blif", kind: "circuit", bytes: 900 }];
+    view.value = v;
+    render(<Sidebar />);
+    const fold = screen.getByText("Design files").closest("button") as HTMLButtonElement;
+    expect(fold.getAttribute("aria-expanded")).toBe("false");
+    expect(fold.textContent).toContain("(2)"); // the upload and the circuit that was read
+    expect(screen.queryByText("mine.blif")).toBeNull();
+    expect(screen.queryByText("⤒ Upload files…")).toBeNull();
+    expect(screen.getByLabelText("Upload files")).toBeTruthy(); // a drop or the welcome screen still uploads
+    fireEvent.click(fold);
+    expect(fold.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByText("mine.blif")).toBeTruthy();
+    expect(fold.textContent).toContain("(2)");
+    fireEvent.click(fold);
+    expect(screen.queryByText("mine.blif")).toBeNull();
+  });
+
+  it("says that it waits for a circuit even when the design files are folded", () => {
+    const v = filled();
+    v.session = { ...v.session!, device_package: { name: "k6", description: null, layout: "2x2", lut_size: 6, tags: [], version: null } as never };
+    v.files.inputs = v.files.inputs.filter((f) => f.label !== "circuit");
+    view.value = v;
+    render(<Sidebar />);
+    expect(screen.getByText(/Waiting for a circuit/)).toBeTruthy();
   });
 
   it("says when the circuit that was uploaded could not be read, and keeps quiet when it was", async () => {
@@ -653,6 +691,7 @@ describe("uploading files to the session", () => {
   it("is not there in the demo", () => {
     config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
     render(<Sidebar />);
+    unfoldFiles();
     expect((screen.getByText(/Upload files/) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -1237,13 +1276,22 @@ describe("the run buttons of the stages", () => {
     return () => JSON.parse(String(fetchMock.mock.calls.find((c) => c[0] === "/api/chat")?.[1]?.body ?? "null"));
   };
 
-  it("are next to synthesis, pack, place and route only", () => {
+  it("are next to synthesis, pack, place, route, analysis and the bitstream only", () => {
     real();
     view.value = filled();
     render(<Sidebar />);
-    for (const name of ["synthesis", "packed", "placed", "routed"]) expect(screen.getByLabelText(`Run ${name}`)).toBeTruthy();
+    for (const name of ["synthesis", "packed", "placed", "routed", "analyzed", "bitstream"])
+      expect(screen.getByLabelText(`Run ${name}`)).toBeTruthy();
     expect(screen.queryByLabelText("Run device")).toBeNull();
-    expect(screen.queryByLabelText("Run analyzed")).toBeNull();
+  });
+
+  it("run the timing analysis", async () => {
+    real();
+    const sent = chat();
+    view.value = filled();
+    render(<Sidebar />);
+    fireEvent.click(screen.getByLabelText("Run analyzed"));
+    await waitFor(() => expect(sent()).toEqual({ message: "/run_stage stage=analysis" }));
   });
 
   it("run a stage as the slash line of run_stage", async () => {
@@ -1253,6 +1301,20 @@ describe("the run buttons of the stages", () => {
     render(<Sidebar />);
     fireEvent.click(screen.getByLabelText("Run routed"));
     await waitFor(() => expect(sent()).toEqual({ message: "/run_stage stage=route" }));
+  });
+
+  it("make the bitstream, whose file is downloaded from the results", async () => {
+    real();
+    const sent = chat();
+    const v = filled();
+    v.files.results = [...v.files.results, "bitstream/and2.bit"];
+    view.value = v;
+    render(<Sidebar />);
+    fireEvent.click(screen.getByLabelText("Run bitstream"));
+    await waitFor(() => expect(sent()).toEqual({ message: "/run_stage stage=bitstream" }));
+    const link = screen.getByTitle("Download bitstream/and2.bit") as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/api/download?name=bitstream%2Fand2.bit");
+    expect(link.hasAttribute("download")).toBe(true);
   });
 
   it("synthesize again the design that the session added last", async () => {
@@ -1297,7 +1359,7 @@ describe("synthesis as a stage", () => {
     withSynthesis("not_reached");
     render(<Sidebar />);
     const items = screen.getAllByRole("listitem");
-    expect(items).toHaveLength(6);
+    expect(items).toHaveLength(7);
     expect(items[0].textContent).toContain("DEVICE");
     expect(items[1].textContent).toContain("SYNTHESIS");
     expect(items[1].className).toContain("stage-not_reached");
@@ -1321,9 +1383,9 @@ describe("synthesis as a stage", () => {
     expect(first.getAttribute("title")).toContain("the design is a netlist");
     expect(first.textContent).toContain("–");
     const bar = screen.getByRole("progressbar", { name: "Stages reached" });
-    expect(bar.getAttribute("aria-valuemax")).toBe("5"); // the five stages of the flow
+    expect(bar.getAttribute("aria-valuemax")).toBe("6"); // the six stages of the flow
     expect(bar.getAttribute("aria-valuenow")).toBe("3");
-    expect((bar.firstChild as HTMLElement).style.width).toBe("60%");
+    expect((bar.firstChild as HTMLElement).style.width).toBe("50%");
   });
 });
 
@@ -1537,5 +1599,204 @@ describe("the edge of the sidebar", () => {
     sidebarOpen.value = false;
     render(<SidebarResize />);
     expect(screen.queryByRole("separator")).toBeNull();
+  });
+});
+
+describe("the hierarchy tab", () => {
+  const real = () => {
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+  };
+  const src = (line: number) => ({ file: "design/d/rtl/top.v", line });
+  const leaf = (instance: string, line: number) => ({
+    instance,
+    name: "leaf",
+    module: "leaf",
+    kind: "module" as const,
+    src: src(line),
+    children: [],
+  });
+  const data: Hierarchy = {
+    design: "d",
+    folder: "design/d",
+    top: "top",
+    nodes: 6,
+    instances: 8,
+    truncated: true,
+    modules: [
+      { name: "leaf", module: "leaf", parameters: {}, kind: "module", instances: 4, cells: 1, src: src(1) },
+      { name: "$paramod\\sub\\W=8", module: "sub", parameters: { W: 8 }, kind: "module", instances: 1, cells: 0, src: src(4) },
+      { name: "mult_8", module: "mult_8", parameters: {}, kind: "library", instances: 1, cells: 0, src: null },
+      { name: "top", module: "top", parameters: {}, kind: "module", instances: 1, cells: 0, src: src(9) },
+    ],
+    tree: {
+      instance: null,
+      name: "top",
+      module: "top",
+      kind: "module",
+      children: [
+        { instance: "u_mul", name: "mult_8", module: "mult_8", kind: "library", src: src(12), children: [] },
+        {
+          instance: "u_wide",
+          name: "$paramod\\sub\\W=8",
+          module: "sub",
+          kind: "module",
+          parameters: { W: 8 },
+          src: src(10),
+          children: [leaf("u_leaf0", 6), leaf("u_leaf1", 7)],
+          more: 2,
+        },
+      ],
+    },
+  };
+  // A session that added the design d
+  const withDesign = (): SessionView => ({ ...filled(), synthesis: { stage: "SYNTHESIS", status: "not_reached", seconds: null, message: null, design: "d" } });
+  const serve = (answer: unknown, status = 200) => {
+    const fetchMock = vi.fn((url: string) =>
+      Promise.resolve(
+        new Response(url.startsWith("/api/hierarchy") ? JSON.stringify(answer) : JSON.stringify({ ok: true, data: { text: "" } }), { status }),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  };
+
+  it("opens in a tab from the sidebar, with the same elaboration", async () => {
+    real();
+    view.value = withDesign();
+    const fetchMock = serve({ ok: true, data });
+    render(
+      <>
+        <Sidebar />
+        <Workspace />
+      </>,
+    );
+    await waitFor(() => expect(screen.getByLabelText("Open the hierarchy in a tab")).toBeTruthy());
+    fireEvent.click(screen.getByLabelText("Open the hierarchy in a tab"));
+    expect(activeTab.value).toBe("panel:hierarchy");
+    const tab = screen.getByRole("region", { name: "Design hierarchy" });
+    await waitFor(() => expect(within(tab).getByText("u_wide")).toBeTruthy());
+    // The sidebar and the tab show the same elaboration: Yosys ran once
+    expect(fetchMock.mock.calls.filter((c) => c[0] === "/api/hierarchy")).toHaveLength(1);
+    expect(within(tab).getByText("top top")).toBeTruthy();
+    expect(within(tab).getByText("8 instances, 4 modules")).toBeTruthy();
+    expect(within(tab).getByText("6 shown")).toBeTruthy();
+  });
+
+  it("shows the instances with their module, parameters and kind, two levels open", async () => {
+    real();
+    view.value = withDesign();
+    serve({ ok: true, data });
+    render(<HierarchyPanel />);
+    await waitFor(() => expect(screen.getByText("u_leaf0")).toBeTruthy());
+    expect(screen.getByText("#(W=8)")).toBeTruthy();
+    expect(screen.getByText("library")).toBeTruthy();
+    expect(screen.getByText("… 2 more instances")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Collapse u_wide"));
+    expect(screen.queryByText("u_leaf0")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Expand u_wide"));
+    expect(screen.getByText("u_leaf1")).toBeTruthy();
+  });
+
+  it("opens the line of an instance in the viewer", async () => {
+    real();
+    view.value = withDesign();
+    serve({ ok: true, data });
+    render(<HierarchyPanel />);
+    await waitFor(() => expect(screen.getByText("u_wide")).toBeTruthy());
+    fireEvent.click(screen.getByTitle("Open design/d/rtl/top.v at line 10"));
+    expect(activeTab.value).toBe("file:design/d/rtl/top.v");
+  });
+
+  it("searches the instances, and lists the modules", async () => {
+    real();
+    view.value = withDesign();
+    serve({ ok: true, data });
+    render(<HierarchyPanel />);
+    await waitFor(() => expect(screen.getByText("u_wide")).toBeTruthy());
+    fireEvent.input(screen.getByLabelText("Search the instances"), { target: { value: "leaf1" } });
+    expect(screen.getByText("u_leaf1")).toBeTruthy();
+    expect(screen.queryByText("u_leaf0")).toBeNull();
+    expect(screen.queryByText("u_mul")).toBeNull();
+    fireEvent.input(screen.getByLabelText("Search the instances"), { target: { value: "" } });
+    fireEvent.click(screen.getByText("Modules"));
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("W=8")).toBeTruthy();
+    expect(within(table).getAllByRole("row")).toHaveLength(5);
+  });
+
+  it("says what is missing when the session has no design", async () => {
+    real();
+    view.value = withDesign();
+    serve({ ok: false, diagnostics: [{ kind: "no_design", message: "The session has no design directory", hint: "Add a design to the session first (Designs)" }] }, 404);
+    render(<HierarchyPanel />);
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("no design directory"));
+    // The same answer is not asked for again
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(screen.getByText("Add a design to the session first (Designs)")).toBeTruthy();
+  });
+
+  it("is not in the demo", () => {
+    config.value = { schema_version: 1, console: false, backend: "demo", model: { endpoint: null, name: null } };
+    view.value = filled();
+    render(<Sidebar />);
+    expect(screen.queryByText("Hierarchy", { selector: ".menu-label" })).toBeNull(); // not in the menu
+    expect(screen.getByText("Not in the demo.")).toBeTruthy();
+  });
+
+  it("is in the sidebar, small, and loads when the session has a design", async () => {
+    real();
+    view.value = withDesign();
+    const fetchMock = serve({ ok: true, data });
+    render(
+      <>
+        <Sidebar />
+        <Workspace />
+      </>,
+    );
+    await waitFor(() => expect(screen.getByText("u_wide")).toBeTruthy());
+    expect(fetchMock.mock.calls.filter((c) => c[0] === "/api/hierarchy")).toHaveLength(1);
+    expect(screen.getByText("8 instances, 4 modules")).toBeTruthy();
+    // One level is open in the sidebar; the name of an instance opens its line
+    expect(screen.queryByText("u_leaf0")).toBeNull();
+    fireEvent.click(screen.getByTitle("Open design/d/rtl/top.v at line 12"));
+    expect(activeTab.value).toBe("file:design/d/rtl/top.v");
+    fireEvent.click(screen.getByLabelText("Expand u_wide"));
+    expect(screen.getByText("u_leaf0")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Elaborate the hierarchy again"));
+    await waitFor(() => expect(fetchMock.mock.calls.filter((c) => c[0] === "/api/hierarchy")).toHaveLength(2));
+    fireEvent.click(screen.getByLabelText("Open the hierarchy in a tab"));
+    expect(activeTab.value).toBe("panel:hierarchy");
+  });
+
+  it("asks for a design in the sidebar, and does not elaborate while a call runs", async () => {
+    real();
+    view.value = filled();
+    const fetchMock = serve({ ok: true, data });
+    render(<Sidebar />);
+    expect(screen.getByText("Add a design to the session (Designs) to see its modules and instances.")).toBeTruthy();
+    busy.value = true;
+    view.value = withDesign();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(fetchMock.mock.calls.filter((c) => c[0] === "/api/hierarchy")).toHaveLength(0);
+    busy.value = false;
+    await waitFor(() => expect(screen.getByText("u_wide")).toBeTruthy());
+  });
+
+  it("is elaborated again for another design", async () => {
+    real();
+    view.value = withDesign();
+    const fetchMock = serve({ ok: true, data });
+    render(<Sidebar />);
+    await waitFor(() => expect(screen.getByText("u_wide")).toBeTruthy());
+    view.value = { ...withDesign(), synthesis: { stage: "SYNTHESIS", status: "not_reached", seconds: null, message: null, design: "other" } };
+    await waitFor(() => expect(fetchMock.mock.calls.filter((c) => c[0] === "/api/hierarchy")).toHaveLength(2));
+  });
+
+  it("keeps the parents of what matches", () => {
+    const found = filterTree(data.tree, "leaf0");
+    expect(found?.children.map((c) => c.instance)).toEqual(["u_wide"]);
+    expect(found?.children[0].children.map((c) => c.instance)).toEqual(["u_leaf0"]);
+    expect(found?.children[0].more).toBeUndefined();
+    expect(filterTree(data.tree, "nothing")).toBeNull();
   });
 });

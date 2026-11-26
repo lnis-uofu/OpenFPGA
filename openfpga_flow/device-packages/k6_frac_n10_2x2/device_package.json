@@ -75,6 +75,17 @@
     },
     "yosys_options": {
       "read_verilog": []
+    },
+    "bitstream": {
+      "link_options": [
+        "--sort_gsb_chan_node_in_edges"
+      ],
+      "fixups": [
+        "check_netlist_naming_conflict"
+      ],
+      "fabric_options": [
+        "--compress_routing"
+      ]
     }
   },
   "reference": {
@@ -82,7 +93,9 @@
     "top": "and2",
     "source_task": "basic_tests/generate_fabric",
     "expected": {
-      "bitstreams": {},
+      "bitstreams": {
+        "build_bitstream": "12f9f468cee936ce80ccdb83eab77ef0347a0bca033799b6aeba0c3ad98f440c"
+      },
       "channel_width": 20,
       "critical_path_delay_ns": 1.15361,
       "fmax_mhz": 866.846,

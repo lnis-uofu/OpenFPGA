@@ -561,6 +561,71 @@ static void test_context_has_session() {
   CHECK(const_context.session().has_input(OpenFpgaInput::VPR_ARCH));
 }
 
+/* The settings, the link, the fabric and the output of build_bitstream
+ * (docs/spec_bitstream.md B-1, B-2, B-20) */
+static void test_bitstream_state() {
+  OpenFpgaSession session;
+  run_all(session);
+  session.set_vpr_generation(3);
+  CHECK(!session.link_current() && !session.fabric_current());
+  session.set_linked_generation(3);
+  CHECK(session.link_current() && !session.fabric_current());
+  session.set_fabric_built();
+  CHECK(session.fabric_current());
+
+  openfpga::BitstreamOutput output;
+  output.file = "a.bit";
+  session.set_bitstream_output(output);
+  CHECK(nullptr != session.bitstream_output());
+
+  /* Simulation settings: the link and the fabric go, the stages stay */
+  session.read_settings("simulation_setting", "sim.xml", false);
+  CHECK(!session.link_current() && !session.fabric_current());
+  CHECK(session.reached(OpenFpgaStage::BITSTREAM));
+  CHECK(nullptr != session.bitstream_output());
+  CHECK(session.settings_files("simulation_setting") ==
+        std::vector<std::string>({"sim.xml"}));
+
+  /* Bitstream settings: REPACKED and BITSTREAM go too, and the output */
+  session.set_linked_generation(3);
+  session.read_settings("bitstream_setting", "a.xml", false);
+  session.read_settings("bitstream_setting", "b.xml", true);
+  CHECK(session.settings_files("bitstream_setting") ==
+        std::vector<std::string>({"a.xml", "b.xml"}));
+  CHECK(!session.link_current());
+  CHECK(!session.reached(OpenFpgaStage::REPACKED));
+  CHECK(!session.reached(OpenFpgaStage::BITSTREAM));
+  CHECK(session.reached(OpenFpgaStage::ANALYZED));
+  CHECK(nullptr == session.bitstream_output());
+  session.read_settings("bitstream_setting", "c.xml", false);
+  CHECK(session.settings_files("bitstream_setting") ==
+        std::vector<std::string>({"c.xml"}));
+
+  /* The output is set only when BITSTREAM is reached, and goes with it */
+  session.set_bitstream_output(output);
+  CHECK(nullptr == session.bitstream_output());
+  CHECK(session.complete(OpenFpgaStage::REPACKED));
+  CHECK(session.complete(OpenFpgaStage::BITSTREAM));
+  session.set_bitstream_output(output);
+  CHECK(nullptr != session.bitstream_output());
+  CHECK(session.complete(OpenFpgaStage::ROUTED));
+  CHECK(nullptr == session.bitstream_output());
+
+  /* A new link drops the fabric; the recipe goes with the architecture */
+  session.set_linked_generation(3);
+  session.set_fabric_built();
+  session.set_linked_generation(3);
+  CHECK(!session.fabric_current());
+  openfpga::BitstreamRecipe recipe;
+  recipe.supported = false;
+  session.set_bitstream_recipe(recipe);
+  CHECK(!session.bitstream_recipe().supported);
+  CHECK(session.read_input(OpenFpgaInput::OPENFPGA_ARCH));
+  CHECK(session.bitstream_recipe().supported);
+  CHECK(session.bitstream_recipe().fabric_options ==
+        std::vector<std::string>({"--compress_routing"}));
+}
+
 int main() {
   test_initial_state();
   test_inputs();
@@ -583,6 +648,7 @@ int main() {
   test_imported_file();
   test_required_stage();
   test_context_has_session();
+  test_bitstream_state();
 
   if (0 != num_failures) {
     std::fprintf(stderr, "%d check(s) failed\n", num_failures);

@@ -5,7 +5,7 @@ import { CHAT, activeTab, calls, closeTab, pinTab, reportUrl, split, tabs, view 
 import { Chat } from "./Chat";
 import { Drawing, kindOf } from "./Drawings";
 import { FileView } from "./FileView";
-import { DesignsPanel, DevicesPanel } from "./Panels";
+import { DesignsPanel, DevicesPanel, HierarchyPanel } from "./Panels";
 
 /** What a result tab shows: the drawing for the kinds that have a shape (utilization, placement, congestion), the result as
  * formatted text (Markdown), and the JSON as the model read it on request */
@@ -74,6 +74,7 @@ export function ReportView(props: { stage: string; title: string }) {
 function TabContent(props: { tab: { id: string; file?: string; report?: string; panel?: string; title: string } }) {
   if (props.tab.panel === "devices") return <DevicesPanel />;
   if (props.tab.panel === "designs") return <DesignsPanel />;
+  if (props.tab.panel === "hierarchy") return <HierarchyPanel />;
   if (props.tab.report) return <ReportView stage={props.tab.report} title={props.tab.title} />;
   return props.tab.file ? <FileView name={props.tab.file} /> : <ResultView callId={props.tab.id} />;
 }

@@ -562,8 +562,8 @@ Status of phases 3 and 4: done (2026-11-25), except what is listed under
     (R-23);
   - the share of constrained endpoints (R-41);
   - the bitstream compared with the one-shot `vpr` (T-6) and with
-    `pcf2place` (T-8): phase 0 compared them by hand; the tests compare the
-    placement;
+    `pcf2place` (T-8): done with the bitstream of the session
+    (docs/plan_bitstream.md, `test_bitstream.py`);
   - an I/O map in one of the packages of the repository, and a 32x32
     package: the tests make a copy of k6_frac_n10_2x2 with a map from
     `write_io_map`;

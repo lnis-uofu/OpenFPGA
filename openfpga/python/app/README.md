@@ -98,16 +98,18 @@ tools are the same.
 
 ## Opening files, and the console
 
-**The sidebar.** Stages: SYNTHESIS comes first, then the five stages of the flow. Synthesis is reached when
+**The sidebar.** Stages: SYNTHESIS comes first, then the six stages of the flow, the last one BITSTREAM (its ▶ runs
+`/run_stage stage=bitstream`; the file is in the results, with ⤓ to download it, `/api/download`). Synthesis is reached when
 the circuit is the netlist of a `synthesize` call (a file of the session's `synth` folder), failed when the
 last one failed (with its message), and greyed out (skipped, struck through, not counted in the progress bar)
 when the design is a netlist that was given, with the reason as its title; it is not reached before a circuit
 is read. Design files: one line for the architecture, with the device package and the layout as labels and a
 button "Show architecture" that opens the VPR and the OpenFPGA architecture files in tabs (they are not
-listed as files), then one list of every design file (what you uploaded, what the model wrote, what a
-synthesis made, and the circuit read from a designs folder), each with its kind and its origin, the circuit
-that the session has read marked "loaded", and the upload button. Constraints, results and the options that
-changed are in their own section. The view has `synthesis` (status, seconds, message) beside `stages`.
+listed as files). Design hierarchy: the tree of the design of the session (see below). Design files, a
+section that is folded at first (its title, which unfolds it, says how many files there are): one list of every design file (what you
+uploaded, what the model wrote, what a synthesis made, and the circuit read from a designs folder), each
+with its kind and its origin, the circuit that the session has read marked "loaded", and the upload
+button. Constraints, results and the options that changed are in their own section. The view has `synthesis` (status, seconds, message) beside `stages`.
 
 A click on a file name in the sidebar (an input, an uploaded file, a result such as the `.net`, `.place`
 or `.route` of the flow, a file of a device package) opens it in a tab of the centre, in Monaco, the
@@ -157,6 +159,20 @@ session (after a question), and the model is told. Files are per session; there 
 shared by all of them. Accepted: `.xml .blif .eblif .v .sv .vh .sdc .odc .pcf .json
 .csv .txt`, a plain name (letters, digits and `. _ + -`, at most 100), 50 MB at most for a file,
 and what a session may hold in all (512 MB). Not in the demo.
+
+## The hierarchy of a design
+
+Design hierarchy, in the sidebar, shows the tree of the design that was added to the session last
+(Designs, "Add to session"), as soon as it is added. Yosys elaborates its RTL in a run of its own
+(`report_design_hierarchy`), and the flow of the session is not changed: the design is still to be
+synthesized. In the sidebar the first level is open, a click on an instance opens its line, ↻
+elaborates the RTL again and ⤢ opens the tab. The tree shows each instance with its module, its parameters (`#(W=8)`) and its kind
+(`library` for a cell of the device package, `unknown` for a module that no file has); its first
+two levels are open, and a search keeps the instances that match with their parents. Modules lists
+each module with how many instances the whole design has of it. The `file:line` of an instance or a
+module opens its line in the viewer. The tree has 2000 instances at most, breadth first. Refresh
+elaborates the RTL again (after an edit). `GET /api/hierarchy` gives the same data. Not in the
+demo.
 
 ## Without a model
 

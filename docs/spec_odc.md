@@ -1,6 +1,6 @@
 # Spec: ODC, the constraints file of OpenFPGA
 
-Status: draft for review. Implemented (phases 3 to 5 of `docs/plan_odc_constraints.md`): `libs/libodc` (the reader, the checks, the writers), the commands of the plugin `ui`, the tools of the model (R-48) and the web app (R-49). Not yet: the custom properties of a `pcf_config.xml` (R-35), the objects of the synthesis commands reported from the log of Yosys (R-23), and the share of the endpoints that are constrained (R-41).
+Status: draft for review. Implemented (phases 3 to 5 of `docs/plan_odc_constraints.md`): `libs/libodc` (the reader, the checks, the writers), the commands of the plugin `ui`, the tools of the model (R-48) and the web app (R-49). Not supported: the custom properties of a `pcf_config.xml` (R-35). Not yet: the objects of the synthesis commands reported from the log of Yosys (R-23), and the share of the endpoints that are constrained (R-41).
 
 ## Overview
 
@@ -168,7 +168,7 @@ Each command has a **stage**, the first stage of the flow whose result it change
   - a port on a pin whose `pin_type` is `UNDEF` is a warning;
   - two ports on one pin is an error.
 - **R-34** `set_property PIN_DEFAULT 0|1 <ports>` gives the `default_value` of the pin constraints XML to a port that `PACKAGE_PIN` puts on a pin without a location (a global port of the fabric). On another port it is an error.
-- **R-35** `set_property <property> <value> <ports>`, for a property that the `pcf_config.xml` of the device package defines (for example an I/O mode), becomes a setting of the bitstream for the I/O that holds the port, as `pcf2bitstream_setting` does today. Not yet: no package has a `pcf_config.xml`, and such a property is refused with the reason.
+- **R-35** `set_property <property> <value> <ports>`, for a property that the `pcf_config.xml` of the device package defines (for example an I/O mode), is not supported: the custom commands of a PCF file are out of the scope of the bitstream of a session (docs/spec_bitstream.md), and such a property is refused with the reason.
 
 ### Other commands
 

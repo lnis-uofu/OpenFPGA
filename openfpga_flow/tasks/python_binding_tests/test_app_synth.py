@@ -95,6 +95,7 @@ def test_synthesis_is_the_first_stage_of_the_view_and_follows_what_the_session_d
         "PLACED",
         "ROUTED",
         "ANALYZED",
+        "BITSTREAM",
     ]
     # A netlist that is given is not synthesized: the stage is not needed
     answer = call(backend, "read_inputs", circuit=golden.circuit.name)
@@ -170,5 +171,52 @@ def test_the_page_lists_the_copy_of_a_design_and_opens_its_files(openfpga_module
         assert text["ok"] and "module chip" in json.dumps(text)
         # The run button of synthesis synthesizes the design that was added last
         assert asyncio.run(backend.view())["synthesis"]["design"] == "chip"
+    finally:
+        backend.close()
+
+
+def test_the_run_button_of_a_stage_synthesizes_the_design_that_was_added_first(
+    openfpga_module, tmp_path
+):
+    from openfpga_app.session_backend import SessionBackend
+    from openfpga_mcp.config import Config
+    from test_app_device_package import PACKAGES
+    from test_mcp_design_synth import make_design
+
+    designs = tmp_path / "designs"
+    make_design(designs / "chip")
+    backend = SessionBackend(
+        Config(
+            root=tmp_path / "workspace",
+            design_dirs=(designs,),
+            package_dirs=(PACKAGES,),
+            call_timeout_s=120,
+        )
+    )
+
+    async def chat(line):
+        return [item async for item in backend.chat(line)]
+
+    def calls(items):
+        return [
+            (i["tool"], i["arguments"].get("design"))
+            for i in items
+            if i["type"] == "tool_call_started"
+        ]
+
+    try:
+        opened(backend)
+        assert asyncio.run(backend.add_design("chip"))["ok"]
+        # The design is added, not synthesized: pack starts with its synthesis
+        items = asyncio.run(chat("/run_stage stage=pack"))
+        assert calls(items) == [("synthesize", "chip"), ("run_stage", None)]
+        finished = [i for i in items if i["type"] == "tool_call_finished"]
+        assert [i["ok"] for i in finished] == [True, True], finished
+        view = asyncio.run(backend.view())
+        assert view["synthesis"]["status"] == "reached"
+        assert {s["stage"]: s["status"] for s in view["stages"]}["PACKED"] == "reached"
+        # The circuit is read now: place does not synthesize again
+        items = asyncio.run(chat("/run_stage stage=place"))
+        assert calls(items) == [("run_stage", None)]
     finally:
         backend.close()

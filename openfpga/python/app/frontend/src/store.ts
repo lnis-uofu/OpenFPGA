@@ -24,6 +24,8 @@ import {
   streamChat,
   fetchDevicePackages,
   fetchFile,
+  fetchHierarchy,
+  type Hierarchy,
   saveFileText,
   copyFileToSession,
   removeUploadedFile,
@@ -66,7 +68,7 @@ export interface ConsoleLine {
 
 export const CHAT = "chat";
 /** The lists that open in a tab from the menu of the sidebar */
-export type Panel = "devices" | "designs";
+export type Panel = "devices" | "designs" | "hierarchy";
 // The calls that change the flow: the console shows them as the lines of the journal
 const CHANGING = new Set(["session_open", "session_close", "read_inputs", "run_stage", "set_option", "set_constraint", "checkpoint"]);
 
@@ -75,7 +77,7 @@ export const emptyView = (): SessionView => ({
   session: null,
   latest: { status: "none", text: "No session" },
   synthesis: { stage: "SYNTHESIS", status: "not_reached" as const, seconds: null, message: null },
-  stages: ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED"].map((stage) => ({
+  stages: ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "BITSTREAM"].map((stage) => ({
     stage,
     status: "not_reached" as const,
     seconds: null,
@@ -218,6 +220,7 @@ export function resetStore() {
   packagesOpen.value = false;
   devicePackages.value = null;
   usage.value = null;
+  hierarchy.value = { loading: false, session: null, design: null, data: null, error: null };
 }
 
 // The events -------------------------------------------------------------------------------
@@ -581,7 +584,7 @@ export function openReport(stage: string) {
 }
 
 /** The titles of the tabs of the lists */
-export const PANEL_TITLES: Record<Panel, string> = { devices: "Devices", designs: "Designs" };
+export const PANEL_TITLES: Record<Panel, string> = { devices: "Devices", designs: "Designs", hierarchy: "Hierarchy" };
 
 /** A list in a tab of its own: the device packages (read again each time, a package may have been
  * added) or the design directories (they come with the view) */
@@ -592,6 +595,33 @@ export function openPanel(panel: Panel) {
   }
   activeTab.value = id;
   if (panel === "devices") void loadDevicePackages();
+}
+
+/** The hierarchy of the design of the session: elaborated again each time it is asked (the RTL
+ * may have been edited) */
+export const hierarchy = signal<{
+  loading: boolean;
+  session: string | null; // the session that it is of
+  design: string | null; // and the design (the one that the session added last)
+  data: Hierarchy | null;
+  error: { message: string; hint?: string | null } | null;
+}>({ loading: false, session: null, design: null, data: null, error: null });
+
+export async function loadHierarchy() {
+  if (hierarchy.value.loading) return;
+  const session = view.value.session?.id ?? null;
+  const design = view.value.synthesis?.design ?? null;
+  hierarchy.value = { ...hierarchy.value, loading: true };
+  try {
+    const answer = await fetchHierarchy();
+    if (answer.ok) hierarchy.value = { loading: false, session, design, data: answer.data as Hierarchy, error: null };
+    else {
+      const d = answer.diagnostics?.[0];
+      hierarchy.value = { loading: false, session, design, data: null, error: { message: d?.message ?? "The hierarchy failed", hint: d?.hint } };
+    }
+  } catch (error) {
+    hierarchy.value = { loading: false, session, design, data: null, error: { message: String(error), hint: "Is the app still running?" } };
+  }
 }
 
 export async function loadDevicePackages() {

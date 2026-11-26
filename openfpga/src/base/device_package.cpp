@@ -299,6 +299,57 @@ std::string first_chars(const std::string& text, const size_t count,
   return text;
 }
 
+/* flow_defaults.bitstream (spec_bitstream.md B-10): flags without a value,
+ * and the fixups that build_bitstream knows. Anything else is refused */
+void read_bitstream_recipe(const std::string& name, const json& recipe,
+                           DevicePackage& package) {
+  if (falsy(recipe)) {
+    return;
+  }
+  const std::string what =
+    "flow_defaults.bitstream has link_options and fabric_options (flags such "
+    "as --compress_routing) and fixups (check_netlist_naming_conflict, "
+    "pb_pin_fixup, lut_truth_table_fixup)";
+  if (!recipe.is_object()) {
+    throw invalid(name, what);
+  }
+  static const std::regex flag("--[A-Za-z0-9_]+");
+  static const std::set<std::string> fixups = {
+    "check_netlist_naming_conflict", "pb_pin_fixup", "lut_truth_table_fixup"};
+  for (const auto& item : recipe.items()) {
+    std::vector<std::string>* list = nullptr;
+    if ("link_options" == item.key()) {
+      list = &package.bitstream_link_options;
+    } else if ("fabric_options" == item.key()) {
+      list = &package.bitstream_fabric_options;
+    } else if ("fixups" == item.key()) {
+      list = &package.bitstream_fixups;
+    } else {
+      throw invalid(name, what + ", not '" + item.key() + "'");
+    }
+    if (!item.value().is_array()) {
+      throw invalid(name, what);
+    }
+    for (const json& value : item.value()) {
+      const std::string text =
+        value.is_string() ? value.get<std::string>() : "";
+      const bool fixup = list == &package.bitstream_fixups;
+      if (fixup ? 0 == fixups.count(text) : !std::regex_match(text, flag)) {
+        throw invalid(name,
+                      what + ", not '" + value.dump() + "' in " + item.key());
+      }
+      list->push_back(text);
+    }
+  }
+  package.has_bitstream_recipe = true;
+  if (!recipe.contains("link_options")) {
+    package.bitstream_link_options = {"--sort_gsb_chan_node_in_edges"};
+  }
+  if (!recipe.contains("fabric_options")) {
+    package.bitstream_fabric_options = {"--compress_routing"};
+  }
+}
+
 } /* end anonymous namespace */
 
 std::vector<fs::path> DevicePackage::files_of(const std::string& role) const {
@@ -436,6 +487,14 @@ DevicePackage load_device_package(const fs::path& given,
     throw invalid(name, "device.flat_routing is true or false");
   }
   package.flat_routing = flat_routing.is_boolean() && flat_routing.get<bool>();
+  const json bitstream = member(device, "bitstream");
+  if (!bitstream.is_null() && !bitstream.is_boolean()) {
+    throw invalid(name, "device.bitstream is true or false");
+  }
+  package.bitstream = !bitstream.is_boolean() || bitstream.get<bool>();
+  read_bitstream_recipe(
+    name, falsy(flow_defaults) ? json() : member(flow_defaults, "bitstream"),
+    package);
   const fs::path vpr_arch = directory / roles["vpr_arch"][0];
   const std::vector<std::string> names = layouts(vpr_arch);
   if (names.end() == std::find(names.begin(), names.end(), package.layout)) {
@@ -548,6 +607,13 @@ std::string device_package_json(const DevicePackage& package,
   data["lut_size"] = package.lut_size ? json(*package.lut_size) : json();
   data["tags"] = package.tags;
   data["flat_routing"] = package.flat_routing;
+  data["bitstream"] = package.bitstream;
+  data["bitstream_recipe"] =
+    package.has_bitstream_recipe
+      ? json{{"link_options", package.bitstream_link_options},
+             {"fixups", package.bitstream_fixups},
+             {"fabric_options", package.bitstream_fabric_options}}
+      : json();
   data["license"] = package.license;
   data["channel_width"] =
     package.channel_width ? json(*package.channel_width) : json();

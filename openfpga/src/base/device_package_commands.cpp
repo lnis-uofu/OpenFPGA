@@ -111,6 +111,33 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
       return CMD_EXEC_FATAL_ERROR;
     }
   }
+  /* The settings of the bitstream (spec_bitstream.md B-3) */
+  for (const auto& setting :
+       {std::make_pair("simulation_setting",
+                       "read_openfpga_simulation_setting"),
+        std::make_pair("bitstream_setting",
+                       "read_openfpga_bitstream_setting")}) {
+    const std::vector<std::filesystem::path> files =
+      package.files_of(setting.first);
+    if (files.empty()) {
+      continue;
+    }
+    const std::string read =
+      std::string(setting.second) + " --file " + quoted(files.front());
+    if (CMD_EXEC_SUCCESS !=
+        shell->execute_command(read.c_str(), openfpga_ctx)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  BitstreamRecipe recipe;
+  recipe.supported = package.bitstream;
+  recipe.package = package.name;
+  if (package.has_bitstream_recipe) {
+    recipe.link_options = package.bitstream_link_options;
+    recipe.fixups = package.bitstream_fixups;
+    recipe.fabric_options = package.bitstream_fabric_options;
+  }
+  session.set_bitstream_recipe(recipe);
   session.set_device_package(device_package_json(package, &applied));
   VTR_LOG("Device package '%s' %s: layout %s\n", package.name.c_str(),
           package.version.c_str(), package.layout.c_str());

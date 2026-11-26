@@ -132,7 +132,7 @@ def test_the_definitions_of_the_tools_of_the_server_say_what_the_server_says(
             wanted = set(theirs[name].get("required", [])) - {"session"}
             assert set(function["parameters"]["required"]) == wanted, name
         stage = ours["run_stage"]["parameters"]["properties"]["stage"]
-        assert stage["enum"] == ["pack", "place", "route", "analysis"]
+        assert stage["enum"] == ["pack", "place", "route", "analysis", "bitstream"]
         # The cost of all 21 in the context: written down so that a change shows
         text = json.dumps(list(ours.values()))
         assert len(text) // 4 < 4000
@@ -824,7 +824,7 @@ def test_a_scripted_model_runs_a_flow_through_the_real_tools(openfpga_module, tm
         assert len(calls) == 9 and all(e["ok"] for e in calls)
         assert found[-1] == events.done("m1")
         assert said(found).endswith("The flow ran.")
-        assert [s["status"] for s in view["stages"]] == ["reached"] * 5
+        assert [s["status"] for s in view["stages"]] == ["reached"] * 5 + ["not_reached"]
         assert view["session"]["name"] == "agent"
         # The model was told the files that it can use, and that the session is open
         system = model.requests[0][0]["content"]

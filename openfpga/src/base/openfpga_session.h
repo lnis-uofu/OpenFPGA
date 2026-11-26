@@ -51,6 +51,29 @@ std::string to_string(const OpenFpgaInput& input);
 std::string to_string(const OpenFpgaStage& stage);
 
 /********************************************************************
+ * How the bitstream of a device is made by build_bitstream
+ * (docs/spec_bitstream.md B-10): from the device package, or the defaults
+ *******************************************************************/
+struct BitstreamRecipe {
+  /* device.bitstream of the package */
+  bool supported = true;
+  std::string package; /* the name of the package, empty for the defaults */
+  std::vector<std::string> link_options = {"--sort_gsb_chan_node_in_edges"};
+  std::vector<std::string> fixups;
+  std::vector<std::string> fabric_options = {"--compress_routing"};
+};
+
+/* The files that build_bitstream wrote, and the steps it ran and kept */
+struct BitstreamOutput {
+  std::string file;
+  std::string format;
+  std::string arch_file;
+  std::vector<std::string> settings;
+  std::vector<std::string> ran;
+  std::vector<std::string> kept;
+};
+
+/********************************************************************
  * What the constraints of the session (ODC, docs/spec_odc.md) give to the
  * commands of the core: the synthesis, and the OpenFPGA commands that take a
  * pin constraints file. A plugin sets them (read_odc)
@@ -152,6 +175,22 @@ class OpenFpgaSession {
   /* The constraints of the session, see SessionConstraints. They are kept
    * when the session is reset, as the options are */
   const SessionConstraints& constraints() const { return constraints_; }
+  /* The files of the simulation settings ("simulation_setting") or of the
+   * bitstream settings ("bitstream_setting") that were read, in order */
+  std::vector<std::string> settings_files(const std::string& kind) const;
+  /* The generation of the link that the fabric was built on (see
+   * linked_generation()), 0 if it was not built or the link was dropped */
+  uint64_t fabric_generation() const { return fabric_generation_; }
+  /* True if the link is made on the data of VPR of the session, and the
+   * fabric on that link */
+  bool link_current() const;
+  bool fabric_current() const;
+  const BitstreamRecipe& bitstream_recipe() const { return bitstream_recipe_; }
+  /* What build_bitstream wrote; null when BITSTREAM is not reached or was
+   * made by the commands by hand */
+  const BitstreamOutput* bitstream_output() const {
+    return bitstream_output_.file.empty() ? nullptr : &bitstream_output_;
+  }
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
@@ -206,12 +245,32 @@ class OpenFpgaSession {
    * of that run, and it is not valid for another one */
   void set_linked_generation(uint64_t generation) {
     linked_generation_ = generation;
+    fabric_generation_ = 0;
+  }
+  /* build_fabric was built on the current link */
+  void set_fabric_built() { fabric_generation_ = linked_generation_; }
+  /* Settings were read (B-1, B-2): the list of their files is replaced, or
+   * appended to; the link and the fabric are dropped, and with the bitstream
+   * settings REPACKED and BITSTREAM */
+  void read_settings(const std::string& kind, const std::string& file,
+                     const bool append);
+  /* The recipe of the device package that was just read (see
+   * set_device_package()). Reading an architecture gives the defaults back */
+  void set_bitstream_recipe(const BitstreamRecipe& recipe) {
+    bitstream_recipe_ = recipe;
+  }
+  void set_bitstream_output(const BitstreamOutput& output) {
+    if (reached(OpenFpgaStage::BITSTREAM)) {
+      bitstream_output_ = output;
+    }
   }
 
  private: /* Internal functions */
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
   void invalidate_all_stages();
   void invalidate_for_option(const std::string& name);
+  /* An architecture was read, or failed to: what came with the package */
+  void forget_package();
   /* The stage that is dropped to drop a stage: the packing with the
    * placement, when the analytical placer made them */
   OpenFpgaStage dropped_with(const OpenFpgaStage& stage) const;
@@ -223,6 +282,10 @@ class OpenFpgaSession {
   AppOptions app_options_;
   uint64_t vpr_generation_ = 0;
   uint64_t linked_generation_ = 0;
+  uint64_t fabric_generation_ = 0;
+  std::map<std::string, std::vector<std::string>> settings_files_;
+  BitstreamRecipe bitstream_recipe_;
+  BitstreamOutput bitstream_output_;
   std::map<OpenFpgaStage, std::string> imported_;
   std::map<OpenFpgaStage, std::string> failures_;
   std::map<OpenFpgaStage, std::string> stage_logs_;

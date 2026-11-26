@@ -198,3 +198,24 @@ def test_the_odc_of_the_session_is_in_the_sidebar_with_its_checks_on_its_lines(
     assert view(client)["constraints"]["outputs_without_delay"] == 0
     assert call(say(client, "/set_constraint kind=odc clear=true"))["ok"]
     assert view(client)["constraints"] is None
+
+
+def test_the_bitstream_is_a_stage_of_the_sidebar_and_its_file_is_downloaded(
+    client, backend, golden
+):
+    assert client.post("/api/session/new", json={"device_package": LOGIC}).json()["ok"]
+    assert call(say(client, f"/read_inputs circuit={golden.circuit.name}"))["ok"]
+    assert call(say(client, "/run_stage stage=bitstream"))["ok"]
+    v = view(client)
+    (bitstream,) = [s for s in v["stages"] if s["stage"] == "BITSTREAM"]
+    assert bitstream["status"] == "reached"
+    assert "bitstream" in v["reports"]
+    name = "bitstream/%s.bit" % golden.circuit.stem
+    assert name in v["files"]["results"]
+    path = backend.config.root / "s1" / name
+    got = client.get("/api/download", params={"name": name})
+    assert got.status_code == 200 and got.content == path.read_bytes()
+    assert "attachment" in got.headers["content-disposition"]
+    assert fetch(client, name).json()["data"]["text"] == path.read_text()
+    for bad in ("../x.bit", "/etc/passwd", "nope.bit"):
+        assert client.get("/api/download", params={"name": bad}).status_code == 404

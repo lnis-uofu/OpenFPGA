@@ -102,6 +102,18 @@
       "read_verilog": [
         "-nolatches"
       ]
+    },
+    "bitstream": {
+      "link_options": [
+        "--sort_gsb_chan_node_in_edges"
+      ],
+      "fixups": [
+        "check_netlist_naming_conflict",
+        "lut_truth_table_fixup"
+      ],
+      "fabric_options": [
+        "--compress_routing"
+      ]
     }
   },
   "reference": {
@@ -111,7 +123,8 @@
     "expected": {
       "bitstreams": {
         "fabric_bitstream.bit": "b52f99bf5d40e26b4e6f979322f3cbf121f1e12abb6666251110a47064a214c3",
-        "fabric_independent_bitstream.xml": "e6ff428459f9476160b44b1f28ceb41c4519d8274ac4d90c391015d16b20a324"
+        "fabric_independent_bitstream.xml": "e6ff428459f9476160b44b1f28ceb41c4519d8274ac4d90c391015d16b20a324",
+        "build_bitstream": "9efcc07c25b3764b0dc39a1d02e1924c4e85908b7dcea83508780f285bf73606"
       },
       "channel_width": 50,
       "critical_path_delay_ns": 1.92248,

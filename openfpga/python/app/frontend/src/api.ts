@@ -323,3 +323,45 @@ export async function* streamChat(message: string): AsyncGenerator<AppEvent> {
     yield* parseEvents(buffer);
   }
 }
+
+/** Where the RTL has a module or an instance: a file of the session (null when it is not one) */
+export interface HierarchySource {
+  file: string | null;
+  line: number;
+}
+/** An instance of the tree of a design: the top has no instance name */
+export interface HierarchyNode {
+  instance: string | null;
+  name: string; // the name of Yosys ($paramod... with parameters)
+  module: string; // the name of the RTL
+  kind: "module" | "library" | "unknown";
+  parameters?: Record<string, number | string>;
+  src?: HierarchySource | null;
+  children: HierarchyNode[];
+  more?: number; // children that the limit left out
+}
+export interface HierarchyModule {
+  name: string;
+  module: string;
+  parameters: Record<string, number | string>;
+  kind: "module" | "library" | "unknown";
+  instances: number;
+  cells: number;
+  src: HierarchySource | null;
+}
+/** The hierarchy of a design of the session (report_design_hierarchy) */
+export interface Hierarchy {
+  design: string | null;
+  folder: string;
+  top: string;
+  modules: HierarchyModule[];
+  tree: HierarchyNode;
+  nodes: number;
+  instances: number;
+  truncated: boolean;
+}
+
+/** The hierarchy of the design that the session added last (or of design, its folder) */
+export async function fetchHierarchy(design?: string): Promise<Answer> {
+  return answerOf(await fetch(`/api/hierarchy${design ? `?design=${encodeURIComponent(design)}` : ""}`));
+}

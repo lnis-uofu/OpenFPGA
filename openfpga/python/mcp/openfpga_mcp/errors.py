@@ -108,3 +108,11 @@ class FlatRoutingUnsupported(RegistryError):
         "set_option name=router.flat_routing value=false; list_device_packages says which "
         "packages support flat routing"
     )
+
+
+class BitstreamUnsupported(RegistryError):
+    """The bitstream is asked of a device whose package says that it cannot make one
+    (device.bitstream false)"""
+
+    kind = "bitstream_unsupported"
+    hint = "Say so: the device of this package makes no bitstream; the stages up to analysis run"
