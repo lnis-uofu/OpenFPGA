@@ -23,6 +23,7 @@ import {
   type Layer,
   type ObjectRef,
   type Scene,
+  itemCount,
   layerVisible,
   refKey,
 } from "../views/scene";
@@ -249,6 +250,8 @@ export function ViewPanel<B>(props: {
         state.scene = built.scene;
         state.index = new SceneIndex(built.scene);
         state.renderer.setScene(built.scene, state.index);
+        // A new layout (a netlist view): the view fits it
+        if (built.refit) state.view = fit(state.view, built.scene.bounds);
         setStatus(built.status);
         const entries = built.legend ?? [];
         const text = JSON.stringify(entries);
@@ -447,6 +450,11 @@ export function ViewPanel<B>(props: {
       leave: () => setTip(null),
       fit: () => setView(fit(state.view, def.bounds(base))),
       clear: () => runViewCommand({ op: "clear" }),
+      activate: (px, py) => {
+        const ref = pickAt(px, py);
+        if (!ref || !def.activate || !state.base) return false;
+        return def.activate(state.base, ref, changed);
+      },
     });
     window.openfpgaViews = window.openfpgaViews ?? {};
     window.openfpgaViews[name] = {
@@ -458,13 +466,7 @@ export function ViewPanel<B>(props: {
           (l) => l.id === id,
         );
         if (!layer || !layerVisible(layer, state.view.scale)) return 0;
-        return layer.kind === "segments"
-          ? layer.xy.length / 4
-          : layer.kind === "grid"
-            ? 1
-            : layer.kind === "labels"
-              ? layer.count
-              : (layer as { x: Float32Array }).x.length;
+        return layer.kind === "grid" ? 1 : itemCount(layer);
       },
       screenOf: (ref) => {
         const box = state.base ? def.locate(state.base, ref, changed) : null;
@@ -515,6 +517,12 @@ export function ViewPanel<B>(props: {
         >
           Fit
         </button>
+        {base &&
+          def.tools?.(base, changed).map((t) => (
+            <button key={t.label} title={t.title} onClick={t.run}>
+              {t.label}
+            </button>
+          ))}
         <div class="view-groups" role="group" aria-label="Layers">
           {def.groups.map((g) => (
             <label key={g.id}>

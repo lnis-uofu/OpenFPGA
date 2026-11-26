@@ -566,6 +566,70 @@ try {
   );
   await shot("routing-path-4x4.png");
 
+  // V1, the netlist: the atoms of the path, laid out (P6)
+  await page.click('[role=tab]:has-text("Timing")');
+  await page.click("text=Show in the netlist");
+  await page.waitForFunction(
+    () => window.openfpgaViews.netlist?.drawn("atoms") > 0,
+    null,
+    { timeout: 60000 },
+  );
+  await page.waitForSelector(".view-status:has-text('path 1')");
+  assert.ok(
+    (await page.evaluate(() => window.openfpgaViews.netlist.drawn("edges"))) >
+      0,
+    "the nets of the path",
+  );
+  await shot("netlist-path-4x4.png");
+  // The whole design: its atoms (the circuit has no modules)
+  await page.click(".view-toolbar button:text-is('Whole design')");
+  await page.waitForSelector(".view-status:has-text('the whole design')");
+  await page.waitForSelector(".view-status:has-text('laid out in')", {
+    timeout: 60000,
+  });
+  await shot("netlist-4x4.png");
+
+  // V2, the clusters: a cluster opened into its atoms by a double click, and closed again
+  await page.click('[aria-label="Open the clusters"]');
+  await page.waitForFunction(
+    () => window.openfpgaViews.clusters?.drawn("groups") > 0,
+    null,
+    { timeout: 60000 },
+  );
+  await page.waitForSelector(".view-status:has-text('laid out in')", {
+    timeout: 60000,
+  });
+  const cluster = await page.evaluate(() => {
+    const scene = window.openfpgaViews.clusters.scene();
+    const groups = scene.layers.find((l) => l.id === "groups");
+    // A cluster of logic: the one with the most atoms is not known here; take a clb
+    for (let i = 0; i < groups.x.length; i++)
+      if (!groups.name(i).includes(":")) return groups.name(i);
+    return groups.name(0);
+  });
+  const atomsBefore = await page.evaluate(() =>
+    window.openfpgaViews.clusters.drawn("atoms"),
+  );
+  const cbox = await page.locator(".view-host").boundingBox();
+  const cat = await page.evaluate(
+    (name) => window.openfpgaViews.clusters.screenOf({ kind: "block", name }),
+    cluster,
+  );
+  await page.mouse.dblclick(cbox.x + cat[0], cbox.y + cat[1]);
+  await page.waitForFunction(
+    (before) => window.openfpgaViews.clusters.drawn("atoms") > before,
+    atomsBefore,
+    { timeout: 60000 },
+  );
+  await shot("clusters-open-4x4.png");
+  await page.click(".view-toolbar button:text-is('Collapse all')");
+  await page.waitForFunction(
+    (before) => window.openfpgaViews.clusters.drawn("atoms") === before,
+    atomsBefore,
+    { timeout: 60000 },
+  );
+  await shot("clusters-4x4.png");
+
   // The 32x32 device: the objects close up, the coarse tiles far out
   await page.click(".session-action:text-is('Close')");
   await page.click("text=Create session from device package…");

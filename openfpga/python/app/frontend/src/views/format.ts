@@ -177,7 +177,7 @@ export async function fetchView(
       Object.entries(scope).map(([k, v]) => [k, String(v)]),
     ),
   });
-  return decodeResponse(await fetch(`/api/view?${query}`));
+  return decodeResponse(await fetchWhenFree(`/api/view?${query}`));
 }
 
 /** A tile of a view of the device (/api/tile) */
@@ -193,7 +193,20 @@ export async function fetchTile(
     x: String(x),
     y: String(y),
   });
-  return decodeResponse(await fetch(`/api/tile?${query}`));
+  return decodeResponse(await fetchWhenFree(`/api/tile?${query}`));
+}
+
+/** How long a request refused because the session is busy (409: a stage runs, the model calls)
+ * is asked again, every half second */
+const BUSY_RETRIES = 240;
+
+/** A request, asked again while the session is busy with another call */
+async function fetchWhenFree(url: string): Promise<Response> {
+  for (let tries = 0; ; tries++) {
+    const response = await fetch(url);
+    if (response.status !== 409 || tries >= BUSY_RETRIES) return response;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
 }
 
 async function decodeResponse(response: Response): Promise<ViewData> {

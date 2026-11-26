@@ -12,6 +12,7 @@ export type ObjectKind =
   | "node"
   | "region"
   | "cell"
+  | "module"
   | "atom"
   | "path";
 

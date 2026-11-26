@@ -88,7 +88,12 @@ try {
     if ((await fold.getAttribute("aria-expanded")) === "false") await fold.click();
   }
   const errors = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  // A view asks for data the session may not have yet (refused: 400) or not now (busy: 409, asked
+  // again): not errors of the page
+  page.on(
+    "console",
+    (m) => m.type() === "error" && !/\/api\/(view|tile)\?/.test(m.location()?.url ?? "") && errors.push(m.text()),
+  );
   await page.goto(url);
   const say = async (line) => {
     await page.fill("textarea", line);
@@ -362,6 +367,22 @@ try {
   await page.click(".hier-mode >> text=Tree");
   await page.click("button[title='Open design/hier/rtl/top.v at line 10']");
   await page.waitForFunction(() => document.querySelector(".file-view .view-lines")?.textContent?.includes("u_wide"), null, { timeout: 30000 });
+
+  // The netlist of the design, synthesized: a module of the hierarchy shown in it, as its atoms
+  // grouped by the modules of the RTL (P6.3)
+  await page.click("[aria-label='Run synthesis']");
+  await page.waitForSelector(".stage-reached:has-text('SYNTHESIS')", { timeout: 180000 });
+  await page.waitForSelector("[aria-label='Open the netlist']", { timeout: 60000 });
+  await page.click(".sidebar [aria-label='Show u_wide in the netlist']");
+  await page.waitForFunction(() => window.openfpgaViews?.netlist?.drawn("groups") > 0, null, { timeout: 60000 });
+  await page.waitForSelector(".view-status:has-text('laid out in')", { timeout: 60000 });
+  await page.waitForSelector(".view-selected:has-text('module u_wide')", { timeout: 30000 });
+  const modules = await page.evaluate(() => {
+    const groups = window.openfpgaViews.netlist.scene().layers.find((l) => l.id === "groups");
+    return Array.from({ length: groups.x.length }, (_, i) => groups.name(i));
+  });
+  assert.ok(modules.includes("u_wide"), `the module u_wide is a box: ${modules}`);
+  if (process.env.SHOT) await page.locator(".view-host").screenshot({ path: process.env.SHOT.replace(/\.png$/, "-netlist.png") });
 
   assert.deepEqual(errors, []);
   if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });

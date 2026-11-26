@@ -12,6 +12,8 @@ import {
   openPanel,
   view,
 } from "../store";
+import { showInNetlist } from "../views/netlist";
+import { runViewCommand } from "../views/selection";
 
 /** The words of a search: every one must be in the text of an entry (any case) */
 export function matches(query: string, ...texts: (string | null | undefined)[]): boolean {
@@ -229,10 +231,21 @@ interface RowProps {
   toggle: (path: string) => void;
   all: boolean;
   compact: boolean;
+  /** The instance path of the node: u_a.u_b ("" the top) */
+  instances?: string;
+}
+
+/** Show a module (an instance path of the RTL) in the netlist view */
+function showModule(instances: string) {
+  showInNetlist({ module: instances });
+  runViewCommand({ op: "select", kind: "module", name: instances });
+  openPanel("netlist");
+  runViewCommand({ op: "zoom_to", kind: "module", name: instances });
 }
 
 function TreeRow(props: RowProps) {
   const { node, path, depth, compact } = props;
+  const instances = props.instances ?? "";
   const has = node.children.length > 0 || !!node.more;
   const expanded = props.all || props.open.has(path);
   const params = parametersText(node.parameters);
@@ -282,6 +295,16 @@ function TreeRow(props: RowProps) {
           <span class="hier-params muted">#({params})</span>
         )}
         <KindChip kind={node.kind} />
+        {node.instance && config.value?.backend === "session" && (
+          <button
+            class="hier-netlist"
+            aria-label={`Show ${instances} in the netlist`}
+            title="Show this module in the netlist: its atoms, as the synthesis mapped them"
+            onClick={() => showModule(instances)}
+          >
+            ⊶
+          </button>
+        )}
         {node.children.length > 0 && !compact && (
           <span class="muted hier-count">
             {node.children.length + (node.more ?? 0)}
@@ -303,6 +326,13 @@ function TreeRow(props: RowProps) {
               node={c}
               path={`${path}/${i}`}
               depth={depth + 1}
+              instances={
+                c.instance
+                  ? instances
+                    ? `${instances}.${c.instance}`
+                    : c.instance
+                  : instances
+              }
             />
           ))}
           {!!node.more && (

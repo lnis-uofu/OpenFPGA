@@ -19,9 +19,20 @@ export type ViewCommand =
   | { op: "highlight"; kind: ObjectKind; name: string }
   | { op: "clear" }
   | { op: "zoom_to"; kind: ObjectKind; name: string }
-  | { op: "open_view"; view: "floorplan" | "pins" | "routing" | "timing" };
+  | {
+      op: "open_view";
+      view:
+        "floorplan" | "pins" | "routing" | "timing" | "netlist" | "clusters";
+    };
 
-const VIEWS: Panel[] = ["floorplan", "pins", "routing", "timing"];
+const VIEWS: Panel[] = [
+  "floorplan",
+  "pins",
+  "routing",
+  "timing",
+  "netlist",
+  "clusters",
+];
 let seq = 0;
 
 /** Run a command of the views. It is logged in the console; returns what it did */

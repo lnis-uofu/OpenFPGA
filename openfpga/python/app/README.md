@@ -190,7 +190,11 @@ map, the ports on them), ▦ the placement (PLACED: the tiles and the blocks, th
 constraints), ⋕ the routing (ROUTED: the routes on their tracks, the congestion far out), ⏱ the
 timing (ANALYZED: the histogram of the slack of the end points, the worst paths, the delays of a
 path on nets and in cells; a path selected is drawn on the placement and its nets on the routing,
-and the layer Slack colours the blocks and the nets by their slack). A legend
+and the layer Slack colours the blocks and the nets by their slack), ⊶ the netlist (DEVICE, with a
+circuit: the atoms grouped by the modules of the RTL; a double click expands a module or shows the
+cone of an atom) and ⊞ the clusters (PACKED: a double click opens a cluster into its atoms); the
+netlists are laid out by ELK in a worker, up to 2000 nodes. The Design hierarchy shows a module in
+the netlist (⊶ on its instance), the Timing tab the atoms of a path. A legend
 in the top left corner of each says what its colours are (folded, it stays folded). Drag to move, the wheel to
 zoom, a click selects (Shift adds), a double click or f fits, Escape clears. The selection is shared
 by the views; its line in the status of a panel zooms to it. The toolbar turns layers off and

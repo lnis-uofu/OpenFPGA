@@ -159,6 +159,24 @@ describe("the file of a view", () => {
     expect(() => decodeView(cut)).toThrow(ViewFormatError);
   });
 
+  it("asks again while the session is busy", async () => {
+    const answers = [409, 400];
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            ok: false,
+            diagnostics: [{ kind: "x", message: "then refused" }],
+          }),
+          { status: answers.shift() },
+        ),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(fetchTile("grid", 0, 0, 0)).rejects.toThrow("then refused");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("says what the server refused", async () => {
     vi.stubGlobal(
       "fetch",
@@ -167,16 +185,14 @@ describe("the file of a view", () => {
           new Response(
             JSON.stringify({
               ok: false,
-              diagnostics: [{ kind: "busy", message: "A call is running" }],
+              diagnostics: [{ kind: "not_reached", message: "Route first" }],
             }),
-            { status: 409 },
+            { status: 400 },
           ),
         ),
       ),
     );
-    await expect(fetchTile("grid", 0, 0, 0)).rejects.toThrow(
-      "A call is running",
-    );
+    await expect(fetchTile("grid", 0, 0, 0)).rejects.toThrow("Route first");
     vi.unstubAllGlobals();
   });
 });

@@ -628,6 +628,30 @@ once, not again each time its tab is shown. Slack in V1 waits for V1 (phase 6).
 - Accept: a 500-atom cone lays out in under 1 s; an expansion of one level in under 300 ms; a path
   from V6 is shown in V1; the ports of a collapsed module equal the nets that cross its edge.
 
+Status of phase 6: done in part (2026-11-26), not committed. ELK (elkjs, EPL-2.0) runs in a Web
+Worker, loaded by the first netlist view; a layout is kept by the signature of its graph, and a new
+one stops the one that runs. Measured with the options used (thoroughness 1; above 400 nodes,
+polyline edges and simple node placement): a netlist-like graph of 500 nodes in 180 to 400 ms, of
+2000 in 1.1 s (the default options take 4 to 90 s, so they are not used). V1 (`netlist.ts`, from the
+DEVICE stage once a circuit is read) groups the atoms by their inferred module, the modules
+collapsed into boxes whose ports are the nets that cross their edge, the guessed atoms marked; a
+double click expands or collapses a module, or shows the cone of an atom, one level more each
+time. V2 (from PACKED) is the same graph grouped by cluster; a cluster opens into its atoms. Both
+draw a net of more than 16 sinks to a stub with its count, refuse a graph of more than 2000 nodes
+(the status says how to narrow it), narrow to the selection and its neighbours ("Around the
+selection"), colour the nets by slack (the layer Slack), and share the selection (a cluster of V2
+is a block of the placement). The Design hierarchy has a button on each instance that shows its
+module in V1; the Timing tab shows the atoms of a path in V1.
+Checked: 500 nodes in 272 ms (unit test); the ports of a collapsed module equal the nets that
+cross its edge (unit test); a path of V6 shown in V1, a cluster opened and closed by a double click
+(browser test); a module of the hierarchy of a synthesized design shown as its box (browser test).
+Not met: an expansion keeps the order of what was shown, but ELK places again: on the test graph a
+node that was shown moves by 100 against a layer spacing of 60, after the new layout is moved onto
+the old one. Meeting it needs our own placement of the expanded contents (a decision for the
+owner). Not done: an export by module when the whole netlist is over 100k atoms (the view says the
+core's refusal); the summary of a module too big to expand (it is refused instead); the measure of
+an expansion at scale. Also fixed: a view asked for while the session is busy is asked again.
+
 ### Phase 7: the model and the spec
 - **P7.1** The tool `show` of the MCP server and its page events; within the budget of the tool
   descriptions.

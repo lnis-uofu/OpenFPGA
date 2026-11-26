@@ -215,11 +215,23 @@ const REPORT: Record<string, string> = {
 
 /** The command of the run button of a stage (none for the stages that have no button) */
 /** The view of the design that a stage gives the data of (docs/plan_design_views.md) */
-const VIEWS: Record<string, { panel: "pins" | "floorplan" | "routing" | "timing"; name: string; icon: string; title: string }> = {
-  DEVICE: { panel: "pins", name: "floorplan", icon: "⌗", title: "the floorplan: the tiles, the I/O sites, the pins of the package and the ports on them" },
-  PLACED: { panel: "floorplan", name: "placement", icon: "▦", title: "the placement: the tiles and the blocks on them" },
-  ROUTED: { panel: "routing", name: "routing", icon: "⋕", title: "the routing: the routes on the channels, and the congestion" },
-  ANALYZED: { panel: "timing", name: "timing", icon: "⏱", title: "the timing: the slack of the end points, the worst paths and their delays" },
+interface StageView {
+  panel: "pins" | "floorplan" | "routing" | "timing" | "netlist" | "clusters";
+  name: string;
+  icon: string;
+  title: string;
+  /** Only with a circuit read */
+  circuit?: boolean;
+}
+const VIEWS: Record<string, StageView[]> = {
+  DEVICE: [
+    { panel: "pins", name: "floorplan", icon: "⌗", title: "the floorplan: the tiles, the I/O sites, the pins of the package and the ports on them" },
+    { panel: "netlist", name: "netlist", icon: "⊶", title: "the netlist: the atoms of the circuit by the modules of the RTL", circuit: true },
+  ],
+  PACKED: [{ panel: "clusters", name: "clusters", icon: "⊞", title: "the clusters: the clusters and the nets between them; a cluster opens into its atoms" }],
+  PLACED: [{ panel: "floorplan", name: "placement", icon: "▦", title: "the placement: the tiles and the blocks on them" }],
+  ROUTED: [{ panel: "routing", name: "routing", icon: "⋕", title: "the routing: the routes on the channels, and the congestion" }],
+  ANALYZED: [{ panel: "timing", name: "timing", icon: "⏱", title: "the timing: the slack of the end points, the worst paths and their delays" }],
 };
 
 const RUN: Record<string, string> = {
@@ -540,16 +552,21 @@ export function Sidebar() {
                     ≣
                   </button>
                 )}
-                {VIEWS[s.stage] && s.status === "reached" && real && (
-                  <button
-                    class="stage-button stage-view"
-                    aria-label={`Open the ${VIEWS[s.stage].name}`}
-                    title={`Open ${VIEWS[s.stage].title}`}
-                    onClick={() => openPanel(VIEWS[s.stage].panel)}
-                  >
-                    {VIEWS[s.stage].icon}
-                  </button>
-                )}
+                {s.status === "reached" &&
+                  real &&
+                  (VIEWS[s.stage] ?? [])
+                    .filter((w) => !w.circuit || files.inputs.some((f) => f.label === "circuit"))
+                    .map((w) => (
+                      <button
+                        key={w.panel}
+                        class="stage-button stage-view"
+                        aria-label={`Open the ${w.name}`}
+                        title={`Open ${w.title}`}
+                        onClick={() => openPanel(w.panel)}
+                      >
+                        {w.icon}
+                      </button>
+                    ))}
                 {(s.stage === "SYNTHESIS" || RUN[s.stage]) && (
                   <button
                     class="stage-button"

@@ -25,6 +25,15 @@ export interface Built {
   status: string;
   /** What the colours of the scene mean, shown in a corner of the view */
   legend?: LegendEntry[];
+  /** Fit the view to the scene: its layout is new (a netlist view, laid out again) */
+  refit?: boolean;
+}
+
+/** A button of the toolbar of a view */
+export interface ViewTool {
+  label: string;
+  title: string;
+  run(): void;
 }
 
 /** A line of the legend: a heading (a label alone), a swatch (a fill, an outline, a line), or a
@@ -62,6 +71,11 @@ export interface ViewDef<B> {
   ): [number, number, number, number] | null;
   /** A line about an object, for the tooltip and the selection */
   describe(base: B, ref: ObjectRef): string;
+  /** A double click on an object (expand, collapse, its cone): true if it did something, else the
+   * view fits */
+  activate?(base: B, ref: ObjectRef, changed: () => void): boolean;
+  /** The buttons of the view in its toolbar, for its state now */
+  tools?(base: B, changed: () => void): ViewTool[];
 }
 
 /** The styles of a scene, by a key: the same key gives the same index */

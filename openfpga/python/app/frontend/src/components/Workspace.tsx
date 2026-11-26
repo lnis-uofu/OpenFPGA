@@ -7,7 +7,7 @@ import { Drawing, kindOf } from "./Drawings";
 import { FileView } from "./FileView";
 import { DesignsPanel, DevicesPanel, HierarchyPanel } from "./Panels";
 import { TimingPanel } from "./TimingPanel";
-import { FloorplanPanel, PinsPanel, RoutingPanel } from "./Views";
+import { ClustersPanel, FloorplanPanel, NetlistPanel, PinsPanel, RoutingPanel } from "./Views";
 
 /** What a result tab shows: the drawing for the kinds that have a shape (utilization, placement, congestion), the result as
  * formatted text (Markdown), and the JSON as the model read it on request */
@@ -81,6 +81,8 @@ function TabContent(props: { tab: { id: string; file?: string; report?: string; 
   if (props.tab.panel === "pins") return <PinsPanel />;
   if (props.tab.panel === "routing") return <RoutingPanel />;
   if (props.tab.panel === "timing") return <TimingPanel />;
+  if (props.tab.panel === "netlist") return <NetlistPanel />;
+  if (props.tab.panel === "clusters") return <ClustersPanel />;
   if (props.tab.report) return <ReportView stage={props.tab.report} title={props.tab.title} />;
   return props.tab.file ? <FileView name={props.tab.file} /> : <ResultView callId={props.tab.id} />;
 }

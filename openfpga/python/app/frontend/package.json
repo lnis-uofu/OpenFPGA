@@ -18,6 +18,7 @@
     "@deck.gl/core": "^9.4.2",
     "@deck.gl/layers": "^9.4.2",
     "@preact/signals": "^2.0.0",
+    "elkjs": "^0.12.2",
     "flatbush": "^4.8.0",
     "preact": "^10.24.0"
   },

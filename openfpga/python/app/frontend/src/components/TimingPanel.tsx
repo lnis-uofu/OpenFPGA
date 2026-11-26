@@ -4,6 +4,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { config, openPanel } from "../store";
 import { setDataSignature, wholeView } from "../views/data";
+import { showInNetlist } from "../views/netlist";
 import { css } from "../views/palette";
 import { refKey } from "../views/scene";
 import { runViewCommand, selectRefs, selection } from "../views/selection";
@@ -120,7 +121,7 @@ function DelayBar(props: { path: TimingPath }) {
 function PathDetail(props: { path: TimingPath; names: Map<number, string> }) {
   const { path, names } = props;
   const net = path.points.filter(isNetDelay).reduce((t, p) => t + p.delay, 0);
-  const show = (panel: "floorplan" | "routing") => {
+  const show = (panel: "floorplan" | "routing" | "netlist") => {
     openPanel(panel);
     runViewCommand({ op: "zoom_to", kind: "path", name: String(path.index) });
   };
@@ -136,6 +137,17 @@ function PathDetail(props: { path: TimingPath; names: Map<number, string> }) {
         <span class="spacer" />
         <button onClick={() => show("floorplan")}>Show on the placement</button>
         <button onClick={() => show("routing")}>Show on the routing</button>
+        <button
+          onClick={() => {
+            showInNetlist({
+              atoms: path.points.map((p) => p.atom).filter(Boolean),
+              what: `path ${path.index + 1}`,
+            });
+            show("netlist");
+          }}
+        >
+          Show in the netlist
+        </button>
       </div>
       <DelayBar path={path} />
       <div class="timing-key muted">

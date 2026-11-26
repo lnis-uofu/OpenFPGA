@@ -1,5 +1,5 @@
 // The input of a view (docs/plan_design_views.md, 3.6): pan by a drag, zoom about the cursor with the
-// wheel, a click to pick, a double click to fit, and the keys. The same for every view and backend:
+// wheel, a click to pick, a double click to act on an object (else to fit), and the keys. The same for every view and backend:
 // it only changes the view state, which the renderers draw.
 import { type ViewState, pan, zoomAt } from "./viewstate";
 
@@ -12,6 +12,8 @@ export interface ControllerEvents {
   leave(): void;
   fit(): void;
   clear(): void;
+  /** A double click on what is at a point: true if the view did something with it (else it fits) */
+  activate?(px: number, py: number): boolean;
 }
 
 const DRAG = 4; // pixels before a press is a drag
@@ -58,7 +60,10 @@ export function attachController(
     element.releasePointerCapture?.(down.id);
     down = null;
   };
-  const dblclick = () => on.fit();
+  const dblclick = (e: MouseEvent) => {
+    const [x, y] = local(e);
+    if (!on.activate?.(x, y)) on.fit();
+  };
   const keydown = (e: KeyboardEvent) => {
     const v = on.view();
     const step = 60;
