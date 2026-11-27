@@ -4,7 +4,8 @@
 import { type ViewData, numbers, texts } from "./format";
 import { wholeView } from "./data";
 import { rects } from "./floorplan";
-import { logicBox, slotBox } from "./geometry";
+import { ioStack, slotBox } from "./geometry";
+import { coordinateLayer, tileLayer } from "./grid";
 import type { Layer } from "./scene";
 import { type LegendEntry, StyleTable, type ViewDef } from "./view";
 
@@ -19,7 +20,12 @@ export interface PinsBase {
   unplaced: string[];
   /** The sites of each I/O tile: its capacity, by "x,y" */
   capacity: Map<string, number>;
-  layers?: { layers: Layer[]; styles: StyleTable; dark: boolean };
+  layers?: {
+    layers: Layer[];
+    styles: StyleTable;
+    tileLegend: LegendEntry[];
+    dark: boolean;
+  };
 }
 
 export async function loadPins(): Promise<PinsBase> {
@@ -64,39 +70,26 @@ export function siteBox(
   const x = numbers(base.pins, "sites", "x")[row];
   const y = numbers(base.pins, "sites", "y")[row];
   const slot = numbers(base.pins, "sites", "sub_tile")[row];
-  return slotBox(x, y, 1, 1, slot, base.capacity.get(`${x},${y}`) ?? 1);
+  return slotBox(
+    x,
+    y,
+    1,
+    1,
+    slot,
+    base.capacity.get(`${x},${y}`) ?? 1,
+    ioStack(x, y, 1, 1, base.width, base.height),
+  );
 }
 
 function layersOf(
   base: PinsBase,
   dark: boolean,
-): { layers: Layer[]; styles: StyleTable } {
+): { layers: Layer[]; styles: StyleTable; tileLegend: LegendEntry[] } {
   const styles = new StyleTable();
   const { device, pins } = base;
-  // The tiles, faint: where the ring is
-  const tx = numbers(device, "tiles", "x");
-  const ty = numbers(device, "tiles", "y");
-  const tw = numbers(device, "tiles", "w");
-  const th = numbers(device, "tiles", "h");
-  const isIo = numbers(device, "tile_types", "is_io");
-  const type = numbers(device, "tiles", "type");
-  const tiles: [number, number, number, number][] = [];
-  const tileStyle = new Uint16Array(tx.length);
-  for (let i = 0; i < tx.length; i++) {
-    tiles.push(logicBox(tx[i], ty[i], tw[i], th[i]));
-    tileStyle[i] = isIo[type[i]]
-      ? styles.add("io-tile", {
-          fill: dark ? [44, 52, 70, 255] : [226, 232, 244, 255],
-          stroke: dark ? [80, 90, 110, 255] : [160, 170, 190, 255],
-          width: 1,
-        })
-      : styles.add("tile", {
-          fill: dark ? [34, 36, 42, 255] : [238, 238, 235, 255],
-        });
-  }
-  const layers: Layer[] = [
-    rects("tiles", tiles, 0, { style: tileStyle, size: 0.6, inert: true }),
-  ];
+  // The tiles, as in the placement and the routing
+  const tiles = tileLayer(device, styles, dark);
+  const layers: Layer[] = [tiles.layer];
   // The sites: free, or with a pin of the package
   const packagePin = texts(pins, "sites", "package_pin");
   const siteBoxes: [number, number, number, number][] = [];
@@ -190,7 +183,9 @@ function layersOf(
     minPx: 70,
     inert: true,
   });
-  return { layers, styles };
+  const coordinates = coordinateLayer(device, styles, dark);
+  if (coordinates) layers.push(coordinates);
+  return { layers, styles, tileLegend: tiles.legend };
 }
 
 export const pinsView: ViewDef<PinsBase> = {
@@ -198,9 +193,11 @@ export const pinsView: ViewDef<PinsBase> = {
   load: loadPins,
   bounds: (base) => [0, 0, base.width, base.height],
   groups: [
+    { id: "tiles", label: "Tiles" },
     { id: "sites", label: "Sites" },
     { id: "ports", label: "Ports" },
     { id: "labels", label: "Names" },
+    { id: "coordinates", label: "Coordinates" },
   ],
   key: (_base, _view, hidden) => [...hidden].sort().join(","),
   build({ base, colors, hidden, selection }) {
@@ -235,10 +232,7 @@ export const pinsView: ViewDef<PinsBase> = {
       .filter(Boolean)
       .join(" · ");
     const legend: LegendEntry[] = [
-      ...styles.legend([
-        ["io-tile", "I/O tile"],
-        ["tile", "Other tile"],
-      ]),
+      ...(hidden.has("tiles") ? [] : base.layers.tileLegend),
       ...(hidden.has("sites")
         ? []
         : styles.legend([

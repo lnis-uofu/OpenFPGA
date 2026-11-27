@@ -172,6 +172,10 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .tab.selected { background: var(--bg); border-color: var(--line); margin-bottom: -1px; }
 .dot-unread { color: var(--accent); }
 .split-toggle { margin-bottom: 3px; }
+.tab .move { padding: 5px 4px; color: var(--muted); }
+.tab[draggable="true"] { cursor: grab; }
+.pane.drop { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.pane-empty { text-align: center; margin-top: 4em; }
 
 /* The chat */
 .chat { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
@@ -492,3 +496,7 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .timing-bar .cell, .timing-swatch.cell { background: #e68c32; }
 .timing-key { font-size: 12px; display: flex; align-items: center; gap: 6px; }
 .timing-swatch { display: inline-block; width: 12px; height: 10px; border-radius: 2px; }
+
+/* The menu of a right click on the page */
+.context-menu { position: fixed; z-index: 1000; min-width: 180px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); font-size: 13px; }
+.context-menu-item { padding: 5px 10px; border-radius: 4px; color: var(--muted); cursor: default; }

@@ -18,6 +18,25 @@ export function logicBox(
   return [x + MARGIN, y + MARGIN, x + w - 1 + LOGIC, y + h - 1 + LOGIC];
 }
 
+/** How the slots of a tile are laid out: in a column (a tile on the left or right edge of the
+ * grid), in a row (on the bottom or top edge), or in a square (anywhere else) */
+export type SlotStack = "column" | "row" | "square";
+
+/** The stack of the slots of an I/O tile of w by h at x, y on a grid of width by height: along
+ * its edge of the fabric, or in a square in the middle */
+export function ioStack(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  width: number,
+  height: number,
+): SlotStack {
+  if (x === 0 || x + w === width) return "column";
+  if (y === 0 || y + h === height) return "row";
+  return "square";
+}
+
 /** The box of a slot (a sub-tile) of a tile with capacity slots */
 export function slotBox(
   x: number,
@@ -26,10 +45,16 @@ export function slotBox(
   h: number,
   slot: number,
   capacity: number,
+  stack: SlotStack = "square",
 ): [number, number, number, number] {
   const [x0, y0, x1, y1] = logicBox(x, y, w, h);
   if (capacity <= 1) return [x0 + 0.06, y0 + 0.06, x1 - 0.06, y1 - 0.06];
-  const cols = Math.ceil(Math.sqrt(capacity));
+  const cols =
+    stack === "column"
+      ? 1
+      : stack === "row"
+        ? capacity
+        : Math.ceil(Math.sqrt(capacity));
   const rows = Math.ceil(capacity / cols);
   const cw = (x1 - x0) / cols;
   const rh = (y1 - y0) / rows;

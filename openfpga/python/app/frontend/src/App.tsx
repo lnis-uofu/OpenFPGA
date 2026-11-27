@@ -1,6 +1,7 @@
 import { useEffect } from "preact/hooks";
 import { chatInput } from "./components/Chat";
 import { Console } from "./components/Console";
+import { ContextMenu } from "./components/ContextMenu";
 import { Settings } from "./components/Settings";
 import { Sidebar, SidebarResize } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
@@ -72,6 +73,7 @@ export function App() {
         </>
       )}
       <Settings />
+      <ContextMenu />
     </div>
   );
 }

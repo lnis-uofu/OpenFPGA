@@ -114,6 +114,37 @@ const CONSOLE_HEIGHT_KEY = "openfpga-console-height";
 export const activeTab = signal<string>(CHAT);
 export const split = signal(false);
 
+// The two sides of the split: a tab is on the left or on the right, and is moved by the person. The
+// chat starts on the left and the rest on the right. Each side shows its tab that was active last.
+export type Side = "left" | "right";
+/** The tabs on the left side (the chat by its id CHAT); the others are on the right */
+export const leftTabs = signal<string[]>([CHAT]);
+/** The tab that each side shows when the active tab is on the other side */
+export const sideShown = signal<Record<Side, string | null>>({ left: CHAT, right: null });
+
+export const sideOf = (id: string): Side => (leftTabs.value.includes(id) ? "left" : "right");
+
+/** The tabs of a side, in the order of the tab bar (the chat first) */
+export function tabsOfSide(side: Side): string[] {
+  return [CHAT, ...tabs.value.map((t) => t.id)].filter((id) => sideOf(id) === side);
+}
+
+/** The tab that a side shows: the active tab if it is there, else the one it showed last, else
+ * its first */
+export function shownOnSide(side: Side): string | null {
+  const ids = tabsOfSide(side);
+  if (ids.includes(activeTab.value)) return activeTab.value;
+  const last = sideShown.value[side];
+  return last && ids.includes(last) ? last : (ids[0] ?? null);
+}
+
+/** Move a tab to a side of the split, and show it there */
+export function moveTab(id: string, side: Side) {
+  const rest = leftTabs.value.filter((t) => t !== id);
+  leftTabs.value = side === "left" ? [...rest, id] : rest;
+  activeTab.value = id;
+}
+
 function storedHeight(): number {
   try {
     const n = Number(window.localStorage.getItem(CONSOLE_HEIGHT_KEY));
@@ -209,6 +240,8 @@ export function resetStore() {
   sessionMenu.value = false;
   activeTab.value = CHAT;
   split.value = false;
+  leftTabs.value = [CHAT];
+  sideShown.value = { left: CHAT, right: null };
   busy.value = false;
   banner.value = null;
   consoleOpen.value = false;
@@ -352,6 +385,13 @@ export function welcoming(): boolean {
 /** The person closed the session: with none open the page goes back to the welcome screen (what
  * was said stays, and shows again with the next session) */
 export const closedSession = signal(false);
+// The tab that each side of the split showed last
+effect(() => {
+  const id = activeTab.value;
+  const side = sideOf(id);
+  if (sideShown.peek()[side] !== id) sideShown.value = { ...sideShown.peek(), [side]: id };
+});
+
 effect(() => {
   if (view.value.session !== null) closedSession.value = false;
 });
@@ -599,8 +639,14 @@ export function closeTab(id: string) {
     openFiles.value = kept;
   }
   const rest = tabs.value.filter((t) => t.id !== id);
+  const side = sideOf(id);
   tabs.value = rest;
-  if (activeTab.value === id) activeTab.value = rest.length ? rest[rest.length - 1].id : CHAT;
+  leftTabs.value = leftTabs.value.filter((t) => t !== id);
+  if (activeTab.value === id) {
+    // The side it was on shows another of its tabs, if it has one
+    const same = split.value ? tabsOfSide(side) : [];
+    activeTab.value = same.length ? same[same.length - 1] : rest.length ? rest[rest.length - 1].id : CHAT;
+  }
   if (!rest.length) split.value = false;
 }
 

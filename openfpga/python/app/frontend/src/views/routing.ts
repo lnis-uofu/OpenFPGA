@@ -11,8 +11,9 @@ import {
   pathCentres,
   rects,
 } from "./floorplan";
-import { logicBox, pinPoint, wireSegment } from "./geometry";
+import { pinPoint, wireSegment } from "./geometry";
 import type { Layer, PointsLayer, SegmentsLayer } from "./scene";
+import { tileLayer, tileStyles } from "./grid";
 import { TILE, levelFor, visibleTiles } from "./tiles";
 import {
   slackColor,
@@ -39,7 +40,7 @@ export interface RoutingBase {
   chany: number;
   /** The index of a net by its name, from the tiles read (for its slack) */
   netIds?: Map<string, number>;
-  tilesLayer?: { layer: Layer; dark: boolean };
+  tilesLayer?: { layer: Layer; legend: LegendEntry[]; dark: boolean };
 }
 
 /** Routes are drawn from this many pixels a grid tile; under it, the congestion */
@@ -228,12 +229,8 @@ export const routingView: ViewDef<RoutingBase> = {
   build({ base, tiles, view, colors, hidden, selection, changed }) {
     const styles = new StyleTable();
     const dark = colors.dark;
-    // First: the kept layer of the tiles refers to it as style 0
-    const tileStyle = styles.add("tile", {
-      fill: dark ? [36, 38, 45, 255] : [236, 236, 232, 255],
-      stroke: dark ? [64, 68, 78, 255] : [200, 200, 196, 255],
-      width: 1,
-    });
+    // First: the kept layer of the tiles refers to the styles of the types of tiles by index
+    tileStyles(base.device, styles, dark);
     const level = levelFor(view.scale, ROUTE_PX, base.width, base.height);
     const layers: Layer[] = [];
     let loading = 0;
@@ -270,15 +267,10 @@ export const routingView: ViewDef<RoutingBase> = {
     } else {
       if (!hidden.has("tiles")) {
         if (!base.tilesLayer || base.tilesLayer.dark !== dark) {
-          const tx = numbers(base.device, "tiles", "x");
-          const ty = numbers(base.device, "tiles", "y");
-          const tw = numbers(base.device, "tiles", "w");
-          const th = numbers(base.device, "tiles", "h");
-          const boxes = Array.from({ length: tx.length }, (_, i) =>
-            logicBox(tx[i], ty[i], tw[i], th[i]),
-          );
+          const tiles = tileLayer(base.device, styles, dark, { inert: true });
           base.tilesLayer = {
-            layer: rects("tiles", boxes, tileStyle, { size: 0.6, inert: true }),
+            layer: tiles.layer,
+            legend: tiles.legend,
             dark,
           };
         }
@@ -484,7 +476,7 @@ export const routingView: ViewDef<RoutingBase> = {
               },
             ]
         : [
-            ...(hidden.has("tiles") ? [] : styles.legend([["tile", "Tile"]])),
+            ...(hidden.has("tiles") ? [] : (base.tilesLayer?.legend ?? [])),
             ...styles
               .legend([
                 ["track", "Free track"],

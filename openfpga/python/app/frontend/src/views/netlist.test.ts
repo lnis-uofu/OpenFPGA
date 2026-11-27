@@ -1,3 +1,4 @@
+import { blockFill } from "./palette";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetStore } from "../store";
 import { resetViewData, setWholeView } from "./data";
@@ -445,6 +446,20 @@ describe("the clusters view (V2)", () => {
     ) as RectsLayer;
     expect(groups.x.length).toBe(4);
     expect(groups.objectKind).toBe("block"); // the selection of the placement
+    // A cluster in the colour of its type of block, as in the placement: io and clb
+    const fill = (i: number) =>
+      built.scene.styles[groups.style![i]].fill!.join(",");
+    const at = (name: string) =>
+      Array.from({ length: groups.x.length }, (_, i) => i).find(
+        (i) => groups.name!(i) === name,
+      )!;
+    expect(fill(at("clb_a"))).toBe(fill(at("clb_q")));
+    expect(fill(at("clb_a"))).not.toBe(fill(at("in0")));
+    expect(fill(at("clb_a"))).toBe(blockFill(2, false).join(","));
+    const labels = built.legend!.map((e) => e.label);
+    expect(labels).toContain("Clusters (double click: expand)");
+    expect(labels).toContain("io");
+    expect(labels).toContain("clb");
     expect(clustersView.describe(base, { kind: "block", name: "clb_a" })).toBe(
       "cluster clb_a (clb): 3 atoms, 2 nets out",
     );

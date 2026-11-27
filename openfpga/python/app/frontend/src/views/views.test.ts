@@ -4,8 +4,15 @@ import { attachController } from "./controller";
 import { resetViewData, setDataSignature } from "./data";
 import { floorplanView, type FloorplanBase } from "./floorplan";
 import { makeView, type ViewData } from "./format";
-import { logicBox, slotBox, trackOffset, wireSegment } from "./geometry";
+import {
+  ioStack,
+  logicBox,
+  slotBox,
+  trackOffset,
+  wireSegment,
+} from "./geometry";
 import { pinsView, type PinsBase } from "./pins";
+import { COORDINATE_PX } from "./grid";
 import { rampColor } from "./palette";
 import {
   clusterNames,
@@ -28,6 +35,7 @@ import {
 import {
   type Layer,
   type PointsLayer,
+  type LabelsLayer,
   type RectsLayer,
   type SegmentsLayer,
   itemBox,
@@ -507,10 +515,11 @@ describe("the floorplan", () => {
     expect(layer("tiles").x.length).toBe(12);
     expect(layer("blocks").x.length).toBe(3);
     expect(layer("blocks").name!(1)).toBe("a");
-    // a, an io block in slot 2 of 3 at 0,1, is in that slot of the logic of its tile
+    // a, an io block in slot 2 of 3 at 0,1, is in that slot of the logic of its tile: on the left
+    // edge of the grid, the slots of an I/O tile are in a column
     close(
       [layer("blocks").x[1], layer("blocks").y[1]],
-      slotBox(0, 1, 1, 1, 2, 3).slice(0, 2),
+      slotBox(0, 1, 1, 1, 2, 3, "column").slice(0, 2),
     );
     expect(layer("regions").w[0]).toBe(2);
     expect(layer("selection:blocks").x.length).toBe(1);
@@ -572,7 +581,37 @@ describe("the floorplan", () => {
         { hidden: new Set(["blocks", "regions"]) },
       ),
     );
-    expect(built.scene.layers.map((l) => l.id)).toEqual(["tiles", "labels"]);
+    expect(built.scene.layers.map((l) => l.id)).toEqual([
+      "tiles",
+      "labels",
+      "coordinates",
+    ]);
+  });
+
+  it("names each tile by its coordinates, above its logic, close up only", () => {
+    const built = floorplanView.build(
+      context(floorplanBase(), {
+        cx: 2,
+        cy: 2,
+        scale: 100,
+        width: 800,
+        height: 600,
+      }),
+    );
+    const names = built.scene.layers.find(
+      (l) => l.id === "coordinates",
+    ) as LabelsLayer;
+    const tiles = built.scene.layers.find(
+      (l) => l.id === "tiles",
+    ) as RectsLayer;
+    expect(names.count).toBe(tiles.x.length);
+    expect(names.text(0)).toBe(tiles.name!(0).split(" ")[1]);
+    // Above the logic of its tile, inside the tile
+    expect(names.y[0]).toBeGreaterThan(tiles.y[0] + tiles.h[0]);
+    expect(names.y[0]).toBeLessThan(Math.floor(tiles.y[0]) + 1);
+    // Drawn from COORDINATE_PX a tile
+    expect(names.size * (COORDINATE_PX - 1)).toBeLessThan(names.minPx!);
+    expect(names.size * COORDINATE_PX).toBeGreaterThanOrEqual(names.minPx!);
   });
 });
 
@@ -652,6 +691,24 @@ describe("the pins", () => {
     expect(pinsView.describe(b, { kind: "block", name: "nope" })).toBe(
       "block nope",
     );
+  });
+
+  it("draws the tiles and their coordinates as the placement does", () => {
+    const b = base();
+    const ctx = { cx: 2, cy: 2, scale: 100, width: 800, height: 600 };
+    const pins = pinsView.build(context(b, ctx));
+    const placement = floorplanView.build(context(floorplanBase(), ctx));
+    const layer = (built: typeof pins, id: string) =>
+      built.scene.layers.find((l) => l.id === id) as RectsLayer;
+    const fills = (built: typeof pins) => {
+      const tiles = layer(built, "tiles");
+      return Array.from(tiles.style, (s) => built.scene.styles[s].fill);
+    };
+    expect(fills(pins)).toEqual(fills(placement));
+    expect(layer(pins, "coordinates")).toBeTruthy();
+    const tileLabels = (built: typeof pins) =>
+      built.legend!.slice(0, 3).map((e) => e.label);
+    expect(tileLabels(pins)).toEqual(tileLabels(placement));
   });
 });
 
@@ -744,8 +801,11 @@ describe("the routing", () => {
     ) as SegmentsLayer;
     expect(selected.xy.length / 4).toBe(2 + 2); // its wires and its links
     expect(built.status).toContain("zoom in for the tracks");
+    // The tiles by their types, as in the floorplan and the placement
     expect(built.legend!.map((e) => e.label)).toEqual([
-      "Tile",
+      "Tiles",
+      "io",
+      "clb",
       "A net (a colour each)",
       "Selected net",
     ]);
@@ -941,9 +1001,7 @@ describe("the timing", () => {
       return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
     };
     // a (row 1), c1 (row 0), out:y (row 2)
-    expect(Array.from(points.x)).toEqual(
-      [centre(1)[0], centre(0)[0], centre(2)[0]].map(Math.fround),
-    );
+    close(Array.from(points.x), [centre(1)[0], centre(0)[0], centre(2)[0]]);
     expect(built.scene.layers.some((l) => l.id === "selection:path")).toBe(
       true,
     );
@@ -1015,6 +1073,27 @@ describe("the geometry of the device views", () => {
     const [, , sx1, sy1] = slotBox(0, 0, 1, 1, 8, 9);
     expect(sx1).toBeLessThanOrEqual(0.62);
     expect(sy1).toBeLessThanOrEqual(0.62);
+  });
+
+  it("stacks the slots of an I/O tile along its edge of the grid, and in a square inside", () => {
+    // A grid of 6 by 5: the edges are x 0 and 5, y 0 and 4
+    expect(ioStack(0, 2, 1, 1, 6, 5)).toBe("column");
+    expect(ioStack(5, 2, 1, 1, 6, 5)).toBe("column");
+    expect(ioStack(2, 0, 1, 1, 6, 5)).toBe("row");
+    expect(ioStack(2, 4, 1, 1, 6, 5)).toBe("row");
+    expect(ioStack(2, 2, 1, 1, 6, 5)).toBe("square");
+    // In a column: the slots one above the other, the same in x, slot 0 at the top
+    const column = [0, 1, 2, 3].map((s) => slotBox(0, 2, 1, 1, s, 4, "column"));
+    expect(new Set(column.map((b) => b[0])).size).toBe(1);
+    expect(column[0][1]).toBeGreaterThan(column[3][1]);
+    // In a row: side by side, the same in y
+    const row = [0, 1, 2, 3].map((s) => slotBox(2, 0, 1, 1, s, 4, "row"));
+    expect(new Set(row.map((b) => b[1])).size).toBe(1);
+    expect(row[3][0]).toBeGreaterThan(row[0][0]);
+    // In a square: 2 by 2
+    const square = [0, 1, 2, 3].map((s) => slotBox(2, 2, 1, 1, s, 4));
+    expect(new Set(square.map((b) => b[0])).size).toBe(2);
+    expect(new Set(square.map((b) => b[1])).size).toBe(2);
   });
 
   it("follows the state of the session for its data", () => {

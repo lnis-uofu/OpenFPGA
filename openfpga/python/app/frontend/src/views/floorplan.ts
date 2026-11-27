@@ -4,8 +4,9 @@
 // R-11); far out, the coarse tiles of the core (one image a tile, whatever the size of the device).
 import { type ViewData, numbers, texts } from "./format";
 import { wholeView, wholeViewNow } from "./data";
-import { logicBox, slotBox } from "./geometry";
-import { categoryColor } from "./palette";
+import { ioStack, logicBox, slotBox } from "./geometry";
+import { coordinateLayer, tileLayer } from "./grid";
+import { blockFill, tileFill } from "./palette";
 import {
   SLACK_STEPS,
   clusterNames,
@@ -58,14 +59,6 @@ const NET_BOX: Rgba = [40, 160, 230, 255];
 const REGION: Rgba = [120, 90, 220, 255];
 export const PATH: Rgba = [200, 40, 170, 255];
 
-/** The colour of a type of tile, and of a type of block */
-const tileFill = (type: number, io: boolean, dark: boolean): Rgba =>
-  categoryColor(io ? 1 : type + 2, dark, 255);
-const blockFill = (type: number, dark: boolean): Rgba =>
-  categoryColor(type + 5, dark, 255).map((v, k) =>
-    k < 3 ? Math.min(255, Math.round(v * (dark ? 1.6 : 0.75))) : v,
-  ) as Rgba;
-
 /** The objects are drawn from this many pixels a grid tile; under it, the coarse tiles */
 export const OBJECT_PX = 6;
 
@@ -108,13 +101,17 @@ export function blockBox(
   if (tile === undefined) return logicBox(x, y);
   const type = numbers(base.device, "tiles", "type")[tile];
   const capacity = numbers(base.device, "tile_types", "capacity")[type];
+  const w = numbers(base.device, "tiles", "w")[tile];
+  const h = numbers(base.device, "tiles", "h")[tile];
+  const io = numbers(base.device, "tile_types", "is_io")[type];
   return slotBox(
     x,
     y,
-    numbers(base.device, "tiles", "w")[tile],
-    numbers(base.device, "tiles", "h")[tile],
+    w,
+    h,
     slot,
     capacity,
+    io ? ioStack(x, y, w, h, base.width, base.height) : "square",
   );
 }
 
@@ -228,38 +225,8 @@ function objectLayers(
 } {
   const styles = new StyleTable();
   const device = base.device;
-  const tileType = numbers(device, "tiles", "type");
-  const typeNames = texts(device, "tile_types", "name");
-  const isIo = numbers(device, "tile_types", "is_io");
-  const tx = numbers(device, "tiles", "x");
-  const ty = numbers(device, "tiles", "y");
-  const tw = numbers(device, "tiles", "w");
-  const th = numbers(device, "tiles", "h");
-  const tileStyles = new Uint16Array(tileType.length);
-  const boxes: [number, number, number, number][] = [];
-  for (let i = 0; i < tileType.length; i++) {
-    const t = tileType[i];
-    tileStyles[i] = styles.add(`tile:${t}`, {
-      fill: tileFill(t, !!isIo[t], dark),
-      stroke: dark ? [90, 95, 110, 255] : [170, 170, 165, 255],
-      width: 1,
-    });
-    boxes.push(logicBox(tx[i], ty[i], tw[i], th[i]));
-  }
-  const tiles = rects("tiles", boxes, 0, {
-    style: tileStyles,
-    objectKind: "tile",
-    name: (i) => `${typeNames.get(tileType[i])} ${tx[i]},${ty[i]}`,
-    size: 0.6,
-    minPx: 2,
-  });
+  const { layer: tiles, legend: tileLegend } = tileLayer(device, styles, dark);
   const layers: Layer[] = [tiles];
-  const tileLegend = [...new Set(tileType)]
-    .sort((a, b) => a - b)
-    .map((t) => ({
-      label: typeNames.get(t),
-      fill: tileFill(t, !!isIo[t], dark),
-    }));
   let blockLegend: LegendEntry[] = [];
   if (base.placement) {
     const placement = base.placement;
@@ -343,6 +310,8 @@ function objectLayers(
       );
     }
   }
+  const coordinates = coordinateLayer(device, styles, dark);
+  if (coordinates) layers.push(coordinates);
   return { layers, styles, tileLegend, blockLegend };
 }
 
@@ -354,8 +323,7 @@ function floorplanLegend(
   const { base, hidden, selection } = context;
   const objects = base.objects!;
   const legend: LegendEntry[] = [];
-  if (!hidden.has("tiles"))
-    legend.push({ label: "Tiles" }, ...objects.tileLegend);
+  if (!hidden.has("tiles")) legend.push(...objects.tileLegend);
   const timing = slackTiming(context);
   if (base.placement && !hidden.has("blocks") && timing)
     legend.push(
@@ -669,6 +637,7 @@ export const floorplanView: ViewDef<FloorplanBase> = {
     { id: "blocks", label: "Blocks" },
     { id: "labels", label: "Names" },
     { id: "regions", label: "Regions" },
+    { id: "coordinates", label: "Coordinates" },
     { id: "slack", label: "Slack", off: true },
   ],
   key(base, view, hidden) {

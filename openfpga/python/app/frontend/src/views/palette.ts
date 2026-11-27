@@ -77,5 +77,17 @@ export function categoryColor(index: number, dark: boolean, alpha = 255): Rgba {
   ];
 }
 
+/** The colour of a type of tile (its index in the tile_types of the device), in every view of
+ * the device */
+export const tileFill = (type: number, io: boolean, dark: boolean): Rgba =>
+  categoryColor(io ? 1 : type + 2, dark, 255);
+
+/** The colour of a type of block (its index in the block_types of an export), the same in the
+ * placement and in the clusters of the netlist */
+export const blockFill = (type: number, dark: boolean): Rgba =>
+  categoryColor(type + 5, dark, 255).map((v, k) =>
+    k < 3 ? Math.min(255, Math.round(v * (dark ? 1.6 : 0.75))) : v,
+  ) as Rgba;
+
 export const css = (c: Rgba) =>
   `rgba(${c[0]},${c[1]},${c[2]},${(c[3] / 255).toFixed(3)})`;

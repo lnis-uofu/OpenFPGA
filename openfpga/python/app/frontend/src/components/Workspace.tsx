@@ -1,7 +1,22 @@
 import { useState } from "preact/hooks";
 import { Markdown } from "../markdown";
 import { resultMarkdown } from "../resultMarkdown";
-import { CHAT, activeTab, calls, closeTab, pinTab, reportUrl, split, tabs, view } from "../store";
+import {
+  CHAT,
+  type Side,
+  activeTab,
+  calls,
+  closeTab,
+  moveTab,
+  pinTab,
+  reportUrl,
+  shownOnSide,
+  sideOf,
+  split,
+  tabs,
+  tabsOfSide,
+  view,
+} from "../store";
 import { Chat } from "./Chat";
 import { Drawing, kindOf } from "./Drawings";
 import { FileView } from "./FileView";
@@ -87,15 +102,45 @@ function TabContent(props: { tab: { id: string; file?: string; report?: string; 
   return props.tab.file ? <FileView name={props.tab.file} /> : <ResultView callId={props.tab.id} />;
 }
 
-function TabButton(props: { id: string; title: string; closable: boolean; pinned?: boolean; unread?: boolean }) {
+/** What a tab carries when it is dragged to the other side of the split */
+const TAB_DRAG = "application/x-openfpga-tab";
+
+function TabButton(props: {
+  id: string;
+  title: string;
+  closable: boolean;
+  pinned?: boolean;
+  unread?: boolean;
+  /** In the split: the tab can be dragged to the other side, or moved by its button */
+  movable?: boolean;
+}) {
   const selected = activeTab.value === props.id;
+  const other: Side = sideOf(props.id) === "left" ? "right" : "left";
   return (
-    <span class={`tab ${selected ? "selected" : ""}`} role="presentation">
+    <span
+      class={`tab ${selected ? "selected" : ""}`}
+      role="presentation"
+      draggable={props.movable}
+      onDragStart={(e) => {
+        e.dataTransfer?.setData(TAB_DRAG, props.id);
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+      }}
+    >
       <button role="tab" aria-selected={selected} onClick={() => (activeTab.value = props.id)}>
         {props.pinned && <span aria-hidden="true">📌 </span>}
         {props.title}
         {props.unread && <span class="dot-unread" aria-label="new result"> ●</span>}
       </button>
+      {props.movable && selected && (
+        <button
+          class="move"
+          aria-label={`Move ${props.title} to the ${other} side`}
+          title={`Move to the ${other} side (or drag the tab)`}
+          onClick={() => moveTab(props.id, other)}
+        >
+          {other === "left" ? "⇠" : "⇢"}
+        </button>
+      )}
       {props.closable && (
         <button class="close" aria-label={`Close ${props.title}`} onClick={() => closeTab(props.id)}>
           ×
@@ -105,41 +150,78 @@ function TabButton(props: { id: string; title: string; closable: boolean; pinned
   );
 }
 
+/** A side of the split: its tabs, and the one it shows. A tab dragged onto it moves to it */
+function SidePane(props: { side: Side }) {
+  const [over, setOver] = useState(false);
+  const ids = tabsOfSide(props.side);
+  const shown = shownOnSide(props.side);
+  const byId = new Map(tabs.value.map((t) => [t.id, t]));
+  const dragged = (e: DragEvent) => !!e.dataTransfer?.types.includes(TAB_DRAG);
+  return (
+    <div
+      class={`pane ${over ? "drop" : ""}`}
+      aria-label={`The ${props.side} side`}
+      onDragOver={(e) => {
+        if (!dragged(e)) return;
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) setOver(false);
+      }}
+      onDrop={(e) => {
+        setOver(false);
+        const id = e.dataTransfer?.getData(TAB_DRAG);
+        if (!id) return;
+        e.preventDefault();
+        moveTab(id, props.side);
+      }}
+    >
+      <div class="tabbar" role="tablist">
+        {ids.map((id) => {
+          const t = byId.get(id);
+          return t ? (
+            <TabButton key={id} id={id} title={t.title} closable pinned={t.pinned} unread={t.unread} movable />
+          ) : (
+            <TabButton key={id} id={CHAT} title="Chat" closable={false} movable />
+          );
+        })}
+        <span class="spacer" />
+        {props.side === "right" && (
+          <button class="split-toggle" onClick={() => (split.value = false)}>⫴ one view</button>
+        )}
+      </div>
+      {shown === null ? (
+        <p class="muted pane-empty">Drag a tab here.</p>
+      ) : shown === CHAT ? (
+        <Chat />
+      ) : (
+        byId.get(shown) && <TabContent tab={byId.get(shown)!} />
+      )}
+    </div>
+  );
+}
+
 /** The centre: the chat alone until there is a result; then a bar of tabs, with Chat the first,
- * or the chat and a result side by side */
+ * or two sides with their tabs, which move from one to the other */
 export function Workspace() {
   const results = tabs.value;
   if (results.length === 0) return <main class="centre"><Chat /></main>;
-  const shown = results.find((t) => t.id === activeTab.value) ?? null;
-  const resultTabs = results.map((t) => (
-    <TabButton key={t.id} id={t.id} title={t.title} closable pinned={t.pinned} unread={t.unread} />
-  ));
-  if (split.value) {
-    const current = shown ?? results[0];
+  if (split.value)
     return (
       <main class="centre split">
-        <div class="pane">
-          <div class="tabbar" role="tablist">
-            <span class="tab selected"><button role="tab" aria-selected>Chat</button></span>
-          </div>
-          <Chat />
-        </div>
-        <div class="pane">
-          <div class="tabbar" role="tablist">
-            {resultTabs}
-            <span class="spacer" />
-            <button class="split-toggle" onClick={() => (split.value = false)}>⫴ one view</button>
-          </div>
-          <TabContent tab={current} />
-        </div>
+        <SidePane side="left" />
+        <SidePane side="right" />
       </main>
     );
-  }
+  const shown = results.find((t) => t.id === activeTab.value) ?? null;
   return (
     <main class="centre">
       <div class="tabbar" role="tablist">
         <TabButton id={CHAT} title="Chat" closable={false} />
-        {resultTabs}
+        {results.map((t) => (
+          <TabButton key={t.id} id={t.id} title={t.title} closable pinned={t.pinned} unread={t.unread} />
+        ))}
         <span class="spacer" />
         <button class="split-toggle" onClick={() => (split.value = true)}>⫴ split</button>
       </div>

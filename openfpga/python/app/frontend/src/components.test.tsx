@@ -33,10 +33,12 @@ import {
   settingsOpen,
   sidebarOpen,
   sidebarWidth,
+  leftTabs,
   split,
   tabs,
   view,
 } from "./store";
+import { ContextMenu, contextMenu } from "./components/ContextMenu";
 
 const started = (callId: string, tool: string, args: Record<string, unknown> = {}): AppEvent => ({
   type: "tool_call_started",
@@ -986,6 +988,64 @@ describe("the centre", () => {
     expect(screen.getByLabelText("Result of get_timing")).toBeTruthy();
     fireEvent.click(screen.getByText("⫴ one view"));
     expect(split.value).toBe(false);
+  });
+
+  it("moves the tabs from one side of the split to the other, by their button or by dragging", () => {
+    give("a", "get_timing");
+    openResult("a");
+    give("b", "get_net");
+    openResult("b");
+    split.value = true;
+    render(<Workspace />);
+    const left = () => within(screen.getByLabelText("The left side"));
+    const right = () => within(screen.getByLabelText("The right side"));
+    expect(left().getByRole("tab", { name: "Chat" })).toBeTruthy();
+    expect(right().getByRole("tab", { name: "get_net" })).toBeTruthy();
+    // The selected tab of the right side moves to the left by its button, and shows there
+    fireEvent.click(screen.getByLabelText("Move get_net to the left side"));
+    expect(leftTabs.value).toEqual([CHAT, "b"]);
+    expect(left().getByRole("tab", { name: "get_net" })).toBeTruthy();
+    expect(left().getByLabelText("Result of get_net")).toBeTruthy();
+    // The right side shows what it has: get_timing
+    expect(right().getByLabelText("Result of get_timing")).toBeTruthy();
+    // The chat is dragged to the right
+    const data = new Map<string, string>();
+    const dataTransfer = {
+      setData: (k: string, v: string) => data.set(k, v),
+      getData: (k: string) => data.get(k) ?? "",
+      get types() {
+        return [...data.keys()];
+      },
+      effectAllowed: "",
+    };
+    const chatTab = left().getByRole("tab", { name: "Chat" }).parentElement!;
+    fireEvent.dragStart(chatTab, { dataTransfer });
+    fireEvent.dragOver(screen.getByLabelText("The right side"), { dataTransfer });
+    fireEvent.drop(screen.getByLabelText("The right side"), { dataTransfer });
+    expect(leftTabs.value).toEqual(["b"]);
+    expect(activeTab.value).toBe(CHAT);
+    expect(right().getByRole("tab", { name: "Chat" })).toBeTruthy();
+    // A tab that is closed shows another of its side
+    fireEvent.click(left().getByLabelText("Close get_net"));
+    expect(leftTabs.value).toEqual([]);
+    expect(left().getByText("Drag a tab here.")).toBeTruthy();
+  });
+
+  it("opens the menu of the page on a right click, but not in a field of text", () => {
+    render(
+      <div>
+        <p>Somewhere</p>
+        <textarea aria-label="field" />
+        <ContextMenu />
+      </div>,
+    );
+    fireEvent.contextMenu(screen.getByText("Somewhere"), { clientX: 30, clientY: 40 });
+    expect(contextMenu.value).toEqual({ x: 30, y: 40 });
+    expect(screen.getByRole("menuitem").textContent).toBe("Under development");
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+    fireEvent.contextMenu(screen.getByLabelText("field"));
+    expect(contextMenu.value).toBeNull();
   });
 
   it("pins a result tab", () => {

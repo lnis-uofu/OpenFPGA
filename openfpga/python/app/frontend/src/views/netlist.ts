@@ -18,7 +18,7 @@ import {
   moduleGrouping,
   netlistOf,
 } from "./netgraph";
-import { categoryColor } from "./palette";
+import { blockFill, categoryColor } from "./palette";
 import type {
   Layer,
   LabelsLayer,
@@ -53,6 +53,8 @@ export interface NetlistBase {
   clusters: ViewData | null;
   clusterName: Map<number, string>;
   clusterType: Map<string, string>;
+  /** The type of each cluster by its name: its index in the block types of the export */
+  clusterTypeIndex: Map<string, number>;
   /** The groups that are expanded; flat: no groups (a cone, a path) */
   expanded: Set<string>;
   flat: boolean;
@@ -123,6 +125,7 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
   }
   const clusterName = new Map<number, string>();
   const clusterType = new Map<string, string>();
+  const clusterTypeIndex = new Map<string, number>();
   if (clusters) {
     const id = numbers(clusters, "blocks", "id");
     const name = texts(clusters, "blocks", "name");
@@ -131,6 +134,7 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
     for (let i = 0; i < id.length; i++) {
       clusterName.set(id[i], name.get(i));
       clusterType.set(name.get(i), types.get(type[i]));
+      clusterTypeIndex.set(name.get(i), type[i]);
     }
   }
   return {
@@ -139,6 +143,7 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
     clusters,
     clusterName,
     clusterType,
+    clusterTypeIndex,
     expanded: new Set(),
     flat: false,
     scope: null,
@@ -487,12 +492,23 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       if (node.kind === "group") {
         const key = node.id.slice(2);
         into.name.push(key);
+        // A cluster in the colour of its type of block (as in the placement), a module plain
+        const type =
+          base.which === "clusters"
+            ? base.clusterTypeIndex.get(key)
+            : undefined;
         into.style.push(
-          styles.add("group", {
-            fill: dark ? [52, 58, 74, 255] : [228, 234, 246, 255],
-            stroke: dark ? [110, 125, 160, 255] : [120, 140, 190, 255],
-            width: 1.5,
-          }),
+          type === undefined
+            ? styles.add("group", {
+                fill: dark ? [52, 58, 74, 255] : [228, 234, 246, 255],
+                stroke: dark ? [110, 125, 160, 255] : [120, 140, 190, 255],
+                width: 1.5,
+              })
+            : styles.add(`group:${type}`, {
+                fill: blockFill(type, dark),
+                stroke: dark ? [20, 20, 20, 255] : [60, 60, 60, 255],
+                width: 1.5,
+              }),
         );
       } else if (node.kind === "atom") {
         const a = node.atoms[0];
@@ -612,14 +628,25 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
         inert: true,
       });
     // The legend
-    if (groups.x.length)
+    if (groups.x.length && base.which === "atoms")
       legend.push({
-        label:
-          base.which === "atoms"
-            ? "Module (double click: expand)"
-            : "Cluster (double click: expand)",
+        label: "Module (double click: expand)",
         ...styles.get("group"),
       });
+    if (groups.x.length && base.which === "clusters") {
+      // A cluster by its type: one entry for each type shown
+      const shownTypes = new Map<number, string>();
+      for (const key of groups.name) {
+        const type = base.clusterTypeIndex.get(key);
+        if (type !== undefined)
+          shownTypes.set(type, base.clusterType.get(key) ?? `type ${type}`);
+      }
+      legend.push({ label: "Clusters (double click: expand)" });
+      for (const [type, label] of [...shownTypes].sort((a, b) => a[0] - b[0]))
+        legend.push({ label, ...styles.get(`group:${type}`) });
+      if (groups.name.some((key) => !base.clusterTypeIndex.has(key)))
+        legend.push({ label: "Other", ...styles.get("group") });
+    }
     const models = new Set(
       atoms.name.map((name) => n.model[n.atomIndex.get(name)!]),
     );
