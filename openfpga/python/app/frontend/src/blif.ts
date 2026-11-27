@@ -27,3 +27,35 @@ export const blifTokens = {
     ],
   },
 };
+
+/** The directives that start a block of lines: a cell and what follows it (the rows of the table
+ * of a .names, the lines that go on with a backslash) */
+const BLOCK = /^\s*\.(names|latch|subckt|gate)\b/;
+
+/** The blocks of a BLIF that fold, as [first, last] line numbers from 1: each .names (and .latch,
+ * .subckt, .gate) with the lines up to the next directive, without the empty lines and the
+ * comments at its end. A block of one line does not fold */
+export function blifFoldingRanges(lines: string[]): [number, number][] {
+  const ranges: [number, number][] = [];
+  let start = -1;
+  let last = -1;
+  let continued = false;
+  const close = () => {
+    if (start >= 0 && last > start) ranges.push([start + 1, last + 1]);
+    start = -1;
+  };
+  lines.forEach((line, i) => {
+    const text = line.trim();
+    // A line that goes on from the one before belongs to it
+    const directive = !continued && text.startsWith(".");
+    continued = /\\\s*$/.test(line);
+    if (directive) {
+      close();
+      if (BLOCK.test(line)) start = last = i;
+      return;
+    }
+    if (start >= 0 && text && !text.startsWith("#")) last = i;
+  });
+  close();
+  return ranges;
+}

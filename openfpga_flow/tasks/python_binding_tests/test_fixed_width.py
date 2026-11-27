@@ -1,6 +1,6 @@
 """The flow of the web app and of its model runs the stages one by one at a fixed channel width: the
 one-shot vpr command is refused, and so is a route while router.route_chan_width is not set (VPR
-would search for the smallest width). A device package gives its own width"""
+would search for the smallest width). A device package gives its own width, which is read only"""
 
 from pathlib import Path
 
@@ -72,14 +72,27 @@ def test_a_device_package_sets_its_channel_width(openfpga_module, tmp_path, gold
             options = await call(
                 "list_options", session=sid, query="router.route_chan_width", changed=True
             )
-            return used, options
+            width = package.channel_width
+            changes = [
+                await call("set_constraint", session=sid, kind="chan_width", width=width + 2),
+                await call(
+                    "set_option", session=sid, name="router.route_chan_width", value=width + 2
+                ),
+            ]
+            same = await call("set_constraint", session=sid, kind="chan_width", width=width)
+            return used, options, changes, same
 
-        used, options = script.run(steps)
+        used, options, changes, same = script.run(steps)
     finally:
         script.close()
     assert used["ok"], used
     shown = str(options["data"])
     assert "router.route_chan_width" in shown and str(package.channel_width) in shown, shown
+    # The width is the one of the package, read only: the same width is fine, another is not
+    for changed in changes:
+        assert changed["diagnostics"][0]["kind"] == "chan_width_fixed", changed
+        assert package.name in changed["diagnostics"][0]["message"]
+    assert same["ok"], same
 
 
 def test_the_tcl_of_the_model_refuses_vpr(openfpga_module, tmp_path, golden):

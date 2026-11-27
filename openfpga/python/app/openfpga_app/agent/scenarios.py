@@ -370,7 +370,8 @@ def _check_synth_error(outcome: Outcome, design: Design) -> List[str]:
     failed = [c for c in outcome.calls if c.tool == "synthesize" and not c.ok]
     if not failed:
         problems.append("synthesize was not called, or it did not fail")
-    if outcome.reached():
+    # The device comes from the architectures, not from the design: only a stage after it counts
+    if [s for s in outcome.reached() if s != "DEVICE"]:
         problems.append("a stage was reached after a synthesis that failed")
     if [c for c in outcome.calls if c.tool == "write_file"]:
         problems.append("a file was written: the person asked only for the synthesis")

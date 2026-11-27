@@ -19,13 +19,18 @@ import "../node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon/co
 import "monaco-editor/languages/definitions/xml/register.js";
 import "monaco-editor/languages/definitions/systemverilog/register.js";
 import "monaco-editor/languages/definitions/tcl/register.js";
-import { BLIF_ID, blifConfiguration, blifTokens } from "./blif";
+import { BLIF_ID, blifConfiguration, blifFoldingRanges, blifTokens } from "./blif";
 import { ODC_ID, odcConfiguration, odcTokens } from "./odc";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 
 monaco.languages.register({ id: BLIF_ID, extensions: [".blif", ".eblif"], aliases: ["BLIF", "blif"] });
 monaco.languages.setLanguageConfiguration(BLIF_ID, blifConfiguration);
 monaco.languages.setMonarchTokensProvider(BLIF_ID, blifTokens as never);
+// Each .names (and .latch, .subckt, .gate) folds with its rows
+monaco.languages.registerFoldingRangeProvider(BLIF_ID, {
+  provideFoldingRanges: (model) =>
+    blifFoldingRanges(model.getLinesContent()).map(([start, end]) => ({ start, end })),
+});
 monaco.languages.register({ id: ODC_ID, extensions: [".odc"], aliases: ["ODC", "odc"] });
 monaco.languages.setLanguageConfiguration(ODC_ID, odcConfiguration);
 monaco.languages.setMonarchTokensProvider(ODC_ID, odcTokens as never);

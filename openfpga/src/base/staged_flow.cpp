@@ -9,6 +9,7 @@
 
 #include "analytical_placement_flow.h"
 #include "draw.h"
+#include "echo_files.h"
 #include "globals.h"
 #include "read_place.h"
 #include "setup_grid.h"
@@ -209,6 +210,9 @@ void read_arch_only(VprRun& run) {
   setup.two_stage_clock_routing = options.two_stage_clock_routing;
   setup.exit_before_pack = options.exit_before_pack;
   setup.num_workers = 1;
+  /* As 'vpr' does first: the device is made from this alone, before a circuit
+   * is read, and it looks up the echo files */
+  init_echo_files_from_options(run.options.echo_file.value());
   vpr_setup_vpr(
     &run.options, setup.TimingEnabled, true, &setup.FileNameOpts, &run.arch,
     &setup.NetlistOpts, &setup.PackerOpts, &setup.PlacerOpts, &setup.APOpts,
@@ -416,8 +420,7 @@ bool do_analysis(OpenFpgaSession& session, VprRun& run) {
 /* Tell which inputs are missing, and how to read them */
 void report_missing_inputs(const OpenFpgaSession& session) {
   for (const OpenFpgaInput& input :
-       {OpenFpgaInput::VPR_ARCH, OpenFpgaInput::OPENFPGA_ARCH,
-        OpenFpgaInput::CIRCUIT}) {
+       {OpenFpgaInput::VPR_ARCH, OpenFpgaInput::OPENFPGA_ARCH}) {
     if (!session.has_input(input)) {
       VTR_LOG_ERROR("The input %s has not been read: use the command '%s'\n",
                     to_string(input).c_str(), input_command(input));
@@ -425,16 +428,71 @@ void report_missing_inputs(const OpenFpgaSession& session) {
   }
 }
 
+/* A stage that packs the circuit (PACKED, and PLACED with the analytical
+ * placer) needs it read: the device alone is made without it */
+bool circuit_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
+                   const char* command) {
+  const bool packs =
+    OpenFpgaStage::PACKED == stage ||
+    (OpenFpgaStage::PLACED == stage && session.analytical_placer());
+  /* Without the architectures, making the device says what is missing */
+  if (!packs || session.has_input(OpenFpgaInput::CIRCUIT) ||
+      !session.has_architectures()) {
+    return true;
+  }
+  VTR_LOG_ERROR(
+    "The input %s has not been read: use the command '%s' (the device is made "
+    "from the architectures, and '%s' packs the circuit onto it)\n",
+    to_string(OpenFpgaInput::CIRCUIT).c_str(),
+    input_command(OpenFpgaInput::CIRCUIT), command);
+  return false;
+}
+
+/* Make the device from the architectures alone: the circuit is not read yet */
+bool ensure_device_without_circuit(OpenFpgaSession& session,
+                                   const std::vector<std::string>& args) {
+  VprRun* current = vpr::current_vpr_run();
+  const bool same = nullptr != current && !current->failed &&
+                    !current->initialized && current->args == args;
+  /* The architecture of VPR was just read for these options: the device is
+   * made from it */
+  if (same && OpenFpgaStage::UNINIT == current->last_stage) {
+    if (!create_device(session, *current)) {
+      return false;
+    }
+  } else if (!same || OpenFpgaStage::DEVICE != current->last_stage) {
+    VprRun& run = start_run(session);
+    run.args = args;
+    const bool ok = guarded([&run, &args]() {
+      run.options = read_vpr_options(args);
+      read_arch_only(run);
+    });
+    if (!ok) {
+      drop_run(session);
+      return false;
+    }
+    if (!create_device(session, run)) {
+      return false;
+    }
+  }
+  session.complete(OpenFpgaStage::DEVICE);
+  return true;
+}
+
 /* Make sure the device is created, from the inputs read and the current
- * options */
+ * options: from the architectures, and the circuit once it is read */
 bool ensure_device(OpenFpgaSession& session) {
-  if (!session.has_all_inputs()) {
+  if (!session.has_architectures()) {
     report_missing_inputs(session);
     return false;
   }
+  const bool with_circuit = session.has_input(OpenFpgaInput::CIRCUIT);
   std::vector<std::string> args;
-  if (!flow_args(session.app_options(), true, args)) {
+  if (!flow_args(session.app_options(), with_circuit, args)) {
     return false;
+  }
+  if (!with_circuit) {
+    return ensure_device_without_circuit(session, args);
   }
   /* The data of the run is good if it was made from the same options */
   VprRun* run = vpr::current_vpr_run();
@@ -544,6 +602,10 @@ bool read_vpr_arch_input(OpenFpgaSession& session, const std::string& file,
     session.fail_input(OpenFpgaInput::VPR_ARCH);
     return false;
   }
+  /* The device is made once both architectures are read */
+  if (session.has_architectures()) {
+    return ensure_device(session);
+  }
   return true;
 }
 
@@ -576,11 +638,16 @@ bool read_circuit_input(OpenFpgaSession& session, const std::string& file) {
   return true;
 }
 
+bool make_flow_device(OpenFpgaSession& session) {
+  sync_with_vpr(session);
+  return session.reached(OpenFpgaStage::DEVICE) || ensure_device(session);
+}
+
 bool openfpga_arch_input_read(OpenFpgaSession& session,
                               const std::string& file) {
   sync_with_vpr(session);
   session.read_input(OpenFpgaInput::OPENFPGA_ARCH, whole_path(file));
-  if (session.has_all_inputs()) {
+  if (session.has_architectures()) {
     return ensure_device(session);
   }
   return true;
@@ -626,6 +693,9 @@ bool run_analytical_stages(OpenFpgaSession& session) {
 
 bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
   sync_with_vpr(session);
+  if (!circuit_ready(session, stage, stage_command(stage))) {
+    return false;
+  }
   if (session.analytical_placer() &&
       (OpenFpgaStage::PACKED == stage || OpenFpgaStage::PLACED == stage)) {
     return run_analytical_stages(session);
@@ -710,6 +780,9 @@ bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
                   to_string(stage).c_str());
     return false;
   }
+  if (!circuit_ready(session, stage, command)) {
+    return false;
+  }
   if (!session.reached(required) && OpenFpgaStage::DEVICE == required) {
     if (!ensure_device(session)) {
       return false;
@@ -772,9 +845,9 @@ bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
   }
   if (OpenFpgaStage::DEVICE == stage) {
     VTR_LOG_ERROR(
-      "Cannot run '%s': the stage DEVICE has not been reached, because not "
-      "all the inputs are read (or one was read again). Use the commands "
-      "'read_vpr_arch', 'read_openfpga_arch' and 'read_circuit' first\n",
+      "Cannot run '%s': the stage DEVICE has not been reached, because the "
+      "architectures are not read (or one was read again). Use the commands "
+      "'read_vpr_arch' and 'read_openfpga_arch' first\n",
       command);
     return false;
   }

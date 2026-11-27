@@ -72,6 +72,8 @@ function Editor(props: {
           ariaLabel: props.name,
         });
         editor.current = created as unknown as MonacoEditor;
+        // A BLIF opens with its blocks folded: a line for each .names (Ctrl+K Ctrl+J unfolds all)
+        if (languageOf(props.name) === "blif") void created.getAction("editor.foldAll")?.run();
         setReady((n) => n + 1);
         if (props.editable) {
           created.onDidChangeModelContent(() => change.current(created.getValue()));

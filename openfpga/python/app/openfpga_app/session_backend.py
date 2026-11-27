@@ -380,7 +380,9 @@ class SessionBackend:
                 continue  # a file that the ODC gave to VPR: the ODC is what the sidebar shows
             if option.name == "router.route_chan_width":
                 if option.value != -1:
-                    files["constraints"].append("chan width %s" % option.value)
+                    # The width of a device package is read only
+                    fixed = " (package)" if session.device_package() else ""
+                    files["constraints"].append("chan width %s%s" % (option.value, fixed))
             elif option.name in _CONSTRAINT_OPTIONS:
                 label = "sdc" if option.name.endswith("sdc_file") else "vpr constraints"
                 files["constraints"].append("%s %s" % (label, self._name(str(option.value))))
@@ -501,8 +503,9 @@ class SessionBackend:
     async def new_session(
         self, name: Optional[str] = None, device_package: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Open a session. With a device package the session reads its two architectures and
-        stops there: the person gives the circuit (the model is told what to do next)"""
+        """Open a session. With a device package the session reads its two architectures, which
+        make the device, and stops there: the person gives the design (the model is told what to
+        do next)"""
         package = None
         if device_package is not None:
             try:
@@ -516,12 +519,11 @@ class SessionBackend:
             return answer
         sid = answer["data"]["session"]
         if package is not None:
-            try:
-                entry = self.registry.get(sid)
-                await anyio.to_thread.run_sync(self._read_package, entry.session, package)
-            except Exception as error:  # noqa: BLE001 - a file that VPR or OpenFPGA refuses
+            # As the model does it: the device is made, and its report written
+            read = await self._tool("use_device_package", session=sid, name=package.name)
+            if not read.get("ok"):
                 self.registry.close(sid, delete_files=True)  # nothing half made is kept
-                return answers.from_exception(error)
+                return read
             self._set_package(sid, package.summary())
         self.sid = sid
         if package is None:
@@ -529,9 +531,10 @@ class SessionBackend:
         else:
             self._changed_outside(
                 "The person created session %s from the device package %s (%s): its VPR "
-                "architecture (layout %s) and its OpenFPGA architecture are read, and there is "
-                "no circuit yet. When the person names a circuit, read it with read_inputs and "
-                "only circuit=<file>, and do not give the architectures again"
+                "architecture (layout %s) and its OpenFPGA architecture are read, the device is "
+                "made (stage DEVICE), and there is no circuit yet. When the person names a "
+                "circuit, read it with read_inputs and only circuit=<file>, and do not give the "
+                "architectures again"
                 % (sid, package.name, package.description or "no description", package.layout)
             )
         return answer

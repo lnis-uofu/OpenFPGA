@@ -110,6 +110,21 @@ def test_a_manifest_whose_options_are_not_values_does_not_load(tmp_path):
         changed_copy(tmp_path, "k6_frac_n10_2x2", change)
 
 
+@pytest.mark.parametrize("width", [None, 0, "absent"])
+def test_a_package_without_a_channel_width_does_not_load(tmp_path, width):
+    """The channel width of a package is read only, and the routing needs it: a package must
+    give a number of tracks above 0"""
+
+    def change(manifest):
+        if width == "absent":
+            del manifest["device"]["channel_width"]
+        else:
+            manifest["device"]["channel_width"] = width
+
+    with pytest.raises(PackageInvalid, match="channel_width"):
+        changed_copy(tmp_path, "k6_frac_n10_2x2", change)
+
+
 def test_the_model_is_told_the_options_and_the_memory_reference_runs(openfpga_module, tmp_path):
     """The memory package runs its reference design with the options of its flow, through the
     tools of the model"""
@@ -152,6 +167,29 @@ def test_the_shell_reads_a_package_as_the_python_code_did(openfpga_module, sessi
     # Reading an architecture by hand forgets the package
     session.read_openfpga_arch(str(PACKAGES / name / "arch" / "openfpga_arch.xml"))
     assert session.device_package() is None
+
+
+def test_the_channel_width_of_a_package_is_read_only(openfpga_module, session):
+    """The channel width is the one of the device package: it is not changed, nor reset, until
+    an architecture is read by hand, which forgets the package"""
+    name = "k6_frac_n10_2x2"
+    session.read_device_package(PACKAGES / name)
+    width = session.options["router.route_chan_width"]
+    assert width > 0
+    session.options["router.route_chan_width"] = width  # the value it has: nothing changes
+    for change in (
+        lambda: session.set_route_chan_width(width + 2),
+        lambda: session.options.reset("router.route_chan_width"),
+    ):
+        with pytest.raises(openfpga_module.OpenfpgaError, match="read only"):
+            change()
+        assert session.options["router.route_chan_width"] == width
+    assert session.state().reached == ["DEVICE"]
+    # Another package is read with its own width
+    session.read_device_package(PACKAGES / "k6_frac_n10_mem1k_3x2")
+    session.read_openfpga_arch(str(PACKAGES / name / "arch" / "openfpga_arch.xml"))
+    session.set_route_chan_width(width + 2)
+    assert session.options["router.route_chan_width"] == width + 2
 
 
 def test_a_checkpoint_and_a_journal_keep_the_package(openfpga_module, tmp_path, monkeypatch):

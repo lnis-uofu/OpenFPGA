@@ -14,6 +14,7 @@
 #include "device_package.h"
 #include "globals.h"
 #include "package_io_map.h"
+#include "staged_flow.h"
 #include "vpr_option_table.h"
 #include "vpr_run.h"
 #include "vtr_log.h"
@@ -24,6 +25,25 @@ namespace openfpga {
 namespace {
 
 const int DEVICE_PACKAGE_SCHEMA_VERSION = 1;
+
+/* The copies of the architectures of corners that this process wrote. VPR
+ * reads the architecture again whenever it makes the device again (a circuit
+ * that is read, an option that changed), so a copy is kept as long as the
+ * process runs, and removed when it ends */
+class CornerCopies {
+ public:
+  void keep(const std::filesystem::path& dir) { dirs_.push_back(dir); }
+  ~CornerCopies() {
+    for (const std::filesystem::path& dir : dirs_) {
+      std::error_code fs_error;
+      std::filesystem::remove_all(dir, fs_error);
+    }
+  }
+
+ private:
+  std::vector<std::filesystem::path> dirs_;
+};
+CornerCopies corner_copies;
 
 /* The answer of report_device_package, around its data */
 std::string answer(const std::string& data) {
@@ -78,6 +98,8 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
   const DevicePackageOptions applied =
     device_package_options(package, vpr_flags());
   OpenFpgaSession& session = openfpga_ctx.mutable_session();
+  /* The package replaces the one that was read before, and its width */
+  session.set_channel_width_package("");
   for (const auto& option : applied.set) {
     std::string error;
     if (!session.set_app_option(option.first, option.second.text, error)) {
@@ -96,8 +118,8 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
             ignored.second.c_str());
   }
   /* An architecture with variables is read from a copy with the values of the
-   * corner: the package is never changed (R-32), and the copy is removed once
-   * VPR has read it */
+   * corner: the package is never changed (R-32). The copy stays while the
+   * process runs, since VPR reads it again when it makes the device again */
   std::filesystem::path arch_file = package.vpr_arch;
   std::filesystem::path copy_dir;
   if (package.has_variables) {
@@ -107,6 +129,7 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
                  ("openfpga_package_" + std::to_string(::getpid()) + "_" +
                   package.name + "_" + package.corner);
       std::filesystem::create_directories(copy_dir, fs_error);
+      corner_copies.keep(copy_dir);
       arch_file = copy_dir / "vpr_arch.xml";
       std::ofstream out(arch_file);
       out << render_vpr_arch(package);
@@ -126,10 +149,6 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
   const std::string read_vpr = "read_vpr_arch --file " + quoted(arch_file) +
                                " --layout " + package.layout;
   const int vpr_status = shell->execute_command(read_vpr.c_str(), openfpga_ctx);
-  if (!copy_dir.empty()) {
-    std::error_code fs_error;
-    std::filesystem::remove_all(copy_dir, fs_error);
-  }
   if (CMD_EXEC_SUCCESS != vpr_status) {
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -139,15 +158,16 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
       shell->execute_command(read_openfpga.c_str(), openfpga_ctx)) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (package.channel_width && 0 != *package.channel_width) {
-    std::string error;
-    if (!session.set_app_option("router.route_chan_width",
-                                std::to_string(*package.channel_width),
-                                error)) {
-      VTR_LOG_ERROR("%s\n", error.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
+  /* A package always gives its channel width (load_device_package()), which
+   * is then read only */
+  std::string width_error;
+  if (!session.set_app_option("router.route_chan_width",
+                              std::to_string(*package.channel_width),
+                              width_error)) {
+    VTR_LOG_ERROR("%s\n", width_error.c_str());
+    return CMD_EXEC_FATAL_ERROR;
   }
+  session.set_channel_width_package(package.name);
   /* The settings of the bitstream (spec_bitstream.md B-3) */
   for (const auto& setting :
        {std::make_pair("simulation_setting",
@@ -176,6 +196,11 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
   }
   session.set_bitstream_recipe(recipe);
   session.set_device_package(device_package_json(package, &applied));
+  /* The device is made now, with the channel width of the package: the
+   * design is read onto it later */
+  if (!make_flow_device(session)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
   VTR_LOG("Device package '%s' %s: layout %s%s%s\n", package.name.c_str(),
           package.version.c_str(), package.layout.c_str(),
           package.corner.empty() ? "" : ", corner ", package.corner.c_str());

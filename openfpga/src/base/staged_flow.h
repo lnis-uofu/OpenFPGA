@@ -47,8 +47,13 @@ bool read_vpr_arch_input(OpenFpgaSession& session, const std::string& file,
 /* Read the circuit. The VPR architecture must have been read */
 bool read_circuit_input(OpenFpgaSession& session, const std::string& file);
 
+/* Create the device from the inputs read and the current options, if the
+ * stage DEVICE is not reached: from the architectures, and the circuit if it
+ * is read. False (with the reason logged) if it cannot be made */
+bool make_flow_device(OpenFpgaSession& session);
+
 /* Record that the OpenFPGA architecture has been read, and create the device
- * if all the inputs are there now. The file is where it was read from.
+ * if both architectures are read now. The file is where it was read from.
  * Call fail_openfpga_arch_input() instead if
  * the architecture could not be read */
 bool openfpga_arch_input_read(OpenFpgaSession& session,

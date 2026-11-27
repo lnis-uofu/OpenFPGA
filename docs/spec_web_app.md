@@ -126,8 +126,10 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
 
 - **UI-20** (done) Lists DEVICE, SYNTHESIS, PACKED, PLACED, ROUTED, ANALYZED with a mark for each
   state (reached, not reached, failed, running, skipped), the time of the run, and a progress bar.
-- **UI-21** (done) DEVICE is shown as reached as soon as both architectures are read, that is when
-  a device package is loaded, before any circuit. It names the device package.
+- **UI-21** (done) DEVICE is reached as soon as both architectures are read, that is when a device
+  package is loaded, before any circuit: the flow makes the device from them, and the design is
+  read onto it as a separate step (SYNTHESIS, or a netlist read as the circuit). The sidebar shows
+  the stage as the session has it, and names the device package.
 - **UI-22** (done) DEVICE has a button that opens the VPR and the OpenFPGA architecture files in
   tabs. The architecture files are not listed anywhere else.
 - **UI-23** (done) SYNTHESIS, PACKED, PLACED and ROUTED have a run button. A flow stage runs the
@@ -229,8 +231,9 @@ browser (Preact page)  ──HTTP + server-sent events──  openfpga_app (Star
   report for each.
 - **REP-4** (done) A stage that fails writes a report with the status "failed" and its reason as
   the first error.
-- **REP-5** (done) The device report is written when the circuit is read, because the device data
-  of VPR exists from then on.
+- **REP-5** (done) The device report is written when the device is made: when a device package
+  is read (the two architectures make the device, before any design), and again when the circuit
+  is read.
 - **REP-6** (done) `run_stage` and `synthesize` return the name of the report as `report`.
 - **REP-7** (done) A report that cannot be written never fails the stage; the answer then has no
   `report`.
@@ -334,7 +337,9 @@ Every report is the template `openfpga_mcp/templates/stage_report.html` with the
   search for the smallest width and the one-shot `vpr` command are not supported: the tools, the
   console, the Tcl of the console, of the terminal and of the model refuse `vpr`, and refuse
   `route` while no width is set (`chan_width_required` for the tools). The width cannot be
-  cleared, only changed, and a device package sets its own.
+  cleared, only changed. A device package sets its own, which is read only: a session of a
+  package refuses another width (`chan_width_fixed` for the tools) until an architecture is read
+  by hand.
 - **FEA-36** (done) Flat routing (`router.flat_routing`) runs in the flow of the app, stage by
   stage (docs/plan_flat_routing.md). On a device package it runs only if the manifest says
   `device.flat_routing: true`: the tools (`flat_routing_unsupported`), the console and the Tcl

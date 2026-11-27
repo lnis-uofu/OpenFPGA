@@ -115,6 +115,11 @@ bool OpenFpgaSession::has_all_inputs() const {
   return true;
 }
 
+bool OpenFpgaSession::has_architectures() const {
+  return has_input(OpenFpgaInput::VPR_ARCH) &&
+         has_input(OpenFpgaInput::OPENFPGA_ARCH);
+}
+
 bool OpenFpgaSession::can_read(const OpenFpgaInput& input) const {
   /* The circuit is read against the VPR architecture */
   if (OpenFpgaInput::CIRCUIT == input) {
@@ -135,9 +140,12 @@ bool OpenFpgaSession::can_run(const OpenFpgaStage& stage) const {
   if (OpenFpgaStage::UNINIT == stage) {
     return false;
   }
-  /* The device is made from all the inputs */
+  /* The device is made from the architectures; the circuit is packed on it */
   if (OpenFpgaStage::DEVICE == stage) {
-    return has_all_inputs();
+    return has_architectures();
+  }
+  if (OpenFpgaStage::PACKED == stage && !has_input(OpenFpgaInput::CIRCUIT)) {
+    return false;
   }
   return reached(required_stage(stage));
 }
@@ -271,11 +279,34 @@ const std::string* OpenFpgaSession::failure(const OpenFpgaStage& stage) const {
   return failures_.end() == found ? nullptr : &found->second;
 }
 
+std::string OpenFpgaSession::fixed_option(const std::string& name) const {
+  if ("router.route_chan_width" != name || channel_width_package_.empty()) {
+    return "";
+  }
+  const AppOptionValue* option = app_options_.find(name);
+  return "The channel width is " +
+         (nullptr == option ? std::string("") : option->to_string()) +
+         ", the one of the device package '" + channel_width_package_ +
+         "', and cannot be changed: router.route_chan_width is read only";
+}
+
 bool OpenFpgaSession::set_app_option(const std::string& name,
                                      const std::string& text,
                                      std::string& error) {
   const AppOptionValue* option = app_options_.find(name);
   const std::string before = nullptr == option ? "" : option->to_string();
+  /* A fixed option is checked on a copy: setting the value it has is fine */
+  const std::string fixed = fixed_option(name);
+  if (!fixed.empty()) {
+    AppOptions copy = app_options_;
+    if (!copy.set(name, text, error)) {
+      return false;
+    }
+    if (before != copy.find(name)->to_string()) {
+      error = fixed;
+      return false;
+    }
+  }
   if (!app_options_.set(name, text, error)) {
     return false;
   }
@@ -290,6 +321,9 @@ bool OpenFpgaSession::reset_app_option(const std::string& name) {
     return false;
   }
   const bool changed = !app_options_.is_default(name);
+  if (changed && !fixed_option(name).empty()) {
+    return false;
+  }
   app_options_.reset(name);
   if (changed) {
     invalidate_for_option(name);
@@ -343,6 +377,7 @@ void OpenFpgaSession::invalidate_all_stages() {
 
 void OpenFpgaSession::forget_package() {
   device_package_.clear();
+  channel_width_package_.clear();
   bitstream_recipe_ = BitstreamRecipe();
 }
 

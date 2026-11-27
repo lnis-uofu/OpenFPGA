@@ -687,6 +687,14 @@ DevicePackage load_device_package(const fs::path& given,
       to_integer(member(device, "channel_width"), number)) {
     package.channel_width = number;
   }
+  /* The channel width of a package is read only, and the routing runs only
+   * at a fixed width: a package must give it */
+  if (!package.channel_width || *package.channel_width <= 0) {
+    throw invalid(name,
+                  "device.channel_width is not a number of tracks above 0: "
+                  "the package gives the channel width, which the routing "
+                  "needs and the session cannot change");
+  }
   for (const json& tag : member(device, "tags")) {
     package.tags.push_back(text_of(tag));
   }

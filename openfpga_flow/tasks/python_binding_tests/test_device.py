@@ -195,7 +195,7 @@ def test_a_limit_that_is_not_a_number(openfpga_module, session):
             session.device(tile_type="io", limit=bad)
 
 
-def test_the_device_needs_the_inputs(openfpga_module, golden, tmp_path):
+def test_the_device_needs_the_architectures_and_not_the_circuit(openfpga_module, golden, tmp_path):
     # In a process of its own: the sessions of one process share the data of VPR
     with openfpga_module.RemoteSession(cwd=tmp_path) as worker:
         with pytest.raises(openfpga_module.OpenfpgaError) as error:
@@ -204,12 +204,15 @@ def test_the_device_needs_the_inputs(openfpga_module, golden, tmp_path):
     session = openfpga_module.Session()
     session.options["general.clock_modeling"] = "route"
     session.read_vpr_arch(golden.vpr_arch, layout=golden.layout)
-    session.read_openfpga_arch(golden.openfpga_arch)
     with pytest.raises(openfpga_module.OpenfpgaError) as error:
         session.device()
     found = error.value.errors[0]
     assert found.kind == "stage_not_reached" and found.data == {"stage": "DEVICE"}
-    assert "read_circuit" in found.hint
+    assert "read_openfpga_arch" in found.hint and "read_circuit" not in found.hint
+    # The two architectures make the device: it is there before the circuit
+    session.read_openfpga_arch(golden.openfpga_arch)
+    assert session.state().reached == ["DEVICE"]
+    assert session.device().grid.width > 0
 
 
 def test_the_device_is_the_same_after_the_stages(session):

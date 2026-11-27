@@ -455,10 +455,8 @@ export function Sidebar() {
   const device = v.stages.findIndex((s) => s.stage === "DEVICE");
   const vpr = files.inputs.find((f) => f.label === "vpr arch");
   const oarch = files.inputs.find((f) => f.label === "openfpga arch");
-  // The device is known once its architectures are read (VPR makes its grid with the circuit)
-  const stages = v.stages.map((s) =>
-    s.stage === "DEVICE" && s.status === "not_reached" && vpr && oarch ? { ...s, status: "reached" as const } : s,
-  );
+  // The device is made from the architectures (a device package), before the design is read
+  const stages = [...v.stages];
   if (v.synthesis) stages.splice(device + 1, 0, { ...v.synthesis, stage: "SYNTHESIS" });
   const counted = stages.filter((s) => s.status !== "skipped");
   const reached = counted.filter((s) => s.status === "reached").length;

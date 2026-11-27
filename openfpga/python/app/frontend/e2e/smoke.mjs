@@ -50,7 +50,8 @@ try {
   if (process.env.SHOT_CHAT) await page.screenshot({ path: process.env.SHOT_CHAT });
   // The sidebar followed the conversation
   assert.ok(await page.isVisible("text=chan width 24"));
-  assert.ok(await page.isVisible(".stage-reached:has-text('DEVICE')"));
+  // The channel width that the model set last dropped the device: the next stage makes it again
+  assert.ok(await page.isVisible(".stage-not_reached:has-text('DEVICE')"));
   // Calls in a row fold; the failed one is a card of its own
   assert.ok(await page.isVisible("text=5 calls"));
   assert.ok(await page.isVisible("div.card-failed"));

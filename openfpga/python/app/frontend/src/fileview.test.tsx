@@ -27,6 +27,7 @@ type FakeEditor = {
   listener?: () => void;
   commands: { key: number; run: () => void }[];
   shown: number[];
+  actions: string[];
   type(v: string): void;
 };
 type FakeMarker = { severity: number; message: string; startLineNumber: number };
@@ -54,6 +55,15 @@ vi.mock("./monaco", () => ({
             listener: undefined as (() => void) | undefined,
             commands: [] as { key: number; run: () => void }[],
             shown: [] as number[],
+            actions: [] as string[],
+            getAction(id: string) {
+              return {
+                run: () => {
+                  this.actions.push(id);
+                  return Promise.resolve();
+                },
+              };
+            },
             getModel() {
               return {};
             },
@@ -129,6 +139,17 @@ describe("opening a file in a tab", () => {
     await waitFor(() => expect(fake.created).toHaveLength(1));
     expect(fake.created[0].options).toMatchObject({ value: "<block/>", language: "xml", readOnly: true });
     expect(screen.getByText(/2\.0 kB/)).toBeTruthy();
+  });
+
+  it("opens a BLIF with its blocks folded, and other files as they are", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => reply(200, file(".names a y\n1 1\n"))));
+    render(<Workspace />);
+    await openFile("s1/top.blif");
+    await waitFor(() => expect(fake.created).toHaveLength(1));
+    expect(fake.created[0].editor.actions).toEqual(["editor.foldAll"]);
+    await openFile("s1/design.net");
+    await waitFor(() => expect(fake.created).toHaveLength(2));
+    expect(fake.created[1].editor.actions).toEqual([]);
   });
 
   it("opens from the sidebar by a click on the name, and the small button only copies it", async () => {

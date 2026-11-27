@@ -117,7 +117,7 @@ critical_paths
 device
 ~~~~~~
 
-  Answer with the device that the flow works on: kind ``device``, read from the stage ``DEVICE``, so it is there as soon as the three inputs are read.
+  Answer with the device that the flow works on: kind ``device``, read from the stage ``DEVICE``, so it is there as soon as the two architectures are read, before the circuit.
 
   - ``grid``: ``width``, ``height``, ``layers`` and the name of the ``layout`` of the architecture
   - ``channel_width``: ``x``, ``y`` and ``fixed``. It is the widest channel of the routing resource graph that VPR made with the device: the width that was set with ``router.route_chan_width`` (``fixed`` is true), or else the width that VPR estimates the delays of the placement with (``place.place_chan_width``, 100 by default), when the router is free to find its own. ``null`` if there is no graph

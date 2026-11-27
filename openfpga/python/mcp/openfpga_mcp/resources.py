@@ -210,8 +210,9 @@ def register(server, registry: SessionRegistry, config: Config) -> Catalogue:
             "the router could not find room. For any stage, read_log with the last lines of the "
             "stage if the diagnostics do not say enough. Name the cause from the diagnostic kind "
             "and cite the number that supports it (the channel width, the overuse, the line of "
-            "the log). Then give one thing to try: set_constraint chan_width, set_option, or "
-            "another stage. Do not guess what the data do not show." % session
+            "the log). Then give one thing to try: set_constraint chan_width (not in a session of a "
+            "device package, whose width is read only), set_option, or another stage. Do not "
+            "guess what the data do not show." % session
         )
 
     return catalogue

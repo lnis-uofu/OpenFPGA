@@ -137,6 +137,9 @@ class OpenFpgaSession {
   bool has_input(const OpenFpgaInput& input) const;
   /* Return true if all the inputs have been read */
   bool has_all_inputs() const;
+  /* Return true if both architectures have been read: the device is made from
+   * them, before the circuit */
+  bool has_architectures() const;
   /* Return true if an input can be read now */
   bool can_read(const OpenFpgaInput& input) const;
   /* Return true if the results of a stage are valid. UNINIT is always valid */
@@ -176,6 +179,10 @@ class OpenFpgaSession {
    * the answer of report_device_package (JSON), or empty when they were not
    * read from one */
   const std::string& device_package() const { return device_package_; }
+  /* Why an option cannot be changed, or empty if it can: the channel width
+   * (router.route_chan_width) is the one of the device package that the
+   * architectures were read from, until another architecture is read */
+  std::string fixed_option(const std::string& name) const;
   /* The constraints of the session, see SessionConstraints. They are kept
    * when the session is reset, as the options are */
   const SessionConstraints& constraints() const { return constraints_; }
@@ -223,11 +230,12 @@ class OpenFpgaSession {
    * changes, the stage that the option tunes and the ones that depend on it
    * are dropped, see app_option_stage(). Setting the value it already has
    * keeps the stages. Return false, and leave everything untouched, if the
-   * option cannot be set */
+   * option cannot be set, or is fixed (fixed_option()) and would change */
   bool set_app_option(const std::string& name, const std::string& text,
                       std::string& error);
   /* Give an option its default value back, with the same effect on the
-   * stages. Return false if it does not exist */
+   * stages. Return false if it does not exist, or is fixed (fixed_option())
+   * and would change */
   bool reset_app_option(const std::string& name);
   /* Give all the options their default value back */
   void reset_app_options();
@@ -244,6 +252,12 @@ class OpenFpgaSession {
    * (see device_package()). Reading an architecture, or failing to, forgets
    * it, and so does reset() */
   void set_device_package(const std::string& json) { device_package_ = json; }
+  /* The channel width that was just set is the one of a device package: it
+   * cannot be changed (see fixed_option()) until the package is forgotten.
+   * An empty name lets it be changed again */
+  void set_channel_width_package(const std::string& package) {
+    channel_width_package_ = package;
+  }
   /* Record the generation of the VPR run that the OpenFPGA architecture was
    * linked to, by link_openfpga_arch. What the link makes refers to the data
    * of that run, and it is not valid for another one */
@@ -298,6 +312,8 @@ class OpenFpgaSession {
   std::map<OpenFpgaStage, double> stage_seconds_;
   std::map<OpenFpgaInput, std::string> input_files_;
   std::string device_package_;
+  /* The package whose channel width is set, empty if none is */
+  std::string channel_width_package_;
   SessionConstraints constraints_;
 };
 

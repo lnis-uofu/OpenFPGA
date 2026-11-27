@@ -140,6 +140,8 @@ try {
     null,
     { timeout: 15000 },
   ); // the tokens come a moment after the text
+  // Each .names opens folded: a line each, with the mark of a folded block in the margin
+  await page.waitForSelector(".file-view .margin-view-overlays .codicon-folding-collapsed", { timeout: 15000 });
   if (process.env.SHOT_BLIF) await page.screenshot({ path: process.env.SHOT_BLIF });
   assert.ok(await page.isVisible('[role=tab]:has-text("mine.blif")'));
   // The file of the session is edited in the editor and saved in place (Ctrl+S)
@@ -288,7 +290,11 @@ try {
   await page.click('[role=tab]:has-text("Chat")');
   assert.equal(await page.locator(".upload-row.loaded").count(), 0, "no circuit yet");
   await unfoldFiles(); // a new sidebar: folded again
-  assert.ok(!(await page.isVisible("header >> text=DEVICE ✔")), "nothing reached");
+  // The device is made from the architectures, before the design: its floorplan opens
+  assert.ok(await page.isVisible("header >> text=DEVICE ✔"), "the device is made");
+  await page.click('[aria-label="Open the floorplan"]');
+  await page.waitForSelector(".view-status:has-text('0 ports')", { timeout: 30000 });
+  await page.click('[role=tab]:has-text("Chat")');
   await page.setInputFiles('[aria-label="Upload files"]', {
     name: "design.blif",
     mimeType: "application/octet-stream",

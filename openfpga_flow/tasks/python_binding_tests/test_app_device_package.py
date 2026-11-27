@@ -141,7 +141,12 @@ def test_a_session_from_a_package_reads_the_architectures_and_waits_for_the_circ
     labels = [f["label"] for f in shown["files"]["inputs"]]
     assert labels == ["vpr arch", "openfpga arch"]  # no circuit: it stops there
     assert shown["files"]["inputs"][0]["extra"] == "layout 2x2"
-    assert all(s["status"] == "not_reached" for s in shown["stages"])
+    # The architectures make the device, and its report is written; nothing else is reached
+    assert [s["stage"] for s in shown["stages"] if s["status"] == "reached"] == ["DEVICE"]
+    assert "device" in shown["reports"]
+    assert [c for c in shown["files"]["constraints"] if c.startswith("chan width")] == [
+        "chan width %d (package)" % device_packages.load(PACKAGES / LOGIC).channel_width
+    ]
     # Nothing is written in the package
     assert [p for p in (PACKAGES / LOGIC).rglob("*") if p.suffix in (".net", ".place", ".route")] == []
 

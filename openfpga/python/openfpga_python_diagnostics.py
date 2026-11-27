@@ -90,10 +90,13 @@ _MESSAGE_RULES = [
         lambda d: "Run '%s' first" % d["command"],
     ),
     (
-        re.compile(r"the stage DEVICE has not been reached, because not all the inputs are read"),
+        re.compile(
+            r"the stage DEVICE has not been reached, because the architectures are not read"
+        ),
         "stage_not_reached",
         lambda m: {"stage": "DEVICE"},
-        lambda d: "Read the three inputs: read_vpr_arch, read_openfpga_arch and read_circuit",
+        lambda d: "Read the two architectures: read_vpr_arch and read_openfpga_arch (the device "
+        "is made from them; the circuit is read onto it after)",
     ),
     (
         re.compile(
@@ -181,8 +184,8 @@ _LINE_RULES = [
         re.compile(r"Circuit is unroutable with a channel width factor of (\d+)"),
         "route_unroutable",
         lambda m: {"channel_width": int(m.group(1))},
-        lambda d: "Raise router.route_chan_width above %d, or change the placement"
-        % d["channel_width"],
+        lambda d: "Raise router.route_chan_width above %d (unless a device package gave it), "
+        "or change the placement" % d["channel_width"],
     ),
 ]
 

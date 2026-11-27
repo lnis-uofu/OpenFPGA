@@ -99,6 +99,17 @@ class FixedWidthOnly(RegistryError):
     )
 
 
+class ChannelWidthFixed(RegistryError):
+    """The channel width of a session of a device package is the one of its package, and is read
+    only"""
+
+    kind = "chan_width_fixed"
+    hint = (
+        "The device package gives the channel width: route with it (get_device says it); a design "
+        "that does not route needs another placement, or another package"
+    )
+
+
 class FlatRoutingUnsupported(RegistryError):
     """Flat routing (router.flat_routing) is asked of a device whose package does not say that
     it supports it"""

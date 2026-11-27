@@ -80,8 +80,8 @@ export function tileLayer(
   return { layer, legend };
 }
 
-/** The coordinates x,y of each tile, above its logic (in the band of its channel), when a grid
- * tile is COORDINATE_PX on the screen; null for a grid that is too large */
+/** The coordinates x,y of each tile, inside the top of its logic, when a grid tile is
+ * COORDINATE_PX on the screen; null for a grid that is too large */
 export function coordinateLayer(
   device: ViewData,
   styles: StyleTable,
@@ -98,7 +98,7 @@ export function coordinateLayer(
   for (let i = 0; i < n; i++) {
     const [x0, , x1, y1] = logicBox(tx[i], ty[i], tw[i], th[i]);
     x[i] = (x0 + x1) / 2;
-    y[i] = y1 + 0.17;
+    y[i] = y1 - 0.07;
   }
   return {
     id: "coordinates",

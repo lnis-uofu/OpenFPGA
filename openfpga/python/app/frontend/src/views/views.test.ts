@@ -588,7 +588,7 @@ describe("the floorplan", () => {
     ]);
   });
 
-  it("names each tile by its coordinates, above its logic, close up only", () => {
+  it("names each tile by its coordinates, at the top of its logic, close up only", () => {
     const built = floorplanView.build(
       context(floorplanBase(), {
         cx: 2,
@@ -606,9 +606,9 @@ describe("the floorplan", () => {
     ) as RectsLayer;
     expect(names.count).toBe(tiles.x.length);
     expect(names.text(0)).toBe(tiles.name!(0).split(" ")[1]);
-    // Above the logic of its tile, inside the tile
-    expect(names.y[0]).toBeGreaterThan(tiles.y[0] + tiles.h[0]);
-    expect(names.y[0]).toBeLessThan(Math.floor(tiles.y[0]) + 1);
+    // On the logic of its tile, at its top
+    expect(names.y[0]).toBeLessThan(tiles.y[0] + tiles.h[0]);
+    expect(names.y[0]).toBeGreaterThan(tiles.y[0] + tiles.h[0] * 0.75);
     // Drawn from COORDINATE_PX a tile
     expect(names.size * (COORDINATE_PX - 1)).toBeLessThan(names.minPx!);
     expect(names.size * COORDINATE_PX).toBeGreaterThanOrEqual(names.minPx!);

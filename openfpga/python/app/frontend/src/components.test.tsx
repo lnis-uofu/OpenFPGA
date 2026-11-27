@@ -1303,12 +1303,27 @@ describe("the device stage of the sidebar", () => {
     real();
     const v = filled();
     v.session = { ...v.session!, device_package: pkg };
-    v.stages = v.stages.map((st) => ({ ...st, status: "not_reached" as const, seconds: null }));
+    // The flow makes the device from the architectures: the session says DEVICE is reached
+    v.stages = v.stages.map((st) => ({
+      ...st,
+      status: st.stage === "DEVICE" ? ("reached" as const) : ("not_reached" as const),
+      seconds: null,
+    }));
     v.files.inputs = v.files.inputs.filter((f) => f.label !== "circuit");
     view.value = v;
     render(<Sidebar />);
     expect(device().className).toContain("stage-reached");
     expect(screen.getAllByRole("listitem")[2].className).toContain("stage-not_reached"); // PACKED
+  });
+
+  it("shows the device as the session has it: dropped by an option, it is not reached", () => {
+    real();
+    const v = filled();
+    v.session = { ...v.session!, device_package: pkg };
+    v.stages = v.stages.map((st) => ({ ...st, status: "not_reached" as const, seconds: null }));
+    view.value = v;
+    render(<Sidebar />);
+    expect(device().className).toContain("stage-not_reached");
   });
 
   it("is not reached in a session with no architecture", () => {

@@ -17,6 +17,7 @@ from . import answers, budget, device_packages, filenames, reports, synthesis
 from .config import Config
 from .errors import (
     FileExists,
+    ChannelWidthFixed,
     FixedWidthOnly,
     BitstreamUnsupported,
     FlatRoutingUnsupported,
@@ -135,6 +136,17 @@ def register(
         if stage in ("pack", "place") and handle.options["place.placer"] == "analytical":
             return ["pack", "place"]
         return [stage]
+
+    def check_width_change(entry: Entry, width: Any) -> None:
+        """Refuse to change the channel width of a session of a device package: it is the width
+        of the package, read only (the core refuses it too; this says it with its own kind)"""
+        name = (registry.read_meta(entry.directory) or {}).get("package_name")
+        current = entry.session.options["router.route_chan_width"]
+        if name and current > 0 and width != current:
+            raise ChannelWidthFixed(
+                "The channel width is %d, the one of the device package '%s', and cannot be "
+                "changed" % (current, name)
+            )
 
     def flat_routing_allowed(entry: Entry) -> bool:
         """Whether the device of the session supports flat routing (its device package says)"""
@@ -414,11 +426,12 @@ def register(
         """Read a device package into a session: its VPR architecture (with the layout of its
         grid) and its OpenFPGA architecture, so that the session targets that device. Give the
         name of a package from list_device_packages. Only a session with nothing read yet takes a
-        package (fails with session_not_empty otherwise); its channel width and options are set. It stops
-        there: read_inputs with only the circuit is the next call, and the architectures are not
-        given again. A package may have design corners (list_device_packages shows them): give
-        corner to read the timing of one, otherwise its default corner is used. Returns the
-        package, its corner and the state of the session."""
+        package (fails with session_not_empty otherwise); its channel width and options are set, and
+        the device is made (stage DEVICE). It stops there: read_inputs with only the circuit is
+        the next call, and the architectures are not given again. A package may have design
+        corners (list_device_packages shows them): give corner to read the timing of one,
+        otherwise its default corner is used. Returns the package, its corner and the state of
+        the session."""
 
         def work():
             entry = session_of(session)
@@ -432,11 +445,21 @@ def register(
                     "Session %s has already read files, and a device package would replace them"
                     % session
                 )
-            applied = device_packages.read_into(handle, package, corner)
+            started = time.monotonic()
+            try:
+                applied = device_packages.read_into(handle, package, corner)
+            except device_packages.PackageInvalid as error:
+                write_report(entry, "device", "failed", None, time.monotonic() - started,
+                             [str(error)])
+                raise
             registry.update_meta(entry, package_name=package.name)  # for synthesize
+            # The device is made from the architectures: the stage DEVICE is reached, and the
+            # design is read onto it later
+            report = write_report(entry, "device", "passed", None, time.monotonic() - started)
             return reply(
                 {
                     "device_package": package.summary(),
+                    **({"report": report} if report else {}),
                     "corner": applied["corner"],
                     # The options of the flow of the package (flow_defaults.vpr_options)
                     "options_set": applied["options"],
@@ -942,6 +965,8 @@ def register(
                     "The routing runs at a fixed channel width: router.route_chan_width takes a "
                     "number of tracks above 0"
                 )
+            if name == "router.route_chan_width":
+                check_width_change(session_of(session), value)
             if name == "router.flat_routing" and value is True and not flat_routing_allowed(
                 session_of(session)
             ):
@@ -1020,7 +1045,8 @@ def register(
     ):
         """Set or clear an input that changes the whole flow; says what it dropped. odc: the
         design's constraints (errors name the line, nearest names). vpr_constraints: VPR's XML.
-        sdc: an SDC. chan_width: width tracks (changed, not cleared)."""
+        sdc: an SDC. chan_width: width tracks (changed, not cleared; read only in a session of a
+        device package, which gives its own)."""
 
         def work():
             entry = session_of(session)
@@ -1037,6 +1063,7 @@ def register(
                     error.hint = "For a channel width: kind=chan_width and width=N"
                     raise error
                 value = _number("width", width, 0, 1, 10000)
+                check_width_change(entry, value)
                 return reply(dataclasses.asdict(handle.set_route_chan_width(value)))
             if (file is None) == (not clear) or width is not None:
                 error = InvalidArgument("%s takes a file, or clear, and no width" % kind)

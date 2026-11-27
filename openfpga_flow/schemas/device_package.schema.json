@@ -78,10 +78,8 @@
           "type": "string"
         },
         "channel_width": {
-          "type": [
-            "integer",
-            "null"
-          ]
+          "type": "integer",
+          "minimum": 1
         },
         "vpr_options": {
           "type": "object",

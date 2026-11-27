@@ -120,4 +120,7 @@ def test_a_replay_that_fails_stops_and_leaves_the_session_with_what_ran(server):
     assert "Replay stopped at line" in item["message"] and "yosys --file" in item["message"]
     assert item["data"]["ran"] == 1 and item["data"]["session"] in item["hint"]
     new = call(server, "get_state", session=item["data"]["session"])["data"]["state"]
-    assert new["reached"] == [] and new["inputs"]["vpr_arch"] and new["inputs"]["openfpga_arch"]
+    # The architectures that were read make the device; the design did not come
+    assert new["reached"] == ["DEVICE"]
+    assert new["inputs"]["vpr_arch"] and new["inputs"]["openfpga_arch"]
+    assert new["inputs"]["circuit"] is None
