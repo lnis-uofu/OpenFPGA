@@ -1,5 +1,4 @@
-#ifndef OUTPUT_CAPTURE_H
-#define OUTPUT_CAPTURE_H
+#pragma once
 
 #include <cstdio>
 #include <string>
@@ -20,6 +19,33 @@ namespace openfpga {
  *   be active at a time.
  * - Capture is not supported on Windows. The object is then inactive
  *   and stop() returns an empty string.
+ * - The text is held until stop(): nothing reaches the terminal while the
+ *   capture is active. Print the text again if it should still be seen.
+ *
+ * Example: run one command of the shell and get its output as text, as
+ * OpenfpgaShell::execute() does for the Python binding
+ *
+ *   OutputCapture capture;
+ *   const int status = shell.execute_command(line.c_str(), openfpga_ctx);
+ *   const std::string log = capture.stop();
+ *
+ * Example: an option '--log <file>' of the shell, which writes the output of
+ * each command to a file and still shows it on the terminal
+ *
+ *   std::ofstream log_file(log_path, std::ios::app);
+ *   for (const std::string& line : commands) {
+ *     OutputCapture capture;
+ *     const int status = shell.execute_command(line.c_str(), openfpga_ctx);
+ *     const std::string text = capture.stop();
+ *     log_file << text;
+ *     std::fwrite(text.data(), 1, text.size(), stdout);
+ *     if (CMD_EXEC_SUCCESS != status) break;
+ *   }
+ *
+ * The output of a command shows when the command ends, not while it runs.
+ * For a log that follows a long command as it runs, vtr::set_log_file()
+ * copies what VTR_LOG writes to a file (not printf, std::cout or the
+ * output of other libraries).
  *******************************************************************/
 class OutputCapture {
  public: /* Constructors */
@@ -46,5 +72,3 @@ class OutputCapture {
 };
 
 } /* End namespace openfpga */
-
-#endif
