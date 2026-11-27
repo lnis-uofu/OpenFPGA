@@ -1,6 +1,7 @@
 // The whole exports that the views share (device, placement, pins, clusters), fetched once for a
 // state of the session and kept until it changes (docs/plan_design_views.md, 3.1)
 import { type ViewData, fetchView } from "./format";
+import { forgetLayouts } from "./layout";
 
 let signature = "";
 const cache = new Map<string, Promise<ViewData>>();
@@ -12,6 +13,8 @@ export function setDataSignature(next: string) {
   signature = next;
   cache.clear();
   ready.clear();
+  // A layout is kept by its graph: the graph of another design may have the same nodes
+  forgetLayouts();
 }
 
 type Scope = Record<string, string | number>;

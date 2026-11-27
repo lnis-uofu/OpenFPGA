@@ -67,6 +67,8 @@ export interface NetlistBase {
   /** The graph and the layout that are drawn, and the revision that a layout is asked for */
   shown: { graph: Graph; layout: Layout; revision: number } | null;
   asked: number;
+  /** Layouts stopped while still wanted, asked again: part of the key, so that the scene is made */
+  retries: number;
   refit: boolean;
   /** What was refused or went wrong, for the status */
   message: string;
@@ -151,6 +153,7 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
     revision: 1,
     shown: null,
     asked: 0,
+    retries: 0,
     refit: true,
     message: "",
     ms: 0,
@@ -391,7 +394,12 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
     base.asked = revision;
     const before = base.shown;
     const hint = hintOf(base, graph);
-    layoutGraph(graph, hint, (id) => !!before?.layout.nodes.has(id)).then(
+    layoutGraph(
+      graph,
+      hint,
+      (id) => !!before?.layout.nodes.has(id),
+      base, // the engine of this view: another view never stops its layout
+    ).then(
       (layout) => {
         if (base.revision !== revision) return;
         base.shown = { graph, layout, revision };
@@ -399,7 +407,15 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
         changed();
       },
       (error) => {
-        if (String(error?.message ?? error) === "stopped") return;
+        if (String(error?.message ?? error) === "stopped") {
+          // Stopped while still wanted (not by a later change of this view): ask again
+          if (base.revision === revision && base.asked === revision) {
+            base.asked = 0;
+            base.retries++;
+            changed();
+          }
+          return;
+        }
         base.message = `The layout failed: ${error?.message ?? error}`;
         changed();
       },
@@ -720,7 +736,7 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
       { id: "slack", label: "Slack", off: true },
     ],
     key: (base, _view, hidden) =>
-      `${base.revision}|${base.shown?.revision ?? 0}|${netlistRequest.value?.seq ?? 0}|${[...hidden].sort().join(",")}`,
+      `${base.revision}|${base.shown?.revision ?? 0}|${base.retries}|${netlistRequest.value?.seq ?? 0}|${[...hidden].sort().join(",")}`,
     build: makeScene,
     locate(base, ref, changed) {
       if (!base.shown || base.shown.revision !== base.revision) return null;

@@ -1,8 +1,10 @@
 // The layout of the netlist views (docs/plan_design_views.md, 3.5): ELK's layered algorithm, in a
-// Web Worker in the page (in the thread in the tests), on the graph of a scope. A layout is kept by
-// the signature of its graph; a new one stops the one that runs. An expansion gives the nodes that
-// were shown their places as hints, keeps the order of the layers, and is moved as a whole onto the
-// layout before it, so that what was shown stays where it was as far as the layout allows.
+// Web Worker in the page (in the thread in the tests), on the graph of a scope. Each view (an
+// owner) has its engine: a new layout of a view stops the one of the same view that still runs,
+// never the one of another view. A layout is kept by the signature of its graph, until the data
+// of the session change. An expansion gives the nodes that were shown their places as hints, keeps
+// the order of the layers, and is moved as a whole onto the layout before it, so that what was
+// shown stays where it was as far as the layout allows.
 import type { ELK, ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 import type { Graph } from "./netgraph";
 
@@ -29,22 +31,59 @@ export interface Layout {
 export const LAYER_SPACING = 60;
 export const NODE_SPACING = 18;
 
-let engine: Promise<ELK> | null = null;
-let inWorker = false;
-let running = 0;
+/** The engine of one owner: its ELK, the count of its layouts, and the one that runs (to stop it:
+ * a worker that is terminated never answers, so its promise is rejected here) */
+interface Engine {
+  elk: Promise<ELK> | null;
+  inWorker: boolean;
+  count: number;
+  stop: ((error: Error) => void) | null;
+}
 
-async function makeEngine(): Promise<ELK> {
+/** The owner of the layouts that give none (the tests) */
+const SHARED = {};
+const engines = new Map<object, Engine>();
+/** The most engines kept: the one used the longest ago is closed (its view is likely gone) */
+const ENGINES = 4;
+
+function engineOf(owner: object): Engine {
+  let engine = engines.get(owner);
+  if (engine) {
+    engines.delete(owner); // last used: at the end
+    engines.set(owner, engine);
+    return engine;
+  }
+  engine = { elk: null, inWorker: false, count: 0, stop: null };
+  engines.set(owner, engine);
+  if (engines.size > ENGINES) {
+    const [oldest, old] = engines.entries().next().value!;
+    engines.delete(oldest);
+    closeEngine(old);
+  }
+  return engine;
+}
+
+/** Stop what an engine runs, and end its worker */
+function closeEngine(engine: Engine) {
+  engine.stop?.(new Error("stopped"));
+  engine.stop = null;
+  const elk = engine.elk;
+  engine.elk = null;
+  if (engine.inWorker && elk) void elk.then((e) => e.terminateWorker());
+}
+
+async function makeEngine(engine: Engine): Promise<ELK> {
   // In the tests, ELK runs in the thread; the page loads only its worker
   if (import.meta.env.MODE !== "test") {
     const [{ default: ElkApi }, { default: workerUrl }] = await Promise.all([
       import("elkjs/lib/elk-api.js"),
       import("elkjs/lib/elk-worker.min.js?url"),
     ]);
-    inWorker = true;
+    engine.inWorker = true;
     return new ElkApi({ workerUrl });
   }
   const { default: ElkBundled } = await import("elkjs/lib/elk.bundled.js");
-  inWorker = false;
+  engine.inWorker = false;
   return new ElkBundled();
 }
 
@@ -78,22 +117,24 @@ const kept = new Map<string, Layout>();
 
 /** The layout of a graph. hint gives a place to a node (where it was, or where the group it came
  * out of was): with hints the layout keeps the order of what was shown, and is moved onto the
- * nodes that wasShown. Rejected with "stopped" when another layout starts before it ends */
+ * nodes that wasShown. owner is the view that asks: a layout is rejected with "stopped" when the
+ * same owner starts another before it ends, and only then */
 export async function layoutGraph(
   graph: Graph,
   hint?: (id: string) => { x: number; y: number } | undefined,
   wasShown: (id: string) => boolean = () => true,
+  owner: object = SHARED,
 ): Promise<Layout> {
   const found = kept.get(graph.signature);
   if (found && !hint) return found;
-  const mine = ++running;
-  if (inWorker && engine) {
-    // The worker is busy with a layout that nobody waits for: stop it
-    (await engine).terminateWorker();
-    engine = null;
-  }
-  engine ??= makeEngine();
-  const elk = await engine;
+  const engine = engineOf(owner);
+  const mine = ++engine.count;
+  // A layout of this owner still runs, and nobody waits for it any more: stop it (a worker that
+  // is idle is kept, as starting one again loads ELK again)
+  if (engine.stop) closeEngine(engine);
+  engine.elk ??= makeEngine(engine);
+  const elk = await engine.elk;
+  if (mine !== engine.count) throw new Error("stopped");
   const hints = new Map<string, { x: number; y: number }>();
   for (const n of graph.nodes) {
     const h = hint?.(n.id);
@@ -118,12 +159,17 @@ export async function layoutGraph(
   const start = performance.now();
   let out: ElkNode;
   try {
-    out = await elk.layout(input);
+    out = await new Promise<ElkNode>((resolve, reject) => {
+      engine.stop = reject;
+      elk.layout(input).then(resolve, reject);
+    });
   } catch (error) {
-    if (mine !== running) throw new Error("stopped");
+    if (mine !== engine.count) throw new Error("stopped");
     throw error;
+  } finally {
+    if (mine === engine.count) engine.stop = null;
   }
-  if (mine !== running) throw new Error("stopped");
+  if (mine !== engine.count) throw new Error("stopped");
   const nodes = new Map<string, Box>();
   for (const c of out.children ?? [])
     nodes.set(c.id, {
@@ -209,7 +255,8 @@ export function layoutBox(layout: Layout): [number, number, number, number] {
   return Number.isFinite(box[0]) ? box : [0, 0, 1, 1];
 }
 
-/** For the tests */
+/** Forget the layouts that are kept: the data of the session changed, and a graph of the same
+ * nodes may be another one */
 export function forgetLayouts() {
   kept.clear();
 }

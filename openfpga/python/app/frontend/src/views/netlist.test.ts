@@ -1,7 +1,7 @@
 import { blockFill } from "./palette";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetStore } from "../store";
-import { resetViewData, setWholeView } from "./data";
+import { resetViewData, setDataSignature, setWholeView } from "./data";
 import { makeView } from "./format";
 import {
   forgetLayouts,
@@ -276,6 +276,48 @@ describe("the layout", () => {
       `expanding u_a moved a node that was shown by ${Math.round(moved)} (layer spacing ${LAYER_SPACING})`,
     );
   });
+
+  it("lays out for two views at once: one never stops the other, only its own next one", async () => {
+    const v1 = {};
+    const v2 = {};
+    const outcome = (p: Promise<unknown>) =>
+      p.then(
+        () => "done",
+        (e: Error) => e.message,
+      );
+    const both = await Promise.all([
+      outcome(layoutGraph(levelled(30), undefined, undefined, v1)),
+      outcome(layoutGraph(levelled(40), undefined, undefined, v2)),
+    ]);
+    expect(both).toEqual(["done", "done"]);
+    // The same view: its earlier layout is stopped, the later one is drawn
+    forgetLayouts();
+    const again = await Promise.all([
+      outcome(layoutGraph(levelled(30), undefined, undefined, v1)),
+      outcome(layoutGraph(levelled(40), undefined, undefined, v1)),
+    ]);
+    expect(again).toEqual(["stopped", "done"]);
+  });
+
+  it("keeps a layout by its nodes and its edges, until the data of the session change", async () => {
+    const n = netlistOf(atoms());
+    const g = buildGraph(n, moduleGrouping(n), new Set(), null) as Graph;
+    // The same nodes and as many edges, joined otherwise (another design): another graph. The
+    // input drives q (in u_c) instead of x1 (in u_a)
+    const rebuilt = buildGraph(
+      { ...n, sinks: n.sinks.map((s, i) => (i === 0 ? [4] : s)) },
+      moduleGrouping(n),
+      new Set(),
+      null,
+    ) as Graph;
+    expect(rebuilt.nodes.map((x) => x.id)).toEqual(g.nodes.map((x) => x.id));
+    expect(rebuilt.edges.length).toBe(g.edges.length);
+    expect(rebuilt.signature).not.toBe(g.signature);
+    const first = await layoutGraph(g);
+    expect(await layoutGraph(g)).toBe(first); // kept
+    setDataSignature("another state of the session");
+    expect(await layoutGraph(g)).not.toBe(first); // laid out again
+  });
 });
 
 const context = (
@@ -429,6 +471,43 @@ describe("the netlist view (V1)", () => {
     expect(built.scene.layers.some((l) => l.id === "selection:nets")).toBe(
       true,
     );
+  });
+});
+
+describe("two netlist views", () => {
+  beforeEach(() => {
+    setWholeView("atoms", atoms());
+    setWholeView("clusters", clusters());
+  });
+
+  it("are both laid out when they are shown at once (the split)", async () => {
+    const [v1, v2] = await Promise.all([
+      netlistView.load(),
+      clustersView.load(),
+    ]);
+    const [b1, b2] = await Promise.all([
+      laidOut(netlistView, v1),
+      laidOut(clustersView, v2),
+    ]);
+    expect(b1.status).toMatch(/laid out in/);
+    expect(b2.status).toMatch(/laid out in/);
+  });
+
+  it("asks again for a layout that was stopped while it was still wanted", async () => {
+    const base = await netlistView.load();
+    let rebuilt!: () => void;
+    const again = new Promise<void>((resolve) => (rebuilt = resolve));
+    const first = netlistView.build(context(base, undefined, () => rebuilt()));
+    expect(first.status).toContain("laying out");
+    // Something else of the same view stops it (as a worker that is restarted would)
+    void layoutGraph(levelled(20), undefined, undefined, base).catch(
+      () => undefined,
+    );
+    await again;
+    // The view is made again, asks again, and draws
+    const built = await laidOut(netlistView, base);
+    expect(built.status).toMatch(/laid out in/);
+    expect(base.retries).toBeGreaterThan(0);
   });
 });
 

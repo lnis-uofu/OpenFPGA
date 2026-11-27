@@ -122,6 +122,16 @@ export interface Graph {
   signature: string;
 }
 
+/** A short hash of a text (FNV-1a, 32 bits), for the signature of a graph */
+function hashText(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
+
 /** The most nodes that a graph lays out; more asks to narrow the scope (3.7) */
 export const SCOPE_LIMIT = 2000;
 /** A net with more sinks than this is drawn to a stub with its count */
@@ -248,7 +258,8 @@ export function buildGraph(
   nodes.push(...stubs);
   nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   edges.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const signature = `${nodes.map((n) => n.id).join(",")}|${edges.length}`;
+  // The edges too: two graphs of the same nodes may join them otherwise (another design)
+  const signature = `${nodes.map((n) => n.id).join(",")}|${edges.length}:${hashText(edges.map((e) => e.id).join(","))}`;
   return { nodes, edges, signature };
 }
 
