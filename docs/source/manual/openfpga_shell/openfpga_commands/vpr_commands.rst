@@ -44,11 +44,22 @@ Stage-by-stage flow
   - ``read_circuit --file <string>`` reads the circuit netlist against the VPR architecture. VPR sets itself up from the architecture and the circuit together, so the architecture is read again.
   - ``pack``, ``place``, ``route`` and ``analysis`` run the stages. A stage needs the one before it: ``pack`` the device, ``place`` the packing, ``route`` the placement, ``analysis`` the routing.
 
+  ``read_packing``, ``read_placement`` and ``read_routing`` (``--file``) read the results of a stage made elsewhere, e.g., by ``vpr``, instead of running it. They need the stage before the one they read, and the routing needs a fixed channel width (``router.fixed_channel_width``). The stages after them run on the results read. When the stages before a stage run again, e.g., after an option changed, the files are read again. Running the stage, or changing an option that tunes it, forgets the file.
+
   ``analysis`` reports the timing and the power, and synchronizes the packing with the routing results, which writes the ``.net.post_routing`` file. It changes the data of VPR, so running it again, or routing again, starts from fresh data. Repacking does not wait for it.
 
   The device (the grid and, if the channel width is fixed with ``router.route_chan_width``, the routing resource graph) is created once the three inputs have been read. A layout that is not fixed (``auto``) is refused, since it is sized from the result of packing.
 
   A stage that is run again, or run after an option changed, runs the stages before it again on fresh data, since VPR cannot run a stage twice on the same data. The results are those of ``vpr``: the same packing, placement and routing for the same options. The command ``vpr`` replaces the data of this flow, which has to be read again.
+
+  The commands that follow the stages are checked against them when the flow is run stage by stage:
+
+  - ``link_openfpga_arch`` and the commands after ``vpr`` accept ``analysis`` in place of ``vpr``.
+  - ``repack`` needs the stage ``route``, and ``build_architecture_bitstream`` needs ``repack``. ``build_fabric_bitstream``, ``write_fabric_bitstream`` and ``report_bitstream_distribution`` need ``build_architecture_bitstream``.
+  - Running a stage again, or changing an option that tunes it, drops these results as well: ``place`` drops the repacking and the bitstream. ``analysis`` does not: it is on another branch of the stages than ``repack``. The commands are refused with the name of the command to run first.
+  - ``link_openfpga_arch`` and ``build_fabric`` refer to the data of VPR that they were run on. A stage that runs again replaces that data, and ``repack`` and ``build_fabric`` are then refused until ``link_openfpga_arch`` and ``build_fabric`` are run again. They start from nothing each time: what they made before is dropped.
+
+  The flow of ``vpr`` is not checked against the stages.
 
   .. code-block:: shell
 
