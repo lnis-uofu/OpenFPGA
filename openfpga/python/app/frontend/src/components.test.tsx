@@ -690,8 +690,9 @@ describe("uploading files to the session", () => {
     expect(fold.getAttribute("aria-expanded")).toBe("false");
     expect(fold.textContent).toContain("(2)"); // the upload and the circuit that was read
     expect(screen.queryByText("mine.blif")).toBeNull();
-    expect(screen.queryByText("⤒ Upload files…")).toBeNull();
-    expect(screen.getByLabelText("Upload files")).toBeTruthy(); // a drop or the welcome screen still uploads
+    // The upload button stays outside the fold
+    expect(screen.getByText("⤒ Upload files…")).toBeTruthy();
+    expect(screen.getByLabelText("Upload files")).toBeTruthy();
     fireEvent.click(fold);
     expect(fold.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByText("mine.blif")).toBeTruthy();

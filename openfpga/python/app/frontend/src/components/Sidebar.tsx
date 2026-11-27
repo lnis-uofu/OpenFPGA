@@ -626,6 +626,15 @@ export function Sidebar() {
                 input.value = ""; // the same file can be chosen again
               }}
             />
+            {/* Outside the fold: files can be uploaded with the list folded */}
+            <button
+              class="upload-button"
+              disabled={!real || uploading.value}
+              title={real ? "Copy files into this session (architectures, circuits, constraints)" : "Not in the demo"}
+              onClick={() => picker.current?.click()}
+            >
+              {uploading.value ? "Uploading…" : "⤒ Upload files…"}
+            </button>
           </>
         }
       >
@@ -653,14 +662,6 @@ export function Sidebar() {
         ) : (
           <div class="muted">(none)</div>
         )}
-        <button
-          class="upload-button"
-          disabled={!real || uploading.value}
-          title={real ? "Copy files into this session (architectures, circuits, constraints)" : "Not in the demo"}
-          onClick={() => picker.current?.click()}
-        >
-          {uploading.value ? "Uploading…" : "⤒ Upload files…"}
-        </button>
       </Section>
       <Section title="Constraints and results">
         <h3>Constraints</h3>
