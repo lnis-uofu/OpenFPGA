@@ -492,7 +492,7 @@ def test_the_defaults_of_the_package_come_first_and_the_user_wins(openfpga_modul
     # The defaults are a file of the package
     shutil.copy(work / "defaults.odc", package / "arch" / "defaults.odc")
     manifest = json.loads((package / "device_package.json").read_text())
-    manifest["files"].append({"role": "odc_defaults", "path": "arch/defaults.odc"})
+    manifest["files"].append({"type": "odc_defaults", "path": "arch/defaults.odc"})
     (package / "device_package.json").write_text(json.dumps(manifest, indent=2))
     checksums(package)
     session = openfpga_module.Session()

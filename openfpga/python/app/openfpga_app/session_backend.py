@@ -39,7 +39,15 @@ _NO_MODEL = (
 # What the console shows of a long output
 _CONSOLE_MAX = 20000
 # Options that are the inputs or the constraints of the flow: the sidebar shows them as files
-_INPUT_OPTIONS = ("filename.arch_file", "filename.circuit_file", "general.device_layout")
+_INPUT_OPTIONS = (
+    "filename.arch_file",
+    "filename.circuit_file",
+    "general.device_layout",
+    # The cached files of the device of a package (R-27): the package sets them
+    "filename.read_rr_graph_file",
+    "filename.read_router_lookahead",
+    "filename.read_placement_delay_lookup",
+)
 _CONSTRAINT_OPTIONS = ("filename.sdc_file", "filename.read_vpr_constraints_file")
 # The errors and warnings of the ODC that the sidebar lists
 _ODC_DIAGNOSTICS = 50

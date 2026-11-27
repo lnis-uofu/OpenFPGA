@@ -135,11 +135,12 @@ The pin constraints of OpenFPGA are not inputs of a stage: they are options of t
 Device packages
 ~~~~~~~~~~~~~~~
 
-``session.read_device_package(directory)`` targets the device of a device package (``docs/spec_device_package.md``), with the shell's command ``read_device_package``:
+``session.read_device_package(directory, corner=None, cache=True)`` targets the device of a device package (``docs/spec_device_package.md``), with the shell's command ``read_device_package``:
 
-- the package is checked: its manifest, its checksums, its files, its grid and its I/O map, if it has one. A package that cannot be used raises ``OpenfpgaError`` with the reason, before anything is read;
-- the options of its flow (``flow_defaults.vpr_options``) are set, found by the flag of VPR of each option (``AppOption.vpr_flag``), and so is its channel width;
-- its VPR architecture is read with the layout of its grid, then its OpenFPGA architecture.
+- the package is checked: its manifest, its ``LICENSE`` file, its checksums, its files and their types, its layout and its I/O map, if it has one. A package that cannot be used raises ``OpenfpgaError`` with the reason, before anything is read;
+- the options of its flow (``flow_defaults.vpr_options``) are set, found by the flag of VPR of each option (``AppOption.vpr_flag``), and so is its channel width, which is then read only;
+- the cached files of its device (the routing resource graph and the lookups, see ``openfpga_flow/scripts/openfpga_package.py cache``) are given to VPR when they were made by this version of VTR from the files of the package as they are; ``cache=False`` (the command's ``--no_cache``) lets VPR make them;
+- its VPR architecture is read with its layout (``device.layout``), then its OpenFPGA architecture.
 
 It returns what ``report_device_package`` answers (kind ``device_package``): the package, its files, ``options_set`` (by name) and ``options_not_set`` (with the reason). ``session.device_package()`` gives the same later, or ``None`` when the architectures were not read from a package; reading an architecture by hand forgets the package. A checkpoint records the package, and ``restore`` reads it again before it sets the options of the checkpoint; the journal has the one command.
 
@@ -150,7 +151,7 @@ It returns what ``report_device_package`` answers (kind ``device_package``): the
 Synthesis and design directories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``session.synthesize(top, files)`` synthesizes Verilog files into a netlist of the LUTs of the device with Yosys (the shell's command ``synthesize``; it needs a build with Yosys). The script is made from the template of the device package of the session (role ``yosys_script``), or from a generic one when ``lut_size`` is given. The script and the netlist go to ``synth/`` (``output_dir``), and the netlist is read as the circuit when the architectures are read (``read=False`` does not). A source that takes a file from outside its folder (`` `include "/etc/passwd"``), a top module or a value that a script does not take, are refused before Yosys runs: ``OpenfpgaError`` with ``Synthesis refused: <reason>``.
+``session.synthesize(top, files)`` synthesizes Verilog files into a netlist of the LUTs of the device with Yosys (the shell's command ``synthesize``; it needs a build with Yosys). The script is made from the template of the device package of the session (type ``yosys_script``), or from a generic one when ``lut_size`` is given. The script and the netlist go to ``synth/`` (``output_dir``), and the netlist is read as the circuit when the architectures are read (``read=False`` does not). A source that takes a file from outside its folder (`` `include "/etc/passwd"``), a top module or a value that a script does not take, are refused before Yosys runs: ``OpenfpgaError`` with ``Synthesis refused: <reason>``.
 
 ``session.read_design(directory)`` reads a design directory (``docs/spec_design_directory.md``, command ``read_design``): its RTL is synthesized with the top, the defines, the include folders and the options of its manifest, or its netlist is read (the one of the label ``netlist``, or the only one of a design with no RTL); its SDC is set as ``filename.sdc_file``.
 

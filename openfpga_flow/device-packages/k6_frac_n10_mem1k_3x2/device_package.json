@@ -9,10 +9,7 @@
     "max_version": null
   },
   "device": {
-    "grid": {
-      "width": 3,
-      "height": 2
-    },
+    "layout": "3x2",
     "lut_size": 6,
     "channel_width": 50,
     "flat_routing": true,
@@ -25,71 +22,71 @@
   },
   "files": [
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/spice/adder.sp"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/adder.v"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/dff.v"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/dpram1k.v"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/gpio.v"
     },
     {
-      "role": "openfpga_arch",
+      "type": "openfpga_arch",
       "path": "arch/openfpga_arch.xml"
     },
     {
-      "role": "simulation_setting",
+      "type": "simulation_setting",
       "path": "arch/simulation_setting.xml"
     },
     {
-      "role": "x_tech_model",
+      "type": "x_tech_model",
       "path": "arch/tech/45nm.pm"
     },
     {
-      "role": "vpr_arch",
+      "type": "vpr_arch",
       "path": "arch/vpr_arch.xml"
     },
     {
-      "role": "reference_design",
+      "type": "reference_design",
       "path": "reference/dual_port_ram_1k.v"
     },
     {
-      "role": "x_openfpga_script",
+      "type": "x_openfpga_script",
       "path": "reference/flow.openfpga"
     },
     {
-      "role": "yosys_script",
+      "type": "yosys_script",
       "path": "synthesis/synth_script.ys"
     },
     {
-      "role": "yosys_bram_rules",
+      "type": "yosys_bram_rules",
       "path": "synthesis/techlib/k6_frac_N10_tileable_adder_chain_mem1K_40nm_bram.txt"
     },
     {
-      "role": "yosys_map",
+      "type": "yosys_bram_map",
       "path": "synthesis/techlib/k6_frac_N10_tileable_adder_chain_mem1K_40nm_bram_map.v"
     },
     {
-      "role": "yosys_cell_sim",
+      "type": "yosys_cell_sim",
       "path": "synthesis/techlib/k6_frac_N10_tileable_adder_chain_mem1K_40nm_cell_sim.v"
     },
     {
-      "role": "x_yosys_rewrite_script",
+      "type": "x_yosys_rewrite_script",
       "path": "synthesis/ys_tmpl_rewrite_flow.ys"
     },
     {
-      "role": "x_yosys_rewrite_script",
+      "type": "x_yosys_rewrite_script",
       "path": "synthesis/ys_tmpl_yosys_vpr_flow_with_rewrite.ys"
     }
   ],

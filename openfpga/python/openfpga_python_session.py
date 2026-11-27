@@ -1416,7 +1416,7 @@ class Session:
         """Read the circuit (a BLIF netlist)"""
         return self.command("read_circuit", file=file)
 
-    def read_device_package(self, directory, corner=None):
+    def read_device_package(self, directory, corner=None, cache=True):
         """Target the device of a device package (docs/spec_device_package.md): the package
         is checked, the options of its flow and its channel width are set, and its two
         architectures are read. Returns what report_device_package answers: the package,
@@ -1424,11 +1424,14 @@ class Session:
         flow_defaults.vpr_options that were not set, with the reason). A package that cannot
         be used raises OpenfpgaError, with the reason, before anything is read. corner is a
         design corner of the package (default: its corners.default), whose timing values
-        replace the variables of the VPR architecture"""
-        if corner is None:
-            self.command("read_device_package", file=os.fspath(directory))
-        else:
-            self.command("read_device_package", file=os.fspath(directory), corner=corner)
+        replace the variables of the VPR architecture. cache=False does not read the cached
+        files of the device (R-27): VPR makes them"""
+        self.command(
+            "read_device_package",
+            file=os.fspath(directory),
+            corner=corner,
+            no_cache=not cache,
+        )
         return self.device_package()
 
     def synthesize(

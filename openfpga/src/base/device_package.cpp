@@ -19,6 +19,7 @@
 #include "nlohmann/json.hpp"
 #include "picosha2.h"
 #include "pugixml.hpp"
+#include "vtr_version.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -32,6 +33,61 @@ const char* const MANIFEST = "device_package.json";
 const char* const CHECKSUMS = "CHECKSUMS.sha256";
 const int KNOWN_MAJOR = 1;
 const size_t README_CHARS = 1200;
+const char* const LICENSE = "LICENSE";
+
+/* The types of R-20. A type that starts with x_ is the package's own */
+const std::set<std::string>& known_types() {
+  static const std::set<std::string> types = {"vpr_arch",
+                                              "openfpga_arch",
+                                              "bitstream_setting",
+                                              "simulation_setting",
+                                              "repack_constraints",
+                                              "pin_constraints",
+                                              "fabric_key",
+                                              "tile_config",
+                                              "pcf_config",
+                                              "io_info",
+                                              "io_map",
+                                              "odc_defaults",
+                                              "yosys_script",
+                                              "yosys_cell_sim",
+                                              "yosys_adder_map",
+                                              "yosys_dsp_map",
+                                              "yosys_ff_map",
+                                              "yosys_bram_map",
+                                              "yosys_map",
+                                              "yosys_bram_rules",
+                                              "sdc",
+                                              "timing_data",
+                                              "timing_lib",
+                                              "timing_sdf",
+                                              "timing_table",
+                                              "power_data",
+                                              "corner_info",
+                                              "rr_graph",
+                                              "router_lookahead",
+                                              "place_delay_lookup",
+                                              "fabric_bitstream_paths",
+                                              "reference_design"};
+  return types;
+}
+
+/* The types that a package has at most once (for each corner) */
+const std::set<std::string>& single_types() {
+  static const std::set<std::string> types = {
+    "yosys_script",          "yosys_cell_sim",
+    "yosys_adder_map",       "yosys_dsp_map",
+    "yosys_ff_map",          "yosys_bram_map",
+    "yosys_bram_rules",      "pcf_config",
+    "timing_data",           "rr_graph",
+    "router_lookahead",      "place_delay_lookup",
+    "fabric_bitstream_paths"};
+  return types;
+}
+
+std::string sha256_of(const std::string& text) {
+  return picosha2::hash256_hex_string(text.begin(), text.end());
+}
 
 DevicePackageError invalid(const std::string& name, const std::string& why) {
   return DevicePackageError("The device package '" + name +
@@ -268,8 +324,9 @@ std::map<std::string, double> read_timing_data(
   return values;
 }
 
-/* The names of the fixed layouts of a VPR architecture */
-std::vector<std::string> layouts(const fs::path& vpr_arch) {
+/* The fixed layouts of a VPR architecture: name, width and height */
+std::vector<std::pair<std::string, std::pair<long long, long long>>> layouts(
+  const fs::path& vpr_arch) {
   pugi::xml_document document;
   const pugi::xml_parse_result result =
     document.load_file(vpr_arch.string().c_str());
@@ -278,11 +335,13 @@ std::vector<std::string> layouts(const fs::path& vpr_arch) {
       std::string("The VPR architecture of the package is not readable: ") +
       result.description());
   }
-  std::vector<std::string> names;
+  std::vector<std::pair<std::string, std::pair<long long, long long>>> found;
   for (const pugi::xpath_node& node : document.select_nodes("//fixed_layout")) {
-    names.push_back(node.node().attribute("name").as_string());
+    found.push_back({node.node().attribute("name").as_string(),
+                     {node.node().attribute("width").as_llong(),
+                      node.node().attribute("height").as_llong()}});
   }
-  return names;
+  return found;
 }
 
 /* An integer as Python's int() reads it from a number or a text */
@@ -428,12 +487,80 @@ void read_bitstream_recipe(const std::string& name, const json& recipe,
   }
 }
 
+/* The cached files of the device (R-27): the ones of the corner in use (or of
+ * every corner, in a package without corners), and whether they can be read.
+ * The key is made of the files that they were made from: the VPR
+ * architecture, the timing data of every corner and the channel width */
+void read_cache(const std::string& name, const json& manifest,
+                const std::map<std::string, std::string>& timing_files,
+                DevicePackage& package) {
+  for (const DevicePackageFile& file : package.files) {
+    bool cached_type = false;
+    for (const auto& type : cached_file_types()) {
+      cached_type = cached_type || type.first == file.type;
+    }
+    if (!cached_type) {
+      continue;
+    }
+    if (!package.corners.empty() && file.corner.empty()) {
+      throw invalid(name, "the file '" + file.path + "' of the type " +
+                            file.type + " has no corner (R-27)");
+    }
+    if (file.corner == package.corner) {
+      package.cached[file.type] = package.directory / file.path;
+    }
+  }
+  std::string key_text =
+    "channel_width=" + std::to_string(package.channel_width.value_or(0)) +
+    "\nvpr_arch=" + sha256_of(read_file(package.vpr_arch)) + "\n";
+  for (const auto& timing : timing_files) {
+    key_text += "timing_data." + timing.first + "=" +
+                sha256_of(read_file(package.directory / timing.second)) + "\n";
+  }
+  package.cache_key = sha256_of(key_text);
+  const json cache = member(manifest, "cache");
+  const json version = member(cache, "vtr_version");
+  const json key = member(cache, "key");
+  package.cache_vtr_version =
+    version.is_string() ? version.get<std::string>() : "";
+  package.cache_key_given = key.is_string() ? key.get<std::string>() : "";
+  if (package.cached.empty()) {
+    return;
+  }
+  if (package.cache_vtr_version.empty() || package.cache_key_given.empty()) {
+    throw invalid(name,
+                  "it has cached files and no cache.vtr_version and "
+                  "cache.key (R-27)");
+  }
+  if (package.cache_vtr_version != vtr_build_version()) {
+    package.cache_reason = "they were made by VTR " +
+                           package.cache_vtr_version + ", and this is VTR " +
+                           vtr_build_version();
+  } else if (package.cache_key_given != package.cache_key) {
+    package.cache_reason =
+      "they were made from other files (cache.key): the VPR architecture, the "
+      "timing data or the channel width changed since";
+  } else {
+    package.cache_usable = true;
+  }
+}
+
 } /* end anonymous namespace */
 
-std::vector<fs::path> DevicePackage::files_of(const std::string& role) const {
+const std::vector<std::pair<std::string, std::string>>& cached_file_types() {
+  static const std::vector<std::pair<std::string, std::string>> types = {
+    {"rr_graph", "filename.read_rr_graph_file"},
+    {"router_lookahead", "filename.read_router_lookahead"},
+    {"place_delay_lookup", "filename.read_placement_delay_lookup"}};
+  return types;
+}
+
+std::string vtr_build_version() { return vtr::VERSION; }
+
+std::vector<fs::path> DevicePackage::files_of(const std::string& type) const {
   std::vector<fs::path> paths;
   for (const DevicePackageFile& file : files) {
-    if (role == file.role) {
+    if (type == file.type) {
       paths.push_back(directory / file.path);
     }
   }
@@ -477,6 +604,12 @@ DevicePackage load_device_package(const fs::path& given,
   if (falsy(member(manifest, "license"))) {
     throw invalid(name, "it has no license");
   }
+  std::error_code license_error;
+  if (fs::is_symlink(fs::symlink_status(directory / LICENSE, license_error)) ||
+      !fs::is_regular_file(directory / LICENSE, license_error)) {
+    throw invalid(name, std::string("it has no ") + LICENSE +
+                          " file with the text of its license (R-9)");
+  }
   /* First: a file that was changed is the reason, whatever else follows */
   if (verify_checksums) {
     verify(directory, name);
@@ -486,29 +619,49 @@ DevicePackage load_device_package(const fs::path& given,
     throw invalid(name, "it has no list of files");
   }
   DevicePackage package;
-  std::map<std::string, std::vector<std::string>> roles;
+  std::map<std::string, std::vector<std::string>> types;
   std::set<std::string> listed;
+  std::set<std::pair<std::string, std::string>> singles;
   for (const json& entry : files) {
     if (!entry.is_object()) {
       throw invalid(name, "an entry of files is not an object");
     }
     const std::string path = inside(directory, member(entry, "path"), name);
-    const json role = member(entry, "role");
-    const std::string role_text = role.is_null() ? "" : text_of(role);
+    if (!member(entry, "role").is_null()) {
+      throw invalid(
+        name, "the file '" + path + "' has a role: the field is type (R-20)");
+    }
+    const json type = member(entry, "type");
+    const std::string type_text = type.is_string() ? text_of(type) : "";
+    if (0 != type_text.rfind("x_", 0) && !known_types().count(type_text)) {
+      throw invalid(name, "the file '" + path + "' has the type '" + type_text +
+                            "', which is not one of R-20 (nor x_...)");
+    }
+    const json corner_of = member(entry, "corner");
+    const std::string corner_text =
+      corner_of.is_string() ? corner_of.get<std::string>() : "";
+    if (single_types().count(type_text) &&
+        !singles.insert({type_text, corner_text}).second) {
+      throw invalid(
+        name, "it lists more than one file of the type " + type_text +
+                (corner_text.empty() ? std::string()
+                                     : " for corner '" + corner_text + "'"));
+    }
     listed.insert(path);
-    package.files.push_back({role_text, path});
-    roles[role_text].push_back(path);
+    package.files.push_back({type_text, path, corner_text});
+    types[type_text].push_back(path);
   }
-  for (const char* role : {"vpr_arch", "openfpga_arch"}) {
-    if (1 != roles[role].size()) {
+  for (const char* type : {"vpr_arch", "openfpga_arch"}) {
+    if (1 != types[type].size()) {
       throw invalid(
         name,
-        std::string("it must list exactly one file with the role ") + role);
+        std::string("it must list exactly one file with the type ") + type);
     }
   }
   std::set<std::string> present;
   for (const std::string& file : files_under(directory, true)) {
-    if (file != MANIFEST && file != "README.md" && file != CHECKSUMS) {
+    if (file != MANIFEST && file != "README.md" && file != CHECKSUMS &&
+        file != LICENSE) {
       present.insert(file);
     }
   }
@@ -528,14 +681,18 @@ DevicePackage load_device_package(const fs::path& given,
   if (falsy(device)) {
     device = json::object();
   }
-  json grid = member(device, "grid");
-  long long width = 0;
-  long long height = 0;
-  if (!to_integer(member(grid, "width"), width) ||
-      !to_integer(member(grid, "height"), height)) {
-    throw invalid(name, "device.grid needs a width and a height");
+  if (!member(device, "grid").is_null()) {
+    throw invalid(name,
+                  "device.grid is replaced by device.layout, the name of a "
+                  "fixed layout of the VPR architecture (R-7)");
   }
-  package.layout = std::to_string(width) + "x" + std::to_string(height);
+  const json layout = member(device, "layout");
+  if (!layout.is_string() || layout.get<std::string>().empty()) {
+    throw invalid(name,
+                  "device.layout names a fixed layout of the VPR "
+                  "architecture (R-7)");
+  }
+  package.layout = layout.get<std::string>();
   json flow_defaults = member(manifest, "flow_defaults");
   json options =
     falsy(flow_defaults) ? json() : member(flow_defaults, "vpr_options");
@@ -622,7 +779,7 @@ DevicePackage load_device_package(const fs::path& given,
                               entry_corner.get<std::string>() +
                               "' is not in " + dir);
       }
-      if ("timing_data" == member(entry, "role")) {
+      if ("timing_data" == member(entry, "type")) {
         timing_files[entry_corner.get<std::string>()] = path;
       }
     }
@@ -637,7 +794,7 @@ DevicePackage load_device_package(const fs::path& given,
     throw invalid(name, "it has no corners, and corner '" + corner +
                           "' was asked for");
   }
-  const fs::path vpr_arch = directory / roles["vpr_arch"][0];
+  const fs::path vpr_arch = directory / types["vpr_arch"][0];
   const std::vector<std::string> variables = variables_of(read_file(vpr_arch));
   package.has_variables = !variables.empty();
   if (package.has_variables && package.corners.empty()) {
@@ -651,8 +808,9 @@ DevicePackage load_device_package(const fs::path& given,
     }
     for (const std::string& each : package.corners) {
       if (!timing_files.count(each)) {
-        throw invalid(name, "corner '" + each + "' has no file of the role "
-                                                "timing_data");
+        throw invalid(name, "corner '" + each +
+                              "' has no file of the type "
+                              "timing_data");
       }
       std::map<std::string, double> values = read_timing_data(
         name, directory / timing_files[each], each, units, variables);
@@ -661,9 +819,16 @@ DevicePackage load_device_package(const fs::path& given,
       }
     }
   }
-  const std::vector<std::string> names = layouts(vpr_arch);
-  if (names.end() == std::find(names.begin(), names.end(), package.layout)) {
-    throw invalid(name, "its grid is " + package.layout +
+  bool layout_found = false;
+  for (const auto& found : layouts(vpr_arch)) {
+    if (found.first == package.layout) {
+      layout_found = true;
+      package.grid_width = found.second.first;
+      package.grid_height = found.second.second;
+    }
+  }
+  if (!layout_found) {
+    throw invalid(name, "its layout is " + package.layout +
                           " and the VPR architecture has no fixed layout of "
                           "that name");
   }
@@ -677,7 +842,7 @@ DevicePackage load_device_package(const fs::path& given,
   package.license = text_of(member(manifest, "license"));
   package.directory = directory;
   package.vpr_arch = vpr_arch;
-  package.openfpga_arch = directory / roles["openfpga_arch"][0];
+  package.openfpga_arch = directory / types["openfpga_arch"][0];
   long long number = 0;
   if (member(device, "lut_size").is_number_integer() &&
       to_integer(member(device, "lut_size"), number)) {
@@ -723,6 +888,7 @@ DevicePackage load_device_package(const fs::path& given,
       }
     }
   }
+  read_cache(name, manifest, timing_files, package);
   return package;
 }
 
@@ -767,7 +933,7 @@ DevicePackageOptions device_package_options(
       if (!(DevicePackageValue::TEXT == value.kind &&
             value.text == package.layout)) {
         applied.ignored.emplace_back(
-          key, "the layout is the grid of the package, " + package.layout);
+          key, "the layout is device.layout of the package, " + package.layout);
       }
       continue;
     }
@@ -804,6 +970,8 @@ std::string device_package_json(const DevicePackage& package,
   data["version"] = package.version;
   data["description"] = package.description;
   data["layout"] = package.layout;
+  data["grid"] = {{"width", package.grid_width},
+                  {"height", package.grid_height}};
   data["corner"] = package.corner.empty() ? json() : json(package.corner);
   data["corners"] = package.corners;
   data["lut_size"] = package.lut_size ? json(*package.lut_size) : json();
@@ -833,11 +1001,29 @@ std::string device_package_json(const DevicePackage& package,
   for (const DevicePackageFile& file : package.files) {
     std::error_code error;
     const auto bytes = fs::file_size(package.directory / file.path, error);
-    files.push_back({{"role", file.role},
+    files.push_back({{"type", file.type},
                      {"path", file.path},
                      {"bytes", error ? 0 : static_cast<long long>(bytes)}});
+    if (!file.corner.empty()) {
+      files.back()["corner"] = file.corner;
+    }
   }
   data["files"] = files;
+  json cached = json::object();
+  for (const auto& entry : package.cached) {
+    cached[entry.first] =
+      entry.second.lexically_relative(package.directory).generic_string();
+  }
+  const auto text_or_null = [](const std::string& text) {
+    return text.empty() ? json() : json(text);
+  };
+  data["cache"] = {{"files", cached},
+                   {"vtr_version", text_or_null(package.cache_vtr_version)},
+                   {"key", text_or_null(package.cache_key_given)},
+                   {"expected_key", package.cache_key},
+                   {"build_vtr_version", vtr_build_version()},
+                   {"usable", package.cache_usable},
+                   {"reason", text_or_null(package.cache_reason)}};
   const json reference = json::parse(package.reference);
   if (reference.empty()) {
     data["reference"] = json();

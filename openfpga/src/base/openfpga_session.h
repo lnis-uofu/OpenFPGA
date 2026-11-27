@@ -258,6 +258,14 @@ class OpenFpgaSession {
   void set_channel_width_package(const std::string& package) {
     channel_width_package_ = package;
   }
+  /* The options that read the cached files of the device of the package
+   * (R-27). Forgetting the package gives them their default value back, as
+   * the files are of its device only */
+  void set_package_cache_options(const std::vector<std::string>& names) {
+    package_cache_options_ = names;
+  }
+  /* Give the options of set_package_cache_options() their default back */
+  void forget_package_cache();
   /* Record the generation of the VPR run that the OpenFPGA architecture was
    * linked to, by link_openfpga_arch. What the link makes refers to the data
    * of that run, and it is not valid for another one */
@@ -314,6 +322,7 @@ class OpenFpgaSession {
   std::string device_package_;
   /* The package whose channel width is set, empty if none is */
   std::string channel_width_package_;
+  std::vector<std::string> package_cache_options_;
   SessionConstraints constraints_;
 };
 

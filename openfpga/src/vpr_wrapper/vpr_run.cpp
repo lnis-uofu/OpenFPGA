@@ -46,6 +46,11 @@ void release_vpr_run(bool announce) {
     floorplanning.constraints = UserPlaceConstraints();
     floorplanning.relative_macros = UserRelativeMacros();
     floorplanning.cluster_constraints.clear();
+    /* A grid made from a routing resource graph that was read (--read_rr_graph)
+     * is marked as fixed by it, and VPR then gives it back for every device
+     * that it makes: the next run, of another architecture or layout, would
+     * get it */
+    g_vpr_ctx.mutable_device().grid = DeviceGrid();
   } catch (const std::exception& exc) {
     VTR_LOG_ERROR("Fail to free VPR data: %s\n", exc.what());
   }

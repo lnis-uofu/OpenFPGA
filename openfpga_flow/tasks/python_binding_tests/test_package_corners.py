@@ -53,7 +53,7 @@ def package(tmp_path):
         )
         manifest["files"].append(
             {
-                "role": "timing_data",
+                "type": "timing_data",
                 "path": f"corners/{corner}/timing_data.json",
                 "corner": corner,
             }

@@ -2,7 +2,7 @@
 
 A Verilog design becomes a BLIF netlist of the LUTs of one device. The script is made, and the
 arguments, the sources and the design directories are checked, by the shell's commands
-synthesize and read_design (in C++), from the template of the device package (role
+synthesize and read_design (in C++), from the template of the device package (type
 `yosys_script`) or from a generic one: the model gives the top module and the files, and never
 writes a Yosys script, because a script can run commands, load plugins and write anywhere.
 Yosys runs inside the worker (the `yosys` command of the shell). This module reads what it

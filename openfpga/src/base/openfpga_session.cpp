@@ -375,9 +375,18 @@ void OpenFpgaSession::invalidate_all_stages() {
   stage_seconds_.clear();
 }
 
+void OpenFpgaSession::forget_package_cache() {
+  const std::vector<std::string> names = package_cache_options_;
+  package_cache_options_.clear();
+  for (const std::string& name : names) {
+    reset_app_option(name);
+  }
+}
+
 void OpenFpgaSession::forget_package() {
   device_package_.clear();
   channel_width_package_.clear();
+  forget_package_cache();
   bitstream_recipe_ = BitstreamRecipe();
 }
 

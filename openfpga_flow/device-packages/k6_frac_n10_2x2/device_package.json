@@ -9,10 +9,7 @@
     "max_version": null
   },
   "device": {
-    "grid": {
-      "width": 2,
-      "height": 2
-    },
+    "layout": "2x2",
     "lut_size": 6,
     "channel_width": 20,
     "flat_routing": true,
@@ -23,47 +20,47 @@
   },
   "files": [
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/dff.v"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/gpio.v"
     },
     {
-      "role": "openfpga_arch",
+      "type": "openfpga_arch",
       "path": "arch/openfpga_arch.xml"
     },
     {
-      "role": "simulation_setting",
+      "type": "simulation_setting",
       "path": "arch/simulation_setting.xml"
     },
     {
-      "role": "x_tech_model",
+      "type": "x_tech_model",
       "path": "arch/tech/45nm.pm"
     },
     {
-      "role": "vpr_arch",
+      "type": "vpr_arch",
       "path": "arch/vpr_arch.xml"
     },
     {
-      "role": "x_reference_activity",
+      "type": "x_reference_activity",
       "path": "reference/and2.act"
     },
     {
-      "role": "x_reference_blif",
+      "type": "x_reference_blif",
       "path": "reference/and2.blif"
     },
     {
-      "role": "reference_design",
+      "type": "reference_design",
       "path": "reference/and2.v"
     },
     {
-      "role": "x_openfpga_script",
+      "type": "x_openfpga_script",
       "path": "reference/flow.openfpga"
     },
     {
-      "role": "yosys_script",
+      "type": "yosys_script",
       "path": "synthesis/synth_script.ys"
     }
   ],

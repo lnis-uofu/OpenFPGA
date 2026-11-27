@@ -160,10 +160,10 @@ def test_the_bitstream_of_a_package_is_the_one_of_its_vpr_flow(openfpga_module, 
         width = session.options["router.route_chan_width"]
     settings = (state.inputs.simulation_setting or []) + (state.inputs.bitstream_setting or [])
     assert answer["settings"] == settings
-    roles = {f["role"]: str(package / f["path"]) for f in manifest["files"]}
-    assert state.inputs.simulation_setting == [roles["simulation_setting"]]
+    types = {f["type"]: str(package / f["path"]) for f in manifest["files"]}
+    assert state.inputs.simulation_setting == [types["simulation_setting"]]
     assert state.inputs.bitstream_setting == (
-        [roles["bitstream_setting"]] if "bitstream_setting" in roles else None
+        [types["bitstream_setting"]] if "bitstream_setting" in types else None
     )
     assert state.results.bitstream == answer["file"]
     vpr_options = " ".join(
@@ -176,14 +176,14 @@ def test_the_bitstream_of_a_package_is_the_one_of_its_vpr_flow(openfpga_module, 
     # package may need the activities of the signals, which a session does not have
     fixed = FLOW / "openfpga_simulation_settings" / "fixed_sim_openfpga.xml"
     lines = [
-        f"vpr {roles['vpr_arch']} {state.inputs.circuit.file}"
+        f"vpr {types['vpr_arch']} {state.inputs.circuit.file}"
         f" --device {state.inputs.vpr_arch.layout} --route_chan_width {width} {vpr_options}"
         " --pack --place --route --analysis",
-        f"read_openfpga_arch -f {roles['openfpga_arch']}",
+        f"read_openfpga_arch -f {types['openfpga_arch']}",
         f"read_openfpga_simulation_setting -f {fixed}",
     ]
-    if "bitstream_setting" in roles:
-        lines.append(f"read_openfpga_bitstream_setting -f {roles['bitstream_setting']}")
+    if "bitstream_setting" in types:
+        lines.append(f"read_openfpga_bitstream_setting -f {types['bitstream_setting']}")
     lines.append(
         "link_openfpga_arch "
         + " ".join(recipe.get("link_options", ["--sort_gsb_chan_node_in_edges"]))
@@ -466,15 +466,16 @@ def test_package_pins_of_odc_give_the_bitstream_of_pcf2place(openfpga_module, wo
         "version": "0.1.0",
         "description": "The device of basic_tests/io_constraints/example_pcf",
         "license": "MIT",
-        "device": {"grid": {"width": 4, "height": 4}, "lut_size": 4, "channel_width": 20},
+        "device": {"layout": "4x4", "lut_size": 4, "channel_width": 20},
         "files": [
-            {"role": "vpr_arch", "path": "arch/vpr_arch.xml"},
-            {"role": "openfpga_arch", "path": "arch/openfpga_arch.xml"},
-            {"role": "io_map", "path": "arch/io_map.csv"},
+            {"type": "vpr_arch", "path": "arch/vpr_arch.xml"},
+            {"type": "openfpga_arch", "path": "arch/openfpga_arch.xml"},
+            {"type": "io_map", "path": "arch/io_map.csv"},
         ],
         "flow_defaults": {"vpr_options": {"clock_modeling": "ideal"}},
     }
     (package / "device_package.json").write_text(json.dumps(manifest, indent=2))
+    (package / "LICENSE").write_text("MIT License\n")
     checksums(package)
     pins = {"a": "pad_fpga_io[0]", "b": "pad_fpga_io[4]", "c": "pad_fpga_io[6]"}
     assert all(f"set_io {p} {pins[p]}" in (TASK / "and2.pcf").read_text() for p in pins)

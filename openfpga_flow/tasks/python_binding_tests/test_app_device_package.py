@@ -84,9 +84,9 @@ def test_a_package_that_is_damaged_is_refused_with_the_reason(copy, damage, why)
         (lambda m: m.update(name="other"), "name"),
         (lambda m: m.update(format_version="2.0"), "format_version"),
         (lambda m: m.pop("license"), "license"),
-        (lambda m: m["device"].update(grid={"width": 9, "height": 9}), "fixed layout"),
-        (lambda m: m["files"].append({"role": "x_a", "path": "../x"}), "not inside"),
-        (lambda m: m["files"].__setitem__(0, {"role": "vpr_arch", "path": "/etc/hosts"}), "not inside"),
+        (lambda m: m["device"].update(layout="9x9"), "fixed layout"),
+        (lambda m: m["files"].append({"type": "x_a", "path": "../x"}), "not inside"),
+        (lambda m: m["files"].__setitem__(0, {"type": "vpr_arch", "path": "/etc/hosts"}), "not inside"),
     ],
 )
 def test_a_manifest_that_breaks_a_rule_is_refused(copy, change, why):
@@ -332,8 +332,8 @@ def test_the_tool_lists_the_packages_and_the_resources_of_one(backend):
 
     one = json.loads(asyncio.run(backend.tools["list_device_packages"](name=LOGIC)))["data"]
     assert one["vpr_arch"] == "arch/vpr_arch.xml" and one["openfpga_arch"] == "arch/openfpga_arch.xml"
-    roles = {f["role"] for f in one["files"]}
-    assert {"vpr_arch", "openfpga_arch"} <= roles
+    types = {f["type"] for f in one["files"]}
+    assert {"vpr_arch", "openfpga_arch"} <= types
     assert all(f["bytes"] > 0 and not f["path"].startswith("/") for f in one["files"])
     assert one["reference"]["top"] == "and2" and one["reference"]["expected"]["channel_width"] == 20
     assert one["readme"].startswith("# " + LOGIC)

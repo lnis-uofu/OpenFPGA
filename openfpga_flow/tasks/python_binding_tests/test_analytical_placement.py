@@ -292,7 +292,7 @@ def test_the_analytical_placer_on_a_device_package_equals_vpr(
 
     package = device_packages.load(PACKAGES / name)
     manifest, netlist = synthesized_reference(tmp_path, name)
-    files = {e["role"]: PACKAGES / name / e["path"] for e in manifest["files"]}
+    files = {e["type"]: PACKAGES / name / e["path"] for e in manifest["files"]}
     vpr_options = manifest.get("flow_defaults", {}).get("vpr_options", {})
     (staged, monolithic), (staged_dir, monolithic_dir) = two_shells
 

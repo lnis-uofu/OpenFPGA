@@ -27,6 +27,9 @@
         "version",
         "description",
         "layout",
+        "corners",
+        "corner",
+        "grid",
         "lut_size",
         "tags",
         "flat_routing",
@@ -39,7 +42,8 @@
         "reference",
         "readme",
         "readme_cut",
-        "directory"
+        "directory",
+        "cache"
       ],
       "additionalProperties": false,
       "properties": {
@@ -55,8 +59,40 @@
         },
         "layout": {
           "type": "string",
-          "pattern": "^[0-9]+x[0-9]+$",
-          "description": "The fixed layout of the VPR architecture, from device.grid"
+          "pattern": "^\\S+$",
+          "description": "device.layout: the name of a fixed layout of the VPR architecture"
+        },
+        "grid": {
+          "type": "object",
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": false,
+          "description": "The size of the layout, as the VPR architecture gives it",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "corner": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The corner in use, null for a package without corners"
+        },
+        "corners": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "lut_size": {
           "type": [
@@ -104,13 +140,13 @@
           "items": {
             "type": "object",
             "required": [
-              "role",
+              "type",
               "path",
               "bytes"
             ],
             "additionalProperties": false,
             "properties": {
-              "role": {
+              "type": {
                 "type": "string"
               },
               "path": {
@@ -119,6 +155,9 @@
               "bytes": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "corner": {
+                "type": "string"
               }
             }
           }
@@ -213,6 +252,61 @@
             }
           ],
           "description": "flow_defaults.bitstream, null when the package has none and the defaults are used (B-10)"
+        },
+        "cache": {
+          "type": "object",
+          "description": "The cached files of the device (R-27) for the corner in use, and whether they are read",
+          "required": [
+            "files",
+            "vtr_version",
+            "key",
+            "expected_key",
+            "build_vtr_version",
+            "usable",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "By type (rr_graph, router_lookahead, place_delay_lookup), the path inside the package"
+            },
+            "vtr_version": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "cache.vtr_version of the manifest"
+            },
+            "key": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "cache.key of the manifest"
+            },
+            "expected_key": {
+              "type": "string",
+              "description": "The key of the files that the cached files are made from, as they are now"
+            },
+            "build_vtr_version": {
+              "type": "string",
+              "description": "The version of VTR of this build"
+            },
+            "usable": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Why the cached files are not read, when there are any"
+            }
+          }
         }
       }
     }

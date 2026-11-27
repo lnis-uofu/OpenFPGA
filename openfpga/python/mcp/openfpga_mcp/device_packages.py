@@ -35,7 +35,7 @@ class DevicePackage:
     # flag of VPR without its dashes, e.g. {"constant_net_method": "route"}
     vpr_options: Dict[str, Any] = field(default_factory=dict)
     license: str = ""
-    files: List[Dict[str, str]] = field(default_factory=list)  # role and path inside the package
+    files: List[Dict[str, str]] = field(default_factory=list)  # type and path inside the package
     reference: Dict[str, Any] = field(default_factory=dict)
     # What report_device_package answers of the package
     answer: Dict[str, Any] = field(default_factory=dict)
@@ -101,7 +101,7 @@ def load(directory: Path, verify_checksums: bool = True) -> DevicePackage:
         flat_routing=data["flat_routing"],
         vpr_options=dict(data["vpr_options"]),
         license=data["license"],
-        files=[{"role": f["role"], "path": f["path"]} for f in data["files"]],
+        files=[{"type": f["type"], "path": f["path"]} for f in data["files"]],
         reference={k: v for k, v in reference.items() if v is not None},
         answer=data,
     )
@@ -193,6 +193,6 @@ def flat_routing_allowed(config: Config, meta: Dict[str, Any]) -> bool:
 
 def describe(package: DevicePackage) -> Dict[str, Any]:
     """Everything that a person or a model may want to know of one package: the device, the files
-    (role, path inside the package, size) and the reference result, with the start of its README.
+    (type, path inside the package, size) and the reference result, with the start of its README.
     The paths are inside the package: the folder of the package on the disk is not told"""
     return {k: v for k, v in package.answer.items() if k != "directory"}

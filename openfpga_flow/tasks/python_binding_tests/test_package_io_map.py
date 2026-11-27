@@ -190,7 +190,7 @@ def package_with_map(tmp_path, rows):
     shutil.copytree(PACKAGES / "k6_frac_n10_2x2", copy)
     write(copy / "arch" / "io_map.csv", rows)
     manifest = json.loads((copy / "device_package.json").read_text())
-    manifest["files"].append({"role": "io_map", "path": "arch/io_map.csv"})
+    manifest["files"].append({"type": "io_map", "path": "arch/io_map.csv"})
     (copy / "device_package.json").write_text(json.dumps(manifest, indent=2))
     lines = []
     for path in sorted(p for p in copy.rglob("*") if p.is_file() and p.name != "CHECKSUMS.sha256"):

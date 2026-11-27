@@ -67,9 +67,9 @@ std::string quoted(const std::filesystem::path& path) {
 }
 
 /* Make the session target the device of a package: the options of VPR of
- * its flow, its two architectures (with the layout of its grid) and its
- * channel width. The options are set first, and a value that the flow refuses
- * stops before the architectures are read */
+ * its flow, its two architectures (with its layout), its channel width and
+ * the cached files of its device. The options are set first, and a value that
+ * the flow refuses stops before the architectures are read */
 int read_device_package_command(Shell<OpenfpgaContext>* shell,
                                 OpenfpgaContext& openfpga_ctx,
                                 const Command& cmd,
@@ -117,6 +117,44 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
     VTR_LOG("Not set: %s, as %s\n", ignored.first.c_str(),
             ignored.second.c_str());
   }
+  /* The channel width (read only, R-14) and the cached files of the device
+   * (R-27) are set before the architectures are read, so that the device is
+   * made once, with them */
+  session.forget_package_cache();
+  std::string width_error;
+  if (!session.set_app_option("router.route_chan_width",
+                              std::to_string(*package.channel_width),
+                              width_error)) {
+    VTR_LOG_ERROR("%s\n", width_error.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  std::vector<std::string> cache_options;
+  if (!package.cached.empty()) {
+    if (cmd_context.option_enable(cmd, cmd.option("no_cache"))) {
+      VTR_LOG("The cached files of the device are not read (--no_cache)\n");
+    } else if (!package.cache_usable) {
+      VTR_LOG_WARN(
+        "The cached files of the device are not read, and VPR makes them: "
+        "%s\n",
+        package.cache_reason.c_str());
+    } else {
+      for (const auto& type : cached_file_types()) {
+        const auto found = package.cached.find(type.first);
+        if (package.cached.end() == found) {
+          continue;
+        }
+        std::string error;
+        if (!session.set_app_option(type.second, found->second.string(),
+                                    error)) {
+          VTR_LOG_ERROR("%s\n", error.c_str());
+          return CMD_EXEC_FATAL_ERROR;
+        }
+        cache_options.push_back(type.second);
+        VTR_LOG("Read the cached %s of the device: %s\n", type.first.c_str(),
+                found->second.filename().string().c_str());
+      }
+    }
+  }
   /* An architecture with variables is read from a copy with the values of the
    * corner: the package is never changed (R-32). The copy stays while the
    * process runs, since VPR reads it again when it makes the device again */
@@ -158,16 +196,10 @@ int read_device_package_command(Shell<OpenfpgaContext>* shell,
       shell->execute_command(read_openfpga.c_str(), openfpga_ctx)) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  /* A package always gives its channel width (load_device_package()), which
-   * is then read only */
-  std::string width_error;
-  if (!session.set_app_option("router.route_chan_width",
-                              std::to_string(*package.channel_width),
-                              width_error)) {
-    VTR_LOG_ERROR("%s\n", width_error.c_str());
-    return CMD_EXEC_FATAL_ERROR;
-  }
+  /* Reading the architectures forgot the previous package: the width of
+   * this one is read only, and its cached files are its own */
   session.set_channel_width_package(package.name);
+  session.set_package_cache_options(cache_options);
   /* The settings of the bitstream (spec_bitstream.md B-3) */
   for (const auto& setting :
        {std::make_pair("simulation_setting",
@@ -320,12 +352,16 @@ void add_device_package_commands(Shell<OpenfpgaContext>& shell) {
     "corner", false,
     "The design corner of the package to read (default: corners.default)");
   read_cmd.set_option_require_value(opt_read_corner, OPT_STRING);
+  read_cmd.add_option("no_cache", false,
+                      "Do not read the cached files of the device (the "
+                      "routing resource graph and the lookups): VPR makes "
+                      "them");
   ShellCommandId read_id = shell.add_command(
     read_cmd,
     "Target the device of a device package: check it, set the options of its "
-    "flow and its channel width, and read its VPR architecture (with the "
-    "layout of its grid, and the timing values of its corner) and its "
-    "OpenFPGA architecture");
+    "flow, its channel width and its cached files, and read its VPR "
+    "architecture (with its layout, and the timing values of its corner) and "
+    "its OpenFPGA architecture");
   shell.set_command_class(read_id, cmd_class);
   shell.set_command_execute_function(read_id, read_device_package_command);
 

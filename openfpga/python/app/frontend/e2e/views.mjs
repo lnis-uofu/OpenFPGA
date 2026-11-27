@@ -61,7 +61,7 @@ cpSync(small, big, { recursive: true });
   const manifestPath = path.join(big, "device_package.json");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   manifest.name = "k6_frac_n10_32x32_test";
-  manifest.device.grid = { width: 32, height: 32 };
+  manifest.device.layout = "32x32";
   if (manifest.flow_defaults?.vpr_options?.device)
     manifest.flow_defaults.vpr_options.device = "32x32";
   delete manifest.reference;

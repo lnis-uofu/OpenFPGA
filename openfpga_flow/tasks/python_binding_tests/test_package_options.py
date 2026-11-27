@@ -69,7 +69,8 @@ def test_a_package_sets_the_options_of_its_flow(session, name):
     applied = device_packages.read_into(session, package)
     # The layout, the channel width and the circuit format are given by the package otherwise,
     # and agree with it: they are not told
-    assert applied == {"options": EXPECTED[name], "ignored": {}}
+    # (a package without corners has none in use)
+    assert applied == {"options": EXPECTED[name], "ignored": {}, "corner": None}
     for option, value in EXPECTED[name].items():
         assert session.options[option] == value
     assert session.options["router.route_chan_width"] == package.channel_width

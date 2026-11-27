@@ -6,10 +6,11 @@
  *
  * load_device_package() reads the manifest of a package and checks what a
  * session needs before it uses the package: the format version, the name,
- * the license, the checksums, that every path is a file inside the package,
- * one architecture of VPR and one of OpenFPGA, the files that the manifest
- * lists, the grid and the layout of that name in the VPR architecture, and
- * the options of the flow. It never writes into a package.
+ * the license and its LICENSE file, the checksums, that every path is a file
+ * inside the package, the type of each file, one architecture of VPR and one
+ * of OpenFPGA, the files that the manifest lists, the layout of the device
+ * in the VPR architecture, the options of the flow, and whether the cached
+ * files of the device (R-27) can be read. It never writes into a package.
  *******************************************************************/
 #include <filesystem>
 #include <map>
@@ -30,8 +31,9 @@ class DevicePackageError : public std::runtime_error {
 };
 
 struct DevicePackageFile {
-  std::string role;
-  std::string path; /* inside the package, with '/' */
+  std::string type;   /* R-20, or one that starts with x_ */
+  std::string path;   /* inside the package, with '/' */
+  std::string corner; /* empty for a file of every corner */
 };
 
 /* A value of flow_defaults.vpr_options: text, a number or true/false */
@@ -49,7 +51,9 @@ struct DevicePackage {
   std::string description;
   std::string license;
   std::filesystem::path directory; /* absolute */
-  std::string layout;              /* "<width>x<height>" of device.grid */
+  std::string layout;       /* device.layout: a fixed layout of the VPR arch */
+  long long grid_width = 0; /* the size of that layout, from the VPR arch */
+  long long grid_height = 0;
   std::filesystem::path vpr_arch;  /* absolute */
   std::filesystem::path openfpga_arch;
   std::optional<long long> lut_size;
@@ -85,9 +89,20 @@ struct DevicePackage {
   bool has_variables = false;
   /* The JSON text of the reference of the manifest, or "{}" */
   std::string reference;
+  /* The cached files of the device (R-27) for the corner in use, by type
+   * (rr_graph, router_lookahead, place_delay_lookup), as whole paths. They
+   * are read only when cache_usable: cache.vtr_version is the version of VTR
+   * of this build and cache.key is the key of the files they were made from
+   * (cache_key). cache_reason says why not, when there are any */
+  std::map<std::string, std::filesystem::path> cached;
+  std::string cache_vtr_version;
+  std::string cache_key_given;
+  std::string cache_key;
+  bool cache_usable = false;
+  std::string cache_reason;
 
-  /* The files of a role, as whole paths */
-  std::vector<std::filesystem::path> files_of(const std::string& role) const;
+  /* The files of a type, as whole paths */
+  std::vector<std::filesystem::path> files_of(const std::string& type) const;
 };
 
 /* The package in a directory, checked. corner is the corner to use ("" for
@@ -95,6 +110,13 @@ struct DevicePackage {
 DevicePackage load_device_package(const std::filesystem::path& directory,
                                   const bool verify_checksums = true,
                                   const std::string& corner = "");
+
+/* The types of the files that hold the device that VPR makes, which a
+ * package may cache (R-27), and the option of VPR that reads each */
+const std::vector<std::pair<std::string, std::string>>& cached_file_types();
+
+/* The version of VTR of this build, which the cached files must have */
+std::string vtr_build_version();
 
 /* The VPR architecture of the package for its corner: the text of vpr_arch.xml
  * with each ${name} replaced by its value (R-22). The file of the package is

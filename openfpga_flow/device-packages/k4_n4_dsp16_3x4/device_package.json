@@ -9,10 +9,7 @@
     "max_version": null
   },
   "device": {
-    "grid": {
-      "width": 3,
-      "height": 4
-    },
+    "layout": "3x4",
     "lut_size": 4,
     "channel_width": 58,
     "flat_routing": true,
@@ -24,63 +21,63 @@
   },
   "files": [
     {
-      "role": "bitstream_setting",
+      "type": "bitstream_setting",
       "path": "arch/bitstream_setting.xml"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/dff.v"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/frac_mult_16x16.v"
     },
     {
-      "role": "x_cell_library",
+      "type": "x_cell_library",
       "path": "arch/cell_library/verilog/gpio.v"
     },
     {
-      "role": "openfpga_arch",
+      "type": "openfpga_arch",
       "path": "arch/openfpga_arch.xml"
     },
     {
-      "role": "simulation_setting",
+      "type": "simulation_setting",
       "path": "arch/simulation_setting.xml"
     },
     {
-      "role": "x_tech_model",
+      "type": "x_tech_model",
       "path": "arch/tech/45nm.pm"
     },
     {
-      "role": "vpr_arch",
+      "type": "vpr_arch",
       "path": "arch/vpr_arch.xml"
     },
     {
-      "role": "x_openfpga_script",
+      "type": "x_openfpga_script",
       "path": "reference/flow.openfpga"
     },
     {
-      "role": "reference_design",
+      "type": "reference_design",
       "path": "reference/mult8.v"
     },
     {
-      "role": "yosys_script",
+      "type": "yosys_script",
       "path": "synthesis/synth_script.ys"
     },
     {
-      "role": "yosys_cell_sim",
+      "type": "yosys_cell_sim",
       "path": "synthesis/techlib/k4_N4_tileable_frac_dsp16_40nm_cell_sim.v"
     },
     {
-      "role": "yosys_map",
+      "type": "yosys_dsp_map",
       "path": "synthesis/techlib/k4_N4_tileable_frac_dsp16_40nm_dsp_map.v"
     },
     {
-      "role": "x_yosys_rewrite_script",
+      "type": "x_yosys_rewrite_script",
       "path": "synthesis/ys_tmpl_rewrite_flow.ys"
     },
     {
-      "role": "x_yosys_rewrite_script",
+      "type": "x_yosys_rewrite_script",
       "path": "synthesis/ys_tmpl_yosys_vpr_dsp_flow_with_rewrite.ys"
     }
   ],

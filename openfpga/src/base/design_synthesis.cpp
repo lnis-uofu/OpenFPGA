@@ -154,20 +154,17 @@ void check_sources(const std::vector<fs::path>& paths) {
 std::map<std::string, std::string> package_values(
   const DevicePackage& package) {
   std::map<std::string, std::string> values;
-  for (const auto& role :
+  /* One file of each of these types (R-20), by the name the script uses */
+  for (const auto& type :
        {std::make_pair("yosys_cell_sim", "YOSYS_CELL_SIM_VERILOG"),
-        std::make_pair("yosys_bram_rules", "YOSYS_BRAM_MAP_RULES")}) {
-    const std::vector<fs::path> files = package.files_of(role.first);
+        std::make_pair("yosys_bram_rules", "YOSYS_BRAM_MAP_RULES"),
+        std::make_pair("yosys_adder_map", "YOSYS_ADDER_MAP_VERILOG"),
+        std::make_pair("yosys_dsp_map", "YOSYS_DSP_MAP_VERILOG"),
+        std::make_pair("yosys_ff_map", "YOSYS_FF_MAP_VERILOG"),
+        std::make_pair("yosys_bram_map", "YOSYS_BRAM_MAP_VERILOG")}) {
+    const std::vector<fs::path> files = package.files_of(type.first);
     if (1 == files.size()) {
-      values[role.second] = files[0].string();
-    }
-  }
-  for (const fs::path& path : package.files_of("yosys_map")) {
-    const std::string name = lower(path.filename().string());
-    if (std::string::npos != name.find("dsp")) {
-      values["YOSYS_DSP_MAP_VERILOG"] = path.string();
-    } else if (std::string::npos != name.find("bram")) {
-      values["YOSYS_BRAM_MAP_VERILOG"] = path.string();
+      values[type.second] = files[0].string();
     }
   }
   bool valid = package.yosys_options_valid;

@@ -1,6 +1,6 @@
 # Spec: OpenFPGA device package
 
-Status: draft for review. Implemented: the manifest and its checks, the corners and the substitution of the timing variables in `read_device_package` (`--corner`; R-16 to R-19, R-22 to R-24, R-46; the process, voltage, temperature and rc of a corner are not required yet), `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md).
+Status: draft for review. Implemented: the manifest and its checks, the corners and the substitution of the timing variables in `read_device_package` (`--corner`; R-16 to R-19, R-22 to R-24, R-46; the process, voltage, temperature and rc of a corner are not required yet), `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md). From the review of the proposal, implemented: the field `type` and the check of the types (R-20), the typed Yosys maps, `device.layout` (R-7), the `LICENSE` file (R-9), and the cached files with `openfpga_package.py cache` (R-27, R-49). Not yet: `fabric_bitstream_paths` (R-28) and `pcf_config` (R-29) are accepted and checked, but the flow does not make or use them yet.
 
 ## Overview
 
@@ -15,10 +15,10 @@ This spec defines the layout, the manifest, the rules a package must follow, and
 
 | Term | Meaning |
 |------|---------|
-| Device | One FPGA fabric: a fixed architecture and a fixed grid size (for example `k4_N4_2x2`). |
+| Device | One FPGA fabric: a fixed architecture and one fixed layout of it (for example `k4_N4_2x2`). |
 | Package | The directory or archive described here. |
 | Manifest | `device_package.json` at the root of a package. |
-| Role | The kind of a file in the package, for example `vpr_arch` or `yosys_cell_sim`. Roles are listed in R-20. |
+| Type | The kind of a file in the package, for example `vpr_arch` or `yosys_cell_sim`. Types are listed in R-20. |
 | Corner | One design corner of the device: a combination of process, voltage, temperature (PVT) and RC extraction corner for which the timing and power data are characterized, for example `ss_0p72v_125c_cworst`. |
 | Package version | The version of this spec that the package follows (`format_version`). Not the version of the device. |
 
@@ -35,7 +35,7 @@ Non-goals:
 - A new architecture format. The files inside are the existing XML, Verilog and text files.
 - A package registry or download service.
 - Holding user designs, benchmarks or results. A package describes the device only.
-- Several grid sizes in one package (R-7).
+- Several layouts in one package (R-7).
 - Generated fabric netlists (R-8).
 - Reading Liberty and SDF files in the flow (R-21).
 
@@ -45,6 +45,7 @@ Non-goals:
 <device_name>/
   device_package.json          manifest (required)
   README.md                    free text for people (optional)
+  LICENSE                      text of the license of the package (required, R-9)
   arch/
     vpr_arch.xml               VPR architecture; timing values are variables, not numbers (R-22)
     openfpga_arch.xml          OpenFPGA architecture
@@ -54,20 +55,23 @@ Non-goals:
     pin_constraints.xml        default pin constraints (optional)
     fabric_key.xml             fabric key (optional)
     tile_config.xml            tile config (optional)
+    pcf_config.xml             custom PCF commands (optional, R-29)
     cell_library/              Verilog or SPICE cells the openfpga_arch refers to
   synthesis/
     synth_script.ys            Yosys script (or script template)
-    techlib/                   cell_sim.v, *_map.v, *_bram.txt, lut and carry maps
+    techlib/                   cell_sim.v, adder, DSP, flip-flop and BRAM maps, *_bram.txt
     constraints/               default SDC, clock definitions (optional)
     defaults.odc               default constraints of the device, in ODC (optional, R-26)
   bitstream/
-    arch_bitstream.xml(.gz)    architecture bitstream of a reference design (optional)
-    fabric_bitstream.*         fabric bitstream of a reference design (optional)
+    fabric_bitstream_paths.*   the path of each configuration bit of the fabric (optional, R-28)
     io_info.xml                I/O naming and location table
     io_map.csv                 I/O map: each I/O subtile, its fabric pin and its customer name (optional, R-25)
   corners/                     design corner files, one directory per corner (optional)
     <corner_name>/             for example tt_0p80v_25c_typ, ss_0p72v_125c_cworst, ff_0p88v_m40c_cbest
       timing_data.json         values of the vpr_arch.xml timing variables for this corner (R-22)
+      rr_graph.bin             routing resource graph of the device at this corner (optional, R-27)
+      router_lookahead.bin     router lookahead of this corner (optional, R-27)
+      place_delay_lookup.bin   placement delay lookup of this corner (optional, R-27)
       timing/                  Liberty (.lib), SDF, delay tables: stored and checked only (R-21)
       power/                   power data for this corner (optional)
       corner.json              corner description: process, voltage, temperature, RC corner, notes (optional)
@@ -92,7 +96,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
   "vtr": { "min_version": "9.0.0" },
   "timing_units": { "time": "ps", "capacitance": "fF", "resistance": "ohm" },
   "device": {
-    "grid": { "width": 2, "height": 2 },
+    "layout": "2x2",
     "lut_size": 4,
     "channel_width": 20,
     "flat_routing": true,
@@ -106,16 +110,19 @@ Paths in the manifest are relative to the package root. Directories may be empty
     ]
   },
   "files": [
-    { "role": "vpr_arch", "path": "arch/vpr_arch.xml" },
-    { "role": "timing_data", "path": "corners/tt_0p80v_25c_typ/timing_data.json", "corner": "tt_0p80v_25c_typ" },
-    { "role": "timing_lib", "path": "corners/tt_0p80v_25c_typ/timing/fabric.lib", "corner": "tt_0p80v_25c_typ" },
-    { "role": "openfpga_arch", "path": "arch/openfpga_arch.xml" },
-    { "role": "bitstream_setting", "path": "arch/bitstream_setting.xml" },
-    { "role": "yosys_script", "path": "synthesis/synth_script.ys" },
-    { "role": "yosys_cell_sim", "path": "synthesis/techlib/cell_sim.v", "license": "MIT" }
+    { "type": "vpr_arch", "path": "arch/vpr_arch.xml" },
+    { "type": "timing_data", "path": "corners/tt_0p80v_25c_typ/timing_data.json", "corner": "tt_0p80v_25c_typ" },
+    { "type": "rr_graph", "path": "corners/tt_0p80v_25c_typ/rr_graph.bin", "corner": "tt_0p80v_25c_typ" },
+    { "type": "openfpga_arch", "path": "arch/openfpga_arch.xml" },
+    { "type": "bitstream_setting", "path": "arch/bitstream_setting.xml" },
+    { "type": "yosys_script", "path": "synthesis/synth_script.ys" },
+    { "type": "yosys_cell_sim", "path": "synthesis/techlib/cell_sim.v" },
+    { "type": "yosys_adder_map", "path": "synthesis/techlib/adder_map.v" },
+    { "type": "x_openfpga_script", "path": "reference/flow.openfpga" }
   ],
+  "cache": { "vtr_version": "9.0.0", "key": "6464aea7...e8536" },
   "flow_defaults": {
-    "vpr_options": { "route_chan_width": 20 },
+    "vpr_options": { "constant_net_method": "route" },
     "openfpga_options": { "write_fabric_verilog": ["--default_net_type", "wire"] }
   }
 }
@@ -129,22 +136,22 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-2** `format_version` uses `major.minor`. A tool refuses a package with a higher major version than it knows. A higher minor version is accepted, and unknown fields are ignored with a warning.
 - **R-3** `name` matches `[a-z][a-z0-9_]*` and equals the directory name.
 - **R-4** `version` is a semantic version of the device content. Any change of a file in the package that changes a flow result raises it.
-- **R-5** Every path in the manifest is relative, stays inside the package (no `..`, no absolute path, no symlink that leaves the package) and exists.
-- **R-6** A package contains no file that is not listed in `files`, other than `device_package.json`, `README.md` and `CHECKSUMS.sha256`.
-- **R-7** A package holds one grid size. A device with another grid size is another package.
-- **R-8** A package holds no generated fabric netlist (Verilog or SPICE). It is made by `write_fabric_verilog` from the architecture files. `check` fails on a file in `files` that is a generated netlist, which it recognizes by the role: no role in R-20 allows one.
-- **R-9** The manifest has a `license` field with an SPDX identifier (or `LicenseRef-<name>` with the text in a `LICENSE` file at the package root) for the package as a whole. A file in `files` may have its own `license` field when it comes from another project; it overrides the package license for that file. `check` fails when the package `license` is missing. `create` asks for the license and does not guess it.
+- **R-5** Every path in the manifest is relative, stays inside the package (no `..`, no absolute path) and exists. A package has no symbolic links at all, since Windows does not support them: `check` fails on a link, even one that stays inside the package.
+- **R-6** A package contains no file that is not listed in `files`, other than `device_package.json`, `README.md`, `LICENSE` and `CHECKSUMS.sha256`.
+- **R-7** A package holds one layout. `device.layout` names a fixed layout (`<fixed_layout name=...>`) of the VPR architecture, and the size of the grid is read from it, not written again in the manifest. A device with another layout is another package. Several devices that share one architecture (device virtualization) are not covered yet.
+- **R-8** A package holds no generated fabric netlist (Verilog or SPICE). It is made by `write_fabric_verilog` from the architecture files. `check` fails on a file in `files` that is a generated netlist, which it recognizes by the type: no type in R-20 allows one.
+- **R-9** The manifest has a `license` field with an SPDX identifier (or `LicenseRef-<name>`) for the package as a whole, and the package has a `LICENSE` file at its root with the text of that license, as it has a `README.md`. A file in `files` may have its own `license` field only when it is copied unchanged from another project under another license (for example a techlib file of Yosys); it overrides the package license for that file. `check` fails when the package `license` or the `LICENSE` file is missing. `create` asks for the license and does not guess it.
 
 ### Content
 
-- **R-10** A package must list exactly one file for each of the roles `vpr_arch` and `openfpga_arch`, and one for `bitstream_setting` when the device supports bitstream generation.
+- **R-10** A package must list exactly one file for each of the types `vpr_arch` and `openfpga_arch`, and one for `bitstream_setting` when the device supports bitstream generation.
 - **R-11** A package for a device with synthesis support must list a `yosys_script` and every techlib file that script reads. A script reads techlib files through paths the tool resolves from the manifest, and does not use absolute paths.
 - **R-11a** A script that takes the synthesis commands of an ODC file has a line `${ODC_SYNTHESIS}` right after its `hierarchy` command, where the design is elaborated and still has its RTL names (spec_odc.md, R-24). A tool that runs the script without ODC replaces it with nothing.
 - **R-12** A package for a device with bitstream support lists the files needed by `build_architecture_bitstream`, `build_fabric_bitstream` and the fabric writers. These include `fabric_key`, `tile_config`, `repack_constraints`, and `pin_constraints` when the architecture needs them.
 - **R-13** Files in `arch/cell_library/` that the OpenFPGA architecture refers to are found through the package, not through `OPENFPGA_PATH`.
-- **R-14** `device.grid`, `device.lut_size` and `device.channel_width` are facts about the files. `device.channel_width` is required, a number of tracks above 0: a session that uses the package routes at that width, which it cannot change (a package without it does not load). `check` (R-40) compares them with the VPR architecture and reports a mismatch. It reads the architecture with the variables replaced by the values of the default corner.
+- **R-14** `device.layout`, `device.lut_size` and `device.channel_width` are facts about the files. `device.channel_width` is required, a number of tracks above 0: a session that uses the package routes at that width, which it cannot change (a package without it does not load). `check` (R-40) compares them with the VPR architecture and reports a mismatch (a layout that is not a fixed layout of the architecture, a LUT size that its blocks do not have). It reads the architecture with the variables replaced by the values of the default corner.
 - **R-14a** `device.flat_routing` (true or false, false when it is missing) says that the flow, up to the bitstream, was checked with flat routing (`router.flat_routing`, VPR's `--flat_routing on`) on this device. The flow of the web app routes flat on a package only when it is true.
-- **R-14b** `flow_defaults.vpr_options` maps flags of VPR, without their dashes, to values (text, numbers or true/false): the options that the reference flow of the package gives to VPR, for example `{"constant_net_method": "route"}`. A session that uses the package sets them as application options, found by their VPR flag (`vpr_flag` of `report_app_option --json`), before it reads the architectures. A value that the flow refuses stops the use of the package. These entries are not set: `device` and `route_chan_width`, which `device.grid` and `device.channel_width` give (they are told when they say otherwise), `circuit_format`, which synthesis follows and the flow reads from the extension of the netlist, and a flag that the flow does not know (told).
+- **R-14b** `flow_defaults.vpr_options` maps flags of VPR, without their dashes, to values (text, numbers or true/false): the options that the reference flow of the package gives to VPR, for example `{"constant_net_method": "route"}`. A session that uses the package sets them as application options, found by their VPR flag (`vpr_flag` of `report_app_option --json`), before it reads the architectures. A value that the flow refuses stops the use of the package. These entries are not set: `device` and `route_chan_width`, which `device.layout` and `device.channel_width` give (they are told when they say otherwise), `circuit_format`, which synthesis follows and the flow reads from the extension of the netlist, and a flag that the flow does not know (told).
 - **R-14c** `flow_defaults.bitstream` says how the bitstream of the device is made in a session: `link_options` and `fabric_options` (flags of `link_openfpga_arch` and `build_fabric`, `--` and a name, no value) and `fixups` (`check_netlist_naming_conflict`, `pb_pin_fixup`, `lut_truth_table_fixup`). Anything else makes the package unusable. `device.bitstream` (true or false, true when missing) says whether the device can make one. See docs/spec_bitstream.md B-10 and B-11.
 - **R-15** A reference bitstream, when present, is for the reference design in `reference/` and the manifest records the design and the SHA-256 of the files, so the package can be tested (R-43). `reference.expected.bitstreams.build_bitstream` is the SHA-256 of the file that `build_bitstream` writes for the reference design in a session (synthesized with the package's script, then pack, place, route; docs/spec_bitstream.md).
 
@@ -153,15 +160,15 @@ Paths in the manifest are relative to the package root. Directories may be empty
 - **R-16** Files that depend on a design corner are in `corners/<corner_name>/`, not in `arch/` or `synthesis/`. Files that do not depend on a corner (the netlist structure, the bitstream, the techlib) are never repeated in a corner directory.
 - **R-17** A corner name matches `[a-z][a-z0-9_]*`, is unique in the package, and equals its directory name. It is listed in `corners.list` with `process`, `voltage` (V), `temperature` (degrees C) and `rc`, the RC extraction corner (for example `typ`, `cworst`, `cbest`, `rcworst`, `rcbest`). Two corners may differ in `rc` only.
 - **R-18** When a package has corners, `corners.default` names one of them. The flow uses the default corner when the user gives none. A package with no `corners` field has no corners; its `arch/vpr_arch.xml` then has no timing variables and is used as it is.
-- **R-19** A file with a corner-dependent role carries a `corner` field in `files`, and its path is inside that corner's directory. The `timing_data` file (`timing_data.json`) of a corner holds the values for that corner (R-22).
-- **R-21** Liberty (`timing_lib`), SDF (`timing_sdf`) and other delay tables (`timing_table`) are only stored and checked for now. The checks are those of every file: listed with a role and a corner (R-19), path rules (R-5), checksum (R-30). The flow does not read them, and `check` does not parse their content.
+- **R-19** A file with a corner-dependent type carries a `corner` field in `files`, and its path is inside that corner's directory. The `timing_data` file (`timing_data.json`) of a corner holds the values for that corner (R-22).
+- **R-21** Liberty (`timing_lib`), SDF (`timing_sdf`) and other delay tables (`timing_table`) are only stored and checked for now. The checks are those of every file: listed with a type and a corner (R-19), path rules (R-5), checksum (R-30). The flow does not read them, and `check` does not parse their content. They are for the tools that sign off the timing of a design outside OpenFPGA; VPR and OpenFPGA use only `timing_data` (R-22).
 - **R-22** `arch/vpr_arch.xml` holds a variable of the form `${name}` in place of each timing value (delays, capacitances, resistances) that depends on the corner. `timing_data.json` of a corner maps each variable name to its value for that corner. The tool replaces the variables in memory when it reads the architecture for the selected corner. The file in the package is never changed and no annotated copy is written into the package (R-32); a copy for a run goes to the output directory. Only the values change: the grid, routing and blocks are the same for all corners. The template has no default values, so it is not valid VPR input until the variables are replaced; a tool that does not know packages cannot read it directly.
 - **R-23** `check` fails when a variable in `vpr_arch.xml` has no value in the `timing_data.json` of one of the corners, and when a package with no corners has variables in `vpr_arch.xml`. It warns when a `timing_data.json` has a name that is not a variable of `vpr_arch.xml`. A flow run fails with the variable name when a value is missing, and never runs with a variable left in the architecture.
 - **R-24** The manifest has `timing_units` with a unit for `time` (`ns`, `ps`, `fs`), `capacitance` (`pF`, `fF`) and `resistance` (`ohm`, `kohm`). All numbers in all `timing_data.json` files of the package are in these units. The kind of a variable comes from the end of its name: `_T` is time, `_C` is capacitance and `_R` is resistance, for example `${lut_T}`, `${wire_C}`, `${switch_R}`. `timing_data.json` is a flat map from the name without `${}` to a number, for example `{"lut_T": 120, "wire_C": 3.5}`. The tool converts each value to the unit VPR reads (seconds, farads, ohms) when it replaces the variable. `check` fails when `timing_units` is missing in a package with `timing_data` files, when a unit is not in the lists, when a variable name does not end in `_T`, `_C` or `_R`, and when a value is not a number.
 
 ### I/O map
 
-- **R-25** The I/O map (role `io_map`) is a CSV file, comma- or tab-separated, with a header row that names these columns, in any order. A column of another name is an error. There is one row per I/O subtile of the layout, and one per global port of the fabric.
+- **R-25** The I/O map (type `io_map`) is a CSV file, comma- or tab-separated, with a header row that names these columns, in any order. A column of another name is an error. There is one row per I/O subtile of the layout, and one per global port of the fabric.
 
   | Column | Meaning |
   |--------|---------|
@@ -181,13 +188,25 @@ Paths in the manifest are relative to the package root. Directories may be empty
   - An I/O subtile of the layout with no row cannot be given by `PACKAGE_PIN`, but `LOC` still places a port on it.
 
   ODC places a port on a pin of the I/O map by `PACKAGE_PIN` (spec_odc.md, R-32). The pin table, the I/O location map and the PCF of the older commands can be written from the I/O map.
-- **R-26** A package may have an ODC file of role `odc_defaults`, read before the ODC file of the user (spec_odc.md, R-46), for example the clock pins of the device.
+- **R-26** A package may have an ODC file of type `odc_defaults`, read before the ODC file of the user (spec_odc.md, R-46), for example the clock pins of the device.
 
-### Roles
+### Cached files
 
-- **R-20** The manifest uses only these roles. A package may add roles that start with `x_`; tools ignore them.
+- **R-27** A package may hold the files that VPR otherwise computes each time it makes the device, to save that time: the routing resource graph (type `rr_graph`), the router lookahead (`router_lookahead`) and the placement delay lookup (`place_delay_lookup`, only when the placer of the package stores one: VPR's `simple` delay model, the default, does not). In a package with corners each has a `corner` (R-19) and is in that corner's directory, as its delays are those of the corner; in a package without corners they are in `cache/`, with no corner. There is at most one of each type for a corner. A session that uses the package gives the ones of its corner to VPR (`--read_rr_graph`, `--read_router_lookahead`, `--read_placement_delay_lookup`), unless `read_device_package` is given `--no_cache`. The routing resource graph is made at `device.channel_width` (R-14). The manifest records `cache.vtr_version`, the version of VTR that wrote them, as their binary formats change between versions, and `cache.key`, the SHA-256 of the files they were made from (the VPR architecture, the `timing_data` of every corner and the channel width). A package with cached files and no `cache.vtr_version` or `cache.key` does not load. A session whose VTR is of another version, or whose files give another key, does not read them and lets VPR make them, with a warning that says why. `report_device_package` answers `cache`: the files, whether they are read, and why not. `openfpga-package cache <pkg>` (R-49) writes them. Reading an architecture by hand forgets the package, and the options that read its cached files go back to their default.
 
-| Role | File | Required when |
+### Bitstream
+
+- **R-28** A package for a device with bitstream support may hold the paths of the configuration bits of its fabric (type `fabric_bitstream_paths`, in `bitstream/`), written once by `write_fabric_bitstream --path_only`: they are the same for every design. The bitstream of a design is then written with `--value_only`, which is small, and the two together give the full bitstream. The architecture bitstream (`build_architecture_bitstream --write_file`) is not part of a package: it is large and is for debugging the architecture, not for the user of the device.
+
+### Pin constraints
+
+- **R-29** A package may hold the custom PCF commands of the device (type `pcf_config`, the file format of `pcf2place --pcf_config`), which a session gives to `pcf2place` when the pin constraints of the user are a PCF file.
+
+### Types
+
+- **R-20** The manifest uses only these types. A package may add types that start with `x_`; tools ignore them, and `check` applies to their files the rules of every file (R-5, R-6, R-30). For example, the packages of the repository list the OpenFPGA script of their reference flow as `{ "type": "x_openfpga_script", "path": "reference/flow.openfpga" }` and the cells that their OpenFPGA architecture refers to as `x_cell_library`.
+
+| Type | File | Required when |
 |------|------|---------------|
 | `vpr_arch` | VPR architecture XML | always |
 | `openfpga_arch` | OpenFPGA architecture XML | always |
@@ -195,6 +214,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 | `simulation_setting` | simulation settings XML | testbench generation |
 | `repack_constraints` | repack design constraints | the arch needs them |
 | `pin_constraints` | pin constraints | the arch needs them |
+| `pcf_config` | custom PCF commands (R-29) | optional |
 | `fabric_key` | fabric key | fabric uses a key |
 | `tile_config` | tile config | tile-based fabric |
 | `io_info` | I/O naming and location table | bitstream support |
@@ -202,41 +222,48 @@ Paths in the manifest are relative to the package root. Directories may be empty
 | `odc_defaults` | default constraints in ODC (R-26) | optional |
 | `yosys_script` | Yosys script | synthesis support |
 | `yosys_cell_sim` | cell simulation models | synthesis support |
-| `yosys_map` | techmap files (LUT, carry, BRAM, DSP) | per architecture |
+| `yosys_adder_map` | techmap of the adders (carry chains) | the device has carry chains |
+| `yosys_dsp_map` | techmap of the DSP blocks | the device has DSP blocks |
+| `yosys_ff_map` | techmap of the flip-flops | the device has flip-flops that Yosys does not map |
+| `yosys_bram_map` | techmap of the memory blocks | the device has BRAM |
+| `yosys_map` | another techmap file, read by the script | per architecture |
 | `yosys_bram_rules` | memory inference rules | the device has BRAM |
 | `sdc` | default timing constraints | optional |
 | `timing_data` | values of the `vpr_arch` timing variables for one corner (has `corner`) | `vpr_arch` has variables |
+| `rr_graph` | routing resource graph of one corner (has `corner`, R-27) | optional |
+| `router_lookahead` | router lookahead of one corner (has `corner`, R-27) | optional |
+| `place_delay_lookup` | placement delay lookup of one corner (has `corner`, R-27) | optional |
 | `timing_lib` | Liberty timing data of one corner (has `corner`), stored and checked only | optional |
 | `timing_sdf` | SDF delays of one corner (has `corner`), stored and checked only | optional |
 | `timing_table` | other delay tables of one corner (has `corner`), stored and checked only | optional |
 | `power_data` | power data of one corner (has `corner`) | optional |
 | `corner_info` | `corner.json` of one corner (has `corner`) | optional |
-| `arch_bitstream` | architecture bitstream | reference design |
-| `fabric_bitstream` | fabric bitstream | reference design |
+| `fabric_bitstream_paths` | the path of each configuration bit (R-28) | optional |
 | `reference_design` | reference RTL | reference design |
 
 ### Integrity and compatibility
 
 - **R-30** `CHECKSUMS.sha256` lists every file. `check` fails when a file is missing, extra or changed. Comment lines that hold a date (`//` lines in bitstream files) are ignored in the hash.
 - **R-31** `check` fails when the installed OpenFPGA or VTR version is outside the range in the manifest.
-- **R-32** A package never writes into itself. A run takes an output directory, and all generated files go there.
+- **R-32** A package never writes into itself, except by `create` and `cache` (R-41, R-49). A run takes an output directory, and all generated files go there.
 
 ### Commands
 
 - **R-40** `openfpga-package check <pkg>` validates the manifest against the schema, applies R-2 to R-6, R-10 to R-14, R-30 and R-31, and exits non-zero with one line per problem.
-- **R-41** `openfpga-package create <name> --from-task <task>` collects the files a task uses into a new package, rewrites the paths, and writes the manifest and checksums. It does not guess: a file it cannot classify is reported and left out.
+- **R-41** `openfpga-package create <name> --from-task <task>` collects the files a task uses into a new package, rewrites the paths, and writes the manifest, the checksums and the files of R-27 and R-28. It does not guess: a file it cannot classify is reported and left out.
 - **R-42** `openfpga-package pack <dir>` and `unpack <archive>` convert between the directory and the archive. Packing is deterministic: the same directory gives the same archive bytes (sorted entries, fixed times, fixed owner).
 - **R-43** `openfpga-package test <pkg>` runs the reference design in `reference/` through the flow and compares the results with those recorded in the manifest: the critical path delay, the Fmax, the wirelength, the channel width and the blocks of each type, as VPR logs them, and the SHA-256 of each bitstream file without its `//` comment lines, which hold the date of the run.
 - **R-44** Task files accept `device_package = <path>` in place of the separate architecture variables. The variables that a package defines (`vpr_arch`, `openfpga_arch`, `bitstream_setting`, ...) are filled in from the manifest; a value given in the task file wins and is logged.
-- **R-45** The Python `Session` takes `Session(device_package=<path>, corner=<name>)`, which reads the VPR architecture and the OpenFPGA architecture from the package, and gives the other files through `session.device_package.path(role)`. `corner` defaults to `corners.default` (R-18).
-- **R-46** The shell has `read_device_package --file <dir> [--corner <name>]`, in C++, which the Python `Session`, the MCP server and the web app call. It is refused when `check` would fail, or when the corner is not in the package. It:
+- **R-45** The Python `Session` takes `Session(device_package=<path>, corner=<name>)`, which reads the VPR architecture and the OpenFPGA architecture from the package, and gives the other files through `session.device_package.path(type)`. `corner` defaults to `corners.default` (R-18).
+- **R-46** The shell has `read_device_package --file <dir> [--corner <name>] [--no_cache]`, in C++, which the Python `Session`, the MCP server and the web app call. It is refused when `check` would fail, or when the corner is not in the package. It:
   - checks the manifest (R-2 to R-6, R-10, R-14 to R-14b, R-25, R-30);
-  - reads the VPR architecture with the layout of `device.grid`, then the OpenFPGA architecture;
-  - sets `router.route_chan_width` to `device.channel_width`, and the options of `flow_defaults.vpr_options` (R-14b);
+  - sets the options of `flow_defaults.vpr_options` (R-14b), `router.route_chan_width` to `device.channel_width`, which is then read only (R-14), and the options that read the cached files of the corner (R-27);
+  - reads the VPR architecture with the layout `device.layout`, then the OpenFPGA architecture: the device is made once, with the channel width and the cached files;
   - keeps for the session what the flow needs later: `device.flat_routing`, the Yosys script and its techlib files, the I/O map, and the `odc_defaults`, which it reads;
-  - reads the files of the roles `simulation_setting` and `bitstream_setting`, and keeps `flow_defaults.bitstream` and `device.bitstream` for `build_bitstream` (docs/spec_bitstream.md B-3).
+  - reads the files of the types `simulation_setting` and `bitstream_setting`, and keeps `flow_defaults.bitstream` and `device.bitstream` for `build_bitstream` (docs/spec_bitstream.md B-3).
 
   The package is an input of the session: a checkpoint saves it, the journal has the command, and a replay runs it.
+- **R-49** `openfpga-package cache <pkg> [--corner <name> ...]` (`openfpga_flow/scripts/openfpga_package.py`) makes the device of each corner (by routing a design of one LUT, which needs no synthesis) and writes its files of R-27 into the package, then updates the manifest (`cache.vtr_version`, `cache.key`) and the checksums. It is the only command that writes into a package after `create`. Later, it also writes the `fabric_bitstream_paths` of R-28.
 - **R-48** `write_io_map --file <f.csv>` writes a first I/O map for the device of the session: a row for each I/O subtile of the grid with `side`, `row`, `col` and `subtile`, and `netlist_name` once the fabric is built. The maker of the package fills in `pin_type`, `pin_direction` and `customer_pin_alias`.
 - **R-47** A task file accepts `device_corner = <name>` next to `device_package`. `openfpga-package check` also verifies that every corner in `corners.list` has a directory and every corner directory is listed.
 
@@ -248,7 +275,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 ## Design notes
 
 - A manifest in JSON, not XML: the schemas in `openfpga_flow/schemas` are already JSON, and it is read by Python and by C++ (nlohmann/json, vendored in `libs/EXTERNAL` for `read_device_package`).
-- A role table, not a fixed file name per role, so that two devices may name their files differently and one device may have several `yosys_map` files.
+- A table of types, not a fixed file name per type, so that two devices may name their files differently and one device may have several `yosys_map` files. The field is `type` (it was `role` in the first drafts).
 - Checksums in a separate file so that a person can regenerate them with `sha256sum` and no tool.
 - Code location: the C++ part is `read_device_package`, `report_device_package`, `write_io_map` and the reader of the I/O map. The `openfpga-package` tool is Python, in `openfpga_flow/scripts/`, next to `run_fpga_task.py`.
 - Existing devices: a first set of packages is made with `create` from existing tasks, one with logic only, one with BRAM and one with DSP (`basic_tests/generate_fabric`, `fpga_verilog/bram/dpram1k` and `fpga_bitstream/extract_dsp_mode_bit`).
@@ -257,7 +284,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 
 | ID | Check | Covers |
 |----|-------|--------|
-| T-1 | A valid package passes `check`. Each of these fails with a message that names the problem: missing file, path with `..`, symlink out of the package, extra file, changed file, wrong grid, bad `format_version`. | R-2 to R-6, R-14, R-30 |
+| T-1 | A valid package passes `check`. Each of these fails with a message that names the problem: missing file, path with `..`, symbolic link, extra file, changed file, a layout that the VPR architecture does not have, missing `LICENSE`, bad `format_version`. | R-2 to R-7, R-9, R-14, R-30 |
 | T-2 | `check` fails when `min_version` is higher than the installed OpenFPGA. | R-31 |
 | T-3 | `pack` run twice gives identical bytes; `unpack` then `check` passes. | R-1, R-42 |
 | T-4 | `create --from-task basic_tests/generate_fabric` gives a package that passes `check`, and `test` on it matches the golden baseline of that task. | R-41, R-43 |
@@ -271,13 +298,22 @@ Paths in the manifest are relative to the package root. Directories may be empty
 | T-12 | The same package run for corner A and for corner B gives architectures that differ only in the timing values, equal to the values of each `timing_data.json`. The package files have the same checksums after the run. A run with a value deleted fails with the variable name. | R-22, R-23, R-32 |
 | T-14 | An I/O map passes `check`. Each of these fails with its line: an unknown column, a location outside the grid or not an I/O subtile, a location given twice, a duplicate alias, a bad `pin_type`. A global port with no location passes. A tab-separated file passes. `write_io_map` writes a map that passes, and the CSV made from the pin table and the I/O location map of basic_tests/io_constraints/example_pcf places the pins of its PCF as `pcf2place` does. | R-25, R-48 |
 | T-15 | `read_device_package` gives the session of the Python reading of today: the same architectures, layout, channel width and options set or not set, and the refusals with the same reasons. `report_device_package` validates against its schema. A checkpoint and a journal restore and replay it. | R-46, R-51 |
+| T-16 | `cache` writes the files of R-27, and a package with them gives the same packing, placement, routing and bitstream as without them (or with `--no_cache`). With another `cache.vtr_version`, or another channel width (the key), they are not read, with a warning. Cached files without `cache.vtr_version` and `cache.key` do not load. Reading an architecture by hand gives the options that read them their default back. | R-27, R-46, R-49 |
+| T-17 | The bitstream of the reference design written with `--value_only`, with the `fabric_bitstream_paths` of the package, equals the full bitstream. | R-28 |
 | T-13 | Two packages with the same timing, one in `ps` and one in `ns` with the values divided by 1000, give the same architecture after substitution, for `_T`, `_C` and `_R` variables. A missing `timing_units`, an unknown unit, or a variable name with no `_T`, `_C` or `_R` suffix fails `check`. | R-22, R-24 |
 
 The tests are a task in `openfpga_flow/tasks/` and run in the regression tests.
 
 ## Open questions
 
-None open.
+Decisions for the owner, from the implementation of the review (2026-11-27):
 
-Decided with the owner: one grid size per package (R-7), no generated fabric netlist (R-8), license in the manifest (R-9), Liberty and SDF only stored and checked (R-21), RC extraction corner is part of a corner (R-17), variables are `${name}` with no default values (R-22), timing units are in the manifest and the kind of a variable comes from its `_T`, `_C` or `_R` suffix (R-24).
+- **D-1 A package whose `LICENSE` is a placeholder.** `check` only requires the file. A package made before R-9 may hold a `LICENSE` with no license text yet. The text has to come from the owner of the package. Open: should `check` refuse a `LICENSE` that is empty or says it is a placeholder?
+- **D-2 Cached files kept as `x_` types.** A package made before R-27 may keep its routing resource graph and router lookahead as `x_` types (for example a compressed graph), next to the files that `cache` writes now. Tools ignore the `x_` copies. Open: should they be removed from such packages, or `cache` remove them?
+- **D-3 No transition from `role`.** A manifest that still has `role` is refused, with a message that names `type`. Open: should the loader accept `role` for a while (R-2), or is the rename done since every known package is migrated?
+- **D-4 Cached files of the packages of the repository.** They are not in the repository: they depend on the build of VTR and are large binary files. The tests make them in a copy. Open: keep it so, or add them to the repository and make them again with each update of VTR?
+- **D-5 `fabric_bitstream_paths` (R-28) and `pcf_config` (R-29).** They are accepted and checked, but the flow does not make or use them yet. Open: when to implement `cache` writing the paths and `build_bitstream` writing a value-only bitstream with them, and `pcf2place` taking the custom PCF commands.
+- **D-6 The placement delay lookup.** VPR's default delay model of the placer (`simple`) stores none, so `cache` writes it only for a package whose flow sets another model (`delta`, `delta_override`). Open: should a package set `delta` to profit from the cache?
+
+Decided with the owner: one layout per package, named in the VPR architecture (R-7), no generated fabric netlist (R-8), license in the manifest and a `LICENSE` file (R-9), the field `type` of a file (R-20), cached routing files per corner (R-27), no architecture bitstream (R-28), Liberty and SDF only stored and checked (R-21), RC extraction corner is part of a corner (R-17), variables are `${name}` with no default values (R-22), timing units are in the manifest and the kind of a variable comes from its `_T`, `_C` or `_R` suffix (R-24).
 

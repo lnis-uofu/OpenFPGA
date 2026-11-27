@@ -130,9 +130,9 @@ def register(
     async def list_device_packages(name: Optional[str] = None) -> str:
         """The device packages that can be used (a package is one device with its architectures
         and the files that go with them). Without a name: for each package its name, version,
-        description, layout (the grid, for example 2x2), LUT size, channel width and tags, and the
+        description, layout (for example 2x2), LUT size, channel width and tags, and the
         packages that are damaged with the reason. With the name of a package: its resources, that
-        is its files (role, path inside the package, size), its architectures, the reference
+        is its files (type, path inside the package, size), its architectures, the reference
         design with the result it should give, and the start of its README. Fails with
         package_not_found for a name that is not there."""
 
