@@ -228,6 +228,39 @@ class SessionState:
     failed: Optional[StageFailure] = None
 
 
+@dataclasses.dataclass(frozen=True)
+class PluginHook:
+    """A hook of a plugin: the command, and when it runs ("before" or "after")"""
+
+    command: str
+    when: str
+
+
+@dataclasses.dataclass(frozen=True)
+class Plugin:
+    """A plugin of the shell that the build has (see report_plugins): the commands it
+    added, the commands of others it overrode or removed, its hooks on commands, and
+    every_command when it has a hook after every command"""
+
+    name: str
+    version: str
+    commands: List[str]
+    overrides: List[str]
+    removes: List[str]
+    hooks: List[PluginHook]
+    every_command: bool
+
+
+@dataclasses.dataclass(frozen=True)
+class _PluginList:
+    plugins: List[Plugin]
+
+
+def _plugin_label(plugins):
+    """The plugins of a build as one line, for example "a 1.0, b 2", or "none" """
+    return ", ".join("%s %s" % (p["name"], p["version"]) for p in plugins) or "none"
+
+
 def _convert(hint, value):
     """The JSON value, as an instance of the type hint"""
     if value is None:
@@ -263,6 +296,7 @@ _SCHEMA_VERSIONS = {
     "run_report": 1,
     "app_options": 1,
     "stage_info": 1,
+    "plugins": 1,
 }
 
 
@@ -420,7 +454,10 @@ class _Journal:
     again when a command ends, so that a run that is cut short leaves scripts that run. The
     shell script ends with exit, as the shell does not stop at the end of a script"""
 
-    def __init__(self, directory, resume=False):
+    # The line of the scripts that says the plugins of the build that wrote them
+    PLUGINS = "# Plugins of the build: "
+
+    def __init__(self, directory, resume=False, plugins="none"):
         self.directory = os.fspath(directory)
         os.makedirs(self.directory, exist_ok=True)
         self._scripts = 0  # the scripts of Yosys that were copied here (see record)
@@ -431,6 +468,7 @@ class _Journal:
             "# Written in %s: the files of the flow are written in the current directory\n"
             % os.getcwd()
         )
+        where += self.PLUGINS + plugins + "\n"
         self._python = [where, "import openfpga\n\nsession = openfpga.Session()\n"]
         self._shell = [where]
         self._write()
@@ -646,7 +684,11 @@ class Session:
         self.options = Options(self.shell, run=self.command)
         self.checkpoint_dir = checkpoint_dir
         # resume_journal: go on with the files of the directory instead of writing them again
-        self._journal = _Journal(journal, resume_journal) if journal is not None else None
+        self._journal = (
+            _Journal(journal, resume_journal, _plugin_label(self._plugin_list()))
+            if journal is not None
+            else None
+        )
         self._tcl_host = None  # made by the first tcl()
 
     # The commands ----------------------------------------------------------------
@@ -670,12 +712,26 @@ class Session:
         return line, result
 
     def shell_commands(self):
-        """The names of the commands of the shell, in the order of its help"""
+        """The names of the commands of the shell, in the order of its help. The help says
+        where a command of a plugin comes from after its name, and lists the commands that
+        plugins removed at its end, which are not commands any more"""
         names = []
         for line in self.shell.run("help").log.splitlines():
+            if line.startswith("Removed by plugins:"):
+                break
             if line.startswith("\t") and line.strip():
                 names.append(line.split()[0])
         return names
+
+    def plugins(self):
+        """The plugins of the shell that the build has, in the order they registered: a
+        list of Plugin"""
+        return _answer(self.shell.run("report_plugins"), "plugins", _PluginList).plugins
+
+    def _plugin_list(self):
+        """The plugins of the build as [{name, version}], as checkpoints and journals keep
+        them"""
+        return [{"name": p.name, "version": p.version} for p in self.plugins()]
 
     def _write_journal(self, name, args, options, error=None):
         if self._journal is not None and name not in type(self).READ_ONLY_COMMANDS:
@@ -863,14 +919,26 @@ class Session:
         and may be a script that a person wrote. The commands run in the
         current directory, with the options and inputs they name. Session
         options, e.g., journal=, are those of the new Session. A command that
-        fails raises ReplayError.
+        fails raises ReplayError, and so does a journal written by a build
+        with other plugins (the line '# Plugins of the build: ...').
         """
         script = _journal_script(path)
         with open(script) as handle:
             lines = handle.read().splitlines()
         session = cls(shell, **session_options)
+        built = _plugin_label(session._plugin_list())
         for number, line in enumerate(lines, 1):
             line = line.strip()
+            if line.startswith(_Journal.PLUGINS) and line[len(_Journal.PLUGINS) :] != built:
+                # A command may not do the same with other plugins: the journal is not replayed
+                raise ReplayError(
+                    line,
+                    number,
+                    RuntimeError(
+                        "the journal was written with the plugins %s, and this build has %s"
+                        % (line[len(_Journal.PLUGINS) :], built)
+                    ),
+                )
             if not line or line.startswith("#"):
                 continue
             name, args, options = _parse_line(line)
@@ -931,6 +999,7 @@ class Session:
                 if option.name not in _INPUT_OPTIONS and option.value is not None
             ],
             "results": results,
+            "plugins": self._plugin_list(),
         }
         path = os.path.join(directory, _CHECKPOINT_MANIFEST)
         previous = _read_manifest(path, missing_ok=True)
@@ -975,6 +1044,13 @@ class Session:
                         % (key, entry["file"])
                     )
         session = cls(shell, **session_options)
+        # A checkpoint made before the plugins were recorded (no "plugins") is taken
+        saved, built = manifest.get("plugins"), session._plugin_list()
+        if saved is not None and saved != built:
+            raise CheckpointError(
+                "The checkpoint was made with the plugins %s, and this build has %s"
+                % (_plugin_label(saved), _plugin_label(built))
+            )
         for option in manifest["options"]:
             session.options.set(option["name"], option["value"])
         inputs = manifest["inputs"]

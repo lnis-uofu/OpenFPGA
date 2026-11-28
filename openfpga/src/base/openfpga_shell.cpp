@@ -12,6 +12,7 @@
 #include "command_parser.h"
 #include "openfpga_bitstream_command.h"
 #include "openfpga_context.h"
+#include "openfpga_plugins.h"
 #include "openfpga_sdc_command.h"
 #include "openfpga_setup_command.h"
 #include "openfpga_spice_command.h"
@@ -59,6 +60,15 @@ OpenfpgaShell::OpenfpgaShell() {
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
   openfpga::add_session_report_commands(shell_);
+
+  /* The plugins of the build, after the commands of the shell that they may
+   * override, remove or hook, and before the basic ones, which they may not */
+  openfpga::add_plugin_commands(shell_);
+  openfpga::register_openfpga_plugins(shell_);
+  const std::string plugins = openfpga::plugins_summary(shell_);
+  if (!plugins.empty()) {
+    shell_.add_title((shell_.title() + "\n" + plugins).c_str());
+  }
 
   /* Add basic commands: exit, help, etc.
    * Note:

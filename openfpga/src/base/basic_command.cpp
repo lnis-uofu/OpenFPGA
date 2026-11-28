@@ -90,6 +90,7 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_exit_id, basic_cmd_class);
   shell.set_command_execute_function(shell_cmd_exit_id,
                                      [shell]() { shell.exit(); });
+  shell.protect_command(shell_cmd_exit_id);
 
   /* Version */
   Command shell_cmd_version("version");
@@ -98,6 +99,7 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_version_id, basic_cmd_class);
   shell.set_command_execute_function(shell_cmd_version_id,
                                      print_openfpga_version_info);
+  shell.protect_command(shell_cmd_version_id);
 
   /* Add a hidden command: internal_version */
   Command shell_cmd_internal_version("hidden_version");
@@ -106,14 +108,15 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_internal_version_id, basic_cmd_class);
   shell.set_command_execute_function(shell_cmd_internal_version_id,
                                      print_openfpga_version_info);
+  shell.protect_command(shell_cmd_internal_version_id);
 
   /* Add 'source' command which can run a set of commands */
-  add_openfpga_source_command(shell, basic_cmd_class,
-                              std::vector<ShellCommandId>());
+  shell.protect_command(add_openfpga_source_command(
+    shell, basic_cmd_class, std::vector<ShellCommandId>()));
 
   /* Add 'exec_external command which can run system call */
-  add_openfpga_ext_exec_command(shell, basic_cmd_class,
-                                std::vector<ShellCommandId>());
+  shell.protect_command(add_openfpga_ext_exec_command(
+    shell, basic_cmd_class, std::vector<ShellCommandId>()));
 
   /* Note:
    * help MUST be the last to add because the linking to execute function will
@@ -125,6 +128,7 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_help_id, basic_cmd_class);
   shell.set_command_execute_function(shell_cmd_help_id,
                                      [shell]() { shell.print_commands(); });
+  shell.protect_command(shell_cmd_help_id);
 }
 
 } /* end namespace openfpga */

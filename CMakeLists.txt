@@ -73,6 +73,8 @@ option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make
 option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number" ON)
 option(OPENFPGA_WITH_SWIG "Enable SWIG interface when building codebase. Disable when you do not need high-level interfaces, such as Tcl/Python" ON)
 option(OPENFPGA_SWIG_PYTHON "Enable Python module (requires OPENFPGA_WITH_SWIG)" OFF)
+set(OPENFPGA_PLUGINS "" CACHE STRING "Plugins of the shell built in, in order, separated by ';' (see docs/source/manual/openfpga_shell/plugins.rst)")
+set(OPENFPGA_PLUGIN_DIRS "" CACHE STRING "Folders where the plugins that are not in openfpga/plugins are found, separated by ';'")
 option(OPENFPGA_ENABLE_STRICT_COMPILE "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)" OFF)
 option(OPENFPGA_UPDATE_UNIQUE_BLOCK_CAPN "Specifies whether to update capn'proto files required by unique block. Recommend only after any modification on  unique block parsers and data structures" OFF)
 ## Installer options

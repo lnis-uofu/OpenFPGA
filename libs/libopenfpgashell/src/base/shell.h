@@ -3,6 +3,7 @@
 #include <ctime>
 #include <functional>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,17 @@
 
 /* Begin namespace openfpga */
 namespace openfpga {
+
+/*********************************************************************
+ * A command that cannot be registered, overridden, removed or hooked: the
+ * message names the command and who registered it. Registration happens
+ * when a shell is set up, so this stops the setup
+ ********************************************************************/
+class ShellRegistrationError : public std::runtime_error {
+ public:
+  explicit ShellRegistrationError(const std::string& message)
+    : std::runtime_error(message) {}
+};
 
 /*********************************************************************
  * Data structure to define a working environment of a mini shell
@@ -60,6 +72,15 @@ class Shell {
     shell_command_iterator;
   /* Create range */
   typedef vtr::Range<shell_command_iterator> shell_command_range;
+  /* A hook that runs before a command, once its options are parsed. It
+   * returns an empty string to let the command run, or the reason why the
+   * command is refused (the command does not run and fails) */
+  typedef std::function<std::string(T&, const Command&, const CommandContext&)>
+    before_hook_type;
+  /* A hook that runs after a command, with the status of the command. It also
+   * runs when the command failed or threw */
+  typedef std::function<void(T&, const Command&, const CommandContext&, int)>
+    after_hook_type;
   /* Enumeration of command types in a shell
    * Built-in commands have their own execute functions inside the shell
    */
@@ -104,12 +125,57 @@ class Shell {
     const ShellCommandId& cmd_id) const;
   std::vector<ShellCommandId> commands_by_class(
     const ShellCommandClassId& cmd_class_id) const;
+  /* The class of a name, or INVALID */
+  ShellCommandClassId find_command_class(const std::string& name) const;
+  /* Who registers the commands, hooks and changes from now on: empty for the
+   * shell's own commands, or the name of a plugin */
+  std::string registrar() const;
+  /* Who registered a command (empty for the shell's own) */
+  std::string command_owner(const ShellCommandId& cmd_id) const;
+  /* The plugin that overrode how a command runs, or empty */
+  std::string command_overrider(const ShellCommandId& cmd_id) const;
+  /* The plugin that removed a command, or empty when it is there */
+  std::string command_remover(const ShellCommandId& cmd_id) const;
+  bool command_removed(const ShellCommandId& cmd_id) const;
+  /* The registrars of the hooks of a command, before and after it */
+  std::vector<std::string> command_before_hook_owners(
+    const ShellCommandId& cmd_id) const;
+  std::vector<std::string> command_after_hook_owners(
+    const ShellCommandId& cmd_id) const;
+  std::vector<std::string> after_any_hook_owners() const;
 
  public: /* Public mutators */
   void set_name(const char* name);
   void add_title(const char* title);
+  /* Set who registers from now on (see registrar()) */
+  void set_registrar(const std::string& name);
+  /* Add a command. A name that is defined already (or was removed) throws
+   * ShellRegistrationError naming both registrars */
   ShellCommandId add_command(const Command& cmd, const char* descr,
                              const bool& hidden = false);
+  /* A command that no plugin may remove (exit, help, ...) */
+  void protect_command(const ShellCommandId& cmd_id);
+  /* Let the registrar (a plugin) replace how a command runs: the command
+   * keeps its id, name, class, options and dependencies, and the caller sets
+   * its new execute function with set_command_execute_function(). Throws
+   * when the command is not defined, is removed, is the registrar's own, or
+   * is overridden by another plugin already */
+  ShellCommandId override_command(const std::string& name);
+  /* Add options to a command that the registrar owns or overrode. The
+   * options it has stay as they are: taking one away, renaming it or
+   * changing whether it is required or takes a value throws */
+  void extend_command_options(const ShellCommandId& cmd_id,
+                              const std::function<void(Command&)>& extend);
+  /* Remove a command for the registrar (a plugin). It keeps its id; calling
+   * it fails and says who removed it. Throws when the command is not
+   * defined, is protected, or when a command that stays depends on it or
+   * has it as an alternative */
+  void deregister_command(const std::string& name);
+  /* Hooks of the registrar around a command, run in the order they are
+   * added; on_after_any is run after every command */
+  void on_before(const std::string& name, const before_hook_type& hook);
+  void on_after(const std::string& name, const after_hook_type& hook);
+  void on_after_any(const after_hook_type& hook);
   void set_command_class(const ShellCommandId& cmd_id,
                          const ShellCommandClassId& cmd_class_id);
   /* Link the execute function to a command
@@ -308,6 +374,39 @@ class Shell {
   vtr::vector<ShellCommandClassId, std::vector<ShellCommandId>>
     commands_by_classes_;
   std::vector<std::string> commands4autocomplete_;
+
+  /* Who registers from now on, and who registered each command, overrode
+   * it or removed it (empty for none) */
+  std::string registrar_;
+  vtr::vector<ShellCommandId, std::string> command_owners_;
+  vtr::vector<ShellCommandId, std::string> command_overriders_;
+  vtr::vector<ShellCommandId, std::string> command_removers_;
+  vtr::vector<ShellCommandId, bool> command_protected_;
+
+  /* Hooks, with the registrar of each */
+  struct BeforeHook {
+    std::string owner;
+    before_hook_type func;
+  };
+  struct AfterHook {
+    std::string owner;
+    after_hook_type func;
+  };
+  vtr::vector<ShellCommandId, std::vector<BeforeHook>> command_before_hooks_;
+  vtr::vector<ShellCommandId, std::vector<AfterHook>> command_after_hooks_;
+  std::vector<AfterHook> after_any_hooks_;
+
+  /* Internal: the command of a name, which must be defined and not removed */
+  ShellCommandId registered_command(const std::string& name,
+                                    const char* action) const;
+  /* Internal: a name for messages, "OpenFPGA" or "plugin 'x'" */
+  std::string registrar_label(const std::string& owner) const;
+  /* Internal: the hooks after a command, and the status they leave */
+  int run_after_hooks(const ShellCommandId& cmd_id, T& common_context,
+                      int status);
+  /* Internal: run a command once its options are parsed, with its hooks */
+  int run_command(const ShellCommandId& cmd_id, T& common_context,
+                  const std::vector<std::string>& tokens);
 
   /* Timer */
   std::clock_t time_start_;

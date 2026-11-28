@@ -14,3 +14,5 @@ OpenFPGA Shell
    openfpga_commands/index
 
    python_session
+
+   plugins

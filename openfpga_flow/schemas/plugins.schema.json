@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "plugins",
+  "description": "The plugins of the shell that the build has, in the order they registered, and what each one added, overrode, removed and hooked, answer of 'report_plugins'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "plugins"
+    },
+    "stage": {
+      "type": "null"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "plugins"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "version",
+              "commands",
+              "overrides",
+              "removes",
+              "hooks",
+              "every_command"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "version": {
+                "type": "string"
+              },
+              "commands": {
+                "description": "The commands it added",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "overrides": {
+                "description": "The commands of the shell or of another plugin whose execution it replaced",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "removes": {
+                "description": "The commands it removed",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hooks": {
+                "description": "Its hooks on commands",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "command",
+                    "when"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "command": {
+                      "type": "string"
+                    },
+                    "when": {
+                      "enum": [
+                        "before",
+                        "after"
+                      ]
+                    }
+                  }
+                }
+              },
+              "every_command": {
+                "description": "It has a hook after every command",
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

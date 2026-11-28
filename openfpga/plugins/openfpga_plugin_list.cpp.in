@@ -1,0 +1,18 @@
+/********************************************************************
+ * The plugins of this build, in order. Written by CMake from
+ * OPENFPGA_PLUGINS (openfpga/plugins/openfpga_plugin_list.cpp.in): do not
+ * edit
+ *******************************************************************/
+#include "openfpga_plugins.h"
+
+/* begin namespace openfpga */
+namespace openfpga {
+
+@OPENFPGA_PLUGIN_DECLARATIONS@
+const std::vector<PluginEntry>& openfpga_plugin_entries() {
+  static const std::vector<PluginEntry> entries = {
+@OPENFPGA_PLUGIN_ENTRIES@  };
+  return entries;
+}
+
+} /* end namespace openfpga */

@@ -182,7 +182,9 @@ def _worker_main():
                     session.checkpoint_dir = checkpoint_dir
                     if journal is not None:
                         # After the restore: its commands are in the journal already
-                        session._journal = _Journal(journal, resume)
+                        session._journal = _Journal(
+                            journal, resume, _plugin_label(session._plugin_list())
+                        )
                 else:
                     session = Session(
                         checkpoint_dir=checkpoint_dir, journal=journal, resume_journal=resume
