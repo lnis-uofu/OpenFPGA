@@ -46,7 +46,8 @@
                   "PACKED",
                   "PLACED",
                   "ROUTED",
-                  "ANALYZED"
+                  "ANALYZED",
+                  "BITSTREAM"
                 ]
               },
               "seconds": {

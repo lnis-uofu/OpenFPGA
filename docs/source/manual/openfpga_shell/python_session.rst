@@ -144,6 +144,17 @@ Both return the answer of the command (kind ``synthesis``): ``top``, ``netlist``
 
 ``session.design_hierarchy(directory)`` (or ``top=`` and ``files=``) gives the tree of the instances of a design and its modules (``report_design_hierarchy``), as a dict. It runs a Yosys script of its own, and changes nothing of the flow; it is not in the journal.
 
+.. _bitstream_in_python:
+
+The bitstream
+~~~~~~~~~~~~~
+
+``session.bitstream(file=None, format="plain_text", arch_file=None)`` makes the bitstream of the routed design with the command ``build_bitstream`` (see :ref:`openfpga_bitstream_commands`): the analysis when it is not reached, the link and the fabric when they are not valid any more, repack, the architecture and fabric bitstreams, and the file (``bitstream/<circuit>.bit`` by default), with the recipe of the bitstream of the device. It returns what ``report_bitstream`` answers (``session.bitstream_report()``): the file with its SHA-256, the bits, the configuration protocol, the bits per type of block, the settings and the steps. ``run_flow(bitstream=True)`` makes it after the analysis.
+
+``session.read_simulation_setting(file)`` and ``session.read_bitstream_setting(file, append=False)`` read the settings. ``state().inputs`` lists their files, and ``state().results.bitstream`` the file of the bitstream. Bitstream settings drop ``REPACKED`` and ``BITSTREAM``; a stage up to ``ROUTED`` that runs again drops them too.
+
+A checkpoint records the settings with their checksums, and the file of the bitstream as a result; ``restore`` reads the settings again (after ``_restore_inputs()``), and does not make the bitstream again. The journal has ``build_bitstream`` and the reads of the settings.
+
 .. _journal_and_replay:
 
 Journal and replay

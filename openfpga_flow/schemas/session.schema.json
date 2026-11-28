@@ -83,6 +83,34 @@
             },
             "circuit": {
               "$ref": "#/$defs/input"
+            },
+            "simulation_setting": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "The files read, in order"
+            },
+            "bitstream_setting": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "The files read, in order"
             }
           }
         },
@@ -112,6 +140,13 @@
                 "string",
                 "null"
               ]
+            },
+            "bitstream": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The file that build_bitstream wrote"
             }
           }
         },
@@ -132,7 +167,9 @@
                   "enum": [
                     "PACKED",
                     "PLACED",
-                    "ROUTED"
+                    "ROUTED",
+                    "REPACKED",
+                    "BITSTREAM"
                   ]
                 },
                 "message": {

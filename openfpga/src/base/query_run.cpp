@@ -78,7 +78,9 @@ bool run_report_json(const OpenFpgaSession& session, const bool in_flow,
     {OpenFpgaStage::PLACED, placed},
     {OpenFpgaStage::ROUTED, routed},
     {OpenFpgaStage::ANALYZED,
-     in_flow && session.reached(OpenFpgaStage::ANALYZED)}};
+     in_flow && session.reached(OpenFpgaStage::ANALYZED)},
+    {OpenFpgaStage::BITSTREAM,
+     in_flow && session.reached(OpenFpgaStage::BITSTREAM)}};
   for (const auto& entry : stages) {
     if (!entry.second) {
       continue;

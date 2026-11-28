@@ -60,6 +60,9 @@ class SessionInputs:
     vpr_arch: Optional[VprArchInput]
     openfpga_arch: Optional[InputFile]
     circuit: Optional[InputFile]
+    # The files of the settings that the bitstream is made with, in the order they were read
+    simulation_setting: Optional[List[str]] = None
+    bitstream_setting: Optional[List[str]] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -71,6 +74,8 @@ class SessionResults:
     packing: Optional[str]
     placement: Optional[str]
     routing: Optional[str]
+    # The file of the fabric bitstream that build_bitstream wrote (bitstream())
+    bitstream: Optional[str] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -303,6 +308,7 @@ _SCHEMA_VERSIONS = {
     "plugins": 1,
     "synthesis": 1,
     "design_hierarchy": 1,
+    "bitstream": 1,
 }
 
 
@@ -710,6 +716,7 @@ class Session:
             "report_app_option",
             "report_plugins",
             "report_design_hierarchy",
+            "report_bitstream",
         )
     )
 
@@ -1008,9 +1015,54 @@ class Session:
             self.checkpoint(self.checkpoint_dir)
         return step
 
-    def run_flow(self):
-        """Run pack, place, route and analysis, and return their results"""
-        return [stage() for stage in (self.pack, self.place, self.route, self.analysis)]
+    def run_flow(self, bitstream=False):
+        """Run pack, place, route and analysis, and return their results. With bitstream, the
+        bitstream is made after them (bitstream()), and its answer is the last item"""
+        steps = [stage() for stage in (self.pack, self.place, self.route, self.analysis)]
+        if bitstream:
+            steps.append(self.bitstream())
+        return steps
+
+    # The bitstream ------------------------------------------------------------------
+
+    def read_simulation_setting(self, file):
+        """Read the simulation settings of OpenFPGA. The link of the architecture is made
+        again by the next bitstream(); nothing else is dropped"""
+        return self.command("read_openfpga_simulation_setting", file=os.path.abspath(file))
+
+    def read_bitstream_setting(self, file, append=False):
+        """Read the bitstream settings of OpenFPGA (with append, after the ones read before).
+        They change the bitstream: REPACKED and BITSTREAM are dropped"""
+        options = {"file": os.path.abspath(file)}
+        if append:
+            options["append"] = True
+        return self.command("read_openfpga_bitstream_setting", **options)
+
+    def repack(self):
+        """Repack the routed design (REPACKED), as the first step of a bitstream does. The
+        architecture must have been linked and the fabric built (bitstream() does both)"""
+        return self.command("repack")
+
+    def bitstream(self, file=None, format="plain_text", arch_file=None):
+        """Make the bitstream of the routed design with the shell's build_bitstream: the link
+        and the fabric (kept when still valid), repack, the architecture and fabric
+        bitstreams, and the file (default bitstream/<circuit>.bit), with the recipe of the
+        bitstream of the device (the defaults, or the one a plugin set). Returns what
+        report_bitstream answers (kind bitstream): the file, its SHA-256, the bits, the
+        protocol, the bits per type of block, the settings and the steps"""
+        options = {"format": format}
+        if file is not None:
+            options["file"] = os.path.abspath(os.fspath(file))
+        if arch_file is not None:
+            options["arch_file"] = os.path.abspath(os.fspath(arch_file))
+        _, result = self._run_command("build_bitstream", (), options)
+        return _answer_data(result, "bitstream")
+
+    def bitstream_report(self, limit=None):
+        """What report_bitstream answers about the bitstream of the session (BITSTREAM)"""
+        options = {} if limit is None else {"limit": int(limit)}
+        result = self.shell.run(_command_line("report_bitstream", (), options))
+        return _answer_data(result, "bitstream")
 
     def read_packing(self, file):
         """Take the packing (.net) of a file, instead of running pack"""
@@ -1140,7 +1192,8 @@ class Session:
         The directory gets the files of the packing, the placement and the
         routing of the stages that are reached, and checkpoint.json: the
         stages, the options that are not the default, and where the inputs
-        come from, with the checksum of every file, the plugins of the build,
+        come from, with the checksum of every file, the simulation and
+        bitstream settings, the file of the bitstream, the plugins of the build,
         the attachments of the session (see set_attachment) and what a
         subclass adds (_checkpoint_extra(), under "extra"). The inputs are not
         copied: restore() needs them where they are. The stages after ANALYZED
@@ -1159,7 +1212,7 @@ class Session:
             entry = getattr(state.inputs, key)
             inputs[key] = dict(dataclasses.asdict(entry), sha256=_sha256(entry.file))
         results = {}
-        for key, _, _ in _CHECKPOINT_RESULTS:
+        for key in [item[0] for item in _CHECKPOINT_RESULTS] + ["bitstream"]:
             source = getattr(state.results, key)
             if source is None:
                 continue
@@ -1180,6 +1233,16 @@ class Session:
             "results": results,
             "plugins": self._plugin_list(),
         }
+        settings = {
+            kind: [{"file": file, "sha256": _sha256(file)} for file in files]
+            for kind, files in (
+                ("simulation_setting", state.inputs.simulation_setting),
+                ("bitstream_setting", state.inputs.bitstream_setting),
+            )
+            if files
+        }
+        if settings:
+            manifest["settings"] = settings
         if state.attachments:
             manifest["attachments"] = state.attachments
         extra = self._checkpoint_extra(directory)
@@ -1214,7 +1277,9 @@ class Session:
         other arguments are those of the Session, e.g., journal=.
 
         In order, on the new session (an instance of cls): the options are
-        set; _restore_inputs() reads the architectures; _restore_extra() gets
+        set; _restore_inputs() reads the architectures; the settings of the
+        bitstream are read again (the bitstream is not made again: its file
+        is in the checkpoint, results.bitstream); _restore_extra() gets
         what _checkpoint_extra() saved; the attachments that are not there
         already are set again; then the circuit is read, and the results of
         the stages. A subclass overrides these methods to save and read what
@@ -1235,6 +1300,12 @@ class Session:
                         "The input '%s' (%s) is not the one of the checkpoint"
                         % (key, entry["file"])
                     )
+            for kind, entries in manifest.get("settings", {}).items():
+                for entry in entries:
+                    if _sha256(entry["file"]) != entry["sha256"]:
+                        raise CheckpointError(
+                            "The %s '%s' is not the one of the checkpoint" % (kind, entry["file"])
+                        )
         session = cls(shell, **session_options)
         # A checkpoint made before the plugins were recorded (no "plugins") is taken
         saved, built = manifest.get("plugins"), session._plugin_list()
@@ -1246,6 +1317,20 @@ class Session:
         for option in manifest["options"]:
             session.options.set(option["name"], option["value"])
         session._restore_inputs(manifest, directory)
+        # The settings of the bitstream, when they are not the ones that were read already
+        now = session.state().inputs
+        for kind, read in (
+            ("simulation_setting", session.read_simulation_setting),
+            ("bitstream_setting", session.read_bitstream_setting),
+        ):
+            files = [entry["file"] for entry in manifest.get("settings", {}).get(kind, [])]
+            if files and files != (getattr(now, kind) or []):
+                read(files[0])
+                for file in files[1:]:
+                    if kind == "bitstream_setting":
+                        read(file, append=True)
+                    else:
+                        read(file)
         session._restore_extra(manifest.get("extra", {}), directory)
         attachments = manifest.get("attachments", {})
         if attachments:

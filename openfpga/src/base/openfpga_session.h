@@ -51,6 +51,32 @@ std::string to_string(const OpenFpgaInput& input);
 std::string to_string(const OpenFpgaStage& stage);
 
 /********************************************************************
+ * How build_bitstream makes the bitstream of a device: the defaults, or the
+ * recipe that a plugin sets for the architectures it read
+ *******************************************************************/
+struct BitstreamRecipe {
+  /* The device can make a bitstream */
+  bool supported = true;
+  /* Who set the recipe (e.g., the name of a device package), empty for the
+   * defaults */
+  std::string owner;
+  std::vector<std::string> link_options = {"--sort_gsb_chan_node_in_edges"};
+  /* Commands run after the link, e.g., check_netlist_naming_conflict */
+  std::vector<std::string> fixups;
+  std::vector<std::string> fabric_options = {"--compress_routing"};
+};
+
+/* The files that build_bitstream wrote, and the steps it ran and kept */
+struct BitstreamOutput {
+  std::string file;
+  std::string format;
+  std::string arch_file;
+  std::vector<std::string> settings;
+  std::vector<std::string> ran;
+  std::vector<std::string> kept;
+};
+
+/********************************************************************
  * What the constraints of the session give to the commands of the core: the
  * synthesis, and the OpenFPGA commands that take a pin constraints file. A
  * plugin sets them, e.g., from a constraints file that it reads
@@ -163,6 +189,22 @@ class OpenFpgaSession {
    * (router.route_chan_width) is fixed while it has an owner (see
    * set_fixed_channel_width_owner()) */
   std::string fixed_option(const std::string& name) const;
+  /* The files of the simulation settings ("simulation_setting") or of the
+   * bitstream settings ("bitstream_setting") that were read, in order */
+  std::vector<std::string> settings_files(const std::string& kind) const;
+  /* The generation of the link that the fabric was built on (see
+   * linked_generation()), 0 if it was not built or the link was dropped */
+  uint64_t fabric_generation() const { return fabric_generation_; }
+  /* True if the link is made on the data of VPR of the session, and the
+   * fabric on that link */
+  bool link_current() const;
+  bool fabric_current() const;
+  const BitstreamRecipe& bitstream_recipe() const { return bitstream_recipe_; }
+  /* What build_bitstream wrote; null when BITSTREAM is not reached or was
+   * made by the commands by hand */
+  const BitstreamOutput* bitstream_output() const {
+    return bitstream_output_.file.empty() ? nullptr : &bitstream_output_;
+  }
   /* The constraints of the session, see SessionConstraints. They are kept
    * when the session is reset, as the options are */
   const SessionConstraints& constraints() const { return constraints_; }
@@ -247,6 +289,24 @@ class OpenFpgaSession {
    * of that run, and it is not valid for another one */
   void set_linked_generation(uint64_t generation) {
     linked_generation_ = generation;
+    fabric_generation_ = 0;
+  }
+  /* build_fabric was built on the current link */
+  void set_fabric_built() { fabric_generation_ = linked_generation_; }
+  /* Settings were read: the list of their files is replaced, or appended to;
+   * the link and the fabric are dropped, and with the bitstream settings
+   * REPACKED and BITSTREAM */
+  void read_settings(const std::string& kind, const std::string& file,
+                     const bool append);
+  /* The recipe of the bitstream of the architectures that were just read,
+   * set by a plugin. Reading an architecture gives the defaults back */
+  void set_bitstream_recipe(const BitstreamRecipe& recipe) {
+    bitstream_recipe_ = recipe;
+  }
+  void set_bitstream_output(const BitstreamOutput& output) {
+    if (reached(OpenFpgaStage::BITSTREAM)) {
+      bitstream_output_ = output;
+    }
   }
 
  private: /* Internal functions */
@@ -255,7 +315,7 @@ class OpenFpgaSession {
   void invalidate_for_option(const std::string& name);
   /* An architecture was read, or failed to be: what came with the previous
    * one goes (the attachments, the owner of the channel width, the cache
-   * options) */
+   * options, the recipe of the bitstream) */
   void forget_architecture_state();
   /* The stage that is dropped to drop a stage: the packing with the
    * placement, when the analytical placer made them */
@@ -268,6 +328,10 @@ class OpenFpgaSession {
   AppOptions app_options_;
   uint64_t vpr_generation_ = 0;
   uint64_t linked_generation_ = 0;
+  uint64_t fabric_generation_ = 0;
+  std::map<std::string, std::vector<std::string>> settings_files_;
+  BitstreamRecipe bitstream_recipe_;
+  BitstreamOutput bitstream_output_;
   std::map<OpenFpgaStage, std::string> imported_;
   std::map<OpenFpgaStage, std::string> failures_;
   std::map<OpenFpgaStage, std::string> stage_logs_;
