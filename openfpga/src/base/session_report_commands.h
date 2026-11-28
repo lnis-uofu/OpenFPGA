@@ -14,6 +14,9 @@
  *   changed for each stage, see query_stage.h. Needs no stage
  * - report_run: what each stage of the flow did, see query_run.h. Needs the
  *   stage DEVICE
+ * and set_attachment --key --value, which keeps the data of a plugin in the
+ * session (OpenFpgaSession::attachment()), e.g., when a checkpoint is
+ * restored
  *******************************************************************/
 /* Begin namespace openfpga */
 namespace openfpga {

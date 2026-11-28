@@ -638,6 +638,11 @@ bool read_circuit_input(OpenFpgaSession& session, const std::string& file) {
   return true;
 }
 
+bool make_flow_device(OpenFpgaSession& session) {
+  sync_with_vpr(session);
+  return session.reached(OpenFpgaStage::DEVICE) || ensure_device(session);
+}
+
 bool openfpga_arch_input_read(OpenFpgaSession& session,
                               const std::string& file) {
   sync_with_vpr(session);

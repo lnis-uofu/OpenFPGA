@@ -67,6 +67,7 @@ void write_app_option_json(JsonWriter& json, const AppOptions& options,
   OpenFpgaStage stage = OpenFpgaStage::DEVICE;
   app_option_stage(name, stage);
   json.key("stage").value(to_string(stage));
+  json.key("owner").value(app_option_owner(name));
   json.key("vpr_flag");
   if (const char* flag = vpr_flag(name)) {
     json.value(flag);

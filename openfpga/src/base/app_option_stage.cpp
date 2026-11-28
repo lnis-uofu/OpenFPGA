@@ -1,11 +1,25 @@
 #include "app_option_stage.h"
 
 #include <map>
+#include <stdexcept>
+
+#include "vpr_option_table.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
 
 namespace {
+
+/* The options of the plugins: their owner and their stage */
+struct RegisteredOption {
+  std::string owner;
+  OpenFpgaStage stage;
+};
+
+std::map<std::string, RegisteredOption>& registered_options() {
+  static std::map<std::string, RegisteredOption> options;
+  return options;
+}
 
 /* The stage of the options of a group */
 const std::map<std::string, OpenFpgaStage>& group_stages() {
@@ -67,6 +81,11 @@ const std::map<std::string, OpenFpgaStage>& option_stages() {
 }  // End anonymous namespace
 
 bool app_option_stage(const std::string& name, OpenFpgaStage& stage) {
+  const auto registered = registered_options().find(name);
+  if (registered != registered_options().end()) {
+    stage = registered->second.stage;
+    return true;
+  }
   const auto option = option_stages().find(name);
   if (option != option_stages().end()) {
     stage = option->second;
@@ -82,6 +101,50 @@ bool app_option_stage(const std::string& name, OpenFpgaStage& stage) {
   }
   stage = group->second;
   return true;
+}
+
+void register_app_option(const std::string& owner, const std::string& name,
+                         const AppOptionValue& default_value,
+                         const OpenFpgaStage& stage) {
+  const std::string prefix = owner + ".";
+  if (owner.empty() || name.size() <= prefix.size() ||
+      0 != name.compare(0, prefix.size(), prefix)) {
+    throw std::invalid_argument("the option '" + name +
+                                "' does not start with '" + prefix + "'");
+  }
+  if (std::string::npos != name.find('.', prefix.size())) {
+    throw std::invalid_argument("the option '" + name +
+                                "' has more than one '.'");
+  }
+  const auto registered = registered_options().find(name);
+  const bool known = 0 != app_option_defaults().count(name);
+  if (known && (registered == registered_options().end() ||
+                owner != registered->second.owner)) {
+    throw std::invalid_argument("the option '" + name + "' is taken by " +
+                                app_option_owner(name));
+  }
+  if (OpenFpgaStage::UNINIT == stage) {
+    throw std::invalid_argument("the option '" + name +
+                                "' does not tune a stage");
+  }
+  registered_options()[name] = RegisteredOption{owner, stage};
+  add_app_option_default(name, default_value);
+}
+
+std::string app_option_owner(const std::string& name) {
+  const auto registered = registered_options().find(name);
+  if (registered != registered_options().end()) {
+    return registered->second.owner;
+  }
+  if (0 == app_option_defaults().count(name)) {
+    return "";
+  }
+  for (const VprOptionSpec& spec : vpr_option_specs()) {
+    if (name == std::string(spec.group) + "." + spec.name) {
+      return "vpr";
+    }
+  }
+  return "openfpga";
 }
 
 } /* End namespace openfpga */

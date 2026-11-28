@@ -40,7 +40,7 @@ int main() {
     has(plugins.data, "{\"command\":\"read_circuit\",\"when\":\"before\"}"));
   CHECK(has(plugins.data, "\"every_command\":true"));
 
-  /* The build may have other plugins too (ui by default) */
+  /* The build may have other plugins too */
   const std::string version = shell.execute("version").log;
   CHECK(has(version, "Plugins: ") && has(version, "example 1.0"));
   const std::string help = shell.execute("help").log;
@@ -67,7 +67,17 @@ int main() {
     shell.execute("read_circuit --file refused_by_example.blif");
   CHECK(0 != refused.status);
   CHECK(has(refused.log, "refused by plugin 'example'"));
+  /* The option of the plugin: its owner, and its value */
+  const CommandResult options =
+    shell.execute("report_app_option --name example.greeting --json");
+  CHECK(0 == options.status);
+  CHECK(has(options.data, "\"owner\":\"example\""));
+  CHECK(has(options.data, "\"stage\":\"ANALYZED\""));
+  CHECK(0 ==
+        shell.execute("set_app_option --name example.greeting --value Bonjour")
+          .status);
   const std::string report = shell.execute("example_report").log;
+  CHECK(has(report, "Bonjour"));
   CHECK(has(report, "Architecture read: " + arch));
   CHECK(!has(report, "Commands seen by the example plugin: 0"));
 

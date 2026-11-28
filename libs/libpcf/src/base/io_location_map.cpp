@@ -40,6 +40,12 @@ size_t IoLocationMap::io_index(const size_t& x, const size_t& y,
   return size_t(-1);
 }
 
+std::vector<BasicPort> IoLocationMap::io_ports(const size_t& x, const size_t& y,
+                                               const size_t& z) const {
+  const auto found = io_indices_.find(std::array<size_t, 3>({x, y, z}));
+  return io_indices_.end() == found ? std::vector<BasicPort>() : found->second;
+}
+
 size_t IoLocationMap::io_x(const BasicPort& io_port) const {
   for (auto pair : io_indices_) {
     for (const BasicPort& candidate : pair.second) {

@@ -22,6 +22,7 @@ report_session
   - ``inputs``: ``vpr_arch`` (``file`` and ``layout``), ``openfpga_arch`` and ``circuit`` (``file``): where each was read from, as a whole path. ``null`` for an input that is not read
   - ``failed``: ``stage`` and ``message`` of the stage (``PACKED``, ``PLACED`` or ``ROUTED``) that failed last and left what it made, e.g., a route that found no legal routing; ``null`` otherwise, and once the stage runs again or is dropped
   - ``results``: ``packing``, ``placement`` and ``routing``: the file of the results of a stage that is reached, which is the one that VPR wrote, or the one that ``read_packing``, ``read_placement`` or ``read_routing`` read instead of running the stage. ``null`` for the other stages. The path is whole, from the current directory of the process
+  - ``attachments``: the data that plugins keep with the architectures of the session, by key (a key starts with the name of its plugin, e.g., ``myplugin.data``), as JSON. Reading an architecture clears them, see :ref:`openfpga_shell_plugins`
 
   .. code-block::
 
@@ -76,3 +77,26 @@ report_run
   .. code-block::
 
     report_run
+
+set_attachment
+~~~~~~~~~~~~~~
+
+  Keep the data of a plugin with the architectures of the session (an attachment, listed by ``report_session``), e.g., when a checkpoint is restored. Reading an architecture clears the attachments.
+
+  .. option:: --key <string>
+
+    The key: the name of the plugin, a dot and a name, e.g., ``myplugin.data``
+
+  .. option:: --value <string>
+
+    The value, as JSON. A value with double quotes, which a command line does not take, is given with ``--file``
+
+  .. option:: --file <string>
+
+    A file whose text is the value, as JSON
+
+  Without ``--value`` and ``--file``, the attachment is dropped. In Python: ``Session.set_attachment(key, value)``.
+
+  .. code-block::
+
+    set_attachment --key myplugin.level --value 3

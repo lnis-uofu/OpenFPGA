@@ -26,7 +26,8 @@
         "reached",
         "inputs",
         "results",
-        "failed"
+        "failed",
+        "attachments"
       ],
       "additionalProperties": false,
       "properties": {
@@ -140,6 +141,10 @@
               }
             }
           ]
+        },
+        "attachments": {
+          "type": "object",
+          "description": "The data that plugins keep with the architectures of the session, by key (a key starts with the name of its plugin, e.g. weft.device_package), as JSON; null for a value that is not JSON. Reading an architecture clears them."
         }
       }
     }

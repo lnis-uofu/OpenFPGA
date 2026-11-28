@@ -33,6 +33,22 @@ namespace openfpga {
  *******************************************************************/
 bool app_option_stage(const std::string& name, OpenFpgaStage& stage);
 
+/********************************************************************
+ * The options that plugins add (PluginApi::register_app_option()): the
+ * option is added to app_option_defaults(), with its owner and the stage it
+ * tunes. The name must start with "<owner>." and not be the one of an option
+ * of another owner: std::invalid_argument says why otherwise. The same owner
+ * may register an option again (a shell made later in the process), which
+ * gives it the new default and stage
+ *******************************************************************/
+void register_app_option(const std::string& owner, const std::string& name,
+                         const AppOptionValue& default_value,
+                         const OpenFpgaStage& stage);
+
+/* Who an option belongs to: the plugin that registered it, else "vpr" for an
+ * option of VPR or "openfpga" for one of OpenFPGA. "" if there is none */
+std::string app_option_owner(const std::string& name);
+
 } /* End namespace openfpga */
 
 #endif

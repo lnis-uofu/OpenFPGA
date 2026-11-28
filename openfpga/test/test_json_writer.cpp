@@ -226,9 +226,8 @@ static void test_app_options_json() {
   const std::string seed = openfpga::app_options_json(options, {"place.seed"});
   CHECK(seed.find("\"name\":\"place.seed\",\"type\":\"int\",\"value\":1,"
                   "\"default\":1,\"is_default\":true") != std::string::npos);
-  CHECK(
-    seed.find("\"choices\":[],\"stage\":\"PLACED\",\"vpr_flag\":\"--seed\"}") !=
-    std::string::npos);
+  CHECK(seed.find("\"choices\":[],\"stage\":\"PLACED\",\"owner\":\"vpr\",\"vpr_"
+                  "flag\":\"--seed\"}") != std::string::npos);
 
   /* A changed value is not the default any more */
   std::string error;

@@ -52,6 +52,9 @@ class JsonWriter {
   JsonWriter& value(double num);
   JsonWriter& value(bool flag);
   JsonWriter& null();
+  /* A value that is JSON text already, written as it is: the caller makes
+   * sure that it is one whole value */
+  JsonWriter& raw(const std::string& json);
 
  public: /* Accessors */
   /* The text, once every container is closed and a value was written */

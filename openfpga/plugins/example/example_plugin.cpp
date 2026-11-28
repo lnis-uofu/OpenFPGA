@@ -5,7 +5,9 @@
  * - removes write_sdc_disable_timing_configure_ports;
  * - hooks read_vpr_arch (after: the file it read), read_circuit (before:
  *   it refuses a file whose name has 'refused_by_example') and every
- *   command (after: it counts them).
+ *   command (after: it counts them);
+ * - adds the application option example.greeting, which example_report
+ *   prints first.
  * What it saw is kept in a slot of the context (extension()).
  *******************************************************************/
 #include <string>
@@ -35,6 +37,9 @@ std::string file_option(const Command& cmd, const CommandContext& context) {
 }
 
 int example_report(const OpenfpgaContext& openfpga_ctx) {
+  const AppOptionValue* greeting =
+    openfpga_ctx.session().app_options().find("example.greeting");
+  VTR_LOG("%s\n", nullptr == greeting ? "" : greeting->string_value.c_str());
   const ExampleData* data = openfpga_ctx.find_extension<ExampleData>();
   VTR_LOG("Commands seen by the example plugin: %d\n",
           data ? data->commands : 0);
@@ -86,6 +91,14 @@ void register_plugin_example(PluginApi& api) {
   shell.on_after_any(
     [](OpenfpgaContext& openfpga_ctx, const Command&, const CommandContext&,
        int) { ++openfpga_ctx.extension<ExampleData>().commands; });
+
+  /* An option of the plugin: its name starts with the name of the plugin, and
+   * changing it drops the stage it tunes (here ANALYZED) */
+  api.register_app_option(
+    "example.greeting",
+    AppOptionValue::make_string("Hello from the example plugin",
+                                "The first line that example_report prints"),
+    OpenFpgaStage::ANALYZED);
 }
 
 } /* end namespace openfpga */

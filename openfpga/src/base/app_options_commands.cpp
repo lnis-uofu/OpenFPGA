@@ -40,7 +40,13 @@ int set_app_option_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 int reset_app_option_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
                              const CommandContext& cmd_context) {
   const std::string name = cmd_context.option_value(cmd, cmd.option("name"));
-  if (!openfpga_ctx.mutable_session().reset_app_option(name)) {
+  OpenFpgaSession& session = openfpga_ctx.mutable_session();
+  if (!session.reset_app_option(name)) {
+    const std::string fixed = session.fixed_option(name);
+    if (!fixed.empty()) {
+      VTR_LOG_ERROR("%s\n", fixed.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
     VTR_LOG_ERROR("Application option '%s' does not exist\n", name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }

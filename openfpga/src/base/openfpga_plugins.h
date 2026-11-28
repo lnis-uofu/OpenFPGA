@@ -35,6 +35,14 @@ class PluginApi {
   const std::string& version() const { return info_.version; }
   /* The shell, whose registrar is this plugin while it registers */
   Shell<OpenfpgaContext>& shell() { return shell_; }
+  /* Add an application option (see set_app_option) before any session
+   * exists. The name must start with "<plugin name>." and not be taken:
+   * ShellRegistrationError otherwise. Changing it drops `stage` and the
+   * stages after it. report_app_option --json gives it the owner <plugin
+   * name> */
+  void register_app_option(const std::string& name,
+                           const AppOptionValue& default_value,
+                           const OpenFpgaStage& stage);
 
  private:
   Shell<OpenfpgaContext>& shell_;

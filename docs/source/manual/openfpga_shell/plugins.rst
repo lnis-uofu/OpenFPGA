@@ -70,6 +70,15 @@ The plugins register after the commands of the shell and before the basic ones (
 - ``on_before(name, hook)`` runs before a command, once its options are read, and may refuse it by returning the reason; ``on_after(name, hook)`` runs after it with its status, also when it failed; ``on_after_any(hook)`` runs after every command.
 - ``context.extension<T>()`` is a place in the data of the shell for the data of the plugin: one object of each type ``T``, made on first use.
 
+- ``api.register_app_option(name, default, stage)`` adds an application option (see :ref:`set_app_option <set_app_option>`), whose name starts with ``<plugin name>.``, e.g., ``myplugin.level``; changing it drops ``stage`` and the stages after it, and ``report_app_option --json`` gives it the ``owner`` ``myplugin``. A name that is taken, or that does not start with the name of the plugin, stops the start.
+
+What a plugin can use of the core, besides the shell:
+
+- ``query_answer.h``, for commands that answer in JSON like the reports of the shell (:ref:`openfpga_session_report_commands`): ``answer_query(ctx, stage, command, query)`` checks the stage, runs ``query(run, json)`` on the data of VPR and gives the answer to the caller; ``stage_data(ctx, stage)``, ``count_option()``, ``string_option()``, ``add_value_option()``, ``add_query_command()`` (a read-only command) and ``QUERY_LIST_DEFAULT_LIMIT``. The answers use ``json_writer.h`` and ``json_response.h``.
+- The attachments of the session (``OpenFpgaSession::set_attachment(key, json)``, ``attachment(key)``, ``clear_attachment(key)``, ``attachment_keys()``): data of the plugin, as JSON, kept with the architectures under a key that starts with its name. Reading an architecture, or failing to, clears them; ``report_session`` lists them (``attachments``), and the checkpoints of a Python ``Session`` keep them. The command ``set_attachment`` sets one from a script.
+- ``OpenFpgaSession::set_fixed_channel_width_owner(owner)`` makes the channel width that was just set read only until an architecture is read: ``set_app_option`` and ``reset_app_option`` refuse another value of ``router.route_chan_width``, with a message that names the owner (``fixed_option(name)``). ``set_cache_options(names)`` names the options that were set to read cached files of the device, e.g., ``filename.read_rr_graph_file``: they go back to their default when an architecture is read (``reset_cache_options()`` does it at once).
+- ``make_flow_device(session)`` (``staged_flow.h``) makes the device at once, e.g., after a plugin read the architectures in its own way; ``OpenFpgaSession::stage_generation(stage)`` changes each time a stage completes, to know when what was made from it is out of date.
+
 A plugin that cannot register (a name defined twice, a removal that is refused) stops the start of the shell with the reason. ``openfpga/plugins/example`` does each of these, and its test (``test_example_plugin``) is built with it.
 
 Plugins are built with the tree: the headers of the shell are not a stable interface for plugins built apart.

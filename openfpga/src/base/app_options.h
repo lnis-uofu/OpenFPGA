@@ -68,6 +68,11 @@ struct AppOptionValue {
  * made of the group and the option, e.g., place.seed */
 const std::map<std::string, AppOptionValue>& app_option_defaults();
 
+/* Add an option to app_option_defaults(), or give it another default. Only
+ * for register_app_option() (app_option_stage.h): the options of a plugin */
+void add_app_option_default(const std::string& name,
+                            const AppOptionValue& value);
+
 /********************************************************************
  * The application options of a flow: the parameters of the engines, e.g.,
  * the seed of the placer. They are meant to be set between the stages.
@@ -102,6 +107,9 @@ class AppOptions {
    */
   bool reset(const std::string& name);
   void reset_all();
+  /* Add the options of app_option_defaults() that are not here yet (those
+   * that plugins registered since), at their default */
+  void add_new_defaults();
 
  private: /* Internal data */
   std::map<std::string, AppOptionValue> values_;

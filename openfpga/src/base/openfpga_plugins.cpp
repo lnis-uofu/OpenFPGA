@@ -6,8 +6,10 @@
 
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 #include <utility>
 
+#include "app_option_stage.h"
 #include "command_exit_codes.h"
 #include "json_response.h"
 #include "json_writer.h"
@@ -117,6 +119,17 @@ int report_plugins_command(Shell<OpenfpgaContext>* shell,
 }
 
 } /* end anonymous namespace */
+
+void PluginApi::register_app_option(const std::string& name,
+                                    const AppOptionValue& default_value,
+                                    const OpenFpgaStage& stage) {
+  try {
+    openfpga::register_app_option(info_.name, name, default_value, stage);
+  } catch (const std::invalid_argument& error) {
+    throw ShellRegistrationError(
+      "plugin '" + info_.name + "' cannot register an option: " + error.what());
+  }
+}
 
 std::vector<PluginInfo> openfpga_plugins() {
   std::vector<PluginInfo> plugins;

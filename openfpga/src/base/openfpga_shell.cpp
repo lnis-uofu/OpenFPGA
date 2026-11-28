@@ -65,6 +65,8 @@ OpenfpgaShell::OpenfpgaShell() {
    * override, remove or hook, and before the basic ones, which they may not */
   openfpga::add_plugin_commands(shell_);
   openfpga::register_openfpga_plugins(shell_);
+  /* The session was made before the plugins added their options */
+  openfpga_ctx_.mutable_session().add_registered_app_options();
   const std::string plugins = openfpga::plugins_summary(shell_);
   if (!plugins.empty()) {
     shell_.add_title((shell_.title() + "\n" + plugins).c_str());
