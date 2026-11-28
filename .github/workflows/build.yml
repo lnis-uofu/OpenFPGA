@@ -1186,6 +1186,95 @@ jobs:
           make prebuild BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF -j${{ steps.cpu-cores.outputs.count}}
           make installer BUILD_TYPE=$BUILD_TYPE INSTALL_DOC=OFF -j${{ steps.cpu-cores.outputs.count}}
 
+  # The Python module, built and installed the way a user does: pip install .
+  # in a clean virtual environment, then used from there
+  python_pip_install:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: "Python: pip install (Ubuntu 22.04)"
+    runs-on: ubuntu-22.04
+    env:
+      CC: gcc-12
+      CXX: g++-12
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo bash ./.github/workflows/install_dependencies_build_ubuntu.sh
+          sudo apt-get install -y python3-venv
+
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          swig -version
+          python3 --version
+
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ runner.os }}-${{ env.CC }}
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v3
+        id: cpu-cores
+
+      # The module does not need Yosys. The circuit of the example is in the
+      # submodule of the micro benchmarks
+      - name: Checkout submodules
+        run: |
+          make checkout_submodule SUBMODULE=vtr-verilog-to-routing
+          make checkout_regtest
+
+      - name: Build the wheel
+        shell: bash
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/build-env"
+          export PATH="/usr/lib/ccache:$PATH"
+          export CMAKE_BUILD_PARALLEL_LEVEL=${{ steps.cpu-cores.outputs.count }}
+          "${RUNNER_TEMP}/build-env/bin/pip" wheel --no-deps -v . -w dist
+          ls -l dist
+          ccache -s
+
+      # A new environment that has nothing but the wheel, and the packages of the tests
+      - name: Install the wheel in a clean environment
+        shell: bash
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/clean-env"
+          "${RUNNER_TEMP}/clean-env/bin/pip" install dist/*.whl pytest jsonschema
+          "${RUNNER_TEMP}/clean-env/bin/pip" show -f openfpga
+
+      - name: Run the example from the installed module
+        shell: bash
+        run: |
+          # Not in the source directory, so that nothing but the installed module is found
+          cd "${RUNNER_TEMP}"
+          unset PYTHONPATH
+          "${RUNNER_TEMP}/clean-env/bin/python" "${GITHUB_WORKSPACE}/openfpga_flow/openfpga_python_scripts/session_quickstart.py"
+          "${RUNNER_TEMP}/clean-env/bin/python" "${GITHUB_WORKSPACE}/openfpga_flow/openfpga_python_scripts/session_quickstart.py" --in-process --json
+
+      - name: Run the tests of the Python module with the installed module
+        shell: bash
+        run: |
+          cd "${RUNNER_TEMP}"
+          unset PYTHONPATH
+          "${RUNNER_TEMP}/clean-env/bin/python" -m pytest "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_smoke.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_session.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_quickstart.py" "${GITHUB_WORKSPACE}/openfpga_flow/tasks/python_binding_tests/test_worker.py" -q
+
+      - name: Upload the wheel
+        uses: actions/upload-artifact@v7
+        with:
+          name: openfpga-python-wheel
+          path: dist/*.whl
+          retention-days: 7
+
   docker_distribution:
     name: Build docker image for distribution
     runs-on: ubuntu-22.04
