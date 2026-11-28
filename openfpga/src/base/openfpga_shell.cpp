@@ -97,6 +97,7 @@ int OpenfpgaShell::execute_guarded(const char* cmd_line, std::string& error) {
 
 int OpenfpgaShell::run_command(const char* cmd_line) {
   std::string error;
+  openfpga_ctx_.clear_query_result();
   return execute_guarded(cmd_line, error);
 }
 
@@ -112,8 +113,14 @@ CommandResult OpenfpgaShell::execute(const char* cmd_line) {
   }
 
   openfpga::OutputCapture capture;
+  /* An answer is the one of this command only */
+  openfpga_ctx_.clear_query_result();
   result.status = execute_guarded(cmd_line, result.error);
   result.log = capture.stop();
+  if (0 == result.status) {
+    result.data = openfpga_ctx_.query_result();
+  }
+  openfpga_ctx_.clear_query_result();
   return result;
 }
 
