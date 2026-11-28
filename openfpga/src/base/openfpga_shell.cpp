@@ -147,11 +147,16 @@ CommandResult OpenfpgaShell::execute(const char* cmd_line) {
         {"place", openfpga::OpenFpgaStage::PLACED},
         {"route", openfpga::OpenFpgaStage::ROUTED},
         {"analysis", openfpga::OpenFpgaStage::ANALYZED}};
+      openfpga::OpenFpgaSession& session = openfpga_ctx_.mutable_session();
       for (const auto& entry : stages) {
         if (name == entry.first) {
-          openfpga_ctx_.mutable_session().set_stage_log(entry.second,
-                                                        result.log);
+          session.set_stage_log(entry.second, result.log);
         }
+      }
+      /* The analytical placer makes both stages in one command */
+      if (session.analytical_placer() && (name == "pack" || name == "place")) {
+        session.set_stage_log(openfpga::OpenFpgaStage::PACKED, result.log);
+        session.set_stage_log(openfpga::OpenFpgaStage::PLACED, result.log);
       }
     }
   }

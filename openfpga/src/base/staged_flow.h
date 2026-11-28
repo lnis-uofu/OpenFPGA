@@ -48,7 +48,7 @@ bool read_vpr_arch_input(OpenFpgaSession& session, const std::string& file,
 bool read_circuit_input(OpenFpgaSession& session, const std::string& file);
 
 /* Record that the OpenFPGA architecture has been read, and create the device
- * if all the inputs are there now. The file is where it was read from.
+ * if both architectures are read now. The file is where it was read from.
  * Call fail_openfpga_arch_input() instead if
  * the architecture could not be read */
 bool openfpga_arch_input_read(OpenFpgaSession& session,

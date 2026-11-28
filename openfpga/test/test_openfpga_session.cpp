@@ -264,7 +264,9 @@ static void test_reread_inputs() {
   CHECK(session.has_input(OpenFpgaInput::OPENFPGA_ARCH));
   CHECK(!session.has_input(OpenFpgaInput::CIRCUIT));
   CHECK(!session.has_all_inputs());
-  CHECK(!session.can_run(OpenFpgaStage::DEVICE));
+  /* The device is made from the architectures, without the circuit */
+  CHECK(session.can_run(OpenFpgaStage::DEVICE));
+  CHECK(!session.can_run(OpenFpgaStage::PACKED));
   CHECK(session.can_read(OpenFpgaInput::CIRCUIT));
 
   /* The flow can then go on */
@@ -561,8 +563,57 @@ static void test_context_has_session() {
   CHECK(const_context.session().has_input(OpenFpgaInput::VPR_ARCH));
 }
 
+/* The device is made from the architectures alone; packing needs the
+ * circuit */
+static void test_device_without_circuit() {
+  OpenFpgaSession session;
+  CHECK(session.read_input(OpenFpgaInput::VPR_ARCH));
+  CHECK(!session.has_architectures());
+  CHECK(session.read_input(OpenFpgaInput::OPENFPGA_ARCH));
+  CHECK(session.has_architectures());
+  CHECK(!session.has_all_inputs());
+  CHECK(session.can_run(OpenFpgaStage::DEVICE));
+  CHECK(session.complete(OpenFpgaStage::DEVICE));
+  CHECK(!session.can_run(OpenFpgaStage::PACKED));
+  CHECK(!session.complete(OpenFpgaStage::PACKED));
+  CHECK(session.read_input(OpenFpgaInput::CIRCUIT));
+  CHECK(session.can_run(OpenFpgaStage::DEVICE));
+  CHECK(session.complete(OpenFpgaStage::DEVICE));
+  CHECK(session.can_run(OpenFpgaStage::PACKED));
+}
+
+/* With the analytical placer, the packing and the placement are one result:
+ * what drops the placement drops the packing */
+static void test_analytical_placer() {
+  OpenFpgaSession session;
+  std::string error;
+  CHECK(!session.analytical_placer());
+  run_up_to(session, OpenFpgaStage::ROUTED);
+  CHECK(session.set_app_option("place.placer", "analytical", error));
+  CHECK(session.analytical_placer());
+  /* place.placer tunes the packing */
+  CHECK(reached_are(session, {OpenFpgaStage::DEVICE}));
+  CHECK(session.complete(OpenFpgaStage::PACKED));
+  CHECK(session.complete(OpenFpgaStage::PLACED));
+  CHECK(session.complete(OpenFpgaStage::ROUTED));
+  CHECK(session.set_app_option("place.seed", "7", error));
+  CHECK(reached_are(session, {OpenFpgaStage::DEVICE}));
+  CHECK(session.complete(OpenFpgaStage::PACKED));
+  CHECK(session.complete(OpenFpgaStage::PLACED));
+  session.fail(OpenFpgaStage::PLACED, "");
+  CHECK(reached_are(session, {OpenFpgaStage::DEVICE}));
+  /* The classic placer keeps the packing */
+  CHECK(session.set_app_option("place.placer", "classic", error));
+  CHECK(session.complete(OpenFpgaStage::PACKED));
+  CHECK(session.complete(OpenFpgaStage::PLACED));
+  CHECK(session.set_app_option("place.seed", "8", error));
+  CHECK(reached_are(session, {OpenFpgaStage::DEVICE, OpenFpgaStage::PACKED}));
+}
+
 int main() {
   test_initial_state();
+  test_device_without_circuit();
+  test_analytical_placer();
   test_inputs();
   test_input_orders();
   test_forward_flow();

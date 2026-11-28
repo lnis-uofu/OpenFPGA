@@ -33,6 +33,9 @@ class AppOption:
     help: str
     choices: List[str]
     stage: str
+    # The flag of the option on the command line of VPR, e.g. --device for
+    # general.device_layout; None for an option of OpenFPGA
+    vpr_flag: Optional[str] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -170,19 +173,33 @@ class PlacementReport:
     estimated_fmax_mhz: Optional[float]
     num_temperatures: Optional[int]
     swap_attempts: Optional[int]
+    # The placer (option place.placer): classic, or analytical, whose detailed placer the
+    # figures above are of, and whose global placement estimates are in global_placement
+    placer: str = "classic"
+    global_placement: Optional["GlobalPlacementReport"] = None
+
+
+@dataclasses.dataclass(frozen=True)
+class GlobalPlacementReport:
+    """The estimates of the global placement of the analytical placer, from its log"""
+
+    estimated_wirelength: Optional[float]
+    estimated_critical_path_delay_ns: Optional[float]
 
 
 @dataclasses.dataclass(frozen=True)
 class RoutingReport:
-    """wirelength is the tiles that the wires span, as VPR adds it up. iterations
-    and critical_path_delay_ns are from the log of the routing, and None if the
-    stage was not run by a command of this session"""
+    """wirelength is the tiles that the wires span, as VPR adds it up (the channels only, also
+    when the routing is flat). iterations and critical_path_delay_ns are from the log of the
+    routing, and None if the stage was not run by a command of this session"""
 
     channel_width: int
     wirelength: int
     wires: int
     iterations: Optional[int]
     critical_path_delay_ns: Optional[float]
+    # True when the routing is flat: wires and wirelength are those of the channels
+    flat_routing: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -602,6 +619,35 @@ class Session:
         if self._journal is not None and name not in type(self).READ_ONLY_COMMANDS:
             self._journal.record(name, args, options, error)
 
+    def fixed_width_refusal(self, command, flat_routing=True):
+        """Why a flow at a fixed channel width does not run this command now, or None when it
+        does. Such a flow (e.g. one that a program or a model drives) runs the stages one by one
+        and routes with the width it is given: vpr, which runs the whole flow in one command, is
+        not run, and route is not run while router.route_chan_width is not set, as VPR would
+        then search for the smallest width that routes.
+
+        flat_routing=False says that the device does not support flat routing: route is not run
+        while router.flat_routing is set"""
+        if command == "vpr":
+            return (
+                "vpr runs the whole flow in one command, which this flow does not do: run the "
+                "stages pack, place, route and analysis"
+            )
+        routes = command == "route" or (
+            command in ("analysis", "bitstream") and "ROUTED" not in self.state().reached
+        )
+        if routes and self.options["router.route_chan_width"] <= 0:
+            return (
+                "The channel width is not set, and the routing is only run at a fixed width: "
+                "set router.route_chan_width"
+            )
+        if routes and not flat_routing and self.options["router.flat_routing"]:
+            return (
+                "Flat routing is set (router.flat_routing), and the device of the session does "
+                "not support it: set router.flat_routing to false"
+            )
+        return None
+
     # The inputs ------------------------------------------------------------------
 
     def read_vpr_arch(self, file, layout):
@@ -763,7 +809,9 @@ class Session:
         directory is replaced.
         """
         state = self.state()
-        if "DEVICE" not in state.reached:
+        # The device is made from the architectures alone: a flow without a circuit has
+        # nothing of its own to save
+        if "DEVICE" not in state.reached or state.inputs.circuit is None:
             raise CheckpointError("Nothing to save: the flow has not read all its inputs")
         directory = os.fspath(directory)
         os.makedirs(directory, exist_ok=True)

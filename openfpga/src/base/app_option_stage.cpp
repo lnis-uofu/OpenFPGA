@@ -30,6 +30,7 @@ const std::map<std::string, OpenFpgaStage>& group_stages() {
 const std::map<std::string, OpenFpgaStage>& option_stages() {
   static const std::map<std::string, OpenFpgaStage> stages = {
     /* Packing */
+    {"place.placer", OpenFpgaStage::PACKED},
     {"filename.net_file", OpenFpgaStage::PACKED},
     {"filename.write_block_usage", OpenFpgaStage::PACKED},
     {"aplace.appack_max_dist_th", OpenFpgaStage::PACKED},

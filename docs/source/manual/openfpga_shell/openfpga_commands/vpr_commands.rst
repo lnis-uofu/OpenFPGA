@@ -48,7 +48,11 @@ Stage-by-stage flow
 
   ``analysis`` reports the timing and the power, and synchronizes the packing with the routing results, which writes the ``.net.post_routing`` file. It changes the data of VPR, so running it again, or routing again, starts from fresh data. Repacking does not wait for it.
 
-  The device (the grid and, if the channel width is fixed with ``router.route_chan_width``, the routing resource graph) is created once the three inputs have been read. A layout that is not fixed (``auto``) is refused, since it is sized from the result of packing.
+  The device (the grid and, if the channel width is fixed with ``router.route_chan_width``, the routing resource graph) is created once the two architectures have been read: the stage ``DEVICE`` is reached before a circuit is read, so that the device can be looked at first. Reading the circuit creates the device again with it, and ``pack`` (or ``read_packing``) is refused until a circuit is read. A layout that is not fixed (``auto``) is refused, since it is sized from the result of packing.
+
+  The placer is chosen with the option ``place.placer``: ``classic`` (``pack``, then ``place``) or ``analytical``, the analytical placement of VPR, which packs and places at once as ``vpr --analytical_place`` does. With it, ``pack`` and ``place`` both run it and reach the two stages together, and the packing and the placement are one result: a change that drops the placement drops the packing too. A placement is not read (``read_placement``) on the packing of the analytical placer.
+
+  Flat routing (``router.flat_routing``) is run as ``vpr --flat_routing on`` runs it: ``route`` routes the atom netlist with the port equivalences turned off, and ``analysis`` synchronizes the clustering with the flat routing. The files and the results are those of ``vpr``.
 
   A stage that is run again, or run after an option changed, runs the stages before it again on fresh data, since VPR cannot run a stage twice on the same data. The results are those of ``vpr``: the same packing, placement and routing for the same options. The command ``vpr`` replaces the data of this flow, which has to be read again.
 

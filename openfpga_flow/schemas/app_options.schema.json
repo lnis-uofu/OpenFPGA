@@ -34,7 +34,8 @@
         "is_default": {"type": "boolean"},
         "help": {"type": "string"},
         "choices": {"type": "array", "items": {"type": "string"}},
-        "stage": {"enum": ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "REPACKED", "BITSTREAM"]}
+        "stage": {"enum": ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "REPACKED", "BITSTREAM"]},
+        "vpr_flag": {"type": ["string", "null"], "description": "The flag of the option on the command line of VPR (e.g. --device for general.device_layout), or the name of a positional argument; null for an option of OpenFPGA."}
       },
       "allOf": [
         {"if": {"properties": {"type": {"const": "int"}}}, "then": {"properties": {"value": {"type": "integer"}, "default": {"type": "integer"}}}},

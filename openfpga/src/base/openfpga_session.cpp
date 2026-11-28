@@ -115,6 +115,11 @@ bool OpenFpgaSession::has_all_inputs() const {
   return true;
 }
 
+bool OpenFpgaSession::has_architectures() const {
+  return has_input(OpenFpgaInput::VPR_ARCH) &&
+         has_input(OpenFpgaInput::OPENFPGA_ARCH);
+}
+
 bool OpenFpgaSession::can_read(const OpenFpgaInput& input) const {
   /* The circuit is read against the VPR architecture */
   if (OpenFpgaInput::CIRCUIT == input) {
@@ -135,9 +140,12 @@ bool OpenFpgaSession::can_run(const OpenFpgaStage& stage) const {
   if (OpenFpgaStage::UNINIT == stage) {
     return false;
   }
-  /* The device is made from all the inputs */
+  /* The device is made from the architectures; the circuit is packed on it */
   if (OpenFpgaStage::DEVICE == stage) {
-    return has_all_inputs();
+    return has_architectures();
+  }
+  if (OpenFpgaStage::PACKED == stage && !has_input(OpenFpgaInput::CIRCUIT)) {
+    return false;
   }
   return reached(required_stage(stage));
 }
@@ -206,9 +214,21 @@ bool OpenFpgaSession::complete(const OpenFpgaStage& stage) {
   return true;
 }
 
+bool OpenFpgaSession::analytical_placer() const {
+  const AppOptionValue* placer = app_options_.find("place.placer");
+  return nullptr != placer && "analytical" == placer->string_value;
+}
+
+OpenFpgaStage OpenFpgaSession::dropped_with(const OpenFpgaStage& stage) const {
+  if (OpenFpgaStage::PLACED == stage && analytical_placer()) {
+    return OpenFpgaStage::PACKED;
+  }
+  return stage;
+}
+
 void OpenFpgaSession::fail(const OpenFpgaStage& stage,
                            const std::string& message) {
-  invalidate_stage_and_dependents(stage);
+  invalidate_stage_and_dependents(dropped_with(stage));
   if (!message.empty()) {
     failures_[stage] = message;
   }
@@ -315,7 +335,7 @@ void OpenFpgaSession::invalidate_for_option(const std::string& name) {
     invalidate_all_stages();
     return;
   }
-  invalidate_stage_and_dependents(stage);
+  invalidate_stage_and_dependents(dropped_with(stage));
 }
 
 } /* End namespace openfpga */
