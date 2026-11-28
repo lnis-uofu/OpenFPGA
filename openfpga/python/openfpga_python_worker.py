@@ -400,7 +400,7 @@ class RemoteSession:
 
     # The calls -------------------------------------------------------------------
 
-    def call(self, name, *args, timeout_s=None, **kwargs):
+    def call(self, name, /, *args, timeout_s=None, **kwargs):
         """Call a method of the Session of the worker by name, e.g.
         call("options.set", "place.seed", 3), with the same arguments. The
         timeout of the call is timeout_s, or the one of the object"""

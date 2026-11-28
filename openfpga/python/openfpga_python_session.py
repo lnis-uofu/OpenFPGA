@@ -605,6 +605,35 @@ class Session:
         if self._journal is not None and name not in type(self).READ_ONLY_COMMANDS:
             self._journal.record(name, args, options, error)
 
+    def fixed_width_refusal(self, command, flat_routing=True):
+        """Why a flow at a fixed channel width does not run this command now, or None when it
+        does. Such a flow (e.g. one that a program or a model drives) runs the stages one by one
+        and routes with the width it is given: vpr, which runs the whole flow in one command, is
+        not run, and route is not run while router.route_chan_width is not set, as VPR would
+        then search for the smallest width that routes.
+
+        flat_routing=False says that the device does not support flat routing: route is not run
+        while router.flat_routing is set"""
+        if command == "vpr":
+            return (
+                "vpr runs the whole flow in one command, which this flow does not do: run the "
+                "stages pack, place, route and analysis"
+            )
+        routes = command == "route" or (
+            command in ("analysis", "bitstream") and "ROUTED" not in self.state().reached
+        )
+        if routes and self.options["router.route_chan_width"] <= 0:
+            return (
+                "The channel width is not set, and the routing is only run at a fixed width: "
+                "set router.route_chan_width"
+            )
+        if routes and not flat_routing and self.options["router.flat_routing"]:
+            return (
+                "Flat routing is set (router.flat_routing), and the device of the session does "
+                "not support it: set router.flat_routing to false"
+            )
+        return None
+
     # The inputs ------------------------------------------------------------------
 
     def read_vpr_arch(self, file, layout):
