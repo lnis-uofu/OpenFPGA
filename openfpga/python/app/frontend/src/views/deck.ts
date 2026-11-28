@@ -48,6 +48,19 @@ function widths(styles: Style[], style: Uint16Array): Float32Array {
   return out;
 }
 
+/** The width of a path, repeated for each of its vertices: deck.gl reads a binary attribute as one
+ * value a vertex, and a path with fewer values than vertices loses the segments after them */
+function vertexWidths(
+  styles: Style[],
+  style: Uint16Array,
+  start: Uint32Array,
+): Float32Array {
+  const out = new Float32Array(start[style.length] ?? 0);
+  for (let i = 0; i < style.length; i++)
+    out.fill(styles[style[i]]?.width ?? 1, start[i], start[i + 1]);
+  return out;
+}
+
 /** The outlines of the items of rects or shapes, as closed rings in one buffer */
 function rings(layer: Extract<Layer, { kind: "rects" | "shapes" }>): {
   positions: Float32Array;
@@ -185,7 +198,10 @@ function deckLayers(layer: Layer, styles: Style[]): DeckLayer[] {
             attributes: {
               getPath: { value: layer.xy, size: 2 },
               getColor: { value: perVertex, size: 4, normalized: true },
-              getWidth: { value: widths(styles, layer.style), size: 1 },
+              getWidth: {
+                value: vertexWidths(styles, layer.style, layer.start),
+                size: 1,
+              },
             },
           },
           widthUnits: "pixels",

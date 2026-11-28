@@ -12,7 +12,8 @@
     "e2e:session": "node e2e/session.mjs",
     "e2e:model": "node e2e/model.mjs",
     "bench": "node e2e/bench.mjs",
-    "e2e:views": "node e2e/views.mjs"
+    "e2e:views": "node e2e/views.mjs",
+    "e2e:parity": "node e2e/parity.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.4.2",
