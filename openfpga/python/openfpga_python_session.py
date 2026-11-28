@@ -520,9 +520,17 @@ def _parse_line(line):
         word[1:-1] if len(word) > 1 and word[0] == word[-1] == '"' else word
         for word in shlex.split(line, posix=False)
     ]
+    args, options = _split_words(words[1:])
+    return words[0], args, options
+
+
+def _split_words(words):
+    """The positional arguments and the options of the words of a command line
+    (without its name), as Session.command takes them: --key value, and --key
+    alone for a switch"""
     args, options = [], {}
     key = None
-    for word in words[1:]:
+    for word in words:
         if word.startswith("--") and len(word) > 2:
             key = word[2:]
             options[key] = True
@@ -530,7 +538,7 @@ def _parse_line(line):
             options[key] = word
         else:
             args.append(word)
-    return words[0], args, options
+    return args, options
 
 
 def _journal_script(path):
@@ -639,6 +647,7 @@ class Session:
         self.checkpoint_dir = checkpoint_dir
         # resume_journal: go on with the files of the directory instead of writing them again
         self._journal = _Journal(journal, resume_journal) if journal is not None else None
+        self._tcl_host = None  # made by the first tcl()
 
     # The commands ----------------------------------------------------------------
 
@@ -646,6 +655,11 @@ class Session:
         """Run any command of the shell, as in OpenfpgaShell.run: the options
         are written as --key value, and key=True as the switch --key"""
         started = time.monotonic()
+        line, result = self._run_command(name, args, options)
+        return StepResult(line, result.log, time.monotonic() - started)
+
+    def _run_command(self, name, args, options):
+        """Run a command and write it in the journal: its line and its CommandResult"""
         line = _command_line(name, args, options)
         try:
             result = self.shell.run(line)
@@ -653,7 +667,15 @@ class Session:
             self._write_journal(name, args, options, error)
             raise
         self._write_journal(name, args, options)
-        return StepResult(line, result.log, time.monotonic() - started)
+        return line, result
+
+    def shell_commands(self):
+        """The names of the commands of the shell, in the order of its help"""
+        names = []
+        for line in self.shell.run("help").log.splitlines():
+            if line.startswith("\t") and line.strip():
+                names.append(line.split()[0])
+        return names
 
     def _write_journal(self, name, args, options, error=None):
         if self._journal is not None and name not in type(self).READ_ONLY_COMMANDS:
@@ -687,6 +709,36 @@ class Session:
                 "not support it: set router.flat_routing to false"
             )
         return None
+
+    def tcl(self, script, safe=False, fixed_width=False, flat_routing=True):
+        """Run a Tcl script, and return a TclResult: its result, what it
+        printed and the command lines of the shell that it ran.
+
+        The commands of the shell are Tcl commands, written as on the command
+        line of the shell (read_vpr_arch --file arch.xml --layout 2x2); they
+        run as command() runs them, so the journal has those that change the
+        flow. A command that answers returns its answer as a Tcl dict (dict get
+        [report_run] routing ...), and a command that fails is an error of Tcl,
+        which catch takes. A command whose name is one of Tcl keeps it, and the
+        one of the shell is in the namespace openfpga (openfpga::source); exit
+        and cd are not available. The variables and procedures stay for the
+        next script.
+
+        With safe=True the script runs in a safe interpreter, kept apart from
+        the other one: no file, no program, and no command of the shell that
+        runs one (ext_exec, source, yosys); a path in the arguments of a
+        command must be in the current directory. A script that fails raises
+        TclError, or TclRefused for what a safe interpreter does not do. Tcl
+        comes with tkinter: a Python without it raises TclError.
+
+        With fixed_width=True a command that fixed_width_refusal() refuses (vpr,
+        and route while the channel width is not set) raises TclRefused.
+        flat_routing=False is passed to it: the device does not support flat
+        routing.
+        """
+        if self._tcl_host is None:
+            self._tcl_host = _TclHost(self)
+        return self._tcl_host.run(script, safe, fixed_width, flat_routing)
 
     # The inputs ------------------------------------------------------------------
 

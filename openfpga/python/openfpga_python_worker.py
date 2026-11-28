@@ -99,6 +99,8 @@ _WIRE_ERRORS = {
     "OpenfpgaError": OpenfpgaError,
     "AnswerError": AnswerError,
     "CheckpointError": CheckpointError,
+    "TclError": TclError,
+    "TclRefused": TclRefused,
 }
 # Seconds between two looks at the worker while a call is running
 _POLL_INTERVAL = 0.05
@@ -112,6 +114,11 @@ def _error_to_wire(error):
     name = type(error).__name__
     if isinstance(error, OpenfpgaError):
         attributes = {key: getattr(error, key) for key in ("command", "status", "log", "error")}
+    elif isinstance(error, TclError):
+        attributes = {
+            key: getattr(error, key)
+            for key in ("output", "printed", "error_info", "commands", "causes")
+        }
     else:
         attributes = {}
     return (name, str(error), attributes)
