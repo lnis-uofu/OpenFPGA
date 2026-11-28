@@ -213,6 +213,21 @@ A command that answers in JSON (see :ref:`query_answers`) gives its answer to th
 
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped. A command that a plugin adds can answer with a kind of its own: ``openfpga.register_answer_kind(kind, version)`` makes the module read it, and a subclass of ``Session`` reads the answer with ``self._query(command, answer_kind, cls, **options)``.
 
+.. _session_plugins_and_subclasses:
+
+Plugins and subclasses
+~~~~~~~~~~~~~~~~~~~~~~
+
+``session.plugins()`` lists the plugins of the build (``Plugin``: ``name``, ``version``, ``commands``, ``overrides``, ``removes``, ``hooks``, ``every_command``), see :ref:`openfpga_shell_plugins`. The journals and the checkpoints record them, and a build with other plugins does not replay or restore them. ``AppOption.owner`` says whose an option is: ``vpr``, ``openfpga`` or a plugin.
+
+``session.set_attachment(key, value)`` keeps a value (anything JSON writes) with the architectures of the session, under a key that starts with the name of a plugin and a dot; ``None`` drops it, and ``session.attachments()`` (or ``state().attachments``) gives them back. Reading an architecture drops them all. A checkpoint keeps them, and ``restore()`` sets those that the restored session does not have already.
+
+A program that adds to the flow (e.g., the commands of a plugin) subclasses ``Session``:
+
+- ``READ_ONLY_COMMANDS = Session.READ_ONLY_COMMANDS | {...}``: its commands that only answer, which the journal leaves out
+- ``REMOTE_METHODS = frozenset({...})``: its methods that a worker may call, on top of those of ``Session`` (see below)
+- ``_checkpoint_extra(directory)`` returns what it saves in a checkpoint, a dict kept under ``extra`` in ``checkpoint.json`` (its own files go in ``directory``); ``_restore_extra(extra, directory)`` reads it back. ``restore()`` sets the options, calls ``_restore_inputs(manifest, directory)``, which reads the architectures (a subclass that reads them another way overrides it, and sets the options of ``manifest["options"]`` again after), then ``_restore_extra()``, then sets the attachments, and reads the circuit and the results of the stages. ``restore()`` and ``replay()`` return an instance of the subclass.
+
 .. _session_tcl:
 
 Tcl scripts
@@ -280,6 +295,8 @@ The failures of the worker itself are ``WorkerError``:
 ``restart()`` starts another worker. With a ``checkpoint_dir`` the worker makes a checkpoint after each stage, and the new worker is restored from the last one, so that the flow loses the stage that was running and nothing else; without one it starts from nothing. It returns the state of the new session. A worker ends when its caller ends, even in the middle of a command (Linux), and ``close()``, or the end of a ``with`` block, ends it.
 
 ``RemoteSession(journal=directory)`` has the worker write the journal of its session in the directory (see :ref:`journal_and_replay`). A worker that starts again (``restart()``) goes on with it: the commands of the restore are not written twice, and a call that ends with the worker is not in it. ``memory_limit_mb`` limits the address space of the worker (``RLIMIT_AS``, Linux), for it and the workers that start again: a command that needs more fails with the error of the allocation, e.g., ``std::bad_alloc``, and the worker goes on. VPR and Yosys map much more than they use, so a worker needs a few GB to start; a limit that is too small for it raises ``WorkerError``.
+
+``RemoteSession(session_class="module:Class")`` runs a subclass of ``Session`` in the worker (default: the environment variable ``OPENFPGA_SESSION_CLASS``, else ``openfpga:Session``): the worker, and the caller, import it, so its module must be on their ``PYTHONPATH``. The worker makes its session with it and restores it with ``Class.restore()`` (``RemoteSession.restore(directory, session_class=...)``); the calls it takes are the public methods of ``Session`` and those of ``Class.REMOTE_METHODS``. A name that is not a subclass of ``Session`` raises ``TypeError``.
 
 The calls are made one at a time, and a call is not a way to share data: results are copied from the worker. The output of the commands is in their results, and a worker's own output outside of them goes to a log that is not kept.
 

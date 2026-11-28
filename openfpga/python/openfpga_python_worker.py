@@ -151,6 +151,37 @@ def _limit_memory(megabytes):
         resource.setrlimit(resource.RLIMIT_AS, (limit << 20, limit << 20))
 
 
+# The class of the session of a worker, unless RemoteSession is given another one
+_DEFAULT_SESSION_CLASS = "openfpga:Session"
+
+
+def _session_class(spec):
+    """The class that "module:Class" names (Class may be dotted): Session or a subclass of
+    it. A name that cannot be imported, or a class that is not a Session, raises TypeError"""
+    if not isinstance(spec, str) or spec.count(":") != 1:
+        raise TypeError("A session class is named 'module:Class', not %r" % (spec,))
+    module_name, class_name = spec.split(":")
+    if module_name == "openfpga":
+        target = sys.modules[__name__]
+    else:
+        import importlib
+
+        try:
+            target = importlib.import_module(module_name)
+        except ImportError as error:
+            raise TypeError("The session class '%s' cannot be imported: %s" % (spec, error))
+    for part in class_name.split("."):
+        target = getattr(target, part, None)
+    if not (isinstance(target, type) and issubclass(target, Session)):
+        raise TypeError("'%s' is not a subclass of openfpga.Session" % spec)
+    return target
+
+
+def _remote_calls(cls):
+    """The calls that a worker of a session of the class takes"""
+    return _REMOTE_CALLS | frozenset(cls.REMOTE_METHODS)
+
+
 def _worker_main():
     """The loop of a worker: it takes calls of the methods of a Session from the
     socket whose number is the argument, and answers them. It ends when the
@@ -165,6 +196,7 @@ def _worker_main():
         pass
     _limit_memory(os.environ.get("OPENFPGA_WORKER_MEMORY_MB"))
     session = None
+    calls = _REMOTE_CALLS
     while True:
         try:
             request = connection.recv()
@@ -176,9 +208,11 @@ def _worker_main():
                 connection.send(("ok", None))
                 return
             if operation == "start":
-                checkpoint_dir, restore, journal, resume = request[1:]
+                checkpoint_dir, restore, journal, resume, class_name = request[1:]
+                cls = _session_class(class_name)
+                calls = _remote_calls(cls)
                 if restore is not None:
-                    session = Session.restore(restore)
+                    session = cls.restore(restore)
                     session.checkpoint_dir = checkpoint_dir
                     if journal is not None:
                         # After the restore: its commands are in the journal already
@@ -186,13 +220,13 @@ def _worker_main():
                             journal, resume, _plugin_label(session._plugin_list())
                         )
                 else:
-                    session = Session(
+                    session = cls(
                         checkpoint_dir=checkpoint_dir, journal=journal, resume_journal=resume
                     )
                 connection.send(("ok", None))
                 continue
             _, name, args, kwargs = request
-            if name not in _REMOTE_CALLS:
+            if name not in calls:
                 raise AttributeError("'%s' is not a method of a Session" % name)
             target = session
             for part in name.split("."):
@@ -294,6 +328,13 @@ class RemoteSession:
     cwd is the directory the worker runs in, where VPR writes its files: it is
     created if it does not exist. Calls are made one at a time, and cancel() is
     the only method that can be called while another thread is in a call.
+
+    session_class names the class of the session of the worker, "module:Class"
+    (default: the environment variable OPENFPGA_SESSION_CLASS, else
+    "openfpga:Session"): a subclass of Session that the worker, and the caller,
+    import (it must be on their PYTHONPATH). The worker makes its session with it,
+    and restores it with Class.restore(); the calls it takes are the public
+    methods of Session and the names of Class.REMOTE_METHODS.
     """
 
     def __init__(
@@ -303,6 +344,7 @@ class RemoteSession:
         timeout_s=None,
         journal=None,
         memory_limit_mb=None,
+        session_class=None,
         _restore=None,
     ):
         self.cwd = None if cwd is None else os.fspath(cwd)
@@ -315,6 +357,14 @@ class RemoteSession:
         # memory_limit_mb: the address space of the worker; it is the same for the workers that
         # start again. None, or 0, is no limit
         self.memory_limit_mb = memory_limit_mb or 0
+        self.session_class = (
+            session_class or os.environ.get("OPENFPGA_SESSION_CLASS") or _DEFAULT_SESSION_CLASS
+        )
+        cls = _session_class(self.session_class)  # the caller checks the name before a worker
+        self._class = cls
+        self._methods = _REMOTE_METHODS | frozenset(
+            name for name in cls.REMOTE_METHODS if "." not in name
+        )
         self.options = _RemoteOptions(self)
         self._lock = threading.Lock()
         self._process = None
@@ -327,7 +377,8 @@ class RemoteSession:
     @classmethod
     def restore(cls, directory, **arguments):
         """A RemoteSession whose worker is restored from the checkpoint in a
-        directory, see Session.restore()"""
+        directory, see Session.restore(). The arguments are those of
+        RemoteSession, e.g. session_class=, whose restore() is used"""
         return cls(_restore=os.fspath(directory), **arguments)
 
     # The worker ------------------------------------------------------------------
@@ -374,7 +425,8 @@ class RemoteSession:
                 os.path.join(self.journal, JOURNAL_SHELL)
             )
             self._request(
-                ("start", self.checkpoint_dir, restore, self.journal, resume), self.timeout_s
+                ("start", self.checkpoint_dir, restore, self.journal, resume, self.session_class),
+                self.timeout_s,
             )
         except BaseException:
             self._kill()
@@ -469,13 +521,13 @@ class RemoteSession:
                 raise
 
     def __getattr__(self, name):
-        if name in _REMOTE_METHODS:
+        if name in self.__dict__.get("_methods", ()):
 
             def method(*args, **kwargs):
                 return self.call(name, *args, **kwargs)
 
             method.__name__ = name
-            method.__doc__ = getattr(Session, name).__doc__
+            method.__doc__ = getattr(self._class, name, None).__doc__
             return method
         raise AttributeError("'RemoteSession' has no attribute '%s'" % name)
 

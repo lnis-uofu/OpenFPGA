@@ -36,6 +36,8 @@ class AppOption:
     # The flag of the option on the command line of VPR, e.g. --device for
     # general.device_layout; None for an option of OpenFPGA
     vpr_flag: Optional[str] = None
+    # Who the option belongs to: vpr, openfpga, or the plugin that added it
+    owner: Optional[str] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -226,6 +228,8 @@ class SessionState:
     inputs: SessionInputs
     results: SessionResults
     failed: Optional[StageFailure] = None
+    # The data that plugins keep with the architectures (attachments), by key, as JSON values
+    attachments: Optional[dict] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -434,6 +438,7 @@ def _read_manifest(path, missing_ok=False):
 JOURNAL_PYTHON = "replay.py"
 JOURNAL_SHELL = "replay.openfpga"
 JOURNAL_SCRIPTS = "scripts"  # the scripts of Yosys that the commands of the journal ran
+JOURNAL_ATTACHMENTS = "attachments"  # the files of the values of set_attachment
 
 
 class ReplayError(RuntimeError):
@@ -461,6 +466,7 @@ class _Journal:
         self.directory = os.fspath(directory)
         os.makedirs(self.directory, exist_ok=True)
         self._scripts = 0  # the scripts of Yosys that were copied here (see record)
+        self._attachments = 0  # the values of set_attachment that were copied here
         if resume and self._resume():
             return
         where = (
@@ -491,6 +497,8 @@ class _Journal:
             self._shell.pop()
         folder = os.path.join(self.directory, JOURNAL_SCRIPTS)
         self._scripts = len(os.listdir(folder)) if os.path.isdir(folder) else 0
+        folder = os.path.join(self.directory, JOURNAL_ATTACHMENTS)
+        self._attachments = len(os.listdir(folder)) if os.path.isdir(folder) else 0
         return True
 
     def _write(self):
@@ -502,6 +510,14 @@ class _Journal:
             with open(path + ".part", "w") as handle:
                 handle.write("".join(lines + end))
             os.replace(path + ".part", path)
+
+    def _keep_attachment(self, source):
+        folder = os.path.join(self.directory, JOURNAL_ATTACHMENTS)
+        os.makedirs(folder, exist_ok=True)
+        self._attachments += 1
+        kept = os.path.join(folder, "%03d.json" % self._attachments)
+        shutil.copyfile(source, kept)
+        return os.path.abspath(kept)
 
     def _keep_script(self, source):
         folder = os.path.join(self.directory, JOURNAL_SCRIPTS)
@@ -528,6 +544,9 @@ class _Journal:
             # A script of Yosys is a file that its maker writes again for the next run: the journal
             # keeps the one that was run, so that a replay runs the same synthesis
             options["file"] = self._keep_script(options["file"])
+        if name == "set_attachment" and error is None and os.path.isfile(options.get("file", "")):
+            # The value is in a file of the moment: the journal keeps it
+            options["file"] = self._keep_attachment(options["file"])
         line = _command_line(name, args, options)
         call = ", ".join(
             [repr(name)]
@@ -676,8 +695,14 @@ class Session:
             "report_run",
             "report_stage",
             "report_app_option",
+            "report_plugins",
         )
     )
+
+    # The methods (names, "a.b" for a method of an attribute) that a worker
+    # (RemoteSession) may call on top of the public methods of Session: a subclass
+    # that adds methods lists them, REMOTE_METHODS = frozenset({...})
+    REMOTE_METHODS = frozenset()
 
     def __init__(self, shell=None, checkpoint_dir=None, journal=None, resume_journal=False):
         self.shell = shell if shell is not None else OpenfpgaShell()
@@ -810,6 +835,28 @@ class Session:
     def read_circuit(self, file):
         """Read the circuit (a BLIF netlist)"""
         return self.command("read_circuit", file=file)
+
+    def set_attachment(self, key, value):
+        """Keep a value (anything that is JSON) with the architectures of the session, under
+        a key that starts with the name of a plugin and a dot (see report_session). None drops
+        it. Reading an architecture drops them all"""
+        if value is None:
+            return self.command("set_attachment", key=key)
+        # The value goes in a file: JSON has double quotes, which a command line does not
+        # take. The journal keeps a copy of it
+        import tempfile
+
+        handle, path = tempfile.mkstemp(prefix="openfpga_attachment_", suffix=".json")
+        try:
+            with os.fdopen(handle, "w") as out:
+                json.dump(value, out)
+            return self.command("set_attachment", key=key, file=path)
+        finally:
+            os.remove(path)
+
+    def attachments(self):
+        """The attachments of the session, by key (see set_attachment)"""
+        return dict(self.state().attachments or {})
 
     # The stages ------------------------------------------------------------------
 
@@ -963,8 +1010,10 @@ class Session:
         The directory gets the files of the packing, the placement and the
         routing of the stages that are reached, and checkpoint.json: the
         stages, the options that are not the default, and where the inputs
-        come from, with the checksum of every file. The inputs are not copied:
-        restore() needs them where they are. The stages after ANALYZED
+        come from, with the checksum of every file, the plugins of the build,
+        the attachments of the session (see set_attachment) and what a
+        subclass adds (_checkpoint_extra(), under "extra"). The inputs are not
+        copied: restore() needs them where they are. The stages after ANALYZED
         (repack, bitstream) are not saved. A checkpoint that was in the
         directory is replaced.
         """
@@ -1001,6 +1050,11 @@ class Session:
             "results": results,
             "plugins": self._plugin_list(),
         }
+        if state.attachments:
+            manifest["attachments"] = state.attachments
+        extra = self._checkpoint_extra(directory)
+        if extra:
+            manifest["extra"] = extra
         path = os.path.join(directory, _CHECKPOINT_MANIFEST)
         previous = _read_manifest(path, missing_ok=True)
         with open(path + ".part", "w") as handle:
@@ -1025,8 +1079,16 @@ class Session:
         goes on from there, in this process or in another one, and gives the
         same results. ANALYZED is run again. A file of the results that does
         not match its checksum raises CheckpointError, and so does an input
-        that changed, unless check_inputs is False. The other arguments are those
-        of the Session, e.g., journal=.
+        that changed, unless check_inputs is False, and a checkpoint made by a
+        build with other plugins, as their commands may not do the same. The
+        other arguments are those of the Session, e.g., journal=.
+
+        In order, on the new session (an instance of cls): the options are
+        set; _restore_inputs() reads the architectures; _restore_extra() gets
+        what _checkpoint_extra() saved; the attachments that are not there
+        already are set again; then the circuit is read, and the results of
+        the stages. A subclass overrides these methods to save and read what
+        it adds to a flow.
         """
         directory = os.fspath(directory)
         manifest = _read_manifest(os.path.join(directory, _CHECKPOINT_MANIFEST))
@@ -1053,10 +1115,15 @@ class Session:
             )
         for option in manifest["options"]:
             session.options.set(option["name"], option["value"])
-        inputs = manifest["inputs"]
-        session.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
-        session.read_openfpga_arch(inputs["openfpga_arch"]["file"])
-        session.read_circuit(inputs["circuit"]["file"])
+        session._restore_inputs(manifest, directory)
+        session._restore_extra(manifest.get("extra", {}), directory)
+        attachments = manifest.get("attachments", {})
+        if attachments:
+            now = session.attachments()
+            for key, value in attachments.items():
+                if now.get(key, None) != value:
+                    session.set_attachment(key, value)
+        session.read_circuit(manifest["inputs"]["circuit"]["file"])
         for key, _, command in _CHECKPOINT_RESULTS:
             if key in manifest["results"]:
                 path = os.path.join(directory, manifest["results"][key]["file"])
@@ -1064,6 +1131,31 @@ class Session:
         if "ANALYZED" in manifest["stages"]:
             session.analysis()
         return session
+
+    # What a subclass adds to a checkpoint ----------------------------------------
+
+    def _checkpoint_extra(self, directory):
+        """What a subclass saves in a checkpoint besides the flow of OpenFPGA: a dict that
+        json writes, kept in checkpoint.json under "extra" (when it is not empty), and given
+        back to _restore_extra() by restore(). Files of its own go in directory. A subclass
+        that overrides it keeps the keys of the classes it derives from:
+        dict(super()._checkpoint_extra(directory), mykey=...). Nothing by default"""
+        return {}
+
+    def _restore_inputs(self, manifest, directory):
+        """Read the architectures of a checkpoint, after its options are set: read_vpr_arch and
+        read_openfpga_arch with the files of manifest["inputs"]. A subclass that reads them
+        another way (e.g. from a package of files that sets options of its own) overrides it,
+        and sets the options of manifest["options"] again after, so that those of the
+        checkpoint win. The circuit is read later, after _restore_extra()"""
+        inputs = manifest["inputs"]
+        self.read_vpr_arch(inputs["vpr_arch"]["file"], layout=inputs["vpr_arch"]["layout"])
+        self.read_openfpga_arch(inputs["openfpga_arch"]["file"])
+
+    def _restore_extra(self, extra, directory):
+        """Read again what _checkpoint_extra() saved (extra; {} for a checkpoint without
+        it), after the architectures are read and before the circuit and the results of the
+        stages: e.g. constraints that the circuit is checked against. Nothing by default"""
 
     # The answers ---------------------------------------------------------------
 
