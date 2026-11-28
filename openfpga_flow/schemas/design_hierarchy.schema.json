@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "design_hierarchy",
+  "description": "The hierarchy of a design, answer of 'report_design_hierarchy': its RTL elaborated from its top by a Yosys script of its own, from the JSON that Yosys writes. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "design_hierarchy"
+    },
+    "stage": {
+      "type": "null"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "design",
+        "top",
+        "modules",
+        "tree",
+        "nodes",
+        "instances",
+        "truncated",
+        "files",
+        "script",
+        "json"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "design": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The name of the design directory, or null for --top and --files"
+        },
+        "top": {
+          "type": "string"
+        },
+        "modules": {
+          "type": "array",
+          "description": "The modules of the tree, most instances first",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "module",
+              "parameters",
+              "kind",
+              "instances",
+              "cells",
+              "src"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of Yosys ($paramod... for a module with parameters)"
+              },
+              "module": {
+                "type": "string",
+                "description": "The name of the RTL"
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": [
+                    "integer",
+                    "string"
+                  ]
+                }
+              },
+              "kind": {
+                "enum": [
+                  "module",
+                  "library",
+                  "unknown"
+                ],
+                "description": "module of the RTL, library (a cell of a cell library of the synthesis target, a blackbox) or unknown (no file has it)"
+              },
+              "instances": {
+                "type": "number",
+                "minimum": 1,
+                "description": "Its instances in the whole tree"
+              },
+              "cells": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The cells of Yosys in one instance (its logic, not its instances)"
+              },
+              "src": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "required": [
+                  "file",
+                  "line"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "description": "Where the RTL has it"
+              }
+            }
+          }
+        },
+        "tree": {
+          "$ref": "#/$defs/node"
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The nodes of tree"
+        },
+        "instances": {
+          "type": "number",
+          "minimum": 1,
+          "description": "The instances of the whole tree, the top included"
+        },
+        "truncated": {
+          "type": "boolean",
+          "description": "Some instances are not in tree (--limit, breadth first)"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "script": {
+          "type": "string"
+        },
+        "json": {
+          "type": "string",
+          "description": "The JSON that Yosys wrote"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": [
+        "instance",
+        "name",
+        "module",
+        "kind",
+        "children"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "instance": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The name of the instance in its parent; null for the top"
+        },
+        "name": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "module",
+            "library",
+            "unknown"
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          }
+        },
+        "src": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "file",
+            "line"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "description": "Where the parent instantiates it"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "more": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Its instances that are not in children"
+        }
+      }
+    }
+  }
+}

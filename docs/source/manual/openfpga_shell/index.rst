@@ -15,4 +15,6 @@ OpenFPGA Shell
 
    python_session
 
+   design_directory
+
    plugins

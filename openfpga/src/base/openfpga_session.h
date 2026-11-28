@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "app_options.h"
@@ -48,6 +49,29 @@ OpenFpgaStage required_stage(const OpenFpgaStage& stage);
 /* Name of an input or a stage, to be used in messages */
 std::string to_string(const OpenFpgaInput& input);
 std::string to_string(const OpenFpgaStage& stage);
+
+/********************************************************************
+ * What the constraints of the session give to the commands of the core: the
+ * synthesis, and the OpenFPGA commands that take a pin constraints file. A
+ * plugin sets them, e.g., from a constraints file that it reads
+ *******************************************************************/
+struct SessionConstraints {
+  /* The Yosys commands for the line ${CONSTRAINT_SYNTHESIS} of a script */
+  std::string synthesis_script;
+  /* The top module and the defines of the synthesis */
+  std::string synthesis_top;
+  std::vector<std::pair<std::string, std::string>> synthesis_defines;
+  /* The pin constraints XML of the pins without a location, for the commands
+   * that take --pin_constraints_file and are not given one */
+  std::string pin_constraints_file;
+  /* The file the constraints were read from, for messages */
+  std::string source;
+  /* The constraints give the SDC of VPR (filename.sdc_file), and the VPR
+   * constraints (filename.read_vpr_constraints_file): another file is not
+   * given for them (e.g., the SDC of a design directory) */
+  bool timing = false;
+  bool vpr_constraints = false;
+};
 
 /********************************************************************
  * The data of a flow that is run stage by stage, together with the
@@ -139,6 +163,9 @@ class OpenFpgaSession {
    * (router.route_chan_width) is fixed while it has an owner (see
    * set_fixed_channel_width_owner()) */
   std::string fixed_option(const std::string& name) const;
+  /* The constraints of the session, see SessionConstraints. They are kept
+   * when the session is reset, as the options are */
+  const SessionConstraints& constraints() const { return constraints_; }
   /* Who fixed the channel width, empty when it can be changed */
   const std::string& fixed_channel_width_owner() const {
     return fixed_channel_width_owner_;
@@ -156,6 +183,12 @@ class OpenFpgaSession {
   /* Mark an input as failed to read: it is dropped, with the inputs that
    * depend on it, and so are the results of all the stages */
   void fail_input(const OpenFpgaInput& input);
+  /* Drop an input that is no longer good, e.g., the circuit when the
+   * synthesis constraints change: as fail_input() */
+  void drop_input(const OpenFpgaInput& input) { fail_input(input); }
+  void set_constraints(const SessionConstraints& constraints) {
+    constraints_ = constraints;
+  }
   /* Mark a stage as done. Return false, and leave the session untouched, if
    * the stage cannot be run now */
   bool complete(const OpenFpgaStage& stage);
@@ -245,6 +278,7 @@ class OpenFpgaSession {
   std::map<std::string, std::string> attachments_;
   std::string fixed_channel_width_owner_;
   std::vector<std::string> cache_options_;
+  SessionConstraints constraints_;
 };
 
 } /* End namespace openfpga */

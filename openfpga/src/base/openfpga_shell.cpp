@@ -24,6 +24,7 @@
 #endif
 #include "session_report_commands.h"
 #include "stage_commands.h"
+#include "synthesis_commands.h"
 #include "vpr_command.h"
 #include "vtr_log.h"
 
@@ -60,6 +61,7 @@ OpenfpgaShell::OpenfpgaShell() {
   /* Add the commands of the flow that is run stage by stage */
   openfpga::add_stage_commands(shell_);
   openfpga::add_session_report_commands(shell_);
+  openfpga::add_synthesis_commands(shell_);
 
   /* The plugins of the build, after the commands of the shell that they may
    * override, remove or hook, and before the basic ones, which they may not */

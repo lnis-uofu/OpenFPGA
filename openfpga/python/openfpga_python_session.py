@@ -301,6 +301,8 @@ _SCHEMA_VERSIONS = {
     "app_options": 1,
     "stage_info": 1,
     "plugins": 1,
+    "synthesis": 1,
+    "design_hierarchy": 1,
 }
 
 
@@ -318,6 +320,17 @@ def register_answer_kind(kind, version):
 class AnswerError(RuntimeError):
     """The answer of a command is not one that this Session reads: another
     kind, or a version of the schema that it does not know"""
+
+
+def _answer_data(result, kind):
+    """The data of the answer in the result of a command, as JSON (a dict), checked to be of
+    the kind and of the version of its schema that the module reads"""
+    answer = result.data
+    if answer is None or answer.get("kind") != kind:
+        raise AnswerError("Expected an answer of the kind '%s'" % kind)
+    if answer.get("schema_version") != _SCHEMA_VERSIONS[kind]:
+        raise AnswerError("The answer '%s' has an unknown schema version" % kind)
+    return answer["data"]
 
 
 def _answer(result, kind, cls):
@@ -696,6 +709,7 @@ class Session:
             "report_stage",
             "report_app_option",
             "report_plugins",
+            "report_design_hierarchy",
         )
     )
 
@@ -835,6 +849,122 @@ class Session:
     def read_circuit(self, file):
         """Read the circuit (a BLIF netlist)"""
         return self.command("read_circuit", file=file)
+
+    # Synthesis --------------------------------------------------------------------
+
+    def synthesize(
+        self,
+        top,
+        files,
+        lut_size=None,
+        include_dirs=None,
+        defines=None,
+        read_options=None,
+        output_dir=None,
+        read=True,
+        run=True,
+    ):
+        """Synthesize Verilog files (paths) into a netlist of the LUTs of the device, with
+        Yosys (the shell's command synthesize): the script is made from a generic one with
+        lut_size, or from the synthesis target that a plugin gives for the session. The script
+        and the netlist go to output_dir (synth). The netlist is read as the circuit when the
+        architectures are read, unless read is False. defines is a dict of NAME: value,
+        read_options a list (-nolatches).
+
+        With run=False the script is written and the plan is returned, and nothing else
+        happens (not written in the journal). Returns what the command answers (kind
+        synthesis): top, netlist, script, target, lut_size, files, synthesized, circuit_read.
+        Arguments that are refused, and a failure of Yosys, raise OpenfpgaError ('Synthesis
+        refused: ...' for the first)"""
+        options = {
+            "top": top,
+            "files": ",".join(os.path.abspath(os.fspath(f)) for f in files),
+            "lut_size": lut_size,
+            "include_dirs": ",".join(os.path.abspath(os.fspath(d)) for d in include_dirs or []),
+            "defines": ",".join("%s=%s" % item for item in (defines or {}).items()),
+            "read_options": ",".join(read_options or []),
+            "output_dir": None if output_dir is None else os.path.abspath(os.fspath(output_dir)),
+        }
+        return self._synthesis("synthesize", options, read, run, check=False)
+
+    def read_design(
+        self,
+        directory,
+        netlist=None,
+        output_dir=None,
+        read=True,
+        run=True,
+        check=False,
+        lut_size=None,
+    ):
+        """Read a design directory with the shell's command read_design: its constraints file is
+        read (with the command that a plugin names), its RTL is synthesized as synthesize() does
+        (or its netlist is read, the one of the label netlist, or the only one of a design with
+        no RTL), and its SDC is given to VPR. With check=True the design is checked and what
+        would be synthesized is returned, without writing anything; with run=False the script
+        is written and the plan returned. Neither is written in the journal. lut_size is for a
+        session without a synthesis target. Returns what the command answers (kind synthesis),
+        with design and design_folder"""
+        options = {
+            "file": os.path.abspath(os.fspath(directory)),
+            "netlist": netlist,
+            "lut_size": lut_size,
+            "output_dir": None if output_dir is None else os.path.abspath(os.fspath(output_dir)),
+        }
+        return self._synthesis("read_design", options, read, run, check)
+
+    def design_hierarchy(
+        self,
+        directory=None,
+        top=None,
+        files=None,
+        include_dirs=None,
+        defines=None,
+        read_options=None,
+        output_dir=None,
+        limit=None,
+    ):
+        """The hierarchy of a design, with the shell's command report_design_hierarchy: its RTL
+        is elaborated from its top by a Yosys script of its own (as the synthesis reads it, with
+        the cell libraries of the synthesis target as blackboxes), and nothing of the flow
+        changes (not written in the journal). Give directory (a design directory), or top and
+        files as synthesize() takes them. The script and the JSON of Yosys go to output_dir
+        (hierarchy).
+
+        Returns a dict: design, top, files, script, json; modules (name, module, parameters,
+        kind: module, library or unknown, instances in the whole tree, cells of Yosys, src:
+        file and line), most instances first; tree (instance, name, module, kind, parameters,
+        src, children, and more: the children that limit left out, breadth first); nodes,
+        instances, truncated. A refusal or a failure of Yosys raises OpenfpgaError"""
+        options = {
+            "file": None if directory is None else os.path.abspath(os.fspath(directory)),
+            "top": top,
+            "files": ",".join(os.path.abspath(os.fspath(f)) for f in files or []),
+            "include_dirs": ",".join(os.path.abspath(os.fspath(d)) for d in include_dirs or []),
+            "defines": ",".join("%s=%s" % item for item in (defines or {}).items()),
+            "read_options": ",".join(read_options or []),
+            "output_dir": None if output_dir is None else os.path.abspath(os.fspath(output_dir)),
+            "limit": None if limit is None else int(limit),
+        }
+        options = {k: v for k, v in options.items() if v not in (None, "")}
+        result = self.shell.run(_command_line("report_design_hierarchy", (), options))
+        return _answer_data(result, "design_hierarchy")
+
+    def _synthesis(self, name, options, read, run, check):
+        options = {k: v for k, v in options.items() if v not in (None, "")}
+        if not read:
+            options["no_read"] = True
+        if check:
+            options["check"] = True
+        elif not run:
+            options["no_run"] = True
+        if run and not check:
+            _, result = self._run_command(name, (), options)
+        else:  # a plan or a check changes nothing of the flow: not in the journal
+            result = self.shell.run(_command_line(name, (), options))
+        return _answer_data(result, "synthesis")
+
+    # Attachments ------------------------------------------------------------------
 
     def set_attachment(self, key, value):
         """Keep a value (anything that is JSON) with the architectures of the session, under
