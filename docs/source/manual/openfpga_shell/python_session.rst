@@ -154,10 +154,11 @@ What is written:
 - the commands that the Session runs: the options, the inputs, the stages, the files of the results that are read (``read_packing``, ...), and any command that is run with ``session.command()``. Files are written as whole paths, so that a replay in another directory reads the same files. The files of the flow are written in the current directory of the replay
 - not the commands that only answer (``Session.READ_ONLY_COMMANDS``: ``help``, ``report_session``, ``report_app_option``, ...), nor what is run with ``session.shell``: that is the way to ask, and to run what has no method, without a mark in the journal. A subclass of ``Session`` that adds commands that only answer extends the set: ``READ_ONLY_COMMANDS = Session.READ_ONLY_COMMANDS | {...}``
 - a command that failed is a comment, ``# Failed, not replayed: route (...)``, with the reason
-- the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again
+- the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again, unless ``resume_journal=True``: it goes on with what is there
+- the script of a ``yosys`` command is copied into the directory (``scripts/001.ys``, ...) and the journal names the copy, as the file that was run may be written again for the next run: a replay runs the synthesis that was run
 - ``Session.restore(directory, journal=...)`` writes the commands that restore does: the options, the inputs and the results that are read from the checkpoint
 
-``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. A ``RemoteSession`` has no journal yet.
+``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. ``RemoteSession(journal=directory)`` has the worker write the journal of its session, see :ref:`worker_processes`.
 
 .. _failed_stages:
 
@@ -240,6 +241,8 @@ The failures of the worker itself are ``WorkerError``:
 - ``WorkerNotRunning``: a call after one of them, or after ``close()``
 
 ``restart()`` starts another worker. With a ``checkpoint_dir`` the worker makes a checkpoint after each stage, and the new worker is restored from the last one, so that the flow loses the stage that was running and nothing else; without one it starts from nothing. It returns the state of the new session. A worker ends when its caller ends, even in the middle of a command (Linux), and ``close()``, or the end of a ``with`` block, ends it.
+
+``RemoteSession(journal=directory)`` has the worker write the journal of its session in the directory (see :ref:`journal_and_replay`). A worker that starts again (``restart()``) goes on with it: the commands of the restore are not written twice, and a call that ends with the worker is not in it. ``memory_limit_mb`` limits the address space of the worker (``RLIMIT_AS``, Linux), for it and the workers that start again: a command that needs more fails with the error of the allocation, e.g., ``std::bad_alloc``, and the worker goes on. VPR and Yosys map much more than they use, so a worker needs a few GB to start; a limit that is too small for it raises ``WorkerError``.
 
 The calls are made one at a time, and a call is not a way to share data: results are copied from the worker. The output of the commands is in their results, and a worker's own output outside of them goes to a log that is not kept.
 
