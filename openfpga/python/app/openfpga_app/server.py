@@ -322,7 +322,10 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         return JSONResponse(answer, status)
 
     async def remove_upload(request: Request) -> Response:
-        answer = await backend.remove_upload(request.query_params.get("name", ""))
+        # folder: where the file is, uploads (the default), created or design
+        answer = await backend.remove_upload(
+            request.query_params.get("name", ""), request.query_params.get("folder", "uploads")
+        )
         if answer.get("ok"):
             return JSONResponse(answer)
         kind = (answer.get("diagnostics") or [{}])[0].get("kind")

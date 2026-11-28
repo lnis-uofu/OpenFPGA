@@ -905,15 +905,16 @@ class SessionBackend:
         inputs = session.state().inputs
         return bool(inputs.vpr_arch and inputs.openfpga_arch and not inputs.circuit)
 
-    async def remove_upload(self, name: str) -> Dict[str, Any]:
-        """Delete a file that the person gave to the session; the model is told that it is gone"""
+    async def remove_upload(self, name: str, where: str = "uploads") -> Dict[str, Any]:
+        """Delete a file of the session that the person can see in its design files: one that was
+        uploaded, one that the model wrote, or one of the copy of a design (where). The model is
+        told that it is gone"""
         try:
-            uploads.check_name(name)
             if self.sid is None:
                 raise uploads.UploadRefused("no_session", "There is no session")
             entry = self.registry.get(self.sid)
             removed = await anyio.to_thread.run_sync(
-                uploads.remove, self.config.root, entry.directory, name
+                uploads.remove, self.config.root, entry.directory, name, where
             )
         except uploads.UploadRefused as refused:
             return answers.failed(
@@ -921,8 +922,13 @@ class SessionBackend:
             )
         except Exception as error:  # noqa: BLE001
             return answers.from_exception(error)
+        what = {
+            "uploads": "the uploaded file",
+            "created": "the file that the model wrote",
+            "design": "the file of the copy of a design",
+        }[where]
         self._changed_outside(
-            "The person removed the uploaded file %s from session %s" % (removed["name"], self.sid)
+            "The person removed %s %s from session %s" % (what, removed["name"], self.sid)
         )
         return {"ok": True, "data": removed, "truncated": False, "more": None}
 

@@ -236,9 +236,13 @@ export async function saveFileText(name: string, text: string): Promise<Answer> 
 export const copyFileToSession = async (name: string): Promise<Answer> =>
   answerOf(await fetch(`/api/file/copy?name=${encodeURIComponent(name)}`, { method: "POST" }));
 
-/** Delete a file that was uploaded to the session */
-export async function removeUploadedFile(name: string): Promise<Answer> {
-  const response = await fetch(`/api/upload?name=${encodeURIComponent(name)}`, { method: "DELETE" });
+/** Where a file of the session can be deleted from: the uploads, what the model wrote, and the
+ * copy of a design */
+export type FileFolder = "uploads" | "created" | "design";
+
+/** Delete a file of the session (an upload unless the folder says another) */
+export async function removeUploadedFile(name: string, folder: FileFolder = "uploads"): Promise<Answer> {
+  const response = await fetch(`/api/upload?name=${encodeURIComponent(name)}&folder=${folder}`, { method: "DELETE" });
   return json<Answer>(response);
 }
 

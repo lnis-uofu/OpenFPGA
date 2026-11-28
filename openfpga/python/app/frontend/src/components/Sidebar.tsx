@@ -1,5 +1,5 @@
 import { useRef, useState } from "preact/hooks";
-import { UPLOAD_EXTENSIONS, type SessionView } from "../api";
+import { UPLOAD_EXTENSIONS, type FileFolder, type SessionView } from "../api";
 import { SessionPicker } from "./SessionPicker";
 import { HierarchySection } from "./Panels";
 import {
@@ -35,7 +35,8 @@ function Section(props: {
   children: preact.ComponentChildren;
   foldable?: boolean; // its title folds it; it starts folded
   note?: string;
-  shown?: preact.ComponentChildren; // what stays when it is folded
+  shown?: preact.ComponentChildren; // what stays when it is folded, above the content
+  footer?: preact.ComponentChildren; // what stays when it is folded, below the content
 }) {
   const [open, setOpen] = useState(false);
   if (!props.foldable) {
@@ -58,6 +59,7 @@ function Section(props: {
       </h2>
       {props.shown}
       {open && props.children}
+      {props.footer}
     </section>
   );
 }
@@ -169,6 +171,10 @@ function size(bytes: number): string {
 }
 
 type Origin = "input" | "design" | "upload" | "model" | "synthesis";
+
+/** The folder of the session that a file can be removed from, by where it came from: the circuit
+ * of a designs folder and what a synthesis made are not the person's to remove here */
+const REMOVABLE: Partial<Record<Origin, FileFolder>> = { upload: "uploads", model: "created", design: "design" };
 
 interface DesignRow {
   name: string;
@@ -616,6 +622,10 @@ export function Sidebar() {
                   : "Waiting for a circuit: add a design (Designs), or upload one (Design files) and say which to read."}
               </div>
             )}
+          </>
+        }
+        footer={
+          <>
             <input
               ref={picker}
               type="file"
@@ -660,13 +670,13 @@ export function Sidebar() {
               <div key={f.name} class={`upload-row ${f.loaded ? "loaded" : ""}`} title={f.loaded ? "The circuit of the session" : undefined}>
                 <Name name={f.name} label={f.label} />
                 {f.bytes != null && <span class="muted upload-size">{size(f.bytes)}</span>}
-                {f.origin === "upload" && (
+                {REMOVABLE[f.origin] && (
                   <button
                     class="upload-remove"
                     aria-label={`Remove ${f.name}`}
                     title="Remove this file from the session"
                     onClick={() => {
-                      if (window.confirm(`Remove "${f.name}" from the session?`)) void removeUpload(f.name);
+                      if (window.confirm(`Remove "${f.name}" from the session?`)) void removeUpload(f.name, REMOVABLE[f.origin]);
                     }}
                   >
                     ✕

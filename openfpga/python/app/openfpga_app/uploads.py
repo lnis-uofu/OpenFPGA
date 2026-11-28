@@ -101,12 +101,52 @@ def tree_listing(root: Path, session_dir: str, name: str, limit: int = 200) -> L
     return items
 
 
-def remove(root: Path, session_dir: str, name: str) -> Dict[str, Any]:
-    """Delete one uploaded file of the session (and only a file that is in its uploads)"""
-    check_name(name)
-    destination = folder(root, session_dir) / name
+# Where a file can be removed from: the person's uploads, what the model wrote, and the copy of a
+# design directory in the session (its files are named from the session: design/<folder>/...)
+DESIGN = "design"
+REMOVABLE = (UPLOADS, CREATED, DESIGN)
+
+
+def _design_file(root: Path, session_dir: str, name: str) -> Path:
+    """The file of a copy of a design in the session: a path of design/<folder>/<file>, plain
+    names only, with no link on the way"""
+    parts = name.split("/") if isinstance(name, str) else []
+    if (
+        len(parts) < 3
+        or parts[0] != DESIGN
+        or any(p in ("", ".", "..") or p.startswith(".") or "\\" in p for p in parts)
+    ):
+        raise UploadRefused(
+            "invalid_name",
+            "'%s' is not a file of a design in the session" % (name if isinstance(name, str) else ""),
+            "Use a path of the form design/<folder>/<file>",
+        )
+    path = root / session_dir
+    for part in parts:
+        path = path / part
+        if path.is_symlink():
+            raise UploadRefused("invalid_name", "'%s' cannot be removed" % name)
+    return path
+
+
+def remove(root: Path, session_dir: str, name: str, where: str = UPLOADS) -> Dict[str, Any]:
+    """Delete one file of the session, and only one that is in the place that was said: its
+    uploads, what the model wrote (created), or the copy of a design (design)"""
+    if where not in REMOVABLE:
+        raise UploadRefused(
+            "invalid_name",
+            "'%s' is not a place to remove a file from" % where,
+            "Use one of: %s" % ", ".join(REMOVABLE),
+        )
+    if where == DESIGN:
+        destination = _design_file(root, session_dir, name)
+    else:
+        check_name(name)
+        destination = root / session_dir / where / name
     if destination.is_symlink() or not destination.is_file():
-        raise UploadRefused("file_not_found", "There is no uploaded file '%s' in the session" % name)
+        raise UploadRefused(
+            "file_not_found", "There is no file '%s' in the %s of the session" % (name, where)
+        )
     size = destination.stat().st_size
     destination.unlink()
     return {"name": name, "bytes": size}

@@ -599,7 +599,7 @@ describe("uploading files to the session", () => {
     expect(document.querySelector(".design-files .chip")).toBeNull(); // no kind, origin or loaded label
   });
 
-  it("lists the files that the model wrote with the others, with no remove button", () => {
+  it("lists the files that the model wrote with the others, with a remove button", () => {
     const v = filled();
     v.files.created = [{ name: "my_arch.xml", kind: "vpr_arch", bytes: 2048 }];
     view.value = v;
@@ -607,7 +607,7 @@ describe("uploading files to the session", () => {
     unfoldFiles();
     expect(screen.queryByText("Written by the model")).toBeNull(); // one list, not one for each origin
     expect(screen.getByText("my_arch.xml")).toBeTruthy();
-    expect(screen.queryByLabelText("Remove my_arch.xml")).toBeNull();
+    expect(screen.getByLabelText("Remove my_arch.xml")).toBeTruthy();
   });
 
   it("lists the files of the synthesis in the same list, with the netlist that is read marked as loaded", () => {
@@ -677,7 +677,7 @@ describe("uploading files to the session", () => {
     fireEvent.click(screen.getByLabelText("Remove mine.blif"));
     await waitFor(() => expect(fetchMock.mock.calls.some((c) => c[0] === "/api/session")).toBe(true));
     const sent = fetchMock.mock.calls.find((c) => String(c[0]).startsWith("/api/upload"))!;
-    expect(sent[0]).toBe("/api/upload?name=mine.blif");
+    expect(sent[0]).toBe("/api/upload?name=mine.blif&folder=uploads");
     expect(sent[1]?.method).toBe("DELETE");
   });
 
@@ -736,6 +736,32 @@ describe("uploading files to the session", () => {
     expect(row("DEVICE").querySelector("[aria-label='Open the netlist']")).toBeNull();
   });
 
+  it("has a remove button on the files of the session (uploaded, written by the model, of a design), and not on the others", async () => {
+    real();
+    const v = filled();
+    v.files.uploads = [{ name: "mine.blif", kind: "circuit", bytes: 900 }];
+    v.files.created = [{ name: "made.v", kind: "circuit", bytes: 10 }];
+    v.files.design = [{ name: "design/wb/rtl/top.v", kind: "circuit", bytes: 20 }];
+    v.files.synthesis = [{ name: "synth/out.blif", kind: "circuit", bytes: 30 }];
+    view.value = v;
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      answer(200, url === "/api/session" ? emptyView() : { ok: true, data: {} }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    render(<Sidebar />);
+    unfoldFiles();
+    expect(screen.queryByLabelText("Remove synth/out.blif")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Remove made.v"));
+    fireEvent.click(screen.getByLabelText("Remove design/wb/rtl/top.v"));
+    await waitFor(() => expect(fetchMock.mock.calls.filter((c) => String(c[0]).startsWith("/api/upload"))).toHaveLength(2));
+    const sent = fetchMock.mock.calls.filter((c) => String(c[0]).startsWith("/api/upload")).map((c) => c[0]);
+    expect(sent).toEqual([
+      "/api/upload?name=made.v&folder=created",
+      "/api/upload?name=design%2Fwb%2Frtl%2Ftop.v&folder=design",
+    ]);
+  });
+
   it("starts with the design files folded, and keeps how many there are in the title", () => {
     const v = filled();
     v.files.uploads = [{ name: "mine.blif", kind: "circuit", bytes: 900 }];
@@ -751,6 +777,9 @@ describe("uploading files to the session", () => {
     fireEvent.click(fold);
     expect(fold.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByText("mine.blif")).toBeTruthy();
+    // Opened, the buttons are below the list of files
+    const after = screen.getByText("mine.blif").compareDocumentPosition(screen.getByText("⤒ Upload files…"));
+    expect(after & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(fold.textContent).toContain("(2)");
     fireEvent.click(fold);
     expect(screen.queryByText("mine.blif")).toBeNull();

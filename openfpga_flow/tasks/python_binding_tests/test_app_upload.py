@@ -190,6 +190,47 @@ def test_an_uploaded_file_can_be_removed_and_nothing_else_can(client, backend):
     assert (backend.config.root / "s1" / "keep.txt").exists()
 
 
+def test_a_file_that_the_model_wrote_or_of_a_design_copy_can_be_removed_from_its_own_folder(
+    client, backend
+):
+    assert put(client, "m.blif", b".model a\n").status_code == 200
+    root = backend.config.root / "s1"
+    (root / "created").mkdir()
+    (root / "created" / "m.blif").write_text("the model's")
+    (root / "design" / "wb" / "rtl").mkdir(parents=True)
+    (root / "design" / "wb" / "rtl" / "top.v").write_text("module top; endmodule\n")
+    (root / "design" / "wb" / "keep.v").write_text("x\n")
+    # The same name in two folders: the folder says which
+    gone = client.delete("/api/upload?name=m.blif&folder=created")
+    assert gone.status_code == 200
+    assert not (root / "created" / "m.blif").exists()
+    assert (root / "uploads" / "m.blif").exists()
+    gone = client.delete("/api/upload?name=design/wb/rtl/top.v&folder=design")
+    assert gone.status_code == 200
+    assert gone.json()["data"]["name"] == "design/wb/rtl/top.v"
+    assert not (root / "design" / "wb" / "rtl" / "top.v").exists()
+    assert (root / "design" / "wb" / "keep.v").exists()
+    # Not outside the folder that was said, and not a place that is not one
+    assert client.delete("/api/upload?name=design/wb/keep.v&folder=uploads").status_code == 400
+    assert client.delete("/api/upload?name=m.blif&folder=synth").status_code == 400
+    for bad in ("design/../uploads/m.blif", "design/wb/../../uploads/m.blif", "design/.x/a.v", "/design/wb/a.v"):
+        assert client.delete("/api/upload?name=%s&folder=design" % bad).status_code == 400
+    assert (root / "uploads" / "m.blif").exists()
+
+
+def test_a_link_in_a_design_copy_is_not_followed_when_removing(client, backend, tmp_path):
+    assert put(client, "m.blif", b".model a\n").status_code == 200
+    root = backend.config.root / "s1"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "a.v").write_text("keep")
+    (root / "design").mkdir()
+    (root / "design" / "link").symlink_to(outside)
+    answer = client.delete("/api/upload?name=design/link/a.v&folder=design")
+    assert answer.status_code == 400
+    assert (outside / "a.v").exists()
+
+
 def test_removing_needs_a_session_and_the_token(client):
     assert client.delete("/api/upload?name=a.blif").status_code == 404  # no session yet
     anonymous = TestClient(client.app, base_url="http://" + HOST)

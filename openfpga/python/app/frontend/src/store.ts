@@ -30,6 +30,7 @@ import {
   saveFileText,
   copyFileToSession,
   removeUploadedFile,
+  type FileFolder,
   uploadFile,
   saveCheckpoint,
   addDesignToSession,
@@ -609,11 +610,12 @@ export async function createFile(typed: string) {
   if (made) await openFile(made.name);
 }
 
-/** Take a file that was uploaded out of the session */
-export async function removeUpload(name: string) {
+/** Take a file out of the session: an upload, a file that the model wrote, or one of the copy of
+ * a design */
+export async function removeUpload(name: string, folder: FileFolder = "uploads") {
   banner.value = null;
   try {
-    const answer = await removeUploadedFile(name);
+    const answer = await removeUploadedFile(name, folder);
     if (!answer.ok) reportFailure(answer);
   } catch (error) {
     banner.value = { kind: "server", message: String(error), hint: "Is the app still running?" };
