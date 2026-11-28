@@ -248,14 +248,18 @@ def test_the_flow_of_vpr_has_the_numbers_of_its_data(openfpga_module, golden, wo
     assert answer["routing"]["wirelength"] > 0 and answer["routing"]["iterations"] is None
 
 
-def test_the_report_needs_all_the_inputs(openfpga_module, golden, work):
+def test_the_report_needs_the_architectures(openfpga_module, golden, work):
     session = openfpga_module.Session()
     session.read_vpr_arch(golden.vpr_arch, layout=golden.layout)
     with pytest.raises(openfpga_module.OpenfpgaError) as refused:
         session.run_report()
-    assert "read_circuit" in str(refused.value)
+    assert "read_openfpga_arch" in str(refused.value)
     found = [d for d in refused.value.errors if d.kind == "stage_not_reached"]
     assert found and found[0].data == {"stage": "DEVICE"}
+    # The device is made from the architectures: the report has it, before the circuit
+    session.read_openfpga_arch(golden.openfpga_arch)
+    report = session.run_report()
+    assert report.packing is None and report.routing is None
 
 
 def test_the_report_needs_the_inputs(openfpga_module, work):

@@ -118,8 +118,12 @@ The inputs that VPR takes besides the architecture and the circuit are options o
 
 - ``read_vpr_constraints(file)``: the floorplan of VPR (XML), i.e., the atoms of a partition and the regions where they must be packed and placed. ``None`` takes it away
 - ``read_sdc(file)``: the timing constraints of VPR, i.e., the clocks and their periods, and the input and output delays. They set what a path requires (the ``data required time`` of the timing reports of VPR). ``None`` takes them away
-- ``set_route_chan_width(width)``: route with this channel width instead of looking for the smallest
+- ``set_route_chan_width(width)``: route with this channel width instead of looking for the smallest. ``fixed_width_refusal(command, flat_routing=True)`` says why a flow that only routes at a fixed width (one that a program or a model drives) does not run a command now, or ``None``: ``vpr`` (the whole flow in one command), ``route`` while no width is set, and, with ``flat_routing=False`` (a device that does not support flat routing), ``route`` while ``router.flat_routing`` is set
 - ``set_option(name, value)``: any option, as ``options[name] = value``, with its ``Change``
+
+The placer is the option ``place.placer``: ``classic`` (``pack``, then ``place``) or ``analytical``, the analytical placement of VPR (``vpr --analytical_place``), which packs and places at once. With it, ``pack()`` and ``place()`` both run it and reach ``PACKED`` and ``PLACED`` together. The two are then one result: a change that drops the placement (an option ``place.*`` or ``aplace.*``) drops the packing too, and ``read_placement`` is refused on its packing. The stages that are run again on fresh data run it again. ``run_report().placement`` has ``placer`` and ``global_placement`` (its estimated wirelength and critical path delay).
+
+Flat routing is the option ``router.flat_routing``: ``route()`` and ``analysis()`` route the atoms and not the clusters, with the port equivalences turned off, as ``vpr --flat_routing on`` does, and give the same files and results. ``run_report().routing.flat_routing`` says it; the wires and the wirelength are those of the channels.
 
 VPR reads these when the device is made, so the options belong to the stage ``DEVICE`` and the whole flow runs again. A file is written as a whole path in the option, and a file that does not exist raises ``FileNotFoundError`` before anything changes. The constraints are not checked until VPR reads them: a constraint that VPR refuses makes the next command fail, with the message of VPR.
 

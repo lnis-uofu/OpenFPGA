@@ -88,10 +88,13 @@ _MESSAGE_RULES = [
         lambda d: "Run '%s' first" % d["command"],
     ),
     (
-        re.compile(r"the stage DEVICE has not been reached, because not all the inputs are read"),
+        re.compile(
+            r"the stage DEVICE has not been reached, because the architectures are not read"
+        ),
         "stage_not_reached",
         lambda m: {"stage": "DEVICE"},
-        lambda d: "Read the three inputs: read_vpr_arch, read_openfpga_arch and read_circuit",
+        lambda d: "Read the two architectures: read_vpr_arch and read_openfpga_arch (the device "
+        "is made from them; the circuit is read onto it after)",
     ),
     (
         re.compile(

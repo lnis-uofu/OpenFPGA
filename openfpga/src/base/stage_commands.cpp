@@ -149,10 +149,13 @@ void add_stage_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                                      read_circuit_command);
 
   add_stage_command(shell, cmd_class, "pack",
-                    "Pack the circuit into the blocks of the device",
+                    "Pack the circuit into the blocks of the device. With the "
+                    "option place.placer analytical, pack and place at once",
                     pack_command);
   add_stage_command(shell, cmd_class, "place",
-                    "Place the packed circuit on the device", place_command);
+                    "Place the packed circuit on the device. With the option "
+                    "place.placer analytical, pack and place again at once",
+                    place_command);
   add_stage_command(shell, cmd_class, "route",
                     "Route the placed circuit on the device", route_command);
   add_read_stage_command(

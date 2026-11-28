@@ -4,7 +4,9 @@ the bitstream.
 
 The designs are the ones of the repository that need no synthesis. Each one
 runs on the architectures given with it, on a fixed layout (the stage by stage
-flow needs one). The pairs of architectures are in GOLDEN.
+flow needs one). The pairs of architectures are in GOLDEN. The designs of
+GOLDEN_FLAT are routed flat (router.flat_routing, 'vpr --flat_routing on'), on
+the architecture of the regression tasks of flat routing.
 """
 
 import os
@@ -28,6 +30,13 @@ GOLDEN = {
     "k6_routing_test": (K6, "interface/routing_test/routing_test.blif", "2x2", 20),
     "k4_and2_or2": (K4, "simple_gates/and2_or2/and2_or2.blif", "2x2", 20),
     "k4_routing_test": (K4, "interface/routing_test/routing_test.blif", "4x4", 30),
+}
+
+K4_FLAT = ("k4_N4_tileable_40nm.xml", "k4_N4_40nm_cc_4FlatRouter_openfpga.xml")
+GOLDEN_FLAT = {
+    "k4_flat_and2_or2": (K4_FLAT, "simple_gates/and2_or2/and2_or2.blif", "2x2", 40),
+    "k4_flat_and2_latch": (K4_FLAT, "simple_gates/and2_latch/and2_latch.blif", "2x2", 40),
+    "k4_flat_routing_test": (K4_FLAT, "interface/routing_test/routing_test.blif", "4x4", 40),
 }
 
 # The files VPR writes, named after the circuit
@@ -54,7 +63,10 @@ class Golden:
     """A golden design, with the flows that are run on it"""
 
     def __init__(self, name):
-        (arch, openfpga_arch), circuit, self.layout, self.chan_width = GOLDEN[name]
+        self.flat = name in GOLDEN_FLAT
+        (arch, openfpga_arch), circuit, self.layout, self.chan_width = {**GOLDEN, **GOLDEN_FLAT}[
+            name
+        ]
         self.name = Path(circuit).stem
         self.vpr_arch = FLOW / "vpr_arch" / arch
         self.openfpga_arch = FLOW / "openfpga_arch" / openfpga_arch
@@ -69,6 +81,7 @@ class Golden:
             f"vpr {self.vpr_arch} {self.circuit} --clock_modeling route "
             f"--device {self.layout} --route_chan_width {self.chan_width} "
             f"--pack --place --route --analysis {extra}"
+            + (" --flat_routing on" if self.flat else "")
         )
 
     def link(self, shell):
@@ -80,16 +93,15 @@ class Golden:
         shell.run("repack")
         shell.run("build_architecture_bitstream")
         shell.run("build_fabric_bitstream")
-        shell.run(
-            "write_fabric_bitstream --file fabric.bit --format plain_text "
-            "--no_time_stamp"
-        )
+        shell.run("write_fabric_bitstream --file fabric.bit --format plain_text " "--no_time_stamp")
         return Path("fabric.bit").read_bytes()
 
     def run_staged(self, shell):
         """The inputs, then the stages one by one. Return the log of the stages"""
         shell.run("set_app_option -n general.clock_modeling -v route")
         shell.run(f"set_app_option -n router.route_chan_width -v {self.chan_width}")
+        if self.flat:
+            shell.run("set_app_option -n router.flat_routing -v true")
         shell.run(f"read_vpr_arch -f {self.vpr_arch} -l {self.layout}")
         shell.run(f"read_openfpga_arch -f {self.openfpga_arch}")
         shell.run(f"read_circuit -f {self.circuit}")
@@ -112,7 +124,7 @@ class Golden:
         }
 
 
-@pytest.fixture(params=sorted(GOLDEN))
+@pytest.fixture(params=sorted(GOLDEN) + sorted(GOLDEN_FLAT))
 def golden(request):
     return Golden(request.param)
 
@@ -157,6 +169,8 @@ def test_staged_flow_equals_the_vpr_flow(golden, two_shells):
     # The comparison means something only if the logs report the results
     assert staged_qor["wirelength"], "no wirelength in the log"
     assert staged_qor["critical_path_delay"] or "latch" in golden.name
+    # A design of GOLDEN_FLAT is routed flat by both flows
+    assert ("flat routing is enabled" in staged_log) == golden.flat
     assert staged_bits == monolithic_bits
     assert len(staged_bits) > 0
 
@@ -187,9 +201,7 @@ def test_option_changed_after_the_bitstream_equals_the_vpr_flow(name, two_shells
         log = golden.run_monolithic(monolithic, "--seed 3")
         return log, golden.files(), golden.bitstream(monolithic)
 
-    monolithic_log, monolithic_files, monolithic_bits = in_dir(
-        monolithic_dir, reference
-    )
+    monolithic_log, monolithic_files, monolithic_bits = in_dir(monolithic_dir, reference)
 
     assert staged_files == monolithic_files
     assert qor(staged_log) == qor(monolithic_log)

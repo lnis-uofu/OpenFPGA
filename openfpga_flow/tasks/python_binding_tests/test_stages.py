@@ -44,9 +44,7 @@ def staged(shell, and2_files, design):
             return self.shell.run(f"read_vpr_arch -f {self.arch} -l {layout}", **kwargs)
 
         def read_openfpga_arch(self, **kwargs):
-            return self.shell.run(
-                f"read_openfpga_arch -f {self.openfpga_arch}", **kwargs
-            )
+            return self.shell.run(f"read_openfpga_arch -f {self.openfpga_arch}", **kwargs)
 
         def read_circuit(self, name="and2", **kwargs):
             return self.shell.run(f"read_circuit -f {design(name)}", **kwargs)
@@ -73,9 +71,7 @@ def results_of(directory, name, patterns=RESULTS):
 
 
 @pytest.mark.parametrize("name", sorted(DESIGNS))
-def test_results_equal_the_monolithic_flow(
-    staged, shell, tmp_path, and2_files, design, name
-):
+def test_results_equal_the_monolithic_flow(staged, shell, tmp_path, and2_files, design, name):
     staged.read_all(name)
     for command in ("pack", "place", "route"):
         shell.run(command)
@@ -96,9 +92,7 @@ def test_results_equal_the_monolithic_flow(
 
 
 @pytest.mark.parametrize("name", sorted(DESIGNS))
-def test_analysis_equals_the_monolithic_flow(
-    staged, shell, tmp_path, and2_files, design, name
-):
+def test_analysis_equals_the_monolithic_flow(staged, shell, tmp_path, and2_files, design, name):
     staged.read_all(name)
     for command in ("pack", "place", "route", "analysis"):
         shell.run(command)
@@ -137,6 +131,22 @@ def test_inputs_in_another_order(staged, shell):
         shell.run(command)
 
 
+def test_the_architectures_make_the_device_before_the_circuit(staged, shell):
+    staged.options()
+    staged.read_vpr_arch()
+    result = staged.read_openfpga_arch()
+    assert "Build Device Grid" in result.log
+    assert "DEVICE" in shell.run("report_stage --stage DEVICE").log
+    # Packing needs the circuit, which is read onto the device after
+    refused(
+        shell.run("pack", check=False), "CIRCUIT has not been read: use the command 'read_circuit'"
+    )
+    result = staged.read_circuit()
+    assert "Build Device Grid" in result.log  # made again with the circuit
+    for command in ("pack", "place", "route"):
+        shell.run(command)
+
+
 def test_the_device_is_not_there_before_the_last_input(staged):
     staged.options()
     assert "Build Device Grid" not in staged.read_vpr_arch().log
@@ -146,16 +156,15 @@ def test_the_device_is_not_there_before_the_last_input(staged):
 def test_missing_inputs_are_named(staged, shell):
     result = shell.run("pack", check=False)
     refused(result, "VPR_ARCH has not been read: use the command 'read_vpr_arch'")
-    assert "use the command 'read_circuit'" in result.log
     assert "use the command 'read_openfpga_arch'" in result.log
+    # The circuit is named once the architectures make the device
+    assert "read_circuit" not in result.log
 
     staged.options()
     staged.read_vpr_arch()
     staged.read_circuit()
     result = shell.run("pack", check=False)
-    refused(
-        result, "OPENFPGA_ARCH has not been read: use the command 'read_openfpga_arch'"
-    )
+    refused(result, "OPENFPGA_ARCH has not been read: use the command 'read_openfpga_arch'")
     assert "CIRCUIT has not been read" not in result.log
 
 
@@ -225,9 +234,7 @@ def test_failed_circuit_is_dropped(staged, shell, tmp_path):
 
 def test_failed_architecture_is_dropped(staged, shell, tmp_path):
     staged.options()
-    result = shell.run(
-        f"read_vpr_arch -f {tmp_path / 'nothing.xml'} -l 2x2", check=False
-    )
+    result = shell.run(f"read_vpr_arch -f {tmp_path / 'nothing.xml'} -l 2x2", check=False)
     assert result.status != 0
     refused(shell.run("pack", check=False), "VPR_ARCH has not been read")
     # A flow that was good before is not left half done
@@ -238,7 +245,8 @@ def test_failed_architecture_is_dropped(staged, shell, tmp_path):
 def test_automatic_layout_is_refused(staged, shell):
     staged.options()
     staged.read_vpr_arch(layout="auto")
-    staged.read_openfpga_arch()
+    # The device is made once both architectures are read: that is when the layout is refused
+    refused(staged.read_openfpga_arch(check=False), "sized from the result of packing")
     result = staged.read_circuit(check=False)
     refused(result, "sized from the result of packing")
     assert "general.device_layout" in result.log
@@ -252,10 +260,10 @@ def test_automatic_layout_is_refused(staged, shell):
 def test_layout_of_another_name_is_refused(staged):
     staged.options()
     result = staged.read_vpr_arch(layout="9x9", check=False)
-    # VPR reports the layout when the architecture is used by the device
-    staged.read_openfpga_arch()
-    result = staged.read_circuit(check=False)
-    assert result.status != 0 or "9x9" in result.log
+    # VPR reports the layout when the architecture is used by the device, which both
+    # architectures make
+    result = staged.read_openfpga_arch(check=False)
+    assert result.status != 0 and "9x9" in result.log
 
 
 def test_vpr_replaces_the_data(staged, shell, and2_files):
@@ -304,9 +312,7 @@ def test_option_changes_what_the_next_stage_does(staged, shell):
     for seed in (2, 3):
         shell.run(f"set_app_option -n place.seed -v {seed}")
         # The option dropped the placement and the routing, not the packing
-        refused(
-            shell.run("route", check=False), "the stage PLACED has not been reached"
-        )
+        refused(shell.run("route", check=False), "the stage PLACED has not been reached")
         log = shell.run("place").log
         assert f"placer_opts.seed: {seed}" in log
         places.append(Path("routing_test.place").read_bytes())
@@ -382,4 +388,3 @@ def test_route_again_after_analysis(staged, shell):
         shell.run(command)
     assert "Run the stages up to PLACED again" in shell.run("route").log
     shell.run("analysis")
-

@@ -7,8 +7,11 @@
 #include <functional>
 #include <vector>
 
+#include "analytical_placement_flow.h"
 #include "draw.h"
+#include "echo_files.h"
 #include "globals.h"
+#include "read_place.h"
 #include "setup_grid.h"
 #include "stats.h"
 #include "tatum/error.hpp"
@@ -207,6 +210,9 @@ void read_arch_only(VprRun& run) {
   setup.two_stage_clock_routing = options.two_stage_clock_routing;
   setup.exit_before_pack = options.exit_before_pack;
   setup.num_workers = 1;
+  /* As 'vpr' does first: the device is made from this alone, before a circuit
+   * is read, and it looks up the echo files */
+  init_echo_files_from_options(run.options.echo_file.value());
   vpr_setup_vpr(
     &run.options, setup.TimingEnabled, true, &setup.FileNameOpts, &run.arch,
     &setup.NetlistOpts, &setup.PackerOpts, &setup.PlacerOpts, &setup.APOpts,
@@ -306,14 +312,59 @@ bool do_place(OpenFpgaSession& session, VprRun& run,
   return true;
 }
 
-bool do_route(OpenFpgaSession& session, VprRun& run,
-              const std::string& file = std::string()) {
-  if (run.setup.RouterOpts.flat_routing) {
-    VTR_LOG_ERROR(
-      "Flat routing is not supported by the stage-by-stage flow yet\n");
-    drop_run(session);
+/* Pack and place at once with the analytical placement of VPR, as
+ * 'vpr --analytical_place' does, on the device that is made already */
+bool do_analytical_place(OpenFpgaSession& session, VprRun& run) {
+  const bool ok = guarded([&run]() {
+    run_analytical_placement_flow(run.setup);
+    const auto& filename_opts = run.setup.FileNameOpts;
+    const auto& cluster_ctx = g_vpr_ctx.clustering();
+    g_vpr_ctx.mutable_placement().placement_id = print_place(
+      filename_opts.NetFile.c_str(), cluster_ctx.clb_nlist.netlist_id().c_str(),
+      filename_opts.PlaceFile.c_str(), g_vpr_ctx.placement().block_locs());
+  });
+  if (!ok) {
+    VTR_LOG_ERROR("Analytical placement failed\n");
+    keep_failed_run(session, run, OpenFpgaStage::PLACED, ok);
     return false;
   }
+  run.last_stage = OpenFpgaStage::PLACED;
+  return true;
+}
+
+/* The netlist that the router works on: the atoms when the routing is flat,
+ * the clusters otherwise */
+const Netlist<>& router_net_list(const VprRun& run) {
+  if (run.setup.RouterOpts.flat_routing) {
+    return (const Netlist<>&)g_vpr_ctx.atom().netlist();
+  }
+  return (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
+}
+
+/* Port equivalence does not hold when the routing goes inside the clusters:
+ * turn it off in the device, as VPR does before a flat routing. The device is
+ * that of a fresh run, which is made again for each routing */
+void unset_port_equivalences() {
+  DeviceContext& device_ctx = g_vpr_ctx.mutable_device();
+  for (auto& physical_type : device_ctx.physical_tile_types) {
+    for (auto& sub_tile : physical_type.sub_tiles) {
+      for (auto& port : sub_tile.ports) {
+        port.equivalent = PortEquivalence::NONE;
+      }
+    }
+  }
+  for (auto& logical_type : device_ctx.logical_block_types) {
+    if (!logical_type.pb_type) {
+      continue;
+    }
+    for (int i = 0; i < logical_type.pb_type->num_ports; i++) {
+      logical_type.pb_type->ports[i].equivalent = PortEquivalence::NONE;
+    }
+  }
+}
+
+bool do_route(OpenFpgaSession& session, VprRun& run,
+              const std::string& file = std::string()) {
   if (!file.empty()) {
     if (NO_FIXED_CHANNEL_WIDTH == run.setup.RouterOpts.fixed_channel_width) {
       VTR_LOG_ERROR(
@@ -325,10 +376,16 @@ bool do_route(OpenFpgaSession& session, VprRun& run,
     run.setup.FileNameOpts.RouteFile = file;
     run.setup.RouterOpts.doRouting = e_stage_action::LOAD;
   }
-  const bool ok = guarded([&run]() {
-    const Netlist<>& net_list =
-      (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
-    run.route_status = vpr_route_flow(net_list, run.setup, run.arch, false);
+  const bool flat = run.setup.RouterOpts.flat_routing;
+  const bool ok = guarded([&run, flat]() {
+    if (flat) {
+      VTR_LOG_WARN(
+        "Disabling port equivalence in the architecture since flat routing "
+        "is enabled.\n");
+      unset_port_equivalences();
+    }
+    run.route_status =
+      vpr_route_flow(router_net_list(run), run.setup, run.arch, flat);
   });
   run.setup.RouterOpts.doRouting = e_stage_action::DO;
   if (!ok || !run.route_status.success()) {
@@ -341,15 +398,15 @@ bool do_route(OpenFpgaSession& session, VprRun& run,
 }
 
 /* Analysis changes the data of VPR: it synchronizes the packing with the
- * routing results. It is run on the data of the routing, as VPR cannot run it
- * twice on the same data */
+ * routing results (with the routing inside the clusters, when it is flat).
+ * It is run on the data of the routing, as VPR cannot run it twice on the
+ * same data */
 bool do_analysis(OpenFpgaSession& session, VprRun& run) {
   bool analyzed = false;
   const bool ok = guarded([&run, &analyzed]() {
-    const Netlist<>& net_list =
-      (const Netlist<>&)g_vpr_ctx.clustering().clb_nlist;
     analyzed =
-      vpr_analysis_flow(net_list, run.setup, run.arch, run.route_status, false);
+      vpr_analysis_flow(router_net_list(run), run.setup, run.arch,
+                        run.route_status, run.setup.RouterOpts.flat_routing);
   });
   if (!ok || !analyzed) {
     VTR_LOG_ERROR("Analysis failed\n");
@@ -363,8 +420,7 @@ bool do_analysis(OpenFpgaSession& session, VprRun& run) {
 /* Tell which inputs are missing, and how to read them */
 void report_missing_inputs(const OpenFpgaSession& session) {
   for (const OpenFpgaInput& input :
-       {OpenFpgaInput::VPR_ARCH, OpenFpgaInput::OPENFPGA_ARCH,
-        OpenFpgaInput::CIRCUIT}) {
+       {OpenFpgaInput::VPR_ARCH, OpenFpgaInput::OPENFPGA_ARCH}) {
     if (!session.has_input(input)) {
       VTR_LOG_ERROR("The input %s has not been read: use the command '%s'\n",
                     to_string(input).c_str(), input_command(input));
@@ -372,16 +428,71 @@ void report_missing_inputs(const OpenFpgaSession& session) {
   }
 }
 
+/* A stage that packs the circuit (PACKED, and PLACED with the analytical
+ * placer) needs it read: the device alone is made without it */
+bool circuit_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
+                   const char* command) {
+  const bool packs =
+    OpenFpgaStage::PACKED == stage ||
+    (OpenFpgaStage::PLACED == stage && session.analytical_placer());
+  /* Without the architectures, making the device says what is missing */
+  if (!packs || session.has_input(OpenFpgaInput::CIRCUIT) ||
+      !session.has_architectures()) {
+    return true;
+  }
+  VTR_LOG_ERROR(
+    "The input %s has not been read: use the command '%s' (the device is made "
+    "from the architectures, and '%s' packs the circuit onto it)\n",
+    to_string(OpenFpgaInput::CIRCUIT).c_str(),
+    input_command(OpenFpgaInput::CIRCUIT), command);
+  return false;
+}
+
+/* Make the device from the architectures alone: the circuit is not read yet */
+bool ensure_device_without_circuit(OpenFpgaSession& session,
+                                   const std::vector<std::string>& args) {
+  VprRun* current = vpr::current_vpr_run();
+  const bool same = nullptr != current && !current->failed &&
+                    !current->initialized && current->args == args;
+  /* The architecture of VPR was just read for these options: the device is
+   * made from it */
+  if (same && OpenFpgaStage::UNINIT == current->last_stage) {
+    if (!create_device(session, *current)) {
+      return false;
+    }
+  } else if (!same || OpenFpgaStage::DEVICE != current->last_stage) {
+    VprRun& run = start_run(session);
+    run.args = args;
+    const bool ok = guarded([&run, &args]() {
+      run.options = read_vpr_options(args);
+      read_arch_only(run);
+    });
+    if (!ok) {
+      drop_run(session);
+      return false;
+    }
+    if (!create_device(session, run)) {
+      return false;
+    }
+  }
+  session.complete(OpenFpgaStage::DEVICE);
+  return true;
+}
+
 /* Make sure the device is created, from the inputs read and the current
- * options */
+ * options: from the architectures, and the circuit once it is read */
 bool ensure_device(OpenFpgaSession& session) {
-  if (!session.has_all_inputs()) {
+  if (!session.has_architectures()) {
     report_missing_inputs(session);
     return false;
   }
+  const bool with_circuit = session.has_input(OpenFpgaInput::CIRCUIT);
   std::vector<std::string> args;
-  if (!flow_args(session.app_options(), true, args)) {
+  if (!flow_args(session.app_options(), with_circuit, args)) {
     return false;
+  }
+  if (!with_circuit) {
+    return ensure_device_without_circuit(session, args);
   }
   /* The data of the run is good if it was made from the same options */
   VprRun* run = vpr::current_vpr_run();
@@ -425,7 +536,27 @@ bool prepare_vpr(OpenFpgaSession& session, const OpenFpgaStage& target) {
   if (OpenFpgaStage::DEVICE == target) {
     return true;
   }
-  if (!do_pack(session, *run, session.imported_file(OpenFpgaStage::PACKED))) {
+  /* The analytical placer made the packing and the placement at once: it
+   * makes them again, unless they were read from files */
+  const std::string packing = session.imported_file(OpenFpgaStage::PACKED);
+  if (session.analytical_placer() && packing.empty()) {
+    if (OpenFpgaStage::PACKED == target) {
+      VTR_LOG_ERROR(
+        "The packing of the analytical placer (option place.placer) is made "
+        "with its placement, and the placement cannot be made again apart: "
+        "use the command 'place' (or 'pack') to make both again\n");
+      return false;
+    }
+    if (!do_analytical_place(session, *run)) {
+      return false;
+    }
+    if (OpenFpgaStage::PLACED == target) {
+      return true;
+    }
+    return do_route(session, *run,
+                    session.imported_file(OpenFpgaStage::ROUTED));
+  }
+  if (!do_pack(session, *run, packing)) {
     return false;
   }
   if (OpenFpgaStage::PACKED == target) {
@@ -471,6 +602,10 @@ bool read_vpr_arch_input(OpenFpgaSession& session, const std::string& file,
     session.fail_input(OpenFpgaInput::VPR_ARCH);
     return false;
   }
+  /* The device is made once both architectures are read */
+  if (session.has_architectures()) {
+    return ensure_device(session);
+  }
   return true;
 }
 
@@ -507,7 +642,7 @@ bool openfpga_arch_input_read(OpenFpgaSession& session,
                               const std::string& file) {
   sync_with_vpr(session);
   session.read_input(OpenFpgaInput::OPENFPGA_ARCH, whole_path(file));
-  if (session.has_all_inputs()) {
+  if (session.has_architectures()) {
     return ensure_device(session);
   }
   return true;
@@ -518,8 +653,48 @@ void fail_openfpga_arch_input(OpenFpgaSession& session) {
   session.fail_input(OpenFpgaInput::OPENFPGA_ARCH);
 }
 
+namespace {
+
+/* Pack and place at once, with the analytical placer: the command 'pack' or
+ * 'place' when the option place.placer is analytical */
+bool run_analytical_stages(OpenFpgaSession& session) {
+  if (!session.reached(OpenFpgaStage::DEVICE) && !ensure_device(session)) {
+    return false;
+  }
+  vtr::ScopedStartFinishTimer timer("Stages PACKED and PLACED (analytical)");
+  if (!prepare_vpr(session, OpenFpgaStage::DEVICE)) {
+    session.fail(OpenFpgaStage::DEVICE);
+    return false;
+  }
+  VprRun& run = *vpr::current_vpr_run();
+  const auto started = std::chrono::steady_clock::now();
+  if (!do_analytical_place(session, run)) {
+    session.fail(OpenFpgaStage::PACKED,
+                 "Analytical placement failed: the circuit could not be "
+                 "packed and placed on the device");
+    return false;
+  }
+  session.complete(OpenFpgaStage::PACKED);
+  session.complete(OpenFpgaStage::PLACED);
+  /* The time is the one of the placement, which made the packing too */
+  session.set_stage_seconds(
+    OpenFpgaStage::PLACED,
+    std::chrono::duration<double>(std::chrono::steady_clock::now() - started)
+      .count());
+  return true;
+}
+
+}  // End anonymous namespace
+
 bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
   sync_with_vpr(session);
+  if (!circuit_ready(session, stage, stage_command(stage))) {
+    return false;
+  }
+  if (session.analytical_placer() &&
+      (OpenFpgaStage::PACKED == stage || OpenFpgaStage::PLACED == stage)) {
+    return run_analytical_stages(session);
+  }
   const OpenFpgaStage required = required_stage(stage);
 
   /* The device is made from the inputs: it can be created by the stage */
@@ -587,6 +762,9 @@ bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
                   to_string(stage).c_str());
     return false;
   }
+  if (!circuit_ready(session, stage, command)) {
+    return false;
+  }
   if (!session.reached(required) && OpenFpgaStage::DEVICE == required) {
     if (!ensure_device(session)) {
       return false;
@@ -649,9 +827,9 @@ bool stage_ready(const OpenFpgaSession& session, const OpenFpgaStage& stage,
   }
   if (OpenFpgaStage::DEVICE == stage) {
     VTR_LOG_ERROR(
-      "Cannot run '%s': the stage DEVICE has not been reached, because not "
-      "all the inputs are read (or one was read again). Use the commands "
-      "'read_vpr_arch', 'read_openfpga_arch' and 'read_circuit' first\n",
+      "Cannot run '%s': the stage DEVICE has not been reached, because the "
+      "architectures are not read (or one was read again). Use the commands "
+      "'read_vpr_arch' and 'read_openfpga_arch' first\n",
       command);
     return false;
   }

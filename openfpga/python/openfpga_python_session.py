@@ -173,19 +173,33 @@ class PlacementReport:
     estimated_fmax_mhz: Optional[float]
     num_temperatures: Optional[int]
     swap_attempts: Optional[int]
+    # The placer (option place.placer): classic, or analytical, whose detailed placer the
+    # figures above are of, and whose global placement estimates are in global_placement
+    placer: str = "classic"
+    global_placement: Optional["GlobalPlacementReport"] = None
+
+
+@dataclasses.dataclass(frozen=True)
+class GlobalPlacementReport:
+    """The estimates of the global placement of the analytical placer, from its log"""
+
+    estimated_wirelength: Optional[float]
+    estimated_critical_path_delay_ns: Optional[float]
 
 
 @dataclasses.dataclass(frozen=True)
 class RoutingReport:
-    """wirelength is the tiles that the wires span, as VPR adds it up. iterations
-    and critical_path_delay_ns are from the log of the routing, and None if the
-    stage was not run by a command of this session"""
+    """wirelength is the tiles that the wires span, as VPR adds it up (the channels only, also
+    when the routing is flat). iterations and critical_path_delay_ns are from the log of the
+    routing, and None if the stage was not run by a command of this session"""
 
     channel_width: int
     wirelength: int
     wires: int
     iterations: Optional[int]
     critical_path_delay_ns: Optional[float]
+    # True when the routing is flat: wires and wirelength are those of the channels
+    flat_routing: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -795,7 +809,9 @@ class Session:
         directory is replaced.
         """
         state = self.state()
-        if "DEVICE" not in state.reached:
+        # The device is made from the architectures alone: a flow without a circuit has
+        # nothing of its own to save
+        if "DEVICE" not in state.reached or state.inputs.circuit is None:
             raise CheckpointError("Nothing to save: the flow has not read all its inputs")
         directory = os.fspath(directory)
         os.makedirs(directory, exist_ok=True)
