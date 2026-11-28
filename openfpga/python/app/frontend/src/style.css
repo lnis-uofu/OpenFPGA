@@ -130,6 +130,7 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .upload-remove { margin-left: auto; padding: 0 5px; font-size: 11px; line-height: 1.4; border: none; background: none; color: var(--muted); cursor: pointer; }
 .upload-remove:hover { color: var(--bad, #d33); }
 .upload-button { font-size: 12px; margin-top: 2px; }
+.upload-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .drop { position: absolute; inset: 8px; z-index: 3; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--bg) 85%, transparent); color: var(--accent); font-size: 16px; pointer-events: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .device-line { font-size: 12px; margin-top: 2px; }
@@ -447,6 +448,9 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .view-panel { padding: 0; gap: 0; }
 .view-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
 .view-toolbar button, .view-toolbar select { font-size: 12px; padding: 2px 8px; }
+.view-arrows { display: inline-flex; gap: 2px; }
+.view-rubber { position: absolute; z-index: 2; pointer-events: none; box-sizing: border-box; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.view-rubber.out { border-style: dashed; background: color-mix(in srgb, #d9534f 12%, transparent); border-color: #d9534f; }
 .view-groups { display: inline-flex; gap: 10px; }
 .view-groups label { display: inline-flex; align-items: center; gap: 3px; }
 .view-body { display: flex; flex: 1; min-height: 0; }

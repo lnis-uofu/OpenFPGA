@@ -32,7 +32,7 @@ import type {
   RectsLayer,
   Rgba,
 } from "./scene";
-import { runViewCommand, selection } from "./selection";
+import { selection } from "./selection";
 import {
   selectedPath,
   slackColor,
@@ -86,6 +86,21 @@ export interface NetlistBase {
   ms: number;
   /** The clusters and their atoms, for the list of V2 (made once) */
   contents?: ClusterContents[];
+  /** The modules and their atoms, for the list of V1 (made once for a netlist) */
+  hierarchy?: ModuleNode;
+}
+
+/** A module of the list of V1: the modules in it, and the atoms that are directly in it */
+export interface ModuleNode {
+  /** The path of the module ("" the top), the key of its group in the layout */
+  key: string;
+  /** Its last part */
+  label: string;
+  children: ModuleNode[];
+  /** The atoms directly in it, by their index */
+  atoms: number[];
+  /** The atoms in it and in the modules below */
+  count: number;
 }
 
 /** A cluster of the list of V2: its name, its type of block, its atoms */
@@ -299,6 +314,44 @@ export function clusterContents(base: NetlistBase): ClusterContents[] {
   return base.contents;
 }
 
+/** The modules of the netlist as a tree, from the module of each atom: a module has the modules
+ * below it and the atoms that are directly in it (the top has the atoms of no module) */
+export function moduleTree(base: NetlistBase): ModuleNode {
+  if (base.hierarchy) return base.hierarchy;
+  const root: ModuleNode = {
+    key: "",
+    label: "(top)",
+    children: [],
+    atoms: [],
+    count: 0,
+  };
+  const byKey = new Map<string, ModuleNode>([["", root]]);
+  const n = base.netlist;
+  for (let a = 0; a < n.atoms.length; a++) {
+    let parent = root;
+    for (const key of moduleKeys(n.module[a])) {
+      let node = byKey.get(key);
+      if (!node) {
+        node = {
+          key,
+          label: moduleParts(key).at(-1) ?? key,
+          children: [],
+          atoms: [],
+          count: 0,
+        };
+        byKey.set(key, node);
+        parent.children.push(node);
+      }
+      node.count++;
+      parent = node;
+    }
+    parent.atoms.push(a);
+    root.count++;
+  }
+  base.hierarchy = root;
+  return root;
+}
+
 /** Whether a group (a module, a cluster) is expanded in the layout */
 export const groupOpen = (base: NetlistBase, key: string) =>
   base.expanded.has(key);
@@ -479,6 +532,7 @@ function fetchScope(
       if (seq !== handled) return; // another was asked for since
       base.netlist = netlistOf(view);
       base.contents = undefined;
+      base.hierarchy = undefined;
       base.clusterAtoms.clear();
       base.shown = null;
       change(base, what, () => {
@@ -988,46 +1042,6 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
         return true;
       }
       return false;
-    },
-    menu(base, ref, changed): ViewTool[] {
-      const items: ViewTool[] = [];
-      const key = groupKey(base, ref);
-      const what = base.which === "atoms" ? "module" : "cluster";
-      if (key !== null)
-        items.push(
-          groupOpen(base, key)
-            ? {
-                label: "Collapse in the layout",
-                title: `The ${what} ${key} as one box`,
-                run: () => setGroupOpen(base, key, false, changed),
-              }
-            : {
-                label: "Expand in the layout",
-                title: `The atoms of the ${what} ${key}`,
-                run: () => setGroupOpen(base, key, true, changed),
-              },
-        );
-      if (ref.kind === "atom" && base.which === "clusters") {
-        // The cluster of an atom shown alone: collapse it
-        const a = base.netlist.atomIndex.get(ref.name);
-        const cluster =
-          a === undefined
-            ? undefined
-            : base.clusterName.get(base.netlist.cluster[a]);
-        if (cluster && groupOpen(base, cluster))
-          items.push({
-            label: `Collapse ${cluster}`,
-            title: `The cluster of ${ref.name} as one box`,
-            run: () => setGroupOpen(base, cluster, false, changed),
-          });
-      }
-      if (items.length)
-        items.push({
-          label: "Select",
-          title: `Select ${ref.name} in every view`,
-          run: () => runViewCommand({ op: "select", ...ref }),
-        });
-      return items;
     },
     tools(base, changed): ViewTool[] {
       const tools: ViewTool[] = [];

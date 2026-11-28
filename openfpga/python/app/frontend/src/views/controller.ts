@@ -1,7 +1,8 @@
 // The input of a view (docs/plan_design_views.md, 3.6): pan by a drag, zoom about the cursor with the
-// wheel, a click to pick, a double click to act on an object (else to fit), and the keys. The same for every view and backend:
+// wheel, a click to pick, a double click to act on an object (else to fit), a right drag to draw a
+// rectangle to zoom to (to the left: out), and the keys. The same for every view and backend:
 // it only changes the view state, which the renderers draw.
-import { type ViewState, pan, zoomAt } from "./viewstate";
+import { type ViewState, pan, zoomAt, zoomRect } from "./viewstate";
 
 export interface ControllerEvents {
   view(): ViewState;
@@ -14,6 +15,11 @@ export interface ControllerEvents {
   clear(): void;
   /** A double click on what is at a point: true if the view did something with it (else it fits) */
   activate?(px: number, py: number): boolean;
+  /** The rectangle that a right drag draws, from its corner to the other (null when it ends): a
+   * rectangle drawn to the left zooms out */
+  rubber?(
+    rect: { x0: number; y0: number; x1: number; y1: number } | null,
+  ): void;
 }
 
 const DRAG = 4; // pixels before a press is a drag
@@ -23,6 +29,8 @@ export function attachController(
   on: ControllerEvents,
 ): () => void {
   let down: { x: number; y: number; moved: boolean; id: number } | null = null;
+  // A right press: it draws a rectangle to zoom to
+  let right: { x: number; y: number; moved: boolean; id: number } | null = null;
   const local = (e: { clientX: number; clientY: number }) => {
     const box = element.getBoundingClientRect();
     return [e.clientX - box.left, e.clientY - box.top] as const;
@@ -35,6 +43,13 @@ export function attachController(
     on.setView(zoomAt(on.view(), x, y, Math.pow(1.0015, -delta)));
   };
   const pointerdown = (e: PointerEvent) => {
+    if (e.button === 2) {
+      element.focus();
+      const [x, y] = local(e);
+      right = { x, y, moved: false, id: e.pointerId };
+      element.setPointerCapture?.(e.pointerId);
+      return;
+    }
     if (e.button !== 0) return;
     element.focus();
     const [x, y] = local(e);
@@ -43,6 +58,12 @@ export function attachController(
   };
   const pointermove = (e: PointerEvent) => {
     const [x, y] = local(e);
+    if (right) {
+      if (!right.moved && Math.hypot(x - right.x, y - right.y) < DRAG) return;
+      right.moved = true;
+      on.rubber?.({ x0: right.x, y0: right.y, x1: x, y1: y });
+      return;
+    }
     if (!down) {
       on.hover(x, y);
       return;
@@ -54,6 +75,18 @@ export function attachController(
     down.y = y;
   };
   const pointerup = (e: PointerEvent) => {
+    if (right && e.button === 2) {
+      const [x, y] = local(e);
+      const rect = right;
+      right = null;
+      element.releasePointerCapture?.(rect.id);
+      on.rubber?.(null);
+      if (rect.moved) {
+        const next = zoomRect(on.view(), rect.x, rect.y, x, y);
+        if (next) on.setView(next);
+      }
+      return;
+    }
     if (!down) return;
     const [x, y] = local(e);
     if (!down.moved) on.pick(x, y, e.shiftKey || e.ctrlKey || e.metaKey);
@@ -85,6 +118,8 @@ export function attachController(
     }
   };
   const leave = () => on.leave();
+  // The menu of the browser never opens on a view: the right button zooms
+  const contextmenu = (e: MouseEvent) => e.preventDefault();
   element.addEventListener("wheel", wheel, { passive: false });
   element.addEventListener("pointerdown", pointerdown);
   element.addEventListener("pointermove", pointermove);
@@ -92,6 +127,7 @@ export function attachController(
   element.addEventListener("pointerleave", leave);
   element.addEventListener("dblclick", dblclick);
   element.addEventListener("keydown", keydown);
+  element.addEventListener("contextmenu", contextmenu);
   return () => {
     element.removeEventListener("wheel", wheel);
     element.removeEventListener("pointerdown", pointerdown);
@@ -100,5 +136,6 @@ export function attachController(
     element.removeEventListener("pointerleave", leave);
     element.removeEventListener("dblclick", dblclick);
     element.removeEventListener("keydown", keydown);
+    element.removeEventListener("contextmenu", contextmenu);
   };
 }

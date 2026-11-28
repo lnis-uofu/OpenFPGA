@@ -58,6 +58,7 @@ import {
   toWorld,
   visibleBox,
   zoomAt,
+  zoomRect,
   zoomTo,
 } from "./viewstate";
 
@@ -164,6 +165,68 @@ describe("the view state", () => {
     expect(run()).toEqual(first);
     expect(first.picks).toEqual([[51, 60]]); // a drag is not a click
     expect(first.view.scale).toBeCloseTo(20 * Math.pow(1.0015, 200) * 1.5);
+  });
+});
+
+describe("the zoom to a rectangle (right drag)", () => {
+  it("zooms in so that the rectangle fills the screen, with its middle at the middle", () => {
+    // 200 x 150 pixels of 800 x 600: four times closer
+    const next = zoomRect(VIEW, 100, 100, 300, 250)!;
+    expect(next.scale).toBeCloseTo(VIEW.scale * 4);
+    close(toWorld(VIEW, 200, 175), [next.cx, next.cy]);
+  });
+
+  it("zooms out into a rectangle drawn to the left: the screen shrinks to it", () => {
+    const next = zoomRect(VIEW, 300, 250, 100, 100)!;
+    expect(next.scale).toBeCloseTo(VIEW.scale / 4);
+    // The middle of the old screen is where the middle of the rectangle is
+    const [x, y] = toScreen(next, VIEW.cx, VIEW.cy);
+    close([x, y], [200, 175]);
+  });
+
+  it("does nothing for a rectangle that is a click, and keeps the scale in its limits", () => {
+    expect(zoomRect(VIEW, 100, 100, 102, 300)).toBeNull();
+    expect(zoomRect(VIEW, 100, 100, 100.5, 100.5, 0)!.scale).toBe(4096);
+  });
+
+  it("is a right drag in the controller, and a right click does nothing", () => {
+    const element = document.createElement("div");
+    element.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 800, height: 600 }) as DOMRect;
+    let view = { ...VIEW };
+    const rects: unknown[] = [];
+    attachController(element, {
+      view: () => view,
+      setView: (next) => (view = next),
+      pick: () => undefined,
+      hover: () => undefined,
+      leave: () => undefined,
+      fit: () => undefined,
+      clear: () => undefined,
+      rubber: (r) => rects.push(r),
+    });
+    const fire = (type: string, x: number, y: number) => {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        button: 2,
+        clientX: x,
+        clientY: y,
+      });
+      Object.defineProperty(event, "pointerId", { value: 1 });
+      element.dispatchEvent(event);
+    };
+    fire("pointerdown", 100, 100);
+    fire("pointermove", 300, 250);
+    fire("pointerup", 300, 250);
+    expect(view.scale).toBeCloseTo(VIEW.scale * 4);
+    expect(rects.at(-1)).toBeNull(); // the rectangle is gone
+    fire("pointerdown", 500, 400);
+    fire("pointerup", 500, 400);
+    expect(view.scale).toBeCloseTo(VIEW.scale * 4);
+    // The menu of the browser does not open
+    const menu = new MouseEvent("contextmenu", { cancelable: true });
+    element.dispatchEvent(menu);
+    expect(menu.defaultPrevented).toBe(true);
   });
 });
 

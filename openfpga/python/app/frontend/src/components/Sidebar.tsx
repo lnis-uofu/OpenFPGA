@@ -23,6 +23,7 @@ import {
   SIDEBAR_WIDTH_DEFAULT,
   toggleSessions,
   uploadFiles,
+  createFile,
   uploading,
   view,
 } from "../store";
@@ -226,6 +227,8 @@ interface StageView {
 const VIEWS: Record<string, StageView[]> = {
   DEVICE: [
     { panel: "pins", name: "floorplan", icon: "⌗", title: "the floorplan: the tiles, the I/O sites, the pins of the package and the ports on them" },
+  ],
+  SYNTHESIS: [
     { panel: "netlist", name: "netlist", icon: "⊶", title: "the netlist: the atoms of the circuit by the modules of the RTL", circuit: true },
   ],
   PACKED: [{ panel: "clusters", name: "clusters", icon: "⊞", title: "the clusters: the clusters and the nets between them; a cluster opens into its atoms" }],
@@ -627,14 +630,27 @@ export function Sidebar() {
               }}
             />
             {/* Outside the fold: files can be uploaded with the list folded */}
-            <button
-              class="upload-button"
-              disabled={!real || uploading.value}
-              title={real ? "Copy files into this session (architectures, circuits, constraints)" : "Not in the demo"}
-              onClick={() => picker.current?.click()}
-            >
-              {uploading.value ? "Uploading…" : "⤒ Upload files…"}
-            </button>
+            <div class="upload-buttons">
+              <button
+                class="upload-button"
+                disabled={!real || uploading.value}
+                title={real ? "Copy files into this session (architectures, circuits, constraints)" : "Not in the demo"}
+                onClick={() => picker.current?.click()}
+              >
+                {uploading.value ? "Uploading…" : "⤒ Upload files…"}
+              </button>
+              <button
+                class="upload-button"
+                disabled={!real || uploading.value}
+                title={real ? "Make a new file in this session: ask for its name, then open it to write" : "Not in the demo"}
+                onClick={() => {
+                  const name = window.prompt(`Name of the new file (${UPLOAD_EXTENSIONS.join(" ")}):`, "");
+                  if (name !== null) void createFile(name);
+                }}
+              >
+                ＋ New file…
+              </button>
+            </div>
           </>
         }
       >

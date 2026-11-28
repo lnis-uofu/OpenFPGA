@@ -681,6 +681,61 @@ describe("uploading files to the session", () => {
     expect(sent[1]?.method).toBe("DELETE");
   });
 
+  it("makes a new file from the name that the person gives, and opens it", async () => {
+    real();
+    view.value = filled();
+    const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+      answer(200, url.startsWith("/api/upload") ? { ok: true, data: { name: "top.v", kind: "circuit", bytes: 1 } } : emptyView()),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const prompt = vi.fn(() => "top.v");
+    vi.stubGlobal("prompt", prompt);
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("＋ New file…"));
+    expect(prompt).toHaveBeenCalled();
+    await waitFor(() => expect(fetchMock.mock.calls.some((c) => String(c[0]).startsWith("/api/upload"))).toBe(true));
+    const sent = fetchMock.mock.calls.find((c) => String(c[0]).startsWith("/api/upload"))!;
+    expect(sent[0]).toBe("/api/upload?name=top.v");
+    expect(sent[1]?.method).toBe("POST");
+  });
+
+  it("refuses a name that is not a file name, and a cancelled prompt does nothing", async () => {
+    real();
+    view.value = filled();
+    const fetchMock = vi.fn(() => answer(200, emptyView()));
+    vi.stubGlobal("fetch", fetchMock);
+    const prompt = vi.fn(() => "a/b.v");
+    vi.stubGlobal("prompt", prompt);
+    render(<Sidebar />);
+    fireEvent.click(screen.getByText("＋ New file…"));
+    await waitFor(() => expect(banner.value?.kind).toBe("invalid_name"));
+    banner.value = null;
+    prompt.mockReturnValue("notes.exe" as never);
+    fireEvent.click(screen.getByText("＋ New file…"));
+    await waitFor(() => expect(banner.value?.kind).toBe("invalid_type"));
+    banner.value = null;
+    prompt.mockReturnValue(null as never);
+    fireEvent.click(screen.getByText("＋ New file…"));
+    expect(banner.value).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("has the open netlist button on the synthesis stage, not on the device", () => {
+    view.value = {
+      ...filled(),
+      stages: [
+        { stage: "DEVICE", status: "reached", message: null, seconds: null },
+        { stage: "PACKED", status: "pending", message: null, seconds: null },
+      ] as never,
+      synthesis: { status: "reached", message: null, seconds: null, design: "d" } as never,
+    };
+    config.value = { schema_version: 1, console: false, backend: "session", model: { endpoint: null, name: null } };
+    render(<Sidebar />);
+    const row = (name: string) => screen.getByText(name).closest("li") as HTMLElement;
+    expect(row("SYNTHESIS").querySelector("[aria-label='Open the netlist']")).toBeTruthy();
+    expect(row("DEVICE").querySelector("[aria-label='Open the netlist']")).toBeNull();
+  });
+
   it("starts with the design files folded, and keeps how many there are in the title", () => {
     const v = filled();
     v.files.uploads = [{ name: "mine.blif", kind: "circuit", bytes: 900 }];

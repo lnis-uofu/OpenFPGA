@@ -570,6 +570,45 @@ export async function uploadFiles(files: File[]) {
   }
 }
 
+const NEW_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]{0,99}$/;
+
+/** The file of the uploads of the session with this name, as the view lists it */
+function uploadedNamed(name: string) {
+  const all = [...(view.value.files.uploads ?? []), ...(view.value.files.created ?? [])];
+  return all.find((f) => f.name === name || f.name.endsWith(`/${name}`));
+}
+
+/** Make a file in the session from the name that the person gave, and open it to write. The
+ * server refuses an empty file, so it starts as one line break. A name that is taken opens the
+ * file that is there: nothing is replaced */
+export async function createFile(typed: string) {
+  const name = typed.trim();
+  if (!name) return;
+  const extension = name.includes(".") ? name.slice(name.lastIndexOf(".")).toLowerCase() : "";
+  if (!NEW_FILE_NAME.test(name) || name.includes("..")) {
+    banner.value = {
+      kind: "invalid_name",
+      message: `'${name}' is not a name for a file`,
+      hint: "Use letters, digits and . _ + - (at most 100), with no folder",
+    };
+    return;
+  }
+  if (!UPLOAD_EXTENSIONS.includes(extension)) {
+    banner.value = {
+      kind: "invalid_type",
+      message: `${name} is not a kind of file that a flow reads`,
+      hint: `Accepted: ${UPLOAD_EXTENSIONS.join(", ")}`,
+    };
+    return;
+  }
+  const taken = uploadedNamed(name);
+  if (!taken) {
+    await uploadFiles([new File(["\n"], name, { type: "text/plain" })]);
+  }
+  const made = taken ?? uploadedNamed(name); // none if it failed: the banner says why
+  if (made) await openFile(made.name);
+}
+
 /** Take a file that was uploaded out of the session */
 export async function removeUpload(name: string) {
   banner.value = null;

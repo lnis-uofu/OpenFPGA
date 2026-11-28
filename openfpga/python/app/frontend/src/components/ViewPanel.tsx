@@ -35,11 +35,11 @@ import {
 } from "../views/selection";
 import { SceneIndex } from "../views/spatial";
 import { TileCache } from "../views/tiles";
-import { openMenu } from "./ContextMenu";
 import type { LegendEntry, ViewDef } from "../views/view";
 import {
   type ViewState,
   fit,
+  pan,
   resized,
   toWorld,
   zoomAt,
@@ -207,6 +207,13 @@ export function ViewPanel<B>(props: {
   );
   /** The list beside the drawing: shown, and drawn again at each build */
   const [sideShown, setSideShown] = useState(true);
+  // The rectangle of a right drag, in pixels of the view: to the left it zooms out
+  const [rubber, setRubber] = useState<{
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  } | null>(null);
   const [version, setVersion] = useState(0);
   const real = config.value?.backend === "session";
   const signature = sessionSignature();
@@ -456,6 +463,7 @@ export function ViewPanel<B>(props: {
         });
       },
       leave: () => setTip(null),
+      rubber: setRubber,
       fit: () => setView(fit(state.view, def.bounds(base))),
       clear: () => runViewCommand({ op: "clear" }),
       activate: (px, py) => {
@@ -515,14 +523,9 @@ export function ViewPanel<B>(props: {
     setHidden(next);
   };
   const chosen = selection.value;
-  // A right click on an object: the commands of the view for it, else the menu of the page
-  const onMenu = (e: MouseEvent) => {
-    const element = host.current;
-    if (!element || !state.base || !def.menu || !state.pickAt) return;
-    const box = element.getBoundingClientRect();
-    const ref = state.pickAt(e.clientX - box.left, e.clientY - box.top);
-    if (ref) openMenu(e, def.menu(state.base, ref, changed));
-  };
+  // The view moved by a share of its size (the arrows of the toolbar, as the arrow keys)
+  const shift = (dx: number, dy: number) =>
+    setView(pan(state.view, dx * state.view.width, dy * state.view.height));
   const Side = def.side?.component;
   return (
     <section class="panel view-panel" aria-label={props.title} data-view={name}>
@@ -535,6 +538,26 @@ export function ViewPanel<B>(props: {
         >
           Fit
         </button>
+        <span class="view-arrows" role="group" aria-label="Move the view">
+          {(
+            [
+              ["←", "left", 0.25, 0],
+              ["↑", "up", 0, 0.25],
+              ["↓", "down", 0, -0.25],
+              ["→", "right", -0.25, 0],
+            ] as const
+          ).map(([arrow, where, dx, dy]) => (
+            <button
+              key={where}
+              disabled={!base}
+              aria-label={`Move the view ${where}`}
+              title={`Shift the layout ${where} (the arrow keys do it too)`}
+              onClick={() => shift(dx, dy)}
+            >
+              {arrow}
+            </button>
+          ))}
+        </span>
         {base &&
           def.tools?.(base, changed).map((t) => (
             <button key={t.label} title={t.title} onClick={t.run}>
@@ -612,9 +635,20 @@ export function ViewPanel<B>(props: {
           class="view-host"
           ref={host}
           tabIndex={0}
-          aria-label={`${props.title}: drag to move, wheel to zoom, click to select`}
-          onContextMenu={onMenu}
+          aria-label={`${props.title}: drag to move, wheel to zoom, click to select, right drag to zoom to a rectangle`}
         >
+          {rubber && (
+            <div
+              class={`view-rubber ${rubber.x1 < rubber.x0 ? "out" : "in"}`}
+              data-zoom={rubber.x1 < rubber.x0 ? "out" : "in"}
+              style={{
+                left: `${Math.min(rubber.x0, rubber.x1)}px`,
+                top: `${Math.min(rubber.y0, rubber.y1)}px`,
+                width: `${Math.abs(rubber.x1 - rubber.x0)}px`,
+                height: `${Math.abs(rubber.y1 - rubber.y0)}px`,
+              }}
+            />
+          )}
           <Legend entries={legend} />
           {tip && (
             <div

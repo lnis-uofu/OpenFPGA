@@ -64,6 +64,39 @@ export function zoomAt(
   };
 }
 
+/** What a rectangle drawn on the screen (corners in pixels) does to the view: drawn from left to
+ * right, it is zoomed to (what is in it fills the screen); drawn from right to left, the whole
+ * screen is zoomed out into it (what is on the screen shrinks to the rectangle). Null for a
+ * rectangle too small to mean it */
+export function zoomRect(
+  v: ViewState,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  minPx = 4,
+): ViewState | null {
+  const w = Math.abs(x1 - x0);
+  const h = Math.abs(y1 - y0);
+  if (w < minPx || h < minPx) return null;
+  const mx = (x0 + x1) / 2;
+  const my = (y0 + y1) / 2;
+  const grow = Math.min(v.width / w, v.height / h);
+  const scale = clampScale(x1 >= x0 ? v.scale * grow : v.scale / grow);
+  // The point of the world at the middle of the rectangle goes to the middle of the screen when
+  // zooming in; the middle of the screen goes to the middle of the rectangle when zooming out
+  const [wx, wy] = toWorld(v, mx, my);
+  if (x1 >= x0) {
+    return { ...v, scale, cx: wx, cy: wy };
+  }
+  return {
+    ...v,
+    scale,
+    cx: v.cx - (mx - v.width / 2) / scale,
+    cy: v.cy + (my - v.height / 2) / scale,
+  };
+}
+
 /** The whole box on the screen, with a margin of pixels */
 export function fit(
   v: ViewState,

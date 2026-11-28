@@ -5,6 +5,7 @@ import { clustersView, netlistView } from "../views/netlist";
 import { pinsView } from "../views/pins";
 import { routingView } from "../views/routing";
 import { ClusterList } from "./ClusterList";
+import { ModuleList } from "./ModuleList";
 import { ViewPanel } from "./ViewPanel";
 
 export const FloorplanPanel = () => (
@@ -16,8 +17,13 @@ export const PinsPanel = () => (
 export const RoutingPanel = () => (
   <ViewPanel name="routing" title="Routing" def={routingView} />
 );
+/** V1 with the hierarchy of its modules beside the drawing, as V2 has its clusters */
+const netlistWithList = {
+  ...netlistView,
+  side: { label: "Hierarchy", component: ModuleList },
+};
 export const NetlistPanel = () => (
-  <ViewPanel name="netlist" title="Netlist" def={netlistView} />
+  <ViewPanel name="netlist" title="Netlist" def={netlistWithList} />
 );
 /** V2 with the list of its clusters beside the drawing */
 const clustersWithList = {

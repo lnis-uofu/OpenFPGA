@@ -519,35 +519,6 @@ describe("the clusters view (V2)", () => {
     ).toBe(0);
   });
 
-  it("expands and collapses a cluster from the menu of a right click", async () => {
-    const base = await clustersView.load();
-    const labels = (name: string) =>
-      clustersView.menu!(base, { kind: "block", name }, () => undefined).map(
-        (t) => t.label,
-      );
-    expect(labels("clb_a")).toEqual(["Expand in the layout", "Select"]);
-    clustersView.menu!(
-      base,
-      { kind: "block", name: "clb_a" },
-      () => undefined,
-    )[0].run();
-    expect(base.expanded.has("clb_a")).toBe(true);
-    expect(labels("clb_a")).toEqual(["Collapse in the layout", "Select"]);
-    // An atom of an expanded cluster collapses its cluster
-    const atom = clustersView.menu!(
-      base,
-      { kind: "atom", name: "u_a.x1" },
-      () => undefined,
-    );
-    expect(atom.map((t) => t.label)).toEqual(["Collapse clb_a", "Select"]);
-    atom[0].run();
-    expect(base.expanded.has("clb_a")).toBe(false);
-    // Nothing for a net: the menu of the page
-    expect(
-      clustersView.menu!(base, { kind: "net", name: "n1" }, () => undefined),
-    ).toEqual([]);
-  });
-
   it("lists the clusters with their atoms", async () => {
     const base = await clustersView.load();
     expect(
