@@ -131,6 +131,19 @@ VPR reads these when the device is made, so the options belong to the stage ``DE
 
 The pin constraints of OpenFPGA are not inputs of a stage: they are options of the commands that follow the stages, e.g., ``route_clock_rr_graph`` and ``pcf2place``. Give them with ``session.command("route_clock_rr_graph", pin_constraints_file="pcf.xml")``, which the journal records.
 
+.. _synthesis_in_python:
+
+Synthesis and design directories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``session.synthesize(top, files, lut_size=None, ...)`` synthesizes Verilog files into a netlist of the LUTs of the device with Yosys (the shell's command ``synthesize``, see :ref:`openfpga_yosys_commands`; it needs a build with Yosys). The script is the generic one with ``lut_size``, or the one of the synthesis target that a plugin gives for the session. The script and the netlist go to ``synth/`` (``output_dir``), and the netlist is read as the circuit when the architectures are read (``read=False`` does not). ``run=False`` writes the script and returns the plan. A source that takes a file from outside its folder, a top module or a value that a script does not take, are refused before Yosys runs: ``OpenfpgaError`` with ``Synthesis refused: <reason>``.
+
+``session.read_design(directory)`` reads a design directory (see :ref:`openfpga_design_directory`, command ``read_design``): its constraints file, then its RTL synthesized with the top, the defines, the include folders and the options of its manifest, or its netlist (the one of the label ``netlist``, or the only one of a design with no RTL); its SDC is set as ``filename.sdc_file``. ``check=True`` checks the design and returns what would be synthesized, without writing anything.
+
+Both return the answer of the command (kind ``synthesis``): ``top``, ``netlist``, ``script``, ``target``, ``lut_size``, ``files``, ``synthesized``, ``circuit_read``, and for a design ``design``, ``design_folder``, ``sdc`` and ``constraints_file``. The journal has the commands that ran, not the checks nor the plans, and a replay runs the synthesis again.
+
+``session.design_hierarchy(directory)`` (or ``top=`` and ``files=``) gives the tree of the instances of a design and its modules (``report_design_hierarchy``), as a dict. It runs a Yosys script of its own, and changes nothing of the flow; it is not in the journal.
+
 .. _journal_and_replay:
 
 Journal and replay

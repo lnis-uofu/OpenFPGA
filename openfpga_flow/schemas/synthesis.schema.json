@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "synthesis",
+  "description": "A synthesis with Yosys (answer of 'synthesize'), or the reading of a design directory (answer of 'read_design'): the netlist, and what made it. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "synthesis"
+    },
+    "stage": {
+      "type": "null"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "design",
+        "netlist",
+        "synthesized",
+        "circuit_read"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "design": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The name of the design directory (read_design), or null"
+        },
+        "design_folder": {
+          "type": "string",
+          "description": "The design directory, as a whole path"
+        },
+        "top": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "netlist": {
+          "type": "string",
+          "description": "The netlist (.blif or .eblif): made by the synthesis, or the one of the design that is read"
+        },
+        "script": {
+          "type": "string",
+          "description": "The script of Yosys that was written"
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The synthesis target (given by a plugin) whose script and values were used, or null for the generic synthesis"
+        },
+        "lut_size": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The Verilog files that are synthesized"
+        },
+        "sdc": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The SDC of the design, given to VPR (read_design)"
+        },
+        "constraints_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The constraints file of the design (role constraints), read with the command that a plugin names (read_design)"
+        },
+        "constraints": {
+          "type": "boolean",
+          "description": "The script has the synthesis commands of the constraints of the session"
+        },
+        "synthesized": {
+          "type": "boolean",
+          "description": "Yosys ran and made the netlist (false for a plan, a check, or a design of a netlist)"
+        },
+        "circuit_read": {
+          "type": "boolean",
+          "description": "The netlist was read as the circuit"
+        }
+      }
+    }
+  }
+}
