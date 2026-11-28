@@ -183,8 +183,9 @@ installer:
 	cpack --config ${BUILD_DIR}/CPackConfig.cmake -G ${INSTALLER_TYPE} ${CPACK_BUILD_CONFIG}
 
 format-cpp:
-# Format all the C/C++ files under this project, excluding submodules
-	for f in `find libs openfpga -iname *.cpp -o -iname *.hpp -o -iname *.c -o -iname *.h`; \
+# Format all the C/C++ files under this project, excluding submodules and the libraries of
+# other projects (libs/EXTERNAL)
+	for f in `find libs openfpga -path libs/EXTERNAL -prune -o \( -iname *.cpp -o -iname *.hpp -o -iname *.c -o -iname *.h \) -print`; \
 	do \
 	${CLANG_FORMAT_EXEC} --style=file -i $${f} || exit 1; \
 	done

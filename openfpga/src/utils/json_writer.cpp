@@ -242,6 +242,13 @@ JsonWriter& JsonWriter::null() {
   return *this;
 }
 
+JsonWriter& JsonWriter::raw(const std::string& json) {
+  before_value();
+  text_ += json;
+  after_value();
+  return *this;
+}
+
 bool JsonWriter::complete() const { return done_; }
 
 std::string JsonWriter::str() const {

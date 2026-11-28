@@ -4,6 +4,7 @@
 
 #include "json_response.h"
 #include "json_writer.h"
+#include "nlohmann/json.hpp"
 #include "staged_flow.h"
 
 /* Begin namespace openfpga */
@@ -101,6 +102,18 @@ std::string session_json(const OpenFpgaSession& session,
   if (!wrote) {
     json.null();
   }
+  /* The data that plugins keep with the architectures, by key */
+  json.key("attachments").begin_object();
+  for (const std::string& key : session.attachment_keys()) {
+    const std::string& value = session.attachment(key);
+    json.key(key);
+    if (nlohmann::json::accept(value)) {
+      json.raw(nlohmann::json::parse(value).dump());
+    } else {
+      json.null();
+    }
+  }
+  json.end_object();
   json.end_object();
   end_response(json);
   return json.str();

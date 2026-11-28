@@ -1,7 +1,11 @@
 #ifndef OPENFPGA_CONTEXT_H
 #define OPENFPGA_CONTEXT_H
 
+#include <map>
+#include <memory>
 #include <string>
+#include <typeindex>
+#include <typeinfo>
 #include <vector>
 
 #include "bitstream_manager.h"
@@ -181,6 +185,26 @@ class OpenfpgaContext : public Context {
    * that does not change the data can set it: the function is const */
   void set_query_result(const std::string& json) const { query_result_ = json; }
   void clear_query_result() const { query_result_.clear(); }
+  /* A slot where a plugin keeps its own data: one object of each type E,
+   * made (default-constructed) on first use and kept as long as the
+   * context. A plugin whose data is part of the flow clears it itself when
+   * the flow is read again: the context is not reset as a whole */
+  template <class E>
+  E& extension() {
+    std::shared_ptr<void>& slot = extensions_[std::type_index(typeid(E))];
+    if (!slot) {
+      slot = std::make_shared<E>();
+    }
+    return *static_cast<E*>(slot.get());
+  }
+  /* The slot of the type E, or null when it was never used */
+  template <class E>
+  const E* find_extension() const {
+    const auto found = extensions_.find(std::type_index(typeid(E)));
+    return extensions_.end() == found
+             ? nullptr
+             : static_cast<const E*>(found->second.get());
+  }
   openfpga::BitstreamManager& mutable_bitstream_manager() {
     return bitstream_manager_;
   }
@@ -307,6 +331,9 @@ class OpenfpgaContext : public Context {
   /* Flow run stage by stage, and the stage it has reached */
   openfpga::OpenFpgaSession session_;
   mutable std::string query_result_;
+
+  /* The data of the plugins, by type (see extension()) */
+  std::map<std::type_index, std::shared_ptr<void>> extensions_;
 };
 
 #endif

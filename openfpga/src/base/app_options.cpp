@@ -285,4 +285,10 @@ bool AppOptions::reset(const std::string& name) {
 
 void AppOptions::reset_all() { values_ = app_option_defaults(); }
 
+void AppOptions::add_new_defaults() {
+  for (const auto& entry : app_option_defaults()) {
+    values_.insert(entry);
+  }
+}
+
 } /* End namespace openfpga */

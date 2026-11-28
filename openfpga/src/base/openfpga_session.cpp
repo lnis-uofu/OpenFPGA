@@ -190,6 +190,9 @@ bool OpenFpgaSession::read_input(const OpenFpgaInput& input,
   }
   inputs_ |= bit(input);
   input_files_[input] = file;
+  if (OpenFpgaInput::CIRCUIT != input) {
+    forget_architecture_state();
+  }
   invalidate_all_stages();
   return true;
 }
@@ -197,6 +200,9 @@ bool OpenFpgaSession::read_input(const OpenFpgaInput& input,
 void OpenFpgaSession::fail_input(const OpenFpgaInput& input) {
   inputs_ &= ~bit(input);
   input_files_.erase(input);
+  if (OpenFpgaInput::CIRCUIT != input) {
+    forget_architecture_state();
+  }
   if (OpenFpgaInput::VPR_ARCH == input) {
     inputs_ &= ~bit(OpenFpgaInput::CIRCUIT);
     input_files_.erase(OpenFpgaInput::CIRCUIT);
@@ -211,7 +217,16 @@ bool OpenFpgaSession::complete(const OpenFpgaStage& stage) {
   /* What depends on the stage was made from its previous results */
   invalidate_stage_and_dependents(stage);
   stages_ |= bit(stage);
+  stage_generations_[stage] = ++completions_;
   return true;
+}
+
+uint64_t OpenFpgaSession::stage_generation(const OpenFpgaStage& stage) const {
+  if (!reached(stage)) {
+    return 0;
+  }
+  const auto found = stage_generations_.find(stage);
+  return stage_generations_.end() == found ? 0 : found->second;
 }
 
 bool OpenFpgaSession::analytical_placer() const {
@@ -264,11 +279,34 @@ const std::string* OpenFpgaSession::failure(const OpenFpgaStage& stage) const {
   return failures_.end() == found ? nullptr : &found->second;
 }
 
+std::string OpenFpgaSession::fixed_option(const std::string& name) const {
+  if ("router.route_chan_width" != name || fixed_channel_width_owner_.empty()) {
+    return "";
+  }
+  const AppOptionValue* option = app_options_.find(name);
+  return "The channel width is " +
+         (nullptr == option ? std::string("") : option->to_string()) +
+         ", the one of " + fixed_channel_width_owner_ +
+         ", and cannot be changed: router.route_chan_width is read only";
+}
+
 bool OpenFpgaSession::set_app_option(const std::string& name,
                                      const std::string& text,
                                      std::string& error) {
   const AppOptionValue* option = app_options_.find(name);
   const std::string before = nullptr == option ? "" : option->to_string();
+  /* A fixed option is checked on a copy: setting the value it has is fine */
+  const std::string fixed = fixed_option(name);
+  if (!fixed.empty()) {
+    AppOptions copy = app_options_;
+    if (!copy.set(name, text, error)) {
+      return false;
+    }
+    if (before != copy.find(name)->to_string()) {
+      error = fixed;
+      return false;
+    }
+  }
   if (!app_options_.set(name, text, error)) {
     return false;
   }
@@ -283,6 +321,9 @@ bool OpenFpgaSession::reset_app_option(const std::string& name) {
     return false;
   }
   const bool changed = !app_options_.is_default(name);
+  if (changed && !fixed_option(name).empty()) {
+    return false;
+  }
   app_options_.reset(name);
   if (changed) {
     invalidate_for_option(name);
@@ -299,6 +340,7 @@ void OpenFpgaSession::reset_app_options() {
 void OpenFpgaSession::reset() {
   inputs_ = 0;
   input_files_.clear();
+  forget_architecture_state();
   stages_ = 0;
   linked_generation_ = 0;
   imported_.clear();
@@ -326,6 +368,43 @@ void OpenFpgaSession::invalidate_all_stages() {
   failures_.clear();
   stage_logs_.clear();
   stage_seconds_.clear();
+}
+
+void OpenFpgaSession::set_attachment(const std::string& key,
+                                     const std::string& json) {
+  attachments_[key] = json;
+}
+
+const std::string& OpenFpgaSession::attachment(const std::string& key) const {
+  static const std::string none;
+  const auto found = attachments_.find(key);
+  return attachments_.end() == found ? none : found->second;
+}
+
+void OpenFpgaSession::clear_attachment(const std::string& key) {
+  attachments_.erase(key);
+}
+
+std::vector<std::string> OpenFpgaSession::attachment_keys() const {
+  std::vector<std::string> keys;
+  for (const auto& entry : attachments_) {
+    keys.push_back(entry.first);
+  }
+  return keys;
+}
+
+void OpenFpgaSession::reset_cache_options() {
+  const std::vector<std::string> names = cache_options_;
+  cache_options_.clear();
+  for (const std::string& name : names) {
+    reset_app_option(name);
+  }
+}
+
+void OpenFpgaSession::forget_architecture_state() {
+  attachments_.clear();
+  fixed_channel_width_owner_.clear();
+  reset_cache_options();
 }
 
 void OpenFpgaSession::invalidate_for_option(const std::string& name) {

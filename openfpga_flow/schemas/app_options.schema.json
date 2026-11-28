@@ -35,6 +35,7 @@
         "help": {"type": "string"},
         "choices": {"type": "array", "items": {"type": "string"}},
         "stage": {"enum": ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED", "REPACKED", "BITSTREAM"]},
+        "owner": {"type": "string", "description": "Who the option belongs to: vpr, openfpga, or the name of the plugin that added it."},
         "vpr_flag": {"type": ["string", "null"], "description": "The flag of the option on the command line of VPR (e.g. --device for general.device_layout), or the name of a positional argument; null for an option of OpenFPGA."}
       },
       "allOf": [

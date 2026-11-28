@@ -116,6 +116,10 @@ class OpenFpgaSession {
    * stage was not run by a command of this session (e.g., its results were
    * read from a file), or was dropped, see set_stage_log() */
   const std::string* stage_log(const OpenFpgaStage& stage) const;
+  /* A number that changes each time a stage completes, and only then: the
+   * version of what was made from its data (e.g., what a plugin exports of
+   * it). 0 if the stage is not reached */
+  uint64_t stage_generation(const OpenFpgaStage& stage) const;
   const double* stage_seconds(const OpenFpgaStage& stage) const;
   /* Return true if the placer is the analytical placement of VPR (the option
    * place.placer): it makes the packing and the placement at once, and they
@@ -124,6 +128,26 @@ class OpenFpgaSession {
   /* The file that an input was read from, as it was given to read_input().
    * Empty if it is not known, or the input is not read */
   std::string input_file(const OpenFpgaInput& input) const;
+  /* The data that a plugin keeps with the architectures of the session, as
+   * JSON, under a key that starts with the name of the plugin (e.g.,
+   * "weft.device_package"); "" if there is none. Reading an architecture,
+   * failing to, and reset() clear them all. Checkpoints keep them, and
+   * report_session lists them (data.attachments) */
+  const std::string& attachment(const std::string& key) const;
+  std::vector<std::string> attachment_keys() const;
+  /* Why an option cannot be changed, or empty if it can: the channel width
+   * (router.route_chan_width) is fixed while it has an owner (see
+   * set_fixed_channel_width_owner()) */
+  std::string fixed_option(const std::string& name) const;
+  /* Who fixed the channel width, empty when it can be changed */
+  const std::string& fixed_channel_width_owner() const {
+    return fixed_channel_width_owner_;
+  }
+  /* The options that read cached files of the device, see
+   * set_cache_options() */
+  const std::vector<std::string>& cache_options() const {
+    return cache_options_;
+  }
 
  public: /* Public mutators */
   /* Mark an input as read. Return false, and leave the session untouched, if
@@ -146,14 +170,17 @@ class OpenFpgaSession {
    * changes, the stage that the option tunes and the ones that depend on it
    * are dropped, see app_option_stage(). Setting the value it already has
    * keeps the stages. Return false, and leave everything untouched, if the
-   * option cannot be set */
+   * option cannot be set, or is fixed (fixed_option()) and would change */
   bool set_app_option(const std::string& name, const std::string& text,
                       std::string& error);
   /* Give an option its default value back, with the same effect on the
-   * stages. Return false if it does not exist */
+   * stages. Return false if it does not exist, or is fixed (fixed_option())
+   * and would change */
   bool reset_app_option(const std::string& name);
   /* Give all the options their default value back */
   void reset_app_options();
+  /* Add the options that plugins registered since the session was made */
+  void add_registered_app_options() { app_options_.add_new_defaults(); }
   /* Record that the results of a valid stage were read from a file. They are
    * read again when the stages before another stage are run again. Running
    * the stage, or dropping it, forgets the file */
@@ -163,6 +190,25 @@ class OpenFpgaSession {
   void set_stage_log(const OpenFpgaStage& stage, const std::string& log);
   void set_stage_seconds(const OpenFpgaStage& stage, const double seconds);
   void set_vpr_generation(uint64_t generation) { vpr_generation_ = generation; }
+  /* Keep, or drop, the data of a plugin with the architectures, see
+   * attachment() */
+  void set_attachment(const std::string& key, const std::string& json);
+  void clear_attachment(const std::string& key);
+  /* The channel width that was just set belongs to an owner (a description
+   * for messages, e.g., "the device package 'k6_2x2'"): it cannot be changed
+   * (see fixed_option()) until an architecture is read. An empty owner lets
+   * it be changed again */
+  void set_fixed_channel_width_owner(const std::string& owner) {
+    fixed_channel_width_owner_ = owner;
+  }
+  /* The options that were just set to read cached files of the device (e.g.,
+   * the routing resource graph): reading an architecture gives them their
+   * default value back, as the files are of that device only */
+  void set_cache_options(const std::vector<std::string>& names) {
+    cache_options_ = names;
+  }
+  /* Give the options of set_cache_options() their default back now */
+  void reset_cache_options();
   /* Record the generation of the VPR run that the OpenFPGA architecture was
    * linked to, by link_openfpga_arch. What the link makes refers to the data
    * of that run, and it is not valid for another one */
@@ -174,6 +220,10 @@ class OpenFpgaSession {
   void invalidate_stage_and_dependents(const OpenFpgaStage& stage);
   void invalidate_all_stages();
   void invalidate_for_option(const std::string& name);
+  /* An architecture was read, or failed to be: what came with the previous
+   * one goes (the attachments, the owner of the channel width, the cache
+   * options) */
+  void forget_architecture_state();
   /* The stage that is dropped to drop a stage: the packing with the
    * placement, when the analytical placer made them */
   OpenFpgaStage dropped_with(const OpenFpgaStage& stage) const;
@@ -190,6 +240,11 @@ class OpenFpgaSession {
   std::map<OpenFpgaStage, std::string> stage_logs_;
   std::map<OpenFpgaStage, double> stage_seconds_;
   std::map<OpenFpgaInput, std::string> input_files_;
+  std::map<OpenFpgaStage, uint64_t> stage_generations_;
+  uint64_t completions_ = 0;
+  std::map<std::string, std::string> attachments_;
+  std::string fixed_channel_width_owner_;
+  std::vector<std::string> cache_options_;
 };
 
 } /* End namespace openfpga */

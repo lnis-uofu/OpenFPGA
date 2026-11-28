@@ -4,9 +4,12 @@
  * what is re-read or re-run
  *******************************************************************/
 #include <cstdio>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "app_option_stage.h"
 #include "openfpga_context.h"
 #include "openfpga_session.h"
 
@@ -610,8 +613,121 @@ static void test_analytical_placer() {
   CHECK(reached_are(session, {OpenFpgaStage::DEVICE, OpenFpgaStage::PACKED}));
 }
 
+/* What a plugin keeps with the architectures goes when one is read */
+static void test_architecture_state() {
+  OpenFpgaSession session;
+  std::string error;
+  run_up_to(session, OpenFpgaStage::ROUTED);
+  session.set_attachment("example.data", "{\"a\":1}");
+  session.set_attachment("example.more", "[]");
+  CHECK("{\"a\":1}" == session.attachment("example.data"));
+  CHECK(session.attachment("example.none").empty());
+  CHECK(session.attachment_keys() ==
+        std::vector<std::string>({"example.data", "example.more"}));
+  session.clear_attachment("example.more");
+  CHECK(session.attachment_keys() ==
+        std::vector<std::string>({"example.data"}));
+
+  /* A channel width with an owner is read only: the same value is fine */
+  CHECK(session.set_app_option("router.route_chan_width", "30", error));
+  session.set_fixed_channel_width_owner("the device 'x'");
+  CHECK(
+    session.fixed_option("router.route_chan_width").find("the device 'x'") !=
+    std::string::npos);
+  CHECK(session.fixed_option("place.seed").empty());
+  CHECK(session.set_app_option("router.route_chan_width", "30", error));
+  CHECK(!session.set_app_option("router.route_chan_width", "32", error));
+  CHECK(error.find("read only") != std::string::npos);
+  CHECK(!session.reset_app_option("router.route_chan_width"));
+
+  /* The cache options go back to their default with the architectures */
+  CHECK(session.set_app_option("filename.read_rr_graph_file", "g.xml", error));
+  session.set_cache_options({"filename.read_rr_graph_file"});
+  CHECK(!session.app_options().is_default("filename.read_rr_graph_file"));
+
+  /* The circuit keeps them */
+  CHECK(session.read_input(OpenFpgaInput::CIRCUIT));
+  CHECK(!session.attachment("example.data").empty());
+  CHECK(!session.fixed_channel_width_owner().empty());
+
+  /* An architecture drops them all */
+  CHECK(session.read_input(OpenFpgaInput::OPENFPGA_ARCH));
+  CHECK(session.attachment_keys().empty());
+  CHECK(session.fixed_channel_width_owner().empty());
+  CHECK(session.fixed_option("router.route_chan_width").empty());
+  CHECK(session.app_options().is_default("filename.read_rr_graph_file"));
+  CHECK(session.cache_options().empty());
+  CHECK(session.set_app_option("router.route_chan_width", "32", error));
+
+  /* And so does an architecture that fails, and reset() */
+  session.set_attachment("example.data", "1");
+  session.fail_input(OpenFpgaInput::VPR_ARCH);
+  CHECK(session.attachment_keys().empty());
+  session.set_attachment("example.data", "1");
+  session.reset();
+  CHECK(session.attachment_keys().empty());
+}
+
+/* The generation of a stage changes each time it completes */
+static void test_stage_generation() {
+  OpenFpgaSession session;
+  CHECK(0 == session.stage_generation(OpenFpgaStage::DEVICE));
+  run_up_to(session, OpenFpgaStage::PLACED);
+  const uint64_t placed = session.stage_generation(OpenFpgaStage::PLACED);
+  const uint64_t device = session.stage_generation(OpenFpgaStage::DEVICE);
+  CHECK(0 != placed && 0 != device && placed != device);
+  CHECK(session.complete(OpenFpgaStage::PLACED));
+  CHECK(placed != session.stage_generation(OpenFpgaStage::PLACED));
+  CHECK(device == session.stage_generation(OpenFpgaStage::DEVICE));
+  CHECK(0 == session.stage_generation(OpenFpgaStage::ROUTED));
+  session.fail(OpenFpgaStage::PLACED);
+  CHECK(0 == session.stage_generation(OpenFpgaStage::PLACED));
+}
+
+/* An option of a plugin: its owner, its stage, and the names it may have */
+static void test_registered_app_option() {
+  const openfpga::AppOptionValue value =
+    openfpga::AppOptionValue::make_int(3, "A number of the plugin");
+  openfpga::register_app_option("myplugin", "myplugin.level", value,
+                                OpenFpgaStage::ROUTED);
+  /* Again, by the same plugin (a second shell): fine */
+  openfpga::register_app_option("myplugin", "myplugin.level", value,
+                                OpenFpgaStage::ROUTED);
+  for (const auto& wrong : {std::make_pair("myplugin", "other.level"),
+                            std::make_pair("other", "myplugin.level"),
+                            std::make_pair("myplugin", "myplugin.a.b"),
+                            std::make_pair("place", "place.seed")}) {
+    bool refused = false;
+    try {
+      openfpga::register_app_option(wrong.first, wrong.second, value,
+                                    OpenFpgaStage::ROUTED);
+    } catch (const std::invalid_argument&) {
+      refused = true;
+    }
+    CHECK(refused);
+  }
+  CHECK("myplugin" == openfpga::app_option_owner("myplugin.level"));
+  CHECK("vpr" == openfpga::app_option_owner("place.seed"));
+  CHECK("openfpga" == openfpga::app_option_owner("place.placer"));
+  CHECK(openfpga::app_option_owner("nothing.here").empty());
+  OpenFpgaStage stage = OpenFpgaStage::DEVICE;
+  CHECK(openfpga::app_option_stage("myplugin.level", stage));
+  CHECK(OpenFpgaStage::ROUTED == stage);
+
+  /* A session made after has it, and changing it drops its stage */
+  OpenFpgaSession session;
+  std::string error;
+  run_up_to(session, OpenFpgaStage::ANALYZED);
+  CHECK(session.set_app_option("myplugin.level", "4", error));
+  CHECK(reached_are(session, {OpenFpgaStage::DEVICE, OpenFpgaStage::PACKED,
+                              OpenFpgaStage::PLACED}));
+}
+
 int main() {
   test_initial_state();
+  test_architecture_state();
+  test_stage_generation();
+  test_registered_app_option();
   test_device_without_circuit();
   test_analytical_placer();
   test_inputs();

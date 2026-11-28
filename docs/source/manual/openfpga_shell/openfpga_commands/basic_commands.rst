@@ -112,7 +112,7 @@ report_app_option
 
   .. option:: --json
 
-    Report as a JSON answer instead of lines of text, see :ref:`query_answers`. The answer is of the kind ``app_options``, and its data is ``{"options": [...]}``, with one entry per option: ``name``, ``type`` (``string``, ``int``, ``float``, ``bool`` or ``selection``), ``value`` and ``default`` (typed after the type), ``is_default``, ``help``, ``choices`` (empty unless the option is a selection) ``stage`` (the stage that the option tunes) and ``vpr_flag`` (the flag of the option on the command line of VPR, e.g., ``--seed`` for ``place.seed``, and ``null`` for an option of OpenFPGA). Its schema is ``openfpga_flow/schemas/app_options.schema.json``.
+    Report as a JSON answer instead of lines of text, see :ref:`query_answers`. The answer is of the kind ``app_options``, and its data is ``{"options": [...]}``, with one entry per option: ``name``, ``type`` (``string``, ``int``, ``float``, ``bool`` or ``selection``), ``value`` and ``default`` (typed after the type), ``is_default``, ``help``, ``choices`` (empty unless the option is a selection) ``stage`` (the stage that the option tunes), ``owner`` (``vpr``, ``openfpga``, or the plugin that added it, see :ref:`openfpga_shell_plugins`) and ``vpr_flag`` (the flag of the option on the command line of VPR, e.g., ``--seed`` for ``place.seed``, and ``null`` for an option of OpenFPGA). Its schema is ``openfpga_flow/schemas/app_options.schema.json``.
 
   .. code-block::
 

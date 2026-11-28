@@ -39,6 +39,11 @@ class IoLocationMap {
   size_t io_x(const BasicPort& io_port) const;
   size_t io_y(const BasicPort& io_port) const;
   size_t io_z(const BasicPort& io_port) const;
+  /* Whether no I/O is mapped (the fabric is not built) */
+  bool empty() const { return io_indices_.empty(); }
+  /* The I/O ports at a coordinate, none when there is none */
+  std::vector<BasicPort> io_ports(const size_t& x, const size_t& y,
+                                  const size_t& z) const;
 
  public: /* Public mutators */
   void set_io_index(const size_t& x, const size_t& y, const size_t& z,

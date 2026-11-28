@@ -67,8 +67,11 @@ AppOptionValue make_vpr_default(const VprOptionSpec& spec,
 
 }  // End anonymous namespace
 
-const std::map<std::string, AppOptionValue>& app_option_defaults() {
-  static const std::map<std::string, AppOptionValue> defaults = [] {
+namespace {
+
+/* The defaults, which the options of the plugins are added to */
+std::map<std::string, AppOptionValue>& defaults_table() {
+  static std::map<std::string, AppOptionValue> defaults = [] {
     std::map<std::string, AppOptionValue> table;
 
     /* The options of VPR, with the defaults of VPR */
@@ -93,6 +96,17 @@ const std::map<std::string, AppOptionValue>& app_option_defaults() {
     return table;
   }();
   return defaults;
+}
+
+}  // End anonymous namespace
+
+const std::map<std::string, AppOptionValue>& app_option_defaults() {
+  return defaults_table();
+}
+
+void add_app_option_default(const std::string& name,
+                            const AppOptionValue& value) {
+  defaults_table()[name] = value;
 }
 
 } /* End namespace openfpga */

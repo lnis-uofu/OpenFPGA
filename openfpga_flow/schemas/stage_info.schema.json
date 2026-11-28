@@ -226,6 +226,10 @@
             "BITSTREAM"
           ]
         },
+        "owner": {
+          "type": "string",
+          "description": "Who the option belongs to: vpr, openfpga, or the name of the plugin that added it."
+        },
         "vpr_flag": {
           "type": [
             "string",
