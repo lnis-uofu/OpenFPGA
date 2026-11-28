@@ -225,6 +225,13 @@
             "REPACKED",
             "BITSTREAM"
           ]
+        },
+        "vpr_flag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The flag of the option on the command line of VPR (e.g. --device for general.device_layout), or the name of a positional argument; null for an option of OpenFPGA."
         }
       },
       "allOf": [
