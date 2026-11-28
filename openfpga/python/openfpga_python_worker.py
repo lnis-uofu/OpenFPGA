@@ -99,6 +99,8 @@ _WIRE_ERRORS = {
     "OpenfpgaError": OpenfpgaError,
     "AnswerError": AnswerError,
     "CheckpointError": CheckpointError,
+    "TclError": TclError,
+    "TclRefused": TclRefused,
 }
 # Seconds between two looks at the worker while a call is running
 _POLL_INTERVAL = 0.05
@@ -112,6 +114,11 @@ def _error_to_wire(error):
     name = type(error).__name__
     if isinstance(error, OpenfpgaError):
         attributes = {key: getattr(error, key) for key in ("command", "status", "log", "error")}
+    elif isinstance(error, TclError):
+        attributes = {
+            key: getattr(error, key)
+            for key in ("output", "printed", "error_info", "commands", "causes")
+        }
     else:
         attributes = {}
     return (name, str(error), attributes)
@@ -130,6 +137,20 @@ def _error_from_wire(name, message, attributes):
     return error
 
 
+def _limit_memory(megabytes):
+    """Limit the address space of this process, so that a runaway command (a design that fills
+    the memory) fails by itself and does not take the machine with it. VPR and Yosys map much
+    more than they use: the limit is of address space, and a few GB are needed to start"""
+    try:
+        limit = int(megabytes or 0)
+    except ValueError:
+        return
+    if limit > 0:
+        import resource
+
+        resource.setrlimit(resource.RLIMIT_AS, (limit << 20, limit << 20))
+
+
 def _worker_main():
     """The loop of a worker: it takes calls of the methods of a Session from the
     socket whose number is the argument, and answers them. It ends when the
@@ -142,6 +163,7 @@ def _worker_main():
         ctypes.CDLL(None).prctl(1, int(signal.SIGKILL))  # PR_SET_PDEATHSIG
     except Exception:  # noqa: BLE001 - only on Linux
         pass
+    _limit_memory(os.environ.get("OPENFPGA_WORKER_MEMORY_MB"))
     session = None
     while True:
         try:
@@ -154,12 +176,17 @@ def _worker_main():
                 connection.send(("ok", None))
                 return
             if operation == "start":
-                checkpoint_dir, restore = request[1:]
+                checkpoint_dir, restore, journal, resume = request[1:]
                 if restore is not None:
                     session = Session.restore(restore)
                     session.checkpoint_dir = checkpoint_dir
+                    if journal is not None:
+                        # After the restore: its commands are in the journal already
+                        session._journal = _Journal(journal, resume)
                 else:
-                    session = Session(checkpoint_dir=checkpoint_dir)
+                    session = Session(
+                        checkpoint_dir=checkpoint_dir, journal=journal, resume_journal=resume
+                    )
                 connection.send(("ok", None))
                 continue
             _, name, args, kwargs = request
@@ -267,10 +294,25 @@ class RemoteSession:
     the only method that can be called while another thread is in a call.
     """
 
-    def __init__(self, cwd=None, checkpoint_dir=None, timeout_s=None, _restore=None):
+    def __init__(
+        self,
+        cwd=None,
+        checkpoint_dir=None,
+        timeout_s=None,
+        journal=None,
+        memory_limit_mb=None,
+        _restore=None,
+    ):
         self.cwd = None if cwd is None else os.fspath(cwd)
         self.checkpoint_dir = None if checkpoint_dir is None else os.fspath(checkpoint_dir)
         self.timeout_s = timeout_s
+        # journal=directory: the worker writes the journal of its session there (see Session), and
+        # a worker that starts again (restart(), a session opened again) goes on with it. A worker
+        # that ends in a call does not write that call: it is not in the journal
+        self.journal = None if journal is None else os.fspath(journal)
+        # memory_limit_mb: the address space of the worker; it is the same for the workers that
+        # start again. None, or 0, is no limit
+        self.memory_limit_mb = memory_limit_mb or 0
         self.options = _RemoteOptions(self)
         self._lock = threading.Lock()
         self._process = None
@@ -304,6 +346,9 @@ class RemoteSession:
         self._log = tempfile.TemporaryFile(mode="w+b")
         module_dir = os.path.dirname(os.path.abspath(__file__))
         env = dict(os.environ)
+        env.pop("OPENFPGA_WORKER_MEMORY_MB", None)
+        if self.memory_limit_mb:
+            env["OPENFPGA_WORKER_MEMORY_MB"] = str(int(self.memory_limit_mb))
         env["PYTHONPATH"] = os.pathsep.join(
             [module_dir] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
         )
@@ -323,7 +368,12 @@ class RemoteSession:
         self._cancelled = False
         self._ended = None
         try:
-            self._request(("start", self.checkpoint_dir, restore), self.timeout_s)
+            resume = self.journal is not None and os.path.isfile(
+                os.path.join(self.journal, JOURNAL_SHELL)
+            )
+            self._request(
+                ("start", self.checkpoint_dir, restore, self.journal, resume), self.timeout_s
+            )
         except BaseException:
             self._kill()
             raise

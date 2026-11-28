@@ -399,6 +399,7 @@ def _read_manifest(path, missing_ok=False):
 
 JOURNAL_PYTHON = "replay.py"
 JOURNAL_SHELL = "replay.openfpga"
+JOURNAL_SCRIPTS = "scripts"  # the scripts of Yosys that the commands of the journal ran
 
 
 class ReplayError(RuntimeError):
@@ -419,9 +420,12 @@ class _Journal:
     again when a command ends, so that a run that is cut short leaves scripts that run. The
     shell script ends with exit, as the shell does not stop at the end of a script"""
 
-    def __init__(self, directory):
+    def __init__(self, directory, resume=False):
         self.directory = os.fspath(directory)
         os.makedirs(self.directory, exist_ok=True)
+        self._scripts = 0  # the scripts of Yosys that were copied here (see record)
+        if resume and self._resume():
+            return
         where = (
             "# The commands of an OpenFPGA session, written by openfpga.Session(journal=...)\n"
             "# Written in %s: the files of the flow are written in the current directory\n"
@@ -430,6 +434,26 @@ class _Journal:
         self._python = [where, "import openfpga\n\nsession = openfpga.Session()\n"]
         self._shell = [where]
         self._write()
+
+    def _resume(self):
+        """Go on with the files that are in the directory (a worker that started again, a session
+        that was opened again): what was written stays, and what comes next is added. False when
+        there is nothing to go on with"""
+        python = os.path.join(self.directory, JOURNAL_PYTHON)
+        shell = os.path.join(self.directory, JOURNAL_SHELL)
+        if not (os.path.isfile(python) and os.path.isfile(shell)):
+            return False
+        with open(python) as handle:
+            self._python = handle.readlines()
+        with open(shell) as handle:
+            self._shell = handle.readlines()
+        if (
+            self._shell and self._shell[-1] == "exit\n"
+        ):  # the end is written again with each command
+            self._shell.pop()
+        folder = os.path.join(self.directory, JOURNAL_SCRIPTS)
+        self._scripts = len(os.listdir(folder)) if os.path.isdir(folder) else 0
+        return True
 
     def _write(self):
         for file, lines, end in (
@@ -440,6 +464,14 @@ class _Journal:
             with open(path + ".part", "w") as handle:
                 handle.write("".join(lines + end))
             os.replace(path + ".part", path)
+
+    def _keep_script(self, source):
+        folder = os.path.join(self.directory, JOURNAL_SCRIPTS)
+        os.makedirs(folder, exist_ok=True)
+        self._scripts += 1
+        kept = os.path.join(folder, "%03d.ys" % self._scripts)
+        shutil.copyfile(source, kept)
+        return os.path.abspath(kept)
 
     @staticmethod
     def _plain(value):
@@ -454,6 +486,10 @@ class _Journal:
             for key, value in options.items()
             if value is not None and value is not False
         }
+        if name == "yosys" and error is None and os.path.isfile(options.get("file", "")):
+            # A script of Yosys is a file that its maker writes again for the next run: the journal
+            # keeps the one that was run, so that a replay runs the same synthesis
+            options["file"] = self._keep_script(options["file"])
         line = _command_line(name, args, options)
         call = ", ".join(
             [repr(name)]
@@ -484,9 +520,17 @@ def _parse_line(line):
         word[1:-1] if len(word) > 1 and word[0] == word[-1] == '"' else word
         for word in shlex.split(line, posix=False)
     ]
+    args, options = _split_words(words[1:])
+    return words[0], args, options
+
+
+def _split_words(words):
+    """The positional arguments and the options of the words of a command line
+    (without its name), as Session.command takes them: --key value, and --key
+    alone for a switch"""
     args, options = [], {}
     key = None
-    for word in words[1:]:
+    for word in words:
         if word.startswith("--") and len(word) > 2:
             key = word[2:]
             options[key] = True
@@ -494,7 +538,7 @@ def _parse_line(line):
             options[key] = word
         else:
             args.append(word)
-    return words[0], args, options
+    return args, options
 
 
 def _journal_script(path):
@@ -573,7 +617,10 @@ class Session:
     options, the stages) are written as they are run, in replay.py and in
     replay.openfpga, so that the flow can be run again by a person, or with
     Session.replay(). A command that only answers (READ_ONLY_COMMANDS), and a
-    command that is run with session.shell, are not written.
+    command that is run with session.shell, are not written. With
+    resume_journal=True the files of the directory are continued, not written
+    again. The script of a yosys command is copied into the directory
+    (scripts/), so that a replay runs the script that was run.
 
     The files of the flow are written in the current directory of the process.
     A stage fails if a stage that it needs is not valid, which is the case
@@ -594,11 +641,13 @@ class Session:
         )
     )
 
-    def __init__(self, shell=None, checkpoint_dir=None, journal=None):
+    def __init__(self, shell=None, checkpoint_dir=None, journal=None, resume_journal=False):
         self.shell = shell if shell is not None else OpenfpgaShell()
         self.options = Options(self.shell, run=self.command)
         self.checkpoint_dir = checkpoint_dir
-        self._journal = _Journal(journal) if journal is not None else None
+        # resume_journal: go on with the files of the directory instead of writing them again
+        self._journal = _Journal(journal, resume_journal) if journal is not None else None
+        self._tcl_host = None  # made by the first tcl()
 
     # The commands ----------------------------------------------------------------
 
@@ -606,6 +655,11 @@ class Session:
         """Run any command of the shell, as in OpenfpgaShell.run: the options
         are written as --key value, and key=True as the switch --key"""
         started = time.monotonic()
+        line, result = self._run_command(name, args, options)
+        return StepResult(line, result.log, time.monotonic() - started)
+
+    def _run_command(self, name, args, options):
+        """Run a command and write it in the journal: its line and its CommandResult"""
         line = _command_line(name, args, options)
         try:
             result = self.shell.run(line)
@@ -613,7 +667,15 @@ class Session:
             self._write_journal(name, args, options, error)
             raise
         self._write_journal(name, args, options)
-        return StepResult(line, result.log, time.monotonic() - started)
+        return line, result
+
+    def shell_commands(self):
+        """The names of the commands of the shell, in the order of its help"""
+        names = []
+        for line in self.shell.run("help").log.splitlines():
+            if line.startswith("\t") and line.strip():
+                names.append(line.split()[0])
+        return names
 
     def _write_journal(self, name, args, options, error=None):
         if self._journal is not None and name not in type(self).READ_ONLY_COMMANDS:
@@ -647,6 +709,36 @@ class Session:
                 "not support it: set router.flat_routing to false"
             )
         return None
+
+    def tcl(self, script, safe=False, fixed_width=False, flat_routing=True):
+        """Run a Tcl script, and return a TclResult: its result, what it
+        printed and the command lines of the shell that it ran.
+
+        The commands of the shell are Tcl commands, written as on the command
+        line of the shell (read_vpr_arch --file arch.xml --layout 2x2); they
+        run as command() runs them, so the journal has those that change the
+        flow. A command that answers returns its answer as a Tcl dict (dict get
+        [report_run] routing ...), and a command that fails is an error of Tcl,
+        which catch takes. A command whose name is one of Tcl keeps it, and the
+        one of the shell is in the namespace openfpga (openfpga::source); exit
+        and cd are not available. The variables and procedures stay for the
+        next script.
+
+        With safe=True the script runs in a safe interpreter, kept apart from
+        the other one: no file, no program, and no command of the shell that
+        runs one (ext_exec, source, yosys); a path in the arguments of a
+        command must be in the current directory. A script that fails raises
+        TclError, or TclRefused for what a safe interpreter does not do. Tcl
+        comes with tkinter: a Python without it raises TclError.
+
+        With fixed_width=True a command that fixed_width_refusal() refuses (vpr,
+        and route while the channel width is not set) raises TclRefused.
+        flat_routing=False is passed to it: the device does not support flat
+        routing.
+        """
+        if self._tcl_host is None:
+            self._tcl_host = _TclHost(self)
+        return self._tcl_host.run(script, safe, fixed_width, flat_routing)
 
     # The inputs ------------------------------------------------------------------
 

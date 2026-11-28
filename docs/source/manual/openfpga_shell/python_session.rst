@@ -93,6 +93,8 @@ A ``Diagnostic`` has a ``severity`` (``error`` or ``warning``; the errors come f
     - The routing failed; for ``route_unroutable``, ``channel_width`` is the width that did not route
   * - ``worker_crashed``, ``worker_timeout``, ``worker_cancelled``, ``worker_not_running``
     - Failures of a ``RemoteSession`` worker (``WorkerError.diagnostics``); ``worker_crashed`` has the ``exitcode`` and the ``signal``, and its diagnostics go on with what the worker wrote before it ended
+  * - ``tcl_error``, ``tcl_refused``
+    - A Tcl script failed (``TclError.diagnostics``, see :ref:`session_tcl`); ``where`` is the line of the script. When a command of the shell failed, its own diagnostics follow
   * - ``vpr_<type>``
     - An error that VPR gave a type, e.g., ``vpr_architecture_file``, that no rule knows
   * - ``error``, ``warning``
@@ -154,10 +156,11 @@ What is written:
 - the commands that the Session runs: the options, the inputs, the stages, the files of the results that are read (``read_packing``, ...), and any command that is run with ``session.command()``. Files are written as whole paths, so that a replay in another directory reads the same files. The files of the flow are written in the current directory of the replay
 - not the commands that only answer (``Session.READ_ONLY_COMMANDS``: ``help``, ``report_session``, ``report_app_option``, ...), nor what is run with ``session.shell``: that is the way to ask, and to run what has no method, without a mark in the journal. A subclass of ``Session`` that adds commands that only answer extends the set: ``READ_ONLY_COMMANDS = Session.READ_ONLY_COMMANDS | {...}``
 - a command that failed is a comment, ``# Failed, not replayed: route (...)``, with the reason
-- the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again
+- the files are written again when a command ends, so that a run that stops leaves scripts that run. A new Session with the same ``journal`` starts the files again, unless ``resume_journal=True``: it goes on with what is there
+- the script of a ``yosys`` command is copied into the directory (``scripts/001.ys``, ...) and the journal names the copy, as the file that was run may be written again for the next run: a replay runs the synthesis that was run
 - ``Session.restore(directory, journal=...)`` writes the commands that restore does: the options, the inputs and the results that are read from the checkpoint
 
-``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. A ``RemoteSession`` has no journal yet.
+``Session.replay(path)`` takes the directory of the journal or one of its two files, runs the commands of ``replay.openfpga`` (a person can edit it: blank lines and ``#`` comments are skipped) and returns the Session, which goes on from there. The other arguments are those of ``Session``, e.g., ``journal=``, to journal the replay. A command that fails raises ``ReplayError``, with its ``line`` and its ``number``. ``RemoteSession(journal=directory)`` has the worker write the journal of its session, see :ref:`worker_processes`.
 
 .. _failed_stages:
 
@@ -210,6 +213,41 @@ A command that answers in JSON (see :ref:`query_answers`) gives its answer to th
 
 An answer of another kind, or of a version of its schema that the module does not know, raises ``AnswerError``. A field that an answer gains without a new version is skipped. A command that a plugin adds can answer with a kind of its own: ``openfpga.register_answer_kind(kind, version)`` makes the module read it, and a subclass of ``Session`` reads the answer with ``self._query(command, answer_kind, cls, **options)``.
 
+.. _session_tcl:
+
+Tcl scripts
+~~~~~~~~~~~
+
+``tcl(script)`` runs a Tcl script in an interpreter that the session keeps, and returns a ``TclResult``: the ``result`` (the value of its last command), the ``output`` (what ``puts`` printed and the logs of the commands of the shell, in their order), ``printed`` (``puts`` alone), the ``commands`` of the shell that it ran, and ``elapsed_s``. Every command of the shell is a Tcl command, written as on its command line, so a loop or a sweep is one call:
+
+.. code-block:: python
+
+    session.tcl("""
+    read_vpr_arch --file arch.xml --layout 2x2
+    read_openfpga_arch --file openfpga_arch.xml
+    read_circuit --file design.blif
+    foreach seed {1 2 3} {
+        set_app_option --name place.seed --value $seed
+        place
+        route
+        puts "$seed [dict get [report_run] routing critical_path_delay_ns]"
+    }
+    """)
+
+- The commands run through ``command()``, so the journal has those that change the flow, as if they had been run from Python. The Tcl around them (loops, procedures) is not in the journal.
+- A command that answers in JSON (see :ref:`query_answers`) returns its answer as a Tcl dict: an object is a dict, a list is a list, ``true`` and ``false`` are ``1`` and ``0``, and ``null`` is the empty string. The JSON that the command prints is not in the output. Like in the shell, ``report_app_option`` answers as data only with ``--json``.
+- A command that fails is an error of Tcl, which ``catch`` takes, with the message of the first error and ``-errorcode {OPENFPGA <kind>}``. A script that fails raises ``TclError``, with the ``output`` so far, the trace of Tcl (``error_info``), the ``commands`` and, when a command failed, its diagnostics.
+- A command whose name is one of Tcl keeps it: ``source`` is the one of Tcl, and the one of the shell is ``openfpga::source``. Every command is also in the namespace ``openfpga``. ``exit`` and ``cd`` are not available, as the process and its directory are those of the session.
+- The variables and the procedures stay for the next script, until the process ends: a worker that starts again (``restart()``) has a new interpreter.
+
+``tcl(script, safe=True)`` runs the script in a safe interpreter (``interp create -safe``), kept apart from the other one: no files, no programs, no ``exit``. It has the commands of the shell but those that run another program or script (``ext_exec``, ``source``, ``yosys``), and an argument of a command that is a path must be in the current directory, links followed. What it refuses raises ``TclRefused``, before the command runs. It is meant for scripts that a program or a model writes.
+
+``tcl(script, fixed_width=True, flat_routing=True)`` refuses, with ``TclRefused``, the commands that ``fixed_width_refusal()`` refuses (see :ref:`session_constraints`), before they run.
+
+Tcl comes with ``tkinter``, which is part of most Python installations: a Python without it raises ``TclError``. In a ``RemoteSession`` the script runs in the worker, so that the timeout of the call and ``cancel()`` stop a script that does not end.
+
+.. _worker_processes:
+
 Worker processes
 ~~~~~~~~~~~~~~~~
 
@@ -240,6 +278,8 @@ The failures of the worker itself are ``WorkerError``:
 - ``WorkerNotRunning``: a call after one of them, or after ``close()``
 
 ``restart()`` starts another worker. With a ``checkpoint_dir`` the worker makes a checkpoint after each stage, and the new worker is restored from the last one, so that the flow loses the stage that was running and nothing else; without one it starts from nothing. It returns the state of the new session. A worker ends when its caller ends, even in the middle of a command (Linux), and ``close()``, or the end of a ``with`` block, ends it.
+
+``RemoteSession(journal=directory)`` has the worker write the journal of its session in the directory (see :ref:`journal_and_replay`). A worker that starts again (``restart()``) goes on with it: the commands of the restore are not written twice, and a call that ends with the worker is not in it. ``memory_limit_mb`` limits the address space of the worker (``RLIMIT_AS``, Linux), for it and the workers that start again: a command that needs more fails with the error of the allocation, e.g., ``std::bad_alloc``, and the worker goes on. VPR and Yosys map much more than they use, so a worker needs a few GB to start; a limit that is too small for it raises ``WorkerError``.
 
 The calls are made one at a time, and a call is not a way to share data: results are copied from the worker. The output of the commands is in their results, and a worker's own output outside of them goes to a log that is not kept.
 
