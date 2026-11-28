@@ -73,6 +73,11 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage);
 bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
                        const std::string& file);
 
+/* A file that VPR reads when it makes the device (the SDC, the VPR
+ * constraints) changed where it is: the device, and what was made from it,
+ * is dropped, and the data of VPR is made again from the files */
+void flow_input_file_changed(OpenFpgaSession& session);
+
 /* The commands that follow the stages, e.g., 'repack', are checked against the
  * session when the flow is run stage by stage, i.e., when the VPR architecture
  * has been read, and the data of VPR has not been replaced by 'vpr' since.

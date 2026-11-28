@@ -756,6 +756,19 @@ bool run_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage) {
   return true;
 }
 
+void flow_input_file_changed(OpenFpgaSession& session) {
+  sync_with_vpr(session);
+  if (!in_staged_flow(session)) {
+    return;
+  }
+  /* The run no longer stands for a command line: it is made again */
+  VprRun* run = vpr::current_vpr_run();
+  if (nullptr != run) {
+    run->args.clear();
+  }
+  session.fail(OpenFpgaStage::DEVICE);
+}
+
 bool import_flow_stage(OpenFpgaSession& session, const OpenFpgaStage& stage,
                        const std::string& file) {
   sync_with_vpr(session);

@@ -11,6 +11,7 @@
 #include "openfpga_scale.h"
 #include "read_xml_bus_group.h"
 #include "read_xml_pin_constraints.h"
+#include "session_pin_constraints.h"
 #include "verilog_api.h"
 #include "verilog_mock_fpga_wrapper.h"
 #include "vtr_log.h"
@@ -160,9 +161,10 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
-  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
-    pin_constraints =
-      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  const std::string pcf_file =
+    pin_constraints_file(openfpga_ctx, cmd, cmd_context, opt_pcf);
+  if (!pcf_file.empty()) {
+    pin_constraints = read_xml_pin_constraints(pcf_file.c_str());
   }
 
   /* If bug group file are enabled by command options, read the file */
@@ -248,9 +250,10 @@ int write_preconfigured_fabric_wrapper_template(
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
-  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
-    pin_constraints =
-      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  const std::string pcf_file =
+    pin_constraints_file(openfpga_ctx, cmd, cmd_context, opt_pcf);
+  if (!pcf_file.empty()) {
+    pin_constraints = read_xml_pin_constraints(pcf_file.c_str());
   }
 
   /* If bug group file are enabled by command options, read the file */
@@ -352,9 +355,10 @@ int write_testbench_io_connection_template(const T& openfpga_ctx,
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
-  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
-    pin_constraints =
-      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  const std::string pcf_file =
+    pin_constraints_file(openfpga_ctx, cmd, cmd_context, opt_pcf);
+  if (!pcf_file.empty()) {
+    pin_constraints = read_xml_pin_constraints(pcf_file.c_str());
   }
 
   /* If bug group file are enabled by command options, read the file */
@@ -417,9 +421,10 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
-  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
-    pin_constraints =
-      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  const std::string pcf_file =
+    pin_constraints_file(openfpga_ctx, cmd, cmd_context, opt_pcf);
+  if (!pcf_file.empty()) {
+    pin_constraints = read_xml_pin_constraints(pcf_file.c_str());
   }
 
   /* If bug group file are enabled by command options, read the file */
@@ -486,9 +491,10 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
-  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
-    pin_constraints =
-      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  const std::string pcf_file =
+    pin_constraints_file(openfpga_ctx, cmd, cmd_context, opt_pcf);
+  if (!pcf_file.empty()) {
+    pin_constraints = read_xml_pin_constraints(pcf_file.c_str());
   }
 
   /* If bug group file are enabled by command options, read the file */
