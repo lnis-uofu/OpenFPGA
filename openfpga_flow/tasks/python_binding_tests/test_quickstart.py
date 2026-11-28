@@ -28,6 +28,9 @@ def test_the_example_runs_end_to_end(openfpga_module, tmp_path, extra):
     assert result.returncode == 0, result.stderr[-2000:]
     summary = json.loads(result.stdout.strip().splitlines()[-1])
     assert summary["stages"] == ["DEVICE", "PACKED", "PLACED", "ROUTED", "ANALYZED"]
+    assert summary["critical_path_delay_ns"] > 0
+    assert summary["wirelength"] > 0 and summary["channel_width"] == 20
+    assert summary["blocks"]["clb"] >= 1 and summary["blocks"]["io"] >= 1
     work = tmp_path / "work"
     assert summary["results"] == {
         "packing": str(work / "and2_latch.net"),
@@ -42,6 +45,7 @@ def test_the_example_says_what_it_did(openfpga_module, tmp_path):
     result = run_example(openfpga_module, tmp_path)
     assert result.returncode == 0, result.stderr[-2000:]
     assert "Stages reached: DEVICE, PACKED, PLACED, ROUTED, ANALYZED" in result.stdout
+    assert "Critical path delay:" in result.stdout and "Blocks: " in result.stdout
     assert "Results:" in result.stdout and "routing: " in result.stdout
 
 

@@ -18,12 +18,35 @@ import threading
 
 class WorkerError(RuntimeError):
     """Base of the failures of a worker, as opposed to the failures of a command
-    (OpenfpgaError), which the worker survives"""
+    (OpenfpgaError), which the worker survives.
+
+    diagnostics is a list of Diagnostic objects, as for OpenfpgaError."""
+
+    kind = "error"
+    hint = None
+
+    @property
+    def diagnostics(self):
+        return [
+            Diagnostic(
+                "error",
+                self.kind,
+                str(self).split("\n")[0],
+                hint=self.hint,
+                data=self._data(),
+            )
+        ]
+
+    def _data(self):
+        return {}
 
 
 class WorkerNotRunning(WorkerError):
     """The worker is not running: it died, was cancelled or closed. restart()
     starts another one"""
+
+    kind = "worker_not_running"
+    hint = "Call restart()"
 
 
 class WorkerCrashed(WorkerError):
@@ -42,13 +65,33 @@ class WorkerCrashed(WorkerError):
         self.signal_name = signal_name
         self.log_tail = log_tail
 
+    kind = "worker_crashed"
+    hint = (
+        "restart() starts another worker, which is restored from the last "
+        "checkpoint if there is one"
+    )
+
+    def _data(self):
+        return {"exitcode": self.exitcode, "signal": self.signal_name}
+
+    @property
+    def diagnostics(self):
+        # What the worker wrote before it ended may say why
+        return super().diagnostics + parse_diagnostics(self.log_tail)
+
 
 class WorkerTimeout(WorkerError):
     """A call took longer than its timeout: the worker was killed"""
 
+    kind = "worker_timeout"
+    hint = "restart() starts another worker; a longer timeout_s or a smaller step may help"
+
 
 class WorkerCancelled(WorkerError):
     """cancel() was called while a call was running: the worker was killed"""
+
+    kind = "worker_cancelled"
+    hint = "restart() starts another worker"
 
 
 # The failures of a command that are given back as themselves
@@ -175,7 +218,7 @@ class _RemoteOptions:
 _REMOTE_METHODS = frozenset(
     name
     for name, member in vars(Session).items()
-    if callable(member) and not name.startswith("_") and name not in ("restore",)
+    if callable(member) and not name.startswith("_") and name not in ("restore", "replay")
 )
 
 # The calls that a worker takes: the methods, and the ones of the options

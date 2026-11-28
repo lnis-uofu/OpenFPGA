@@ -37,6 +37,16 @@ int set_app_option_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
   return CMD_EXEC_SUCCESS;
 }
 
+int reset_app_option_command(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                             const CommandContext& cmd_context) {
+  const std::string name = cmd_context.option_value(cmd, cmd.option("name"));
+  if (!openfpga_ctx.mutable_session().reset_app_option(name)) {
+    VTR_LOG_ERROR("Application option '%s' does not exist\n", name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
 int report_app_option_command(const OpenfpgaContext& openfpga_ctx,
                               const Command& cmd,
                               const CommandContext& cmd_context) {
@@ -100,6 +110,20 @@ void add_app_options_commands(openfpga::Shell<OpenfpgaContext>& shell) {
     shell_cmd_set, "Set an application option, which tunes the flow engines");
   shell.set_command_class(shell_cmd_set_id, cmd_class);
   shell.set_command_execute_function(shell_cmd_set_id, set_app_option_command);
+
+  /* Command 'reset_app_option': give an option its default value back, which
+   * set_app_option cannot do for an option whose default is empty */
+  Command shell_cmd_reset("reset_app_option");
+  CommandOptionId reset_opt_name = shell_cmd_reset.add_option(
+    "name", true, "Name of the option, e.g., place.seed");
+  shell_cmd_reset.set_option_short_name(reset_opt_name, "n");
+  shell_cmd_reset.set_option_require_value(reset_opt_name,
+                                           openfpga::OPT_STRING);
+  ShellCommandId shell_cmd_reset_id = shell.add_command(
+    shell_cmd_reset, "Give an application option its default value back");
+  shell.set_command_class(shell_cmd_reset_id, cmd_class);
+  shell.set_command_execute_function(shell_cmd_reset_id,
+                                     reset_app_option_command);
 
   /* Command 'report_app_option': show the value of one option or of all */
   Command shell_cmd_report("report_app_option");
