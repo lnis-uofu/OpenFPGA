@@ -32,7 +32,7 @@ import type {
   RectsLayer,
   Rgba,
 } from "./scene";
-import { selection } from "./selection";
+import { runViewCommand, selection } from "./selection";
 import {
   selectedPath,
   slackColor,
@@ -1122,3 +1122,43 @@ export function resetNetlistRequests() {
   netlistRequest.value = null;
   handled = 0;
 }
+    menu(base, ref, changed): ViewTool[] {
+      const items: ViewTool[] = [];
+      const key = groupKey(base, ref);
+      const what = base.which === "atoms" ? "module" : "cluster";
+      if (key !== null)
+        items.push(
+          groupOpen(base, key)
+            ? {
+                label: "Collapse in the layout",
+                title: `The ${what} ${key} as one box`,
+                run: () => setGroupOpen(base, key, false, changed),
+              }
+            : {
+                label: "Expand in the layout",
+                title: `The atoms of the ${what} ${key}`,
+                run: () => setGroupOpen(base, key, true, changed),
+              },
+        );
+      if (ref.kind === "atom" && base.which === "clusters") {
+        // The cluster of an atom shown alone: collapse it
+        const a = base.netlist.atomIndex.get(ref.name);
+        const cluster =
+          a === undefined
+            ? undefined
+            : base.clusterName.get(base.netlist.cluster[a]);
+        if (cluster && groupOpen(base, cluster))
+          items.push({
+            label: `Collapse ${cluster}`,
+            title: `The cluster of ${ref.name} as one box`,
+            run: () => setGroupOpen(base, cluster, false, changed),
+          });
+      }
+      if (items.length)
+        items.push({
+          label: "Select",
+          title: `Select ${ref.name} in every view`,
+          run: () => runViewCommand({ op: "select", ...ref }),
+        });
+      return items;
+    },

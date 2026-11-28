@@ -1,6 +1,6 @@
 // The input of a view (docs/plan_design_views.md, 3.6): pan by a drag, zoom about the cursor with the
-// wheel, a click to pick, a double click to act on an object (else to fit), a right drag to draw a
-// rectangle to zoom to (to the left: out), and the keys. The same for every view and backend:
+// wheel, a click to pick, a double click to act on an object (else to fit), and the keys. With the
+// zoom tool the left drag draws a rectangle to zoom to (to the left: out) instead of a pan. The same for every view and backend:
 // it only changes the view state, which the renderers draw.
 import { type ViewState, pan, zoomAt, zoomRect } from "./viewstate";
 
@@ -15,7 +15,9 @@ export interface ControllerEvents {
   clear(): void;
   /** A double click on what is at a point: true if the view did something with it (else it fits) */
   activate?(px: number, py: number): boolean;
-  /** The rectangle that a right drag draws, from its corner to the other (null when it ends): a
+  /** The tool now: select (a drag pans, a click picks) or zoom (a drag draws a rectangle) */
+  tool?(): "select" | "zoom";
+  /** The rectangle that a drag of the zoom tool draws, from its corner to the other (null when it ends): a
    * rectangle drawn to the left zooms out */
   rubber?(
     rect: { x0: number; y0: number; x1: number; y1: number } | null,
@@ -29,7 +31,7 @@ export function attachController(
   on: ControllerEvents,
 ): () => void {
   let down: { x: number; y: number; moved: boolean; id: number } | null = null;
-  // A right press: it draws a rectangle to zoom to
+  // A press of the zoom tool: it draws a rectangle to zoom to
   let right: { x: number; y: number; moved: boolean; id: number } | null = null;
   const local = (e: { clientX: number; clientY: number }) => {
     const box = element.getBoundingClientRect();
@@ -43,16 +45,14 @@ export function attachController(
     on.setView(zoomAt(on.view(), x, y, Math.pow(1.0015, -delta)));
   };
   const pointerdown = (e: PointerEvent) => {
-    if (e.button === 2) {
-      element.focus();
-      const [x, y] = local(e);
+    if (e.button !== 0) return;
+    element.focus();
+    const [x, y] = local(e);
+    if (on.tool?.() === "zoom") {
       right = { x, y, moved: false, id: e.pointerId };
       element.setPointerCapture?.(e.pointerId);
       return;
     }
-    if (e.button !== 0) return;
-    element.focus();
-    const [x, y] = local(e);
     down = { x, y, moved: false, id: e.pointerId };
     element.setPointerCapture?.(e.pointerId);
   };
@@ -75,7 +75,7 @@ export function attachController(
     down.y = y;
   };
   const pointerup = (e: PointerEvent) => {
-    if (right && e.button === 2) {
+    if (right && e.button === 0) {
       const [x, y] = local(e);
       const rect = right;
       right = null;
@@ -118,8 +118,6 @@ export function attachController(
     }
   };
   const leave = () => on.leave();
-  // The menu of the browser never opens on a view: the right button zooms
-  const contextmenu = (e: MouseEvent) => e.preventDefault();
   element.addEventListener("wheel", wheel, { passive: false });
   element.addEventListener("pointerdown", pointerdown);
   element.addEventListener("pointermove", pointermove);
@@ -127,7 +125,6 @@ export function attachController(
   element.addEventListener("pointerleave", leave);
   element.addEventListener("dblclick", dblclick);
   element.addEventListener("keydown", keydown);
-  element.addEventListener("contextmenu", contextmenu);
   return () => {
     element.removeEventListener("wheel", wheel);
     element.removeEventListener("pointerdown", pointerdown);
@@ -136,6 +133,5 @@ export function attachController(
     element.removeEventListener("pointerleave", leave);
     element.removeEventListener("dblclick", dblclick);
     element.removeEventListener("keydown", keydown);
-    element.removeEventListener("contextmenu", contextmenu);
   };
 }

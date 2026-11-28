@@ -451,6 +451,9 @@ code { background: var(--code); padding: 0 4px; border-radius: 3px; }
 .view-arrows { display: inline-flex; gap: 2px; }
 .view-rubber { position: absolute; z-index: 2; pointer-events: none; box-sizing: border-box; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
 .view-rubber.out { border-style: dashed; background: color-mix(in srgb, #d9534f 12%, transparent); border-color: #d9534f; }
+.view-tools { display: inline-flex; gap: 2px; }
+.view-tools button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.view-host[data-tool="zoom"], .view-host[data-tool="zoom"]:active { cursor: crosshair; }
 .view-groups { display: inline-flex; gap: 10px; }
 .view-groups label { display: inline-flex; align-items: center; gap: 3px; }
 .view-body { display: flex; flex: 1; min-height: 0; }

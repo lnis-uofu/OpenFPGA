@@ -36,6 +36,7 @@ import {
 import { SceneIndex } from "../views/spatial";
 import { TileCache } from "../views/tiles";
 import type { LegendEntry, ViewDef } from "../views/view";
+import { openMenu } from "./ContextMenu";
 import {
   type ViewState,
   fit,
@@ -207,13 +208,15 @@ export function ViewPanel<B>(props: {
   );
   /** The list beside the drawing: shown, and drawn again at each build */
   const [sideShown, setSideShown] = useState(true);
-  // The rectangle of a right drag, in pixels of the view: to the left it zooms out
+  // The rectangle of a drag of the zoom tool, in pixels of the view: to the left it zooms out
   const [rubber, setRubber] = useState<{
     x0: number;
     y0: number;
     x1: number;
     y1: number;
   } | null>(null);
+  /** The tool of the toolbar: select (a drag pans, a click picks) or zoom (a drag draws a rectangle) */
+  const [tool, setTool] = useState<"select" | "zoom">("select");
   const [version, setVersion] = useState(0);
   const real = config.value?.backend === "session";
   const signature = sessionSignature();
@@ -235,10 +238,12 @@ export function ViewPanel<B>(props: {
     /** A request to show an object that waits for its data */
     pendingZoom: null as { ref: ObjectRef; seq: number } | null,
     /** The object at a point of the drawing */
+    tool: "select" as "select" | "zoom",
     pickAt: null as ((px: number, py: number) => ObjectRef | null) | null,
   }).current;
   state.base = base;
   state.hidden = hidden;
+  state.tool = tool;
 
   const draw = () => {
     if (state.frame) return;
@@ -445,6 +450,7 @@ export function ViewPanel<B>(props: {
     const detach = attachController(element, {
       view: () => state.view,
       setView,
+      tool: () => state.tool,
       pick: (px, py, add) => {
         const ref = pickAt(px, py);
         if (ref)
@@ -523,6 +529,14 @@ export function ViewPanel<B>(props: {
     setHidden(next);
   };
   const chosen = selection.value;
+  // A right click on an object: the commands of the view for it, else the menu of the page
+  const onMenu = (e: MouseEvent) => {
+    const element = host.current;
+    if (!element || !state.base || !def.menu || !state.pickAt) return;
+    const box = element.getBoundingClientRect();
+    const ref = state.pickAt(e.clientX - box.left, e.clientY - box.top);
+    if (ref) openMenu(e, def.menu(state.base, ref, changed));
+  };
   // The view moved by a share of its size (the arrows of the toolbar, as the arrow keys)
   const shift = (dx: number, dy: number) =>
     setView(pan(state.view, dx * state.view.width, dy * state.view.height));
@@ -531,6 +545,22 @@ export function ViewPanel<B>(props: {
     <section class="panel view-panel" aria-label={props.title} data-view={name}>
       <div class="view-toolbar">
         <strong>{props.title}</strong>
+        <span class="view-tools" role="group" aria-label="Tools">
+          <button
+            aria-pressed={tool === "select"}
+            title="Select: click to select, drag to move the view, right click for the menu"
+            onClick={() => setTool("select")}
+          >
+            ⬚ Select
+          </button>
+          <button
+            aria-pressed={tool === "zoom"}
+            title="Zoom: drag a rectangle to zoom to it; drag it to the left to zoom out"
+            onClick={() => setTool("zoom")}
+          >
+            🔍 Zoom
+          </button>
+        </span>
         <button
           disabled={!base}
           onClick={() => base && setView(fit(state.view, def.bounds(base)))}
@@ -635,7 +665,9 @@ export function ViewPanel<B>(props: {
           class="view-host"
           ref={host}
           tabIndex={0}
-          aria-label={`${props.title}: drag to move, wheel to zoom, click to select, right drag to zoom to a rectangle`}
+          data-tool={tool}
+          aria-label={`${props.title}: drag to move, wheel to zoom, click to select, right click for the menu; with the zoom tool, drag a rectangle to zoom to it`}
+          onContextMenu={onMenu}
         >
           {rubber && (
             <div

@@ -168,7 +168,7 @@ describe("the view state", () => {
   });
 });
 
-describe("the zoom to a rectangle (right drag)", () => {
+describe("the zoom to a rectangle (the zoom tool)", () => {
   it("zooms in so that the rectangle fills the screen, with its middle at the middle", () => {
     // 200 x 150 pixels of 800 x 600: four times closer
     const next = zoomRect(VIEW, 100, 100, 300, 250)!;
@@ -189,26 +189,29 @@ describe("the zoom to a rectangle (right drag)", () => {
     expect(zoomRect(VIEW, 100, 100, 100.5, 100.5, 0)!.scale).toBe(4096);
   });
 
-  it("is a right drag in the controller, and a right click does nothing", () => {
+  it("is a left drag of the zoom tool in the controller; the select tool pans and picks", () => {
     const element = document.createElement("div");
     element.getBoundingClientRect = () =>
       ({ left: 0, top: 0, width: 800, height: 600 }) as DOMRect;
     let view = { ...VIEW };
+    let tool: "select" | "zoom" = "zoom";
     const rects: unknown[] = [];
+    const picks: unknown[] = [];
     attachController(element, {
       view: () => view,
       setView: (next) => (view = next),
-      pick: () => undefined,
+      tool: () => tool,
+      pick: (x, y) => picks.push([x, y]),
       hover: () => undefined,
       leave: () => undefined,
       fit: () => undefined,
       clear: () => undefined,
       rubber: (r) => rects.push(r),
     });
-    const fire = (type: string, x: number, y: number) => {
+    const fire = (type: string, x: number, y: number, button = 0) => {
       const event = new MouseEvent(type, {
         bubbles: true,
-        button: 2,
+        button,
         clientX: x,
         clientY: y,
       });
@@ -220,13 +223,26 @@ describe("the zoom to a rectangle (right drag)", () => {
     fire("pointerup", 300, 250);
     expect(view.scale).toBeCloseTo(VIEW.scale * 4);
     expect(rects.at(-1)).toBeNull(); // the rectangle is gone
-    fire("pointerdown", 500, 400);
-    fire("pointerup", 500, 400);
-    expect(view.scale).toBeCloseTo(VIEW.scale * 4);
-    // The menu of the browser does not open
+    expect(picks).toEqual([]);
+    // The right button does nothing here: its menu is the page's
+    const scale = view.scale;
+    fire("pointerdown", 100, 100, 2);
+    fire("pointermove", 300, 250, 2);
+    fire("pointerup", 300, 250, 2);
+    expect(view.scale).toBe(scale);
     const menu = new MouseEvent("contextmenu", { cancelable: true });
     element.dispatchEvent(menu);
-    expect(menu.defaultPrevented).toBe(true);
+    expect(menu.defaultPrevented).toBe(false);
+    // The select tool: a click picks, a drag pans
+    tool = "select";
+    fire("pointerdown", 500, 400);
+    fire("pointerup", 500, 400);
+    expect(picks).toEqual([[500, 400]]);
+    fire("pointerdown", 500, 400);
+    fire("pointermove", 540, 400);
+    fire("pointerup", 540, 400);
+    expect(view.scale).toBe(scale);
+    expect(view.cx).not.toBe(VIEW.cx);
   });
 });
 

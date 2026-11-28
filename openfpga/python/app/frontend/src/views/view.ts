@@ -79,6 +79,8 @@ export interface ViewDef<B> {
   tools?(base: B, changed: () => void): ViewTool[];
   /** A list beside the drawing (the clusters of V2), drawn again at each build (version) */
   side?: {
+  /** The commands of a right click on an object of the view (none: the menu of the page) */
+  menu?(base: B, ref: ObjectRef, changed: () => void): ViewTool[];
     label: string;
     component: ComponentType<{
       base: B;
