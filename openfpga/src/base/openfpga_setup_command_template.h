@@ -100,8 +100,9 @@ ShellCommandId add_read_simulation_setting_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "read OpenFPGA simulation setting file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                     read_simulation_setting_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id, record_settings<T>("simulation_setting",
+                                     read_simulation_setting_template<T>));
 
   return shell_cmd_id;
 }
@@ -161,8 +162,9 @@ ShellCommandId add_read_bitstream_setting_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "read OpenFPGA bitstream setting file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                     read_bitstream_setting_template<T>);
+  shell.set_command_execute_function(
+    shell_cmd_id, record_settings<T>("bitstream_setting",
+                                     read_bitstream_setting_template<T>));
 
   return shell_cmd_id;
 }
@@ -471,7 +473,8 @@ ShellCommandId add_build_fabric_command_template(
     shell_cmd, "Build the FPGA fabric in a graph of modules", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(
-    shell_cmd_id, require_link<T>("build_fabric", build_fabric_template<T>));
+    shell_cmd_id, require_link<T>("build_fabric",
+                                  record_fabric<T>(build_fabric_template<T>)));
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);

@@ -3,6 +3,40 @@
 FPGA-Bitstream
 --------------
 
+build_bitstream
+~~~~~~~~~~~~~~~
+
+  Make the bitstream of the routed design of the flow run stage by stage (see :ref:`openfpga_vpr_commands`), in one command. It runs ``analysis`` when it is not reached, then ``link_openfpga_arch`` and ``build_fabric`` when they are not valid any more (they are kept when the routing did not change), then ``repack``, ``build_architecture_bitstream``, ``build_fabric_bitstream`` and ``write_fabric_bitstream``, without time stamps. The options of the link and of the fabric, and the fix-ups after the link (e.g., ``check_netlist_naming_conflict``, run with ``--fix``), are those of the recipe of the bitstream that a plugin set with the architectures it read (see :ref:`openfpga_shell_plugins`), or ``--sort_gsb_chan_node_in_edges`` and ``--compress_routing``. A recipe that says the device cannot make a bitstream refuses it.
+
+  The simulation settings and the bitstream settings that the session read are used. When none were read, fixed simulation settings are written next to the file and read: the bitstream does not depend on them. Reading bitstream settings drops the bitstream; reading simulation settings makes the link again.
+
+  A step that fails stops the command, with the step named. The answer is the one of ``report_bitstream``.
+
+  .. option:: --file <string>
+
+    The file of the fabric bitstream. Default: ``bitstream/<circuit>.bit`` (``.xml`` with ``--format xml``)
+
+  .. option:: --format <string>
+
+    ``plain_text`` (default) or ``xml``
+
+  .. option:: --arch_file <string>
+
+    Also write the architecture bitstream (XML) in this file. It takes time on a large device
+
+  .. code-block::
+
+    build_bitstream --file bitstream/top.bit
+
+report_bitstream
+~~~~~~~~~~~~~~~~
+
+  Answer JSON about the bitstream of the session (kind ``bitstream``, ``openfpga_flow/schemas/bitstream.schema.json``) once ``BITSTREAM`` is reached: the file that ``build_bitstream`` wrote with its size and SHA-256, the number of configuration bits, the configuration protocol and its regions, the bits of each type of block under the top, the settings files, and the steps that ran and that were kept.
+
+  .. option:: --limit <int>
+
+    The most types of blocks listed (default: 50)
+
 repack
 ~~~~~~
 

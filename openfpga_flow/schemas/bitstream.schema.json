@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bitstream",
+  "description": "The bitstream of the session, answer of 'build_bitstream' and 'report_bitstream'. Version 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "stage",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "bitstream"
+    },
+    "stage": {
+      "const": "BITSTREAM"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "file",
+        "format",
+        "bytes",
+        "sha256",
+        "arch_file",
+        "arch_sha256",
+        "settings",
+        "steps",
+        "bits",
+        "protocol",
+        "regions",
+        "truncated",
+        "blocks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The file of the fabric bitstream that build_bitstream wrote, whole; null when the bitstream was made with the commands by hand"
+        },
+        "format": {
+          "enum": [
+            "plain_text",
+            "xml",
+            null
+          ]
+        },
+        "bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Of the bytes of the file, which has no time stamp"
+        },
+        "arch_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The architecture bitstream (XML), when build_bitstream was asked for it"
+        },
+        "arch_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "settings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The simulation and bitstream settings files the bitstream was made with"
+        },
+        "steps": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "ran",
+                "kept"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "ran": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "kept": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The link and the fabric, when they were still valid"
+                }
+              }
+            }
+          ]
+        },
+        "bits": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The configuration bits of the fabric bitstream"
+        },
+        "protocol": {
+          "type": "string",
+          "description": "The type of the configuration protocol: scan_chain, memory_bank, frame_based, ..."
+        },
+        "regions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean",
+          "description": "The list of blocks was cut at --limit"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "instances",
+              "bits"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The name of the block without the coordinates of its instance (grid_clb, sb, cbx)"
+              },
+              "instances": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "bits": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "description": "The blocks under the top of the architecture bitstream, by type, largest first"
+        }
+      }
+    }
+  }
+}
