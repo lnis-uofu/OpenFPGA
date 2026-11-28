@@ -88,6 +88,10 @@
     {
       "type": "x_yosys_rewrite_script",
       "path": "synthesis/ys_tmpl_yosys_vpr_flow_with_rewrite.ys"
+    },
+    {
+      "type": "netlist_symbols",
+      "path": "views/netlist_symbols.svg"
     }
   ],
   "flow_defaults": {

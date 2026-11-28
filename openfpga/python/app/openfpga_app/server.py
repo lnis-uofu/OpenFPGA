@@ -273,6 +273,13 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
             return JSONResponse({"error": refused}, 400)
         return _view_response(*(await find(options)))
 
+    async def netlist_symbols(request: Request) -> Response:
+        """The netlist symbols of the package of the session (none in the demo)"""
+        find = getattr(backend, "netlist_symbols", None)
+        if find is None:
+            return JSONResponse({"ok": True, "data": None})
+        return JSONResponse(await find())
+
     async def tile(request: Request) -> Response:
         """A tile of a view of the device, as a binary file of tables"""
         find = getattr(backend, "tile_file", None)
@@ -348,6 +355,7 @@ def create_app(config: AppConfig, backend: Backend, static: Optional[Path] = Non
         Route("/api/hierarchy", hierarchy),
         Route("/api/view", view),
         Route("/api/tile", tile),
+        Route("/api/package/netlist_symbols", netlist_symbols),
         Route("/api/sessions", sessions),
         Route("/api/session/open", open_session, methods=["POST"]),
         Route("/api/session/new", new_session, methods=["POST"]),

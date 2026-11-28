@@ -196,6 +196,27 @@ def test_the_atoms_and_the_clusters_agree_with_block_info(openfpga_module, flow)
             assert pins[net["driver"]]["net"] == net_index and pins[net["driver"]]["dir"] == 1
 
 
+def test_the_pins_of_the_clusters_are_those_of_block_info(openfpga_module, flow):
+    """The pins of each cluster that are on a net, for the cluster symbols of the netlist views"""
+    session, folder = flow
+    _, clusters = export(openfpga_module, session, folder, "clusters")
+    blocks = rows(clusters, "blocks")
+    nets = {n["net"]: n["name"] for n in rows(clusters, "nets")}
+    direction = {0: "input", 1: "output", 2: "clock"}
+    exported = {}
+    for pin in rows(clusters, "pins"):
+        name = blocks[pin["block"]]["name"]
+        exported.setdefault(name, set()).add(
+            (pin["port"], pin["bit"], direction[pin["dir"]], nets[pin["net"]])
+        )
+    assert exported
+    for block in blocks:
+        info = session.block_info(block["name"])
+        assert exported.get(block["name"], set()) == {
+            (p.port, p.bit, p.direction, p.net) for p in info.pins if p.net
+        }
+
+
 def test_the_module_of_each_atom_is_inferred(openfpga_module, flow):
     session, folder = flow
     _, view = export(openfpga_module, session, folder, "atoms")

@@ -6,11 +6,20 @@
 import { signal } from "@preact/signals";
 import { type ViewData, numbers, texts } from "./format";
 import { wholeView } from "./data";
-import { FRAME_PAD, type Layout, layoutBox, layoutGraph } from "./layout";
+import {
+  FRAME_PAD,
+  type Layout,
+  pinsLimitNow,
+  layoutBox,
+  layoutGraph,
+  withPins,
+} from "./layout";
 import {
   type Graph,
+  type GraphNode,
   type Grouping,
   type Netlist,
+  type Shaper,
   GROUP_CHARS,
   SCOPE_LIMIT,
   buildGraph,
@@ -27,12 +36,22 @@ import { blockFill, categoryColor } from "./palette";
 import type {
   Layer,
   LabelsLayer,
+  PointsLayer,
   ObjectRef,
   PolylinesLayer,
   RectsLayer,
   Rgba,
 } from "./scene";
 import { runViewCommand, selection } from "./selection";
+import { SymbolDrawer } from "./symboldraw";
+import {
+  type SymbolSet,
+  loadSymbols,
+  placePins,
+  symbolFor,
+  symbolsNote,
+  usePackageSymbols,
+} from "./symbols";
 import {
   selectedPath,
   slackColor,
@@ -86,6 +105,19 @@ export interface NetlistBase {
   ms: number;
   /** The clusters and their atoms, for the list of V2 (made once) */
   contents?: ClusterContents[];
+  /** The netlist symbols (docs/plan_netlist_symbols.md), and the package they come from */
+  symbols: SymbolSet;
+  packageName: string | null;
+  /** The pins of each cluster on a net, from the clusters export (null: an export without them):
+   * port, bit, direction (0 in, 1 out, 2 clock), and the net of the atoms (-1 none) */
+  clusterPins: Map<
+    string,
+    { port: string; bit: number; dir: number; net: number }[]
+  > | null;
+  /** The pins drawn now, by their ids: what they are, for the tooltip and the selection */
+  pinInfo: Map<string, { owner: string; label: string; net: number }>;
+  /** The pins of the graph placed by the rule, not by a port of their symbol */
+  unnamedPins: number;
   /** The modules and their atoms, for the list of V1 (made once for a netlist) */
   hierarchy?: ModuleNode;
 }
@@ -195,6 +227,34 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
     if (!list) clusterAtoms.set(name, (list = []));
     list.push(a);
   });
+  // The pins of the clusters, on the nets of the atoms (a net of the clusters has the name of the
+  // net of the atoms that it carries)
+  let clusterPins: NetlistBase["clusterPins"] = null;
+  if (clusters?.tables.pins) {
+    clusterPins = new Map();
+    const blockName = texts(clusters, "blocks", "name");
+    const netName = new Map<number, string>();
+    const ids = numbers(clusters, "nets", "net");
+    const names = texts(clusters, "nets", "name");
+    for (let i = 0; i < ids.length; i++) netName.set(ids[i], names.get(i));
+    const block = numbers(clusters, "pins", "block");
+    const port = texts(clusters, "pins", "port");
+    const bit = numbers(clusters, "pins", "bit");
+    const dir = numbers(clusters, "pins", "dir");
+    const net = numbers(clusters, "pins", "net");
+    for (let i = 0; i < block.length; i++) {
+      const name = blockName.get(block[i]);
+      let list = clusterPins.get(name);
+      if (!list) clusterPins.set(name, (list = []));
+      list.push({
+        port: port.get(i),
+        bit: bit[i],
+        dir: dir[i],
+        net: netlist.netIndex.get(netName.get(net[i]) ?? "") ?? -1,
+      });
+    }
+  }
+  const { set: symbols, packageName } = await loadSymbols();
   return {
     which,
     netlist,
@@ -204,6 +264,11 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
     clusterTypeIndex,
     clusterAtoms,
     tooLarge,
+    symbols,
+    packageName,
+    clusterPins,
+    pinInfo: new Map(),
+    unnamedPins: 0,
     expanded: new Set(),
     flat: false,
     scope: null,
@@ -244,9 +309,196 @@ function graphOf(base: NetlistBase): Graph | { tooBig: number } {
         base.expanded,
         base.scope,
         groupLabel(base),
+        shaperOf(base),
       ),
     };
   return base.graph.graph;
+}
+
+/** The aliases of an atom, in the order they are looked for (section 3 of the plan) */
+function atomAliases(base: NetlistBase, a: number): string[] {
+  const n = base.netlist;
+  const model = n.model[a];
+  if (model === ".names") {
+    const inputs = n.pins
+      ? n.pins.of[a].filter((p) => n.pins!.dir[p] !== 1).length
+      : 0;
+    return [`atom:.names/${inputs}`, "atom:.names", "atom:generic"];
+  }
+  if ([".latch", ".input", ".output"].includes(model))
+    return [`atom:${model}`, "atom:generic"];
+  return [`atom:${model}`, "atom:.subckt", "atom:generic"];
+}
+
+/** The slack of a net of the atoms, when the timing is there */
+function slackOfNet(base: NetlistBase, net: string): number | undefined {
+  const timing = timingNow(() => undefined);
+  const index = base.netlist.netIndex.get(net);
+  const ids = base.netlist.netId;
+  if (!timing || index === undefined || !ids || !timing.tables.atom_nets)
+    return undefined;
+  const slack = numbers(timing, "atom_nets", "slack_ns")[ids[index]];
+  return Number.isFinite(slack) ? slack : undefined;
+}
+
+/** The body of a symbol whose box has no fill */
+const fallbackBody = (dark: boolean): Rgba =>
+  dark ? [70, 70, 70, 255] : [240, 240, 235, 255];
+
+/** The value of an attribute of a node, for the texts of its symbol (s:attribute) */
+function attributeOf(
+  base: NetlistBase,
+  node: GraphNode,
+  attribute: string,
+): string {
+  const n = base.netlist;
+  if (node.kind === "atom") {
+    const a = node.atoms[0];
+    switch (attribute) {
+      case "name":
+        return n.atoms[a];
+      case "short_name":
+        return node.label;
+      case "model":
+        return n.model[a];
+      case "type":
+        return (
+          base.clusterType.get(base.clusterName.get(n.cluster[a]) ?? "") ?? ""
+        );
+      case "count":
+        return "1";
+      case "ports":
+        return String(n.pins?.of[a].length ?? 0);
+    }
+    return "";
+  }
+  const key = node.id.slice(2);
+  switch (attribute) {
+    case "name":
+    case "short_name":
+      return node.label;
+    case "model":
+      return "";
+    case "type":
+      return node.kind === "group"
+        ? base.which === "clusters"
+          ? (base.clusterType.get(key) ?? "")
+          : "module"
+        : "";
+    case "count":
+      return String(node.atoms.length);
+    case "ports":
+      return String(node.ports);
+  }
+  return "";
+}
+
+/** The symbol of a group (a module, a cluster), or null: a box */
+function groupSymbol(base: NetlistBase, key: string) {
+  return base.which === "atoms"
+    ? symbolFor(base.symbols, [`module:${key}`, "module:generic"])
+    : symbolFor(base.symbols, [
+        `cluster:${base.clusterType.get(key) ?? ""}`,
+        "cluster:generic",
+      ]);
+}
+
+/** The shapes of the nodes of the graph: their symbols, sizes and ports */
+function shaperOf(base: NetlistBase): Shaper {
+  const n = base.netlist;
+  base.unnamedPins = 0;
+  return {
+    atom(a) {
+      const pins = n.pins;
+      const symbol = symbolFor(base.symbols, atomAliases(base, a));
+      if (!symbol || !pins) return null;
+      const placed = placePins(
+        symbol,
+        pins.of[a].map((p) => ({
+          key: String(p),
+          port: pins.port[p],
+          bit: pins.bit[p],
+          out: pins.dir[p] === 1,
+        })),
+      );
+      base.unnamedPins += placed.unnamed;
+      const portOfPin = new Map<number, string>();
+      const ports = placed.pins.map((pp) => {
+        const p = Number(pp.key);
+        const id = `a:${a}#${p}`;
+        portOfPin.set(p, id);
+        return {
+          id,
+          side: pp.side,
+          x: pp.x,
+          y: pp.y,
+          label: `${pins.port[p]}[${pins.bit[p]}]`,
+          net: pins.net[p],
+        };
+      });
+      return {
+        symbol: symbol.type,
+        width: placed.width,
+        height: placed.height,
+        ports,
+        portOfPin,
+      };
+    },
+    group(key, _atoms, ins, outs) {
+      const symbol = groupSymbol(base, key);
+      if (!symbol) return null;
+      const pins =
+        base.which === "clusters" ? base.clusterPins?.get(key) : undefined;
+      if (!pins)
+        // Its ports on its sides, one per net, ordered by the layout
+        return {
+          symbol: symbol.type,
+          width: symbol.width,
+          height: Math.max(
+            symbol.height,
+            30 + 10 * Math.max(ins.length, outs.length),
+          ),
+        };
+      const placed = placePins(
+        symbol,
+        pins.map((p, i) => ({
+          key: String(i),
+          port: p.port,
+          bit: p.bit,
+          out: p.dir === 1,
+        })),
+      );
+      base.unnamedPins += placed.unnamed;
+      const byNet = new Map<string, string>();
+      const ports = placed.pins.map((pp) => {
+        const p = pins[Number(pp.key)];
+        const id = `g:${key}#${pp.key}`;
+        const where = `${p.net}:${p.dir === 1}`;
+        if (p.net >= 0 && !byNet.has(where)) byNet.set(where, id);
+        return {
+          id,
+          side: pp.side,
+          x: pp.x,
+          y: pp.y,
+          label: `${p.port}[${p.bit}]`,
+          net: p.net,
+        };
+      });
+      return {
+        symbol: symbol.type,
+        width: placed.width,
+        height: placed.height,
+        ports,
+        portOfNet: (net, out) => byNet.get(`${net}:${out}`),
+      };
+    },
+    stub() {
+      const symbol = symbolFor(base.symbols, ["stub"]);
+      return symbol
+        ? { symbol: symbol.type, width: symbol.width, height: symbol.height }
+        : null;
+    },
+  };
 }
 
 /** A change of the state; undone if the graph would have too many nodes */
@@ -688,6 +940,7 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
     const atoms = make("atoms");
     const stubs = make("stubs");
     const frames = make("frames");
+    const drawer = new SymbolDrawer(base.symbols, styles, dark);
     const lx: number[] = [];
     const ly: number[] = [];
     const ltext: string[] = [];
@@ -705,15 +958,31 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
         base.which === "clusters"
           ? base.clusterTypeIndex.get(f.key)
           : undefined;
+      // Its symbol gives its colours: the role of its first shape, and its outline
+      const frameSymbol = symbolFor(
+        base.symbols,
+        base.which === "clusters"
+          ? [
+              `frame:cluster:${base.clusterType.get(f.key) ?? ""}`,
+              "frame:cluster",
+            ]
+          : ["frame:module"],
+      );
+      const frameFill = frameSymbol
+        ? drawer.color(frameSymbol, frameSymbol.shapes[0]?.role ?? "body-alt")
+        : ((dark ? [40, 44, 54, 255] : [244, 246, 251, 255]) as Rgba);
+      const frameStroke: Rgba =
+        type !== undefined
+          ? blockFill(type, dark)
+          : frameSymbol
+            ? drawer.color(frameSymbol, "outline")
+            : dark
+              ? [110, 125, 160, 255]
+              : [120, 140, 190, 255];
       frames.style.push(
-        styles.add(`frame:${type ?? ""}`, {
-          fill: dark ? [40, 44, 54, 255] : [244, 246, 251, 255],
-          stroke:
-            type === undefined
-              ? dark
-                ? [110, 125, 160, 255]
-                : [120, 140, 190, 255]
-              : blockFill(type, dark),
+        styles.add(`frame:${frameFill}:${frameStroke}`, {
+          fill: frameFill,
+          stroke: frameStroke,
           width: 1.5,
         }),
       );
@@ -721,6 +990,15 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       ly.push(y1 - FRAME_PAD.top / 2);
       ltext.push(f.label);
     }
+    // A node with a symbol: picked by its box (drawn by nothing), drawn by the symbol
+    const unseen = styles.add("unseen", {});
+    let guessShown = false;
+    const symbolBoxes: {
+      node: GraphNode;
+      box: [number, number, number, number];
+      into: ReturnType<typeof make>;
+      index: number;
+    }[] = [];
     for (const node of g.nodes) {
       const b = layout.nodes.get(node.id);
       if (!b) continue;
@@ -731,9 +1009,18 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       into.y.push(y0);
       into.w.push(x1 - x0);
       into.h.push(y1 - y0);
-      lx.push((x0 + x1) / 2);
-      ly.push((y0 + y1) / 2);
-      ltext.push(node.label);
+      if (node.symbol)
+        symbolBoxes.push({
+          node,
+          box: [x0, y0, x1, y1],
+          into,
+          index: into.x.length - 1,
+        });
+      else {
+        lx.push((x0 + x1) / 2);
+        ly.push((y0 + y1) / 2);
+        ltext.push(node.label);
+      }
       if (node.kind === "group") {
         const key = node.id.slice(2);
         into.name.push(key);
@@ -785,6 +1072,65 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
         );
       }
     }
+    // The symbols: in the colour that the box would have, by the style of the box
+    for (const { node, box, into, index } of symbolBoxes) {
+      const symbol = base.symbols.byType.get(node.symbol!);
+      if (!symbol) continue;
+      const boxStyle = styles.list[into.style[index]];
+      into.style[index] = unseen;
+      const guessed =
+        node.kind === "atom" &&
+        base.which === "atoms" &&
+        n.how[node.atoms[0]] === 2;
+      drawer.add(
+        symbol,
+        box,
+        boxStyle.fill ?? fallbackBody(dark),
+        (attribute) => attributeOf(base, node, attribute),
+        guessed ? GUESS : undefined,
+        into.name[index],
+      );
+      if (guessed) guessShown = true;
+    }
+    for (const l of drawer.labels) {
+      lx.push(l.x);
+      ly.push(l.y);
+      ltext.push(l.text);
+    }
+    // The pins: where the layout put the ports of the nodes
+    const pinX: number[] = [];
+    const pinY: number[] = [];
+    const pinName: string[] = [];
+    base.pinInfo = new Map();
+    for (const node of g.nodes)
+      for (const port of node.pins ?? []) {
+        const at = layout.ports.get(port.id);
+        if (!at) continue;
+        pinX.push(at.x);
+        pinY.push(-at.y);
+        pinName.push(port.id);
+        base.pinInfo.set(port.id, {
+          owner:
+            node.kind === "atom" ? n.atoms[node.atoms[0]] : node.id.slice(2),
+          label: port.label,
+          net: port.net,
+        });
+      }
+    const pinColor = drawer.color(null, "pin");
+    const pinsLayer: PointsLayer = {
+      id: "pins",
+      kind: "points",
+      x: Float32Array.from(pinX),
+      y: Float32Array.from(pinY),
+      radius: 2.5,
+      style: new Uint16Array(pinX.length).fill(
+        styles.add("pin", { fill: pinColor }),
+      ),
+      objectKind: "pin",
+      name: (i) => pinName[i],
+      size: 60,
+      minPx: 40,
+    };
     const rectsOf = (
       r: ReturnType<typeof make>,
       objectKind: RectsLayer["objectKind"],
@@ -807,6 +1153,8 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
     layers.push(rectsOf(groups, groupKind, "groups"));
     layers.push(rectsOf(atoms, "atom", "atoms"));
     layers.push(rectsOf(stubs, "net", "stubs"));
+    layers.push(...drawer.layers());
+    if (pinX.length) layers.push(pinsLayer);
     if (!hidden.has("labels")) {
       const label = styles.add("label", {
         fill: dark ? [235, 235, 235, 255] : [20, 20, 20, 255],
@@ -827,8 +1175,13 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       layers.push(labels);
     }
     // The selection: the nodes of what is selected, and its nets over all
+    // The nets of the selection: a net, or the net of a pin
     const chosenNets = new Set(
-      selection.filter((r) => r.kind === "net").map((r) => r.name),
+      selection.flatMap((r) => {
+        if (r.kind === "net") return [r.name];
+        const pin = r.kind === "pin" ? base.pinInfo.get(r.name) : undefined;
+        return pin && pin.net >= 0 ? [n.nets[pin.net]] : [];
+      }),
     );
     const path = selection.find((r) => r.kind === "path");
     // A group that is expanded: its frame
@@ -926,14 +1279,21 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
         });
     if (
       base.which === "atoms" &&
-      atoms.style.some((s) => styles.list[s].stroke === GUESS)
+      (guessShown || atoms.style.some((s) => styles.list[s].stroke === GUESS))
     )
       legend.push({ label: "Module guessed", stroke: GUESS });
     if (stubs.x.length)
       legend.push({ label: "Net of a large fanout", ...styles.get("stub") });
     if (netSlack) legend.push(slackLegend(range));
     else legend.push({ label: "Net", stroke: edgeStroke, line: true });
+    if (pinX.length) legend.push({ label: "Pin", fill: pinColor });
     if (selection.length) legend.push({ label: "Selected", stroke: SELECTED });
+    // What drew the symbols
+    legend.push({
+      label: `${symbolsNote(base.symbols)}${base.packageName && (base.symbols.replaced.length || base.symbols.hiddenTypes.length || base.symbols.added.length) ? ` (${base.packageName})` : ""}`,
+    });
+    if (base.symbols.problem)
+      legend.push({ label: base.symbols.problem, stroke: GUESS });
   }
   const box = shown
     ? layoutBox(shown.layout)
@@ -954,6 +1314,11 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
         ? "laying out…"
         : `laid out in ${Math.round(base.ms)} ms`,
       base.message,
+      shown && !withPins(shown.graph)
+        ? `no pins over ${pinsLimitNow()} nodes`
+        : base.unnamedPins
+          ? `${base.unnamedPins} pins placed by the rule (no port of their symbol)`
+          : "",
       !hidden.has("slack") && !timing ? "analyzing the timing" : "",
     ]
       .filter(Boolean)
@@ -972,6 +1337,8 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
   return {
     needs: which === "atoms" ? "DEVICE" : "PACKED",
     load: () => loadNetlist(which),
+    // The symbols of the package, or not: the views are read again
+    reloadKey: () => String(usePackageSymbols.value),
     bounds: (base) => {
       if (!base.shown) return [0, 0, 1, 1];
       const b = layoutBox(base.shown.layout);
@@ -1011,6 +1378,13 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
         const type = base.clusterType.get(ref.name);
         return `cluster ${ref.name}${type ? ` (${type})` : ""}: ${atomsOf(base, ref, () => undefined).length} atoms${node ? `, ${node.ports} nets out` : ""}`;
       }
+      if (ref.kind === "pin") {
+        const pin = base.pinInfo.get(ref.name);
+        if (!pin) return `pin ${ref.name}`;
+        const net = pin.net >= 0 ? n.nets[pin.net] : "";
+        const slack = slackOfNet(base, net);
+        return `pin ${pin.label} of ${pin.owner}${net ? `: net ${net}` : ""}${slack === undefined ? "" : `, slack ${slack.toFixed(3)} ns`}`;
+      }
       if (ref.kind === "net") {
         const net = n.netIndex.get(ref.name);
         if (net === undefined) return `net ${ref.name}`;
@@ -1042,6 +1416,46 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
         return true;
       }
       return false;
+    },
+    menu(base, ref, changed): ViewTool[] {
+      const items: ViewTool[] = [];
+      const key = groupKey(base, ref);
+      const what = base.which === "atoms" ? "module" : "cluster";
+      if (key !== null)
+        items.push(
+          groupOpen(base, key)
+            ? {
+                label: "Collapse in the layout",
+                title: `The ${what} ${key} as one box`,
+                run: () => setGroupOpen(base, key, false, changed),
+              }
+            : {
+                label: "Expand in the layout",
+                title: `The atoms of the ${what} ${key}`,
+                run: () => setGroupOpen(base, key, true, changed),
+              },
+        );
+      if (ref.kind === "atom" && base.which === "clusters") {
+        // The cluster of an atom shown alone: collapse it
+        const a = base.netlist.atomIndex.get(ref.name);
+        const cluster =
+          a === undefined
+            ? undefined
+            : base.clusterName.get(base.netlist.cluster[a]);
+        if (cluster && groupOpen(base, cluster))
+          items.push({
+            label: `Collapse ${cluster}`,
+            title: `The cluster of ${ref.name} as one box`,
+            run: () => setGroupOpen(base, cluster, false, changed),
+          });
+      }
+      if (items.length)
+        items.push({
+          label: "Select",
+          title: `Select ${ref.name} in every view`,
+          run: () => runViewCommand({ op: "select", ...ref }),
+        });
+      return items;
     },
     tools(base, changed): ViewTool[] {
       const tools: ViewTool[] = [];
@@ -1122,43 +1536,3 @@ export function resetNetlistRequests() {
   netlistRequest.value = null;
   handled = 0;
 }
-    menu(base, ref, changed): ViewTool[] {
-      const items: ViewTool[] = [];
-      const key = groupKey(base, ref);
-      const what = base.which === "atoms" ? "module" : "cluster";
-      if (key !== null)
-        items.push(
-          groupOpen(base, key)
-            ? {
-                label: "Collapse in the layout",
-                title: `The ${what} ${key} as one box`,
-                run: () => setGroupOpen(base, key, false, changed),
-              }
-            : {
-                label: "Expand in the layout",
-                title: `The atoms of the ${what} ${key}`,
-                run: () => setGroupOpen(base, key, true, changed),
-              },
-        );
-      if (ref.kind === "atom" && base.which === "clusters") {
-        // The cluster of an atom shown alone: collapse it
-        const a = base.netlist.atomIndex.get(ref.name);
-        const cluster =
-          a === undefined
-            ? undefined
-            : base.clusterName.get(base.netlist.cluster[a]);
-        if (cluster && groupOpen(base, cluster))
-          items.push({
-            label: `Collapse ${cluster}`,
-            title: `The cluster of ${ref.name} as one box`,
-            run: () => setGroupOpen(base, cluster, false, changed),
-          });
-      }
-      if (items.length)
-        items.push({
-          label: "Select",
-          title: `Select ${ref.name} in every view`,
-          run: () => runViewCommand({ op: "select", ...ref }),
-        });
-      return items;
-    },

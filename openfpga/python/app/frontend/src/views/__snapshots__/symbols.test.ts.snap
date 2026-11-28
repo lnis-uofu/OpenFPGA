@@ -1,0 +1,274 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the compiler of the netlist symbols > compiles the default symbols, the same each time 1`] = `
+[
+  {
+    "aliases": [
+      "atom:generic",
+    ],
+    "ports": [],
+    "shapes": 1,
+    "size": [
+      90,
+      28,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_generic",
+  },
+  {
+    "aliases": [
+      "atom:.subckt",
+    ],
+    "ports": [],
+    "shapes": 2,
+    "size": [
+      100,
+      40,
+    ],
+    "texts": [
+      "model",
+      "short_name",
+    ],
+    "type": "atom_subckt",
+  },
+  {
+    "aliases": [
+      "atom:.names",
+    ],
+    "ports": [
+      "in@0,6:left/8",
+      "out@60,14:right",
+    ],
+    "shapes": 2,
+    "size": [
+      60,
+      28,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_lut",
+  },
+  {
+    "aliases": [
+      "atom:frac_lut6",
+    ],
+    "ports": [
+      "in@0,6:left/8",
+      "lut4_out@64,16:right",
+      "lut5_out@64,28:right",
+      "lut6_out@64,40:right",
+    ],
+    "shapes": 2,
+    "size": [
+      64,
+      52,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_frac_lut",
+  },
+  {
+    "aliases": [
+      "atom:.latch",
+    ],
+    "ports": [
+      "D@0,9:left",
+      "clk@0,27:left",
+      "Q@50,9:right",
+    ],
+    "shapes": 2,
+    "size": [
+      50,
+      36,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_ff",
+  },
+  {
+    "aliases": [
+      "atom:.input",
+    ],
+    "ports": [
+      "inpad@64,10:right",
+    ],
+    "shapes": 1,
+    "size": [
+      64,
+      20,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_input",
+  },
+  {
+    "aliases": [
+      "atom:.output",
+    ],
+    "ports": [
+      "outpad@0,10:left",
+    ],
+    "shapes": 1,
+    "size": [
+      64,
+      20,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_output",
+  },
+  {
+    "aliases": [
+      "atom:adder",
+    ],
+    "ports": [
+      "a@0,8:left",
+      "b@0,36:left",
+      "cin@22,4:top",
+      "cout@22,40:bottom",
+      "sumout@44,22:right",
+    ],
+    "shapes": 1,
+    "size": [
+      44,
+      44,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_adder",
+  },
+  {
+    "aliases": [
+      "atom:mult_8",
+      "atom:mult_16",
+    ],
+    "ports": [],
+    "shapes": 3,
+    "size": [
+      60,
+      44,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "atom_mult",
+  },
+  {
+    "aliases": [
+      "atom:dpram_128x8",
+    ],
+    "ports": [],
+    "shapes": 2,
+    "size": [
+      80,
+      60,
+    ],
+    "texts": [
+      "model",
+      "short_name",
+    ],
+    "type": "atom_memory",
+  },
+  {
+    "aliases": [
+      "cluster:generic",
+    ],
+    "ports": [],
+    "shapes": 2,
+    "size": [
+      120,
+      48,
+    ],
+    "texts": [
+      "type",
+      "short_name",
+    ],
+    "type": "cluster_generic",
+  },
+  {
+    "aliases": [
+      "cluster:io",
+    ],
+    "ports": [],
+    "shapes": 1,
+    "size": [
+      96,
+      28,
+    ],
+    "texts": [
+      "short_name",
+    ],
+    "type": "cluster_io",
+  },
+  {
+    "aliases": [
+      "cluster:clb",
+    ],
+    "ports": [],
+    "shapes": 6,
+    "size": [
+      120,
+      56,
+    ],
+    "texts": [
+      "type",
+      "short_name",
+    ],
+    "type": "cluster_clb",
+  },
+  {
+    "aliases": [
+      "module:generic",
+    ],
+    "ports": [],
+    "shapes": 2,
+    "size": [
+      150,
+      48,
+    ],
+    "texts": [
+      "name",
+    ],
+    "type": "module_generic",
+  },
+  {
+    "aliases": [
+      "frame:module",
+      "frame:cluster",
+    ],
+    "ports": [],
+    "shapes": 1,
+    "size": [
+      150,
+      80,
+    ],
+    "texts": [
+      "name",
+    ],
+    "type": "frame_module",
+  },
+  {
+    "aliases": [
+      "stub",
+    ],
+    "ports": [],
+    "shapes": 1,
+    "size": [
+      70,
+      18,
+    ],
+    "texts": [
+      "name",
+    ],
+    "type": "stub",
+  },
+]
+`;

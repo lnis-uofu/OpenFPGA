@@ -670,6 +670,102 @@ try {
     { timeout: 60000 },
   );
 
+  // The netlist symbols (docs/plan_netlist_symbols.md): the pins on the symbols, and every edge
+  // from a pin to a pin
+  const onPins = (view) =>
+    page.evaluate((name) => {
+      const scene = window.openfpgaViews[name].scene();
+      const pins = scene.layers.find((l) => l.id === "pins");
+      const edges = scene.layers.find((l) => l.id === "edges");
+      if (!pins || !edges) return { pins: 0, edges: 0, off: -1 };
+      const near = (x, y) => {
+        for (let i = 0; i < pins.x.length; i++)
+          if (Math.hypot(pins.x[i] - x, pins.y[i] - y) < 1) return true;
+        return false;
+      };
+      const count = edges.start.length - 1;
+      let off = 0;
+      for (let i = 0; i < count; i++) {
+        const a = edges.start[i];
+        const b = edges.start[i + 1] - 1;
+        if (!near(edges.xy[a * 2], edges.xy[a * 2 + 1])) off++;
+        if (!near(edges.xy[b * 2], edges.xy[b * 2 + 1])) off++;
+      }
+      return { pins: pins.x.length, edges: count, off };
+    }, view);
+  const clusterPins = await onPins("clusters");
+  console.log(
+    `clusters: ${clusterPins.pins} pins, ${clusterPins.edges} edges, ${clusterPins.off} ends off a pin`,
+  );
+  assert.ok(
+    clusterPins.pins > 0 && clusterPins.edges > 0 && clusterPins.off === 0,
+    "every edge of the clusters goes from a pin to a pin",
+  );
+  // The same picture with deck.gl and Canvas2D, in the light and the dark theme
+  const symbolParity = async (theme) => {
+    await page.evaluate((t) => {
+      if (t === "dark")
+        document.documentElement.setAttribute("data-theme", "dark");
+      else document.documentElement.setAttribute("data-theme", "light");
+    }, theme);
+    const shots = {};
+    for (const renderer of ["canvas2d", "webgl"]) {
+      await page.selectOption('[aria-label="Renderer"]', renderer);
+      await page.waitForFunction(
+        (want) => window.openfpgaViews.clusters?.backend() === want,
+        renderer === "webgl" ? "deck" : "canvas2d",
+        { timeout: 30000 },
+      );
+      await page.waitForTimeout(1500);
+      shots[renderer] = cells(
+        pixels(await page.locator(".view-host").screenshot()),
+      );
+      if (renderer === "webgl") await shot(`clusters-symbols-${theme}-4x4.png`);
+    }
+    const [sa, sb] = [shots.canvas2d, shots.webgl];
+    const d =
+      sa.reduce(
+        (sum, cell, i) =>
+          sum +
+          Math.abs(cell[0] - sb[i][0]) +
+          Math.abs(cell[1] - sb[i][1]) +
+          Math.abs(cell[2] - sb[i][2]),
+        0,
+      ) /
+      (sa.length * 3);
+    console.log(
+      `parity of the cluster symbols, ${theme} (deck.gl vs Canvas2D): mean difference ${d.toFixed(2)}`,
+    );
+    assert.ok(
+      d < 12,
+      `the symbols are the same picture, ${theme} (${d.toFixed(2)})`,
+    );
+  };
+  await symbolParity("light");
+  await symbolParity("dark");
+  await page.evaluate(() =>
+    document.documentElement.removeAttribute("data-theme"),
+  );
+  await page.selectOption('[aria-label="Renderer"]', "canvas2d");
+  // The netlist: its pins and its edges too
+  await page.click('[role=tab]:has-text("Netlist")');
+  await page.waitForFunction(
+    () =>
+      window.openfpgaViews.netlist
+        ?.scene()
+        ?.layers.some((l) => l.id === "pins"),
+    null,
+    { timeout: 60000 },
+  );
+  const netlistPins = await onPins("netlist");
+  console.log(
+    `netlist: ${netlistPins.pins} pins, ${netlistPins.edges} edges, ${netlistPins.off} ends off a pin`,
+  );
+  assert.ok(
+    netlistPins.pins > 0 && netlistPins.off === 0,
+    "every edge of the netlist goes from a pin to a pin",
+  );
+
   // The 32x32 device: the objects close up, the coarse tiles far out
   await page.click(".session-action:text-is('Close')");
   await page.click("text=Create session from device package…");

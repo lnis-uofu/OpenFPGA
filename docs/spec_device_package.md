@@ -1,6 +1,6 @@
 # Spec: OpenFPGA device package
 
-Status: draft for review. Implemented: the manifest and its checks, the corners and the substitution of the timing variables in `read_device_package` (`--corner`; R-16 to R-19, R-22 to R-24, R-46; the process, voltage, temperature and rc of a corner are not required yet), `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md). From the review of the proposal, implemented: the field `type` and the check of the types (R-20), the typed Yosys maps, `device.layout` (R-7), the `LICENSE` file (R-9), and the cached files with `openfpga_package.py cache` (R-27, R-49). Not yet: `fabric_bitstream_paths` (R-28) and `pcf_config` (R-29) are accepted and checked, but the flow does not make or use them yet.
+Status: draft for review. Implemented: the manifest and its checks, the corners and the substitution of the timing variables in `read_device_package` (`--corner`; R-16 to R-19, R-22 to R-24, R-46; the process, voltage, temperature and rc of a corner are not required yet), `read_device_package` and `report_device_package` in C++ (which Python, the MCP server and the web app call), the I/O map (`write_io_map`, `check_io_map`), `odc_defaults`, the settings and the recipe of the bitstream (docs/spec_bitstream.md), and the line `${ODC_SYNTHESIS}` in the scripts of the three packages of the repository (docs/plan_odc_constraints.md). From the review of the proposal, implemented: the field `type` and the check of the types (R-20), the typed Yosys maps, `device.layout` (R-7), the `LICENSE` file (R-9), and the cached files with `openfpga_package.py cache` (R-27, R-49). Added: the netlist symbols of the web app (R-52). Not yet: `fabric_bitstream_paths` (R-28) and `pcf_config` (R-29) are accepted and checked, but the flow does not make or use them yet.
 
 ## Overview
 
@@ -76,6 +76,8 @@ Non-goals:
       power/                   power data for this corner (optional)
       corner.json              corner description: process, voltage, temperature, RC corner, notes (optional)
   reference/                   small reference design with its expected results (optional)
+  views/
+    netlist_symbols.svg        symbols of the netlist views of the web app (optional, R-52)
   CHECKSUMS.sha256             SHA-256 of every file except itself
 ```
 
@@ -200,6 +202,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 
 ### Pin constraints
 
+- **R-52** A package may hold the symbols of the netlist views of the web app (type `netlist_symbols`, the file `views/netlist_symbols.svg`, at most one): an SVG file in the subset of docs/plan_netlist_symbols.md (section 2). Its symbols replace the default symbols of the same `s:type`, hide them (`s:hide="true"`) or add new ones, and its `s:color` gives the light and dark colours of its roles. Reading the package refuses a file outside the subset (scripts, styles, images, links, events, colours on shapes, transforms other than translate and scale), a role with no colours or without both a light and a dark one, a symbol with no alias, a hidden symbol that draws something, and layout options other than `layerSpacing`, `nodeSpacing` and `direction`. A hidden symbol that is not a default symbol is refused by the app, which then uses the default symbols and says why.
 - **R-29** A package may hold the custom PCF commands of the device (type `pcf_config`, the file format of `pcf2place --pcf_config`), which a session gives to `pcf2place` when the pin constraints of the user are a PCF file.
 
 ### Types
@@ -239,6 +242,7 @@ Paths in the manifest are relative to the package root. Directories may be empty
 | `power_data` | power data of one corner (has `corner`) | optional |
 | `corner_info` | `corner.json` of one corner (has `corner`) | optional |
 | `fabric_bitstream_paths` | the path of each configuration bit (R-28) | optional |
+| `netlist_symbols` | the symbols of the netlist views, `views/netlist_symbols.svg` (R-52) | optional |
 | `reference_design` | reference RTL | reference design |
 
 ### Integrity and compatibility

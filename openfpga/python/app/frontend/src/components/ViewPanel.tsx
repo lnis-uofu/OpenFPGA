@@ -322,7 +322,7 @@ export function ViewPanel<B>(props: {
     return () => {
       gone = true;
     };
-  }, [signature, real]);
+  }, [signature, real, def.reloadKey?.()]);
 
   // The renderer: the one chosen, deck.gl unless auto finds it missing, software or slow
   useEffect(() => {

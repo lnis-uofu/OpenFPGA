@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:s="https://github.com/nturley/netlistsvg"
+     width="420" height="240">
+  <title>The netlist symbols of k6_frac_n10_mem1k_3x2 (docs/plan_netlist_symbols.md)</title>
+  <!-- Over the default symbols of the tool: the memory block of this device, with its pins where
+       the block has them; its memory atom drawn the same way; no multiplier symbol, as the device
+       has none. -->
+  <s:color role="memory" light="#dfe9f7" dark="#24324a"/>
+  <s:color role="accent" light="#2f6fbf" dark="#7fb0f0"/>
+
+  <!-- The cluster of a memory: addresses, data and enables on the left, data out on the right -->
+  <g s:type="cluster_memory" s:width="140" s:height="196" transform="translate(20,20)">
+    <s:alias val="cluster:memory"/>
+    <rect x="0" y="0" width="140" height="196" s:generic="body"/>
+    <rect x="0" y="0" width="140" height="14" class="memory"/>
+    <text x="70" y="10" s:attribute="type"/>
+    <text x="70" y="100" s:attribute="short_name"/>
+    <polyline points="0,182 8,187 0,192" fill="none" class="accent"/>
+    <g s:pid="waddr" s:x="0" s:y="20" s:step="6"/>
+    <g s:pid="raddr" s:x="0" s:y="66" s:step="6"/>
+    <g s:pid="data_in" s:x="0" s:y="112" s:step="6"/>
+    <g s:pid="wen" s:x="0" s:y="164"/>
+    <g s:pid="ren" s:x="0" s:y="172"/>
+    <g s:pid="clk" s:x="0" s:y="187"/>
+    <g s:pid="data_out" s:x="140" s:y="20" s:step="6"/>
+  </g>
+
+  <!-- Its atom: the same pins -->
+  <g s:type="atom_memory" s:width="100" s:height="196" transform="translate(200,20)">
+    <s:alias val="atom:dpram_128x8"/>
+    <rect x="0" y="0" width="100" height="196"/>
+    <rect x="0" y="0" width="100" height="14" class="memory"/>
+    <text x="50" y="10" s:attribute="model"/>
+    <text x="50" y="100" s:attribute="short_name"/>
+    <polyline points="0,182 8,187 0,192" fill="none" class="accent"/>
+    <g s:pid="waddr" s:x="0" s:y="20" s:step="6"/>
+    <g s:pid="raddr" s:x="0" s:y="66" s:step="6"/>
+    <g s:pid="data_in" s:x="0" s:y="112" s:step="6"/>
+    <g s:pid="wen" s:x="0" s:y="164"/>
+    <g s:pid="ren" s:x="0" s:y="172"/>
+    <g s:pid="clk" s:x="0" s:y="187"/>
+    <g s:pid="data_out" s:x="100" s:y="20" s:step="6"/>
+  </g>
+
+  <g s:type="atom_mult" s:hide="true"/>
+</svg>

@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:s="https://github.com/nturley/netlistsvg"
+     width="760" height="420">
+  <title>The default netlist symbols of OpenFPGA (docs/plan_netlist_symbols.md)</title>
+  <!-- The format is the one of netlistsvg (MIT license), as a subset; the drawings are new.
+       A symbol is a g with s:type; its units are those of the views (a LUT is 60 wide); y goes
+       down. The colours are those of the roles; body is left to the views, which fill it with
+       the colour of the model of an atom or the block type of a cluster. -->
+  <s:color role="outline" light="#464646" dark="#141414"/>
+  <s:color role="pin" light="#3c3c46" dark="#c8c8d2"/>
+  <s:color role="label" light="#141414" dark="#ebebeb"/>
+  <s:color role="accent" light="#c8781e" dark="#f0a040"/>
+  <s:color role="body-alt" light="#f4f6fb" dark="#282c36"/>
+  <s:layout layerSpacing="60" nodeSpacing="18" direction="RIGHT"/>
+
+  <!-- An atom of any model that has no symbol: its ports placed by the rule -->
+  <g s:type="atom_generic" s:width="90" s:height="28" transform="translate(20,20)">
+    <s:alias val="atom:generic"/>
+    <rect x="0" y="0" width="90" height="28" s:generic="body"/>
+    <text x="45" y="16" s:attribute="short_name"/>
+  </g>
+
+  <!-- A .subckt: the model at its top, then the name -->
+  <g s:type="atom_subckt" s:width="100" s:height="40" transform="translate(140,20)">
+    <s:alias val="atom:.subckt"/>
+    <rect x="0" y="0" width="100" height="40" s:generic="body"/>
+    <line x1="0" y1="14" x2="100" y2="14"/>
+    <text x="50" y="10" s:attribute="model"/>
+    <text x="50" y="28" s:attribute="short_name"/>
+  </g>
+
+  <!-- A LUT: its inputs on the left, one bit each 8 units, its output on the right -->
+  <g s:type="atom_lut" s:width="60" s:height="28" transform="translate(270,20)">
+    <s:alias val="atom:.names"/>
+    <path d="M0,0 H52 L60,8 V28 H0 Z" s:generic="body"/>
+    <path d="M52,0 V8 H60" fill="none"/>
+    <text x="28" y="17" s:attribute="short_name"/>
+    <g s:pid="in" s:x="0" s:y="6" s:step="8"/>
+    <g s:pid="out" s:x="60" s:y="14"/>
+  </g>
+
+  <!-- A fractured LUT of the architectures of the repository -->
+  <g s:type="atom_frac_lut" s:width="64" s:height="52" s:gap="8" transform="translate(360,20)">
+    <s:alias val="atom:frac_lut6"/>
+    <path d="M0,0 H56 L64,8 V52 H0 Z" s:generic="body"/>
+    <path d="M56,0 V8 H64" fill="none"/>
+    <text x="30" y="30" s:attribute="short_name"/>
+    <g s:pid="in" s:x="0" s:y="6" s:step="8"/>
+    <g s:pid="lut4_out" s:x="64" s:y="16"/>
+    <g s:pid="lut5_out" s:x="64" s:y="28"/>
+    <g s:pid="lut6_out" s:x="64" s:y="40"/>
+  </g>
+
+  <!-- A flip-flop: D and the clock on the left (the clock with its wedge), Q on the right -->
+  <g s:type="atom_ff" s:width="50" s:height="36" transform="translate(450,20)">
+    <s:alias val="atom:.latch"/>
+    <rect x="0" y="0" width="50" height="36"/>
+    <polyline points="0,22 8,27 0,32" fill="none"/>
+    <text x="25" y="21" s:attribute="short_name"/>
+    <g s:pid="D" s:x="0" s:y="9"/>
+    <g s:pid="clk" s:x="0" s:y="27"/>
+    <g s:pid="Q" s:x="50" s:y="9"/>
+  </g>
+
+  <!-- The pads of the circuit: arrows into it and out of it -->
+  <g s:type="atom_input" s:width="64" s:height="20" transform="translate(530,20)">
+    <s:alias val="atom:.input"/>
+    <path d="M0,0 H52 L64,10 L52,20 H0 Z"/>
+    <text x="28" y="13" s:attribute="short_name"/>
+    <g s:pid="inpad" s:x="64" s:y="10"/>
+  </g>
+  <g s:type="atom_output" s:width="64" s:height="20" transform="translate(620,20)">
+    <s:alias val="atom:.output"/>
+    <path d="M12,0 H64 V20 H12 L0,10 Z"/>
+    <text x="36" y="13" s:attribute="short_name"/>
+    <g s:pid="outpad" s:x="0" s:y="10"/>
+  </g>
+
+  <!-- An adder of a carry chain: the carry in at the top, the carry out at the bottom -->
+  <g s:type="atom_adder" s:width="44" s:height="44" transform="translate(20,120)">
+    <s:alias val="atom:adder"/>
+    <path d="M0,0 L44,8 V36 L0,44 V28 L8,22 L0,16 Z"/>
+    <text x="24" y="25" s:attribute="short_name"/>
+    <g s:pid="a" s:x="0" s:y="8"/>
+    <g s:pid="b" s:x="0" s:y="36"/>
+    <g s:pid="cin" s:x="22" s:y="4" s:position="top"/>
+    <g s:pid="cout" s:x="22" s:y="40" s:position="bottom"/>
+    <g s:pid="sumout" s:x="44" s:y="22"/>
+  </g>
+
+  <!-- A multiplier -->
+  <g s:type="atom_mult" s:width="60" s:height="44" s:gap="6" transform="translate(100,120)">
+    <s:alias val="atom:mult_8"/>
+    <s:alias val="atom:mult_16"/>
+    <rect x="0" y="0" width="60" height="44" s:generic="body"/>
+    <path d="M24,14 L36,26 M36,14 L24,26" fill="none" class="accent"/>
+    <text x="30" y="38" s:attribute="short_name"/>
+  </g>
+
+  <!-- A memory -->
+  <g s:type="atom_memory" s:width="80" s:height="60" s:gap="6" transform="translate(190,120)">
+    <s:alias val="atom:dpram_128x8"/>
+    <rect x="0" y="0" width="80" height="60" s:generic="body"/>
+    <line x1="0" y1="14" x2="80" y2="14"/>
+    <text x="40" y="10" s:attribute="model"/>
+    <text x="40" y="34" s:attribute="short_name"/>
+  </g>
+
+  <!-- A cluster of any block type: its used pins placed by the rule -->
+  <g s:type="cluster_generic" s:width="120" s:height="48" s:gap="8" transform="translate(300,120)">
+    <s:alias val="cluster:generic"/>
+    <rect x="0" y="0" width="120" height="48" s:generic="body"/>
+    <line x1="0" y1="14" x2="120" y2="14"/>
+    <text x="60" y="10" s:attribute="type"/>
+    <text x="60" y="32" s:attribute="short_name"/>
+  </g>
+
+  <!-- A cluster of I/O -->
+  <g s:type="cluster_io" s:width="96" s:height="28" s:gap="8" transform="translate(450,120)">
+    <s:alias val="cluster:io"/>
+    <path d="M10,0 H86 L96,14 L86,28 H10 L0,14 Z" s:generic="body"/>
+    <text x="48" y="17" s:attribute="short_name"/>
+  </g>
+
+  <!-- A cluster of logic: a box with the marks of its slices -->
+  <g s:type="cluster_clb" s:width="120" s:height="56" s:gap="8" transform="translate(570,120)">
+    <s:alias val="cluster:clb"/>
+    <rect x="0" y="0" width="120" height="56" s:generic="body"/>
+    <line x1="0" y1="14" x2="120" y2="14"/>
+    <path d="M104,3 H114 V11 H104 Z M106,5 H112 M106,7 H112 M106,9 H112" fill="none"/>
+    <text x="56" y="10" s:attribute="type"/>
+    <text x="60" y="36" s:attribute="short_name"/>
+  </g>
+
+  <!-- A module of the RTL, collapsed: its ports are the nets that cross its edge -->
+  <g s:type="module_generic" s:width="150" s:height="48" transform="translate(20,240)">
+    <s:alias val="module:generic"/>
+    <rect x="0" y="0" width="150" height="48" s:generic="body"/>
+    <path d="M0,10 H150" fill="none"/>
+    <text x="75" y="30" s:attribute="name"/>
+  </g>
+
+  <!-- An expanded group: a frame around what it holds, in the colour of body-alt -->
+  <g s:type="frame_module" s:width="150" s:height="80" transform="translate(200,240)">
+    <s:alias val="frame:module"/>
+    <s:alias val="frame:cluster"/>
+    <rect x="0" y="0" width="150" height="80" class="body-alt"/>
+    <text x="75" y="13" s:attribute="name"/>
+  </g>
+
+  <!-- A net of a large fanout, drawn to a stub with its count -->
+  <g s:type="stub" s:width="70" s:height="18" transform="translate(380,240)">
+    <s:alias val="stub"/>
+    <path d="M0,9 L8,0 H70 V18 H8 Z" class="body-alt"/>
+    <text x="38" y="12" s:attribute="name"/>
+  </g>
+</svg>

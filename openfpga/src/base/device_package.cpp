@@ -16,6 +16,7 @@
 #include <sstream>
 #include <system_error>
 
+#include "netlist_symbols_check.h"
 #include "nlohmann/json.hpp"
 #include "picosha2.h"
 #include "pugixml.hpp"
@@ -34,6 +35,7 @@ const char* const CHECKSUMS = "CHECKSUMS.sha256";
 const int KNOWN_MAJOR = 1;
 const size_t README_CHARS = 1200;
 const char* const LICENSE = "LICENSE";
+const char* const NETLIST_SYMBOLS = "views/netlist_symbols.svg";
 
 /* The types of R-20. A type that starts with x_ is the package's own */
 const std::set<std::string>& known_types() {
@@ -68,20 +70,27 @@ const std::set<std::string>& known_types() {
                                               "router_lookahead",
                                               "place_delay_lookup",
                                               "fabric_bitstream_paths",
+                                              "netlist_symbols",
                                               "reference_design"};
   return types;
 }
 
 /* The types that a package has at most once (for each corner) */
 const std::set<std::string>& single_types() {
-  static const std::set<std::string> types = {
-    "yosys_script",          "yosys_cell_sim",
-    "yosys_adder_map",       "yosys_dsp_map",
-    "yosys_ff_map",          "yosys_bram_map",
-    "yosys_bram_rules",      "pcf_config",
-    "timing_data",           "rr_graph",
-    "router_lookahead",      "place_delay_lookup",
-    "fabric_bitstream_paths"};
+  static const std::set<std::string> types = {"yosys_script",
+                                              "yosys_cell_sim",
+                                              "yosys_adder_map",
+                                              "yosys_dsp_map",
+                                              "yosys_ff_map",
+                                              "yosys_bram_map",
+                                              "yosys_bram_rules",
+                                              "pcf_config",
+                                              "timing_data",
+                                              "rr_graph",
+                                              "router_lookahead",
+                                              "place_delay_lookup",
+                                              "fabric_bitstream_paths",
+                                              "netlist_symbols"};
   return types;
 }
 
@@ -676,6 +685,23 @@ DevicePackage load_device_package(const fs::path& given,
       text += (0 == i ? "" : ", ") + extra[i];
     }
     throw invalid(name, "the files and the manifest differ: " + text);
+  }
+  /* The netlist symbols of the views (docs/plan_netlist_symbols.md): one
+   * file, views/netlist_symbols.svg, in the subset that the app reads */
+  for (const std::string& path : types["netlist_symbols"]) {
+    if (path != NETLIST_SYMBOLS) {
+      throw invalid(name, "the file of the netlist symbols is " +
+                            std::string(NETLIST_SYMBOLS) + ", not '" + path +
+                            "'");
+    }
+    std::ifstream in(directory / path, std::ios::binary);
+    const std::string text((std::istreambuf_iterator<char>(in)),
+                           std::istreambuf_iterator<char>());
+    const std::string problem = check_netlist_symbols(text);
+    if (!problem.empty()) {
+      throw invalid(
+        name, "its netlist symbols (" + path + ") are refused: " + problem);
+    }
   }
   json device = member(manifest, "device");
   if (falsy(device)) {

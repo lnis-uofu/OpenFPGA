@@ -20,6 +20,8 @@ export interface Box {
 export interface Layout {
   signature: string;
   nodes: Map<string, Box>;
+  /** Where each port is (its centre), by its id */
+  ports: Map<string, { x: number; y: number }>;
   /** The points of each edge, x, y */
   edges: Map<string, number[]>;
   width: number;
@@ -102,7 +104,7 @@ function options(
     ...(frames
       ? {
           "elk.hierarchyHandling": "INCLUDE_CHILDREN",
-          "elk.json.shapeCoords": "ROOT",
+          // The shapes in their parent (added up when read), the edges in the root
           "elk.json.edgeCoords": "ROOT",
         }
       : {}),
@@ -125,6 +127,47 @@ function options(
           "elk.layered.cycleBreaking.strategy": "INTERACTIVE",
         }
       : {}),
+  };
+}
+
+/** The ports of a node for ELK: placed (FIXED_POS) when they all have a place, else on their
+ * sides, ordered by ELK (FIXED_SIDE), the node growing to hold them */
+const SIDES = { left: "WEST", right: "EAST", top: "NORTH", bottom: "SOUTH" };
+/** The most nodes of a graph laid out with its ports: over it, the edges go from node to node
+ * and no pin is drawn (ports cost ELK about 2 times the time at 1500 nodes, placed or not) */
+export const PINS_LIMIT = 400;
+let pinsLimit = PINS_LIMIT;
+/** For the tests and the measures */
+export function setPinsLimit(limit: number) {
+  pinsLimit = limit;
+}
+/** The most nodes laid out with their ports, now */
+export const pinsLimitNow = () => pinsLimit;
+/** Whether a graph is laid out with its ports */
+export const withPins = (graph: Graph) => graph.nodes.length <= pinsLimit;
+
+function portsOf(
+  node: Graph["nodes"][number],
+  pinsOn: boolean,
+): Partial<ElkNode> {
+  const pins = node.pins;
+  if (!pins?.length || !pinsOn) return {};
+  const placed = pins.every((p) => p.x !== undefined && p.y !== undefined);
+  return {
+    layoutOptions: placed
+      ? { "elk.portConstraints": "FIXED_POS" }
+      : {
+          "elk.portConstraints": "FIXED_SIDE",
+          "elk.nodeSize.constraints": "PORTS",
+          "elk.spacing.portPort": "8",
+        },
+    ports: pins.map((p) => ({
+      id: p.id,
+      width: 0,
+      height: 0,
+      ...(placed ? { x: p.x, y: p.y } : {}),
+      layoutOptions: { "elk.port.side": SIDES[p.side] },
+    })),
   };
 }
 
@@ -157,6 +200,7 @@ export async function layoutGraph(
   }
   const interactive = hints.size > 0;
   const frames = graph.frames ?? [];
+  const pinsOn = withPins(graph);
   const root: ElkNode = {
     id: "root",
     layoutOptions: options(graph.nodes.length, interactive, frames.length > 0),
@@ -184,14 +228,15 @@ export async function layoutGraph(
       id: n.id,
       width: n.width,
       height: n.height,
+      ...portsOf(n, pinsOn),
       ...(hints.get(n.id) ?? {}),
     });
   const input: ElkNode = {
     ...root,
     edges: graph.edges.map((e): ElkExtendedEdge => ({
       id: e.id,
-      sources: [e.source],
-      targets: [e.target],
+      sources: [(pinsOn && e.sourcePort) || e.source],
+      targets: [(pinsOn && e.targetPort) || e.target],
     })),
   };
   const start = performance.now();
@@ -210,16 +255,19 @@ export async function layoutGraph(
   if (mine !== engine.count) throw new Error("stopped");
   // The nodes and the frames, and the edges of every level (relative to the root)
   const nodes = new Map<string, Box>();
+  const ports = new Map<string, { x: number; y: number }>();
   const edges = new Map<string, number[]>();
-  const read = (parent: ElkNode) => {
+  const read = (parent: ElkNode, ox: number, oy: number) => {
     for (const c of parent.children ?? []) {
-      nodes.set(c.id, {
-        x: c.x ?? 0,
-        y: c.y ?? 0,
-        w: c.width ?? 0,
-        h: c.height ?? 0,
-      });
-      read(c);
+      const x = ox + (c.x ?? 0);
+      const y = oy + (c.y ?? 0);
+      nodes.set(c.id, { x, y, w: c.width ?? 0, h: c.height ?? 0 });
+      for (const p of c.ports ?? [])
+        ports.set(p.id, {
+          x: x + (p.x ?? 0) + (p.width ?? 0) / 2,
+          y: y + (p.y ?? 0) + (p.height ?? 0) / 2,
+        });
+      read(c, x, y);
     }
     for (const e of (parent.edges ?? []) as ElkExtendedEdge[]) {
       const points: number[] = [];
@@ -231,7 +279,7 @@ export async function layoutGraph(
       edges.set(e.id, points);
     }
   };
-  read(out);
+  read(out, 0, 0);
   // Onto the layout before: the move of the nodes that were shown, on average, is undone
   if (interactive) {
     let dx = 0;
@@ -251,6 +299,10 @@ export async function layoutGraph(
         b.x += dx;
         b.y += dy;
       }
+      for (const p of ports.values()) {
+        p.x += dx;
+        p.y += dy;
+      }
       for (const points of edges.values())
         for (let i = 0; i < points.length; i += 2) {
           points[i] += dx;
@@ -261,6 +313,7 @@ export async function layoutGraph(
   const layout: Layout = {
     signature: graph.signature,
     nodes,
+    ports,
     edges,
     width: out.width ?? 0,
     height: out.height ?? 0,

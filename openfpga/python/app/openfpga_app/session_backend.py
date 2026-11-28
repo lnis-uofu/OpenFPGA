@@ -1029,6 +1029,35 @@ class SessionBackend:
                 return answers.from_exception(error), None
         return {"ok": True, "data": data, "truncated": False, "more": None}, data["file"]
 
+    async def netlist_symbols(self) -> Dict[str, Any]:
+        """The file of netlist symbols of the package of the session (docs/plan_netlist_symbols.md,
+        type netlist_symbols): its package, its path in the package and its text. None: no session,
+        a session of no package, or a package with no such file"""
+        sid = self.sid
+
+        def find() -> Optional[Dict[str, Any]]:
+            if sid is None:
+                return None
+            try:
+                meta = self.registry.read_meta(self.registry.get(sid).directory)
+                name = meta.get("package_name") or (meta.get("device_package") or {}).get("name")
+                if not name:
+                    return None
+                package = device_packages.find(self.config, name)
+            except RegistryError:  # no session, a package that is gone or damaged
+                return None
+            for entry in package.files:
+                if entry["type"] == "netlist_symbols":
+                    path = package.path / entry["path"]
+                    return {
+                        "package": package.name,
+                        "path": entry["path"],
+                        "text": path.read_text(encoding="utf-8"),
+                    }
+            return None
+
+        return {"ok": True, "data": await anyio.to_thread.run_sync(find)}
+
     async def view_file(self, options: Dict[str, Any]) -> Tuple[Dict[str, Any], Optional[str]]:
         """The file of the data of a view of the session (export_view): kind, and a scope (module,
         cone with depth, blocks) or paths for timing. A file per kind and scope in views/, kept

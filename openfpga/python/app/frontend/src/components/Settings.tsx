@@ -1,5 +1,6 @@
 import { config, settingsOpen } from "../store";
 import { THEMES, setTheme, theme } from "../theme";
+import { setUsePackageSymbols, usePackageSymbols } from "../views/symbols";
 
 /** Settings: the model (read from the config, not edited here) and the console. The servers of MCP
  * are not connected in this version */
@@ -21,6 +22,19 @@ export function Settings() {
             </button>
           ))}
         </div>
+        <h2>Netlist symbols</h2>
+        <label>
+          <input
+            type="checkbox"
+            checked={usePackageSymbols.value}
+            onChange={(e) => setUsePackageSymbols((e.target as HTMLInputElement).checked)}
+          />{" "}
+          Use the symbols of the device package of the session
+        </label>
+        <p class="muted">
+          The netlist and cluster views draw the default symbols, with those of the package over them (replaced, hidden
+          or added). Off: the default symbols only.
+        </p>
         <h2>Model</h2>
         <p class="muted">Read from the configuration of the app; edit it there.</p>
         <p>

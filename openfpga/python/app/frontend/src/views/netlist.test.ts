@@ -482,12 +482,16 @@ describe("the clusters view (V2)", () => {
     ) as RectsLayer;
     expect(groups.x.length).toBe(4);
     expect(groups.objectKind).toBe("block"); // the selection of the placement
-    // A cluster in the colour of its type of block, as in the placement: io and clb
+    // A cluster in the colour of its type of block, as in the placement: io and clb (the body of
+    // its symbol, and its box when it is small on the screen)
+    const boxes = built.scene.layers.find(
+      (l) => l.id === "symbols:24:boxes",
+    ) as RectsLayer;
     const fill = (i: number) =>
-      built.scene.styles[groups.style![i]].fill!.join(",");
+      built.scene.styles[boxes.style![i]].fill!.join(",");
     const at = (name: string) =>
-      Array.from({ length: groups.x.length }, (_, i) => i).find(
-        (i) => groups.name!(i) === name,
+      Array.from({ length: boxes.x.length }, (_, i) => i).find(
+        (i) => boxes.name!(i) === name,
       )!;
     expect(fill(at("clb_a"))).toBe(fill(at("clb_q")));
     expect(fill(at("clb_a"))).not.toBe(fill(at("in0")));
@@ -519,10 +523,6 @@ describe("the clusters view (V2)", () => {
     ).toBe(0);
   });
 
-  it("lists the clusters with their atoms", async () => {
-    const base = await clustersView.load();
-    expect(
-      clusterContents(base).map((c) => [c.name, c.type, c.atoms.length]),
   it("expands and collapses a cluster from the menu of a right click", async () => {
     const base = await clustersView.load();
     const labels = (name: string) =>
@@ -552,6 +552,10 @@ describe("the clusters view (V2)", () => {
     ).toEqual([]);
   });
 
+  it("lists the clusters with their atoms", async () => {
+    const base = await clustersView.load();
+    expect(
+      clusterContents(base).map((c) => [c.name, c.type, c.atoms.length]),
     ).toEqual([
       ["in0", "io", 1],
       ["clb_a", "clb", 3],

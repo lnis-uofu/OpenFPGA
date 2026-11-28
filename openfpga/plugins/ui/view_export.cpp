@@ -1206,6 +1206,35 @@ bool clusters_view(const ViewRequest& request, ViewFile& file,
     .column("fanout", fanout)
     .column("ignored", ignored);
   file.table("sinks", sinks.size()).column("block", sinks);
+  /* The pins of the clusters that are on a net: the block (its row), the
+   * port, the bit of the port, the direction (0 in, 1 out, 2 clock) and the
+   * net (its index, as the column 'net' of the nets) */
+  std::vector<uint32_t> pblock, pnet;
+  std::vector<std::string> pport;
+  std::vector<uint16_t> pbit;
+  std::vector<uint8_t> pdir;
+  for (const ClusterBlockId blk : scope) {
+    for (const ClusterPinId pin : clb_nlist.block_pins(blk)) {
+      const ClusterNetId net = clb_nlist.pin_net(pin);
+      if (!net.is_valid()) {
+        continue;
+      }
+      const ClusterPortId port = clb_nlist.pin_port(pin);
+      pblock.push_back(static_cast<uint32_t>(block_index[blk]));
+      pport.push_back(clb_nlist.port_name(port));
+      pbit.push_back(static_cast<uint16_t>(clb_nlist.pin_port_bit(pin)));
+      pdir.push_back(PinType::DRIVER == clb_nlist.pin_type(pin)     ? 1
+                     : PortType::CLOCK == clb_nlist.port_type(port) ? 2
+                                                                    : 0);
+      pnet.push_back(static_cast<uint32_t>(size_t(net)));
+    }
+  }
+  file.table("pins", pblock.size())
+    .column("block", pblock)
+    .strings("port", pport)
+    .column("bit", pbit)
+    .column("dir", pdir)
+    .column("net", pnet);
   Meta meta;
   meta.key("total_clusters")
     .value(static_cast<int64_t>(clb_nlist.blocks().size()));

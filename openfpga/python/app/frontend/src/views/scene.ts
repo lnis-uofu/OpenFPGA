@@ -14,6 +14,7 @@ export type ObjectKind =
   | "cell"
   | "module"
   | "atom"
+  | "pin"
   | "path";
 
 /** An object, by its kind and its name: the key across views (3.3) */

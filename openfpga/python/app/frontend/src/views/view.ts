@@ -59,6 +59,8 @@ export interface ViewDef<B> {
   /** The stage whose data it needs, for the message when there is none */
   needs: string;
   load(): Promise<B>;
+  /** What else the data depends on: when it changes, load() runs again (a setting) */
+  reloadKey?(): string;
   bounds(base: B): [number, number, number, number];
   groups: LayerGroup[];
   /** What the scene depends on besides the selection: when it is the same, the scene is kept */
@@ -77,10 +79,10 @@ export interface ViewDef<B> {
   activate?(base: B, ref: ObjectRef, changed: () => void): boolean;
   /** The buttons of the view in its toolbar, for its state now */
   tools?(base: B, changed: () => void): ViewTool[];
-  /** A list beside the drawing (the clusters of V2), drawn again at each build (version) */
-  side?: {
   /** The commands of a right click on an object of the view (none: the menu of the page) */
   menu?(base: B, ref: ObjectRef, changed: () => void): ViewTool[];
+  /** A list beside the drawing (the clusters of V2), drawn again at each build (version) */
+  side?: {
     label: string;
     component: ComponentType<{
       base: B;

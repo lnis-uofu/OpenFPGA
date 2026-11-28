@@ -28,6 +28,19 @@ export interface Netlist {
   /** The id of each net in the netlist of the atoms (the row of the slack of the timing,
    * atom_nets), when the export has it */
   netId: NumberArray | null;
+  /** The pins (of an export; not of a netlist made by hand): their atom, port, bit, direction
+   * (0 in, 1 out, 2 clock) and net; the pins of each atom; the pin that drives each net (-1
+   * none) and the pins of its sinks */
+  pins?: {
+    atom: NumberArray;
+    port: string[];
+    bit: NumberArray;
+    dir: NumberArray;
+    net: NumberArray;
+    of: number[][];
+    driver: Int32Array;
+    sinks: number[][];
+  };
 }
 
 /** A netlist of no atoms (a design over the limit, before a scope is asked for) */
@@ -104,12 +117,18 @@ export function netlistOf(view: ViewData): Netlist {
   const inside = numbers(view, "nets", "inside");
   const driver = Int32Array.from(driverPin, (p) => (p >= 0 ? pinAtom[p] : -1));
   const sinks: number[][] = nets.map(() => []);
+  const sinkPins: number[][] = nets.map(() => []);
   const netsOf: number[][] = atoms.map(() => []);
+  const pinsOf: number[][] = atoms.map(() => []);
   for (let p = 0; p < pinAtom.length; p++) {
     const a = pinAtom[p];
     const n = pinNet[p];
-    if (pinDir[p] !== 1) sinks[n].push(a);
+    if (pinDir[p] !== 1) {
+      sinks[n].push(a);
+      sinkPins[n].push(p);
+    }
     if (!netsOf[a].includes(n)) netsOf[a].push(n);
+    pinsOf[a].push(p);
   }
   const partial = Uint8Array.from(total, (t, i) => (t > inside[i] ? 1 : 0));
   const atomIndex = new Map(atoms.map((a, i) => [a, i]));
@@ -131,6 +150,16 @@ export function netlistOf(view: ViewData): Netlist {
     atomIndex,
     netIndex,
     netId,
+    pins: {
+      atom: pinAtom,
+      port: texts(view, "pins", "port").all(),
+      bit: numbers(view, "pins", "bit"),
+      dir: pinDir,
+      net: pinNet,
+      of: pinsOf,
+      driver: Int32Array.from(driverPin),
+      sinks: sinkPins,
+    },
   };
 }
 
@@ -174,6 +203,50 @@ export interface GraphNode {
   height: number;
   /** The frame it is drawn in (f:<group key>), if any */
   parent?: string;
+  /** Its ports (a node with a symbol, a group): placed (all have x and y, in the node, y down) or
+   * only on a side, for the layout to order */
+  pins?: GraphPort[];
+  /** The type of its symbol, if it has one */
+  symbol?: string;
+}
+
+export interface GraphPort {
+  id: string;
+  side: "left" | "right" | "top" | "bottom";
+  x?: number;
+  y?: number;
+  /** What it is, for the tooltip: the pin of an atom or a cluster, or a net that crosses a group */
+  label: string;
+  net: number;
+}
+
+/** The shapes of the nodes: their symbols, sizes and ports. Without it the nodes are boxes and
+ * the edges go from node to node */
+export interface Shaper {
+  /** An atom: its symbol, size, ports, and the port of each of its pins (by the pin's index) */
+  atom(a: number): {
+    symbol?: string;
+    width: number;
+    height: number;
+    ports: GraphPort[];
+    portOfPin: Map<number, string>;
+  } | null;
+  /** A group, with the nets that cross its edge: the ones it drives (outs) and the others (ins).
+   * portOfNet gives the port of a net, in or out; null: a box, with a port on a side per net */
+  group(
+    key: string,
+    atoms: number[],
+    ins: number[],
+    outs: number[],
+  ): {
+    symbol?: string;
+    width?: number;
+    height?: number;
+    ports?: GraphPort[];
+    portOfNet?: (net: number, out: boolean) => string | undefined;
+  } | null;
+  /** A stub: its symbol, if it has one */
+  stub?(): { symbol: string; width: number; height: number } | null;
 }
 
 /** An expanded group, drawn as a frame around what it holds (B5 of the report) */
@@ -191,6 +264,9 @@ export interface GraphEdge {
   net: number;
   source: string;
   target: string;
+  /** The ports it goes from and to, when the nodes have them */
+  sourcePort?: string;
+  targetPort?: string;
 }
 
 export interface Graph {
@@ -250,32 +326,16 @@ export function buildGraph(
   scope: Set<number> | null,
   label: (key: string, atoms: number[]) => string = (key) =>
     cut(moduleParts(key).pop() ?? key, GROUP_CHARS),
+  shaper?: Shaper,
 ): Graph | { tooBig: number } {
-  const nodeOf = new Map<number, string>();
-  const members = new Map<string, number[]>();
-  const each = scope ? [...scope] : netlist.atoms.map((_, i) => i);
-  // The frame of each node, and the atoms of each frame
-  const parentOf = new Map<string, string>();
-  const frameAtoms = new Map<string, number[]>();
-  const frameParent = new Map<string, string | undefined>();
-  for (const a of each) {
-    const id = nodeOfAtom(a, grouping, expanded);
-    nodeOf.set(a, id);
-    let list = members.get(id);
-    if (!list) members.set(id, (list = []));
-    list.push(a);
-    let frame: string | undefined;
-    for (const key of grouping(a)) {
-      if (!expanded.has(key)) break;
-      const f = `f:${key}`;
-      if (!frameParent.has(f)) frameParent.set(f, frame);
-      let atomsIn = frameAtoms.get(f);
-      if (!atomsIn) frameAtoms.set(f, (atomsIn = []));
-      atomsIn.push(a);
-      frame = f;
-    }
-    if (frame) parentOf.set(id, frame);
-  }
+  if (shaper && netlist.pins)
+    return buildPortGraph(netlist, grouping, expanded, scope, label, shaper);
+  const { nodeOf, members, parentOf, frameAtoms, frameParent } = assignNodes(
+    netlist,
+    grouping,
+    expanded,
+    scope,
+  );
   if (members.size > SCOPE_LIMIT) return { tooBig: members.size };
   const nodes: GraphNode[] = [];
   const ports = new Map<string, number>();
@@ -356,7 +416,53 @@ export function buildGraph(
       });
     }
   }
-  // Outer frames first: a key is longer than the key of the frame it is in
+  nodes.push(...stubs);
+  return finish(nodes, edges, frameParent, frameAtoms, label);
+}
+
+/** The node of each atom of a scope, the atoms of each node, the frame of each node, and the
+ * atoms and the parent of each frame */
+function assignNodes(
+  netlist: Netlist,
+  grouping: Grouping,
+  expanded: Set<string>,
+  scope: Set<number> | null,
+) {
+  const nodeOf = new Map<number, string>();
+  const members = new Map<string, number[]>();
+  const each = scope ? [...scope] : netlist.atoms.map((_, i) => i);
+  const parentOf = new Map<string, string>();
+  const frameAtoms = new Map<string, number[]>();
+  const frameParent = new Map<string, string | undefined>();
+  for (const a of each) {
+    const id = nodeOfAtom(a, grouping, expanded);
+    nodeOf.set(a, id);
+    let list = members.get(id);
+    if (!list) members.set(id, (list = []));
+    list.push(a);
+    let frame: string | undefined;
+    for (const key of grouping(a)) {
+      if (!expanded.has(key)) break;
+      const f = `f:${key}`;
+      if (!frameParent.has(f)) frameParent.set(f, frame);
+      let atomsIn = frameAtoms.get(f);
+      if (!atomsIn) frameAtoms.set(f, (atomsIn = []));
+      atomsIn.push(a);
+      frame = f;
+    }
+    if (frame) parentOf.set(id, frame);
+  }
+  return { nodeOf, members, parentOf, frameAtoms, frameParent };
+}
+
+/** The frames (outer ones first), the order of the nodes and the edges, and the signature */
+function finish(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  frameParent: Map<string, string | undefined>,
+  frameAtoms: Map<string, number[]>,
+  label: (key: string, atoms: number[]) => string,
+): Graph {
   const frames: GraphFrame[] = [...frameParent]
     .map(([id, parent]) => ({
       id,
@@ -369,12 +475,183 @@ export function buildGraph(
         depthOf(a.id, frameParent) - depthOf(b.id, frameParent) ||
         (a.id < b.id ? -1 : 1),
     );
-  nodes.push(...stubs);
   nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   edges.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  // The edges too: two graphs of the same nodes may join them otherwise (another design)
-  const signature = `${nodes.map((n) => n.id).join(",")}|${frames.map((f) => f.id).join(",")}|${edges.length}:${hashText(edges.map((e) => e.id).join(","))}`;
+  // The edges too: two graphs of the same nodes may join them otherwise (another design); the
+  // ports too: the same nodes with other symbols are laid out again
+  const ports = nodes.map(
+    (n) =>
+      n.pins?.map((p) => `${p.id}@${p.x ?? ""},${p.y ?? ""}`).join(";") ?? "",
+  );
+  const signature = `${nodes.map((n) => `${n.id}:${n.width}x${n.height}`).join(",")}|${frames.map((f) => f.id).join(",")}|${edges.length}:${hashText(edges.map((e) => e.id).join(","))}:${hashText(ports.join("|"))}`;
   return { nodes, edges, frames, signature };
+}
+
+/** The graph with the symbols of a shaper: nodes with ports, and edges from pin to pin */
+function buildPortGraph(
+  netlist: Netlist,
+  grouping: Grouping,
+  expanded: Set<string>,
+  scope: Set<number> | null,
+  label: (key: string, atoms: number[]) => string,
+  shaper: Shaper,
+): Graph | { tooBig: number } {
+  const pins = netlist.pins!;
+  const { nodeOf, members, parentOf, frameAtoms, frameParent } = assignNodes(
+    netlist,
+    grouping,
+    expanded,
+    scope,
+  );
+  if (members.size > SCOPE_LIMIT) return { tooBig: members.size };
+  // The nets that cross the edge of each group: in, or out (driven inside it)
+  const ins = new Map<string, number[]>();
+  const outs = new Map<string, number[]>();
+  for (let n = 0; n < netlist.nets.length; n++) {
+    const d = netlist.driver[n];
+    const from = d >= 0 ? nodeOf.get(d) : undefined;
+    const to = new Set<string>();
+    let outside = !!netlist.partial[n] || (d >= 0 && !from);
+    for (const sink of netlist.sinks[n]) {
+      const t = nodeOf.get(sink);
+      if (t) to.add(t);
+      else outside = true;
+    }
+    const touched = new Set<string>([...(from ? [from] : []), ...to]);
+    for (const id of touched) {
+      if (!id.startsWith("g:") || (touched.size < 2 && !outside)) continue;
+      const into = id === from ? outs : ins;
+      let list = into.get(id);
+      if (!list) into.set(id, (list = []));
+      list.push(n);
+    }
+  }
+  // The nodes, with their symbols and ports
+  const nodes: GraphNode[] = [];
+  const atomPorts = new Map<string, Map<number, string>>();
+  const groupPorts = new Map<
+    string,
+    (net: number, out: boolean) => string | undefined
+  >();
+  for (const [id, atoms] of members) {
+    if (id.startsWith("g:")) {
+      const key = id.slice(2);
+      const i = ins.get(id) ?? [];
+      const o = outs.get(id) ?? [];
+      const shaped = shaper.group(key, atoms, i, o);
+      let ports = shaped?.ports;
+      let portOf = shaped?.portOfNet;
+      if (!ports || !portOf) {
+        // A port on a side for each net, ordered by the layout
+        ports = [
+          ...i.map((n) => ({
+            id: `${id}#n${n}`,
+            side: "left" as const,
+            label: netlist.nets[n],
+            net: n,
+          })),
+          ...o.map((n) => ({
+            id: `${id}#n${n}`,
+            side: "right" as const,
+            label: netlist.nets[n],
+            net: n,
+          })),
+        ];
+        portOf = (n) => `${id}#n${n}`;
+      }
+      groupPorts.set(id, portOf);
+      const p = i.length + o.length;
+      nodes.push({
+        id,
+        kind: "group",
+        label: label(key, atoms),
+        atoms,
+        ports: p,
+        width: shaped?.width ?? GROUP_W,
+        height:
+          shaped?.height ??
+          Math.max(48, 30 + 10 * Math.max(i.length, o.length)),
+        parent: parentOf.get(id),
+        ...(ports.length ? { pins: ports } : {}),
+        ...(shaped?.symbol ? { symbol: shaped.symbol } : {}),
+      } as GraphNode);
+    } else {
+      const a = atoms[0];
+      const shaped = shaper.atom(a);
+      if (shaped) atomPorts.set(id, shaped.portOfPin);
+      nodes.push({
+        id,
+        kind: "atom",
+        label: shortName(netlist.atoms[a]),
+        atoms,
+        ports: 0,
+        width: shaped?.width ?? ATOM_W,
+        height: shaped?.height ?? ATOM_H,
+        parent: parentOf.get(id),
+        ...(shaped?.ports.length ? { pins: shaped.ports } : {}),
+        ...(shaped?.symbol ? { symbol: shaped.symbol } : {}),
+      } as GraphNode);
+    }
+  }
+  const endpoint = (node: string, pin: number, net: number, out: boolean) =>
+    node.startsWith("a:")
+      ? atomPorts.get(node)?.get(pin)
+      : groupPorts.get(node)?.(net, out);
+  // The edges: from the pin that drives a net to the pins of its sinks
+  const edges: GraphEdge[] = [];
+  const seen = new Set<string>();
+  const stub = shaper.stub?.() ?? null;
+  for (let n = 0; n < netlist.nets.length; n++) {
+    const dp = pins.driver[n];
+    if (dp < 0) continue;
+    const from = nodeOf.get(pins.atom[dp]);
+    if (!from) continue;
+    const source = endpoint(from, dp, n, true);
+    const targets: [string, number][] = [];
+    const nodesTo = new Set<string>();
+    for (const sp of pins.sinks[n]) {
+      const t = nodeOf.get(pins.atom[sp]);
+      if (!t || t === from) continue;
+      targets.push([t, sp]);
+      nodesTo.add(t);
+    }
+    if (nodesTo.size > FANOUT_LIMIT) {
+      const id = `s:${n}`;
+      nodes.push({
+        id,
+        kind: "stub",
+        label: `${shortName(netlist.nets[n])} (${nodesTo.size})`,
+        atoms: [],
+        ports: nodesTo.size,
+        width: stub?.width ?? 70,
+        height: stub?.height ?? 18,
+        ...(stub ? { symbol: stub.symbol } : {}),
+      });
+      edges.push({
+        id: `${n}:${source ?? from}>${id}`,
+        net: n,
+        source: from,
+        target: id,
+        ...(source ? { sourcePort: source } : {}),
+      });
+      continue;
+    }
+    for (const [t, sp] of targets) {
+      const target = endpoint(t, sp, n, false);
+      const key = `${n}:${source ?? from}>${target ?? t}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      edges.push({
+        id: key,
+        net: n,
+        source: from,
+        target: t,
+        ...(source ? { sourcePort: source } : {}),
+        ...(target ? { targetPort: target } : {}),
+      });
+    }
+  }
+  return finish(nodes, edges, frameParent, frameAtoms, label);
 }
 
 /** How many frames a frame is in */
