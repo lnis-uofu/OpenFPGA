@@ -760,6 +760,8 @@ bool timing_view(const vpr::VprRun& run, const std::string& version,
   Meta meta;
   meta.grid();
   meta.key("nets").value("by the index of the net (routing and clusters: net)");
+  meta.key("atom_nets")
+    .value("by the index of the net of the atoms (atoms: id)");
   meta.key("blocks").value(
     "by the index of the block (placement and clusters: id)");
   file.set_meta(meta.str());
@@ -1035,9 +1037,10 @@ bool atoms_view(const ViewRequest& request, ViewFile& file,
   }
   std::vector<std::string> nname;
   std::vector<int32_t> ndriver;
-  std::vector<uint32_t> npins, ninside;
+  std::vector<uint32_t> npins, ninside, nid;
   for (const AtomNetId net : nets) {
     nname.push_back(netlist.net_name(net));
+    nid.push_back(static_cast<uint32_t>(size_t(net)));
     const AtomPinId driver = netlist.net_driver(net);
     const auto d = pin_index.find(driver);
     ndriver.push_back(d == pin_index.end() ? -1
@@ -1070,7 +1073,8 @@ bool atoms_view(const ViewRequest& request, ViewFile& file,
     .strings("name", nname)
     .column("driver", ndriver)
     .column("pins", npins)
-    .column("inside", ninside);
+    .column("inside", ninside)
+    .column("id", nid);
   /* How the modules are known, over the whole design */
   int64_t by[4] = {0, 0, 0, 0};
   for (const uint8_t h : modules.how) {

@@ -2,7 +2,7 @@
 // scope, each shown as itself or inside a group that is collapsed (a module of the RTL in V1, a
 // cluster in V2), and the nets between what is shown. Expanding and collapsing is a change of this
 // graph, never a request: the netlist of the version is in the page.
-import { type ViewData, numbers, texts } from "./format";
+import { type NumberArray, type ViewData, numbers, texts } from "./format";
 
 /** The atoms and their nets, from the atoms export */
 export interface Netlist {
@@ -23,7 +23,66 @@ export interface Netlist {
   /** A net with pins outside the export (a scope smaller than the design) */
   partial: Uint8Array;
   atomIndex: Map<string, number>;
+  /** The index of each net by its name */
+  netIndex: Map<string, number>;
+  /** The id of each net in the netlist of the atoms (the row of the slack of the timing,
+   * atom_nets), when the export has it */
+  netId: NumberArray | null;
 }
+
+/** A netlist of no atoms (a design over the limit, before a scope is asked for) */
+export function emptyNetlist(): Netlist {
+  return {
+    atoms: [],
+    model: [],
+    module: [],
+    how: new Uint8Array(),
+    cluster: new Int32Array(),
+    nets: [],
+    driver: new Int32Array(),
+    sinks: [],
+    netsOf: [],
+    partial: new Uint8Array(),
+    atomIndex: new Map(),
+    netIndex: new Map(),
+    netId: null,
+  };
+}
+
+/** The levels of the path of a module: "u_a.u_b" is ["u_a", "u_b"]. An escaped name of Verilog
+ * (from a backslash to a space) is one level, with the dots in it */
+export function moduleParts(path: string): string[] {
+  const parts: string[] = [];
+  let i = 0;
+  while (i < path.length) {
+    let end: number;
+    if (path[i] === "\\") {
+      const space = path.indexOf(" ", i);
+      end = space < 0 ? path.length : space + 1;
+      // What follows the space, up to the next dot, is still of this level
+      const dot = path.indexOf(".", end);
+      if (dot > end || (dot < 0 && end < path.length))
+        end = dot < 0 ? path.length : dot;
+    } else {
+      const dot = path.indexOf(".", i);
+      end = dot < 0 ? path.length : dot;
+    }
+    parts.push(path.slice(i, end));
+    i = end + 1;
+  }
+  return parts;
+}
+
+/** The keys of the groups of a module, outermost first: "u_a.u_b" is ["u_a", "u_a.u_b"] */
+export function moduleKeys(path: string): string[] {
+  if (!path) return [];
+  const parts = moduleParts(path);
+  return parts.map((_, k) => parts.slice(0, k + 1).join("."));
+}
+
+/** A text cut to a number of characters, with an ellipsis */
+export const cut = (text: string, chars: number) =>
+  text.length > chars ? `${text.slice(0, chars - 1)}…` : text;
 
 export function netlistOf(view: ViewData): Netlist {
   const atoms = texts(view, "atoms", "name").all();
@@ -54,6 +113,10 @@ export function netlistOf(view: ViewData): Netlist {
   }
   const partial = Uint8Array.from(total, (t, i) => (t > inside[i] ? 1 : 0));
   const atomIndex = new Map(atoms.map((a, i) => [a, i]));
+  const netIndex = new Map(nets.map((n, i) => [n, i]));
+  const netId = view.tables.nets?.columns.id
+    ? numbers(view, "nets", "id")
+    : null;
   return {
     atoms,
     model,
@@ -66,6 +129,8 @@ export function netlistOf(view: ViewData): Netlist {
     netsOf,
     partial,
     atomIndex,
+    netIndex,
+    netId,
   };
 }
 
@@ -75,11 +140,12 @@ export type Grouping = (atom: number) => string[];
 
 /** The modules of the RTL: "u_a.u_b" is in the groups "u_a" and "u_a.u_b" */
 export function moduleGrouping(netlist: Netlist): Grouping {
+  const keys = new Map<string, string[]>();
   return (atom) => {
     const m = netlist.module[atom];
-    if (!m) return [];
-    const parts = m.split(".");
-    return parts.map((_, k) => parts.slice(0, k + 1).join("."));
+    let found = keys.get(m);
+    if (!found) keys.set(m, (found = moduleKeys(m)));
+    return found;
   };
 }
 
@@ -106,6 +172,18 @@ export interface GraphNode {
   ports: number;
   width: number;
   height: number;
+  /** The frame it is drawn in (f:<group key>), if any */
+  parent?: string;
+}
+
+/** An expanded group, drawn as a frame around what it holds (B5 of the report) */
+export interface GraphFrame {
+  /** f:<group key> */
+  id: string;
+  key: string;
+  label: string;
+  /** The frame it is in, if any */
+  parent?: string;
 }
 
 export interface GraphEdge {
@@ -118,6 +196,8 @@ export interface GraphEdge {
 export interface Graph {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  /** The expanded groups, outer ones first */
+  frames: GraphFrame[];
   /** A text that is the same for the same graph: the key of its layout */
   signature: string;
 }
@@ -139,12 +219,16 @@ export const FANOUT_LIMIT = 16;
 
 export const ATOM_W = 90;
 export const ATOM_H = 28;
+export const GROUP_W = 150;
+/** The characters of a label that fit in a box (11 px, about 6.5 px a character) */
+export const ATOM_CHARS = 13;
+export const GROUP_CHARS = 21;
 
 /** The short name of an atom: what follows its last '.' or '$' */
 export function shortName(name: string): string {
-  const cut = Math.max(name.lastIndexOf("."), name.lastIndexOf("$"));
-  const short = cut >= 0 && cut < name.length - 1 ? name.slice(cut + 1) : name;
-  return short.length > 18 ? `${short.slice(0, 17)}…` : short;
+  const at = Math.max(name.lastIndexOf("."), name.lastIndexOf("$"));
+  const short = at >= 0 && at < name.length - 1 ? name.slice(at + 1) : name;
+  return cut(short, ATOM_CHARS);
 }
 
 /** What an atom is shown as: itself, or its outermost group that is not expanded */
@@ -165,17 +249,32 @@ export function buildGraph(
   expanded: Set<string>,
   scope: Set<number> | null,
   label: (key: string, atoms: number[]) => string = (key) =>
-    key.split(".").pop() ?? key,
+    cut(moduleParts(key).pop() ?? key, GROUP_CHARS),
 ): Graph | { tooBig: number } {
   const nodeOf = new Map<number, string>();
   const members = new Map<string, number[]>();
   const each = scope ? [...scope] : netlist.atoms.map((_, i) => i);
+  // The frame of each node, and the atoms of each frame
+  const parentOf = new Map<string, string>();
+  const frameAtoms = new Map<string, number[]>();
+  const frameParent = new Map<string, string | undefined>();
   for (const a of each) {
     const id = nodeOfAtom(a, grouping, expanded);
     nodeOf.set(a, id);
     let list = members.get(id);
     if (!list) members.set(id, (list = []));
     list.push(a);
+    let frame: string | undefined;
+    for (const key of grouping(a)) {
+      if (!expanded.has(key)) break;
+      const f = `f:${key}`;
+      if (!frameParent.has(f)) frameParent.set(f, frame);
+      let atomsIn = frameAtoms.get(f);
+      if (!atomsIn) frameAtoms.set(f, (atomsIn = []));
+      atomsIn.push(a);
+      frame = f;
+    }
+    if (frame) parentOf.set(id, frame);
   }
   if (members.size > SCOPE_LIMIT) return { tooBig: members.size };
   const nodes: GraphNode[] = [];
@@ -239,8 +338,9 @@ export function buildGraph(
         label: label(key, atoms),
         atoms,
         ports: p,
-        width: 150,
+        width: GROUP_W,
         height: Math.max(48, Math.min(160, 30 + 4 * p)),
+        parent: parentOf.get(id),
       });
     } else {
       const a = atoms[0];
@@ -252,15 +352,36 @@ export function buildGraph(
         ports: 0,
         width: ATOM_W,
         height: ATOM_H,
+        parent: parentOf.get(id),
       });
     }
   }
+  // Outer frames first: a key is longer than the key of the frame it is in
+  const frames: GraphFrame[] = [...frameParent]
+    .map(([id, parent]) => ({
+      id,
+      key: id.slice(2),
+      label: label(id.slice(2), frameAtoms.get(id)!),
+      parent,
+    }))
+    .sort(
+      (a, b) =>
+        depthOf(a.id, frameParent) - depthOf(b.id, frameParent) ||
+        (a.id < b.id ? -1 : 1),
+    );
   nodes.push(...stubs);
   nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   edges.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   // The edges too: two graphs of the same nodes may join them otherwise (another design)
-  const signature = `${nodes.map((n) => n.id).join(",")}|${edges.length}:${hashText(edges.map((e) => e.id).join(","))}`;
-  return { nodes, edges, signature };
+  const signature = `${nodes.map((n) => n.id).join(",")}|${frames.map((f) => f.id).join(",")}|${edges.length}:${hashText(edges.map((e) => e.id).join(","))}`;
+  return { nodes, edges, frames, signature };
+}
+
+/** How many frames a frame is in */
+function depthOf(id: string, parent: Map<string, string | undefined>): number {
+  let depth = 0;
+  for (let p = parent.get(id); p; p = parent.get(p)) depth++;
+  return depth;
 }
 
 /** The atoms around some atoms, depth nets away, both ways */

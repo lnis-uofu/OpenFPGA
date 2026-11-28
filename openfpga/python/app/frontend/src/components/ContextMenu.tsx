@@ -1,11 +1,29 @@
-// The menu of a right click on the page: the page's own, in place of the browser's. It has no
-// commands yet. The browser's menu stays in a field of text (to copy and paste), and the editor
-// keeps its own menu.
+// The menu of a right click on the page: the page's own, in place of the browser's. A part of the
+// page gives its commands (openMenu: a cluster of V2); elsewhere it has none yet. The browser's
+// menu stays in a field of text (to copy and paste), and the editor keeps its own menu.
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 
-/** Where the menu is open, in px of the window, or null */
-export const contextMenu = signal<{ x: number; y: number } | null>(null);
+/** A command of the menu */
+export interface MenuItem {
+  label: string;
+  title?: string;
+  run(): void;
+}
+
+/** Where the menu is open, in px of the window, and its commands; or null */
+export const contextMenu = signal<{
+  x: number;
+  y: number;
+  items?: MenuItem[];
+} | null>(null);
+
+/** A right click on a part of the page that has its own commands */
+export function openMenu(e: MouseEvent, items: MenuItem[]) {
+  if (!items.length) return;
+  e.preventDefault();
+  contextMenu.value = { x: e.clientX, y: e.clientY, items };
+}
 
 /** Whether a right click on this target keeps the browser's menu: a field of text */
 export function keepsBrowserMenu(target: EventTarget | null): boolean {
@@ -54,9 +72,10 @@ export function ContextMenu() {
     };
   }, [menu]);
   if (!menu) return null;
-  // Inside the window: the menu is about 190 by 40 px
+  // Inside the window: the menu is about 190 px wide, and 30 px a line
+  const lines = menu.items?.length ?? 1;
   const x = Math.max(0, Math.min(menu.x, window.innerWidth - 200));
-  const y = Math.max(0, Math.min(menu.y, window.innerHeight - 50));
+  const y = Math.max(0, Math.min(menu.y, window.innerHeight - 20 - 30 * lines));
   return (
     <div
       ref={ref}
@@ -65,9 +84,26 @@ export function ContextMenu() {
       aria-label="Menu"
       style={{ left: `${x}px`, top: `${y}px` }}
     >
-      <div class="context-menu-item" role="menuitem" aria-disabled="true">
-        Under development
-      </div>
+      {menu.items ? (
+        menu.items.map((item) => (
+          <button
+            key={item.label}
+            class="context-menu-item"
+            role="menuitem"
+            title={item.title}
+            onClick={() => {
+              contextMenu.value = null;
+              item.run();
+            }}
+          >
+            {item.label}
+          </button>
+        ))
+      ) : (
+        <div class="context-menu-item" role="menuitem" aria-disabled="true">
+          Under development
+        </div>
+      )}
     </div>
   );
 }

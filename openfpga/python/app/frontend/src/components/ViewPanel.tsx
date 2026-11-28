@@ -35,6 +35,7 @@ import {
 } from "../views/selection";
 import { SceneIndex } from "../views/spatial";
 import { TileCache } from "../views/tiles";
+import { openMenu } from "./ContextMenu";
 import type { LegendEntry, ViewDef } from "../views/view";
 import {
   type ViewState,
@@ -204,6 +205,9 @@ export function ViewPanel<B>(props: {
   const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(
     null,
   );
+  /** The list beside the drawing: shown, and drawn again at each build */
+  const [sideShown, setSideShown] = useState(true);
+  const [version, setVersion] = useState(0);
   const real = config.value?.backend === "session";
   const signature = sessionSignature();
   const choice = backendChoice.value;
@@ -223,6 +227,8 @@ export function ViewPanel<B>(props: {
     legend: "",
     /** A request to show an object that waits for its data */
     pendingZoom: null as { ref: ObjectRef; seq: number } | null,
+    /** The object at a point of the drawing */
+    pickAt: null as ((px: number, py: number) => ObjectRef | null) | null,
   }).current;
   state.base = base;
   state.hidden = hidden;
@@ -253,6 +259,7 @@ export function ViewPanel<B>(props: {
         // A new layout (a netlist view): the view fits it
         if (built.refit) state.view = fit(state.view, built.scene.bounds);
         setStatus(built.status);
+        if (def.side) setVersion((v) => v + 1);
         const entries = built.legend ?? [];
         const text = JSON.stringify(entries);
         if (text !== state.legend) {
@@ -426,6 +433,7 @@ export function ViewPanel<B>(props: {
         name: found.layer.name(found.item),
       } as ObjectRef;
     };
+    state.pickAt = pickAt;
     let hoverFrame = 0;
     const detach = attachController(element, {
       view: () => state.view,
@@ -481,6 +489,7 @@ export function ViewPanel<B>(props: {
     return () => {
       observer.disconnect();
       detach();
+      state.pickAt = null;
       cancelAnimationFrame(hoverFrame);
       if (window.openfpgaViews) delete window.openfpgaViews[name];
     };
@@ -506,6 +515,15 @@ export function ViewPanel<B>(props: {
     setHidden(next);
   };
   const chosen = selection.value;
+  // A right click on an object: the commands of the view for it, else the menu of the page
+  const onMenu = (e: MouseEvent) => {
+    const element = host.current;
+    if (!element || !state.base || !def.menu || !state.pickAt) return;
+    const box = element.getBoundingClientRect();
+    const ref = state.pickAt(e.clientX - box.left, e.clientY - box.top);
+    if (ref) openMenu(e, def.menu(state.base, ref, changed));
+  };
+  const Side = def.side?.component;
   return (
     <section class="panel view-panel" aria-label={props.title} data-view={name}>
       <div class="view-toolbar">
@@ -524,6 +542,16 @@ export function ViewPanel<B>(props: {
             </button>
           ))}
         <div class="view-groups" role="group" aria-label="Layers">
+          {def.side && (
+            <label>
+              <input
+                type="checkbox"
+                checked={sideShown}
+                onChange={() => setSideShown(!sideShown)}
+              />{" "}
+              {def.side.label}
+            </label>
+          )}
           {def.groups.map((g) => (
             <label key={g.id}>
               <input
@@ -579,21 +607,31 @@ export function ViewPanel<B>(props: {
       ) : !base ? (
         <div class="muted view-message">Reading the data of the view…</div>
       ) : null}
-      <div
-        class="view-host"
-        ref={host}
-        tabIndex={0}
-        aria-label={`${props.title}: drag to move, wheel to zoom, click to select`}
-        hidden={!base || !!failure}
-      >
-        <Legend entries={legend} />
-        {tip && (
-          <div
-            class="view-tip"
-            style={{ left: `${tip.x + 12}px`, top: `${tip.y + 12}px` }}
+      <div class="view-body" hidden={!base || !!failure}>
+        <div
+          class="view-host"
+          ref={host}
+          tabIndex={0}
+          aria-label={`${props.title}: drag to move, wheel to zoom, click to select`}
+          onContextMenu={onMenu}
+        >
+          <Legend entries={legend} />
+          {tip && (
+            <div
+              class="view-tip"
+              style={{ left: `${tip.x + 12}px`, top: `${tip.y + 12}px` }}
+            >
+              {tip.text}
+            </div>
+          )}
+        </div>
+        {Side && base && sideShown && (
+          <aside
+            class="view-side"
+            aria-label={`${props.title}: ${def.side!.label}`}
           >
-            {tip.text}
-          </div>
+            <Side base={base} changed={changed} version={version} />
+          </aside>
         )}
       </div>
       <div class="view-status muted">

@@ -4,6 +4,7 @@ import { floorplanView } from "../views/floorplan";
 import { clustersView, netlistView } from "../views/netlist";
 import { pinsView } from "../views/pins";
 import { routingView } from "../views/routing";
+import { ClusterList } from "./ClusterList";
 import { ViewPanel } from "./ViewPanel";
 
 export const FloorplanPanel = () => (
@@ -18,6 +19,11 @@ export const RoutingPanel = () => (
 export const NetlistPanel = () => (
   <ViewPanel name="netlist" title="Netlist" def={netlistView} />
 );
+/** V2 with the list of its clusters beside the drawing */
+const clustersWithList = {
+  ...clustersView,
+  side: { label: "List", component: ClusterList },
+};
 export const ClustersPanel = () => (
-  <ViewPanel name="clusters" title="Clusters" def={clustersView} />
+  <ViewPanel name="clusters" title="Clusters" def={clustersWithList} />
 );

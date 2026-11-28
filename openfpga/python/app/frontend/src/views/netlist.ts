@@ -6,16 +6,21 @@
 import { signal } from "@preact/signals";
 import { type ViewData, numbers, texts } from "./format";
 import { wholeView } from "./data";
-import { type Layout, layoutBox, layoutGraph } from "./layout";
+import { FRAME_PAD, type Layout, layoutBox, layoutGraph } from "./layout";
 import {
   type Graph,
   type Grouping,
   type Netlist,
+  GROUP_CHARS,
   SCOPE_LIMIT,
   buildGraph,
   clusterGrouping,
   cone,
+  cut,
+  emptyNetlist,
   moduleGrouping,
+  moduleKeys,
+  moduleParts,
   netlistOf,
 } from "./netgraph";
 import { blockFill, categoryColor } from "./palette";
@@ -27,7 +32,7 @@ import type {
   RectsLayer,
   Rgba,
 } from "./scene";
-import { selection } from "./selection";
+import { runViewCommand, selection } from "./selection";
 import {
   selectedPath,
   slackColor,
@@ -55,6 +60,11 @@ export interface NetlistBase {
   clusterType: Map<string, string>;
   /** The type of each cluster by its name: its index in the block types of the export */
   clusterTypeIndex: Map<string, number>;
+  /** The atoms of each cluster, by its name */
+  clusterAtoms: Map<string, number[]>;
+  /** The design is over the limit of a whole export (the message of the core): the netlist is
+   * the scope that was asked for last (a module, a cone), fetched on its own */
+  tooLarge: string;
   /** The groups that are expanded; flat: no groups (a cone, a path) */
   expanded: Set<string>;
   flat: boolean;
@@ -74,6 +84,16 @@ export interface NetlistBase {
   message: string;
   /** How long the last layout took */
   ms: number;
+  /** The clusters and their atoms, for the list of V2 (made once) */
+  contents?: ClusterContents[];
+}
+
+/** A cluster of the list of V2: its name, its type of block, its atoms */
+export interface ClusterContents {
+  name: string;
+  type: string;
+  typeIndex: number | undefined;
+  atoms: number[];
 }
 
 /** A request of another part of the page to the netlist (V1): show a module, or atoms (a path) */
@@ -117,8 +137,21 @@ const MODELS: [string, string][] = [
 const SELECTED: Rgba = [250, 80, 40, 255];
 const GUESS: Rgba = [230, 150, 20, 255];
 
+/** The error of the core for a scope over its limit */
+const OVER_LIMIT = /more than \d+/;
+
 async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
-  const atoms = await wholeView("atoms");
+  let netlist: Netlist;
+  let tooLarge = "";
+  try {
+    netlist = netlistOf(await wholeView("atoms"));
+  } catch (error) {
+    const text = String((error as Error)?.message ?? error);
+    // V1 of a large design: a module or a cone at a time
+    if (which !== "atoms" || !OVER_LIMIT.test(text)) throw error;
+    netlist = emptyNetlist();
+    tooLarge = text;
+  }
   let clusters: ViewData | null = null;
   try {
     clusters = await wholeView("clusters");
@@ -128,6 +161,7 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
   const clusterName = new Map<number, string>();
   const clusterType = new Map<string, string>();
   const clusterTypeIndex = new Map<string, number>();
+  const clusterAtoms = new Map<string, number[]>();
   if (clusters) {
     const id = numbers(clusters, "blocks", "id");
     const name = texts(clusters, "blocks", "name");
@@ -139,17 +173,26 @@ async function loadNetlist(which: NetlistKind): Promise<NetlistBase> {
       clusterTypeIndex.set(name.get(i), type[i]);
     }
   }
+  netlist.cluster.forEach((c, a) => {
+    const name = clusterName.get(c);
+    if (name === undefined) return;
+    let list = clusterAtoms.get(name);
+    if (!list) clusterAtoms.set(name, (list = []));
+    list.push(a);
+  });
   return {
     which,
-    netlist: netlistOf(atoms),
+    netlist,
     clusters,
     clusterName,
     clusterType,
     clusterTypeIndex,
+    clusterAtoms,
+    tooLarge,
     expanded: new Set(),
     flat: false,
     scope: null,
-    scopeText: "the whole design",
+    scopeText: tooLarge ? "nothing yet" : "the whole design",
     revision: 1,
     shown: null,
     asked: 0,
@@ -168,10 +211,11 @@ function grouping(base: NetlistBase): Grouping {
 }
 
 function groupLabel(base: NetlistBase) {
-  return (key: string, atoms: number[]) =>
-    base.which === "atoms"
-      ? `${key.split(".").pop()} (${atoms.length})`
-      : `${key.length > 16 ? `${key.slice(0, 15)}…` : key}`;
+  return (key: string, atoms: number[]) => {
+    if (base.which !== "atoms") return cut(key, GROUP_CHARS);
+    const count = ` (${atoms.length})`;
+    return `${cut(moduleParts(key).pop() ?? key, GROUP_CHARS - count.length)}${count}`;
+  };
 }
 
 /** The graph of the state now (made again only when it changed) */
@@ -233,14 +277,49 @@ function hintOf(base: NetlistBase, graph: Graph) {
       const b = before.nodes.get(`a:${a}`);
       if (b) return { x: b.x, y: b.y };
       const outer =
-        base.which === "atoms" ? base.netlist.module[a].split(".") : [];
-      for (let k = outer.length; k > 0; k--) {
-        const g = before.nodes.get(`g:${outer.slice(0, k).join(".")}`);
+        base.which === "atoms" ? moduleKeys(base.netlist.module[a]) : [];
+      for (let k = outer.length - 1; k >= 0; k--) {
+        const g = before.nodes.get(`g:${outer[k]}`);
         if (g) return { x: g.x, y: g.y };
       }
     }
     return undefined;
   };
+}
+
+/** The clusters, in the order of the export, with their atoms */
+export function clusterContents(base: NetlistBase): ClusterContents[] {
+  if (!base.contents)
+    base.contents = [...base.clusterName.values()].map((name) => ({
+      name,
+      type: base.clusterType.get(name) ?? "",
+      typeIndex: base.clusterTypeIndex.get(name),
+      atoms: base.clusterAtoms.get(name) ?? [],
+    }));
+  return base.contents;
+}
+
+/** Whether a group (a module, a cluster) is expanded in the layout */
+export const groupOpen = (base: NetlistBase, key: string) =>
+  base.expanded.has(key);
+
+/** Expand a group in the layout, or collapse it (and the groups inside it). False if refused:
+ * the graph would be too big, and base.message says so */
+export function setGroupOpen(
+  base: NetlistBase,
+  key: string,
+  open: boolean,
+  changed: () => void,
+): boolean {
+  if (groupOpen(base, key) === open) return true;
+  const done = change(base, `Expanding ${key}`, () => {
+    if (!open) {
+      for (const k of [...base.expanded])
+        if (k === key || k.startsWith(`${key}.`)) base.expanded.delete(k);
+    } else base.expanded.add(key);
+  });
+  changed();
+  return done;
 }
 
 /** The key of the group of a ref that is a group of this view */
@@ -262,22 +341,15 @@ function atomsOf(
       const a = n.atomIndex.get(ref.name);
       return a === undefined ? [] : [a];
     }
-    case "block": {
-      const found: number[] = [];
-      for (const [id, name] of base.clusterName)
-        if (name === ref.name)
-          n.cluster.forEach((c, a) => {
-            if (c === id) found.push(a);
-          });
-      return found;
-    }
+    case "block":
+      return base.clusterAtoms.get(ref.name) ?? [];
     case "module":
       return n.module.flatMap((m, a) =>
         m === ref.name || m.startsWith(`${ref.name}.`) ? [a] : [],
       );
     case "net": {
-      const net = n.nets.indexOf(ref.name);
-      if (net < 0) return [];
+      const net = n.netIndex.get(ref.name);
+      if (net === undefined) return [];
       return [n.driver[net], ...n.sinks[net]].filter((a) => a >= 0);
     }
     case "path": {
@@ -333,10 +405,14 @@ function union(
 
 /** A request of the page (a module of the hierarchy, the atoms of a path), applied once */
 let handled = 0;
-function applyRequest(base: NetlistBase) {
+function applyRequest(base: NetlistBase, changed: () => void) {
   const request = netlistRequest.value;
   if (base.which !== "atoms" || !request || request.seq <= handled) return;
   handled = request.seq;
+  if (base.tooLarge) {
+    fetchScope(base, request, changed);
+    return;
+  }
   if (request.module !== undefined) {
     const module = request.module;
     change(base, `The module ${module}`, () => {
@@ -344,9 +420,7 @@ function applyRequest(base: NetlistBase) {
       base.scope = null;
       base.scopeText = "the whole design";
       // Its parents expanded, so that it shows
-      const parts = module.split(".");
-      for (let k = 1; k < parts.length; k++)
-        base.expanded.add(parts.slice(0, k).join("."));
+      for (const key of moduleKeys(module).slice(0, -1)) base.expanded.add(key);
     });
     if (
       !base.netlist.module.some(
@@ -378,13 +452,72 @@ function applyRequest(base: NetlistBase) {
   base.refit = true;
 }
 
+/** A design over the limit: the netlist of the module or the cone asked for, fetched on its own.
+ * A path is the cone of its first atom, the atoms of the path in it shown flat */
+function fetchScope(
+  base: NetlistBase,
+  request: NonNullable<typeof netlistRequest.value>,
+  changed: () => void,
+) {
+  const first = request.cone ?? request.atoms?.[0];
+  const scope: Record<string, string | number> | null =
+    request.module !== undefined
+      ? { module: request.module }
+      : first !== undefined
+        ? { cone: first, depth: request.cone !== undefined ? 2 : 1 }
+        : null;
+  if (!scope) return;
+  const what =
+    request.what ??
+    (request.module !== undefined
+      ? `the module ${request.module}`
+      : `the cone of ${first}`);
+  base.message = `Reading ${what}…`;
+  const seq = request.seq;
+  wholeView("atoms", scope).then(
+    (view) => {
+      if (seq !== handled) return; // another was asked for since
+      base.netlist = netlistOf(view);
+      base.contents = undefined;
+      base.clusterAtoms.clear();
+      base.shown = null;
+      change(base, what, () => {
+        base.expanded = new Set(
+          request.module ? moduleKeys(request.module) : [],
+        );
+        base.flat = request.module === undefined;
+        base.scope = null;
+        if (request.atoms) {
+          // The atoms of the path that are in the cone of its first one
+          const found = request.atoms.flatMap((name) => {
+            const a = base.netlist.atomIndex.get(name);
+            return a === undefined ? [] : [a];
+          });
+          if (found.length) base.scope = cone(base.netlist, found, 0);
+        }
+        base.scopeText = what;
+      });
+      base.refit = true;
+      changed();
+    },
+    (error) => {
+      if (seq !== handled) return;
+      base.message = String(error?.message ?? error);
+      changed();
+    },
+  );
+}
+
 function makeScene(context: BuildContext<NetlistBase>): Built {
   const { base, colors, hidden, selection, changed } = context;
   const dark = colors.dark;
-  applyRequest(base);
+  applyRequest(base, changed);
   const graph = graphOf(base);
   let status = "";
-  if ("tooBig" in graph) {
+  if (base.tooLarge && !base.netlist.atoms.length) {
+    status = `The design is too large to show whole (${base.tooLarge}). Show a module from the Design hierarchy, or a path or an atom from the Timing tab`;
+    if (base.message) status += ` · ${base.message}`;
+  } else if ("tooBig" in graph) {
     status = `${base.scopeText}: ${graph.tooBig} nodes, more than ${SCOPE_LIMIT}. Select objects (in this or another view) and use "Around the selection", or expand less`;
   } else if (
     base.shown?.revision !== base.revision &&
@@ -430,10 +563,21 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
     const { graph: g, layout } = shown;
     const n = base.netlist;
     const edgeStroke: Rgba = dark ? [120, 125, 140, 255] : [130, 130, 125, 255];
-    // The slack of the nets, by their names (the clusters give the index of each)
+    // The slack of the nets: by the id of each net of the atoms (every net, inside a cluster too),
+    // else by the names of the nets of the clusters
     let netSlack: ((net: string) => number) | null = null;
     let range: [number, number] = [0, 0];
-    if (timing && base.clusters) {
+    const atomSlack = timing?.tables.atom_nets?.columns.slack_ns
+      ? numbers(timing, "atom_nets", "slack_ns")
+      : null;
+    const ids = n.netId;
+    if (atomSlack && ids) {
+      range = slackRange(atomSlack);
+      netSlack = (net) => {
+        const index = n.netIndex.get(net);
+        return index === undefined ? Infinity : atomSlack[ids[index]];
+      };
+    } else if (timing && base.clusters) {
       const slack = numbers(timing, "nets", "slack_ns");
       range = slackRange(slack);
       const names = texts(base.clusters, "nets", "name");
@@ -489,9 +633,40 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
     const groups = make("groups");
     const atoms = make("atoms");
     const stubs = make("stubs");
+    const frames = make("frames");
     const lx: number[] = [];
     const ly: number[] = [];
     const ltext: string[] = [];
+    // The expanded groups: a frame around what they hold, their name at its top
+    for (const f of g.frames) {
+      const b = layout.nodes.get(f.id);
+      if (!b) continue;
+      const [x0, y0, x1, y1] = worldBox(b);
+      frames.x.push(x0);
+      frames.y.push(y0);
+      frames.w.push(x1 - x0);
+      frames.h.push(y1 - y0);
+      frames.name.push(f.key);
+      const type =
+        base.which === "clusters"
+          ? base.clusterTypeIndex.get(f.key)
+          : undefined;
+      frames.style.push(
+        styles.add(`frame:${type ?? ""}`, {
+          fill: dark ? [40, 44, 54, 255] : [244, 246, 251, 255],
+          stroke:
+            type === undefined
+              ? dark
+                ? [110, 125, 160, 255]
+                : [120, 140, 190, 255]
+              : blockFill(type, dark),
+          width: 1.5,
+        }),
+      );
+      lx.push((x0 + x1) / 2);
+      ly.push(y1 - FRAME_PAD.top / 2);
+      ltext.push(f.label);
+    }
     for (const node of g.nodes) {
       const b = layout.nodes.get(node.id);
       if (!b) continue;
@@ -573,6 +748,7 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       size: 60,
       minPx: 0,
     });
+    layers.push(rectsOf(frames, groupKind, "frames"));
     layers.push(edges);
     layers.push(rectsOf(groups, groupKind, "groups"));
     layers.push(rectsOf(atoms, "atom", "atoms"));
@@ -601,11 +777,22 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       selection.filter((r) => r.kind === "net").map((r) => r.name),
     );
     const path = selection.find((r) => r.kind === "path");
+    // A group that is expanded: its frame
+    const framed = (r: ObjectRef) => {
+      const key = groupKey(base, r);
+      const b = key === null ? undefined : layout.nodes.get(`f:${key}`);
+      return b ? worldBox(b) : null;
+    };
     const chosenAtoms = selection
-      .filter((r) => r.kind !== "net" && r.kind !== "path")
+      .filter((r) => r.kind !== "net" && r.kind !== "path" && !framed(r))
       .flatMap((r) => atomsOf(base, r, changed));
     if (path) chosenAtoms.push(...atomsOf(base, path, changed));
-    const boxes = boxesOf(base, chosenAtoms);
+    const boxes = [
+      ...boxesOf(base, chosenAtoms),
+      ...selection
+        .map(framed)
+        .filter((b): b is [number, number, number, number] => b !== null),
+    ];
     const selXy: number[] = [];
     const selStart: number[] = [0];
     const selNet: string[] = [];
@@ -648,6 +835,11 @@ function makeScene(context: BuildContext<NetlistBase>): Built {
       legend.push({
         label: "Module (double click: expand)",
         ...styles.get("group"),
+      });
+    if (frames.x.length)
+      legend.push({
+        label: `${base.which === "atoms" ? "Module" : "Cluster"} expanded (double click: collapse)`,
+        ...(styles.get("frame:") ?? styles.list[frames.style[0]]),
       });
     if (groups.x.length && base.which === "clusters") {
       // A cluster by its type: one entry for each type shown
@@ -766,8 +958,8 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
         return `cluster ${ref.name}${type ? ` (${type})` : ""}: ${atomsOf(base, ref, () => undefined).length} atoms${node ? `, ${node.ports} nets out` : ""}`;
       }
       if (ref.kind === "net") {
-        const net = n.nets.indexOf(ref.name);
-        if (net < 0) return `net ${ref.name}`;
+        const net = n.netIndex.get(ref.name);
+        if (net === undefined) return `net ${ref.name}`;
         const d = n.driver[net];
         return `net ${ref.name}: from ${d >= 0 ? n.atoms[d] : "outside"} to ${n.sinks[net].length} pins`;
       }
@@ -776,14 +968,7 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
     activate(base, ref, changed) {
       const key = groupKey(base, ref);
       if (key !== null) {
-        const open = base.expanded.has(key);
-        change(base, `Expanding ${key}`, () => {
-          if (open) {
-            for (const k of [...base.expanded])
-              if (k === key || k.startsWith(`${key}.`)) base.expanded.delete(k);
-          } else base.expanded.add(key);
-        });
-        changed();
+        setGroupOpen(base, key, !groupOpen(base, key), changed);
         return true;
       }
       if (base.which === "atoms" && ref.kind === "atom") {
@@ -804,22 +989,70 @@ function makeDef(which: NetlistKind): ViewDef<NetlistBase> {
       }
       return false;
     },
+    menu(base, ref, changed): ViewTool[] {
+      const items: ViewTool[] = [];
+      const key = groupKey(base, ref);
+      const what = base.which === "atoms" ? "module" : "cluster";
+      if (key !== null)
+        items.push(
+          groupOpen(base, key)
+            ? {
+                label: "Collapse in the layout",
+                title: `The ${what} ${key} as one box`,
+                run: () => setGroupOpen(base, key, false, changed),
+              }
+            : {
+                label: "Expand in the layout",
+                title: `The atoms of the ${what} ${key}`,
+                run: () => setGroupOpen(base, key, true, changed),
+              },
+        );
+      if (ref.kind === "atom" && base.which === "clusters") {
+        // The cluster of an atom shown alone: collapse it
+        const a = base.netlist.atomIndex.get(ref.name);
+        const cluster =
+          a === undefined
+            ? undefined
+            : base.clusterName.get(base.netlist.cluster[a]);
+        if (cluster && groupOpen(base, cluster))
+          items.push({
+            label: `Collapse ${cluster}`,
+            title: `The cluster of ${ref.name} as one box`,
+            run: () => setGroupOpen(base, cluster, false, changed),
+          });
+      }
+      if (items.length)
+        items.push({
+          label: "Select",
+          title: `Select ${ref.name} in every view`,
+          run: () => runViewCommand({ op: "select", ...ref }),
+        });
+      return items;
+    },
     tools(base, changed): ViewTool[] {
       const tools: ViewTool[] = [];
-      if (base.scope || base.flat)
+      if (base.scope || base.flat) {
+        // A design over the limit has only the scope it fetched: all of it, grouped
+        const all = base.tooLarge ? "All of the scope" : "Whole design";
+        const text = base.tooLarge
+          ? `${base.netlist.atoms.length} atoms fetched`
+          : "the whole design";
         tools.push({
-          label: "Whole design",
-          title: "Back to the whole design, grouped",
+          label: all,
+          title: base.tooLarge
+            ? "All the atoms that were fetched, grouped (the design is too large to show whole)"
+            : "Back to the whole design, grouped",
           run: () => {
-            change(base, "The whole design", () => {
+            change(base, all, () => {
               base.flat = false;
               base.scope = null;
-              base.scopeText = "the whole design";
+              base.scopeText = text;
             });
             base.refit = true;
             changed();
           },
         });
+      }
       tools.push({
         label: "Around the selection",
         title:

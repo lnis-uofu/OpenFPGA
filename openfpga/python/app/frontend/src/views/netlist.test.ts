@@ -1,7 +1,12 @@
 import { blockFill } from "./palette";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetStore } from "../store";
-import { resetViewData, setDataSignature, setWholeView } from "./data";
+import {
+  resetViewData,
+  setDataSignature,
+  setViewError,
+  setWholeView,
+} from "./data";
 import { makeView } from "./format";
 import {
   forgetLayouts,
@@ -18,19 +23,24 @@ import {
   clusterGrouping,
   cone,
   moduleGrouping,
+  moduleKeys,
+  moduleParts,
   netlistOf,
 } from "./netgraph";
 import {
   type NetlistBase,
+  clusterContents,
   clustersView,
   netlistView,
   resetNetlistRequests,
   showInNetlist,
 } from "./netlist";
-import type { RectsLayer } from "./scene";
+import type { PolylinesLayer, RectsLayer } from "./scene";
 import { resetSelection, selection } from "./selection";
 import { TileCache } from "./tiles";
+import { setTiming, slackColor } from "./timing";
 import type { ViewData } from "./format";
+import { atoms, clusters } from "./netlist.fixtures";
 
 beforeEach(() => {
   resetStore();
@@ -39,63 +49,6 @@ beforeEach(() => {
   resetNetlistRequests();
   forgetLayouts();
 });
-
-/** in0 -> x1 (u_a) -> x2, x3 (u_a.u_b) -> q (u_c) -> out; x3 is guessed */
-function atoms(): ViewData {
-  // pins: atom, dir (0 in, 1 out), net
-  const pins: [number, number, number][] = [
-    [0, 1, 0], // in0 drives n_in
-    [1, 0, 0],
-    [1, 1, 1], // x1: n_in -> n1
-    [2, 0, 1],
-    [2, 1, 2], // x2: n1 -> n2
-    [3, 0, 1],
-    [3, 0, 2],
-    [3, 1, 3], // x3: n1, n2 -> n3
-    [4, 0, 3],
-    [4, 1, 4], // q: n3 -> n4
-    [5, 0, 4], // out
-  ];
-  const pinStart = [0, 1, 3, 5, 8, 10];
-  return makeView("atoms", {
-    models: { name: [".input", ".names", ".latch", ".output"] },
-    modules: { name: ["", "u_a", "u_a.u_b", "u_c"] },
-    atoms: {
-      name: ["in0", "u_a.x1", "u_a.u_b.x2", "$abc$7$x3", "u_c.q", "out:out"],
-      model: Uint16Array.of(0, 1, 1, 1, 2, 3),
-      module: Uint32Array.of(0, 1, 2, 2, 3, 0),
-      how: Uint8Array.of(3, 0, 0, 2, 0, 3),
-      cluster: Int32Array.of(0, 1, 1, 1, 2, 3),
-      pin_start: Uint32Array.from(pinStart),
-      pin_count: Uint32Array.of(1, 2, 2, 3, 2, 1),
-    },
-    pins: {
-      atom: Uint32Array.from(pins, (p) => p[0]),
-      port: pins.map(() => "p"),
-      bit: new Uint16Array(pins.length),
-      dir: Uint8Array.from(pins, (p) => p[1]),
-      net: Uint32Array.from(pins, (p) => p[2]),
-    },
-    nets: {
-      name: ["n_in", "n1", "n2", "n3", "n4"],
-      driver: Int32Array.of(0, 2, 4, 7, 9),
-      pins: Uint32Array.of(2, 3, 2, 2, 2),
-      inside: Uint32Array.of(2, 3, 2, 2, 2),
-    },
-  });
-}
-
-function clusters(): ViewData {
-  return makeView("clusters", {
-    block_types: { name: ["EMPTY", "io", "clb"] },
-    blocks: {
-      name: ["in0", "clb_a", "clb_q", "out:out"],
-      id: Uint32Array.of(0, 1, 2, 3),
-      type: Uint16Array.of(1, 2, 2, 1),
-    },
-    nets: { name: ["n_in", "n3", "n4"], net: Uint32Array.of(0, 1, 2) },
-  });
-}
 
 const ids = (g: Graph | { tooBig: number }) =>
   "tooBig" in g ? [] : g.nodes.map((n) => n.id);
@@ -166,6 +119,8 @@ describe("the graph of a netlist", () => {
       netsOf: [[0], ...Array.from({ length: sinks }, () => [0])],
       partial: new Uint8Array(1),
       atomIndex: new Map(),
+      netIndex: new Map([["clk", 0]]),
+      netId: null,
     };
     const g = buildGraph(n, () => [], new Set(), null) as Graph;
     const stub = g.nodes.find((x) => x.kind === "stub")!;
@@ -187,6 +142,8 @@ describe("the graph of a netlist", () => {
       netsOf: Array.from({ length: count }, () => []),
       partial: new Uint8Array(0),
       atomIndex: new Map(),
+      netIndex: new Map(),
+      netId: null,
     };
     expect(buildGraph(n, () => [], new Set(), null)).toEqual({ tooBig: count });
   });
@@ -229,7 +186,7 @@ function levelled(count: number): Graph {
         });
     }
   }
-  return { nodes, edges, signature: `levelled ${count}` };
+  return { nodes, edges, frames: [], signature: `levelled ${count}` };
 }
 
 describe("the layout", () => {
@@ -562,6 +519,47 @@ describe("the clusters view (V2)", () => {
     ).toBe(0);
   });
 
+  it("expands and collapses a cluster from the menu of a right click", async () => {
+    const base = await clustersView.load();
+    const labels = (name: string) =>
+      clustersView.menu!(base, { kind: "block", name }, () => undefined).map(
+        (t) => t.label,
+      );
+    expect(labels("clb_a")).toEqual(["Expand in the layout", "Select"]);
+    clustersView.menu!(
+      base,
+      { kind: "block", name: "clb_a" },
+      () => undefined,
+    )[0].run();
+    expect(base.expanded.has("clb_a")).toBe(true);
+    expect(labels("clb_a")).toEqual(["Collapse in the layout", "Select"]);
+    // An atom of an expanded cluster collapses its cluster
+    const atom = clustersView.menu!(
+      base,
+      { kind: "atom", name: "u_a.x1" },
+      () => undefined,
+    );
+    expect(atom.map((t) => t.label)).toEqual(["Collapse clb_a", "Select"]);
+    atom[0].run();
+    expect(base.expanded.has("clb_a")).toBe(false);
+    // Nothing for a net: the menu of the page
+    expect(
+      clustersView.menu!(base, { kind: "net", name: "n1" }, () => undefined),
+    ).toEqual([]);
+  });
+
+  it("lists the clusters with their atoms", async () => {
+    const base = await clustersView.load();
+    expect(
+      clusterContents(base).map((c) => [c.name, c.type, c.atoms.length]),
+    ).toEqual([
+      ["in0", "io", 1],
+      ["clb_a", "clb", 3],
+      ["clb_q", "clb", 1],
+      ["out:out", "io", 1],
+    ]);
+  });
+
   it("narrows to the selection and its neighbours", async () => {
     const base = await clustersView.load();
     selection.value = [{ kind: "block", name: "clb_q" }];
@@ -571,5 +569,185 @@ describe("the clusters view (V2)", () => {
     around.run();
     // clb_q, clb_a (n3) and out:out (n4), whole
     expect(base.scope!.size).toBe(5);
+  });
+});
+
+describe("the fixes of the report on the netlist views", () => {
+  beforeEach(() => {
+    setWholeView("atoms", atoms());
+    setWholeView("clusters", clusters());
+  });
+
+  it("keeps the dots of an escaped name of Verilog in one level (B11)", () => {
+    expect(moduleParts("u_a.u_b")).toEqual(["u_a", "u_b"]);
+    expect(moduleParts("u_a.\\gen.blk[0] .u_c")).toEqual([
+      "u_a",
+      "\\gen.blk[0] ",
+      "u_c",
+    ]);
+    expect(moduleKeys("u_a.\\gen.blk[0] .u_c")).toEqual([
+      "u_a",
+      "u_a.\\gen.blk[0] ",
+      "u_a.\\gen.blk[0] .u_c",
+    ]);
+    expect(moduleKeys("")).toEqual([]);
+  });
+
+  it("cuts the names of the modules to their boxes (B8)", async () => {
+    const view = atoms();
+    const names = view.tables.modules.columns.name as unknown as {
+      get(i: number): string;
+    };
+    expect(names.get(1)).toBe("u_a");
+    setWholeView(
+      "atoms",
+      makeView("atoms", {
+        ...Object.fromEntries(
+          Object.entries(view.tables).map(([t, table]) => [t, table.columns]),
+        ),
+        modules: {
+          name: [
+            "",
+            "u_a_very_long_module_instance_name",
+            "u_a_very_long_module_instance_name.u_b",
+            "u_c",
+          ],
+        },
+      } as never),
+    );
+    const base = await netlistView.load();
+    const built = await laidOut(netlistView, base);
+    const labels = built.scene.layers.find((l) => l.id === "labels")!;
+    const texts = Array.from(
+      { length: (labels as { count: number }).count },
+      (_, i) => (labels as { text(i: number): string }).text(i),
+    );
+    const long = texts.find((t) => t.startsWith("u_a_very"))!;
+    expect(long).toMatch(/…\ \(3\)$/);
+    expect(long.length).toBeLessThanOrEqual(21);
+  });
+
+  it("colours the nets inside a cluster by their own slack (B7)", async () => {
+    // By the id of each net of the atoms: n1 (id 3) is inside clb_a
+    setTiming(
+      makeView("timing", {
+        nets: {
+          slack_ns: Float32Array.of(1, 1, 1),
+          criticality: new Float32Array(3),
+        },
+        atom_nets: { slack_ns: Float32Array.of(1, 3, 0.5, -2, 1) },
+      }),
+    );
+    const base = await clustersView.load();
+    clustersView.activate!(
+      base,
+      { kind: "block", name: "clb_a" },
+      () => undefined,
+    );
+    await laidOut(clustersView, base);
+    const built = clustersView.build(context(base, new Set()));
+    const edges = built.scene.layers.find(
+      (l) => l.id === "edges",
+    ) as PolylinesLayer;
+    const strokeOf = (net: string) => {
+      const i = Array.from(
+        { length: edges.start.length - 1 },
+        (_, k) => k,
+      ).find((k) => edges.name!(k) === net)!;
+      return built.scene.styles[edges.style![i]].stroke;
+    };
+    expect(strokeOf("n1")).toEqual(slackColor(-2, [-2, 3], false));
+    expect(strokeOf("n2")).toEqual(slackColor(0.5, [-2, 3], false));
+  });
+
+  it("draws an expanded module as a frame around what it holds (B5)", async () => {
+    const base = await netlistView.load();
+    await laidOut(netlistView, base);
+    netlistView.activate!(
+      base,
+      { kind: "module", name: "u_a" },
+      () => undefined,
+    );
+    netlistView.activate!(
+      base,
+      { kind: "module", name: "u_a.u_b" },
+      () => undefined,
+    );
+    selection.value = [{ kind: "module", name: "u_a.u_b" }];
+    const built = await laidOut(netlistView, base);
+    const frames = built.scene.layers.find(
+      (l) => l.id === "frames",
+    ) as RectsLayer;
+    expect(frames.objectKind).toBe("module");
+    expect([frames.name!(0), frames.name!(1)]).toEqual(["u_a", "u_a.u_b"]);
+    const box = (layer: RectsLayer, i: number) => [
+      layer.x[i],
+      layer.y[i],
+      layer.x[i] + layer.w[i],
+      layer.y[i] + layer.h[i],
+    ];
+    const inside = (b: number[], f: number[]) =>
+      b[0] >= f[0] && b[1] >= f[1] && b[2] <= f[2] && b[3] <= f[3];
+    // x1, x2 and x3 in u_a; x2 and x3 in u_a.u_b, which is in u_a
+    const atomsLayer = built.scene.layers.find(
+      (l) => l.id === "atoms",
+    ) as RectsLayer;
+    const at = (name: string) =>
+      box(
+        atomsLayer,
+        Array.from({ length: atomsLayer.x.length }, (_, i) => i).find(
+          (i) => atomsLayer.name!(i) === name,
+        )!,
+      );
+    for (const name of ["u_a.x1", "u_a.u_b.x2", "$abc$7$x3"])
+      expect(inside(at(name), box(frames, 0))).toBe(true);
+    expect(inside(at("u_a.x1"), box(frames, 1))).toBe(false);
+    expect(inside(at("u_a.u_b.x2"), box(frames, 1))).toBe(true);
+    expect(inside(box(frames, 1), box(frames, 0))).toBe(true);
+    // Its name at its top, and the selection around the frame
+    const labels = built.scene.layers.find(
+      (l) => l.id === "labels",
+    ) as unknown as {
+      count: number;
+      text(i: number): string;
+    };
+    const texts = Array.from({ length: labels.count }, (_, i) =>
+      labels.text(i),
+    );
+    expect(texts).toContain("u_b (2)");
+    const chosen = built.scene.layers.find(
+      (l) => l.id === "selection:nodes",
+    ) as RectsLayer;
+    expect(chosen.x.length).toBe(1);
+    expect(chosen.w[0]).toBeCloseTo(frames.w[1] + 6);
+    expect(built.legend!.map((e) => e.label)).toContain(
+      "Module expanded (double click: collapse)",
+    );
+  });
+
+  it("shows a module at a time when the design is over the limit (B9)", async () => {
+    setViewError(
+      "atoms",
+      "The scope has 200000 atoms, more than 100000: give --module or --cone (or a smaller one)",
+    );
+    const base = await netlistView.load();
+    let built = netlistView.build(context(base));
+    expect(built.status).toContain("too large to show whole");
+    // The clusters view needs the whole netlist
+    await expect(clustersView.load()).rejects.toThrow("more than 100000");
+    // A module of the hierarchy: its own export, with it expanded
+    setWholeView("atoms", atoms(), { module: "u_a" });
+    showInNetlist({ module: "u_a" });
+    let done!: () => void;
+    const came = new Promise<void>((resolve) => (done = resolve));
+    netlistView.build(context(base, undefined, () => done()));
+    await came;
+    expect(base.netlist.atoms.length).toBe(6);
+    expect(base.expanded.has("u_a")).toBe(true);
+    built = await laidOut(netlistView, base);
+    expect(built.status).toContain("the module u_a");
+    expect(
+      netlistView.tools!(base, () => undefined).map((t) => t.label),
+    ).not.toContain("Whole design");
   });
 });

@@ -630,6 +630,46 @@ try {
   );
   await shot("clusters-4x4.png");
 
+  // The list of the clusters beside it: a double click opens a cluster in the list, a click on
+  // an atom selects it (and the drawing shows it), a right click expands it in the layout
+  const listRow = page.locator(
+    `.view-side .cluster-row:not(.atom):has(.name:text-is("${cluster}"))`,
+  );
+  await listRow.dblclick();
+  const firstAtom = page.locator(
+    `.view-side li:has(> .cluster-row:not(.atom) .name:text-is("${cluster}")) .cluster-row.atom`,
+  );
+  await firstAtom.first().waitFor();
+  const atomName = await firstAtom.first().locator(".name").textContent();
+  await firstAtom.first().click();
+  await page.waitForFunction(
+    () =>
+      window.openfpgaViews.clusters
+        .scene()
+        .layers.some((l) => l.id === "selection:nodes"),
+    null,
+    { timeout: 10000 },
+  );
+  if ((await firstAtom.first().getAttribute("aria-selected")) !== "true")
+    throw new Error(`The atom ${atomName} is not shown selected in the list`);
+  await listRow.click({ button: "right" });
+  await page.click(".context-menu >> text=Expand in the layout");
+  await page.waitForFunction(
+    (before) => window.openfpgaViews.clusters.drawn("atoms") > before,
+    atomsBefore,
+    { timeout: 60000 },
+  );
+  await page
+    .locator(".view-panel[data-view='clusters']")
+    .screenshot({ path: path.join(shots, "clusters-list-4x4.png") });
+  await listRow.click({ button: "right" });
+  await page.click(".context-menu >> text=Collapse in the layout");
+  await page.waitForFunction(
+    (before) => window.openfpgaViews.clusters.drawn("atoms") === before,
+    atomsBefore,
+    { timeout: 60000 },
+  );
+
   // The 32x32 device: the objects close up, the coarse tiles far out
   await page.click(".session-action:text-is('Close')");
   await page.click("text=Create session from device package…");

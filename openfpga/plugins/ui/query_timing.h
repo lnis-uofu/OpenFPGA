@@ -76,8 +76,10 @@ bool net_slacks(const vpr::VprRun& run, const std::string& version,
 
 /* The slacks of net_slacks(), the count worst setup paths as the tables
  * 'paths' and 'points' of the data of a view (docs/plan_design_views.md,
- * 3.1), and the histogram of the setup slack of the end points as the table
- * 'histogram', from the same kept analysis */
+ * 3.1), the histogram of the setup slack of the end points as the table
+ * 'histogram', and the worst setup slack of every net of the atoms, by its
+ * index (the column 'id' of the nets of the atoms view), as the table
+ * 'atom_nets', from the same kept analysis */
 bool timing_view_tables(const vpr::VprRun& run, const std::string& version,
                         size_t count, ViewFile& file,
                         std::vector<float>& slack_ns,

@@ -1,6 +1,7 @@
 // What a view of the design is to the panel that shows it (docs/plan_design_views.md, P2.5): its
 // data, how it builds a scene for a view state, and how it finds and names its objects. The panel
 // does the rest the same way for every view: the renderer, the input, the selection, the tiles.
+import type { ComponentType } from "preact";
 import type { ViewColors } from "./palette";
 import type { ObjectRef, Ramp, Rgba, Scene, Style } from "./scene";
 import type { TileCache } from "./tiles";
@@ -76,6 +77,17 @@ export interface ViewDef<B> {
   activate?(base: B, ref: ObjectRef, changed: () => void): boolean;
   /** The buttons of the view in its toolbar, for its state now */
   tools?(base: B, changed: () => void): ViewTool[];
+  /** The commands of a right click on an object of the view (none: the menu of the page) */
+  menu?(base: B, ref: ObjectRef, changed: () => void): ViewTool[];
+  /** A list beside the drawing (the clusters of V2), drawn again at each build (version) */
+  side?: {
+    label: string;
+    component: ComponentType<{
+      base: B;
+      changed: () => void;
+      version: number;
+    }>;
+  };
 }
 
 /** The styles of a scene, by a key: the same key gives the same index */

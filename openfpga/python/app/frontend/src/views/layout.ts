@@ -4,7 +4,8 @@
 // never the one of another view. A layout is kept by the signature of its graph, until the data
 // of the session change. An expansion gives the nodes that were shown their places as hints, keeps
 // the order of the layers, and is moved as a whole onto the layout before it, so that what was
-// shown stays where it was as far as the layout allows.
+// shown stays where it was as far as the layout allows. An expanded group is a compound node of
+// ELK (a frame) that holds what is in it, so that its contents stay together.
 import type { ELK, ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 import type { Graph } from "./netgraph";
 
@@ -30,6 +31,8 @@ export interface Layout {
 /** The space between the layers, and between the nodes of a layer */
 export const LAYER_SPACING = 60;
 export const NODE_SPACING = 18;
+/** The space inside a frame around what it holds; its name is in the top one */
+export const FRAME_PAD = { top: 26, side: 12 };
 
 /** The engine of one owner: its ELK, the count of its layouts, and the one that runs (to stop it:
  * a worker that is terminated never answers, so its promise is rejected here) */
@@ -89,8 +92,20 @@ async function makeEngine(engine: Engine): Promise<ELK> {
 
 /** The options of the layered algorithm: the faster ones for a large graph (P0 measures: ELK
  * lays out 500 netlist nodes in about 200 ms with them, 2000 in about a second) */
-function options(nodes: number, interactive: boolean): Record<string, string> {
+function options(
+  nodes: number,
+  interactive: boolean,
+  frames: boolean,
+): Record<string, string> {
   return {
+    // Frames: laid out with what is around them, and positions relative to the root
+    ...(frames
+      ? {
+          "elk.hierarchyHandling": "INCLUDE_CHILDREN",
+          "elk.json.shapeCoords": "ROOT",
+          "elk.json.edgeCoords": "ROOT",
+        }
+      : {}),
     "elk.algorithm": "layered",
     "elk.direction": "RIGHT",
     "elk.layered.thoroughness": "1",
@@ -141,15 +156,38 @@ export async function layoutGraph(
     if (h) hints.set(n.id, h);
   }
   const interactive = hints.size > 0;
-  const input: ElkNode = {
+  const frames = graph.frames ?? [];
+  const root: ElkNode = {
     id: "root",
-    layoutOptions: options(graph.nodes.length, interactive),
-    children: graph.nodes.map((n) => ({
+    layoutOptions: options(graph.nodes.length, interactive, frames.length > 0),
+    children: [],
+  };
+  // The frames, outer first, then the nodes, each in its frame
+  const holder = new Map<string, ElkNode>();
+  const into = (parent: string | undefined) =>
+    (parent ? holder.get(parent) : undefined) ?? root;
+  for (const f of frames) {
+    const node: ElkNode = {
+      id: f.id,
+      children: [],
+      layoutOptions: {
+        // The same strategies as the root: ELK lays out the levels together
+        ...root.layoutOptions,
+        "elk.padding": `[top=${FRAME_PAD.top},left=${FRAME_PAD.side},bottom=${FRAME_PAD.side},right=${FRAME_PAD.side}]`,
+      },
+    };
+    holder.set(f.id, node);
+    into(f.parent).children!.push(node);
+  }
+  for (const n of graph.nodes)
+    into(n.parent).children!.push({
       id: n.id,
       width: n.width,
       height: n.height,
       ...(hints.get(n.id) ?? {}),
-    })),
+    });
+  const input: ElkNode = {
+    ...root,
     edges: graph.edges.map((e): ElkExtendedEdge => ({
       id: e.id,
       sources: [e.source],
@@ -170,24 +208,30 @@ export async function layoutGraph(
     if (mine === engine.count) engine.stop = null;
   }
   if (mine !== engine.count) throw new Error("stopped");
+  // The nodes and the frames, and the edges of every level (relative to the root)
   const nodes = new Map<string, Box>();
-  for (const c of out.children ?? [])
-    nodes.set(c.id, {
-      x: c.x ?? 0,
-      y: c.y ?? 0,
-      w: c.width ?? 0,
-      h: c.height ?? 0,
-    });
   const edges = new Map<string, number[]>();
-  for (const e of (out.edges ?? []) as ElkExtendedEdge[]) {
-    const points: number[] = [];
-    for (const s of e.sections ?? []) {
-      points.push(s.startPoint.x, s.startPoint.y);
-      for (const b of s.bendPoints ?? []) points.push(b.x, b.y);
-      points.push(s.endPoint.x, s.endPoint.y);
+  const read = (parent: ElkNode) => {
+    for (const c of parent.children ?? []) {
+      nodes.set(c.id, {
+        x: c.x ?? 0,
+        y: c.y ?? 0,
+        w: c.width ?? 0,
+        h: c.height ?? 0,
+      });
+      read(c);
     }
-    edges.set(e.id, points);
-  }
+    for (const e of (parent.edges ?? []) as ElkExtendedEdge[]) {
+      const points: number[] = [];
+      for (const s of e.sections ?? []) {
+        points.push(s.startPoint.x, s.startPoint.y);
+        for (const b of s.bendPoints ?? []) points.push(b.x, b.y);
+        points.push(s.endPoint.x, s.endPoint.y);
+      }
+      edges.set(e.id, points);
+    }
+  };
+  read(out);
   // Onto the layout before: the move of the nodes that were shown, on average, is undone
   if (interactive) {
     let dx = 0;

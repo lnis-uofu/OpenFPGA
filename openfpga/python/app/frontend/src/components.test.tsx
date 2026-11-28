@@ -38,7 +38,7 @@ import {
   tabs,
   view,
 } from "./store";
-import { ContextMenu, contextMenu } from "./components/ContextMenu";
+import { ContextMenu, contextMenu, openMenu } from "./components/ContextMenu";
 
 const started = (callId: string, tool: string, args: Record<string, unknown> = {}): AppEvent => ({
   type: "tool_call_started",
@@ -1047,6 +1047,21 @@ describe("the centre", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     fireEvent.contextMenu(screen.getByLabelText("field"));
     expect(contextMenu.value).toBeNull();
+  });
+
+  it("shows the commands that a part of the page gives on a right click", () => {
+    let ran = 0;
+    render(
+      <div>
+        <p onContextMenu={(e) => openMenu(e, [{ label: "Do it", run: () => ran++ }])}>Here</p>
+        <ContextMenu />
+      </div>,
+    );
+    fireEvent.contextMenu(screen.getByText("Here"), { clientX: 5, clientY: 6 });
+    expect(contextMenu.value?.items?.map((i) => i.label)).toEqual(["Do it"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Do it" }));
+    expect(ran).toBe(1);
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 
   it("pins a result tab", () => {

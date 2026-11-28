@@ -178,6 +178,23 @@ void slacks_of(const RoutedTiming& timing, std::vector<float>& slack_ns,
   }
 }
 
+/* The worst setup slack (ns) of every net of the atoms, by its index: the
+ * nets inside a cluster too, which have no net of the clusters */
+void atom_slacks_of(const RoutedTiming& timing, std::vector<float>& slack_ns) {
+  const auto& netlist = g_vpr_ctx.atom().netlist();
+  slack_ns.assign(netlist.nets().size(),
+                  std::numeric_limits<float>::infinity());
+  for (const AtomNetId net : netlist.nets()) {
+    double worst = std::numeric_limits<double>::infinity();
+    for (const AtomPinId pin : netlist.net_sinks(net)) {
+      worst = std::min<double>(worst, timing.info->setup_pin_slack(pin));
+    }
+    if (std::isfinite(worst)) {
+      slack_ns[size_t(net)] = static_cast<float>(sec_to_nanosec(worst));
+    }
+  }
+}
+
 void paths_of(const RoutedTiming& timing_data, const size_t count,
               ViewFile& file) {
   const RoutedTiming* timing = &timing_data;
@@ -331,6 +348,7 @@ struct ViewTiming {
   std::unique_ptr<RoutedTiming> timing;
   std::vector<float> slack_ns;
   std::vector<float> criticality;
+  std::vector<float> atom_slack_ns;
 };
 
 const ViewTiming* view_timing(const vpr::VprRun& run,
@@ -346,6 +364,7 @@ const ViewTiming* view_timing(const vpr::VprRun& run,
     return nullptr;
   }
   slacks_of(*timing, cache->slack_ns, cache->criticality);
+  atom_slacks_of(*timing, cache->atom_slack_ns);
   cache->timing = std::move(timing);
   cache->version = version;
   return cache;
@@ -374,6 +393,8 @@ bool timing_view_tables(const vpr::VprRun& run, const std::string& version,
   }
   slack_ns = timing->slack_ns;
   criticality = timing->criticality;
+  file.table("atom_nets", timing->atom_slack_ns.size())
+    .column("slack_ns", timing->atom_slack_ns);
   paths_of(*timing->timing, count, file);
   endpoints_of(*timing->timing, file);
   return true;

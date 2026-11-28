@@ -60,6 +60,13 @@ export function setWholeView(kind: string, data: ViewData, scope: Scope = {}) {
   ready.set(key, data);
 }
 
+/** For the tests: an export that the core refuses */
+export function setViewError(kind: string, message: string, scope: Scope = {}) {
+  const failed = Promise.reject(new Error(message));
+  failed.catch(() => undefined);
+  cache.set(keyOf(kind, scope), failed);
+}
+
 /** For the tests */
 export function resetViewData() {
   signature = "";
